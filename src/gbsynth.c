@@ -11,13 +11,7 @@
 
 #define NULLCHECK(var) assert(var != NULL)
 
-typedef struct SquareOsc {
-    unsigned ticksPerDuty;
-    unsigned ticksPerPeriod;
-    unsigned ticksPerEnvStep;
-    unsigned envSteps;
-    unsigned ticks;
-} SquareOsc;
+
 
 struct GbsSynth {
     float samplingRate;

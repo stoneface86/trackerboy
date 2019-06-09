@@ -6,6 +6,6 @@ include_directories(
 )
 
 set(GBSYNTH "gbsynth")
-set(GBSYNTH_SRC "src/gbsynth.c")
+set(GBSYNTH_SRC "src/gbsynth.c" "src/square.c")
 
 add_library(${GBSYNTH} STATIC ${GBSYNTH_SRC})
