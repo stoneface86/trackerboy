@@ -78,6 +78,28 @@ GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg) {
     return GBS_E_NONE;
 }
 
+// channel 1
+
+GbsErr gbs_ch1_setSweepTime(GbsSynth *synth, uint8_t ts) {
+    NULLCHECK(synth);
+    
+    if (ts > GBS_SWEEP_TIME_MAX) {
+        return GBS_E_PARAMETER;
+    }
+    uint8_t nr10 = synth->ch1.nr10;
+    nr10 &= 0x1F; // reset the current time value
+    nr10 |= ts << 5; // set the new value
+    synth->ch1.nr10 = nr10;
+
+    // TODO: update the oscillator
+
+    return GBS_E_NONE;
+}
+
+GbsErr gbs_ch1_setSweepType(GbsSynth *synth, uint8_t addition);
+
+GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
+
 //void gbs_decodeCh2(GbsCh2 *ch2, GbsCh2Reg *reg) {
 //	ch2->duty = (GbsDuty)(reg->nr21 >> 6);
 //	ch2->length = reg->nr21 & 0x3f;

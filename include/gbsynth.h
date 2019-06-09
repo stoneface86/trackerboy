@@ -10,6 +10,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define GBS_SWEEP_TIME_MAX      0x7
+#define GBS_SWEEP_SHIFT_MAX     0x7
+
 typedef enum GbsErr {
     GBS_E_NONE = 0,         // no error
     GBS_E_MEM,              // out of memory
