@@ -21,21 +21,18 @@ typedef struct SquareOsc {
 
 struct GbsSynth {
     float samplingRate;
-    GbsCh1Reg ch1;
-    GbsCh2Reg ch2;
-    GbsCh3Reg ch3;
-    GbsCh4Reg ch4;
-    float currentSamples[4];
-
-
+    GbsChType channel;
+    GbsChRegUnion reg;
+    float currentSample;
 };
 
-GbsErr gbs_init(GbsSynth **synthVar, float samplingRate) {
+GbsErr gbs_init(GbsSynth **synthVar, GbsChType channel, float samplingRate) {
     NULLCHECK(synthVar);
     GbsSynth *synth = (GbsSynth*)malloc(sizeof(struct GbsSynth));
     if (synth == NULL) {
         return GBS_E_MEM;
     }
+    synth->channel = channel;
     synth->samplingRate = samplingRate;
 
 
@@ -51,29 +48,14 @@ GbsErr gbs_deinit(GbsSynth *synth) {
 
 float gbs_currentSample(GbsSynth *synth, GbsChType chan) {
     NULLCHECK(synth);
-    return synth->currentSamples[chan];
+    return synth->currentSample;
 }
 
 GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg) {
     NULLCHECK(synth);
     NULLCHECK(reg);
 
-    switch (chan) {
-        case GBS_CH1:
-            reg->ch1 = synth->ch1;
-            break;
-        case GBS_CH2:
-            reg->ch2 = synth->ch2;
-            break;
-        case GBS_CH3:
-            reg->ch3 = synth->ch3;
-            break;
-        case GBS_CH4:
-            reg->ch4 = synth->ch4;
-            break;
-        default:
-            return GBS_E_PARAMETER;
-    }
+    *reg = synth->reg;
 
     return GBS_E_NONE;
 }
@@ -82,23 +64,27 @@ GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg) {
 
 GbsErr gbs_ch1_setSweepTime(GbsSynth *synth, uint8_t ts) {
     NULLCHECK(synth);
+
+    if (synth->channel != GBS_CH1) {
+        return GBS_E_WRONG_CHANNEL;
+    }
     
     if (ts > GBS_SWEEP_TIME_MAX) {
         return GBS_E_PARAMETER;
     }
-    uint8_t nr10 = synth->ch1.nr10;
+    uint8_t nr10 = synth->reg.ch1.nr10;
     nr10 &= 0x1F; // reset the current time value
     nr10 |= ts << 5; // set the new value
-    synth->ch1.nr10 = nr10;
+    synth->reg.ch1.nr10 = nr10;
 
     // TODO: update the oscillator
 
     return GBS_E_NONE;
 }
 
-GbsErr gbs_ch1_setSweepType(GbsSynth *synth, uint8_t addition);
+//GbsErr gbs_ch1_setSweepType(GbsSynth *synth, uint8_t addition);
 
-GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
+//GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
 
 //void gbs_decodeCh2(GbsCh2 *ch2, GbsCh2Reg *reg) {
 //	ch2->duty = (GbsDuty)(reg->nr21 >> 6);

@@ -116,24 +116,24 @@ GbsErr gbs_ch3_setWaveform(GbsSynth *synth, uint8_t waveform[16]);
 //
 // general settings
 //
-GbsErr gbs_setDuty(GbsSynth *synth, GbsChType chan, GbsDuty duty);
+GbsErr gbs_setDuty(GbsSynth *synth, GbsDuty duty);
 
-GbsErr gbs_setLength(GbsSynth *synth, GbsChType chan, uint8_t length);
+GbsErr gbs_setLength(GbsSynth *synth, uint8_t length);
 
-GbsErr gbs_setEnvSteps(GbsSynth *synth, GbsChType chan, uint8_t steps);
+GbsErr gbs_setEnvSteps(GbsSynth *synth, uint8_t steps);
 
-GbsErr gbs_setEnvMode(GbsSynth *synth, GbsChType chan, GbsEnvMode mode);
+GbsErr gbs_setEnvMode(GbsSynth *synth, GbsEnvMode mode);
 
-GbsErr gbs_setEnvLength(GbsSynth *synth, GbsChType chan, uint8_t length);
+GbsErr gbs_setEnvLength(GbsSynth *synth, uint8_t length);
 
-GbsErr gbs_setFreq(GbsSynth *synth, GbsChType chan, uint16_t freq);
+GbsErr gbs_setFreq(GbsSynth *synth, uint16_t freq);
 
 
 //
 // synth
 //
 
-GbsErr gbs_init(GbsSynth **synth, float samplingRate);
+GbsErr gbs_init(GbsSynth **synth, GbsChType channel, float samplingRate);
 
 GbsErr gbs_deinit(GbsSynth *synth);
 
