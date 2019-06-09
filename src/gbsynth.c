@@ -82,49 +82,69 @@ GbsErr gbs_ch1_setSweepTime(GbsSynth *synth, uint8_t ts) {
     return GBS_E_NONE;
 }
 
-//GbsErr gbs_ch1_setSweepType(GbsSynth *synth, uint8_t addition);
+GbsErr gbs_ch1_setSweepType(GbsSynth *synth, uint8_t addition) {
+    NULLCHECK(synth);
 
-//GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
+    return GBS_E_PARAMETER;
+}
 
-//void gbs_decodeCh2(GbsCh2 *ch2, GbsCh2Reg *reg) {
-//	ch2->duty = (GbsDuty)(reg->nr21 >> 6);
-//	ch2->length = reg->nr21 & 0x3f;
-//	ch2->envSteps = reg->nr22 >> 4;
-//	ch2->envDirection = (GbsEnvMode)((reg->nr22 >> 3) & 0x1);
-//	ch2->envLength = reg->nr22 & 0x7;
-//	ch2->frequency = ((reg->nr24 & 0x7) << 8) | reg->nr23;
-//}
+GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
 //
-//void gbs_encodeCh2(GbsCh2 *ch2, GbsCh2Reg *reg) {
-//    // NR21
-//    // bits 0-5: sound length
-//    // bits 6-7: duty
-//    reg->nr21 = ((ch2->duty & 3) << 6) |
-//                (ch2->length & 0x3f);
-//    // NR22
-//    // bits 0-2: envelope step length
-//    // bit    3: envelope direction
-//    // bits 4-7: enevelop steps
-//    reg->nr22 = ((ch2->envSteps & 0xF) << 4) |
-//                (ch2->envDirection << 3) |
-//                (ch2->envLength & 0x7);
+// Channel 3 settings
 //
-//    // NR23
-//    // bits 0-7: lower 8 bits of the frequency data
-//    reg->nr23 = ch2->frequency & 0xFF;
+GbsErr gbs_ch3_setEnable(GbsSynth *synth, bool enabled) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_ch3_setWaveform(GbsSynth *synth, uint8_t waveform[16]) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+
 //
-//    // NR24
-//    // bits 0-3: higher 3 bits of the frequency data
-//    reg->nr24 = (ch2->frequency >> 8) & 0x7;
-//}
+// general settings
 //
-//void gbs_setEnvSteps(GbsSynth *synth, GbsChType chan, uint8_t steps) {
-//	switch (chan) {
-//		case GBS_CH_SOUND1:
-//			break;
-//		case GBS_CH_SOUND2:
-//			break;
-//		default:
-//			return -1;
-//	}
-//}
+GbsErr gbs_setDuty(GbsSynth *synth, GbsDuty duty) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_setLength(GbsSynth *synth, uint8_t length) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_setEnvSteps(GbsSynth *synth, uint8_t steps) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_setEnvMode(GbsSynth *synth, GbsEnvMode mode) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_setEnvLength(GbsSynth *synth, uint8_t length) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_setFreq(GbsSynth *synth, uint16_t freq) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
