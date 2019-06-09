@@ -69,7 +69,7 @@ GbsErr gbs_ch1_setSweepTime(GbsSynth *synth, uint8_t ts) {
         return GBS_E_WRONG_CHANNEL;
     }
     
-    if (ts > GBS_SWEEP_TIME_MAX) {
+    if (ts > GBS_MAX_SWEEP_TIME) {
         return GBS_E_PARAMETER;
     }
     uint8_t nr10 = synth->reg.ch1.nr10;

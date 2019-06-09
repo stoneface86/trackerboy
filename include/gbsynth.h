@@ -10,8 +10,15 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define GBS_SWEEP_TIME_MAX      0x7
-#define GBS_SWEEP_SHIFT_MAX     0x7
+// maximum values for parameters
+#define GBS_MAX_SWEEP_TIME      0x7
+#define GBS_MAX_SWEEP_SHIFT     0x7
+#define GBS_MAX_LENGTH          0x3F
+#define GBS_MAX_ENV_STEPS       0xF
+#define GBS_MAX_ENV_LENGTH      0x7
+#define GBS_MAX_FREQUENCY       0x7FF
+#define GBS_MAX_WAVE_LENGTH     0xFF
+
 
 typedef enum GbsErr {
     GBS_E_NONE = 0,         // no error
@@ -110,12 +117,43 @@ GbsErr gbs_ch1_setSweepMode(GbsSynth *synth, GbsSweepMode mode);
 
 GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
 
+#define gbs_ch1_setDuty(synth, duty) gbs_setDuty(synth, duty)
+
+#define gbs_ch1_setLength(synth, length) gbs_setLength(synth, length)
+
+#define gbs_ch1_setEnvSteps(synth, steps) gbs_setEnvSteps(synth, steps)
+
+#define gbs_ch1_setEnvMode(synth, mode) gbs_setEnvMode(synth, mode)
+
+#define gbs_ch1_setEnvLength(synth, length) gbs_setEnvLength(synth, length)
+
+#define gbs_ch1_setFreq(synth, freq) gbs_setFreq(synth, freq)
+
+//
+// Channel 2 settings
+//
+#define gbs_ch2_setDuty(synth, duty) gbs_setDuty(synth, duty)
+
+#define gbs_ch2_setLength(synth, length) gbs_setLength(synth, length)
+
+#define gbs_ch2_setEnvSteps(synth, steps) gbs_setEnvSteps(synth, steps)
+
+#define gbs_ch2_setEnvMode(synth, mode) gbs_setEnvMode(synth, mode)
+
+#define gbs_ch2_setEnvLength(synth, length) gbs_setEnvLength(synth, length)
+
+#define gbs_ch2_setFreq(synth, freq) gbs_setFreq(synth, freq)
+
 //
 // Channel 3 settings
 //
 GbsErr gbs_ch3_setEnable(GbsSynth *synth, bool enabled);
 
 GbsErr gbs_ch3_setWaveform(GbsSynth *synth, uint8_t waveform[16]);
+
+#define gbs_ch3_setLength(synth, length) gbs_setLength(synth, length)
+
+#define gbs_ch3_setFreq(synth, freq) gbs_setFreq(synth, freq)
 
 //
 // Channel 4 settings
@@ -126,6 +164,13 @@ GbsErr gbs_ch4_setStep(GbsSynth *synth, GbsStepCount steps);
 
 GbsErr gbs_ch4_setDrf(GbsSynth *synth, uint8_t drf);
 
+#define gbs_ch4_setLength(synth, length) gbs_setLength(synth, length)
+
+#define gbs_ch4_setEnvSteps(synth, steps) gbs_setEnvSteps(synth, steps)
+
+#define gbs_ch4_setEnvMode(synth, mode) gbs_setEnvMode(synth, mode)
+
+#define gbs_ch4_setEnvLength(synth, length) gbs_setEnvLength(synth, length)
 
 //
 // general settings
