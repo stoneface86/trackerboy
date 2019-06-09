@@ -54,10 +54,27 @@ float gbs_currentSample(GbsSynth *synth, GbsChType chan) {
     return synth->currentSamples[chan];
 }
 
-GbsErr gbs_ch1_registers(GbsSynth *synth, GbsCh1Reg *reg) {
+GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg) {
     NULLCHECK(synth);
     NULLCHECK(reg);
-    *reg = synth->ch1;
+
+    switch (chan) {
+        case GBS_CH1:
+            reg->ch1 = synth->ch1;
+            break;
+        case GBS_CH2:
+            reg->ch2 = synth->ch2;
+            break;
+        case GBS_CH3:
+            reg->ch3 = synth->ch3;
+            break;
+        case GBS_CH4:
+            reg->ch4 = synth->ch4;
+            break;
+        default:
+            return GBS_E_PARAMETER;
+    }
+
     return GBS_E_NONE;
 }
 

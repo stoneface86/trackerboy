@@ -78,18 +78,16 @@ typedef struct GbsCh3Reg {
     uint8_t nr44;
 } GbsCh4Reg;
 
+typedef union GbsChRegUnion {
+    GbsCh1Reg ch1;
+    GbsCh2Reg ch2;
+    GbsCh3Reg ch3;
+    GbsCh4Reg ch4;
+} GbsChRegUnion;
+
 typedef struct GbsSynth GbsSynth;
 
-
-GbsErr gbs_ch1_registers(GbsSynth *synth, GbsCh1Reg *reg);
-
-GbsErr gbs_ch2_registers(GbsSynth *synth, GbsCh2Reg *reg);
-
-GbsErr gbs_ch3_registers(GbsSynth *synth, GbsCh3Reg *reg);
-
-GbsErr gbs_ch4_registers(GbsSynth *synth, GbsCh4Reg *reg);
-
-
+GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg);
 
 // ========================================================
 // Synthesizer settings
