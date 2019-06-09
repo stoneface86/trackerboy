@@ -71,7 +71,7 @@ typedef struct GbsCh3Reg {
     uint8_t nr34;
 } GbsCh3Reg;
 
-typedef struct GbsCh3Reg {
+typedef struct GbsCh4Reg {
     uint8_t nr41;
     uint8_t nr42;
     uint8_t nr43;
