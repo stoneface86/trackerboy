@@ -109,6 +109,12 @@ GbsErr gbs_ch3_setWaveform(GbsSynth *synth, uint8_t waveform[16]) {
     return GBS_E_PARAMETER;
 }
 
+GbsErr gbs_ch3_setWaveformLevel(GbsSynth *synth, GbsWaveformLevel level) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
 //
 // Channel 4 settings
 //

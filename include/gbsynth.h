@@ -56,12 +56,12 @@ typedef enum GbsStepCount {
     GBS_STEPS_7  = 1
 } GbsStepCount;
 
-typedef enum GbsWaveOutput {
+typedef enum GbsWaveformLevel {
 	GBS_WAVE_MUTE    = 0,
 	GBS_WAVE_WHOLE   = 1,
 	GBS_WAVE_HALF    = 2,
 	GBS_WAVE_QUARTER = 3
-} GbsWaveOutput;
+} GbsWaveformLevel;
 
 typedef struct GbsCh1Reg {
     uint8_t nr10;
@@ -150,6 +150,8 @@ GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
 GbsErr gbs_ch3_setEnable(GbsSynth *synth, bool enabled);
 
 GbsErr gbs_ch3_setWaveform(GbsSynth *synth, uint8_t waveform[16]);
+
+GbsErr gbs_ch3_setWaveformLevel(GbsSynth *synth, GbsWaveformLevel level);
 
 #define gbs_ch3_setLength(synth, length) gbs_setLength(synth, length)
 
