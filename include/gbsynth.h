@@ -28,17 +28,17 @@ typedef enum GbsErr {
 } GbsErr;
 
 typedef enum GbsChType {
-	GBS_CH1,  // square-wave with sweep, envelope
-	GBS_CH2,  // square-wave with envelope
-	GBS_CH3,  // wave playback
-	GBS_CH4   // white noise generator
+    GBS_CH1,  // square-wave with sweep, envelope
+    GBS_CH2,  // square-wave with envelope
+    GBS_CH3,  // wave playback
+    GBS_CH4   // white noise generator
 } GbsChType;
 
 typedef enum GbsDuty {
-    GBS_DUTY_125 = 0,	// 12.5%
-    GBS_DUTY_25 = 1,	// 25%
-    GBS_DUTY_50 = 2,	// 50%
-    GBS_DUTY_75 = 3		// 75%
+    GBS_DUTY_125 = 0,   // 12.5%
+    GBS_DUTY_25 = 1,    // 25%
+    GBS_DUTY_50 = 2,    // 50%
+    GBS_DUTY_75 = 3     // 75%
 } GbsDuty;
 
 typedef enum GbsEnvMode {
@@ -57,10 +57,10 @@ typedef enum GbsStepCount {
 } GbsStepCount;
 
 typedef enum GbsWaveformLevel {
-	GBS_WAVE_MUTE    = 0,
-	GBS_WAVE_WHOLE   = 1,
-	GBS_WAVE_HALF    = 2,
-	GBS_WAVE_QUARTER = 3
+    GBS_WAVE_MUTE    = 0,
+    GBS_WAVE_WHOLE   = 1,
+    GBS_WAVE_HALF    = 2,
+    GBS_WAVE_QUARTER = 3
 } GbsWaveformLevel;
 
 typedef struct GbsCh1Reg {
