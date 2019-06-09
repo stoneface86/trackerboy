@@ -44,6 +44,11 @@ typedef enum GbsSweepMode {
     GBS_SWEEP_SUBTRACTION = 1
 } GbsSweepMode;
 
+typedef enum GbsStepCount {
+    GBS_STEPS_15 = 0,
+    GBS_STEPS_7  = 1
+} GbsStepCount;
+
 typedef enum GbsWaveOutput {
 	GBS_WAVE_MUTE    = 0,
 	GBS_WAVE_WHOLE   = 1,
@@ -101,7 +106,7 @@ GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg);
 //
 GbsErr gbs_ch1_setSweepTime(GbsSynth *synth, uint8_t ts);
 
-GbsErr gbs_ch1_setSweepType(GbsSynth *synth, uint8_t addition);
+GbsErr gbs_ch1_setSweepMode(GbsSynth *synth, GbsSweepMode mode);
 
 GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
 
@@ -111,6 +116,15 @@ GbsErr gbs_ch1_setSweepShift(GbsSynth *synth, uint8_t n);
 GbsErr gbs_ch3_setEnable(GbsSynth *synth, bool enabled);
 
 GbsErr gbs_ch3_setWaveform(GbsSynth *synth, uint8_t waveform[16]);
+
+//
+// Channel 4 settings
+//
+GbsErr gbs_ch4_setScf(GbsSynth *synth, uint8_t scf);
+
+GbsErr gbs_ch4_setStep(GbsSynth *synth, GbsStepCount steps);
+
+GbsErr gbs_ch4_setDrf(GbsSynth *synth, uint8_t drf);
 
 
 //

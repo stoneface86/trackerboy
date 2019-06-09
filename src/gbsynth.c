@@ -82,7 +82,7 @@ GbsErr gbs_ch1_setSweepTime(GbsSynth *synth, uint8_t ts) {
     return GBS_E_NONE;
 }
 
-GbsErr gbs_ch1_setSweepType(GbsSynth *synth, uint8_t addition) {
+GbsErr gbs_ch1_setSweepMode(GbsSynth *synth, GbsSweepMode mode) {
     NULLCHECK(synth);
 
     return GBS_E_PARAMETER;
@@ -104,6 +104,27 @@ GbsErr gbs_ch3_setEnable(GbsSynth *synth, bool enabled) {
 }
 
 GbsErr gbs_ch3_setWaveform(GbsSynth *synth, uint8_t waveform[16]) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+//
+// Channel 4 settings
+//
+GbsErr gbs_ch4_setScf(GbsSynth *synth, uint8_t scf) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_ch4_setStep(GbsSynth *synth, GbsStepCount steps) {
+    NULLCHECK(synth);
+
+    return GBS_E_PARAMETER;
+}
+
+GbsErr gbs_ch4_setDrf(GbsSynth *synth, uint8_t drf) {
     NULLCHECK(synth);
 
     return GBS_E_PARAMETER;
