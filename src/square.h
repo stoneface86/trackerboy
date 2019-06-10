@@ -23,6 +23,6 @@ void square_init(SquareOsc *osc);
 
 void square_setFrequency(SquareOsc *osc, float samplingRate, uint16_t frequency);
 
-void square_setDuty(SquareOsc *osc, float duty);
+void square_setDuty(SquareOsc *osc, GbsDuty duty);
 
 float square_nextSample(SquareOsc *osc);

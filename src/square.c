@@ -8,6 +8,11 @@
 
 #include "square.h"
 
+static const float DUTY_TABLE[] = {
+    0.125f, 0.25f, 0.5f, 0.75f
+};
+
+
 void square_init(SquareOsc *osc) {
     osc->samplesPerDuty = 0;
     osc->samplesPerPeriod = 0;
@@ -17,12 +22,12 @@ void square_setFrequency(SquareOsc *osc, float samplingRate, uint16_t frequency)
     osc->frequency = frequency;
     unsigned samplesPerPeriod = (unsigned)(samplingRate / gbs_freq(frequency));
     osc->samplesPerPeriod = samplesPerPeriod;
-    osc->samplesPerDuty = (unsigned)(samplesPerPeriod * osc->duty);
+    osc->samplesPerDuty = (unsigned)(samplesPerPeriod * DUTY_TABLE[osc->duty]);
 }
 
-void square_setDuty(SquareOsc *osc, float duty) {
+void square_setDuty(SquareOsc *osc, GbsDuty duty) {
     osc->duty = duty;
-    osc->samplesPerDuty = (unsigned)(osc->samplesPerPeriod * duty);
+    osc->samplesPerDuty = (unsigned)(osc->samplesPerPeriod * DUTY_TABLE[duty]);
 }
 
 float square_nextSample(SquareOsc *osc) {
