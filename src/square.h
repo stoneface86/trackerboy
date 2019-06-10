@@ -8,20 +8,20 @@
 
 #pragma once
 
+#include "gbsynth.h"
 #include <stdint.h>
 
 typedef struct SquareOsc {
-    float samplingRate;
-    float frequency;
-    float duty;
+    uint16_t frequency;
+    GbsDuty duty;
     unsigned samplesPerDuty;    // number of samples for the "on" part of the wave
     unsigned samplesPerPeriod;  // number of samples per period
     unsigned counter;
 } SquareOsc;
 
-void square_init(SquareOsc *osc, float samplingRate, float frequency, float duty);
+void square_init(SquareOsc *osc);
 
-void square_setFrequency(SquareOsc *osc, float frequency);
+void square_setFrequency(SquareOsc *osc, float samplingRate, uint16_t frequency);
 
 void square_setDuty(SquareOsc *osc, float duty);
 

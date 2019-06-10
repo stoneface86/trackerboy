@@ -8,15 +8,14 @@
 
 #include "square.h"
 
-void square_init(SquareOsc *osc, float samplingRate, float frequency, float duty) {
-    osc->samplingRate = samplingRate;
-    osc->duty = duty;
-    square_setFrequency(osc, frequency);
+void square_init(SquareOsc *osc) {
+    osc->samplesPerDuty = 0;
+    osc->samplesPerPeriod = 0;
     osc->counter = 0;
 }
-void square_setFrequency(SquareOsc *osc, float frequency) {
+void square_setFrequency(SquareOsc *osc, float samplingRate, uint16_t frequency) {
     osc->frequency = frequency;
-    unsigned samplesPerPeriod = (unsigned)(osc->samplingRate / frequency);
+    unsigned samplesPerPeriod = (unsigned)(samplingRate / gbs_freq(frequency));
     osc->samplesPerPeriod = samplesPerPeriod;
     osc->samplesPerDuty = (unsigned)(samplesPerPeriod * osc->duty);
 }
@@ -27,17 +26,21 @@ void square_setDuty(SquareOsc *osc, float duty) {
 }
 
 float square_nextSample(SquareOsc *osc) {
-    float sample;
+    float sample = 0.0f;
 
-    if (osc->counter < osc->samplesPerDuty) {
-        sample = 1.0f;
-    } else {
-        sample = -1.0f;
-    }
+    // output nothing if no frequency was set
+    if (osc->samplesPerPeriod == 0) {
 
-    // update counter
-    if (++osc->counter >= osc->samplesPerPeriod) {
-        osc->counter = 0;
+        if (osc->counter < osc->samplesPerDuty) {
+            sample = 1.0f;
+        } else {
+            sample = -1.0f;
+        }
+
+        // update counter
+        if (++osc->counter >= osc->samplesPerPeriod) {
+            osc->counter = 0;
+        }
     }
     
 

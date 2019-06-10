@@ -19,6 +19,8 @@
 #define GBS_MAX_FREQUENCY       0x7FF
 #define GBS_MAX_WAVE_LENGTH     0xFF
 
+#define gbs_convertFreq(freq) ((float)(131072.0f / (2048 - freq)))
+
 
 typedef enum GbsErr {
     GBS_E_NONE = 0,         // no error
@@ -201,3 +203,10 @@ GbsErr gbs_deinit(GbsSynth *synth);
 float gbs_currentSample(GbsSynth *synth, GbsChType chan);
 
 GbsErr gbs_tick(GbsSynth *synth);
+
+//
+// utility functions
+//
+float gbs_freq(uint16_t freq);
+
+uint16_t gbs_arcfreq(float freq);

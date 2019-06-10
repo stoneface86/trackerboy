@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define NULLCHECK(var) assert(var != NULL)
 
@@ -168,4 +169,29 @@ GbsErr gbs_setFreq(GbsSynth *synth, uint16_t freq) {
     NULLCHECK(synth);
 
     return GBS_E_PARAMETER;
+}
+
+//
+// utility functions
+//
+
+float gbs_freq(uint16_t freq) {
+    if (freq > GBS_MAX_FREQUENCY) {
+        freq = GBS_MAX_FREQUENCY; // clamp
+    }
+    return 131072.0f / (2048 - freq);
+}
+
+uint16_t gbs_arcfreq(float freq) {
+
+    float calc = 2048.0f - (131072.0f / freq);
+    if (isnormal(calc) && calc > 0.0f) {
+        calc = roundf(calc);
+        if (calc < 2048.0f) {
+            return (uint16_t)calc;   
+        }
+    }
+
+
+    return GBS_MAX_FREQUENCY;
 }
