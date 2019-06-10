@@ -10,15 +10,21 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "square.h"
+
 #define NULLCHECK(var) assert(var != NULL)
 
+
+typedef union OscUnion {
+    SquareOsc square;
+} OscUnion;
 
 
 struct GbsSynth {
     float samplingRate;
     GbsChType channel;
-    GbsChRegUnion reg;
     float currentSample;
+    OscUnion osc;
 };
 
 GbsErr gbs_init(GbsSynth **synthVar, GbsChType channel, float samplingRate) {
@@ -29,6 +35,21 @@ GbsErr gbs_init(GbsSynth **synthVar, GbsChType channel, float samplingRate) {
     }
     synth->channel = channel;
     synth->samplingRate = samplingRate;
+
+    switch (channel) {
+        case GBS_CH1:
+            // TODO: initialize sweep
+            // fall-through
+        case GBS_CH2:
+            square_init(&synth->osc.square);
+            square_setDuty(&synth->osc.square, GBS_DEFAULT_DUTY);
+            square_setFrequency(&synth->osc.square, samplingRate, GBS_DEFAULT_FREQUENCY);
+            break;
+        case GBS_CH3:
+            break;
+        case GBS_CH4:
+            break;
+    }
 
 
     *synthVar = synth;
@@ -41,16 +62,16 @@ GbsErr gbs_deinit(GbsSynth *synth) {
     return GBS_E_NONE;
 }
 
-float gbs_currentSample(GbsSynth *synth, GbsChType chan) {
+float gbs_currentSample(GbsSynth *synth) {
     NULLCHECK(synth);
     return synth->currentSample;
 }
 
-GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg) {
+GbsErr gbs_getRegisters(GbsSynth *synth, GbsChRegUnion *reg) {
     NULLCHECK(synth);
     NULLCHECK(reg);
 
-    *reg = synth->reg;
+    
 
     return GBS_E_NONE;
 }
@@ -67,10 +88,10 @@ GbsErr gbs_ch1_setSweepTime(GbsSynth *synth, uint8_t ts) {
     if (ts > GBS_MAX_SWEEP_TIME) {
         return GBS_E_PARAMETER;
     }
-    uint8_t nr10 = synth->reg.ch1.nr10;
-    nr10 &= 0x1F; // reset the current time value
-    nr10 |= ts << 5; // set the new value
-    synth->reg.ch1.nr10 = nr10;
+    //uint8_t nr10 = synth->reg.ch1.nr10;
+    //nr10 &= 0x1F; // reset the current time value
+    //nr10 |= ts << 5; // set the new value
+    //synth->reg.ch1.nr10 = nr10;
 
     // TODO: update the oscillator
 

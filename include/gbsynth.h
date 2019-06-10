@@ -19,7 +19,15 @@
 #define GBS_MAX_FREQUENCY       0x7FF
 #define GBS_MAX_WAVE_LENGTH     0xFF
 
-#define gbs_convertFreq(freq) ((float)(131072.0f / (2048 - freq)))
+// defaults
+#define GBS_DEFAULT_FREQUENCY   0
+#define GBS_DEFAULT_DUTY        GBS_DUTY_75
+#define GBS_DEFAULT_ENV_STEPS   0
+#define GBS_DEFAULT_ENV_LENGTH  0
+#define GBS_DEFAULT_ENV_MODE    GBS_ENV_ATTENUATE
+#define GBS_DEFAULT_SWEEP_TIME  GBS_MAX_SWEEP_TIME
+#define GBS_DEFAULT_SWEEP_MODE  GBS_SWEEP_ADDITION
+#define GBS_DEFAULT_SWEEP_SHIFT 0
 
 
 typedef enum GbsErr {
@@ -104,7 +112,7 @@ typedef union GbsChRegUnion {
 
 typedef struct GbsSynth GbsSynth;
 
-GbsErr gbs_getRegisters(GbsSynth *synth, GbsChType chan, GbsChRegUnion *reg);
+GbsErr gbs_getRegisters(GbsSynth *synth, GbsChRegUnion *reg);
 
 // ========================================================
 // Synthesizer settings
@@ -200,7 +208,7 @@ GbsErr gbs_init(GbsSynth **synth, GbsChType channel, float samplingRate);
 
 GbsErr gbs_deinit(GbsSynth *synth);
 
-float gbs_currentSample(GbsSynth *synth, GbsChType chan);
+float gbs_currentSample(GbsSynth *synth);
 
 GbsErr gbs_tick(GbsSynth *synth);
 
