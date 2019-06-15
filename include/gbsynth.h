@@ -112,8 +112,6 @@ typedef union GbsChRegUnion {
 
 typedef struct GbsSynth GbsSynth;
 
-GbsErr gbs_getRegisters(GbsSynth *synth, GbsChRegUnion *reg);
-
 // ========================================================
 // Synthesizer settings
 // ========================================================
@@ -187,34 +185,88 @@ GbsErr gbs_ch4_setDrf(GbsSynth *synth, uint8_t drf);
 //
 // general settings
 //
+
+//
+// Set the waveform duty for the rectangle waveform generator.
+// Channels: 1, 2
+//
 GbsErr gbs_setDuty(GbsSynth *synth, GbsDuty duty);
 
+//
+// Sets the length that the synthesizer will output sound when started
+// This value is ignored if continuous output is set
+// Channels: 1, 2, 3, 4
+//
 GbsErr gbs_setLength(GbsSynth *synth, uint8_t length);
 
+//
+// Sets the current step of the envelope function. Must be an integer between
+// 0 and GBS_MAX_ENV_STEPS.
+// Channels: 1, 2, 4
+//
 GbsErr gbs_setEnvSteps(GbsSynth *synth, uint8_t steps);
 
+//
+// Sets the mode of the envelope function
+// Channels: 1, 2, 4
+//
 GbsErr gbs_setEnvMode(GbsSynth *synth, GbsEnvMode mode);
 
+//
+// Sets the length of time a step in the envelope takes. Must be an integer
+// between 0 and GBS_MAX_ENV_LENGTH. The duration, in seconds, is determined by
+// the formula: length / 64. If length is 0, then the envelope function does not occur. 
+//
 GbsErr gbs_setEnvLength(GbsSynth *synth, uint8_t length);
 
 GbsErr gbs_setFreq(GbsSynth *synth, uint16_t freq);
 
 
-//
-// synth
-//
+// ===========================================================================
+// Synthesizer Control
+// ===========================================================================
 
+//
+// Initialize a synth handle with the given channel and sampling rate. If successful,
+// the synth pointer will be set to a newly allocated GbsSynth struct, and is initialized
+// with default settings.
+//
 GbsErr gbs_init(GbsSynth **synth, GbsChType channel, float samplingRate);
 
+//
+// Free any resources used by the given synth handle.
+//
 GbsErr gbs_deinit(GbsSynth *synth);
 
+//
+// Get the current sample of the synthesizer
+//
 float gbs_currentSample(GbsSynth *synth);
 
+//
+// Encode the current settings of the synthesizer into the register union.
+// See the gameboy manual for the format of these registers
+//
+GbsErr gbs_getRegisters(GbsSynth* synth, GbsChRegUnion* reg);
+
+//
+// Simulate a single step of the synthesizer. A step is 1 sample of output. For example,
+// if the synthesizer sampling rate is 44100 Hz, it will take 44100 ticks to output
+// 1 second of sound.
+//
 GbsErr gbs_tick(GbsSynth *synth);
 
 //
 // utility functions
 //
+
+//
+// Convert a 11-bit gameboy frequency to hertz, as a float. If the given freq is larger than
+// the maximum, GBS_MAX_FREQUENCY, the maximum will be converted instead.
+//
 float gbs_freq(uint16_t freq);
 
+//
+// Inverse of gbs_freq. Converts a frequency, in hertz, to an 11-bit gameboy frequency.
+//
 uint16_t gbs_arcfreq(float freq);
