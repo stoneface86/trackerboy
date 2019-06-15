@@ -176,7 +176,14 @@ GbsErr gbs_ch4_setDrf(GbsSynth *synth, uint8_t drf) {
 GbsErr gbs_setDuty(GbsSynth *synth, GbsDuty duty) {
     NULLCHECK(synth);
 
-    return GBS_E_PARAMETER;
+    switch (synth->channel) {
+        case GBS_CH1:
+        case GBS_CH2:
+            square_setDuty(&synth->osc.square, duty);
+            return GBS_E_NONE;
+        default:
+            return GBS_E_WRONG_CHANNEL;
+    }
 }
 
 GbsErr gbs_setLength(GbsSynth *synth, uint8_t length) {
@@ -187,26 +194,59 @@ GbsErr gbs_setLength(GbsSynth *synth, uint8_t length) {
 
 GbsErr gbs_setEnvSteps(GbsSynth *synth, uint8_t steps) {
     NULLCHECK(synth);
+    if (steps > GBS_MAX_ENV_STEPS) {
+        return GBS_E_PARAMETER;
+    }
 
-    return GBS_E_PARAMETER;
+    if (synth->env != NULL) {
+        envelope_setStep(synth->env, steps);
+        return GBS_E_NONE;
+    } else {
+        return GBS_E_WRONG_CHANNEL;
+    }
 }
 
 GbsErr gbs_setEnvMode(GbsSynth *synth, GbsEnvMode mode) {
     NULLCHECK(synth);
-
-    return GBS_E_PARAMETER;
+    if (synth->env != NULL) {
+        envelope_setMode(synth->env, mode);
+        return GBS_E_NONE;
+    } else {
+        return GBS_E_WRONG_CHANNEL;
+    }
 }
 
 GbsErr gbs_setEnvLength(GbsSynth *synth, uint8_t length) {
     NULLCHECK(synth);
+    if (length > GBS_MAX_ENV_LENGTH) {
+        return GBS_E_PARAMETER;
+    }
 
-    return GBS_E_PARAMETER;
+    if (synth->env != NULL) {
+        envelope_setLength(synth->env, synth->samplingRate, length);
+        return GBS_E_NONE;
+    } else {
+        return GBS_E_WRONG_CHANNEL;
+    }
 }
 
 GbsErr gbs_setFreq(GbsSynth *synth, uint16_t freq) {
     NULLCHECK(synth);
 
-    return GBS_E_PARAMETER;
+    if (freq > GBS_MAX_FREQUENCY) {
+        return GBS_E_PARAMETER;
+    }
+
+    switch (synth->channel) {
+        case GBS_CH1:
+        case GBS_CH2:
+            square_setFrequency(&synth->osc.square, synth->samplingRate, freq);
+            return GBS_E_NONE;
+        case GBS_CH3:
+            return GBS_E_NONE;
+        default:
+            return GBS_E_WRONG_CHANNEL;
+    }
 }
 
 //
