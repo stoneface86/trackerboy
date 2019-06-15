@@ -34,7 +34,7 @@ float square_nextSample(SquareOsc *osc) {
     float sample = 0.0f;
 
     // output nothing if no frequency was set
-    if (osc->samplesPerPeriod == 0) {
+    if (osc->samplesPerPeriod != 0) {
 
         if (osc->counter < osc->samplesPerDuty) {
             sample = 1.0f;
