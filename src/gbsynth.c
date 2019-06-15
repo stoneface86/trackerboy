@@ -11,6 +11,7 @@
 #include <math.h>
 
 #include "square.h"
+#include "envelope.h"
 
 #define NULLCHECK(var) assert(var != NULL)
 
@@ -25,6 +26,7 @@ struct GbsSynth {
     GbsChType channel;
     float currentSample;
     OscUnion osc;
+    Envelope *env;
 };
 
 GbsErr gbs_init(GbsSynth **synthVar, GbsChType channel, float samplingRate) {
@@ -51,6 +53,18 @@ GbsErr gbs_init(GbsSynth **synthVar, GbsChType channel, float samplingRate) {
             break;
     }
 
+    // all channels have an envelope except for channel 3
+    if (channel == GBS_CH3) {
+        synth->env = NULL;
+    } else {
+        Envelope *env = (Envelope*)malloc(sizeof(Envelope));
+        if (env == NULL) {
+            free(synth);
+            return GBS_E_MEM;
+        }
+        envelope_init(env, samplingRate, GBS_DEFAULT_ENV_STEPS, GBS_DEFAULT_ENV_MODE, GBS_DEFAULT_ENV_LENGTH);
+    }
+
 
     *synthVar = synth;
     return GBS_E_NONE;
@@ -58,6 +72,9 @@ GbsErr gbs_init(GbsSynth **synthVar, GbsChType channel, float samplingRate) {
 
 GbsErr gbs_deinit(GbsSynth *synth) {
     NULLCHECK(synth);
+    if (synth->env != NULL) {
+        free(synth->env);
+    }
     free(synth);
     return GBS_E_NONE;
 }
