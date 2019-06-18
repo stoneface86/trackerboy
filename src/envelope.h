@@ -21,6 +21,8 @@ typedef struct Envelope {
 
 float envelope_apply(Envelope *env, float sample);
 
+void envelope_applyBuf(Envelope* env, float buf[], size_t nsamples);
+
 void envelope_init(Envelope *env, float samplingRate, uint8_t steps, GbsEnvMode mode, uint8_t length);
 
 void envelope_setStep(Envelope *env, uint8_t step);

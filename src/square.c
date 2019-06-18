@@ -8,6 +8,8 @@
 
 #include "square.h"
 
+#include <string.h>
+
 static const float DUTY_TABLE[] = {
     0.125f, 0.25f, 0.5f, 0.75f
 };
@@ -50,4 +52,23 @@ float square_nextSample(SquareOsc *osc) {
     
 
     return sample;
+}
+
+void square_fill(SquareOsc* osc, float buf[], size_t nsamples) {
+    // make sure we actually have work to do
+    float sample;
+    for (size_t i = 0; i != nsamples; ++i) {
+        if (osc->counter < osc->samplesPerDuty) {
+            sample = 1.0f;
+        } else {
+            sample = -1.0f;
+        }
+        buf[i] = sample;
+
+        // update counter
+        if (++osc->counter >= osc->samplesPerPeriod) {
+            osc->counter = 0;
+        }
+        
+    }
 }

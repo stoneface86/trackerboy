@@ -54,11 +54,37 @@ static float ENV_TIMING_TABLE[] = {
 
 
 float envelope_apply(Envelope *env, float sample) {
-    if (fabsf(sample) > env->value) {
-        // clamp the sample to the envelope
-        return env->value * copysignf(1.0f, sample);
-    } else {
-        return sample;
+    return sample * env->value;
+    //if (fabsf(sample) > env->value) {
+    //    // clamp the sample to the envelope
+    //    return env->value * copysignf(1.0f, sample);
+    //} else {
+    //    return sample;
+    //}
+}
+
+void envelope_applyBuf(Envelope* env, float buf[], size_t nsamples) {
+    bool newstep = false;
+    for (size_t i = 0; i != nsamples; ++i) {
+        buf[i] = buf[i] * env->value;
+        if (env->counter++ >= env->samplesPerStep) {
+            if (env->mode == GBS_ENV_AMPLIFY) {
+                if (env->stepCounter < GBS_MAX_ENV_STEPS) {
+                    ++env->stepCounter;
+                    newstep = true;
+                }
+            } else {
+                if (env->stepCounter > 0) {
+                    --env->stepCounter;
+                    newstep = true;
+                }
+            }
+
+            if (newstep) {
+                env->value = ENV_VALUE_TABLE[env->stepCounter];
+            }
+            env->counter = 0;
+        }
     }
 }
 
