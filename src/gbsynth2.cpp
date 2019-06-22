@@ -9,14 +9,14 @@ namespace gbsynth {
     
 
 
-    float freq(uint16_t freq) {
+    float fromGbFreq(uint16_t freq) {
         if (freq > MAX_FREQUENCY) {
             freq = MAX_FREQUENCY; // clamp
         }
         return 131072.0f / (2048 - freq);
     }
 
-    uint16_t arcfreq(float freq) {
+    uint16_t toGbFreq(float freq) {
 
         if (freq < 0) {
             return 0;

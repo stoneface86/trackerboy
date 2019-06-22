@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-#define calcSamplesPerPeriod(f) ((unsigned)roundf(samplingRate / freq(f)))
+#define calcSamplesPerPeriod(f) ((unsigned)roundf(samplingRate / f))
 #define calcSamplesPerDuty(duty) ((unsigned)roundf(samplesPerPeriod * DUTY_TABLE[duty]))
 
 namespace gbsynth {
@@ -23,7 +23,8 @@ namespace gbsynth {
         sweepTime = DEFAULT_SWEEP_TIME;
         sweepShift = DEFAULT_SWEEP_SHIFT;
 
-        samplesPerPeriod = calcSamplesPerPeriod(frequency);
+        float f = fromGbFreq(frequency);
+        samplesPerPeriod = calcSamplesPerPeriod(f);
         samplesPerDuty = calcSamplesPerDuty(duty);
         periodCounter = 0;
     }
@@ -48,7 +49,7 @@ namespace gbsynth {
     }
 
     void SquareChannel::getRegisters(ChRegUnion* reg) {
-
+        
     }
 
     void SquareChannel::reset() {
@@ -63,6 +64,13 @@ namespace gbsynth {
 
     void SquareChannel::setFrequency(uint16_t frequency) {
         this->frequency = frequency;
+        float f = fromGbFreq(frequency);
+        samplesPerPeriod = calcSamplesPerPeriod(f);
+        samplesPerDuty = calcSamplesPerDuty(duty);
+    }
+
+    void SquareChannel::setFrequency(float frequency) {
+        this->frequency = toGbFreq(frequency);
         samplesPerPeriod = calcSamplesPerPeriod(frequency);
         samplesPerDuty = calcSamplesPerDuty(duty);
     }

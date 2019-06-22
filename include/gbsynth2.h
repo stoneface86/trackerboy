@@ -161,6 +161,7 @@ namespace gbsynth {
         void getRegisters(ChRegUnion* reg) override;
         void setDuty(Duty duty);
         void setFrequency(uint16_t frequency);
+        void setFrequency(float frequency);
         void setSweepTime(uint8_t ts);
         void setSweepMode(SweepMode mode);
         void setSweepShift(uint8_t n);
@@ -180,8 +181,8 @@ namespace gbsynth {
 
     // utility functions
 
-    float freq(uint16_t value);
+    float fromGbFreq(uint16_t value);
 
-    uint16_t arcfreq(float value);
+    uint16_t toGbFreq(float value);
 
 }
