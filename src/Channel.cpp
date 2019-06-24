@@ -11,32 +11,43 @@ namespace gbsynth {
         continuous = true;
         samplesToOutput = 0;
         sampleCounter = 0;
+        enabled = true;
     }
 
 
     void Channel::fill(float buf[], size_t bufsize) {
-        size_t samplesToGenerate;
-        if (continuous) {
-            // continuous output, fill the entire buffer
-            samplesToGenerate = bufsize;
-        } else {
-            // not continuous, output until sampleCounter == samplesToOutput
-            // 0.0f will be outputted for rest of the buffer (if needed)
-            samplesToGenerate = samplesToOutput - sampleCounter;
-            if (samplesToGenerate > bufsize) {
+
+        size_t ngenerated = 0;
+
+        if (enabled) {
+            size_t samplesToGenerate;
+            if (continuous) {
+                // continuous output, fill the entire buffer
                 samplesToGenerate = bufsize;
             } else {
-                // zero fill the rest of the buffer
-                for (size_t i = samplesToGenerate; i != bufsize; ++i) {
-                    buf[i] = 0.0f;
+                // not continuous, output until sampleCounter == samplesToOutput
+                // 0.0f will be outputted for rest of the buffer (if needed)
+                samplesToGenerate = samplesToOutput - sampleCounter;
+                if (samplesToGenerate > bufsize) {
+                    samplesToGenerate = bufsize;
+                } else {
+                    enabled = false; // stop the sound, length reached
                 }
+                // update the counter
+                // cast is there is to silence warning
+                sampleCounter += (unsigned)samplesToGenerate;
             }
-            // update the counter
-            // cast is there is to silence warning
-            sampleCounter += (unsigned)samplesToGenerate;
+            // generate the signal
+            ngenerated = generate(buf, samplesToGenerate);
         }
-        // generate the signal
-        generate(buf, samplesToGenerate);
+
+        // zero fill the rest of the buffer WHEN:
+        // * sound was not continuous and the length was reached
+        // * the channel stopped generation early (ie square sweep overflow)
+        // * sound is disabled
+        for (size_t i = ngenerated; i != bufsize; ++i) {
+            buf[i] = 0.0f;
+        }
 
         /*float* bp = buf;
         float sample;

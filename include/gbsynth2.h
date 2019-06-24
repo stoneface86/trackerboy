@@ -107,10 +107,11 @@ namespace gbsynth {
         float samplingRate;
         uint8_t length;
         bool continuous;
+        bool enabled;
 
         Channel(float samplingRate);
 
-        virtual void generate(float buf[], size_t bufsize) = 0;
+        virtual size_t generate(float buf[], size_t bufsize) = 0;
     private:
         unsigned samplesToOutput;
         unsigned sampleCounter;
@@ -149,11 +150,13 @@ namespace gbsynth {
         uint8_t sweepShift;
         unsigned samplesPerDuty;
         unsigned samplesPerPeriod;
+        unsigned samplesPerSweep;
+        unsigned sweepCounter;
         unsigned periodCounter;
         bool sweepEnabled;
 
     protected:
-        void generate(float buf[], size_t nsamples) override;
+        size_t generate(float buf[], size_t nsamples) override;
 
     public:
         SquareChannel(float samplingRate, bool enableSweep);
