@@ -1,4 +1,4 @@
-#include "gbsynth2.h"
+#include "gbsynth.h"
 
 #include <cmath>
 
