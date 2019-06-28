@@ -118,6 +118,8 @@ namespace gbsynth {
     };
 
     class Channel {
+        unsigned samplesToOutput;
+        unsigned sampleCounter;
     
     public:
         virtual void getRegisters(ChRegUnion* regs) = 0;
@@ -134,15 +136,10 @@ namespace gbsynth {
 
         Channel(float samplingRate);
 
-        virtual size_t generate(uint8_t buf[], size_t bufsize) = 0;
-    private:
-        unsigned samplesToOutput;
-        unsigned sampleCounter;
-
+        virtual size_t generate(uint8_t buf[], size_t bufsize) = 0;  
     };
 
     class EnvChannel : public Channel {
-    private:
         unsigned samplesPerStep;
         unsigned stepCounter;
         unsigned envCounter;
@@ -153,6 +150,7 @@ namespace gbsynth {
         void setEnvMode(EnvMode mode);
         void setEnvLength(uint8_t length);
         virtual void reset() override;
+    
     protected:
         uint8_t envSteps;
         EnvMode envMode;
@@ -165,7 +163,6 @@ namespace gbsynth {
     };
 
     class SquareChannel : public EnvChannel {
-    private:
         uint16_t frequency;
         Duty duty;
         SweepMode sweepMode;
