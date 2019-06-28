@@ -54,7 +54,12 @@ namespace gbsynth {
         DEFAULT_ENV_MODE    = ENV_ATTENUATE,
         DEFAULT_SWEEP_TIME  = MAX_SWEEP_TIME,
         DEFAULT_SWEEP_MODE  = SWEEP_ADDITION,
-        DEFAULT_SWEEP_SHIFT = 0
+        DEFAULT_SWEEP_SHIFT = 0,
+
+        // sample values
+        SAMPLE_GND          = 0x8,
+        SAMPLE_MAX          = 0xF,
+        SAMPLE_MIN          = 0x0
     };
 
     struct Ch1Reg {
@@ -98,7 +103,7 @@ namespace gbsynth {
     
     public:
         virtual void getRegisters(ChRegUnion* regs) = 0;
-        void fill(float buf[], size_t bufsize);
+        void fill(uint8_t buf[], size_t bufsize);
         void setLength(uint8_t length);
         void setContinuousOutput(bool continuous);
         virtual void reset() = 0;
@@ -111,7 +116,7 @@ namespace gbsynth {
 
         Channel(float samplingRate);
 
-        virtual size_t generate(float buf[], size_t bufsize) = 0;
+        virtual size_t generate(uint8_t buf[], size_t bufsize) = 0;
     private:
         unsigned samplesToOutput;
         unsigned sampleCounter;
@@ -138,7 +143,7 @@ namespace gbsynth {
         EnvChannel(float samplingRate);
 
         uint8_t encodeEnvRegister();
-        void apply(float buf[], size_t bufsize);
+        void apply(uint8_t buf[], size_t bufsize);
     };
 
     class SquareChannel : public EnvChannel {
@@ -156,7 +161,7 @@ namespace gbsynth {
         bool sweepEnabled;
 
     protected:
-        size_t generate(float buf[], size_t nsamples) override;
+        size_t generate(uint8_t buf[], size_t nsamples) override;
 
     public:
         SquareChannel(float samplingRate, bool enableSweep);
@@ -187,5 +192,7 @@ namespace gbsynth {
     float fromGbFreq(uint16_t value);
 
     uint16_t toGbFreq(float value);
+
+    void bufToFloat(uint8_t input[], float output[], size_t nsamples);
 
 }

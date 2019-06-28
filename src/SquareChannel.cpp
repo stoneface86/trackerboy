@@ -44,14 +44,14 @@ namespace gbsynth {
         periodCounter = 0;
     }
 
-    size_t SquareChannel::generate(float buf[], size_t nsamples) {
+    size_t SquareChannel::generate(uint8_t buf[], size_t nsamples) {
         int32_t sweepfreq;
-        float sample;
+        uint8_t sample;
         for (size_t i = 0; i != nsamples; ++i) {
             if (periodCounter < samplesPerDuty) {
-                sample = 1.0f;
+                sample = SAMPLE_MAX;
             } else {
-                sample = -1.0f;
+                sample = SAMPLE_MIN;
             }
             buf[i] = sample;
 

@@ -59,11 +59,13 @@ namespace gbsynth {
 
     }
 
-    void EnvChannel::apply(float buf[], size_t bufsize) {
+    void EnvChannel::apply(uint8_t buf[], size_t bufsize) {
         if (envLength != 0) {
             // envelope is not applied when envLength == 0
             for (size_t i = 0; i != bufsize; ++i) {
-                buf[i] = buf[i] * envelope;
+                if (buf[i] > stepCounter) {
+                    buf[i] = stepCounter;
+                }
                 if (envCounter++ >= samplesPerStep) {
                     if (envMode == ENV_AMPLIFY) {
                         if (stepCounter < MAX_ENV_STEPS) {

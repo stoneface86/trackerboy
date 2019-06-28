@@ -15,7 +15,7 @@ namespace gbsynth {
     }
 
 
-    void Channel::fill(float buf[], size_t bufsize) {
+    void Channel::fill(uint8_t buf[], size_t bufsize) {
 
         size_t ngenerated = 0;
 
@@ -46,7 +46,7 @@ namespace gbsynth {
         // * the channel stopped generation early (ie square sweep overflow)
         // * sound is disabled
         for (size_t i = ngenerated; i != bufsize; ++i) {
-            buf[i] = 0.0f;
+            buf[i] = SAMPLE_GND;
         }
 
         /*float* bp = buf;
