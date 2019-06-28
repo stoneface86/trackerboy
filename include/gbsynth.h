@@ -2,8 +2,10 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 using std::uint8_t;
 using std::uint16_t;
+using std::vector;
 
 namespace gbsynth {
 
@@ -97,6 +99,22 @@ namespace gbsynth {
         Ch2Reg ch2;
         Ch3Reg ch3;
         Ch4Reg ch4;
+    };
+
+    class Oscillator {
+        vector<uint8_t> referencePeriod;
+        vector<uint8_t> period;
+        size_t counter;
+        float samplesPerPeriod;
+
+        void setPeriod();
+
+    public:
+        Oscillator(uint8_t waveform[], size_t nsamples);
+
+        void setFrequency(float samplingRate, float frequency);
+        void setWaveform(uint8_t waveform[], size_t nsamples);
+        void fill(uint8_t buf[], size_t nsamples);
     };
 
     class Channel {

@@ -11,6 +11,7 @@ set(GBSYNTH_SRC
 	"src/Channel.cpp" 
 	"src/EnvChannel.cpp"
 	"src/SquareChannel.cpp"
+	"src/Oscillator.cpp"
 )
 
 add_library(${GBSYNTH} STATIC ${GBSYNTH_SRC})
