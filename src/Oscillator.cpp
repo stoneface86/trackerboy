@@ -12,6 +12,7 @@ namespace gbsynth {
     Oscillator::Oscillator(uint8_t waveform[], size_t nsamples) {
         referencePeriod.assign(waveform, waveform + nsamples);
         period = referencePeriod;
+        samplesPerPeriod = nsamples;
         counter = 0;
     }
 
@@ -26,7 +27,7 @@ namespace gbsynth {
         setPeriod();
     }
 
-    void Oscillator::fill(uint8_t buf[], size_t nsamples) {
+    uint8_t* Oscillator::fill(uint8_t buf[], size_t nsamples) {
         size_t psize = period.size();
         size_t samplesToCopy = 0;
         if (counter != 0) {
@@ -34,12 +35,13 @@ namespace gbsynth {
             samplesToCopy = psize - counter;
             if (nsamples < samplesToCopy) {
                 samplesToCopy = nsamples;
-                counter += nsamples;
-            } else {
-                counter = 0;
             }
 
             copy_n(period.begin() + counter, samplesToCopy, buf);
+            counter += nsamples;
+            if (counter >= psize) {
+                counter = 0;
+            }
             buf += samplesToCopy;
         }
 
@@ -58,8 +60,18 @@ namespace gbsynth {
         if (remainder) {
             copy_n(period.begin(), remainder, buf);
             counter = remainder;
+            buf += remainder;
         }
+
+        return buf;
     }
+
+    void Oscillator::reset() {
+        counter = 0;
+    }
+
+
+    // === private methods ===
 
     void Oscillator::setPeriod() {
         size_t oldperiod = period.size();

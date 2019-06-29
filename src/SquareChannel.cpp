@@ -2,13 +2,25 @@
 #include "gbsynth.h"
 
 #include <cmath>
+#include <algorithm>
+
+using std::min;
 
 #define calcSamplesPerPeriod(f) ((unsigned)roundf(samplingRate / f))
 #define calcSamplesPerDuty(duty) ((unsigned)roundf(samplesPerPeriod * DUTY_TABLE[duty]))
 #define calcSamplesPerSweep(ts) ((unsigned)roundf(samplingRate * SWEEP_TIMING[ts]))
 #define calcSweepTime(ts) (ts / 128.0f)
 
+#define WAVE_SAMPLES 8
+
 namespace gbsynth {
+
+    static uint8_t WAVE_TABLE[][WAVE_SAMPLES] = {
+        {SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX},
+        {SAMPLE_MAX, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX},
+        {SAMPLE_MAX, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX},
+        {SAMPLE_MIN, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MIN}
+    };
 
     static const float DUTY_TABLE[] = {
         0.125f,
@@ -28,7 +40,10 @@ namespace gbsynth {
         calcSweepTime(7),
     };
 
-    SquareChannel::SquareChannel(float samplingRate, bool enableSweep) : EnvChannel(samplingRate) {
+    SquareChannel::SquareChannel(float samplingRate, bool enableSweep) : 
+        EnvChannel(samplingRate), 
+        osc(WAVE_TABLE[DEFAULT_DUTY], WAVE_SAMPLES) 
+    {
         sweepEnabled = enableSweep;
         frequency = DEFAULT_FREQUENCY;
         duty = (Duty)DEFAULT_DUTY;
@@ -36,32 +51,28 @@ namespace gbsynth {
         sweepTime = DEFAULT_SWEEP_TIME;
         sweepShift = DEFAULT_SWEEP_SHIFT;
 
-        float f = fromGbFreq(frequency);
-        samplesPerPeriod = calcSamplesPerPeriod(f);
-        samplesPerDuty = calcSamplesPerDuty(duty);
+        osc.setFrequency(samplingRate, fromGbFreq(frequency));
         samplesPerSweep = calcSamplesPerSweep(sweepTime);
         sweepCounter = 0;
-        periodCounter = 0;
     }
 
     size_t SquareChannel::generate(uint8_t buf[], size_t nsamples) {
-        int32_t sweepfreq;
-        uint8_t sample;
-        for (size_t i = 0; i != nsamples; ++i) {
-            if (periodCounter < samplesPerDuty) {
-                sample = SAMPLE_MAX;
-            } else {
-                sample = SAMPLE_MIN;
-            }
-            buf[i] = sample;
+        //int32_t sweepfreq;
+        //uint8_t sample;
 
-            //update counter
-            if (++periodCounter >= samplesPerPeriod) {
-                periodCounter = 0;
-            }
+        if (sweepEnabled) {
 
-            if (sweepEnabled && sweepTime != 0) {
-                if (++sweepCounter >= samplesPerSweep) {
+            size_t nfill = samplesPerSweep - sweepCounter;
+            uint8_t *bp = buf;
+            size_t count = 0;
+            int16_t sweepfreq;
+
+            while (count != nsamples) {
+                nfill = min(nfill, nsamples - count);
+                bp = osc.fill(bp, nfill);
+                count += nfill;
+                sweepCounter += nfill;
+                if (sweepCounter >= samplesPerSweep) {
                     sweepCounter = 0;
                     if (sweepShift != 0) {
                         sweepfreq = frequency >> sweepShift;
@@ -75,16 +86,20 @@ namespace gbsynth {
                             if (sweepfreq > MAX_FREQUENCY) {
                                 // sweep will overflow, stop the sound
                                 enabled = false;
-                                return i + 1;
+                                return count;
                             }
                         }
 
-                        
                         setFrequency((uint16_t)sweepfreq);
                     }
                 }
+                nfill = samplesPerSweep;
+                
             }
+        } else {
+            osc.fill(buf, nsamples);
         }
+
         // apply the envelope
         apply(buf, nsamples);
         return nsamples;
@@ -96,26 +111,24 @@ namespace gbsynth {
 
     void SquareChannel::reset() {
         EnvChannel::reset();
-        periodCounter = 0;
+        osc.reset();
         sweepCounter = 0;
     }
 
     void SquareChannel::setDuty(Duty duty) {
         this->duty = duty;
-        samplesPerDuty = calcSamplesPerDuty(duty);
+        osc.setWaveform(WAVE_TABLE[duty], WAVE_SAMPLES);
     }
 
     void SquareChannel::setFrequency(uint16_t frequency) {
         this->frequency = frequency;
         float f = fromGbFreq(frequency);
-        samplesPerPeriod = calcSamplesPerPeriod(f);
-        samplesPerDuty = calcSamplesPerDuty(duty);
+        osc.setFrequency(samplingRate, f);
     }
 
     void SquareChannel::setFrequency(float frequency) {
         this->frequency = toGbFreq(frequency);
-        samplesPerPeriod = calcSamplesPerPeriod(frequency);
-        samplesPerDuty = calcSamplesPerDuty(duty);
+        osc.setFrequency(samplingRate, frequency);
     }
 
     void SquareChannel::setSweepTime(uint8_t ts) {
@@ -135,6 +148,31 @@ namespace gbsynth {
             shift = MAX_SWEEP_SHIFT;
         }
         sweepShift = shift;
+    }
+
+    bool SquareChannel::doSweep() {
+        int16_t sweepfreq;
+        if (sweepShift != 0) {
+            sweepfreq = frequency >> sweepShift;
+            if (sweepMode == SWEEP_SUBTRACTION) {
+                sweepfreq = frequency - sweepfreq;
+                if (sweepfreq < 0) {
+                    sweepfreq = frequency; // no change
+                }
+            } else {
+                sweepfreq = frequency + sweepfreq;
+                if (sweepfreq > MAX_FREQUENCY) {
+                    // sweep will overflow, stop the sound
+                    enabled = false;
+                    return true;
+                }
+            }
+
+
+            setFrequency((uint16_t)sweepfreq);
+        }
+        
+        return false;
     }
 
 }

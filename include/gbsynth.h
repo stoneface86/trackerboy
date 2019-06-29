@@ -114,7 +114,8 @@ namespace gbsynth {
 
         void setFrequency(float samplingRate, float frequency);
         void setWaveform(uint8_t waveform[], size_t nsamples);
-        void fill(uint8_t buf[], size_t nsamples);
+        uint8_t* fill(uint8_t buf[], size_t nsamples);
+        void reset();
     };
 
     class Channel {
@@ -168,12 +169,17 @@ namespace gbsynth {
         SweepMode sweepMode;
         uint8_t sweepTime;
         uint8_t sweepShift;
-        unsigned samplesPerDuty;
-        unsigned samplesPerPeriod;
+
+        Oscillator osc;
+
+        //unsigned samplesPerDuty;
+        //unsigned samplesPerPeriod;
         unsigned samplesPerSweep;
         unsigned sweepCounter;
-        unsigned periodCounter;
+        //unsigned periodCounter;
         bool sweepEnabled;
+
+        bool doSweep();
 
     protected:
         size_t generate(uint8_t buf[], size_t nsamples) override;
