@@ -163,7 +163,7 @@ namespace gbsynth {
         void apply(uint8_t buf[], size_t bufsize);
     };
 
-    class SquareChannel : public EnvChannel {
+    class PulseChannel : public EnvChannel {
         uint16_t frequency;
         Duty duty;
         SweepMode sweepMode;
@@ -180,7 +180,7 @@ namespace gbsynth {
         size_t generate(uint8_t buf[], size_t nsamples) override;
 
     public:
-        SquareChannel(float samplingRate, bool enableSweep);
+        PulseChannel(float samplingRate, bool enableSweep);
 
         void getRegisters(ChRegUnion* reg) override;
         void setDuty(Duty duty);

@@ -10,7 +10,7 @@ set(GBSYNTH_SRC
 	"src/gbsynth.cpp" 
 	"src/Channel.cpp" 
 	"src/EnvChannel.cpp"
-	"src/SquareChannel.cpp"
+	"src/PulseChannel.cpp"
 	"src/Oscillator.cpp"
 )
 

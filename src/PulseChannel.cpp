@@ -35,7 +35,7 @@ namespace gbsynth {
         calcSweepTime(7),
     };
 
-    SquareChannel::SquareChannel(float samplingRate, bool enableSweep) : 
+    PulseChannel::PulseChannel(float samplingRate, bool enableSweep) : 
         EnvChannel(samplingRate), 
         osc(WAVE_TABLE[DEFAULT_DUTY], WAVE_SAMPLES) 
     {
@@ -51,7 +51,7 @@ namespace gbsynth {
         sweepCounter = 0;
     }
 
-    size_t SquareChannel::generate(uint8_t buf[], size_t nsamples) {
+    size_t PulseChannel::generate(uint8_t buf[], size_t nsamples) {
         //int32_t sweepfreq;
         //uint8_t sample;
 
@@ -100,33 +100,33 @@ namespace gbsynth {
         return nsamples;
     }
 
-    void SquareChannel::getRegisters(ChRegUnion* reg) {
+    void PulseChannel::getRegisters(ChRegUnion* reg) {
         
     }
 
-    void SquareChannel::reset() {
+    void PulseChannel::reset() {
         EnvChannel::reset();
         osc.reset();
         sweepCounter = 0;
     }
 
-    void SquareChannel::setDuty(Duty duty) {
+    void PulseChannel::setDuty(Duty duty) {
         this->duty = duty;
         osc.setWaveform(WAVE_TABLE[duty], WAVE_SAMPLES);
     }
 
-    void SquareChannel::setFrequency(uint16_t frequency) {
+    void PulseChannel::setFrequency(uint16_t frequency) {
         this->frequency = frequency;
         float f = fromGbFreq(frequency);
         osc.setFrequency(samplingRate, f);
     }
 
-    void SquareChannel::setFrequency(float frequency) {
+    void PulseChannel::setFrequency(float frequency) {
         this->frequency = toGbFreq(frequency);
         osc.setFrequency(samplingRate, frequency);
     }
 
-    void SquareChannel::setSweepTime(uint8_t ts) {
+    void PulseChannel::setSweepTime(uint8_t ts) {
         if (ts > MAX_SWEEP_TIME) {
             ts = MAX_SWEEP_TIME;
         }
@@ -134,11 +134,11 @@ namespace gbsynth {
         samplesPerSweep = calcSamplesPerSweep(ts);
     }
 
-    void SquareChannel::setSweepMode(SweepMode mode) {
+    void PulseChannel::setSweepMode(SweepMode mode) {
         sweepMode = mode;
     }
 
-    void SquareChannel::setSweepShift(uint8_t shift) {
+    void PulseChannel::setSweepShift(uint8_t shift) {
         if (shift > MAX_SWEEP_SHIFT) {
             shift = MAX_SWEEP_SHIFT;
         }
