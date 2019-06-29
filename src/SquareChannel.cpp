@@ -6,8 +6,6 @@
 
 using std::min;
 
-#define calcSamplesPerPeriod(f) ((unsigned)roundf(samplingRate / f))
-#define calcSamplesPerDuty(duty) ((unsigned)roundf(samplesPerPeriod * DUTY_TABLE[duty]))
 #define calcSamplesPerSweep(ts) ((unsigned)roundf(samplingRate * SWEEP_TIMING[ts]))
 #define calcSweepTime(ts) (ts / 128.0f)
 
@@ -16,17 +14,14 @@ using std::min;
 namespace gbsynth {
 
     static uint8_t WAVE_TABLE[][WAVE_SAMPLES] = {
+        // Duty 12.5%:  00000001
         {SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX},
+        // Duty 25%:    10000001
         {SAMPLE_MAX, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX},
+        // Duty 50%:    10000111
         {SAMPLE_MAX, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX},
+        // Duty 75%:    01111110
         {SAMPLE_MIN, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MIN}
-    };
-
-    static const float DUTY_TABLE[] = {
-        0.125f,
-        0.25f,
-        0.5f,
-        0.75f
     };
 
     static const float SWEEP_TIMING[] = {
@@ -148,31 +143,6 @@ namespace gbsynth {
             shift = MAX_SWEEP_SHIFT;
         }
         sweepShift = shift;
-    }
-
-    bool SquareChannel::doSweep() {
-        int16_t sweepfreq;
-        if (sweepShift != 0) {
-            sweepfreq = frequency >> sweepShift;
-            if (sweepMode == SWEEP_SUBTRACTION) {
-                sweepfreq = frequency - sweepfreq;
-                if (sweepfreq < 0) {
-                    sweepfreq = frequency; // no change
-                }
-            } else {
-                sweepfreq = frequency + sweepfreq;
-                if (sweepfreq > MAX_FREQUENCY) {
-                    // sweep will overflow, stop the sound
-                    enabled = false;
-                    return true;
-                }
-            }
-
-
-            setFrequency((uint16_t)sweepfreq);
-        }
-        
-        return false;
     }
 
 }

@@ -172,14 +172,9 @@ namespace gbsynth {
 
         Oscillator osc;
 
-        //unsigned samplesPerDuty;
-        //unsigned samplesPerPeriod;
         unsigned samplesPerSweep;
         unsigned sweepCounter;
-        //unsigned periodCounter;
         bool sweepEnabled;
-
-        bool doSweep();
 
     protected:
         size_t generate(uint8_t buf[], size_t nsamples) override;
