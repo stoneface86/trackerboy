@@ -123,7 +123,7 @@ namespace gbsynth {
         unsigned sampleCounter;
     
     public:
-        virtual void getRegisters(ChRegUnion* regs) = 0;
+        virtual void getRegisters(ChRegUnion &reg) = 0;
         void fill(uint8_t buf[], size_t bufsize);
         void setLength(uint8_t length);
         void setContinuousOutput(bool continuous);
@@ -182,7 +182,7 @@ namespace gbsynth {
     public:
         PulseChannel(float samplingRate, bool enableSweep);
 
-        void getRegisters(ChRegUnion* reg) override;
+        void getRegisters(ChRegUnion &reg) override;
         void setDuty(Duty duty);
         void setFrequency(uint16_t frequency);
         void setFrequency(float frequency);
