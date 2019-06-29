@@ -36,8 +36,7 @@ namespace gbsynth {
     };
 
     PulseChannel::PulseChannel(float samplingRate, bool enableSweep) : 
-        EnvChannel(samplingRate), 
-        osc(WAVE_TABLE[DEFAULT_DUTY], WAVE_SAMPLES) 
+        EnvChannel(samplingRate)
     {
         sweepEnabled = enableSweep;
         frequency = DEFAULT_FREQUENCY;
@@ -47,6 +46,7 @@ namespace gbsynth {
         sweepShift = DEFAULT_SWEEP_SHIFT;
 
         osc.setFrequency(samplingRate, fromGbFreq(frequency));
+        osc.setWaveform(WAVE_TABLE[duty], WAVE_SAMPLES);
         samplesPerSweep = calcSamplesPerSweep(sweepTime);
         sweepCounter = 0;
     }

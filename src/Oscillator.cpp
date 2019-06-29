@@ -9,10 +9,11 @@ using std::copy_n;
 
 namespace gbsynth {
 
-    Oscillator::Oscillator(uint8_t waveform[], size_t nsamples) {
-        referencePeriod.assign(waveform, waveform + nsamples);
+    Oscillator::Oscillator() {
+        // output nothing as default
+        referencePeriod.push_back(SAMPLE_GND);
         period = referencePeriod;
-        samplesPerPeriod = (float)nsamples;
+        samplesPerPeriod = 1.0f;
         counter = 0;
     }
 

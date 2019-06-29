@@ -110,7 +110,7 @@ namespace gbsynth {
         void setPeriod();
 
     public:
-        Oscillator(uint8_t waveform[], size_t nsamples);
+        Oscillator();
 
         void setFrequency(float samplingRate, float frequency);
         void setWaveform(uint8_t waveform[], size_t nsamples);
