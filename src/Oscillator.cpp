@@ -12,7 +12,7 @@ namespace gbsynth {
     Oscillator::Oscillator(uint8_t waveform[], size_t nsamples) {
         referencePeriod.assign(waveform, waveform + nsamples);
         period = referencePeriod;
-        samplesPerPeriod = nsamples;
+        samplesPerPeriod = (float)nsamples;
         counter = 0;
     }
 

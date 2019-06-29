@@ -66,7 +66,7 @@ namespace gbsynth {
                 nfill = min(nfill, nsamples - count);
                 bp = osc.fill(bp, nfill);
                 count += nfill;
-                sweepCounter += nfill;
+                sweepCounter += (unsigned)nfill; // cast to silence warning
                 if (sweepCounter >= samplesPerSweep) {
                     sweepCounter = 0;
                     if (sweepShift != 0) {
