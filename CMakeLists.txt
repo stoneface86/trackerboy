@@ -10,8 +10,9 @@ set(GBSYNTH_SRC
 	"src/gbsynth.cpp" 
 	"src/Channel.cpp" 
 	"src/EnvChannel.cpp"
-	"src/PulseChannel.cpp"
 	"src/Oscillator.cpp"
+	"src/PulseChannel.cpp"
+	"src/WaveChannel.cpp"
 )
 
 add_library(${GBSYNTH} STATIC ${GBSYNTH_SRC})

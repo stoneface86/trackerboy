@@ -57,11 +57,16 @@ namespace gbsynth {
         DEFAULT_SWEEP_TIME  = MAX_SWEEP_TIME,
         DEFAULT_SWEEP_MODE  = SWEEP_ADDITION,
         DEFAULT_SWEEP_SHIFT = 0,
+        DEFAULT_WAVE_LEVEL  = WAVE_WHOLE, 
 
         // sample values
         SAMPLE_GND          = 0x8,
         SAMPLE_MAX          = 0xF,
-        SAMPLE_MIN          = 0x0
+        SAMPLE_MIN          = 0x0,
+
+        // # of entries in waveform ram (sound3)
+        WAVE_SIZE           = 32,
+        WAVE_RAMSIZE        = 16
     };
 
     struct Ch1Reg {
@@ -194,7 +199,25 @@ namespace gbsynth {
 
     };
 
-    class WaveChannel : Channel {
+    class WaveChannel : public Channel {
+        WaveformLevel outputLevel;
+        uint16_t frequency;
+        uint8_t wavedata[WAVE_RAMSIZE];
+
+        Oscillator osc;
+
+    protected:
+        size_t generate(uint8_t buf[], size_t nsamples) override;
+
+    public:
+        WaveChannel(float samplingRate);
+
+        void getRegisters(ChRegUnion &reg) override;
+        void setOutputLevel(WaveformLevel level);
+        void setFrequency(uint16_t frequency);
+        void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
+
+        void reset() override;
 
     };
 
