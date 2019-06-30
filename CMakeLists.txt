@@ -7,11 +7,16 @@ project(gbsynth CXX)
 
 set(GBSYNTH "gbsynth")
 set(GBSYNTH_SRC 
-	"src/gbsynth.cpp" 
 	"src/Channel.cpp" 
 	"src/EnvChannel.cpp"
-	"src/Oscillator.cpp"
+	"src/FreqChannel.cpp"
+	"src/gbsynth.cpp" 
+	"src/Mixer.cpp"
+	"src/NoiseChannel.cpp"
 	"src/PulseChannel.cpp"
+	"src/Sequencer.cpp"
+	"src/Sweep.cpp"
+	"src/Synth.cpp"
 	"src/WaveChannel.cpp"
 )
 

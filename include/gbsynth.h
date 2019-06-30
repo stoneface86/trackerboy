@@ -171,12 +171,13 @@ namespace gbsynth {
     protected:
         uint16_t frequency;
     public:
+        FreqChannel();
+
         void setFrequency(uint16_t frequency);
         void setFrequency(float frequency);
     };
 
     class PulseChannel : public EnvChannel, public FreqChannel {
-        uint16_t frequency;
         Duty duty;
   
     public:
