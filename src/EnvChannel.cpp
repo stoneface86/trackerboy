@@ -15,8 +15,7 @@ namespace gbsynth {
     }
 
     uint8_t EnvChannel::apply(uint8_t sample) {
-        // TODO
-        return 0;
+        return (sample > envelope) ? envelope : sample;
     }
 
     void EnvChannel::setEnvLength(uint8_t length) {
@@ -35,11 +34,26 @@ namespace gbsynth {
             step = MAX_ENV_STEPS;
         }
         envSteps = step;
-        envCounter = step;
     }
 
     void EnvChannel::envStep() {
-        // TODO
+        if (envLength) {
+            // do nothing if envLength == 0
+            if (envCounter == envLength) {
+                envCounter = 0;
+                if (envMode == ENV_AMPLIFY) {
+                    if (envelope < SAMPLE_MAX) {
+                        ++envelope;
+                    }
+                } else {
+                    if (envelope > SAMPLE_MIN) {
+                        --envelope;
+                    }
+                }
+            } else {
+                ++envCounter;
+            }
+        }
     }
     
     /*uint8_t EnvChannel::encodeEnvRegister() {
@@ -52,8 +66,8 @@ namespace gbsynth {
 
     void EnvChannel::reset() {
         Channel::reset();
-        envCounter = envSteps;
-        
+        envelope = envSteps;
+        envCounter = 0;
     }
 
 }
