@@ -38,6 +38,20 @@ namespace gbsynth {
         WAVE_QUARTER = 3
     };
 
+    enum Terminal {
+        TERM_S01,
+        TERM_S02,
+        TERM_LEFT = TERM_S01,   // todo: verify that s01 = left
+        TERM_RIGHT = TERM_S02
+    };
+
+    enum ChType {
+        CH_SOUND1 = 0,
+        CH_SOUND2 = 1,
+        CH_SOUND3 = 2,
+        CH_SOUND4 = 3
+    };
+
     enum Constants {
         // maximum values for parameters
         MAX_SWEEP_TIME      = 0x7,
@@ -47,6 +61,7 @@ namespace gbsynth {
         MAX_ENV_LENGTH      = 0x7,
         MAX_FREQUENCY       = 0x7FF,
         MAX_WAVE_LENGTH     = 0xFF,
+        MAX_VOLUME          = 0x7,
 
         // defaults
         DEFAULT_FREQUENCY   = 0,
@@ -243,7 +258,16 @@ namespace gbsynth {
 
     class Mixer {
         ChannelFile &cf;
+        bool terminalEnable[2];
+        uint8_t terminalVolumes[2];
+        uint8_t outputStat;
 
+    public:
+        Mixer(ChannelFile &cf);
+
+        void setTerminalEnable(Terminal term, bool enabled);
+        void setTerminalVolume(Terminal term, uint8_t volume);
+        void setEnable(ChType ch, Terminal term, bool enabled);
     };
 
     class Synth {
