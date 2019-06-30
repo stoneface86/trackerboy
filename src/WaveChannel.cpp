@@ -24,8 +24,9 @@ namespace gbsynth {
         // TODO
     }
 
-    void WaveChannel::step() {
+    uint8_t WaveChannel::generate() {
         // TODO
+        return 0;
     }
 
 }

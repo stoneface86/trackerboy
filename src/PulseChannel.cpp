@@ -54,8 +54,9 @@ namespace gbsynth {
         this->duty = duty;
     }
 
-    void PulseChannel::step() {
+    uint8_t PulseChannel::generate() {
         // TODO
+        return 0;
     }
 
 }

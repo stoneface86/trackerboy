@@ -14,13 +14,12 @@ namespace gbsynth {
     }
 
     uint8_t Channel::getCurrentSample() {
-        // TODO
-        return 0;
+        return enabled ? currentSample : SAMPLE_MIN;
     }
 
     float Channel::getCurrentVolume() {
-        // TODO
-        return 0.0f;
+        // convert current sample to a value between 0.0f and 1.0f
+        return enabled ? (currentSample / (float)SAMPLE_MAX) : 0.0f;
     }
 
     void Channel::setLength(uint8_t length) {
@@ -35,10 +34,27 @@ namespace gbsynth {
     }
 
     void Channel::lengthStep() {
-        // TODO
+        if (!continuous) {
+            if (lengthCounter == 0) {
+                enabled = false;
+            } else {
+                --lengthCounter;
+            }  
+        }
     }
 
     void Channel::reset() {
-        // TODO
+        lengthCounter = length;
+        enabled = true;
+        currentSample = SAMPLE_MIN;
     }
+
+    void Channel::step() {
+        currentSample = generate();
+    }
+
+    void Channel::disable() {
+        enabled = false;
+    }
+
 }

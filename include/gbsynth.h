@@ -126,6 +126,11 @@ namespace gbsynth {
     class Channel {
         uint8_t lengthCounter;
 
+        uint8_t currentSample;
+        uint8_t length;
+        bool continuous;
+        bool enabled;
+
     public:
         uint8_t getCurrentSample();
         float getCurrentVolume();
@@ -133,17 +138,14 @@ namespace gbsynth {
         void setContinuousOutput(bool continuous);
         void lengthStep();
         virtual void reset();
-        virtual void step() = 0;
+        void step();
 
     protected:
-        uint8_t currentSample;
-        uint8_t length;
-        bool continuous;
-        bool enabled;
 
         Channel();
 
-        
+        void disable();
+        virtual uint8_t generate() = 0;
     };
 
     class EnvChannel : public Channel {
@@ -185,7 +187,9 @@ namespace gbsynth {
 
         void setDuty(Duty duty);
         void reset() override;
-        void step() override;
+    
+    protected:
+        uint8_t generate() override;
     };
 
     class WaveChannel : public Channel, public FreqChannel {
@@ -199,7 +203,9 @@ namespace gbsynth {
         void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
 
         void reset() override;
-        void step() override;
+
+    protected:
+        uint8_t generate() override;
     };
 
     class NoiseChannel : public EnvChannel {
@@ -215,7 +221,9 @@ namespace gbsynth {
         void setDrf(uint8_t drf);
 
         void reset() override;
-        void step() override;
+
+    protected:
+        uint8_t generate() override;
     };
 
 

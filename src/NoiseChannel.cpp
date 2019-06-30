@@ -23,8 +23,9 @@ namespace gbsynth {
         // TODO
     }
 
-    void NoiseChannel::step() {
+    uint8_t NoiseChannel::generate() {
         // TODO
+        return 0;
     }
 
 }
