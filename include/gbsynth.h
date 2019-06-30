@@ -106,123 +106,163 @@ namespace gbsynth {
         Ch4Reg ch4;
     };
 
-    class Oscillator {
-        vector<uint8_t> referencePeriod;
-        vector<uint8_t> period;
-        size_t counter;
-        float samplesPerPeriod;
-
-        void setPeriod();
-
-    public:
-        Oscillator();
-
-        void setFrequency(float samplingRate, float frequency);
-        void setWaveform(uint8_t waveform[], size_t nsamples);
-        uint8_t* fill(uint8_t buf[], size_t nsamples);
-        void reset();
-    };
+   
 
     class Channel {
-        unsigned samplesToOutput;
-        unsigned sampleCounter;
-    
+        uint8_t lengthCounter;
+
     public:
-        virtual void getRegisters(ChRegUnion &reg) = 0;
-        void fill(uint8_t buf[], size_t bufsize);
+        uint8_t getCurrentSample();
+        float getCurrentVolume();
         void setLength(uint8_t length);
         void setContinuousOutput(bool continuous);
-        virtual void reset() = 0;
+        void lengthStep();
+        virtual void reset();
+        virtual void step() = 0;
 
     protected:
-        float samplingRate;
+        uint8_t currentSample;
         uint8_t length;
         bool continuous;
         bool enabled;
 
-        Channel(float samplingRate);
+        Channel();
 
-        virtual size_t generate(uint8_t buf[], size_t bufsize) = 0;  
+        
     };
 
     class EnvChannel : public Channel {
-        unsigned samplesPerStep;
-        unsigned stepCounter;
-        unsigned envCounter;
-        float envelope;
+        uint8_t envCounter;
+        uint8_t envelope;
 
     public:
         void setEnvStep(uint8_t step);
         void setEnvMode(EnvMode mode);
         void setEnvLength(uint8_t length);
+        void envStep();
         virtual void reset() override;
-    
+
     protected:
         uint8_t envSteps;
         EnvMode envMode;
         uint8_t envLength;
 
-        EnvChannel(float samplingRate);
+        EnvChannel();
 
-        uint8_t encodeEnvRegister();
-        void apply(uint8_t buf[], size_t bufsize);
+        uint8_t apply(uint8_t sample);
     };
 
-    class PulseChannel : public EnvChannel {
+    class FreqChannel {
+    protected:
+        uint16_t frequency;
+    public:
+        void setFrequency(uint16_t frequency);
+        void setFrequency(float frequency);
+    };
+
+    class PulseChannel : public EnvChannel, public FreqChannel {
         uint16_t frequency;
         Duty duty;
+  
+    public:
+        PulseChannel();
+
+        void setDuty(Duty duty);
+        void reset() override;
+        void step() override;
+    };
+
+    class WaveChannel : public Channel, public FreqChannel {
+        WaveformLevel outputLevel;
+        uint8_t wavedata[WAVE_RAMSIZE];
+
+    public:
+        WaveChannel();
+
+        void setOutputLevel(WaveformLevel level);
+        void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
+
+        void reset() override;
+        void step() override;
+    };
+
+    class NoiseChannel : public EnvChannel {
+        uint8_t scf;
+        StepCount stepSelection;
+        uint8_t drf;
+        
+    public:
+        NoiseChannel();
+
+        void setScf(uint8_t scf);
+        void setStepSelection(StepCount count);
+        void setDrf(uint8_t drf);
+
+        void reset() override;
+        void step() override;
+    };
+
+
+    class Sweep {
         SweepMode sweepMode;
         uint8_t sweepTime;
         uint8_t sweepShift;
 
-        Oscillator osc;
+        PulseChannel &ch;
 
-        unsigned samplesPerSweep;
-        unsigned sweepCounter;
-        bool sweepEnabled;
-
-    protected:
-        size_t generate(uint8_t buf[], size_t nsamples) override;
+        uint8_t counter;
 
     public:
-        PulseChannel(float samplingRate, bool enableSweep);
+        Sweep(PulseChannel &ch);
 
-        void getRegisters(ChRegUnion &reg) override;
-        void setDuty(Duty duty);
-        void setFrequency(uint16_t frequency);
-        void setFrequency(float frequency);
         void setSweepTime(uint8_t ts);
         void setSweepMode(SweepMode mode);
         void setSweepShift(uint8_t n);
-
-        void reset() override;
-
+        void reset();
+        void step();
     };
 
-    class WaveChannel : public Channel {
-        WaveformLevel outputLevel;
-        uint16_t frequency;
-        uint8_t wavedata[WAVE_RAMSIZE];
+    struct ChannelFile {
+        PulseChannel ch1;
+        PulseChannel ch2;
+        WaveChannel ch3;
+        NoiseChannel ch4;
+    };
 
-        Oscillator osc;
-
-    protected:
-        size_t generate(uint8_t buf[], size_t nsamples) override;
+    class Sequencer {
+        unsigned counter;
+        Sweep &sweep;
+        ChannelFile &cf;
 
     public:
-        WaveChannel(float samplingRate);
+        Sequencer(ChannelFile &cf, Sweep &sweep);
 
-        void getRegisters(ChRegUnion &reg) override;
-        void setOutputLevel(WaveformLevel level);
-        void setFrequency(uint16_t frequency);
-        void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
+        void step();
+        void reset();
+    };
 
-        void reset() override;
+    class Mixer {
+        ChannelFile &cf;
 
     };
 
-    class NoiseChannel : EnvChannel {
+    class Synth {
+        Sweep sweep;
+        ChannelFile cf;
+        Mixer mixer;
+        Sequencer sequencer;
 
+        float samplingRate;
+
+    public:
+        Synth(float samplingRate);
+
+        Sweep& getSweep();
+        ChannelFile& getChannels();
+        Mixer& getMixer();
+        Sequencer& getSequencer();
+
+        void fill(float leftBuf[], float rightBuf[], size_t nsamples);
     };
 
 
