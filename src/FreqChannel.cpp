@@ -5,15 +5,15 @@
 namespace gbsynth {
 
     FreqChannel::FreqChannel() {
-        // TODO
+        frequency = DEFAULT_FREQUENCY;
     }
 
     void FreqChannel::setFrequency(uint16_t frequency) {
-        // TODO
+        this->frequency = frequency;
     }
 
     void FreqChannel::setFrequency(float frequency) {
-        // TODO
+        this->frequency = toGbFreq(frequency);
     }
 
 }
