@@ -7,7 +7,6 @@ namespace gbsynth {
     Synth::Synth(float samplingRate) :
         cf(),
         sweep(cf.ch1),
-        mixer(cf),
         sequencer(cf, sweep)
     {
         // TODO

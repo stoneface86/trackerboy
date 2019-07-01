@@ -72,7 +72,9 @@ namespace gbsynth {
         DEFAULT_SWEEP_TIME  = MAX_SWEEP_TIME,
         DEFAULT_SWEEP_MODE  = SWEEP_ADDITION,
         DEFAULT_SWEEP_SHIFT = 0,
-        DEFAULT_WAVE_LEVEL  = WAVE_WHOLE, 
+        DEFAULT_WAVE_LEVEL  = WAVE_WHOLE,
+        DEFAULT_TERM_ENABLE = false,
+        DEFAULT_TERM_VOLUME = MAX_VOLUME,
 
         // sample values
         SAMPLE_GND          = 0x8,
@@ -181,7 +183,10 @@ namespace gbsynth {
 
     class PulseChannel : public EnvChannel, public FreqChannel {
         Duty duty;
-  
+        uint16_t periodCounter;
+        uint8_t dutyCounter;
+        uint8_t nextsample;
+
     public:
         PulseChannel();
 
@@ -266,17 +271,18 @@ namespace gbsynth {
     };
 
     class Mixer {
-        ChannelFile &cf;
         bool terminalEnable[2];
         uint8_t terminalVolumes[2];
         uint8_t outputStat;
 
     public:
-        Mixer(ChannelFile &cf);
+        Mixer();
 
         void setTerminalEnable(Terminal term, bool enabled);
         void setTerminalVolume(Terminal term, uint8_t volume);
         void setEnable(ChType ch, Terminal term, bool enabled);
+
+        void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
     };
 
     class Synth {

@@ -1,22 +1,98 @@
 
 #include "gbsynth.h"
 
+// each channel has a maximum volume of 0.2, so maximum volume of all channels is 0.8
+#define VOL_MULTIPLIER 0.2f
+
+enum OutputStat {
+    CTRL_SOUND1_LEFT = 0x1,
+    CTRL_SOUND2_LEFT = 0x2,
+    CTRL_SOUND3_LEFT = 0x4,
+    CTRL_SOUND4_LEFT = 0x8,
+    CTRL_SOUND1_RIGHT = 0x10,
+    CTRL_SOUND2_RIGHT = 0x20,
+    CTRL_SOUND3_RIGHT = 0x40,
+    CTRL_SOUND4_RIGHT = 0x80
+};
+
 namespace gbsynth {
 
-    Mixer::Mixer(ChannelFile &cf) : cf(cf) {
-        // TODO
+    static const float VOLUME_TABLE[] = {
+        0.125f,
+        0.25f,
+        0.375f,
+        0.5f,
+        0.625f,
+        0.75f,
+        0.875f,
+        1.0f,
+    };
+
+
+    Mixer::Mixer() {
+        for (size_t i = 0; i != 2; ++i) {
+            terminalEnable[i] = DEFAULT_TERM_ENABLE;
+            terminalVolumes[i] = DEFAULT_TERM_VOLUME;
+        }
+        outputStat = 0; // all off
+    }
+
+    void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
+        float left = 0.0f, right = 0.0f;
+        if (terminalEnable[TERM_LEFT]) {
+            if (outputStat & CTRL_SOUND1_LEFT) {
+                left += in1 * VOL_MULTIPLIER;
+            }
+            if (outputStat & CTRL_SOUND2_LEFT) {
+                left += in2 * VOL_MULTIPLIER;
+            }
+            if (outputStat & CTRL_SOUND3_LEFT) {
+                left += in3 * VOL_MULTIPLIER;
+            }
+            if (outputStat & CTRL_SOUND4_LEFT) {
+                left += in4 * VOL_MULTIPLIER;
+            }
+        }
+        if (terminalEnable[TERM_RIGHT]) {
+            if (outputStat & CTRL_SOUND1_RIGHT) {
+                right += in1 * VOL_MULTIPLIER;
+            }
+            if (outputStat & CTRL_SOUND2_RIGHT) {
+                right += in2 * VOL_MULTIPLIER;
+            }
+            if (outputStat & CTRL_SOUND3_RIGHT) {
+                right += in3 * VOL_MULTIPLIER;
+            }
+            if (outputStat & CTRL_SOUND4_RIGHT) {
+                right += in4 * VOL_MULTIPLIER;
+            }
+        }
+        outLeft = left * VOLUME_TABLE[terminalVolumes[TERM_LEFT]];
+        outRight = right * VOLUME_TABLE[terminalVolumes[TERM_RIGHT]];
     }
 
     void Mixer::setTerminalEnable(Terminal term, bool enabled) {
-        // TODO
+        terminalEnable[term] = enabled;
     }
 
     void Mixer::setTerminalVolume(Terminal term, uint8_t volume) {
-        // TODO
+        if (volume > MAX_VOLUME) {
+            volume = MAX_VOLUME;
+        }
+        terminalVolumes[term] = volume;
     }
 
     void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
-        // TODO
+        uint8_t flag = 1 << ch;
+        if (term == TERM_S02) {
+            flag <<= 4;
+        }
+
+        if (enabled) {
+            outputStat |= flag;
+        } else {
+            outputStat &= ~flag;
+        }
     }
 
 
