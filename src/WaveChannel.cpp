@@ -18,6 +18,7 @@ namespace gbsynth {
 
     void WaveChannel::reset() {
         waveIndex = 0;
+        freqCounter = 0;
     }
 
     void WaveChannel::setOutputLevel(WaveformLevel level) {
@@ -29,8 +30,18 @@ namespace gbsynth {
     }
 
     uint8_t WaveChannel::generate(unsigned cycles) {
-        
-        return 0;
+        freqCounter += cycles;
+        unsigned wavesteps = freqCounter / freqCounterMax;
+        freqCounter %= freqCounterMax;
+        waveIndex = (waveIndex + wavesteps) & 0x1F; // & 0x1F == % 32
+        uint8_t sample = wavedata[waveIndex >> 1];
+        if (waveIndex & 1) {
+            // odd number, low nibble
+            return sample & 0xF;
+        } else {
+            // even number, high nibble
+            return sample >> 4;
+        }
     }
 
 }
