@@ -173,13 +173,15 @@ namespace gbsynth {
     };
 
     class FreqChannel {
+        unsigned multiplier;
+
     protected:
         uint16_t frequency;
-
-        virtual void frequencyChanged();
+        unsigned freqCounter;
+        unsigned freqCounterMax;
 
     public:
-        FreqChannel();
+        FreqChannel(unsigned multiplier);
 
         void setFrequency(uint16_t frequency);
         void setFrequency(float frequency);
@@ -187,8 +189,6 @@ namespace gbsynth {
 
     class PulseChannel : public EnvChannel, public FreqChannel {
         Duty duty;
-        unsigned freqCounter;
-        unsigned freqCounterMax;
         unsigned dutyCounter;
 
     public:
@@ -198,7 +198,6 @@ namespace gbsynth {
         void reset() override;
 
     protected:
-        void frequencyChanged() override;
         uint8_t generate(unsigned cycles) override;
     
     };
@@ -206,6 +205,7 @@ namespace gbsynth {
     class WaveChannel : public Channel, public FreqChannel {
         WaveformLevel outputLevel;
         uint8_t wavedata[WAVE_RAMSIZE];
+        unsigned waveIndex;
 
     public:
         WaveChannel();

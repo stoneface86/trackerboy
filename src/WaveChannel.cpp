@@ -3,17 +3,21 @@
 
 #include <algorithm>
 
-using std::fill_n;
+using std::copy_n;
 
 namespace gbsynth {
 
-    WaveChannel::WaveChannel() : Channel(), FreqChannel() {
-        fill_n(wavedata, 16, 0);
-        outputLevel = (WaveformLevel)DEFAULT_WAVE_LEVEL;
+    WaveChannel::WaveChannel() :
+        Channel(),
+        FreqChannel(2),
+        wavedata{0},
+        outputLevel((WaveformLevel)DEFAULT_WAVE_LEVEL),
+        waveIndex(0)
+    {
     }
 
     void WaveChannel::reset() {
-        // TODO
+        waveIndex = 0;
     }
 
     void WaveChannel::setOutputLevel(WaveformLevel level) {
@@ -21,11 +25,11 @@ namespace gbsynth {
     }
 
     void WaveChannel::setWaveform(uint8_t waveform[WAVE_RAMSIZE]) {
-        // TODO
+        copy_n(waveform, WAVE_RAMSIZE, wavedata);
     }
 
     uint8_t WaveChannel::generate(unsigned cycles) {
-        // TODO
+        
         return 0;
     }
 

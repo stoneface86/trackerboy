@@ -16,11 +16,12 @@ namespace gbsynth {
         {SAMPLE_MIN, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MIN}
     };
 
-    PulseChannel::PulseChannel() : EnvChannel(), FreqChannel() {        
-        duty = (Duty)DEFAULT_DUTY;
-        freqCounter = 0;
-        dutyCounter = 0;
-        freqCounterMax = (2048 - frequency) * 4;
+    PulseChannel::PulseChannel() : 
+        EnvChannel(),
+        FreqChannel(4),
+        duty((Duty)DEFAULT_DUTY),
+        dutyCounter(0)
+    {        
     }
 
     /*void PulseChannel::getRegisters(ChRegUnion &reg) {
@@ -64,11 +65,6 @@ namespace gbsynth {
         freqCounter %= freqCounterMax;
         dutyCounter = (dutyCounter + dutysteps) & 0x7; // & 7 == % 8
         return DUTY_TABLE[duty][dutyCounter];
-    }
-
-    void PulseChannel::frequencyChanged() {
-        // calculate this value here instead of every call to generate()
-        freqCounterMax = (2048 - frequency) * 4;
     }
 
 }

@@ -1,25 +1,26 @@
 
 #include "gbsynth.h"
 
+#define calcFreqMax(f) ((2048 - f) * multiplier)
 
 namespace gbsynth {
 
-    FreqChannel::FreqChannel() {
-        frequency = DEFAULT_FREQUENCY;
+    FreqChannel::FreqChannel(unsigned multiplier) :
+        frequency(DEFAULT_FREQUENCY),
+        freqCounter(0),
+        freqCounterMax(calcFreqMax(frequency)),
+        multiplier(multiplier)
+    {
     }
 
     void FreqChannel::setFrequency(uint16_t frequency) {
         this->frequency = frequency;
-        frequencyChanged();
+        freqCounterMax = calcFreqMax(frequency);
     }
 
     void FreqChannel::setFrequency(float frequency) {
         this->frequency = toGbFreq(frequency);
-        frequencyChanged();
-    }
-
-    void FreqChannel::frequencyChanged() {
-        // do nothing
+        freqCounterMax = calcFreqMax(this->frequency);
     }
 
 }
