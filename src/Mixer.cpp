@@ -29,12 +29,11 @@ namespace gbsynth {
     };
 
 
-    Mixer::Mixer() {
-        for (size_t i = 0; i != 2; ++i) {
-            terminalEnable[i] = DEFAULT_TERM_ENABLE;
-            terminalVolumes[i] = DEFAULT_TERM_VOLUME;
-        }
-        outputStat = 0; // all off
+    Mixer::Mixer() :
+        terminalEnable{DEFAULT_TERM_ENABLE},
+        terminalVolumes{DEFAULT_TERM_VOLUME},
+        outputStat(0)
+    {
     }
 
     void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
