@@ -128,7 +128,6 @@ namespace gbsynth {
     class Channel {
         uint8_t lengthCounter;
 
-        uint8_t currentSample;
         uint8_t length;
         bool continuous;
         bool enabled;
@@ -140,14 +139,15 @@ namespace gbsynth {
         void setContinuousOutput(bool continuous);
         void lengthStep();
         virtual void reset();
-        void step();
+        virtual void step(unsigned cycles);
 
     protected:
+        uint8_t currentSample;
 
         Channel();
 
         void disable();
-        virtual uint8_t generate() = 0;
+        virtual uint8_t generate(unsigned cycles) = 0;
     };
 
     class EnvChannel : public Channel {
@@ -159,6 +159,7 @@ namespace gbsynth {
         void setEnvMode(EnvMode mode);
         void setEnvLength(uint8_t length);
         void envStep();
+        void step(unsigned cycles) override;
         virtual void reset() override;
 
     protected:
@@ -174,6 +175,9 @@ namespace gbsynth {
     class FreqChannel {
     protected:
         uint16_t frequency;
+
+        virtual void frequencyChanged();
+
     public:
         FreqChannel();
 
@@ -183,18 +187,20 @@ namespace gbsynth {
 
     class PulseChannel : public EnvChannel, public FreqChannel {
         Duty duty;
-        uint16_t periodCounter;
-        uint8_t dutyCounter;
-        uint8_t nextsample;
+        unsigned freqCounter;
+        unsigned freqCounterMax;
+        unsigned dutyCounter;
 
     public:
         PulseChannel();
 
         void setDuty(Duty duty);
         void reset() override;
-    
+
     protected:
-        uint8_t generate() override;
+        void frequencyChanged() override;
+        uint8_t generate(unsigned cycles) override;
+    
     };
 
     class WaveChannel : public Channel, public FreqChannel {
@@ -206,11 +212,10 @@ namespace gbsynth {
 
         void setOutputLevel(WaveformLevel level);
         void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
-
         void reset() override;
 
     protected:
-        uint8_t generate() override;
+        uint8_t generate(unsigned cycles) override;
     };
 
     class NoiseChannel : public EnvChannel {
@@ -228,7 +233,8 @@ namespace gbsynth {
         void reset() override;
 
     protected:
-        uint8_t generate() override;
+        uint8_t generate(unsigned cycles) override;
+
     };
 
 

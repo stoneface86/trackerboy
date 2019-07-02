@@ -18,9 +18,9 @@ namespace gbsynth {
 
     PulseChannel::PulseChannel() : EnvChannel(), FreqChannel() {        
         duty = (Duty)DEFAULT_DUTY;
-        periodCounter = 0;
+        freqCounter = 0;
         dutyCounter = 0;
-        nextsample = DUTY_TABLE[duty][0];
+        freqCounterMax = (2048 - frequency) * 4;
     }
 
     /*void PulseChannel::getRegisters(ChRegUnion &reg) {
@@ -50,27 +50,25 @@ namespace gbsynth {
 
     void PulseChannel::reset() {
         EnvChannel::reset();
-        periodCounter = 0;
+        freqCounter = 0;
         dutyCounter = 0;
-        nextsample = DUTY_TABLE[duty][0];
     }
 
     void PulseChannel::setDuty(Duty duty) {
         this->duty = duty;
     }
 
-    uint8_t PulseChannel::generate() {
-        if (periodCounter == 0) {
-            periodCounter = (2048 - frequency) * 4;
-            nextsample = DUTY_TABLE[duty][dutyCounter];
-            if (++dutyCounter == DUTY_SIZE) {
-                dutyCounter = 0;
-            }
-        } else {
-            --periodCounter;
-        }
+    uint8_t PulseChannel::generate(unsigned cycles) {
+        freqCounter += cycles;
+        unsigned dutysteps = freqCounter / freqCounterMax;
+        freqCounter %= freqCounterMax;
+        dutyCounter = (dutyCounter + dutysteps) & 0x7; // & 7 == % 8
+        return DUTY_TABLE[duty][dutyCounter];
+    }
 
-        return apply(nextsample);
+    void PulseChannel::frequencyChanged() {
+        // calculate this value here instead of every call to generate()
+        freqCounterMax = (2048 - frequency) * 4;
     }
 
 }

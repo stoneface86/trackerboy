@@ -64,6 +64,11 @@ namespace gbsynth {
         return reg;
     }*/
 
+    void EnvChannel::step(unsigned cycles) {
+        uint8_t sample = generate(cycles);
+        currentSample = (sample > envelope) ? envelope : sample;
+    }
+
     void EnvChannel::reset() {
         Channel::reset();
         envelope = envSteps;

@@ -49,8 +49,8 @@ namespace gbsynth {
         currentSample = SAMPLE_MIN;
     }
 
-    void Channel::step() {
-        currentSample = generate();
+    void Channel::step(unsigned cycles) {
+        currentSample = generate(cycles);
     }
 
     void Channel::disable() {

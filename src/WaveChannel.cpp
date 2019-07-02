@@ -24,7 +24,7 @@ namespace gbsynth {
         // TODO
     }
 
-    uint8_t WaveChannel::generate() {
+    uint8_t WaveChannel::generate(unsigned cycles) {
         // TODO
         return 0;
     }

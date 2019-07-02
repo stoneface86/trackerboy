@@ -23,7 +23,7 @@ namespace gbsynth {
         // TODO
     }
 
-    uint8_t NoiseChannel::generate() {
+    uint8_t NoiseChannel::generate(unsigned cycles) {
         // TODO
         return 0;
     }
