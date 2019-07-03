@@ -137,6 +137,7 @@ namespace gbsynth {
         bool enabled;
 
     public:
+        void disable();
         uint8_t getCurrentSample();
         float getCurrentVolume();
         void setLength(uint8_t length);
@@ -150,7 +151,6 @@ namespace gbsynth {
 
         Channel();
 
-        void disable();
         virtual uint8_t generate(unsigned cycles) = 0;
     };
 
@@ -187,6 +187,7 @@ namespace gbsynth {
     public:
         FreqChannel(unsigned multiplier);
 
+        uint16_t getFrequency();
         void setFrequency(uint16_t frequency);
         void setFrequency(float frequency);
     };

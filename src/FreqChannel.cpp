@@ -13,6 +13,10 @@ namespace gbsynth {
     {
     }
 
+    uint16_t FreqChannel::getFrequency() {
+        return frequency;
+    }
+
     void FreqChannel::setFrequency(uint16_t frequency) {
         this->frequency = frequency;
         freqCounterMax = calcFreqMax(frequency);

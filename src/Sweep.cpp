@@ -3,12 +3,17 @@
 
 namespace gbsynth {
 
-    Sweep::Sweep(PulseChannel &ch) : ch(ch) {
-        // TODO
+    Sweep::Sweep(PulseChannel &ch) : 
+        ch(ch),
+        sweepMode((SweepMode)DEFAULT_SWEEP_MODE),
+        sweepTime(DEFAULT_SWEEP_TIME),
+        sweepShift(DEFAULT_SWEEP_SHIFT),
+        counter(0)
+    {
     }
 
     void Sweep::reset() {
-        // TODO
+        counter = 0;
     }
 
     void Sweep::setSweepTime(uint8_t ts) {
@@ -30,7 +35,29 @@ namespace gbsynth {
     }
 
     void Sweep::step() {
-        // TODO
+        if (sweepTime) {
+            if (++counter >= sweepTime) {
+                counter = 0;
+                if (sweepShift) {
+                    int16_t shadow = ch.getFrequency();
+                    int16_t sweepfreq = shadow >> sweepShift;
+                    if (sweepMode == SWEEP_SUBTRACTION) {
+                        sweepfreq = shadow - sweepfreq;
+                        if (sweepfreq < 0) {
+                            return; // no change
+                        }
+                    } else {
+                        sweepfreq = shadow + sweepfreq;
+                        if (sweepfreq > MAX_FREQUENCY) {
+                            // sweep will overflow, disable the channel
+                            ch.disable();
+                            return;
+                        }
+                    }
+                    ch.setFrequency((uint16_t)sweepfreq);
+                }
+            }
+        }
     }
 
 
