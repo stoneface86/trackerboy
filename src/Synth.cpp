@@ -1,15 +1,18 @@
 
 #include "gbsynth.h"
 
+#define GB_CLOCK_SPEED 4194304
+
 namespace gbsynth {
 
 
     Synth::Synth(float samplingRate) :
         cf(),
         sweep(cf.ch1),
-        sequencer(cf, sweep)
+        sequencer(cf, sweep),
+        samplingRate(samplingRate),
+        stepsPerSample((unsigned)(GB_CLOCK_SPEED / samplingRate))
     {
-        // TODO
     }
 
     Sweep& Synth::getSweep() {
@@ -29,7 +32,23 @@ namespace gbsynth {
     }
 
     void Synth::fill(float leftBuf[], float rightBuf[], size_t nsamples) {
-        // TODO
+        for (size_t i = 0; i != nsamples; ++i) {
+            mixer.getOutput(
+                cf.ch1.getCurrentVolume(), 
+                cf.ch2.getCurrentVolume(),
+                cf.ch3.getCurrentVolume(), 
+                cf.ch4.getCurrentVolume(),
+                leftBuf[i],
+                rightBuf[i]
+            );
+
+            sequencer.step(stepsPerSample);
+            
+            cf.ch1.step(stepsPerSample);
+            cf.ch2.step(stepsPerSample);
+            cf.ch3.step(stepsPerSample);
+            cf.ch4.step(stepsPerSample);
+        }
     }
 
 }

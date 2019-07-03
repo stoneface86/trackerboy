@@ -307,6 +307,7 @@ namespace gbsynth {
         Sequencer sequencer;
 
         float samplingRate;
+        unsigned stepsPerSample;
 
     public:
         Synth(float samplingRate);
