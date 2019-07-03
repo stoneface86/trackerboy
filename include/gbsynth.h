@@ -273,14 +273,15 @@ namespace gbsynth {
     };
 
     class Sequencer {
-        unsigned counter;
+        unsigned freqCounter;
+        unsigned stepCounter;
         Sweep &sweep;
         ChannelFile &cf;
 
     public:
         Sequencer(ChannelFile &cf, Sweep &sweep);
 
-        void step();
+        void step(unsigned cycles);
         void reset();
     };
 
