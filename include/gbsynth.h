@@ -62,6 +62,7 @@ namespace gbsynth {
         MAX_FREQUENCY       = 0x7FF,
         MAX_WAVE_LENGTH     = 0xFF,
         MAX_VOLUME          = 0x7,
+        MAX_SCF             = 0xD,
 
         // defaults
         DEFAULT_FREQUENCY   = 0,
@@ -75,6 +76,9 @@ namespace gbsynth {
         DEFAULT_WAVE_LEVEL  = WAVE_WHOLE,
         DEFAULT_TERM_ENABLE = false,
         DEFAULT_TERM_VOLUME = MAX_VOLUME,
+        DEFAULT_SCF         = 0,
+        DEFAULT_STEP_COUNT  = STEPS_15,
+        DEFAULT_DRF         = 0,
 
         // sample values
         SAMPLE_GND          = 0x8,
@@ -222,6 +226,10 @@ namespace gbsynth {
         uint8_t scf;
         StepCount stepSelection;
         uint8_t drf;
+
+        uint16_t lfsr;
+        unsigned shiftCounter;
+        unsigned shiftCounterMax;
         
     public:
         NoiseChannel();
