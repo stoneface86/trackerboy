@@ -37,10 +37,22 @@ namespace gbsynth {
         uint8_t sample = wavedata[waveIndex >> 1];
         if (waveIndex & 1) {
             // odd number, low nibble
-            return sample & 0xF;
+            sample &= 0xF;
         } else {
             // even number, high nibble
-            return sample >> 4;
+            sample >>= 4;
+        }
+        switch (outputLevel) {
+            case WAVE_MUTE:
+                return SAMPLE_MIN;
+            case WAVE_WHOLE:
+                return sample;
+            case WAVE_HALF:
+                return sample >> 1;
+            case WAVE_QUARTER:
+                return sample >> 2;
+            default:
+                return SAMPLE_MIN; // should never happen
         }
     }
 
