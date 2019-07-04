@@ -1,6 +1,8 @@
 
 #include "gbsynth.h"
 
+#include "tables.h"
+
 #include <cmath>
 
 namespace gbsynth {
@@ -14,8 +16,8 @@ namespace gbsynth {
         envSteps = DEFAULT_ENV_STEPS;
     }
 
-    uint8_t EnvChannel::apply(uint8_t sample) {
-        return (sample > envelope) ? envelope : sample;
+    float EnvChannel::getCurrentVolume() {
+        return Channel::getCurrentVolume() * ENV_TABLE[envelope];
     }
 
     void EnvChannel::setEnvLength(uint8_t length) {
@@ -63,11 +65,6 @@ namespace gbsynth {
         reg |= envLength;
         return reg;
     }*/
-
-    void EnvChannel::step(unsigned cycles) {
-        uint8_t sample = generate(cycles);
-        currentSample = (sample > envelope) ? envelope : sample;
-    }
 
     void EnvChannel::reset() {
         Channel::reset();

@@ -1,11 +1,13 @@
 #include "gbsynth.h"
 
+#include "tables.h"
+
 #include <cmath>
 
 
 namespace gbsynth {
 
-    static const float SAMPLE_TABLE[] = {
+    /*static const float SAMPLE_TABLE[] = {
         -1.0f,
         -7.0f / 8.0f,
         -6.0f / 8.0f,
@@ -22,7 +24,7 @@ namespace gbsynth {
          5.0f / 7.0f,
          6.0f / 7.0f,
          1.0f
-    };
+    };*/
 
     Channel::Channel() {
         lengthCounter = 0;

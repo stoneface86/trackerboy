@@ -139,7 +139,7 @@ namespace gbsynth {
     public:
         void disable();
         uint8_t getCurrentSample();
-        float getCurrentVolume();
+        virtual float getCurrentVolume();
         void setLength(uint8_t length);
         void setContinuousOutput(bool continuous);
         void lengthStep();
@@ -159,11 +159,11 @@ namespace gbsynth {
         uint8_t envelope;
 
     public:
+        float getCurrentVolume() override;
         void setEnvStep(uint8_t step);
         void setEnvMode(EnvMode mode);
         void setEnvLength(uint8_t length);
         void envStep();
-        void step(unsigned cycles) override;
         virtual void reset() override;
 
     protected:
@@ -172,8 +172,6 @@ namespace gbsynth {
         uint8_t envLength;
 
         EnvChannel();
-
-        uint8_t apply(uint8_t sample);
     };
 
     class FreqChannel {
