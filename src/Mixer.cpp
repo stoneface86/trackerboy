@@ -1,6 +1,8 @@
 
 #include "gbsynth.h"
 
+#include "tables.h"
+
 // each channel has a maximum volume of 0.2, so maximum volume of all channels is 0.8
 #define VOL_MULTIPLIER 0.2f
 
@@ -16,18 +18,6 @@ enum OutputStat {
 };
 
 namespace gbsynth {
-
-    static const float VOLUME_TABLE[] = {
-        0.125f,
-        0.25f,
-        0.375f,
-        0.5f,
-        0.625f,
-        0.75f,
-        0.875f,
-        1.0f,
-    };
-
 
     Mixer::Mixer() :
         terminalEnable{DEFAULT_TERM_ENABLE},
