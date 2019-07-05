@@ -20,15 +20,17 @@ enum OutputStat {
 namespace gbsynth {
 
     Mixer::Mixer() :
-        terminalEnable{DEFAULT_TERM_ENABLE},
-        terminalVolumes{DEFAULT_TERM_VOLUME},
+        s01enable(DEFAULT_TERM_ENABLE),
+        s02enable(DEFAULT_TERM_ENABLE),
+        s01vol(DEFAULT_TERM_VOLUME),
+        s02vol(DEFAULT_TERM_VOLUME),
         outputStat((OutputFlags)0)
     {
     }
 
     void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
         float left = 0.0f, right = 0.0f;
-        if (terminalEnable[TERM_LEFT]) {
+        if (s01enable) {
             if (outputStat & CTRL_SOUND1_LEFT) {
                 left += in1 * VOL_MULTIPLIER;
             }
@@ -42,7 +44,7 @@ namespace gbsynth {
                 left += in4 * VOL_MULTIPLIER;
             }
         }
-        if (terminalEnable[TERM_RIGHT]) {
+        if (s02enable) {
             if (outputStat & CTRL_SOUND1_RIGHT) {
                 right += in1 * VOL_MULTIPLIER;
             }
@@ -56,19 +58,27 @@ namespace gbsynth {
                 right += in4 * VOL_MULTIPLIER;
             }
         }
-        outLeft = left * VOLUME_TABLE[terminalVolumes[TERM_LEFT]];
-        outRight = right * VOLUME_TABLE[terminalVolumes[TERM_RIGHT]];
+        outLeft = left * VOLUME_TABLE[s01vol];
+        outRight = right * VOLUME_TABLE[s02vol];
     }
 
     void Mixer::setTerminalEnable(Terminal term, bool enabled) {
-        terminalEnable[term] = enabled;
+        if (term == TERM_S01) {
+            s01enable = enabled;
+        } else {
+            s02enable = enabled;
+        }
     }
 
     void Mixer::setTerminalVolume(Terminal term, uint8_t volume) {
         if (volume > MAX_VOLUME) {
             volume = MAX_VOLUME;
         }
-        terminalVolumes[term] = volume;
+        if (term == TERM_S01) {
+            s01vol = volume;
+        } else {
+            s02vol = volume;
+        }
     }
 
     void Mixer::setEnable(OutputFlags flags) {

@@ -301,8 +301,10 @@ namespace gbsynth {
     };
 
     class Mixer {
-        bool terminalEnable[2];
-        uint8_t terminalVolumes[2];
+        bool s01enable, s02enable;
+        uint8_t s01vol, s02vol;
+        //bool terminalEnable[2];
+        //uint8_t terminalVolumes[2];
         uint8_t outputStat;
 
     public:
