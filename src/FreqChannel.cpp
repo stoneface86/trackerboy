@@ -1,5 +1,5 @@
 
-#include "gbsynth.h"
+#include "gbsynth.hpp"
 
 #define calcFreqMax(f) ((2048 - f) * multiplier)
 

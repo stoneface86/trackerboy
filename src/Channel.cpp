@@ -1,4 +1,4 @@
-#include "gbsynth.h"
+#include "gbsynth.hpp"
 
 #include "tables.h"
 

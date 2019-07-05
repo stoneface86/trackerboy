@@ -1,5 +1,5 @@
 
-#include "gbsynth.h"
+#include "gbsynth.hpp"
 
 #define GB_CLOCK_SPEED 4194304
 

@@ -1,5 +1,5 @@
 
-#include "gbsynth.h"
+#include "gbsynth.hpp"
 
 #define DUTY_SIZE 8
 
