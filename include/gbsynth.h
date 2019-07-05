@@ -52,6 +52,22 @@ namespace gbsynth {
         CH_SOUND4 = 3
     };
 
+    enum OutputFlags : uint8_t {
+        OUT_SOUND1_LEFT     = 0x1,
+        OUT_SOUND2_LEFT     = 0x2,
+        OUT_SOUND3_LEFT     = 0x4,
+        OUT_SOUND4_LEFT     = 0x8,
+        OUT_SOUND1_RIGHT    = 0x10,
+        OUT_SOUND2_RIGHT    = 0x20,
+        OUT_SOUND3_RIGHT    = 0x40,
+        OUT_SOUND4_RIGHT    = 0x80,
+        OUT_SOUND1_BOTH     = OUT_SOUND1_LEFT | OUT_SOUND1_RIGHT,
+        OUT_SOUND2_BOTH     = OUT_SOUND2_LEFT | OUT_SOUND2_RIGHT,
+        OUT_SOUND3_BOTH     = OUT_SOUND3_LEFT | OUT_SOUND3_RIGHT,
+        OUT_SOUND4_BOTH     = OUT_SOUND4_LEFT | OUT_SOUND4_RIGHT,
+        OUT_ALL             = 0xFF
+    };
+
     enum Constants {
         // maximum values for parameters
         MAX_SWEEP_TIME      = 0x7,
@@ -294,6 +310,7 @@ namespace gbsynth {
 
         void setTerminalEnable(Terminal term, bool enabled);
         void setTerminalVolume(Terminal term, uint8_t volume);
+        void setEnable(OutputFlags flags);
         void setEnable(ChType ch, Terminal term, bool enabled);
 
         void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);

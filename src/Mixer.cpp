@@ -22,7 +22,7 @@ namespace gbsynth {
     Mixer::Mixer() :
         terminalEnable{DEFAULT_TERM_ENABLE},
         terminalVolumes{DEFAULT_TERM_VOLUME},
-        outputStat(0)
+        outputStat((OutputFlags)0)
     {
     }
 
@@ -69,6 +69,10 @@ namespace gbsynth {
             volume = MAX_VOLUME;
         }
         terminalVolumes[term] = volume;
+    }
+
+    void Mixer::setEnable(OutputFlags flags) {
+        outputStat = flags;
     }
 
     void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
