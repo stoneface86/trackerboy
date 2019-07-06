@@ -6,26 +6,6 @@
 
 namespace gbsynth {
 
-    static const float SAMPLE_TABLE[] = {
-        -1.0f,
-        -7.0f / 8.0f,
-        -6.0f / 8.0f,
-        -5.0f / 8.0f,
-        -4.0f / 8.0f,
-        -3.0f / 8.0f,
-        -2.0f / 8.0f,
-        -1.0f / 8.0f,
-         0.0f,
-         1.0f / 7.0f,
-         2.0f / 7.0f,
-         3.0f / 7.0f,
-         4.0f / 7.0f,
-         5.0f / 7.0f,
-         6.0f / 7.0f,
-         1.0f
-    };
-
-
     float fromGbFreq(uint16_t freq) {
         if (freq > MAX_FREQUENCY) {
             freq = MAX_FREQUENCY; // clamp
@@ -50,18 +30,5 @@ namespace gbsynth {
 
         return MAX_FREQUENCY;
     }
-
-    void bufToFloat(uint8_t input[], float output[], size_t nsamples) {
-        for (size_t i = 0; i != nsamples; ++i) {
-            output[i] = SAMPLE_TABLE[input[i]];
-        }
-    }
-
-    void bufToInt16(uint8_t input[], int16_t output[], size_t nsamples) {
-        for (size_t i = 0; i != nsamples; ++i) {
-
-        }
-    }
-
 
 }

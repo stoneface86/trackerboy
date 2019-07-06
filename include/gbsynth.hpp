@@ -344,7 +344,4 @@ namespace gbsynth {
     float fromGbFreq(uint16_t value);
 
     uint16_t toGbFreq(float value);
-
-    void bufToFloat(uint8_t input[], float output[], size_t nsamples);
-
 }
