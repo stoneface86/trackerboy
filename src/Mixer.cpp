@@ -6,17 +6,6 @@
 // each channel has a maximum volume of 0.2, so maximum volume of all channels is 0.8
 #define VOL_MULTIPLIER 0.2f
 
-enum OutputStat {
-    CTRL_SOUND1_LEFT = 0x1,
-    CTRL_SOUND2_LEFT = 0x2,
-    CTRL_SOUND3_LEFT = 0x4,
-    CTRL_SOUND4_LEFT = 0x8,
-    CTRL_SOUND1_RIGHT = 0x10,
-    CTRL_SOUND2_RIGHT = 0x20,
-    CTRL_SOUND3_RIGHT = 0x40,
-    CTRL_SOUND4_RIGHT = 0x80
-};
-
 namespace gbsynth {
 
     Mixer::Mixer() :
@@ -31,30 +20,30 @@ namespace gbsynth {
     void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
         float left = 0.0f, right = 0.0f;
         if (s01enable) {
-            if (outputStat & CTRL_SOUND1_LEFT) {
+            if (outputStat & OUT_SOUND1_LEFT) {
                 left += in1 * VOL_MULTIPLIER;
             }
-            if (outputStat & CTRL_SOUND2_LEFT) {
+            if (outputStat & OUT_SOUND2_LEFT) {
                 left += in2 * VOL_MULTIPLIER;
             }
-            if (outputStat & CTRL_SOUND3_LEFT) {
+            if (outputStat & OUT_SOUND3_LEFT) {
                 left += in3 * VOL_MULTIPLIER;
             }
-            if (outputStat & CTRL_SOUND4_LEFT) {
+            if (outputStat & OUT_SOUND4_LEFT) {
                 left += in4 * VOL_MULTIPLIER;
             }
         }
         if (s02enable) {
-            if (outputStat & CTRL_SOUND1_RIGHT) {
+            if (outputStat & OUT_SOUND1_RIGHT) {
                 right += in1 * VOL_MULTIPLIER;
             }
-            if (outputStat & CTRL_SOUND2_RIGHT) {
+            if (outputStat & OUT_SOUND2_RIGHT) {
                 right += in2 * VOL_MULTIPLIER;
             }
-            if (outputStat & CTRL_SOUND3_RIGHT) {
+            if (outputStat & OUT_SOUND3_RIGHT) {
                 right += in3 * VOL_MULTIPLIER;
             }
-            if (outputStat & CTRL_SOUND4_RIGHT) {
+            if (outputStat & OUT_SOUND4_RIGHT) {
                 right += in4 * VOL_MULTIPLIER;
             }
         }
