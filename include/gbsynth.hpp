@@ -106,49 +106,8 @@ namespace gbsynth {
         WAVE_RAMSIZE        = 16
     };
 
-    struct Ch1Reg {
-        uint8_t nr10;
-        uint8_t nr11;
-        uint8_t nr12;
-        uint8_t nr13;
-        uint8_t nr14;
-    };
-
-    struct Ch2Reg {
-        uint8_t nr21;
-        uint8_t nr22;
-        uint8_t nr23;
-        uint8_t nr24;
-    };
-
-    struct Ch3Reg {
-        uint8_t nr30;
-        uint8_t nr31;
-        uint8_t nr32;
-        uint8_t nr33;
-        uint8_t nr34;
-    };
-
-    struct Ch4Reg {
-        uint8_t nr41;
-        uint8_t nr42;
-        uint8_t nr43;
-        uint8_t nr44;
-    };
-
-    union ChRegUnion {
-        Ch1Reg ch1;
-        Ch2Reg ch2;
-        Ch3Reg ch3;
-        Ch4Reg ch4;
-    };
-
-   
-
     class Channel {
         uint8_t lengthCounter;
-
-        uint8_t length;
         bool continuous;
         bool enabled;
 
@@ -164,6 +123,7 @@ namespace gbsynth {
 
     protected:
         uint8_t currentSample;
+        uint8_t length;
 
         Channel();
 
@@ -303,8 +263,6 @@ namespace gbsynth {
     class Mixer {
         bool s01enable, s02enable;
         uint8_t s01vol, s02vol;
-        //bool terminalEnable[2];
-        //uint8_t terminalVolumes[2];
         uint8_t outputStat;
 
     public:

@@ -57,14 +57,6 @@ namespace gbsynth {
             }
         }
     }
-    
-    /*uint8_t EnvChannel::encodeEnvRegister() {
-        uint8_t reg;
-        reg = envSteps << 4;
-        reg |= envMode << 3;
-        reg |= envLength;
-        return reg;
-    }*/
 
     void EnvChannel::reset() {
         Channel::reset();
