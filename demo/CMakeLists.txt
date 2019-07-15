@@ -23,3 +23,4 @@ function(add_demo demoName)
 endfunction(add_demo)
 
 add_demo(sweep)
+add_demo(duty)
