@@ -44,7 +44,7 @@ namespace gbsynth {
         }
         switch (outputLevel) {
             case WAVE_MUTE:
-                return SAMPLE_MIN;
+                return SAMPLE_GND;
             case WAVE_WHOLE:
                 return sample;
             case WAVE_HALF:
@@ -52,7 +52,7 @@ namespace gbsynth {
             case WAVE_QUARTER:
                 return sample >> 2;
             default:
-                return SAMPLE_MIN; // should never happen
+                return SAMPLE_GND; // should never happen
         }
     }
 
