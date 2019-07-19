@@ -26,11 +26,11 @@ void DutyDemo::init(Synth &synth) {
     mixer.setEnable(OUT_SOUND2_BOTH);
 }
 
-long DutyDemo::setupNextRun() {
+long DutyDemo::setupNextRun(Synth &synth, unsigned counter) {
     if (counter > 3) {
         return 0;
     } else {
-        Duty duty = (Duty)counter++;
+        Duty duty = (Duty)counter;
         std::cout << "Duty: " << DUTY_STRINGS[duty] << "%" << std::endl;
         synth.getChannels().ch2.setDuty(duty);
         return DEMO_RUNTIME;

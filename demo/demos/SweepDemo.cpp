@@ -11,7 +11,7 @@
 
 using namespace gbsynth;
 
-void SweepDemo::init() {
+void SweepDemo::init(Synth &synth) {
     ChannelFile &cf = synth.getChannels();
     Mixer &mixer = synth.getMixer();
     Sweep &sweep = synth.getSweep();
@@ -26,7 +26,7 @@ void SweepDemo::init() {
     mixer.setEnable(OUT_SOUND1_BOTH);
 }
 
-long SweepDemo::setupNextRun() {
+long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
 
     Sweep &sweep = synth.getSweep();
     PulseChannel &ch1 = synth.getChannels().ch1;
@@ -34,7 +34,7 @@ long SweepDemo::setupNextRun() {
     uint16_t freq;
     SweepMode mode;
 
-    switch (counter++) {
+    switch (counter) {
         case 0:
             // sweep subtraction for 4 seconds
             freq = DEMO_SUB_FREQ;
