@@ -1,7 +1,6 @@
 
-#include "demo.hpp"
-
 #include <iostream>
+#include "../demo.hpp"
 
 #define DEMO_RUNTIME 4000
 #define DEMO_SWEEP_SHIFT 7

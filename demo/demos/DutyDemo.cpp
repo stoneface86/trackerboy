@@ -1,5 +1,7 @@
 
-#include "demo.hpp"
+#include <iostream>
+
+#include "../demo.hpp"
 
 #define DEMO_RUNTIME 1000
 #define DEMO_FREQ    440.0f
