@@ -32,3 +32,19 @@ public:
     long setupNextRun(gbsynth::Synth &synth, unsigned counter) override;
 
 };
+
+class WaveDemo : public Demo {
+
+    uint8_t wavedata[gbsynth::WAVE_RAMSIZE];
+
+public:
+    WaveDemo(const uint8_t wavedata[gbsynth::WAVE_RAMSIZE]);
+
+    void init(gbsynth::Synth &synth) override;
+    long setupNextRun(gbsynth::Synth &synth, unsigned counter) override;
+
+};
+
+extern const uint8_t WAVEDATA_TRIANGLE[gbsynth::WAVE_RAMSIZE];
+extern const uint8_t WAVEDATA_SAWTOOTH[gbsynth::WAVE_RAMSIZE];
+extern const uint8_t WAVEDATA_SINE[gbsynth::WAVE_RAMSIZE];

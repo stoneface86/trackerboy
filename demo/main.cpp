@@ -107,9 +107,12 @@ int main(int argc, const char *argv[]) {
 
     // map of demo name -> demo object
     std::unordered_map<std::string, std::unique_ptr<Demo>> demoTable;
-    #define demoTableSet(name, cls) demoTable[name] = std::unique_ptr<Demo>(new cls())
-    demoTableSet("duty", DutyDemo);
-    demoTableSet("sweep", SweepDemo);
+    #define demoTableSet(name, ptr) demoTable[name] = std::unique_ptr<Demo>(ptr)
+    demoTableSet("duty", new DutyDemo());
+    demoTableSet("sweep", new SweepDemo());
+    demoTableSet("waveTriangle", new WaveDemo(WAVEDATA_TRIANGLE));
+    demoTableSet("waveSawtooth", new WaveDemo(WAVEDATA_SAWTOOTH));
+    demoTableSet("waveSine", new WaveDemo(WAVEDATA_SINE));
     #undef demoTableSet
 
     // get our list of demos to run
