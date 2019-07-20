@@ -15,6 +15,12 @@ static const char* DUTY_STRINGS[] = {
     "75.0"
 };
 
+DutyDemo::DutyDemo() :
+    Demo("Duty")
+{
+}
+
+
 void DutyDemo::init(Synth &synth) {
     Mixer &mixer = synth.getMixer();
     PulseChannel &ch2 = synth.getChannels().ch2;

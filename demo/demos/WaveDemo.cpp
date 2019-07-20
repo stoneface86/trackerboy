@@ -1,6 +1,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include "../demo.hpp"
 
 #define DEMO_RUNTIME 1000
@@ -34,10 +35,14 @@ const uint8_t WAVEDATA_SINE[WAVE_RAMSIZE] = {
 
 
 
-WaveDemo::WaveDemo(const uint8_t wavedata[WAVE_RAMSIZE]) :
-    wavedata{0}
+WaveDemo::WaveDemo(const uint8_t wavedata[WAVE_RAMSIZE], std::string waveName) :
+    wavedata{0},
+    Demo("")
 {
     std::copy_n(wavedata, WAVE_RAMSIZE, this->wavedata);
+    std::ostringstream stream;
+    stream << "Wave (" << waveName << ")";
+    name = stream.str();
 }
 
 void WaveDemo::init(Synth &synth) {

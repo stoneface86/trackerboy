@@ -3,6 +3,7 @@ project(demo CXX)
 set(DEMO "demo")
 set(DEMO_SRC
 	"main.cpp"
+	"Demo.cpp"
 	"demos/DutyDemo.cpp"
 	"demos/SweepDemo.cpp"
 	"demos/WaveDemo.cpp"

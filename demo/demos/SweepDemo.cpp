@@ -10,6 +10,11 @@
 
 using namespace gbsynth;
 
+SweepDemo::SweepDemo() :
+    Demo("Sweep")
+{
+}
+
 void SweepDemo::init(Synth &synth) {
     ChannelFile &cf = synth.getChannels();
     Mixer &mixer = synth.getMixer();

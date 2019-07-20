@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <mutex>
@@ -37,6 +38,9 @@ struct CbData {
 
 static void runDemo(CbData &cbdata, Demo *demo) {
     assert(demo != nullptr); // should never be null
+
+    std::cout << std::left;
+    std::cout << std::setfill('=') << std::setw(80) << ("=== DEMO: " + demo->getName() + " ") << std::endl;
 
     // initialize the synth
     // each demo starts with a new synth object
@@ -110,9 +114,9 @@ int main(int argc, const char *argv[]) {
     #define demoTableSet(name, ptr) demoTable[name] = std::unique_ptr<Demo>(ptr)
     demoTableSet("duty", new DutyDemo());
     demoTableSet("sweep", new SweepDemo());
-    demoTableSet("waveTriangle", new WaveDemo(WAVEDATA_TRIANGLE));
-    demoTableSet("waveSawtooth", new WaveDemo(WAVEDATA_SAWTOOTH));
-    demoTableSet("waveSine", new WaveDemo(WAVEDATA_SINE));
+    demoTableSet("waveTriangle", new WaveDemo(WAVEDATA_TRIANGLE, "Triangle"));
+    demoTableSet("waveSawtooth", new WaveDemo(WAVEDATA_SAWTOOTH, "Sawtooth"));
+    demoTableSet("waveSine", new WaveDemo(WAVEDATA_SINE, "Sine"));
     #undef demoTableSet
 
     // get our list of demos to run

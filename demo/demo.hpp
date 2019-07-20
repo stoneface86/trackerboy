@@ -1,12 +1,21 @@
 
 #pragma once
 
+#include <string>
+
 #include "gbsynth.hpp"
 
 
 class Demo {
 
+protected:
+    std::string name;
+
 public:
+
+    Demo(std::string name);
+
+    std::string getName();
 
     virtual void init(gbsynth::Synth &synth) = 0;
 
@@ -20,6 +29,8 @@ public:
 class DutyDemo : public Demo {
 
 public:
+    DutyDemo();
+
     void init(gbsynth::Synth &synth) override;
     long setupNextRun(gbsynth::Synth &synth, unsigned counter) override;
 
@@ -28,6 +39,8 @@ public:
 class SweepDemo : public Demo {
 
 public:
+    SweepDemo();
+
     void init(gbsynth::Synth &synth) override;
     long setupNextRun(gbsynth::Synth &synth, unsigned counter) override;
 
@@ -38,7 +51,7 @@ class WaveDemo : public Demo {
     uint8_t wavedata[gbsynth::WAVE_RAMSIZE];
 
 public:
-    WaveDemo(const uint8_t wavedata[gbsynth::WAVE_RAMSIZE]);
+    WaveDemo(const uint8_t wavedata[gbsynth::WAVE_RAMSIZE], std::string waveName);
 
     void init(gbsynth::Synth &synth) override;
     long setupNextRun(gbsynth::Synth &synth, unsigned counter) override;
