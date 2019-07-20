@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <map>
 #include <mutex>
 #include <string>
-#include <unordered_map>
 
 #include "demo.hpp"
 #include "gbsynth.hpp"
@@ -106,7 +106,7 @@ int main(int argc, const char *argv[]) {
 #endif
 
     // map of demo name -> demo object
-    std::unordered_map<std::string, std::unique_ptr<Demo>> demoTable;
+    std::map<std::string, std::unique_ptr<Demo>> demoTable;
     #define demoTableSet(name, ptr) demoTable[name] = std::unique_ptr<Demo>(ptr)
     demoTableSet("duty", new DutyDemo());
     demoTableSet("sweep", new SweepDemo());
