@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.8)
 project(gbsynth)
 
-set(INC_DIR "${CMAKE_SOURCE_DIR}/include")
+set(INC_DIR "include")
 
 option(ENABLE_TESTS "Enable unit tests" ON)
 option(ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
