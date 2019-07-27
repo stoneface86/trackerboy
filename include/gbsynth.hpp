@@ -132,8 +132,7 @@ namespace gbsynth {
 
     class EnvChannel : public Channel {
         uint8_t envCounter;
-        uint8_t envelope;
-
+        
     public:
         float getCurrentVolume() override;
         void setEnvStep(uint8_t step);
@@ -143,7 +142,7 @@ namespace gbsynth {
         virtual void reset() override;
 
     protected:
-        uint8_t envSteps;
+        uint8_t envelope;
         EnvMode envMode;
         uint8_t envLength;
 

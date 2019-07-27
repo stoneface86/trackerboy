@@ -7,13 +7,13 @@
 
 namespace gbsynth {
 
-    EnvChannel::EnvChannel() : Channel() {
-        envCounter = 0;
-        envelope = 0;
-
-        envLength = DEFAULT_ENV_LENGTH;
-        envMode = (EnvMode)DEFAULT_ENV_MODE;
-        envSteps = DEFAULT_ENV_STEPS;
+    EnvChannel::EnvChannel() : 
+        envCounter(0),
+        envelope(DEFAULT_ENV_STEPS),
+        envLength(DEFAULT_ENV_LENGTH),
+        envMode((EnvMode)DEFAULT_ENV_MODE),
+        Channel() 
+    {
     }
 
     float EnvChannel::getCurrentVolume() {
@@ -35,7 +35,7 @@ namespace gbsynth {
         if (step > MAX_ENV_STEPS) {
             step = MAX_ENV_STEPS;
         }
-        envSteps = step;
+        envelope = step;
     }
 
     void EnvChannel::envStep() {
@@ -60,7 +60,6 @@ namespace gbsynth {
 
     void EnvChannel::reset() {
         Channel::reset();
-        envelope = envSteps;
         envCounter = 0;
     }
 
