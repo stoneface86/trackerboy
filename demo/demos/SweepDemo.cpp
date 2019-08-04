@@ -18,12 +18,11 @@ SweepDemo::SweepDemo() :
 void SweepDemo::init(Synth &synth) {
     ChannelFile &cf = synth.getChannels();
     Mixer &mixer = synth.getMixer();
-    Sweep &sweep = synth.getSweep();
 
     cf.ch1.setEnvStep(MAX_ENV_STEPS);
 
-    sweep.setSweepShift(DEMO_SWEEP_SHIFT);
-    sweep.setSweepTime(DEMO_SWEEP_TIME);
+    cf.ch1.setSweepShift(DEMO_SWEEP_SHIFT);
+    cf.ch1.setSweepTime(DEMO_SWEEP_TIME);
 
     mixer.setTerminalEnable(Terminal::left, true);
     mixer.setTerminalEnable(Terminal::right, true);
@@ -32,8 +31,7 @@ void SweepDemo::init(Synth &synth) {
 
 long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
 
-    Sweep &sweep = synth.getSweep();
-    PulseChannel &ch1 = synth.getChannels().ch1;
+    SweepPulseChannel &ch1 = synth.getChannels().ch1;
 
     uint16_t freq;
     SweepMode mode;
@@ -58,9 +56,8 @@ long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
 
 
     ch1.setFrequency(freq);
+    ch1.setSweepMode(mode);
     ch1.reset();
-    sweep.setSweepMode(mode);
-    sweep.reset();
 
     return DEMO_RUNTIME;
 }

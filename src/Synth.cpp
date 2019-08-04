@@ -8,15 +8,10 @@ namespace gbsynth {
 
     Synth::Synth(float samplingRate) :
         cf(),
-        sweep(cf.ch1),
-        sequencer(cf, sweep),
+        sequencer(cf),
         samplingRate(samplingRate),
         stepsPerSample((unsigned)(GB_CLOCK_SPEED / samplingRate))
     {
-    }
-
-    Sweep& Synth::getSweep() {
-        return sweep;
     }
 
     ChannelFile& Synth::getChannels() {

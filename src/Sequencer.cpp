@@ -19,9 +19,8 @@
 
 namespace gbsynth {
 
-    Sequencer::Sequencer(ChannelFile &cf, Sweep &sweep) : 
+    Sequencer::Sequencer(ChannelFile &cf) : 
         cf(cf),
-        sweep(sweep),
         freqCounter(0),
         stepCounter(0)
     {
@@ -46,7 +45,7 @@ namespace gbsynth {
                     break;
                 case 2:
                     allLengthStep(cf);
-                    sweep.step();
+                    cf.ch1.sweepStep();
                     break;
                 case 3:
                     break;
@@ -57,7 +56,7 @@ namespace gbsynth {
                     break;
                 case 6:
                     allLengthStep(cf);
-                    sweep.step();
+                    cf.ch1.sweepStep();
                     break;
                 case 7:
                     stepCounter = 0; // adjust counter since it overflowed

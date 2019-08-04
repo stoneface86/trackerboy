@@ -229,11 +229,29 @@ public:
     PulseChannel();
 
     void setDuty(Duty duty);
-    void reset() override;
+    virtual void reset() override;
 
 protected:
     uint8_t generate(unsigned cycles) override;
     
+};
+
+class SweepPulseChannel : public PulseChannel {
+    SweepMode sweepMode;
+    uint8_t sweepTime;
+    uint8_t sweepShift;
+
+    uint8_t sweepCounter;
+
+public:
+    SweepPulseChannel();
+
+    void reset() override;
+    void setSweep(uint8_t sweepReg);
+    void setSweepTime(uint8_t ts);
+    void setSweepMode(SweepMode mode);
+    void setSweepShift(uint8_t n);
+    void sweepStep();
 };
 
 
@@ -277,29 +295,8 @@ protected:
 
 };
 
-
-class Sweep {
-    SweepMode sweepMode;
-    uint8_t sweepTime;
-    uint8_t sweepShift;
-
-    PulseChannel &ch;
-
-    uint8_t counter;
-
-public:
-    Sweep(PulseChannel &ch);
-
-    void setSweep(uint8_t sweepReg);
-    void setSweepTime(uint8_t ts);
-    void setSweepMode(SweepMode mode);
-    void setSweepShift(uint8_t n);
-    void reset();
-    void step();
-};
-
 struct ChannelFile {
-    PulseChannel ch1;
+    SweepPulseChannel ch1;
     PulseChannel ch2;
     WaveChannel ch3;
     NoiseChannel ch4;
@@ -308,11 +305,10 @@ struct ChannelFile {
 class Sequencer {
     unsigned freqCounter;
     unsigned stepCounter;
-    Sweep &sweep;
     ChannelFile &cf;
 
 public:
-    Sequencer(ChannelFile &cf, Sweep &sweep);
+    Sequencer(ChannelFile &cf);
 
     void step(unsigned cycles);
     void reset();
@@ -335,7 +331,6 @@ public:
 };
 
 class Synth {
-    Sweep sweep;
     ChannelFile cf;
     Mixer mixer;
     Sequencer sequencer;
@@ -346,7 +341,6 @@ class Synth {
 public:
     Synth(float samplingRate);
 
-    Sweep& getSweep();
     ChannelFile& getChannels();
     Mixer& getMixer();
     Sequencer& getSequencer();
