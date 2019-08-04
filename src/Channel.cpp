@@ -43,15 +43,15 @@ namespace gbsynth {
         return enabled ? SAMPLE_TABLE[currentSample] : 0.0f;
     }
 
-    void Channel::setLength(uint8_t length) {
-        if (length > MAX_LENGTH) {
-            length = MAX_LENGTH;
+    void Channel::setLength(uint8_t _length) {
+        if (_length > MAX_LENGTH) {
+            _length = MAX_LENGTH;
         }
-        this->length = length;
+        length = _length;
     }
 
-    void Channel::setContinuousOutput(bool continuous) {
-        this->continuous = continuous;
+    void Channel::setContinuousOutput(bool _continuous) {
+        continuous = _continuous;
     }
 
     void Channel::lengthStep() {

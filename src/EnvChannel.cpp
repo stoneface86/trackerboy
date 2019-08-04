@@ -26,11 +26,11 @@ namespace gbsynth {
         envelope = (envReg >> 4);
     }
 
-    void EnvChannel::setEnvLength(uint8_t length) {
-        if (length > MAX_ENV_LENGTH) {
-            length = MAX_ENV_LENGTH;
+    void EnvChannel::setEnvLength(uint8_t _envLength) {
+        if (_envLength > MAX_ENV_LENGTH) {
+            _envLength = MAX_ENV_LENGTH;
         }
-        envLength = length;
+        envLength = _envLength;
     }
 
     void EnvChannel::setEnvMode(EnvMode mode) {

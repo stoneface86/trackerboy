@@ -30,8 +30,8 @@ namespace gbsynth {
         dutyCounter = 0;
     }
 
-    void PulseChannel::setDuty(Duty duty) {
-        this->duty = duty;
+    void PulseChannel::setDuty(Duty _duty) {
+        duty = _duty;
     }
 
     uint8_t PulseChannel::generate(unsigned cycles) {

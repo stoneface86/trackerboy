@@ -35,6 +35,14 @@ target_include_directories(
 	${INC_DIR}
 )
 
+if (MSVC)
+target_compile_options(
+	${GBSYNTH}
+	PRIVATE
+	/W4
+)
+endif ()
+
 if (ENABLE_DEMO)
 	add_subdirectory(demo)
 endif (ENABLE_DEMO)

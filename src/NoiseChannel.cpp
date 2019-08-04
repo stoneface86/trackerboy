@@ -40,11 +40,11 @@ namespace gbsynth {
         scf = noiseReg >> 4;
     }
 
-    void NoiseChannel::setScf(uint8_t scf) {
-        if (scf > MAX_SCF) {
-            scf = MAX_SCF;
+    void NoiseChannel::setScf(uint8_t _scf) {
+        if (_scf > MAX_SCF) {
+            _scf = MAX_SCF;
         }
-        this->scf = scf;
+        scf = _scf;
         shiftCounterMax = calcCounterMax(drf, scf);
     }
 
@@ -52,8 +52,8 @@ namespace gbsynth {
         stepSelection = count;
     }
 
-    void NoiseChannel::setDrf(uint8_t drf) {
-        this->drf = drf;
+    void NoiseChannel::setDrf(uint8_t _drf) {
+        drf = _drf;
         shiftCounterMax = calcCounterMax(drf, scf);
     }
 
