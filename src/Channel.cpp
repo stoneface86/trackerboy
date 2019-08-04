@@ -26,12 +26,13 @@ namespace gbsynth {
          1.0f
     };*/
 
-    Channel::Channel() {
-        lengthCounter = 0;
-        currentSample = SAMPLE_GND;
-        length = 0;
-        continuous = true;
-        enabled = true;
+    Channel::Channel() :
+        lengthCounter(0),
+        currentSample(SAMPLE_MIN),
+        length(0),
+        continuous(true),
+        enabled(true)
+    {
     }
 
     uint8_t Channel::getCurrentSample() {
