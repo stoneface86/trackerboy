@@ -74,18 +74,5 @@ namespace gbsynth {
         outputStat = flags;
     }
 
-    void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
-        uint8_t flag = 1 << ch;
-        if (term == Terminal::s02) {
-            flag <<= 4;
-        }
-
-        if (enabled) {
-            outputStat |= static_cast<OutputFlags>(flag);
-        } else {
-            outputStat &= ~static_cast<OutputFlags>(flag);
-        }
-    }
-
 
 }

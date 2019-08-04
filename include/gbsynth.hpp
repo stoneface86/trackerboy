@@ -44,16 +44,6 @@ enum class Terminal {
     right = s02
 };
 
-// TODO: Is this needed?
-enum ChType {
-    CH_SOUND1 = 0,
-    CH_SOUND2 = 1,
-    CH_SOUND3 = 2,
-    CH_SOUND4 = 3
-};
-
-
-
 enum class OutputFlags : uint8_t {
     left1 = 0x1,
     left2 = 0x2,
@@ -214,8 +204,8 @@ public:
         return frequency;
     }
 
-    void setFrequency(uint16_t frequency) {
-        this->frequency = frequency;
+    void setFrequency(uint16_t _frequency) {
+        frequency = _frequency;
         freqCounterMax = calcFreqMax(frequency, multiplier);
     }
 };
@@ -325,7 +315,6 @@ public:
     void setTerminalEnable(Terminal term, bool enabled);
     void setTerminalVolume(Terminal term, uint8_t volume);
     void setEnable(OutputFlags flags);
-    void setEnable(ChType ch, Terminal term, bool enabled);
 
     void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
 };
