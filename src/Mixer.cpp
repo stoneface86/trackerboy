@@ -13,37 +13,37 @@ namespace gbsynth {
         s02enable(DEFAULT_TERM_ENABLE),
         s01vol(DEFAULT_TERM_VOLUME),
         s02vol(DEFAULT_TERM_VOLUME),
-        outputStat((OutputFlags)0)
+        outputStat(OutputFlags::all_off)
     {
     }
 
     void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
         float left = 0.0f, right = 0.0f;
         if (s01enable) {
-            if (outputStat & OUT_SOUND1_LEFT) {
+            if ((outputStat & OutputFlags::left1) == OutputFlags::left1) {
                 left += in1 * VOL_MULTIPLIER;
             }
-            if (outputStat & OUT_SOUND2_LEFT) {
+            if ((outputStat & OutputFlags::left2) == OutputFlags::left2) {
                 left += in2 * VOL_MULTIPLIER;
             }
-            if (outputStat & OUT_SOUND3_LEFT) {
+            if ((outputStat & OutputFlags::left3) == OutputFlags::left3) {
                 left += in3 * VOL_MULTIPLIER;
             }
-            if (outputStat & OUT_SOUND4_LEFT) {
+            if ((outputStat & OutputFlags::left4) == OutputFlags::left4) {
                 left += in4 * VOL_MULTIPLIER;
             }
         }
         if (s02enable) {
-            if (outputStat & OUT_SOUND1_RIGHT) {
+            if ((outputStat & OutputFlags::right1) == OutputFlags::right1) {
                 right += in1 * VOL_MULTIPLIER;
             }
-            if (outputStat & OUT_SOUND2_RIGHT) {
+            if ((outputStat & OutputFlags::right2) == OutputFlags::right2) {
                 right += in2 * VOL_MULTIPLIER;
             }
-            if (outputStat & OUT_SOUND3_RIGHT) {
+            if ((outputStat & OutputFlags::right3) == OutputFlags::right3) {
                 right += in3 * VOL_MULTIPLIER;
             }
-            if (outputStat & OUT_SOUND4_RIGHT) {
+            if ((outputStat & OutputFlags::right4) == OutputFlags::right4) {
                 right += in4 * VOL_MULTIPLIER;
             }
         }
@@ -52,7 +52,7 @@ namespace gbsynth {
     }
 
     void Mixer::setTerminalEnable(Terminal term, bool enabled) {
-        if (term == TERM_S01) {
+        if (term == Terminal::s01) {
             s01enable = enabled;
         } else {
             s02enable = enabled;
@@ -63,7 +63,7 @@ namespace gbsynth {
         if (volume > MAX_VOLUME) {
             volume = MAX_VOLUME;
         }
-        if (term == TERM_S01) {
+        if (term == Terminal::s01) {
             s01vol = volume;
         } else {
             s02vol = volume;
@@ -76,14 +76,14 @@ namespace gbsynth {
 
     void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
         uint8_t flag = 1 << ch;
-        if (term == TERM_S02) {
+        if (term == Terminal::s02) {
             flag <<= 4;
         }
 
         if (enabled) {
-            outputStat |= flag;
+            outputStat |= static_cast<OutputFlags>(flag);
         } else {
-            outputStat &= ~flag;
+            outputStat &= ~static_cast<OutputFlags>(flag);
         }
     }
 

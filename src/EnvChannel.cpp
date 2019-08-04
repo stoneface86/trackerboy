@@ -11,7 +11,7 @@ namespace gbsynth {
         envCounter(0),
         envelope(DEFAULT_ENV_STEPS),
         envLength(DEFAULT_ENV_LENGTH),
-        envMode((EnvMode)DEFAULT_ENV_MODE),
+        envMode(static_cast<EnvMode>(DEFAULT_ENV_MODE)),
         Channel() 
     {
     }
@@ -43,7 +43,7 @@ namespace gbsynth {
             // do nothing if envLength == 0
             if (envCounter == envLength) {
                 envCounter = 0;
-                if (envMode == ENV_AMPLIFY) {
+                if (envMode == EnvMode::amplify) {
                     if (envelope < SAMPLE_MAX) {
                         ++envelope;
                     }

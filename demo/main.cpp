@@ -13,6 +13,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "demo.hpp"
 #include "gbsynth.hpp"

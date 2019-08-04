@@ -41,7 +41,7 @@ namespace gbsynth {
                 if (sweepShift) {
                     int16_t shadow = ch.getFrequency();
                     int16_t sweepfreq = shadow >> sweepShift;
-                    if (sweepMode == SWEEP_SUBTRACTION) {
+                    if (sweepMode == SweepMode::subtraction) {
                         sweepfreq = shadow - sweepfreq;
                         if (sweepfreq < 0) {
                             return; // no change

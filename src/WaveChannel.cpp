@@ -9,9 +9,9 @@ namespace gbsynth {
 
     WaveChannel::WaveChannel() :
         Channel(),
-        FreqChannel(2),
+        FreqChannel(),
         wavedata{0},
-        outputLevel((WaveformLevel)DEFAULT_WAVE_LEVEL),
+        outputLevel(static_cast<WaveVolume>(DEFAULT_WAVE_LEVEL)),
         waveIndex(0)
     {
     }
@@ -21,7 +21,7 @@ namespace gbsynth {
         freqCounter = 0;
     }
 
-    void WaveChannel::setOutputLevel(WaveformLevel level) {
+    void WaveChannel::setOutputLevel(WaveVolume level) {
         outputLevel = level;
     }
 
@@ -43,13 +43,13 @@ namespace gbsynth {
             sample >>= 4;
         }
         switch (outputLevel) {
-            case WAVE_MUTE:
+            case WaveVolume::mute:
                 return SAMPLE_GND;
-            case WAVE_WHOLE:
+            case WaveVolume::full:
                 return sample;
-            case WAVE_HALF:
+            case WaveVolume::half:
                 return sample >> 1;
-            case WAVE_QUARTER:
+            case WaveVolume::quarter:
                 return sample >> 2;
             default:
                 return SAMPLE_GND; // should never happen

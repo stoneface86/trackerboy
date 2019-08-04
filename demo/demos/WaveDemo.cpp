@@ -49,12 +49,12 @@ void WaveDemo::init(Synth &synth) {
     Mixer &mixer = synth.getMixer();
     WaveChannel &ch3 = synth.getChannels().ch3;
 
-    ch3.setOutputLevel(WAVE_WHOLE);
+    ch3.setOutputLevel(WaveVolume::full);
     ch3.setWaveform(wavedata);
 
-    mixer.setTerminalEnable(TERM_LEFT, true);
-    mixer.setTerminalEnable(TERM_RIGHT, true);
-    mixer.setEnable(OUT_SOUND3_BOTH);
+    mixer.setTerminalEnable(Terminal::left, true);
+    mixer.setTerminalEnable(Terminal::right, true);
+    mixer.setEnable(OutputFlags::both3);
 }
 
 long WaveDemo::setupNextRun(Synth &synth, unsigned counter) {

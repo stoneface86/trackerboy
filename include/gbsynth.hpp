@@ -2,303 +2,359 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
+#include <type_traits>
 using std::uint8_t;
 using std::uint16_t;
-using std::vector;
 
 namespace gbsynth {
 
-    enum Duty {
-        DUTY_125 = 0,
-        DUTY_25  = 1,
-        DUTY_50  = 2,
-        DUTY_75  = 3
-    };
+enum class Duty {
+    p125 = 0,
+    p25  = 1,
+    p50  = 2,
+    p75  = 3
+};
 
-    enum EnvMode {
-        ENV_ATTENUATE = 0,
-        ENV_AMPLIFY = 1
-    };
+enum class EnvMode {
+    attenuate = 0,
+    amplify = 1
+};
 
-    enum SweepMode {
-        SWEEP_ADDITION = 0,
-        SWEEP_SUBTRACTION = 1
-    };
+enum class SweepMode {
+    addition = 0,
+    subtraction = 1
+};
 
-    enum StepCount {
-        STEPS_15 = 0,
-        STEPS_7 = 1
-    };
+enum class StepCount {
+    steps15 = 0,
+    steps7 = 1
+};
 
-    enum WaveformLevel {
-        WAVE_MUTE    = 0,
-        WAVE_WHOLE   = 1,
-        WAVE_HALF    = 2,
-        WAVE_QUARTER = 3
-    };
+enum class WaveVolume {
+    mute    = 0,
+    full    = 1,
+    half    = 2,
+    quarter = 3
+};
 
-    enum Terminal {
-        TERM_S01,
-        TERM_S02,
-        TERM_LEFT = TERM_S01,   // todo: verify that s01 = left
-        TERM_RIGHT = TERM_S02
-    };
+enum class Terminal {
+    s01,
+    s02,
+    left  = s01,   // todo: verify that s01 = left
+    right = s02
+};
 
-    enum ChType {
-        CH_SOUND1 = 0,
-        CH_SOUND2 = 1,
-        CH_SOUND3 = 2,
-        CH_SOUND4 = 3
-    };
+// TODO: Is this needed?
+enum ChType {
+    CH_SOUND1 = 0,
+    CH_SOUND2 = 1,
+    CH_SOUND3 = 2,
+    CH_SOUND4 = 3
+};
 
-    enum OutputFlags : uint8_t {
-        OUT_SOUND1_LEFT     = 0x1,
-        OUT_SOUND2_LEFT     = 0x2,
-        OUT_SOUND3_LEFT     = 0x4,
-        OUT_SOUND4_LEFT     = 0x8,
-        OUT_SOUND1_RIGHT    = 0x10,
-        OUT_SOUND2_RIGHT    = 0x20,
-        OUT_SOUND3_RIGHT    = 0x40,
-        OUT_SOUND4_RIGHT    = 0x80,
-        OUT_SOUND1_BOTH     = OUT_SOUND1_LEFT | OUT_SOUND1_RIGHT,
-        OUT_SOUND2_BOTH     = OUT_SOUND2_LEFT | OUT_SOUND2_RIGHT,
-        OUT_SOUND3_BOTH     = OUT_SOUND3_LEFT | OUT_SOUND3_RIGHT,
-        OUT_SOUND4_BOTH     = OUT_SOUND4_LEFT | OUT_SOUND4_RIGHT,
-        OUT_ALL             = 0xFF
-    };
 
-    enum Constants {
-        // maximum values for parameters
-        MAX_SWEEP_TIME      = 0x7,
-        MAX_SWEEP_SHIFT     = 0x7,
-        MAX_LENGTH          = 0x3F,
-        MAX_ENV_STEPS       = 0xF,
-        MAX_ENV_LENGTH      = 0x7,
-        MAX_FREQUENCY       = 0x7FF,
-        MAX_WAVE_LENGTH     = 0xFF,
-        MAX_VOLUME          = 0x7,
-        MAX_SCF             = 0xD,
 
-        // defaults
-        DEFAULT_FREQUENCY   = 0,
-        DEFAULT_DUTY        = DUTY_75,
-        DEFAULT_ENV_STEPS   = 0,
-        DEFAULT_ENV_LENGTH  = 0,
-        DEFAULT_ENV_MODE    = ENV_ATTENUATE,
-        DEFAULT_SWEEP_TIME  = MAX_SWEEP_TIME,
-        DEFAULT_SWEEP_MODE  = SWEEP_ADDITION,
-        DEFAULT_SWEEP_SHIFT = 0,
-        DEFAULT_WAVE_LEVEL  = WAVE_WHOLE,
-        DEFAULT_TERM_ENABLE = false,
-        DEFAULT_TERM_VOLUME = MAX_VOLUME,
-        DEFAULT_SCF         = 0,
-        DEFAULT_STEP_COUNT  = STEPS_15,
-        DEFAULT_DRF         = 0,
-
-        // sample values
-        SAMPLE_GND          = 0x8,
-        SAMPLE_MAX          = 0xF,
-        SAMPLE_MIN          = 0x0,
-
-        // # of entries in waveform ram (sound3)
-        WAVE_SIZE           = 32,
-        WAVE_RAMSIZE        = 16
-    };
-
-    class Channel {
-        uint8_t lengthCounter;
-        bool continuous;
-        bool enabled;
-
-    public:
-        void disable();
-        uint8_t getCurrentSample();
-        virtual float getCurrentVolume();
-        void setLength(uint8_t length);
-        void setContinuousOutput(bool continuous);
-        void lengthStep();
-        virtual void reset();
-        virtual void step(unsigned cycles);
-
-    protected:
-        uint8_t currentSample;
-        uint8_t length;
-
-        Channel();
-
-        virtual uint8_t generate(unsigned cycles) = 0;
-    };
-
-    class EnvChannel : public Channel {
-        uint8_t envCounter;
-        
-    public:
-        float getCurrentVolume() override;
-        void setEnvStep(uint8_t step);
-        void setEnvMode(EnvMode mode);
-        void setEnvLength(uint8_t length);
-        void envStep();
-        virtual void reset() override;
-
-    protected:
-        uint8_t envelope;
-        EnvMode envMode;
-        uint8_t envLength;
-
-        EnvChannel();
-    };
-
-    class FreqChannel {
-        unsigned multiplier;
-
-    protected:
-        uint16_t frequency;
-        unsigned freqCounter;
-        unsigned freqCounterMax;
-
-    public:
-        FreqChannel(unsigned multiplier);
-
-        uint16_t getFrequency();
-        void setFrequency(uint16_t frequency);
-        void setFrequency(float frequency);
-    };
-
-    class PulseChannel : public EnvChannel, public FreqChannel {
-        Duty duty;
-        unsigned dutyCounter;
-
-    public:
-        PulseChannel();
-
-        void setDuty(Duty duty);
-        void reset() override;
-
-    protected:
-        uint8_t generate(unsigned cycles) override;
+enum class OutputFlags : uint8_t {
+    left1 = 0x1,
+    left2 = 0x2,
+    left3 = 0x4,
+    left4 = 0x8,
+    right1 = 0x10,
+    right2 = 0x20,
+    right3 = 0x40,
+    right4 = 0x80,
+    both1 = left1 | right1,
+    both2 = left2 | right2,
+    both3 = left3 | right3,
+    both4 = left4 | right4,
+    all_on = 0xFF,
+    all_off = 0x0
     
-    };
+};
 
-    class WaveChannel : public Channel, public FreqChannel {
-        WaveformLevel outputLevel;
-        uint8_t wavedata[WAVE_RAMSIZE];
-        unsigned waveIndex;
+constexpr inline OutputFlags operator |(OutputFlags lhs, OutputFlags rhs) {
+    return static_cast<OutputFlags>(
+        static_cast<std::underlying_type<OutputFlags>::type>(lhs) |
+        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
+    );
+}
 
-    public:
-        WaveChannel();
+constexpr inline OutputFlags operator &(OutputFlags lhs, OutputFlags rhs) {
+    return static_cast<OutputFlags>(
+        static_cast<std::underlying_type<OutputFlags>::type>(lhs) &
+        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
+        );
+}
 
-        void setOutputLevel(WaveformLevel level);
-        void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
-        void reset() override;
+constexpr inline OutputFlags operator ~(OutputFlags rhs) {
+    return static_cast<OutputFlags>(
+        ~static_cast<std::underlying_type<OutputFlags>::type>(rhs)
+        );
+}
 
-    protected:
-        uint8_t generate(unsigned cycles) override;
-    };
+constexpr inline OutputFlags& operator &=(OutputFlags &lhs, OutputFlags rhs) {
+    lhs = static_cast<OutputFlags>(
+            static_cast<std::underlying_type<OutputFlags>::type>(lhs) &
+            static_cast<std::underlying_type<OutputFlags>::type>(rhs)
+    );
+    return lhs;
+}
 
-    class NoiseChannel : public EnvChannel {
-        uint8_t scf;
-        StepCount stepSelection;
-        uint8_t drf;
+constexpr inline OutputFlags& operator |=(OutputFlags &lhs, OutputFlags rhs) {
+    lhs = static_cast<OutputFlags>(
+        static_cast<std::underlying_type<OutputFlags>::type>(lhs) |
+        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
+        );
+    return lhs;
+}
 
-        uint16_t lfsr;
-        unsigned shiftCounter;
-        unsigned shiftCounterMax;
+
+
+
+enum Constants {
+    // maximum values for parameters
+    MAX_SWEEP_TIME      = 0x7,
+    MAX_SWEEP_SHIFT     = 0x7,
+    MAX_LENGTH          = 0x3F,
+    MAX_ENV_STEPS       = 0xF,
+    MAX_ENV_LENGTH      = 0x7,
+    MAX_FREQUENCY       = 0x7FF,
+    MAX_WAVE_LENGTH     = 0xFF,
+    MAX_VOLUME          = 0x7,
+    MAX_SCF             = 0xD,
+
+    // defaults
+    DEFAULT_FREQUENCY   = 0,
+    DEFAULT_DUTY        = Duty::p75,
+    DEFAULT_ENV_STEPS   = 0,
+    DEFAULT_ENV_LENGTH  = 0,
+    DEFAULT_ENV_MODE    = EnvMode::attenuate,
+    DEFAULT_SWEEP_TIME  = MAX_SWEEP_TIME,
+    DEFAULT_SWEEP_MODE  = SweepMode::addition,
+    DEFAULT_SWEEP_SHIFT = 0,
+    DEFAULT_WAVE_LEVEL  = WaveVolume::full,
+    DEFAULT_TERM_ENABLE = false,
+    DEFAULT_TERM_VOLUME = MAX_VOLUME,
+    DEFAULT_SCF         = 0,
+    DEFAULT_STEP_COUNT  = StepCount::steps15,
+    DEFAULT_DRF         = 0,
+
+    // sample values
+    SAMPLE_GND          = 0x8,
+    SAMPLE_MAX          = 0xF,
+    SAMPLE_MIN          = 0x0,
+
+    // # of entries in waveform ram (sound3)
+    WAVE_SIZE           = 32,
+    WAVE_RAMSIZE        = 16
+};
+
+class Channel {
+    uint8_t lengthCounter;
+    bool continuous;
+    bool enabled;
+
+protected:
+    uint8_t currentSample;
+    uint8_t length;
+
+    Channel();
+
+    virtual uint8_t generate(unsigned cycles) = 0;
+
+public:
+    void disable();
+    uint8_t getCurrentSample();
+    virtual float getCurrentVolume();
+    void setLength(uint8_t length);
+    void setContinuousOutput(bool continuous);
+    void lengthStep();
+    
+    virtual void reset();
+    void step(unsigned cycles);
+};
+
+class EnvChannel : public Channel {
+    uint8_t envCounter;
         
-    public:
-        NoiseChannel();
+public:
+    float getCurrentVolume() override;
+    void setEnvStep(uint8_t step);
+    void setEnvMode(EnvMode mode);
+    void setEnvLength(uint8_t length);
+    void envStep();
+    void reset() override;
 
-        void setScf(uint8_t scf);
-        void setStepSelection(StepCount count);
-        void setDrf(uint8_t drf);
+protected:
+    uint8_t envelope;
+    EnvMode envMode;
+    uint8_t envLength;
 
-        void reset() override;
+    EnvChannel();
+};
 
-    protected:
-        uint8_t generate(unsigned cycles) override;
+#define calcFreqMax(f,m) ((2048 - f) * m)
+template <unsigned multiplier>
+class FreqChannel {
+protected:
+    uint16_t frequency;
+    unsigned freqCounter;
+    unsigned freqCounterMax;
 
-    };
+public:
+    FreqChannel() :
+        frequency(DEFAULT_FREQUENCY),
+        freqCounter(0),
+        freqCounterMax(calcFreqMax(frequency, multiplier))
+    {
+    }
 
+    uint16_t getFrequency() {
+        return frequency;
+    }
 
-    class Sweep {
-        SweepMode sweepMode;
-        uint8_t sweepTime;
-        uint8_t sweepShift;
+    void setFrequency(uint16_t frequency) {
+        this->frequency = frequency;
+        freqCounterMax = calcFreqMax(frequency, multiplier);
+    }
+};
+#undef calcFreqMax
 
-        PulseChannel &ch;
+class PulseChannel : public EnvChannel, public FreqChannel<4> {
+    Duty duty;
+    unsigned dutyCounter;
 
-        uint8_t counter;
+public:
+    PulseChannel();
 
-    public:
-        Sweep(PulseChannel &ch);
+    void setDuty(Duty duty);
+    void reset() override;
 
-        void setSweepTime(uint8_t ts);
-        void setSweepMode(SweepMode mode);
-        void setSweepShift(uint8_t n);
-        void reset();
-        void step();
-    };
-
-    struct ChannelFile {
-        PulseChannel ch1;
-        PulseChannel ch2;
-        WaveChannel ch3;
-        NoiseChannel ch4;
-    };
-
-    class Sequencer {
-        unsigned freqCounter;
-        unsigned stepCounter;
-        Sweep &sweep;
-        ChannelFile &cf;
-
-    public:
-        Sequencer(ChannelFile &cf, Sweep &sweep);
-
-        void step(unsigned cycles);
-        void reset();
-    };
-
-    class Mixer {
-        bool s01enable, s02enable;
-        uint8_t s01vol, s02vol;
-        uint8_t outputStat;
-
-    public:
-        Mixer();
-
-        void setTerminalEnable(Terminal term, bool enabled);
-        void setTerminalVolume(Terminal term, uint8_t volume);
-        void setEnable(OutputFlags flags);
-        void setEnable(ChType ch, Terminal term, bool enabled);
-
-        void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
-    };
-
-    class Synth {
-        Sweep sweep;
-        ChannelFile cf;
-        Mixer mixer;
-        Sequencer sequencer;
-
-        float samplingRate;
-        unsigned stepsPerSample;
-
-    public:
-        Synth(float samplingRate);
-
-        Sweep& getSweep();
-        ChannelFile& getChannels();
-        Mixer& getMixer();
-        Sequencer& getSequencer();
-
-        void fill(float leftBuf[], float rightBuf[], size_t nsamples);
-    };
+protected:
+    uint8_t generate(unsigned cycles) override;
+    
+};
 
 
-    // utility functions
+class WaveChannel : public Channel, public FreqChannel<2> {
+    WaveVolume outputLevel;
+    uint8_t wavedata[WAVE_RAMSIZE];
+    unsigned waveIndex;
 
-    float fromGbFreq(uint16_t value);
+public:
+    WaveChannel();
 
-    uint16_t toGbFreq(float value);
+    void setOutputLevel(WaveVolume level);
+    void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
+    void reset() override;
+
+protected:
+    uint8_t generate(unsigned cycles) override;
+};
+
+class NoiseChannel : public EnvChannel {
+    uint8_t scf;
+    StepCount stepSelection;
+    uint8_t drf;
+
+    uint16_t lfsr;
+    unsigned shiftCounter;
+    unsigned shiftCounterMax;
+        
+public:
+    NoiseChannel();
+
+    void setScf(uint8_t scf);
+    void setStepSelection(StepCount count);
+    void setDrf(uint8_t drf);
+
+    void reset() override;
+
+protected:
+    uint8_t generate(unsigned cycles) override;
+
+};
+
+
+class Sweep {
+    SweepMode sweepMode;
+    uint8_t sweepTime;
+    uint8_t sweepShift;
+
+    PulseChannel &ch;
+
+    uint8_t counter;
+
+public:
+    Sweep(PulseChannel &ch);
+
+    void setSweepTime(uint8_t ts);
+    void setSweepMode(SweepMode mode);
+    void setSweepShift(uint8_t n);
+    void reset();
+    void step();
+};
+
+struct ChannelFile {
+    PulseChannel ch1;
+    PulseChannel ch2;
+    WaveChannel ch3;
+    NoiseChannel ch4;
+};
+
+class Sequencer {
+    unsigned freqCounter;
+    unsigned stepCounter;
+    Sweep &sweep;
+    ChannelFile &cf;
+
+public:
+    Sequencer(ChannelFile &cf, Sweep &sweep);
+
+    void step(unsigned cycles);
+    void reset();
+};
+
+class Mixer {
+    bool s01enable, s02enable;
+    uint8_t s01vol, s02vol;
+    OutputFlags outputStat;
+
+public:
+    Mixer();
+
+    void setTerminalEnable(Terminal term, bool enabled);
+    void setTerminalVolume(Terminal term, uint8_t volume);
+    void setEnable(OutputFlags flags);
+    void setEnable(ChType ch, Terminal term, bool enabled);
+
+    void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
+};
+
+class Synth {
+    Sweep sweep;
+    ChannelFile cf;
+    Mixer mixer;
+    Sequencer sequencer;
+
+    float samplingRate;
+    unsigned stepsPerSample;
+
+public:
+    Synth(float samplingRate);
+
+    Sweep& getSweep();
+    ChannelFile& getChannels();
+    Mixer& getMixer();
+    Sequencer& getSequencer();
+
+    void fill(float leftBuf[], float rightBuf[], size_t nsamples);
+};
+
+
+// utility functions
+
+float fromGbFreq(uint16_t value);
+
+uint16_t toGbFreq(float value);
 }

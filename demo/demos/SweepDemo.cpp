@@ -25,9 +25,9 @@ void SweepDemo::init(Synth &synth) {
     sweep.setSweepShift(DEMO_SWEEP_SHIFT);
     sweep.setSweepTime(DEMO_SWEEP_TIME);
 
-    mixer.setTerminalEnable(TERM_LEFT, true);
-    mixer.setTerminalEnable(TERM_RIGHT, true);
-    mixer.setEnable(OUT_SOUND1_BOTH);
+    mixer.setTerminalEnable(Terminal::left, true);
+    mixer.setTerminalEnable(Terminal::right, true);
+    mixer.setEnable(OutputFlags::both1);
 }
 
 long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
@@ -42,13 +42,13 @@ long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
         case 0:
             // sweep subtraction for 4 seconds
             freq = DEMO_SUB_FREQ;
-            mode = SWEEP_SUBTRACTION;
+            mode = SweepMode::subtraction;
             std::cout << "Sweep subtraction" << std::endl;
             break;
         case 1:
             // sweep addition for 4 seconds
             freq = DEMO_ADD_FREQ;
-            mode = SWEEP_ADDITION;
+            mode = SweepMode::addition;
             std::cout << "Sweep addition" << std::endl;
             break;
         default:

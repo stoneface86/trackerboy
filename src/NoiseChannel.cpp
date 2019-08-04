@@ -62,7 +62,7 @@ namespace gbsynth {
             lfsr >>= 1;
             // set the resulting xor to bit 15 (feedback)
             lfsr |= xor << 14;
-            if (stepSelection == STEPS_7) {
+            if (stepSelection == StepCount::steps7) {
                 // 7-bit lfsr, set bit 7 with the result
                 lfsr &= ~0x40; // reset bit 7
                 lfsr |= xor << 6; // set bit 7 result

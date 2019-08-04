@@ -4,7 +4,7 @@
 #include "../demo.hpp"
 
 #define DEMO_RUNTIME 1000
-#define DEMO_FREQ    440.0f
+#define DEMO_FREQ    toGbFreq(440.0f)
 
 using namespace gbsynth;
 
@@ -29,18 +29,17 @@ void DutyDemo::init(Synth &synth) {
     ch2.setFrequency(DEMO_FREQ);
     ch2.reset();
 
-    mixer.setTerminalEnable(TERM_LEFT, true);
-    mixer.setTerminalEnable(TERM_RIGHT, true);
-    mixer.setEnable(OUT_SOUND2_BOTH);
+    mixer.setTerminalEnable(Terminal::left, true);
+    mixer.setTerminalEnable(Terminal::right, true);
+    mixer.setEnable(OutputFlags::both2);
 }
 
 long DutyDemo::setupNextRun(Synth &synth, unsigned counter) {
     if (counter > 3) {
         return 0;
     } else {
-        Duty duty = (Duty)counter;
-        std::cout << "Duty: " << DUTY_STRINGS[duty] << "%" << std::endl;
-        synth.getChannels().ch2.setDuty(duty);
+        std::cout << "Duty: " << DUTY_STRINGS[counter] << "%" << std::endl;
+        synth.getChannels().ch2.setDuty(static_cast<Duty>(counter));
         return DEMO_RUNTIME;
     }
 }

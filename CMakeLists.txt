@@ -16,7 +16,6 @@ set(GBSYNTH "gbsynth")
 set(GBSYNTH_SRC 
 	"src/Channel.cpp" 
 	"src/EnvChannel.cpp"
-	"src/FreqChannel.cpp"
 	"src/gbsynth.cpp" 
 	"src/Mixer.cpp"
 	"src/NoiseChannel.cpp"

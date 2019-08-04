@@ -18,7 +18,7 @@ namespace gbsynth {
 
     PulseChannel::PulseChannel() : 
         EnvChannel(),
-        FreqChannel(4),
+        FreqChannel(),
         duty((Duty)DEFAULT_DUTY),
         dutyCounter(0)
     {        
@@ -39,6 +39,6 @@ namespace gbsynth {
         unsigned dutysteps = freqCounter / freqCounterMax;
         freqCounter %= freqCounterMax;
         dutyCounter = (dutyCounter + dutysteps) & 0x7; // & 7 == % 8
-        return DUTY_TABLE[duty][dutyCounter];
+        return DUTY_TABLE[static_cast<uint8_t>(duty)][dutyCounter];
     }
 }
