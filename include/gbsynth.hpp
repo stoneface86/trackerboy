@@ -179,6 +179,7 @@ class EnvChannel : public Channel {
         
 public:
     float getCurrentVolume() override;
+    void setEnv(uint8_t envReg);
     void setEnvStep(uint8_t step);
     void setEnvMode(EnvMode mode);
     void setEnvLength(uint8_t length);
@@ -264,6 +265,7 @@ class NoiseChannel : public EnvChannel {
 public:
     NoiseChannel();
 
+    void setNoise(uint8_t noiseReg);
     void setScf(uint8_t scf);
     void setStepSelection(StepCount count);
     void setDrf(uint8_t drf);
@@ -288,6 +290,7 @@ class Sweep {
 public:
     Sweep(PulseChannel &ch);
 
+    void setSweep(uint8_t sweepReg);
     void setSweepTime(uint8_t ts);
     void setSweepMode(SweepMode mode);
     void setSweepShift(uint8_t n);

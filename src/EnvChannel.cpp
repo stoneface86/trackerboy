@@ -20,6 +20,12 @@ namespace gbsynth {
         return Channel::getCurrentVolume() * ENV_TABLE[envelope];
     }
 
+    void EnvChannel::setEnv(uint8_t envReg) {
+        envLength = (envReg & 0x7);
+        envMode = static_cast<EnvMode>((envReg >> 3) & 1);
+        envelope = (envReg >> 4);
+    }
+
     void EnvChannel::setEnvLength(uint8_t length) {
         if (length > MAX_ENV_LENGTH) {
             length = MAX_ENV_LENGTH;

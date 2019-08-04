@@ -16,6 +16,12 @@ namespace gbsynth {
         counter = 0;
     }
 
+    void Sweep::setSweep(uint8_t sweepReg) {
+        sweepShift = sweepReg & 0x7;
+        sweepMode = static_cast<SweepMode>((sweepReg >> 3) & 1);
+        sweepTime = (sweepReg >> 4) & 0x7;
+    }
+
     void Sweep::setSweepTime(uint8_t ts) {
         if (ts > MAX_SWEEP_TIME) {
             ts = MAX_SWEEP_TIME;

@@ -34,6 +34,12 @@ namespace gbsynth {
         lfsr = LFSR_INIT;
     }
 
+    void NoiseChannel::setNoise(uint8_t noiseReg) {
+        drf = noiseReg & 0x7;
+        stepSelection = static_cast<StepCount>((noiseReg >> 3) & 1);
+        scf = noiseReg >> 4;
+    }
+
     void NoiseChannel::setScf(uint8_t scf) {
         if (scf > MAX_SCF) {
             scf = MAX_SCF;
