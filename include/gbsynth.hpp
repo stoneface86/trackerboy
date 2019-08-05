@@ -8,58 +8,64 @@ using std::uint16_t;
 
 namespace gbsynth {
 
+
 enum class Duty {
-    p125 = 0,
-    p25  = 1,
-    p50  = 2,
-    p75  = 3
+    p125        = 0,
+    p25         = 1,
+    p50         = 2,
+    p75         = 3
 };
+
 
 enum class EnvMode {
-    attenuate = 0,
-    amplify = 1
+    attenuate   = 0,
+    amplify     = 1
 };
 
+
 enum class SweepMode {
-    addition = 0,
+    addition    = 0,
     subtraction = 1
 };
 
+
 enum class StepCount {
-    steps15 = 0,
-    steps7 = 1
+    steps15     = 0,
+    steps7      = 1
 };
 
+
 enum class WaveVolume {
-    mute    = 0,
-    full    = 1,
-    half    = 2,
-    quarter = 3
+    mute        = 0,
+    full        = 1,
+    half        = 2,
+    quarter     = 3
 };
+
 
 enum class Terminal {
     s01,
     s02,
-    left  = s01,   // todo: verify that s01 = left
+    left  = s01,
     right = s02
 };
 
+
 enum class OutputFlags : uint8_t {
-    left1 = 0x1,
-    left2 = 0x2,
-    left3 = 0x4,
-    left4 = 0x8,
-    right1 = 0x10,
-    right2 = 0x20,
-    right3 = 0x40,
-    right4 = 0x80,
-    both1 = left1 | right1,
-    both2 = left2 | right2,
-    both3 = left3 | right3,
-    both4 = left4 | right4,
-    all_on = 0xFF,
-    all_off = 0x0
-    
+    left1       = 0x1,
+    left2       = 0x2,
+    left3       = 0x4,
+    left4       = 0x8,
+    right1      = 0x10,
+    right2      = 0x20,
+    right3      = 0x40,
+    right4      = 0x80,
+    both1       = left1 | right1,
+    both2       = left2 | right2,
+    both3       = left3 | right3,
+    both4       = left4 | right4,
+    all_on      = 0xFF,
+    all_off     = 0x0
 };
 
 constexpr inline OutputFlags operator |(OutputFlags lhs, OutputFlags rhs) {
@@ -97,8 +103,6 @@ constexpr inline OutputFlags& operator |=(OutputFlags &lhs, OutputFlags rhs) {
         );
     return lhs;
 }
-
-
 
 
 enum Constants {
@@ -139,6 +143,7 @@ enum Constants {
     WAVE_RAMSIZE        = 16
 };
 
+
 class Channel {
     uint8_t lengthCounter;
     bool continuous;
@@ -156,39 +161,41 @@ public:
     void disable();
     uint8_t getCurrentSample();
     virtual float getCurrentVolume();
-    void setLength(uint8_t length);
-    void setContinuousOutput(bool continuous);
     void lengthStep();
-    
     virtual void reset();
+    void setContinuousOutput(bool continuous);
+    void setLength(uint8_t length);
     virtual void step(unsigned cycles) = 0;
 };
 
+
 class EnvChannel : public Channel {
     uint8_t envCounter;
-        
-public:
-    virtual ~EnvChannel() = default;
-
-    float getCurrentVolume() override;
-    void setEnv(uint8_t envReg);
-    void setEnvStep(uint8_t step);
-    void setEnvMode(EnvMode mode);
-    void setEnvLength(uint8_t length);
-    void envStep();
-    void reset() override;
-
+    
 protected:
     uint8_t envelope;
     EnvMode envMode;
     uint8_t envLength;
 
     EnvChannel();
+
+public:
+    virtual ~EnvChannel() = default;
+
+    void envStep();
+    float getCurrentVolume() override;
+    void reset() override;
+    void setEnv(uint8_t envReg);
+    void setEnvLength(uint8_t length);
+    void setEnvMode(EnvMode mode);
+    void setEnvStep(uint8_t step);
 };
 
-#define calcFreqMax(f,m) ((2048 - f) * m)
 template <unsigned multiplier>
 class FreqChannel {
+
+#define calcFreqMax(f,m) ((2048 - f) * m)
+
 protected:
     uint16_t frequency;
     unsigned freqCounter;
@@ -210,8 +217,11 @@ public:
         frequency = _frequency;
         freqCounterMax = calcFreqMax(frequency, multiplier);
     }
-};
+
 #undef calcFreqMax
+
+};
+
 
 class PulseChannel : public EnvChannel, public FreqChannel<4> {
     Duty duty;
@@ -220,11 +230,12 @@ class PulseChannel : public EnvChannel, public FreqChannel<4> {
 public:
     PulseChannel();
 
-    void setDuty(Duty duty);
     virtual void reset() override;
+    void setDuty(Duty duty);
     void step(unsigned cycles) override;
     
 };
+
 
 class SweepPulseChannel : public PulseChannel {
     SweepMode sweepMode;
@@ -238,9 +249,9 @@ public:
 
     void reset() override;
     void setSweep(uint8_t sweepReg);
-    void setSweepTime(uint8_t ts);
     void setSweepMode(SweepMode mode);
     void setSweepShift(uint8_t n);
+    void setSweepTime(uint8_t ts);
     void sweepStep();
 };
 
@@ -253,12 +264,12 @@ class WaveChannel : public Channel, public FreqChannel<2> {
 public:
     WaveChannel();
 
+    void reset() override;
     void setOutputLevel(WaveVolume level);
     void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
-    void reset() override;
     void step(unsigned cycles) override;
-
 };
+
 
 class NoiseChannel : public EnvChannel {
     uint8_t scf;
@@ -272,15 +283,14 @@ class NoiseChannel : public EnvChannel {
 public:
     NoiseChannel();
 
+    void reset() override;
+    void setDrf(uint8_t drf);
     void setNoise(uint8_t noiseReg);
     void setScf(uint8_t scf);
     void setStepSelection(StepCount count);
-    void setDrf(uint8_t drf);
-
-    void reset() override;
     void step(unsigned cycles) override;
-
 };
+
 
 struct ChannelFile {
     SweepPulseChannel ch1;
@@ -288,6 +298,7 @@ struct ChannelFile {
     WaveChannel ch3;
     NoiseChannel ch4;
 };
+
 
 class Sequencer {
     unsigned freqCounter;
@@ -297,9 +308,10 @@ class Sequencer {
 public:
     Sequencer(ChannelFile &cf);
 
-    void step(unsigned cycles);
     void reset();
+    void step(unsigned cycles);
 };
+
 
 class Mixer {
     bool s01enable, s02enable;
@@ -309,12 +321,12 @@ class Mixer {
 public:
     Mixer();
 
+    void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
+    void setEnable(OutputFlags flags);
     void setTerminalEnable(Terminal term, bool enabled);
     void setTerminalVolume(Terminal term, uint8_t volume);
-    void setEnable(OutputFlags flags);
-
-    void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
 };
+
 
 class Synth {
     ChannelFile cf;
@@ -340,4 +352,5 @@ public:
 float fromGbFreq(uint16_t value);
 
 uint16_t toGbFreq(float value);
+
 }

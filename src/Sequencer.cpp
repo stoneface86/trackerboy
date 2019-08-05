@@ -19,53 +19,53 @@
 
 namespace gbsynth {
 
-    Sequencer::Sequencer(ChannelFile &cf) : 
-        cf(cf),
-        freqCounter(0),
-        stepCounter(0)
-    {
-    }
+Sequencer::Sequencer(ChannelFile &cf) : 
+    cf(cf),
+    freqCounter(0),
+    stepCounter(0)
+{
+}
 
-    void Sequencer::reset() {
-        freqCounter = 0;
-        stepCounter = 0;
-    }
+void Sequencer::reset() {
+    freqCounter = 0;
+    stepCounter = 0;
+}
 
-    void Sequencer::step(unsigned cycles) {
-        // TODO: check that cycles <= FREQ_COUNTER_MAX
-        freqCounter += cycles;
-        if (freqCounter >= FREQ_COUNTER_MAX) {
-            freqCounter -= FREQ_COUNTER_MAX;
+void Sequencer::step(unsigned cycles) {
+    // TODO: check that cycles <= FREQ_COUNTER_MAX
+    freqCounter += cycles;
+    if (freqCounter >= FREQ_COUNTER_MAX) {
+        freqCounter -= FREQ_COUNTER_MAX;
             
-            switch (stepCounter++) {
-                case 0:
-                    allLengthStep(cf);
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    allLengthStep(cf);
-                    cf.ch1.sweepStep();
-                    break;
-                case 3:
-                    break;
-                case 4:
-                    allLengthStep(cf);
-                    break;
-                case 5:
-                    break;
-                case 6:
-                    allLengthStep(cf);
-                    cf.ch1.sweepStep();
-                    break;
-                case 7:
-                    stepCounter = 0; // adjust counter since it overflowed
-                    allEnvStep(cf);
-                    break;
+        switch (stepCounter++) {
+            case 0:
+                allLengthStep(cf);
+                break;
+            case 1:
+                break;
+            case 2:
+                allLengthStep(cf);
+                cf.ch1.sweepStep();
+                break;
+            case 3:
+                break;
+            case 4:
+                allLengthStep(cf);
+                break;
+            case 5:
+                break;
+            case 6:
+                allLengthStep(cf);
+                cf.ch1.sweepStep();
+                break;
+            case 7:
+                stepCounter = 0; // adjust counter since it overflowed
+                allEnvStep(cf);
+                break;
 
-            }
         }
-        
     }
+        
+}
 
 }
