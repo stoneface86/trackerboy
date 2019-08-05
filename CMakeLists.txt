@@ -23,7 +23,6 @@ set(GBSYNTH_SRC
 	"src/Sequencer.cpp"
 	"src/SweepPulseChannel.cpp"
 	"src/Synth.cpp"
-	"src/tables.cpp"
 	"src/WaveChannel.cpp"
 )
 

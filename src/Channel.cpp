@@ -1,9 +1,28 @@
 
 #include "gbsynth.hpp"
-#include "tables.h"
 
 
 namespace gbsynth {
+
+static const float SAMPLE_TABLE[16] = {
+    -1.0f,
+    -7.0f / 8.0f,
+    -6.0f / 8.0f,
+    -5.0f / 8.0f,
+    -4.0f / 8.0f,
+    -3.0f / 8.0f,
+    -2.0f / 8.0f,
+    -1.0f / 8.0f,
+    0.0f,
+    1.0f / 7.0f,
+    2.0f / 7.0f,
+    3.0f / 7.0f,
+    4.0f / 7.0f,
+    5.0f / 7.0f,
+    6.0f / 7.0f,
+    1.0f
+};
+
 
 Channel::Channel() :
     lengthCounter(0),
