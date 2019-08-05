@@ -150,8 +150,6 @@ protected:
 
     Channel();
 
-    virtual uint8_t generate(unsigned cycles) = 0;
-
 public:
     virtual ~Channel() = default;
 
@@ -163,7 +161,7 @@ public:
     void lengthStep();
     
     virtual void reset();
-    void step(unsigned cycles);
+    virtual void step(unsigned cycles) = 0;
 };
 
 class EnvChannel : public Channel {
@@ -224,9 +222,7 @@ public:
 
     void setDuty(Duty duty);
     virtual void reset() override;
-
-protected:
-    uint8_t generate(unsigned cycles) override;
+    void step(unsigned cycles) override;
     
 };
 
@@ -260,9 +256,8 @@ public:
     void setOutputLevel(WaveVolume level);
     void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
     void reset() override;
+    void step(unsigned cycles) override;
 
-protected:
-    uint8_t generate(unsigned cycles) override;
 };
 
 class NoiseChannel : public EnvChannel {
@@ -283,9 +278,7 @@ public:
     void setDrf(uint8_t drf);
 
     void reset() override;
-
-protected:
-    uint8_t generate(unsigned cycles) override;
+    void step(unsigned cycles) override;
 
 };
 

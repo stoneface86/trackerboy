@@ -71,10 +71,6 @@ namespace gbsynth {
         currentSample = SAMPLE_GND;
     }
 
-    void Channel::step(unsigned cycles) {
-        currentSample = generate(cycles);
-    }
-
     void Channel::disable() {
         enabled = false;
     }

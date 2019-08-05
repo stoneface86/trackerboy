@@ -34,11 +34,11 @@ namespace gbsynth {
         duty = _duty;
     }
 
-    uint8_t PulseChannel::generate(unsigned cycles) {
+    void PulseChannel::step(unsigned cycles) {
         freqCounter += cycles;
         unsigned dutysteps = freqCounter / freqCounterMax;
         freqCounter %= freqCounterMax;
         dutyCounter = (dutyCounter + dutysteps) & 0x7; // & 7 == % 8
-        return DUTY_TABLE[static_cast<uint8_t>(duty)][dutyCounter];
+        currentSample = DUTY_TABLE[static_cast<uint8_t>(duty)][dutyCounter];
     }
 }

@@ -57,7 +57,7 @@ namespace gbsynth {
         shiftCounterMax = calcCounterMax(drf, scf);
     }
 
-    uint8_t NoiseChannel::generate(unsigned cycles) {
+    void NoiseChannel::step(unsigned cycles) {
         shiftCounter += cycles;
         unsigned shifts = shiftCounter / shiftCounterMax; // determine shifts to do
         shiftCounter %= shiftCounterMax; // adjust counter if overflow
@@ -76,9 +76,9 @@ namespace gbsynth {
         }
         if (lfsr & 0x1) {
             // output is bit 0 inverted, so if bit 0 == 1, output MIN
-            return SAMPLE_MIN;
+            currentSample = SAMPLE_MIN;
         } else {
-            return SAMPLE_MAX;
+            currentSample = SAMPLE_MAX;
         }
     }
 

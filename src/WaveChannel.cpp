@@ -29,7 +29,7 @@ namespace gbsynth {
         copy_n(waveform, WAVE_RAMSIZE, wavedata);
     }
 
-    uint8_t WaveChannel::generate(unsigned cycles) {
+    void WaveChannel::step(unsigned cycles) {
         freqCounter += cycles;
         unsigned wavesteps = freqCounter / freqCounterMax;
         freqCounter %= freqCounterMax;
@@ -44,16 +44,16 @@ namespace gbsynth {
         }
         switch (outputLevel) {
             case WaveVolume::mute:
-                return SAMPLE_GND;
+                sample = SAMPLE_GND;
             case WaveVolume::full:
-                return sample;
+                break; // nothing to do
             case WaveVolume::half:
-                return sample >> 1;
+                sample >>= 1;
             case WaveVolume::quarter:
-                return sample >> 2;
-            default:
-                return SAMPLE_GND; // should never happen
+                sample >>= 2;
         }
+
+        currentSample = sample;
     }
 
 }
