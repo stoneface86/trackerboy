@@ -153,6 +153,8 @@ protected:
     virtual uint8_t generate(unsigned cycles) = 0;
 
 public:
+    virtual ~Channel() = default;
+
     void disable();
     uint8_t getCurrentSample();
     virtual float getCurrentVolume();
@@ -168,6 +170,8 @@ class EnvChannel : public Channel {
     uint8_t envCounter;
         
 public:
+    virtual ~EnvChannel() = default;
+
     float getCurrentVolume() override;
     void setEnv(uint8_t envReg);
     void setEnvStep(uint8_t step);
