@@ -65,6 +65,19 @@ void Mixer::setEnable(OutputFlags flags) {
     outputStat = flags;
 }
 
+void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
+    uint8_t flag = 1 << static_cast<uint8_t>(ch);
+    if (term == Terminal::s02) {
+        flag <<= 4;
+    }
+
+    if (enabled) {
+        outputStat |= static_cast<OutputFlags>(flag);
+    } else {
+        outputStat &= ~static_cast<OutputFlags>(flag);
+    }
+}
+
 void Mixer::setTerminalEnable(Terminal term, bool enabled) {
     if (term == Terminal::s01) {
         s01enable = enabled;

@@ -51,6 +51,14 @@ enum class Terminal {
 };
 
 
+enum class ChType : uint8_t {
+    ch1         = 0,
+    ch2         = 1,
+    ch3         = 2,
+    ch4         = 3
+};
+
+
 enum class OutputFlags : uint8_t {
     left1       = 0x1,
     left2       = 0x2,
@@ -323,6 +331,7 @@ public:
 
     void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
     void setEnable(OutputFlags flags);
+    void setEnable(ChType ch, Terminal term, bool enabled);
     void setTerminalEnable(Terminal term, bool enabled);
     void setTerminalVolume(Terminal term, uint8_t volume);
 };
