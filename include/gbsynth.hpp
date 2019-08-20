@@ -352,7 +352,11 @@ public:
     Mixer& getMixer();
     Sequencer& getSequencer();
 
+    void step(float &left, float &right);
+
     void fill(float leftBuf[], float rightBuf[], size_t nsamples);
+
+    void fill(float buf[], size_t nsamples);
 };
 
 
