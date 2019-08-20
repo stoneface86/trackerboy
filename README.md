@@ -1,5 +1,14 @@
 # gbsynth
 
+reorganize branch:
+
+This branch was created to restructure the project.
+
+The focus of this project is shifting from gameboy synthesizer to gameboy tracker,
+while utilizing the existing synthesizer code in this repo. Repo will eventually be
+renamed to "trackerboy".
+
+
 WIP!
 
 gbsynth is a C++ library for synthesizing sound based on the gameboy hardware.
