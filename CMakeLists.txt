@@ -1,52 +1,75 @@
-﻿cmake_minimum_required(VERSION 3.8)
-project(gbsynth)
+﻿#
+# File: CMakeLists.txt
+#
+# Main cmakelists for the trackerboy repo.
+# See README.md for details on building
+#
 
-set(INC_DIR "include")
+cmake_minimum_required(VERSION 3.8)
+project (
+	trackerboy 
+	VERSION "0.1.0"
+	DESCRIPTION "Gameboy tracker"
+	HOMEPAGE_URL "https://github.com/stoneface86/trackerboy"
+	LANGUAGES C CXX
+)
 
-option(ENABLE_TESTS "Enable unit tests" ON)
-option(ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
-option(ENABLE_SOUNDTEST "Enable building of sound test gui (requires Qt, portaudio)" OFF)
+option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
+option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
+option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
 
-if (ENABLE_DEMO OR ENABLE_SOUNDTEST)
+if (TRACKERBOY_ENABLE_TESTS)
+	enable_testing()
+endif ()
+
+include_directories("include")
+
+# ============================================================================
+# Dependencies
+# ============================================================================
+
+# portaudio is required for the demo and ui projects
+if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
 	add_subdirectory(portaudio EXCLUDE_FROM_ALL)
+	# PaUtilRingBuffer isn't included in the library, so add it here separately
+	add_library(portaudio_ringbuffer STATIC EXCLUDE_FROM_ALL "portaudio/src/common/pa_ringbuffer.c")
+	target_include_directories(portaudio_ringbuffer PUBLIC "portaudio/src/common")
 endif ()
 
+# qt is required for the ui project
+function(use_qt components)
+	set(CMAKE_AUTOMOC ON)
+	set(CMAKE_AUTOUIC ON)
+	set(CMAKE_AUTORCC ON)
+	find_package(Qt5 COMPONENTS ${components} REQUIRED)
+	if (WIN32)
+		set(GUI_TYPE WIN32 PARENT_SCOPE)
+	elseif (APPLE)
+		set(GUI_TYPE MACOSX_BUNDLE PARENT_SCOPE)
+	else ()
+		set(GUI_TYPE "" PARENT_SCOPE)
+	endif ()
+endfunction(use_qt)
 
-set(GBSYNTH "gbsynth")
-set(GBSYNTH_SRC 
-	"src/Channel.cpp" 
-	"src/EnvChannel.cpp"
-	"src/gbsynth.cpp" 
-	"src/Mixer.cpp"
-	"src/NoiseChannel.cpp"
-	"src/PulseChannel.cpp"
-	"src/Sequencer.cpp"
-	"src/SweepPulseChannel.cpp"
-	"src/Synth.cpp"
-	"src/WaveChannel.cpp"
-)
+# ============================================================================
+# Sub-projects
+# ============================================================================
 
-add_library(${GBSYNTH} STATIC ${GBSYNTH_SRC})
+#
+# libtrackerboy, main library used by ui and demo programs
+#
+add_subdirectory(libtrackerboy)
 
-target_include_directories(
-	${GBSYNTH}
-	PUBLIC
-	${INC_DIR}
-)
+#
+# Main program (optional)
+#
+if (TRACKERBOY_ENABLE_UI)
+#	add_subdirectory(ui)
+endif()
 
-if (MSVC)
-target_compile_options(
-	${GBSYNTH}
-	PRIVATE
-	/W4
-)
-endif ()
-
-if (ENABLE_DEMO)
+#
+# Demo programs (optional)
+#
+if (TRACKERBOY_ENABLE_DEMO)
 	add_subdirectory(demo)
-endif (ENABLE_DEMO)
-
-if (ENABLE_SOUNDTEST)
-#	add_subdirectory(soundtest)
-endif (ENABLE_SOUNDTEST)
-
+endif ()

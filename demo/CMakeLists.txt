@@ -11,4 +11,4 @@ set(DEMO_SRC
 
 add_executable(${DEMO} ${DEMO_SRC})
 #target_include_directories(${DEMO} PUBLIC ${INC_DIR})
-target_link_libraries(${DEMO} ${GBSYNTH} portaudio_static)
+target_link_libraries(${DEMO} trackerboy portaudio_static)
