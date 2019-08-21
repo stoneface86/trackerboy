@@ -1,9 +1,9 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 #include <algorithm>
 
-namespace gbsynth {
+namespace trackerboy {
 
 WaveChannel::WaveChannel() :
     Channel(),

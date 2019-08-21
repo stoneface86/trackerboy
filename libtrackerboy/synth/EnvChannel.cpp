@@ -1,9 +1,9 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 #include <cmath>
 
-namespace gbsynth {
+namespace trackerboy {
 
 static const float ENV_TABLE[16] = {
     0.0f,

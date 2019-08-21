@@ -1,9 +1,9 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 #define DUTY_SIZE 8
 
-namespace gbsynth {
+namespace trackerboy {
 
 static uint8_t DUTY_TABLE[][DUTY_SIZE] = {
     // Duty 12.5%:  00000001

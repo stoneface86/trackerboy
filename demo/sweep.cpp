@@ -9,7 +9,7 @@
 #define DEMO_SUB_FREQ 2000
 #define DEMO_ADD_FREQ 256
 
-using namespace gbsynth;
+using namespace trackerboy;
 
 namespace demo {
 

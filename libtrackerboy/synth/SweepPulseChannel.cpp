@@ -1,7 +1,7 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
-namespace gbsynth {
+namespace trackerboy {
 
 SweepPulseChannel::SweepPulseChannel() : 
     sweepMode(static_cast<SweepMode>(DEFAULT_SWEEP_MODE)),

@@ -6,81 +6,81 @@
 using std::uint8_t;
 using std::uint16_t;
 
-namespace gbsynth {
+namespace trackerboy {
 
 
 enum class Duty {
-    p125        = 0,
-    p25         = 1,
-    p50         = 2,
-    p75         = 3
+    p125 = 0,
+    p25 = 1,
+    p50 = 2,
+    p75 = 3
 };
 
 
 enum class EnvMode {
-    attenuate   = 0,
-    amplify     = 1
+    attenuate = 0,
+    amplify = 1
 };
 
 
 enum class SweepMode {
-    addition    = 0,
+    addition = 0,
     subtraction = 1
 };
 
 
 enum class StepCount {
-    steps15     = 0,
-    steps7      = 1
+    steps15 = 0,
+    steps7 = 1
 };
 
 
 enum class WaveVolume {
-    mute        = 0,
-    full        = 1,
-    half        = 2,
-    quarter     = 3
+    mute = 0,
+    full = 1,
+    half = 2,
+    quarter = 3
 };
 
 
 enum class Terminal {
     s01,
     s02,
-    left  = s01,
+    left = s01,
     right = s02
 };
 
 
 enum class ChType : uint8_t {
-    ch1         = 0,
-    ch2         = 1,
-    ch3         = 2,
-    ch4         = 3
+    ch1 = 0,
+    ch2 = 1,
+    ch3 = 2,
+    ch4 = 3
 };
 
 
 enum class OutputFlags : uint8_t {
-    left1       = 0x1,
-    left2       = 0x2,
-    left3       = 0x4,
-    left4       = 0x8,
-    right1      = 0x10,
-    right2      = 0x20,
-    right3      = 0x40,
-    right4      = 0x80,
-    both1       = left1 | right1,
-    both2       = left2 | right2,
-    both3       = left3 | right3,
-    both4       = left4 | right4,
-    all_on      = 0xFF,
-    all_off     = 0x0
+    left1 = 0x1,
+    left2 = 0x2,
+    left3 = 0x4,
+    left4 = 0x8,
+    right1 = 0x10,
+    right2 = 0x20,
+    right3 = 0x40,
+    right4 = 0x80,
+    both1 = left1 | right1,
+    both2 = left2 | right2,
+    both3 = left3 | right3,
+    both4 = left4 | right4,
+    all_on = 0xFF,
+    all_off = 0x0
 };
 
 constexpr inline OutputFlags operator |(OutputFlags lhs, OutputFlags rhs) {
     return static_cast<OutputFlags>(
         static_cast<std::underlying_type<OutputFlags>::type>(lhs) |
         static_cast<std::underlying_type<OutputFlags>::type>(rhs)
-    );
+        );
 }
 
 constexpr inline OutputFlags operator &(OutputFlags lhs, OutputFlags rhs) {
@@ -98,9 +98,9 @@ constexpr inline OutputFlags operator ~(OutputFlags rhs) {
 
 constexpr inline OutputFlags& operator &=(OutputFlags &lhs, OutputFlags rhs) {
     lhs = static_cast<OutputFlags>(
-            static_cast<std::underlying_type<OutputFlags>::type>(lhs) &
-            static_cast<std::underlying_type<OutputFlags>::type>(rhs)
-    );
+        static_cast<std::underlying_type<OutputFlags>::type>(lhs) &
+        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
+        );
     return lhs;
 }
 
@@ -115,40 +115,40 @@ constexpr inline OutputFlags& operator |=(OutputFlags &lhs, OutputFlags rhs) {
 
 enum Constants {
     // maximum values for parameters
-    MAX_SWEEP_TIME      = 0x7,
-    MAX_SWEEP_SHIFT     = 0x7,
-    MAX_LENGTH          = 0x3F,
-    MAX_ENV_STEPS       = 0xF,
-    MAX_ENV_LENGTH      = 0x7,
-    MAX_FREQUENCY       = 0x7FF,
-    MAX_WAVE_LENGTH     = 0xFF,
-    MAX_VOLUME          = 0x7,
-    MAX_SCF             = 0xD,
+    MAX_SWEEP_TIME = 0x7,
+    MAX_SWEEP_SHIFT = 0x7,
+    MAX_LENGTH = 0x3F,
+    MAX_ENV_STEPS = 0xF,
+    MAX_ENV_LENGTH = 0x7,
+    MAX_FREQUENCY = 0x7FF,
+    MAX_WAVE_LENGTH = 0xFF,
+    MAX_VOLUME = 0x7,
+    MAX_SCF = 0xD,
 
     // defaults
-    DEFAULT_FREQUENCY   = 0,
-    DEFAULT_DUTY        = Duty::p75,
-    DEFAULT_ENV_STEPS   = 0,
-    DEFAULT_ENV_LENGTH  = 0,
-    DEFAULT_ENV_MODE    = EnvMode::attenuate,
-    DEFAULT_SWEEP_TIME  = MAX_SWEEP_TIME,
-    DEFAULT_SWEEP_MODE  = SweepMode::addition,
+    DEFAULT_FREQUENCY = 0,
+    DEFAULT_DUTY = Duty::p75,
+    DEFAULT_ENV_STEPS = 0,
+    DEFAULT_ENV_LENGTH = 0,
+    DEFAULT_ENV_MODE = EnvMode::attenuate,
+    DEFAULT_SWEEP_TIME = MAX_SWEEP_TIME,
+    DEFAULT_SWEEP_MODE = SweepMode::addition,
     DEFAULT_SWEEP_SHIFT = 0,
-    DEFAULT_WAVE_LEVEL  = WaveVolume::full,
+    DEFAULT_WAVE_LEVEL = WaveVolume::full,
     DEFAULT_TERM_ENABLE = false,
     DEFAULT_TERM_VOLUME = MAX_VOLUME,
-    DEFAULT_SCF         = 0,
-    DEFAULT_STEP_COUNT  = StepCount::steps15,
-    DEFAULT_DRF         = 0,
+    DEFAULT_SCF = 0,
+    DEFAULT_STEP_COUNT = StepCount::steps15,
+    DEFAULT_DRF = 0,
 
     // sample values
-    SAMPLE_GND          = 0x8,
-    SAMPLE_MAX          = 0xF,
-    SAMPLE_MIN          = 0x0,
+    SAMPLE_GND = 0x8,
+    SAMPLE_MAX = 0xF,
+    SAMPLE_MIN = 0x0,
 
     // # of entries in waveform ram (sound3)
-    WAVE_SIZE           = 32,
-    WAVE_RAMSIZE        = 16
+    WAVE_SIZE = 32,
+    WAVE_RAMSIZE = 16
 };
 
 
@@ -179,7 +179,7 @@ public:
 
 class EnvChannel : public Channel {
     uint8_t envCounter;
-    
+
 protected:
     uint8_t envelope;
     EnvMode envMode;
@@ -202,7 +202,7 @@ public:
 template <unsigned multiplier>
 class FreqChannel {
 
-#define calcFreqMax(f,m) ((2048 - f) * m)
+    #define calcFreqMax(f,m) ((2048 - f) * m)
 
 protected:
     uint16_t frequency;
@@ -226,7 +226,7 @@ public:
         freqCounterMax = calcFreqMax(frequency, multiplier);
     }
 
-#undef calcFreqMax
+    #undef calcFreqMax
 
 };
 
@@ -241,7 +241,7 @@ public:
     virtual void reset() override;
     void setDuty(Duty duty);
     void step(unsigned cycles) override;
-    
+
 };
 
 
@@ -287,7 +287,7 @@ class NoiseChannel : public EnvChannel {
     uint16_t lfsr;
     unsigned shiftCounter;
     unsigned shiftCounterMax;
-        
+
 public:
     NoiseChannel();
 

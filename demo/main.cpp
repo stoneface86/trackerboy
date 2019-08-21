@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "demo.hpp"
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 #include "portaudio.h"
 
 
@@ -28,7 +28,7 @@
 // callback user data
 struct CbData {
     std::mutex mutex;
-    gbsynth::Synth *synth;
+    trackerboy::Synth *synth;
 
     CbData() :
         synth(nullptr)
@@ -45,7 +45,7 @@ static void runDemo(CbData &cbdata, Demo *demo) {
 
     // initialize the synth
     // each demo starts with a new synth object
-    gbsynth::Synth synth(SAMPLING_RATE);
+    trackerboy::Synth synth(SAMPLING_RATE);
     cbdata.mutex.lock();
     cbdata.synth = &synth; // update the callback's reference
     demo->init(synth);     // initialize demo

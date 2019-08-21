@@ -6,7 +6,7 @@
 #define DEMO_RUNTIME 1000
 #define DEMO_FREQ    toGbFreq(440.0f)
 
-using namespace gbsynth;
+using namespace trackerboy;
 
 static const char* DUTY_STRINGS[] = {
     "12.5",

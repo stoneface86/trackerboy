@@ -1,10 +1,10 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 #define LFSR_INIT 0x7FFF
 #define calcCounterMax(drf, scf) (DRF_TABLE[drf] << (scf+1))
 
-namespace gbsynth {
+namespace trackerboy {
 
 static const uint8_t DRF_TABLE[] = {
     8,

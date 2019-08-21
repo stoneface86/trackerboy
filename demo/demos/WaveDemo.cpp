@@ -7,7 +7,7 @@
 #define DEMO_RUNTIME 1000
 #define N_RUNS 4
 
-using namespace gbsynth;
+using namespace trackerboy;
 
 static const uint16_t FREQ_TABLE[N_RUNS] = {
     1045,  // C3

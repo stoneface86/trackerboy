@@ -1,8 +1,8 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 
-namespace gbsynth {
+namespace trackerboy {
 
 static const float SAMPLE_TABLE[16] = {
     -1.0f,

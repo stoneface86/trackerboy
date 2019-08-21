@@ -1,10 +1,10 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 #include <cmath>
 
 
-namespace gbsynth {
+namespace trackerboy {
 
 float fromGbFreq(uint16_t freq) {
     if (freq > MAX_FREQUENCY) {

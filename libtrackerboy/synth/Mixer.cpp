@@ -1,10 +1,10 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 // each channel has a maximum volume of 0.2, so maximum volume of all channels is 0.8
 #define VOL_MULTIPLIER 0.2f
 
-namespace gbsynth {
+namespace trackerboy {
 
 static const float VOLUME_TABLE[8] = {
     0.125f,

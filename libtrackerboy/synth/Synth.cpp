@@ -1,9 +1,9 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 #define GB_CLOCK_SPEED 4194304
 
-namespace gbsynth {
+namespace trackerboy {
 
 
 Synth::Synth(float samplingRate) :

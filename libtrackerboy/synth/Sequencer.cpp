@@ -1,5 +1,5 @@
 
-#include "gbsynth.hpp"
+#include "trackerboy/synth.hpp"
 
 // 512 Hz, 4194304 / 512 = 8192 cycles per step
 #define FREQ_COUNTER_MAX 8192
@@ -17,7 +17,7 @@
     cf.ch4.envStep(); \
     } while (0)
 
-namespace gbsynth {
+namespace trackerboy {
 
 Sequencer::Sequencer(ChannelFile &cf) : 
     cf(cf),

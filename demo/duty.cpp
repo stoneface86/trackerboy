@@ -5,7 +5,7 @@
 #define DEMO_RUNTIME 1000
 #define DEMO_FREQ    440.0f
 
-using namespace gbsynth;
+using namespace trackerboy;
 
 namespace demo {
 
