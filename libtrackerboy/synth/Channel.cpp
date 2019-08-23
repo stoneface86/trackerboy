@@ -25,9 +25,9 @@ static const float SAMPLE_TABLE[16] = {
 
 
 Channel::Channel() :
-    lengthCounter(0),
+    lengthCounter(DEFAULT_LENGTH),
     currentSample(SAMPLE_MIN),
-    length(0),
+    length(DEFAULT_LENGTH),
     continuous(true),
     enabled(true)
 {

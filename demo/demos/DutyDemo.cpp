@@ -25,7 +25,7 @@ void DutyDemo::init(Synth &synth) {
     Mixer &mixer = synth.getMixer();
     PulseChannel &ch2 = synth.getChannels().ch2;
 
-    ch2.setEnvStep(MAX_ENV_STEPS);
+    ch2.setEnvStep(EnvChannel::MAX_ENV_STEPS);
     ch2.setFrequency(DEMO_FREQ);
     ch2.reset();
 

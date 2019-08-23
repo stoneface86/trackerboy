@@ -42,52 +42,12 @@ enum class WaveVolume {
     quarter = 3
 };
 
-
-
-
-
 enum class ChType : uint8_t {
     ch1 = 0,
     ch2 = 1,
     ch3 = 2,
     ch4 = 3
 };
-
-
-enum Constants {
-    // maximum values for parameters
-    MAX_SWEEP_TIME = 0x7,
-    MAX_SWEEP_SHIFT = 0x7,
-    MAX_ENV_STEPS = 0xF,
-    MAX_ENV_LENGTH = 0x7,
-    MAX_FREQUENCY = 0x7FF,
-    MAX_WAVE_LENGTH = 0xFF,
-    MAX_SCF = 0xD,
-
-    // defaults
-    DEFAULT_FREQUENCY = 0,
-    DEFAULT_DUTY = Duty::p75,
-    DEFAULT_ENV_STEPS = 0,
-    DEFAULT_ENV_LENGTH = 0,
-    DEFAULT_ENV_MODE = EnvMode::attenuate,
-    DEFAULT_SWEEP_TIME = MAX_SWEEP_TIME,
-    DEFAULT_SWEEP_MODE = SweepMode::addition,
-    DEFAULT_SWEEP_SHIFT = 0,
-    DEFAULT_WAVE_LEVEL = WaveVolume::full,
-    DEFAULT_SCF = 0,
-    DEFAULT_STEP_COUNT = StepCount::steps15,
-    DEFAULT_DRF = 0,
-
-    // sample values
-    SAMPLE_GND = 0x8,
-    SAMPLE_MAX = 0xF,
-    SAMPLE_MIN = 0x0,
-
-    // # of entries in waveform ram (sound3)
-    WAVE_SIZE = 32,
-    WAVE_RAMSIZE = 16
-};
-
 
 class Channel {
     uint8_t lengthCounter;
@@ -101,7 +61,14 @@ protected:
     Channel();
 
 public:
+    static constexpr uint16_t MAX_FREQUENCY = 0x7FF;
     static constexpr uint8_t MAX_LENGTH = 0x3F;
+    static constexpr uint8_t MAX_LENGTH_WAVE = 0xFF;
+    static constexpr uint8_t DEFAULT_LENGTH = 0;
+    static constexpr uint16_t DEFAULT_FREQUENCY = 0;
+    static constexpr uint8_t SAMPLE_GND = 0x8; // "ground" no sound
+    static constexpr uint8_t SAMPLE_MAX = 0xF;
+    static constexpr uint8_t SAMPLE_MIN = 0x0;
 
     virtual ~Channel() = default;
 
@@ -127,6 +94,12 @@ protected:
     EnvChannel();
 
 public:
+    static constexpr uint8_t MAX_ENV_STEPS = 0xF;
+    static constexpr uint8_t MAX_ENV_LENGTH = 0x7;
+    static constexpr uint8_t DEFAULT_ENV_STEPS = 0;
+    static constexpr uint8_t DEFAULT_ENV_LENGTH = 0;
+    static constexpr EnvMode DEFAULT_ENV_MODE = EnvMode::attenuate;
+
     virtual ~EnvChannel() = default;
 
     void envStep();
@@ -150,7 +123,7 @@ protected:
 
 public:
     FreqChannel() :
-        frequency(DEFAULT_FREQUENCY),
+        frequency(Channel::DEFAULT_FREQUENCY),
         freqCounter(0),
         freqCounterMax(calcFreqMax(frequency, multiplier))
     {
@@ -175,6 +148,8 @@ class PulseChannel : public EnvChannel, public FreqChannel<4> {
     unsigned dutyCounter;
 
 public:
+    static constexpr Duty DEFAULT_DUTY = Duty::p75;
+
     PulseChannel();
 
     virtual void reset() override;
@@ -192,6 +167,12 @@ class SweepPulseChannel : public PulseChannel {
     uint8_t sweepCounter;
 
 public:
+    static constexpr uint8_t MAX_SWEEP_TIME = 0x7;
+    static constexpr uint8_t MAX_SWEEP_SHIFT = 0x7;
+    static constexpr uint8_t DEFAULT_SWEEP_TIME = MAX_SWEEP_TIME;
+    static constexpr SweepMode DEFAULT_SWEEP_MODE = SweepMode::addition;
+    static constexpr uint8_t DEFAULT_SWEEP_SHIFT = 0;
+
     SweepPulseChannel();
 
     void reset() override;
@@ -204,17 +185,24 @@ public:
 
 
 class WaveChannel : public Channel, public FreqChannel<2> {
-    WaveVolume outputLevel;
-    uint8_t wavedata[WAVE_RAMSIZE];
-    unsigned waveIndex;
 
 public:
+    static constexpr WaveVolume DEFAULT_WAVE_LEVEL = WaveVolume::full;
+    static constexpr size_t WAVE_SIZE = 32;
+    static constexpr size_t WAVE_RAMSIZE = 16;
+
     WaveChannel();
 
     void reset() override;
     void setOutputLevel(WaveVolume level);
     void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
     void step(unsigned cycles) override;
+
+private:
+    WaveVolume outputLevel;
+    uint8_t wavedata[WAVE_RAMSIZE];
+    unsigned waveIndex;
+
 };
 
 
@@ -228,6 +216,11 @@ class NoiseChannel : public EnvChannel {
     unsigned shiftCounterMax;
 
 public:
+    static constexpr uint8_t MAX_SCF = 0xD;
+    static constexpr uint8_t DEFAULT_SCF = 0;
+    static constexpr StepCount DEFAULT_STEP_COUNT = StepCount::steps15;
+    static constexpr uint8_t DEFAULT_DRF = 0;
+
     NoiseChannel();
 
     void reset() override;

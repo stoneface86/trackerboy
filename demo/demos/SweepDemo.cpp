@@ -19,7 +19,7 @@ void SweepDemo::init(Synth &synth) {
     ChannelFile &cf = synth.getChannels();
     Mixer &mixer = synth.getMixer();
 
-    cf.ch1.setEnvStep(MAX_ENV_STEPS);
+    cf.ch1.setEnvStep(EnvChannel::MAX_ENV_STEPS);
 
     cf.ch1.setSweepShift(DEMO_SWEEP_SHIFT);
     cf.ch1.setSweepTime(DEMO_SWEEP_TIME);

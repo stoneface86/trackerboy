@@ -7,13 +7,49 @@ namespace trackerboy {
 
 static uint8_t DUTY_TABLE[][DUTY_SIZE] = {
     // Duty 12.5%:  00000001
-    {SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX},
+    {
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MAX
+    },
     // Duty 25%:    10000001
-    {SAMPLE_MAX, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX},
+    {
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MAX
+    },
     // Duty 50%:    10000111
-    {SAMPLE_MAX, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MIN, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX},
+    {
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MAX
+    },
     // Duty 75%:    01111110
-    {SAMPLE_MIN, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MAX, SAMPLE_MIN}
+    {
+        Channel::SAMPLE_MIN,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MAX,
+        Channel::SAMPLE_MIN
+    }
 };
 
 PulseChannel::PulseChannel() : 
