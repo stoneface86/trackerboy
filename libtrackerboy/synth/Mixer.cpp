@@ -23,37 +23,37 @@ Mixer::Mixer() :
     s02enable(DEFAULT_TERM_ENABLE),
     s01vol(DEFAULT_TERM_VOLUME),
     s02vol(DEFAULT_TERM_VOLUME),
-    outputStat(OutputFlags::all_off)
+    outputStat(all_off)
 {
 }
 
 void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
     float left = 0.0f, right = 0.0f;
     if (s01enable) {
-        if ((outputStat & OutputFlags::left1) == OutputFlags::left1) {
+        if (outputStat & left1) {
             left += in1 * VOL_MULTIPLIER;
         }
-        if ((outputStat & OutputFlags::left2) == OutputFlags::left2) {
+        if (outputStat & left2) {
             left += in2 * VOL_MULTIPLIER;
         }
-        if ((outputStat & OutputFlags::left3) == OutputFlags::left3) {
+        if (outputStat & left3) {
             left += in3 * VOL_MULTIPLIER;
         }
-        if ((outputStat & OutputFlags::left4) == OutputFlags::left4) {
+        if (outputStat & left4) {
             left += in4 * VOL_MULTIPLIER;
         }
     }
     if (s02enable) {
-        if ((outputStat & OutputFlags::right1) == OutputFlags::right1) {
+        if (outputStat & right1) {
             right += in1 * VOL_MULTIPLIER;
         }
-        if ((outputStat & OutputFlags::right2) == OutputFlags::right2) {
+        if (outputStat & right2) {
             right += in2 * VOL_MULTIPLIER;
         }
-        if ((outputStat & OutputFlags::right3) == OutputFlags::right3) {
+        if (outputStat & right3) {
             right += in3 * VOL_MULTIPLIER;
         }
-        if ((outputStat & OutputFlags::right4) == OutputFlags::right4) {
+        if (outputStat & right4) {
             right += in4 * VOL_MULTIPLIER;
         }
     }
@@ -72,9 +72,9 @@ void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
     }
 
     if (enabled) {
-        outputStat |= static_cast<OutputFlags>(flag);
+        outputStat |= flag;
     } else {
-        outputStat &= ~static_cast<OutputFlags>(flag);
+        outputStat &= flag;
     }
 }
 
@@ -87,8 +87,8 @@ void Mixer::setTerminalEnable(Terminal term, bool enabled) {
 }
 
 void Mixer::setTerminalVolume(Terminal term, uint8_t volume) {
-    if (volume > MAX_VOLUME) {
-        volume = MAX_VOLUME;
+    if (volume > MAX_TERM_VOLUME) {
+        volume = MAX_TERM_VOLUME;
     }
     if (term == Terminal::s01) {
         s01vol = volume;

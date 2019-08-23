@@ -26,7 +26,7 @@ void SweepDemo::init(Synth &synth) {
 
     mixer.setTerminalEnable(Terminal::left, true);
     mixer.setTerminalEnable(Terminal::right, true);
-    mixer.setEnable(OutputFlags::both1);
+    mixer.setEnable(Mixer::both1);
 }
 
 long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {

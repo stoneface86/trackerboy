@@ -59,60 +59,6 @@ enum class ChType : uint8_t {
 };
 
 
-enum class OutputFlags : uint8_t {
-    left1 = 0x1,
-    left2 = 0x2,
-    left3 = 0x4,
-    left4 = 0x8,
-    right1 = 0x10,
-    right2 = 0x20,
-    right3 = 0x40,
-    right4 = 0x80,
-    both1 = left1 | right1,
-    both2 = left2 | right2,
-    both3 = left3 | right3,
-    both4 = left4 | right4,
-    all_on = 0xFF,
-    all_off = 0x0
-};
-
-constexpr inline OutputFlags operator |(OutputFlags lhs, OutputFlags rhs) {
-    return static_cast<OutputFlags>(
-        static_cast<std::underlying_type<OutputFlags>::type>(lhs) |
-        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
-        );
-}
-
-constexpr inline OutputFlags operator &(OutputFlags lhs, OutputFlags rhs) {
-    return static_cast<OutputFlags>(
-        static_cast<std::underlying_type<OutputFlags>::type>(lhs) &
-        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
-        );
-}
-
-constexpr inline OutputFlags operator ~(OutputFlags rhs) {
-    return static_cast<OutputFlags>(
-        ~static_cast<std::underlying_type<OutputFlags>::type>(rhs)
-        );
-}
-
-constexpr inline OutputFlags& operator &=(OutputFlags &lhs, OutputFlags rhs) {
-    lhs = static_cast<OutputFlags>(
-        static_cast<std::underlying_type<OutputFlags>::type>(lhs) &
-        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
-        );
-    return lhs;
-}
-
-constexpr inline OutputFlags& operator |=(OutputFlags &lhs, OutputFlags rhs) {
-    lhs = static_cast<OutputFlags>(
-        static_cast<std::underlying_type<OutputFlags>::type>(lhs) |
-        static_cast<std::underlying_type<OutputFlags>::type>(rhs)
-        );
-    return lhs;
-}
-
-
 enum Constants {
     // maximum values for parameters
     MAX_SWEEP_TIME = 0x7,
@@ -122,7 +68,6 @@ enum Constants {
     MAX_ENV_LENGTH = 0x7,
     MAX_FREQUENCY = 0x7FF,
     MAX_WAVE_LENGTH = 0xFF,
-    MAX_VOLUME = 0x7,
     MAX_SCF = 0xD,
 
     // defaults
@@ -135,8 +80,6 @@ enum Constants {
     DEFAULT_SWEEP_MODE = SweepMode::addition,
     DEFAULT_SWEEP_SHIFT = 0,
     DEFAULT_WAVE_LEVEL = WaveVolume::full,
-    DEFAULT_TERM_ENABLE = false,
-    DEFAULT_TERM_VOLUME = MAX_VOLUME,
     DEFAULT_SCF = 0,
     DEFAULT_STEP_COUNT = StepCount::steps15,
     DEFAULT_DRF = 0,
@@ -156,6 +99,11 @@ class Channel {
     uint8_t lengthCounter;
     bool continuous;
     bool enabled;
+
+    enum {
+        
+    };
+
 
 protected:
     uint8_t currentSample;
@@ -322,11 +270,31 @@ public:
 
 
 class Mixer {
-    bool s01enable, s02enable;
-    uint8_t s01vol, s02vol;
-    OutputFlags outputStat;
 
 public:
+
+    enum OutputFlags : uint8_t {
+        left1 = 0x1,
+        left2 = 0x2,
+        left3 = 0x4,
+        left4 = 0x8,
+        right1 = 0x10,
+        right2 = 0x20,
+        right3 = 0x40,
+        right4 = 0x80,
+        both1 = left1 | right1,
+        both2 = left2 | right2,
+        both3 = left3 | right3,
+        both4 = left4 | right4,
+        all_on = 0xFF,
+        all_off = 0x0
+    };
+
+    static constexpr uint8_t MAX_TERM_VOLUME = 0x7;
+    static constexpr uint8_t DEFAULT_TERM_VOLUME = MAX_TERM_VOLUME;
+    static constexpr bool DEFAULT_TERM_ENABLE = false;
+    static constexpr OutputFlags DEFAULT_OUTPUT = all_off;
+
     Mixer();
 
     void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
@@ -334,6 +302,12 @@ public:
     void setEnable(ChType ch, Terminal term, bool enabled);
     void setTerminalEnable(Terminal term, bool enabled);
     void setTerminalVolume(Terminal term, uint8_t volume);
+
+private:
+    bool s01enable, s02enable;
+    uint8_t s01vol, s02vol;
+    std::underlying_type<OutputFlags>::type outputStat;
+
 };
 
 

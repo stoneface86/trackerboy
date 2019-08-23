@@ -31,7 +31,7 @@ void DutyDemo::init(Synth &synth) {
 
     mixer.setTerminalEnable(Terminal::left, true);
     mixer.setTerminalEnable(Terminal::right, true);
-    mixer.setEnable(OutputFlags::both2);
+    mixer.setEnable(Mixer::both2);
 }
 
 long DutyDemo::setupNextRun(Synth &synth, unsigned counter) {

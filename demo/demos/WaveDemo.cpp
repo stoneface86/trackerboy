@@ -54,7 +54,7 @@ void WaveDemo::init(Synth &synth) {
 
     mixer.setTerminalEnable(Terminal::left, true);
     mixer.setTerminalEnable(Terminal::right, true);
-    mixer.setEnable(OutputFlags::both3);
+    mixer.setEnable(Mixer::both3);
 }
 
 long WaveDemo::setupNextRun(Synth &synth, unsigned counter) {
