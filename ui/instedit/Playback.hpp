@@ -21,10 +21,12 @@ public:
 class Playback {
 
     PaStream *stream;
-    PaUtilRingBuffer ringLeft;
-    PaUtilRingBuffer ringRight;
-    std::unique_ptr<float[]> framedataLeft;
-    std::unique_ptr<float[]> framedataRight;
+    //PaUtilRingBuffer ringLeft;
+    //PaUtilRingBuffer ringRight;
+    PaUtilRingBuffer ringbuf;
+    std::unique_ptr<float[]> framedata;
+    //std::unique_ptr<float[]> framedataLeft;
+    //std::unique_ptr<float[]> framedataRight;
     
     // frame settings
     size_t samplesPerFrame; // spf = framerate / samplingRate
@@ -47,7 +49,7 @@ public:
 
     void stop(bool wait);
     
-    void writeFrame(float framesLeft[], float framesRight[]);
+    void writeFrame(float frame[]);
 
 };
 

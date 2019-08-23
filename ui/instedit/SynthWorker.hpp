@@ -38,8 +38,7 @@ private:
 
     // run() settings
 
-    std::unique_ptr<float[]> bufLeft;
-    std::unique_ptr<float[]> bufRight;
+    std::unique_ptr<float[]> buf;
 
     trackerboy::InstrumentRuntime *runtime; // the runtime to play
     bool loop; // reset runtime at end of program

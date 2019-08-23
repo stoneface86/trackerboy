@@ -17,18 +17,12 @@ int playbackCallback(
     void *userData
 ) {
     (void)input;
-    float *outLeft = static_cast<float**>(output)[0];
-    float *outRight = static_cast<float**>(output)[1];
+    float *out = static_cast<float*>(output);
     Playback *pb = static_cast<Playback*>(userData);
 
-    // read 1 frame from the ring buffers
-    auto nread = PaUtil_ReadRingBuffer(&pb->ringLeft, outLeft, frameCount);
+    auto nread = PaUtil_ReadRingBuffer(&pb->ringbuf, out, frameCount);
     if (nread != frameCount) {
-        std::fill_n(outLeft + nread, frameCount - nread, 0.0f);
-    }
-    nread = PaUtil_ReadRingBuffer(&pb->ringRight, outRight, frameCount);
-    if (nread != frameCount) {
-        std::fill_n(outRight + nread, frameCount - nread, 0.0f);
+        std::fill_n(out + nread, frameCount - nread, 0.0f);
     }
     
     return paContinue;
@@ -36,12 +30,10 @@ int playbackCallback(
 
 Playback::Playback(float samplingRate) :
     stream(nullptr),
-    framedataLeft(new float[N_FRAMES]),
-    framedataRight(new float[N_FRAMES])
+    framedata(new float[N_FRAMES * 2])
 {
     setSamplingRate(samplingRate);
-    PaUtil_InitializeRingBuffer(&ringLeft, sizeof(float), N_FRAMES, framedataLeft.get());
-    PaUtil_InitializeRingBuffer(&ringRight, sizeof(float), N_FRAMES, framedataRight.get());
+    PaUtil_InitializeRingBuffer(&ringbuf, sizeof(float) * 2, N_FRAMES, framedata.get());
 }
 
 Playback::~Playback() {
@@ -51,7 +43,7 @@ Playback::~Playback() {
 }
 
 bool Playback::canWrite() {
-    return PaUtil_GetRingBufferWriteAvailable(&ringRight) >= samplesPerFrame;
+    return PaUtil_GetRingBufferWriteAvailable(&ringbuf) >= samplesPerFrame;
 }
 
 size_t Playback::framesize() {
@@ -75,7 +67,7 @@ void Playback::setSamplingRate(float _samplingRate) {
         &stream,
         0,
         2,
-        paFloat32 | paNonInterleaved,
+        paFloat32,
         samplingRate,
         paFramesPerBufferUnspecified,
         playbackCallback,
@@ -88,8 +80,7 @@ void Playback::setSamplingRate(float _samplingRate) {
 }
 
 void Playback::start() {
-    PaUtil_FlushRingBuffer(&ringLeft);
-    PaUtil_FlushRingBuffer(&ringRight);
+    PaUtil_FlushRingBuffer(&ringbuf);
     PaError err = Pa_StartStream(stream);
     if (err != paNoError) {
         throw PaException(err);
@@ -99,7 +90,7 @@ void Playback::start() {
 void Playback::stop(bool wait) {
     // wait until all frames have been played out
     if (wait) {
-        while (PaUtil_GetRingBufferWriteAvailable(&ringRight) != N_FRAMES) {
+        while (PaUtil_GetRingBufferWriteAvailable(&ringbuf) != N_FRAMES) {
             Pa_Sleep(20);
         }
     }
@@ -110,11 +101,8 @@ void Playback::stop(bool wait) {
     }
 }
 
-void Playback::writeFrame(float framesLeft[], float framesRight[]) {
-
-    PaUtil_WriteRingBuffer(&ringLeft, framesLeft, samplesPerFrame);
-    PaUtil_WriteRingBuffer(&ringRight, framesRight, samplesPerFrame);
-
+void Playback::writeFrame(float frame[]) {
+    PaUtil_WriteRingBuffer(&ringbuf, frame, samplesPerFrame);
 }
 
 

@@ -18,9 +18,7 @@ SynthWorker::SynthWorker(QObject *parent) :
     mixer.setTerminalEnable(trackerboy::Mixer::term_both, true);
     mixer.setEnable(trackerboy::Mixer::all_on);
 
-    bufLeft.reset(new float[pb.framesize()]);
-    bufRight.reset(new float[pb.framesize()]);
-
+    buf.reset(new float[pb.framesize() * 2]);
 }
 
 void SynthWorker::run() {
@@ -36,8 +34,7 @@ void SynthWorker::run() {
     pb.start();
 
     // frame buffer pointers
-    auto left = bufLeft.get();
-    auto right = bufRight.get();
+    auto frame = buf.get();
     size_t framesize = pb.framesize();
 
     bool stoppedEarly = false;
@@ -67,9 +64,9 @@ void SynthWorker::run() {
         // execute 1 frame of the program
         runtime->step(synth);
         // synthesize the frame
-        synth.fill(left, right, framesize);
+        synth.fill(frame, framesize);
         // write it to the playback buffer
-        pb.writeFrame(left, right);
+        pb.writeFrame(frame);
         
 
     }
