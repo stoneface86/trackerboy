@@ -57,8 +57,13 @@ class Channel {
 protected:
     uint8_t currentSample;
     uint8_t length;
+    uint16_t frequency;
+    const unsigned freqMultiplier;
+    unsigned freqCounter;
+    unsigned freqCounterMax;
+    
 
-    Channel();
+    Channel(bool ch3 = false);
 
 public:
     static constexpr uint16_t MAX_FREQUENCY = 0x7FF;
@@ -78,6 +83,7 @@ public:
     void lengthStep();
     virtual void reset();
     void setContinuousOutput(bool continuous);
+    void setFrequency(uint16_t frequency);
     void setLength(uint8_t length);
     virtual void step(unsigned cycles) = 0;
 };
@@ -111,39 +117,8 @@ public:
     void setEnvStep(uint8_t step);
 };
 
-template <unsigned multiplier>
-class FreqChannel {
 
-    #define calcFreqMax(f,m) ((2048 - f) * m)
-
-protected:
-    uint16_t frequency;
-    unsigned freqCounter;
-    unsigned freqCounterMax;
-
-public:
-    FreqChannel() :
-        frequency(Channel::DEFAULT_FREQUENCY),
-        freqCounter(0),
-        freqCounterMax(calcFreqMax(frequency, multiplier))
-    {
-    }
-
-    uint16_t getFrequency() {
-        return frequency;
-    }
-
-    void setFrequency(uint16_t _frequency) {
-        frequency = _frequency;
-        freqCounterMax = calcFreqMax(frequency, multiplier);
-    }
-
-    #undef calcFreqMax
-
-};
-
-
-class PulseChannel : public EnvChannel, public FreqChannel<4> {
+class PulseChannel : public EnvChannel {
     Duty duty;
     unsigned dutyCounter;
 
@@ -184,7 +159,7 @@ public:
 };
 
 
-class WaveChannel : public Channel, public FreqChannel<2> {
+class WaveChannel : public Channel {
 
 public:
     static constexpr WaveVolume DEFAULT_WAVE_LEVEL = WaveVolume::full;

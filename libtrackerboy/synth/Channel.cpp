@@ -1,6 +1,8 @@
 
 #include "trackerboy/synth.hpp"
 
+#define calcFreqMax(f) ((2048 - f) * freqMultiplier)
+
 
 namespace trackerboy {
 
@@ -24,12 +26,16 @@ static const float SAMPLE_TABLE[16] = {
 };
 
 
-Channel::Channel() :
+Channel::Channel(bool ch3) :
     lengthCounter(DEFAULT_LENGTH),
     currentSample(SAMPLE_MIN),
     length(DEFAULT_LENGTH),
     continuous(true),
-    enabled(true)
+    enabled(true),
+    frequency(DEFAULT_FREQUENCY),
+    freqCounter(0),
+    freqMultiplier(ch3 ? 2 : 4),
+    freqCounterMax(calcFreqMax(DEFAULT_FREQUENCY))
 {
 }
 
@@ -64,6 +70,15 @@ void Channel::reset() {
 
 void Channel::setContinuousOutput(bool _continuous) {
     continuous = _continuous;
+}
+
+void Channel::setFrequency(uint16_t _frequency) {
+    if (_frequency > MAX_FREQUENCY) {
+        _frequency = MAX_FREQUENCY;
+    }
+
+    frequency = _frequency;
+    freqCounterMax = calcFreqMax(frequency);
 }
 
 void Channel::setLength(uint8_t _length) {

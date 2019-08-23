@@ -54,7 +54,6 @@ static uint8_t DUTY_TABLE[][DUTY_SIZE] = {
 
 PulseChannel::PulseChannel() : 
     EnvChannel(),
-    FreqChannel(),
     duty((Duty)DEFAULT_DUTY),
     dutyCounter(0)
 {        

@@ -6,8 +6,7 @@
 namespace trackerboy {
 
 WaveChannel::WaveChannel() :
-    Channel(),
-    FreqChannel(),
+    Channel(true),
     wavedata{0},
     outputLevel(static_cast<WaveVolume>(DEFAULT_WAVE_LEVEL)),
     waveIndex(0)
