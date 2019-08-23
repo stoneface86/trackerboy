@@ -40,19 +40,19 @@ if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
 endif ()
 
 # qt is required for the ui project
-function(use_qt components)
+macro(use_qt)
 	set(CMAKE_AUTOMOC ON)
 	set(CMAKE_AUTOUIC ON)
 	set(CMAKE_AUTORCC ON)
-	find_package(Qt5 COMPONENTS ${components} REQUIRED)
+	find_package(Qt5 COMPONENTS ${ARGV} REQUIRED)
 	if (WIN32)
-		set(GUI_TYPE WIN32 PARENT_SCOPE)
+		set(GUI_TYPE WIN32)
 	elseif (APPLE)
-		set(GUI_TYPE MACOSX_BUNDLE PARENT_SCOPE)
+		set(GUI_TYPE MACOSX_BUNDLE)
 	else ()
-		set(GUI_TYPE "" PARENT_SCOPE)
+		set(GUI_TYPE "")
 	endif ()
-endfunction(use_qt)
+endmacro(use_qt)
 
 # ============================================================================
 # Sub-projects
@@ -67,7 +67,7 @@ add_subdirectory(libtrackerboy)
 # Main program (optional)
 #
 if (TRACKERBOY_ENABLE_UI)
-#	add_subdirectory(ui)
+	add_subdirectory(ui)
 endif()
 
 #

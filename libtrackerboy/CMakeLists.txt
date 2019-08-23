@@ -1,6 +1,16 @@
 
 project("libtrackerboy")
 
+set(INSTRUMENT_SRC
+	"instrument/Instrument.cpp"
+	"instrument/InstrumentRuntime.cpp"
+	"instrument/NoiseInstrumentRuntime.cpp"
+	"instrument/parse.cpp"
+	"instrument/ParseError.cpp"
+	"instrument/PulseInstrumentRuntime.cpp"
+	"instrument/WaveInstrumentRuntime.cpp"
+)
+
 set(SYNTH_SRC
 	"synth/Channel.cpp"
 	"synth/EnvChannel.cpp"
@@ -15,6 +25,7 @@ set(SYNTH_SRC
 )
 
 add_library("trackerboy" STATIC
+	${INSTRUMENT_SRC}
 	${SYNTH_SRC}
 )
 
