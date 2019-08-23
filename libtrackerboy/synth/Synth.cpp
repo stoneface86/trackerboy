@@ -52,7 +52,7 @@ void Synth::fill(float leftBuf[], float rightBuf[], size_t nsamples) {
 }
 
 void Synth::fill(float buf[], size_t nsamples) {
-    for (size_t i = 0; i != nsamples; i += 2) {
+    for (size_t i = 0, j = nsamples * 2; i != j; i += 2) {
         step(buf[i], buf[i + 1]);
     }
 }

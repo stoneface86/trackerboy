@@ -85,17 +85,15 @@ static int synthCallback(
 ) {
     (void)inputBuffer; // not used
     // non-interleaved, outputBuffer is an array of float buffers
-    float *leftBuf = ((float**)outputBuffer)[0];
-    float *rightBuf = ((float**)outputBuffer)[1];
+    float *buf = static_cast<float*>(outputBuffer);
     auto data = (CbData*)userData;
 
     // synthesize
     data->mutex.lock();
     if (data->synth == nullptr) {
-        std::fill_n(leftBuf, framesPerBuffer, 0.0f);
-        std::fill_n(rightBuf, framesPerBuffer, 0.0f);
+        std::fill_n(buf, framesPerBuffer, 0.0f);
     } else {
-        data->synth->fill(leftBuf, rightBuf, framesPerBuffer);
+        data->synth->fill(buf, framesPerBuffer);
     }
     data->mutex.unlock();
     return 0;
@@ -159,7 +157,7 @@ int main(int argc, const char *argv[]) {
             &stream,
             0,                              // no input channels
             2,                              // stereo output (2 output channels)
-            paFloat32 | paNonInterleaved,   // 32 bit float output, separate left/right buffers
+            paFloat32,   // 32 bit float output, separate left/right buffers
             SAMPLING_RATE,                  // 44.1 KHz sampling rate
             paFramesPerBufferUnspecified,   // frames per buffer (can also use PaFramesPerBufferUnspecified)
             synthCallback,                  // callback function
