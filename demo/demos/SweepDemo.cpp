@@ -24,8 +24,7 @@ void SweepDemo::init(Synth &synth) {
     cf.ch1.setSweepShift(DEMO_SWEEP_SHIFT);
     cf.ch1.setSweepTime(DEMO_SWEEP_TIME);
 
-    mixer.setTerminalEnable(Terminal::left, true);
-    mixer.setTerminalEnable(Terminal::right, true);
+    mixer.setTerminalEnable(Mixer::term_both, true);
     mixer.setEnable(Mixer::both1);
 }
 

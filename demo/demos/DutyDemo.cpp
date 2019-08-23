@@ -29,8 +29,7 @@ void DutyDemo::init(Synth &synth) {
     ch2.setFrequency(DEMO_FREQ);
     ch2.reset();
 
-    mixer.setTerminalEnable(Terminal::left, true);
-    mixer.setTerminalEnable(Terminal::right, true);
+    mixer.setTerminalEnable(Mixer::term_both, true);
     mixer.setEnable(Mixer::both2);
 }
 

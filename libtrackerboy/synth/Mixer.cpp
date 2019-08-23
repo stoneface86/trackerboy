@@ -57,6 +57,7 @@ void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft
             right += in4 * VOL_MULTIPLIER;
         }
     }
+    // TODO: cache these table lookups in a member variable
     outLeft = left * VOLUME_TABLE[s01vol];
     outRight = right * VOLUME_TABLE[s02vol];
 }
@@ -66,22 +67,28 @@ void Mixer::setEnable(OutputFlags flags) {
 }
 
 void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
-    uint8_t flag = 1 << static_cast<uint8_t>(ch);
-    if (term == Terminal::s02) {
-        flag <<= 4;
+    uint8_t flag = 0;
+    if (term & term_left) {
+        flag = 1 << static_cast<uint8_t>(ch);
+    }
+
+    if (term & term_right) {
+        flag |= flag << 4;
     }
 
     if (enabled) {
         outputStat |= flag;
     } else {
-        outputStat &= flag;
+        outputStat &= ~flag;
     }
 }
 
 void Mixer::setTerminalEnable(Terminal term, bool enabled) {
-    if (term == Terminal::s01) {
+    if (term & term_left) {
         s01enable = enabled;
-    } else {
+    }
+
+    if (term & term_right) {
         s02enable = enabled;
     }
 }
@@ -90,9 +97,12 @@ void Mixer::setTerminalVolume(Terminal term, uint8_t volume) {
     if (volume > MAX_TERM_VOLUME) {
         volume = MAX_TERM_VOLUME;
     }
-    if (term == Terminal::s01) {
+
+    if (term & term_left) {
         s01vol = volume;
-    } else {
+    }
+
+    if (term & term_right) {
         s02vol = volume;
     }
 }

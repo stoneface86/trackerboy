@@ -43,12 +43,7 @@ enum class WaveVolume {
 };
 
 
-enum class Terminal {
-    s01,
-    s02,
-    left = s01,
-    right = s02
-};
+
 
 
 enum class ChType : uint8_t {
@@ -63,7 +58,6 @@ enum Constants {
     // maximum values for parameters
     MAX_SWEEP_TIME = 0x7,
     MAX_SWEEP_SHIFT = 0x7,
-    MAX_LENGTH = 0x3F,
     MAX_ENV_STEPS = 0xF,
     MAX_ENV_LENGTH = 0x7,
     MAX_FREQUENCY = 0x7FF,
@@ -100,11 +94,6 @@ class Channel {
     bool continuous;
     bool enabled;
 
-    enum {
-        
-    };
-
-
 protected:
     uint8_t currentSample;
     uint8_t length;
@@ -112,6 +101,8 @@ protected:
     Channel();
 
 public:
+    static constexpr uint8_t MAX_LENGTH = 0x3F;
+
     virtual ~Channel() = default;
 
     void disable();
@@ -288,6 +279,12 @@ public:
         both4 = left4 | right4,
         all_on = 0xFF,
         all_off = 0x0
+    };
+
+    enum Terminal {
+        term_left = 0x1,
+        term_right = 0x2,
+        term_both = term_left | term_right
     };
 
     static constexpr uint8_t MAX_TERM_VOLUME = 0x7;

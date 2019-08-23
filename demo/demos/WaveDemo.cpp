@@ -52,8 +52,7 @@ void WaveDemo::init(Synth &synth) {
     ch3.setOutputLevel(WaveVolume::full);
     ch3.setWaveform(wavedata);
 
-    mixer.setTerminalEnable(Terminal::left, true);
-    mixer.setTerminalEnable(Terminal::right, true);
+    mixer.setTerminalEnable(Mixer::term_both, true);
     mixer.setEnable(Mixer::both3);
 }
 
