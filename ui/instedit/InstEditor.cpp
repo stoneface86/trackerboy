@@ -21,6 +21,7 @@ InstEditor::InstEditor(QWidget *parent) :
     playButton(new QPushButton("Play")),
     loopCheckbox(new QCheckBox("Loop")),
     frequencyEdit(new QLineEdit("0")),
+    pianoWidget(new PianoWidget),
     worker(new SynthWorker(this)),
     currentTrackId(trackerboy::TrackId::ch1),
     runtimeTable{nullptr},
@@ -29,6 +30,9 @@ InstEditor::InstEditor(QWidget *parent) :
     QWidget(parent)
 {
     connect(worker, &SynthWorker::finished, this, &InstEditor::workerFinished);
+    connect(pianoWidget, &PianoWidget::keyDown, this, &InstEditor::pianoKeyDown);
+    connect(pianoWidget, &PianoWidget::keyUp, this, &InstEditor::pianoKeyUp);
+
 
 
     const QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -102,6 +106,8 @@ InstEditor::InstEditor(QWidget *parent) :
     playbackLayout->addStretch();
     layout->addLayout(playbackLayout, 3, 0, 1, 2);
     
+    // row 4, piano control
+    layout->addWidget(pianoWidget, 4, 0, 1, 2);
 
 
     layout->setRowStretch(2, 1);
@@ -194,7 +200,13 @@ void InstEditor::workerFinished() {
     playing = false;
 }
 
+void InstEditor::pianoKeyDown(trackerboy::Note note) {
 
+}
+
+void InstEditor::pianoKeyUp() {
+
+}
 
 
 }

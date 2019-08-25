@@ -9,6 +9,7 @@
 
 #include "trackerboy.hpp"
 #include "SynthWorker.hpp"
+#include "PianoWidget.hpp"
 
 
 namespace instedit {
@@ -29,6 +30,8 @@ private slots:
     void channelSelected(int index);
     void play();
     void workerFinished();
+    void pianoKeyDown(trackerboy::Note note);
+    void pianoKeyUp();
     
 private:
 
@@ -37,6 +40,7 @@ private:
     QPushButton *playButton;
     QCheckBox *loopCheckbox;
     QLineEdit *frequencyEdit;
+    PianoWidget *pianoWidget;
     SynthWorker *worker;
     
     std::vector<trackerboy::Instruction>* programTable[4];

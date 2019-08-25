@@ -8,6 +8,8 @@ set(INSTEDIT_SRC
 	"instedit/Playback.cpp"
 	"instedit/PaException.cpp"
 	"instedit/SynthWorker.cpp"
+	"instedit/PianoWidget.cpp"
+	"instedit/keys.qrc"
 )
 
 
