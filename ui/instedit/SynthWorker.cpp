@@ -31,7 +31,7 @@ void SynthWorker::run() {
     runtime->reset();
     
     // begin playback
-    pb.start();
+    //pb.start();
 
     // frame buffer pointers
     auto frame = buf.get();

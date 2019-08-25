@@ -24,8 +24,13 @@ int playbackCallback(
     if (nread != frameCount) {
         std::fill_n(out + nread, frameCount - nread, 0.0f);
     }
-    
-    return paContinue;
+
+    if (PaUtil_GetRingBufferReadAvailable(&pb->ringbuf) == 0) {
+        // buffer is now empty, stop the stream
+        return paComplete;
+    } else {
+        return paContinue;
+    }
 }
 
 Playback::Playback(float samplingRate) :
@@ -99,10 +104,20 @@ void Playback::stop(bool wait) {
     if (err != paNoError) {
         throw PaException(err);
     }
+
+    if (!wait) {
+        PaUtil_FlushRingBuffer(&ringbuf);
+    }
 }
 
 void Playback::writeFrame(float frame[]) {
     PaUtil_WriteRingBuffer(&ringbuf, frame, samplesPerFrame);
+    if (!Pa_IsStreamActive(stream)) {
+        PaError err = Pa_StartStream(stream);
+        if (err != paNoError) {
+            throw PaException(err);
+        }
+    }
 }
 
 
