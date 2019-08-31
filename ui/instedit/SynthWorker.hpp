@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#include "Playback.hpp"
+#include "audio.hpp"
 #include "trackerboy.hpp"
 
 
@@ -31,7 +31,7 @@ public:
     void stop();
 
 private:
-    Playback pb;
+    audio::PlaybackQueue pb;
     trackerboy::Synth synth;
     QWaitCondition writeAvailable;
     QMutex mutex;

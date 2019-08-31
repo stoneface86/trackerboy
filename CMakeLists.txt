@@ -27,12 +27,18 @@ endif ()
 
 include_directories("include")
 
+if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
+	set(PORTAUDIO_REQUIRED TRUE)
+else ()
+	set(PORTAUDIO_REQUIRED FALSE)
+endif ()
+
 # ============================================================================
 # Dependencies
 # ============================================================================
 
 # portaudio is required for the demo and ui projects
-if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
+if (PORTAUDIO_REQUIRED)
 	add_subdirectory(portaudio EXCLUDE_FROM_ALL)
 	# PaUtilRingBuffer isn't included in the library, so add it here separately
 	add_library(portaudio_ringbuffer STATIC EXCLUDE_FROM_ALL "portaudio/src/common/pa_ringbuffer.c")
@@ -62,6 +68,10 @@ endmacro(use_qt)
 # libtrackerboy, main library used by ui and demo programs
 #
 add_subdirectory(libtrackerboy)
+
+if (PORTAUDIO_REQUIRED)
+	add_subdirectory(audio)
+endif()
 
 #
 # Main program (optional)
