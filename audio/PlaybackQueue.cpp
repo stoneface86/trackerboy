@@ -2,9 +2,7 @@
 #include "audio.hpp"
 
 #include <algorithm>
-
-static constexpr ring_buffer_size_t N_FRAMES = 32768;
-static constexpr float FRAMERATE = 59.7f;
+#include <cmath>
 
 namespace audio {
 
@@ -20,63 +18,155 @@ int playbackCallback(
     float *out = static_cast<float*>(output);
     PlaybackQueue *pb = static_cast<PlaybackQueue*>(userData);
 
-    auto nread = PaUtil_ReadRingBuffer(&pb->ringbuf, out, frameCount);
+    auto nread = PaUtil_ReadRingBuffer(&pb->mQueue, out, frameCount);
     if (nread != frameCount) {
-        std::fill_n(out + nread, frameCount - nread, 0.0f);
+        std::fill_n(out + (nread * 2), (frameCount - nread) * 2, 0.0f);
     }
 
-    if (PaUtil_GetRingBufferReadAvailable(&pb->ringbuf) == 0) {
+    //if (PaUtil_GetRingBufferReadAvailable(&pb->mQueue) == 0) {
         // buffer is now empty, stop the stream
-        return paComplete;
-    } else {
+    //    return paComplete;
+    //} else {
         return paContinue;
-    }
+    //}
 }
 
-PlaybackQueue::PlaybackQueue(float samplingRate) :
-    stream(nullptr),
-    framedata(new float[N_FRAMES * 2])
+PlaybackQueue::PlaybackQueue(float samplingRate, unsigned bufferSize) :
+    mStream(nullptr),
+    mSamplingRate(samplingRate),
+    mBufferSize(bufferSize)
 {
-    setSamplingRate(samplingRate);
-    PaUtil_InitializeRingBuffer(&ringbuf, sizeof(float) * 2, N_FRAMES, framedata.get());
+    checkSamplingRate(samplingRate);
+    checkBufferSize(bufferSize);
+
+    // resize the queue vector
+    resizeQueue();
+
+    // open the stream
+    openStream();
+
 }
 
 PlaybackQueue::~PlaybackQueue() {
-    if (stream != nullptr) {
-        Pa_CloseStream(stream);
+    if (mStream != nullptr) {
+        Pa_CloseStream(mStream);
     }
 }
 
-bool PlaybackQueue::canWrite() {
-    return PaUtil_GetRingBufferWriteAvailable(&ringbuf) >= samplesPerFrame;
+size_t PlaybackQueue::bufferSampleSize() {
+    // divide by two since 1 sample is two floats
+    return (mQueueData.size() / 2) - mSlack;
 }
 
-size_t PlaybackQueue::framesize() {
-    return samplesPerFrame;
+unsigned PlaybackQueue::bufferSize() {
+    return mBufferSize;
 }
 
 
-void PlaybackQueue::setSamplingRate(float _samplingRate) {
-    samplingRate = _samplingRate;
-    if (stream != nullptr) {
-        if (Pa_IsStreamActive(stream)) {
+bool PlaybackQueue::canWrite(size_t nsamples) {
+    return  PaUtil_GetRingBufferWriteAvailable(&mQueue) - mSlack >= nsamples;
+}
+
+void PlaybackQueue::flush() {
+    PaUtil_FlushRingBuffer(&mQueue);
+}
+
+void PlaybackQueue::setBufferSize(unsigned bufferSize) {
+
+    checkBufferSize(bufferSize);
+
+    if (mStream != nullptr && Pa_IsStreamActive(mStream)) {
+        throw std::runtime_error("cannot change buffer size while stream is active");
+    }
+
+    flush();
+    mBufferSize = bufferSize;
+    resizeQueue();
+}
+
+
+void PlaybackQueue::setSamplingRate(float samplingRate) {
+
+    checkSamplingRate(samplingRate);
+
+    if (mStream != nullptr) {
+        if (Pa_IsStreamActive(mStream)) {
             return; // cannot change the samping rate while the stream is active
         }
-
-        Pa_CloseStream(stream);
+        // close the existing stream, portaudio doesn't have a function for
+        // changing the sampling rate, so we have to open a new stream
+        Pa_CloseStream(mStream);
     }
 
-    samplesPerFrame = static_cast<size_t>(samplingRate / FRAMERATE);
+    flush();
+    mSamplingRate = samplingRate;
+    openStream();
+    resizeQueue();
+}
 
+void PlaybackQueue::start() {
+    flush();
+    PaError err = Pa_StartStream(mStream);
+    if (err != paNoError) {
+        throw PaException(err);
+    }
+}
+
+void PlaybackQueue::stop(bool wait) {
+    // wait until all samples have been played out
+    if (wait) {
+        const size_t queueSize = mQueueData.size() / 2;
+        const size_t remainingSamples = queueSize - PaUtil_GetRingBufferWriteAvailable(&mQueue);
+        // determine how long to sleep until the queue is read out
+        unsigned sleepTime = static_cast<unsigned>(std::round(
+            (mSamplingRate / (remainingSamples * 1000.0f))
+        ));
+
+        Pa_Sleep(sleepTime);
+
+        while (PaUtil_GetRingBufferWriteAvailable(&mQueue) != queueSize) {
+            // just spin lock until the stream ends
+            Pa_Sleep(10);
+        }
+    } 
+    PaError err = Pa_StopStream(mStream);
+    if (err != paNoError) {
+        throw PaException(err);
+    }
+
+}
+
+size_t PlaybackQueue::write(float buf[], size_t nsamples) {
+
+    size_t navail = PaUtil_GetRingBufferWriteAvailable(&mQueue) - mSlack;
+    size_t samplesToWrite = nsamples > navail ? navail : nsamples;
+    return PaUtil_WriteRingBuffer(&mQueue, buf, samplesToWrite);
+}
+
+// private methods
+
+void PlaybackQueue::checkBufferSize(unsigned bufferSize) {
+    if (bufferSize < MIN_BUFFER_SIZE || bufferSize > MAX_BUFFER_SIZE) {
+        throw std::invalid_argument("buffer size is out of range");
+    }
+}
+
+void PlaybackQueue::checkSamplingRate(float samplingRate) {
+    if (samplingRate <= 0.0f) {
+        throw std::invalid_argument("sampling rate must be positive");
+    }
+}
+
+void PlaybackQueue::openStream() {
     PaError err = Pa_OpenDefaultStream(
-        &stream,
-        0,
-        2,
-        paFloat32,
-        samplingRate,
-        paFramesPerBufferUnspecified,
-        playbackCallback,
-        this
+        &mStream,                       // the stream pointer
+        0,                              // no input channels
+        2,                              // stereo, 2 output channels
+        paFloat32,                      // 32-bit float samples
+        mSamplingRate,                  // use the set sampling rate
+        paFramesPerBufferUnspecified,   // use the best fbp for the host
+        playbackCallback,               // callback function
+        this                            // pass this to the callback function
     );
 
     if (err != paNoError) {
@@ -84,40 +174,30 @@ void PlaybackQueue::setSamplingRate(float _samplingRate) {
     }
 }
 
-void PlaybackQueue::start() {
-    PaUtil_FlushRingBuffer(&ringbuf);
-    PaError err = Pa_StartStream(stream);
-    if (err != paNoError) {
-        throw PaException(err);
-    }
-}
+void PlaybackQueue::resizeQueue() {
+    
+    // determine the number of samples the queue requires
+    const unsigned nsamples = static_cast<unsigned>(std::round(mSamplingRate * (mBufferSize / 1000.0f)));
+    
+    // find the nearest power of two that is >= nsamples
+    // there's a faster way to do this but performance is not a concern here.
 
-void PlaybackQueue::stop(bool wait) {
-    // wait until all frames have been played out
-    if (wait) {
-        while (PaUtil_GetRingBufferWriteAvailable(&ringbuf) != N_FRAMES) {
-            Pa_Sleep(20);
-        }
+    unsigned queueDataSize = 1;
+    while (queueDataSize < nsamples) {
+        queueDataSize <<= 1;
     }
 
-    PaError err = Pa_StopStream(stream);
-    if (err != paNoError) {
-        throw PaException(err);
-    }
+    // resize the queue vector
+    mQueueData.resize(queueDataSize * 2);
 
-    if (!wait) {
-        PaUtil_FlushRingBuffer(&ringbuf);
-    }
-}
-
-void PlaybackQueue::writeFrame(float frame[]) {
-    PaUtil_WriteRingBuffer(&ringbuf, frame, samplesPerFrame);
-    if (!Pa_IsStreamActive(stream)) {
-        PaError err = Pa_StartStream(stream);
-        if (err != paNoError) {
-            throw PaException(err);
-        }
-    }
+    // re-initialize ringbuffer with the new size
+    PaUtil_InitializeRingBuffer(&mQueue, sizeof(float) * 2, queueDataSize, mQueueData.data());
+    
+    // update the slack
+    // worst case: slack = nsamples+1 (~50% unused)
+    // best case: slack = 0 (0% unused)
+    mSlack = queueDataSize - nsamples;
+    
 }
 
 

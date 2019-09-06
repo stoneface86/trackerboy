@@ -35,6 +35,7 @@ private:
     trackerboy::Synth synth;
     QWaitCondition writeAvailable;
     QMutex mutex;
+    QMutex synthMutex;
 
     // run() settings
 
