@@ -28,18 +28,12 @@ public:
 
 private slots:
     void channelSelected(int index);
-    void play();
-    void workerFinished();
-    void pianoKeyDown(trackerboy::Note note);
-    void pianoKeyUp();
+    void programChanged();
     
 private:
 
     QPlainTextEdit *programEdit;
     QPlainTextEdit *outputEdit;
-    QPushButton *playButton;
-    QCheckBox *loopCheckbox;
-    QLineEdit *frequencyEdit;
     PianoWidget *pianoWidget;
     SynthWorker *worker;
     
@@ -50,10 +44,7 @@ private:
     QStringList programList;
     QStringList outputList;
 
-    bool playing;
-
     bool parse();
-
 };
 
 

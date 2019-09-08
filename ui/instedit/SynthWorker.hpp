@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include <QThread>
+#include <QObject>
+#include <QTimer>
 #include <QWaitCondition>
 #include <QMutex>
 
@@ -14,27 +15,27 @@
 namespace instedit {
 
 
-class SynthWorker : public QThread {
+class SynthWorker : public QObject {
 
     Q_OBJECT
 
-protected:
-    void run() override;
-
 public:
     SynthWorker(QObject *parent = nullptr);
+    ~SynthWorker();
 
-    void setFrequency(uint16_t frequency);
     void setRuntime(trackerboy::InstrumentRuntime *runtime);
-    void setLoop(bool loop);
-
+    
+public slots:
+    void play(trackerboy::Note note);
     void stop();
+
+private slots:
+    void onTimeout();
 
 private:
     audio::PlaybackQueue pb;
     trackerboy::Synth synth;
-    QWaitCondition writeAvailable;
-    QMutex mutex;
+    QTimer *timer;
     QMutex synthMutex;
 
     // run() settings
@@ -42,8 +43,9 @@ private:
     std::unique_ptr<float[]> buf;
 
     trackerboy::InstrumentRuntime *runtime; // the runtime to play
-    bool loop; // reset runtime at end of program
-    bool shouldStop;
+    bool playing; // true if a note is being played
+    bool frameOut; // true if we are in process of outputting a frame to the queue
+    size_t frameOffset; // offset in the frame buffer to start outputting from
 
 };
 
