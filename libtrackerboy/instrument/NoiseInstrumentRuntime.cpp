@@ -11,7 +11,12 @@ NoiseInstrumentRuntime::NoiseInstrumentRuntime() :
 
 
 void NoiseInstrumentRuntime::execute(Synth &synth, Instruction inst) {
-    // TODO: implement noise runtime
+
+    if (inst.ctrl & Instruction::CTRL_SET_NOISE) {
+        synth.getChannels().ch4.setNoise(inst.settings);
+    }
+
+
 }
 
 
