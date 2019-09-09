@@ -42,17 +42,19 @@ struct Instruction {
     // Bit masks for all fields in the ctrl byte
     //
     enum CtrlFlags {
-        CTRL_DUTY      = 0x03, // duty setting bits 0-1 (channels 1,2)
-        CTRL_SET_WAVE  = 0x03, // wave set flag bits 0-1 (channel 3)
-        CTRL_SET_NOISE = 0x01, // noise set flag bit 0 (channel 4)
-        CTRL_SET_DUTY  = 0x04, // duty set flag bit 2 (channels 1,2)
-        CTRL_SET_ENV   = 0x18, // envelope set flag bits 3-4 (channels 1,2,4)
-        CTRL_PANNING   = 0x60, // panning setting bits 5-6 (all channels)
-        CTRL_INIT      = 0x80, // init flag bit 7 (all channels)
+        CTRL_DUTY        = 0x03, // duty setting bits 0-1 (channels 1,2)
+        CTRL_SET_WAVE    = 0x03, // wave set flag bits 0-1 (channel 3)
+        CTRL_SET_WAVEVOL = 0x04, // wave volume set flag bit 2 (channel 3)
+        CTRL_SET_NOISE   = 0x01, // noise set flag bit 0 (channel 4)
+        CTRL_SET_DUTY    = 0x04, // duty set flag bit 2 (channels 1,2)
+        CTRL_SET_ENV     = 0x18, // envelope set flag bits 3-4 (channels 1,2,4)
+        CTRL_PANNING     = 0x60, // panning setting bits 5-6 (all channels)
+        CTRL_INIT        = 0x80, // init flag bit 7 (all channels)
     };
 
     enum SettingsFlags {
         SETTINGS_SET_SWEEP = 0x80, // sweep set flag bit 7 (channel 1 only)
+        SETTINGS_WAVEVOL   = 0x03  // wave volume settings bits 0-1 (channel 3 only)
     };
 
     //
@@ -178,7 +180,11 @@ protected:
     void execute(Synth &synth, Instruction inst) override;
 
 public:
-    WaveInstrumentRuntime();
+    WaveInstrumentRuntime(WaveTable &waveTable);
+
+private:
+
+    WaveTable &mWaveTable;
 
 };
 

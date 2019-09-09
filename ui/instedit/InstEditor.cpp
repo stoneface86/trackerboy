@@ -40,7 +40,7 @@ InstEditor::InstEditor(QWidget *parent) :
 
     runtimeTable[0] = new trackerboy::PulseInstrumentRuntime(true);
     runtimeTable[1] = new trackerboy::PulseInstrumentRuntime(false);
-    runtimeTable[2] = new trackerboy::WaveInstrumentRuntime();
+    runtimeTable[2] = new trackerboy::WaveInstrumentRuntime(waveTable);
     runtimeTable[3] = new trackerboy::NoiseInstrumentRuntime();
     
     for (int i = 0; i != 4; ++i) {
