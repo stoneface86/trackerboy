@@ -99,6 +99,24 @@ struct Instruction {
 };
 
 
+class WaveTable {
+
+public:
+    WaveTable();
+
+    uint8_t* getWave(uint8_t waveId);
+
+    void setWave(uint8_t waveId, uint8_t waveform[WaveChannel::WAVE_RAMSIZE]);
+
+    std::vector<uint8_t>& table();
+
+private:
+
+    std::vector<uint8_t> mTable;
+
+};
+
+
 class Instrument {
 
     uint8_t id;

@@ -9,6 +9,7 @@ set(INSTRUMENT_SRC
 	"instrument/ParseError.cpp"
 	"instrument/PulseInstrumentRuntime.cpp"
 	"instrument/WaveInstrumentRuntime.cpp"
+	"instrument/WaveTable.cpp"
 )
 
 set(SYNTH_SRC
