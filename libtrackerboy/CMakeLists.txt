@@ -10,6 +10,7 @@ set(INSTRUMENT_SRC
 	"instrument/PulseInstrumentRuntime.cpp"
 	"instrument/WaveInstrumentRuntime.cpp"
 	"instrument/WaveTable.cpp"
+	"note.cpp"
 )
 
 set(SYNTH_SRC
