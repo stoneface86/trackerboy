@@ -7,6 +7,7 @@
 #include <cstdint>
 using std::uint8_t;
 
+#include "note.hpp"
 #include "track.hpp"
 #include "synth.hpp"
 
@@ -158,7 +159,7 @@ public:
 
     void setProgram(std::vector<Instruction> *program);
 
-    void step(Synth &synth);
+    void step(Synth &synth, uint8_t rowVol = 0, uint16_t freq = 0);
 
 };
 

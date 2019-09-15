@@ -28,7 +28,7 @@ void InstrumentRuntime::setProgram(std::vector<Instruction> *_program) {
 }
 
 
-void InstrumentRuntime::step(Synth &synth) {
+void InstrumentRuntime::step(Synth &synth, uint8_t rowVol, uint16_t rowFreq) {
 
     if (program == nullptr) {
         return;
@@ -68,6 +68,15 @@ void InstrumentRuntime::step(Synth &synth) {
         // execute settings for all instructions
         if (inst.ctrl & Instruction::CTRL_INIT) {
             // init sound, channel restarts output
+            if (trackId != TrackId::ch4) {
+                uint16_t freq;
+                if (inst.note == NOTE_NONE) {
+                    freq = rowFreq;
+                } else {
+                    freq = NOTE_FREQ_TABLE[inst.note];
+                }
+                ch->setFrequency(freq);
+            }
             ch->reset();
         }
 
@@ -86,8 +95,8 @@ void InstrumentRuntime::step(Synth &synth) {
             if (envCtrl != Instruction::ENV_NOSET) {
                 uint8_t envsettings = inst.envSettings;
                 if (envCtrl == Instruction::ENV_SETNOVOL) {
-                    // TODO: get the volume from the current note
                     // replace volume (bits 4-7) with volume from row
+                    envsettings = (rowVol << 4) | (envsettings & 0xF);
                 }
                 envCh->setEnv(envsettings);
             }

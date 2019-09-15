@@ -1,6 +1,5 @@
 
 #include "trackerboy/instrument.hpp"
-#include "trackerboy/pattern.hpp"
 
 #define CHAR_NOT_HEX 255
 
@@ -19,18 +18,15 @@ uint8_t hextoint(char ch) {
 }
 
 uint8_t toNote(std::string str) {
-    static const uint8_t NOTE_LOOKUP[] = {
-        static_cast<uint8_t>(Note::A2), // ('A' - 'A') -> A2
-        static_cast<uint8_t>(Note::B2),
-        static_cast<uint8_t>(Note::C2),
-        static_cast<uint8_t>(Note::D2),
-        static_cast<uint8_t>(Note::E2),
-        static_cast<uint8_t>(Note::F2),
-        static_cast<uint8_t>(Note::G2)
-
+    static const Note NOTE_LOOKUP[] = {
+        NOTE_A, // ('A' - 'A') -> A2
+        NOTE_B,
+        NOTE_C,
+        NOTE_D,
+        NOTE_E,
+        NOTE_F,
+        NOTE_G
     };
-
-    constexpr uint8_t NO_NOTE = static_cast<uint8_t>(Note::None);
 
     // C, C#, D, D#, E, F, F#, G, G#, A, A#, B
     // C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B
@@ -42,27 +38,27 @@ uint8_t toNote(std::string str) {
     // format: <note><#|-><octave>
 
     if (str.length() != 3) {
-        return static_cast<uint8_t>(Note::None);
+        return NOTE_NONE;
     }
 
     int note = str[0] - 'A';
     if (note < 0 || note >= sizeof(NOTE_LOOKUP)) {
-        return NO_NOTE;
+        return NOTE_NONE;
     }
 
     uint8_t result = NOTE_LOOKUP[note];
     if (str[1] == '#') {
         if (str[0] == 'B' || str[0] == 'E') {
-            return NO_NOTE;
+            return NOTE_NONE;
         }
         ++result;
     } else if (str[1] != '-') {
-        return NO_NOTE;
+        return NOTE_NONE;
     }
 
     int octave = str[2] - '2';
     if (octave < 0 || octave >= 6) {
-        return NO_NOTE;
+        return NOTE_NONE;
     }
 
     return result + (octave * 12);
@@ -278,10 +274,10 @@ Instruction parse(TrackId trackId, std::string line) {
             }
             case 'I':           // init
                 if (token.length() == 1) {
-                    inst.note = static_cast<uint8_t>(Note::None);
+                    inst.note = NOTE_NONE;
                 } else {
                     uint8_t note = toNote(token.substr(1));
-                    if (note == static_cast<uint8_t>(Note::None)) {
+                    if (note == NOTE_NONE) {
                         throw ParseError(0);
                     }
                     inst.note = note;

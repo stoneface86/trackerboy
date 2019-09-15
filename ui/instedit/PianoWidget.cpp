@@ -21,21 +21,21 @@ static const int BLACKKEY_LEFTOF[] = {
 };
 
 static const int WHITEKEY_TO_NOTE[] = {
-    static_cast<int>(trackerboy::Note::C2),
-    static_cast<int>(trackerboy::Note::D2),
-    static_cast<int>(trackerboy::Note::E2),
-    static_cast<int>(trackerboy::Note::F2),
-    static_cast<int>(trackerboy::Note::G2),
-    static_cast<int>(trackerboy::Note::A2),
-    static_cast<int>(trackerboy::Note::B2)
+    trackerboy::NOTE_C,
+    trackerboy::NOTE_D,
+    trackerboy::NOTE_E,
+    trackerboy::NOTE_F,
+    trackerboy::NOTE_G,
+    trackerboy::NOTE_A,
+    trackerboy::NOTE_B
 };
 
 static const int BLACKKEY_TO_NOTE[] = {
-    static_cast<int>(trackerboy::Note::Db2), // C#
-    static_cast<int>(trackerboy::Note::Eb2), // D#
-    static_cast<int>(trackerboy::Note::Gb2), // F#
-    static_cast<int>(trackerboy::Note::Ab2), // G#
-    static_cast<int>(trackerboy::Note::Bb2)  // A#
+    trackerboy::NOTE_Db, // C#
+    trackerboy::NOTE_Eb, // D#
+    trackerboy::NOTE_Gb, // F#
+    trackerboy::NOTE_Ab, // G#
+    trackerboy::NOTE_Bb  // A#
 };
 
 
