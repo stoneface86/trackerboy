@@ -11,6 +11,7 @@ set(INSTRUMENT_SRC
 	"instrument/WaveInstrumentRuntime.cpp"
 	"instrument/WaveTable.cpp"
 	"note.cpp"
+	"pattern/Track.cpp"
 )
 
 set(SYNTH_SRC
