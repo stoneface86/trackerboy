@@ -25,7 +25,7 @@ void PulseInstrumentRuntime::execute(Synth &synth, Instruction inst) {
     }
 
     if (inst.ctrl & Instruction::CTRL_SET_DUTY) {
-        ch->setDuty(static_cast<Duty>(inst.ctrl & Instruction::CTRL_DUTY));
+        ch->setDuty(static_cast<Gbs::Duty>(inst.ctrl & Instruction::CTRL_DUTY));
     }
 }
 

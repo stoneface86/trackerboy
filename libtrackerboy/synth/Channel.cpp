@@ -27,15 +27,15 @@ static const float SAMPLE_TABLE[16] = {
 
 
 Channel::Channel(bool ch3) :
-    lengthCounter(DEFAULT_LENGTH),
-    currentSample(SAMPLE_MIN),
-    length(DEFAULT_LENGTH),
+    lengthCounter(Gbs::DEFAULT_LENGTH),
+    currentSample(Gbs::SAMPLE_MIN),
+    length(Gbs::DEFAULT_LENGTH),
     continuous(true),
     enabled(true),
-    frequency(DEFAULT_FREQUENCY),
+    frequency(Gbs::DEFAULT_FREQUENCY),
     freqCounter(0),
     freqMultiplier(ch3 ? 2 : 4),
-    freqCounterMax(calcFreqMax(DEFAULT_FREQUENCY))
+    freqCounterMax(calcFreqMax(Gbs::DEFAULT_FREQUENCY))
 {
 }
 
@@ -44,7 +44,7 @@ void Channel::disable() {
 }
 
 uint8_t Channel::getCurrentSample() {
-    return enabled ? currentSample : SAMPLE_GND;
+    return enabled ? currentSample : Gbs::SAMPLE_GND;
 }
 
 float Channel::getCurrentVolume() {
@@ -65,7 +65,7 @@ void Channel::lengthStep() {
 void Channel::reset() {
     lengthCounter = length;
     enabled = true;
-    currentSample = SAMPLE_GND;
+    currentSample = Gbs::SAMPLE_GND;
 }
 
 void Channel::setContinuousOutput(bool _continuous) {
@@ -73,8 +73,8 @@ void Channel::setContinuousOutput(bool _continuous) {
 }
 
 void Channel::setFrequency(uint16_t _frequency) {
-    if (_frequency > MAX_FREQUENCY) {
-        _frequency = MAX_FREQUENCY;
+    if (_frequency > Gbs::MAX_FREQUENCY) {
+        _frequency = Gbs::MAX_FREQUENCY;
     }
 
     frequency = _frequency;
@@ -82,8 +82,8 @@ void Channel::setFrequency(uint16_t _frequency) {
 }
 
 void Channel::setLength(uint8_t _length) {
-    if (_length > MAX_LENGTH) {
-        _length = MAX_LENGTH;
+    if (_length > Gbs::MAX_LENGTH) {
+        _length = Gbs::MAX_LENGTH;
     }
     length = _length;
 }

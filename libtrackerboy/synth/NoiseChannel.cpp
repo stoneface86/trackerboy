@@ -19,9 +19,9 @@ static const uint8_t DRF_TABLE[] = {
 
 NoiseChannel::NoiseChannel() : 
     EnvChannel(),
-    scf(DEFAULT_SCF),
-    stepSelection((StepCount)DEFAULT_STEP_COUNT),
-    drf(DEFAULT_DRF),
+    scf(Gbs::DEFAULT_SCF),
+    stepSelection(Gbs::DEFAULT_STEP_COUNT),
+    drf(Gbs::DEFAULT_DRF),
     lfsr(LFSR_INIT),
     shiftCounter(0),
     shiftCounterMax(calcCounterMax(drf, scf))
@@ -41,19 +41,19 @@ void NoiseChannel::setDrf(uint8_t _drf) {
 
 void NoiseChannel::setNoise(uint8_t noiseReg) {
     drf = noiseReg & 0x7;
-    stepSelection = static_cast<StepCount>((noiseReg >> 3) & 1);
+    stepSelection = static_cast<Gbs::NoiseSteps>((noiseReg >> 3) & 1);
     scf = noiseReg >> 4;
 }
 
 void NoiseChannel::setScf(uint8_t _scf) {
-    if (_scf > MAX_SCF) {
-        _scf = MAX_SCF;
+    if (_scf > Gbs::MAX_SCF) {
+        _scf = Gbs::MAX_SCF;
     }
     scf = _scf;
     shiftCounterMax = calcCounterMax(drf, scf);
 }
 
-void NoiseChannel::setStepSelection(StepCount count) {
+void NoiseChannel::setStepSelection(Gbs::NoiseSteps count) {
     stepSelection = count;
 }
 
@@ -68,7 +68,7 @@ void NoiseChannel::step(unsigned cycles) {
         lfsr >>= 1;
         // set the resulting xor to bit 15 (feedback)
         lfsr |= xor << 14;
-        if (stepSelection == StepCount::steps7) {
+        if (stepSelection == Gbs::NOISE_STEPS_7) {
             // 7-bit lfsr, set bit 7 with the result
             lfsr &= ~0x40; // reset bit 7
             lfsr |= xor << 6; // set bit 7 result
@@ -76,9 +76,9 @@ void NoiseChannel::step(unsigned cycles) {
     }
     if (lfsr & 0x1) {
         // output is bit 0 inverted, so if bit 0 == 1, output MIN
-        currentSample = SAMPLE_MIN;
+        currentSample = Gbs::SAMPLE_MIN;
     } else {
-        currentSample = SAMPLE_MAX;
+        currentSample = Gbs::SAMPLE_MAX;
     }
 }
 

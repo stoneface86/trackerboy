@@ -7,8 +7,8 @@
 namespace trackerboy {
 
 float fromGbFreq(uint16_t freq) {
-    if (freq > Channel::MAX_FREQUENCY) {
-        freq = Channel::MAX_FREQUENCY; // clamp
+    if (freq > Gbs::MAX_FREQUENCY) {
+        freq = Gbs::MAX_FREQUENCY; // clamp
     }
     return 131072.0f / (2048 - freq);
 }
@@ -28,7 +28,7 @@ uint16_t toGbFreq(float freq) {
     }
 
 
-    return Channel::MAX_FREQUENCY;
+    return Gbs::MAX_FREQUENCY;
 }
 
 }

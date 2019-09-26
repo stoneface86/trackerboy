@@ -131,20 +131,20 @@ static Instruction _parsePulseSettings(TrackId trackId, std::vector<std::string>
                 } else {  // else used for scope
                     sweepSet = Instruction::SETTINGS_SET_SWEEP;
                     sweepTime = hextoint(token[1]);
-                    if (sweepTime == CHAR_NOT_HEX || sweepTime > SweepPulseChannel::MAX_SWEEP_TIME) {
+                    if (sweepTime == CHAR_NOT_HEX || sweepTime > Gbs::MAX_SWEEP_TIME) {
                         throw ParseError(0);
                     }
                     char modechar = token[2];
                     if (modechar == '+') {
                         // sweep addition
-                        sweepMode = static_cast<uint8_t>(SweepMode::addition);
+                        sweepMode = static_cast<uint8_t>(Gbs::SWEEP_ADDITION);
                     } else if (modechar == '-') {
-                        sweepMode = static_cast<uint8_t>(SweepMode::subtraction);
+                        sweepMode = static_cast<uint8_t>(Gbs::SWEEP_SUBTRACTION);
                     } else {
                         throw ParseError(0);
                     }
                     sweepShift = hextoint(token[3]);
-                    if (sweepShift == CHAR_NOT_HEX || sweepShift > SweepPulseChannel::MAX_SWEEP_SHIFT) {
+                    if (sweepShift == CHAR_NOT_HEX || sweepShift > Gbs::MAX_SWEEP_SHIFT) {
                         throw ParseError(0);
                     }
                 }
@@ -258,9 +258,9 @@ Instruction parse(TrackId trackId, std::string line) {
 
                 char modechar = token[offset + 1];
                 if (modechar == '/') {
-                    envMode = static_cast<uint8_t>(EnvMode::amplify);
+                    envMode = static_cast<uint8_t>(Gbs::ENV_AMPLIFY);
                 } else if (modechar == '\\') {
-                    envMode = static_cast<uint8_t>(EnvMode::attenuate);
+                    envMode = static_cast<uint8_t>(Gbs::ENV_ATTENUATE);
                 } else {
                     throw ParseError(0);
                 }

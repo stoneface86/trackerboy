@@ -27,9 +27,9 @@ static const float ENV_TABLE[16] = {
 
 EnvChannel::EnvChannel() : 
     envCounter(0),
-    envelope(DEFAULT_ENV_STEPS),
-    envLength(DEFAULT_ENV_LENGTH),
-    envMode(static_cast<EnvMode>(DEFAULT_ENV_MODE)),
+    envelope(Gbs::DEFAULT_ENV_STEPS),
+    envLength(Gbs::DEFAULT_ENV_LENGTH),
+    envMode(Gbs::DEFAULT_ENV_MODE),
     Channel() 
 {
 }
@@ -39,12 +39,12 @@ void EnvChannel::envStep() {
         // do nothing if envLength == 0
         if (envCounter == envLength) {
             envCounter = 0;
-            if (envMode == EnvMode::amplify) {
-                if (envelope < SAMPLE_MAX) {
+            if (envMode == Gbs::ENV_AMPLIFY) {
+                if (envelope < Gbs::SAMPLE_MAX) {
                     ++envelope;
                 }
             } else {
-                if (envelope > SAMPLE_MIN) {
+                if (envelope > Gbs::SAMPLE_MIN) {
                     --envelope;
                 }
             }
@@ -65,24 +65,24 @@ void EnvChannel::reset() {
 
 void EnvChannel::setEnv(uint8_t envReg) {
     envLength = (envReg & 0x7);
-    envMode = static_cast<EnvMode>((envReg >> 3) & 1);
+    envMode = static_cast<Gbs::EnvMode>((envReg >> 3) & 1);
     envelope = (envReg >> 4);
 }
 
 void EnvChannel::setEnvLength(uint8_t _envLength) {
-    if (_envLength > MAX_ENV_LENGTH) {
-        _envLength = MAX_ENV_LENGTH;
+    if (_envLength > Gbs::MAX_ENV_LENGTH) {
+        _envLength = Gbs::MAX_ENV_LENGTH;
     }
     envLength = _envLength;
 }
 
-void EnvChannel::setEnvMode(EnvMode mode) {
+void EnvChannel::setEnvMode(Gbs::EnvMode mode) {
     this->envMode = mode;
 }
 
 void EnvChannel::setEnvStep(uint8_t step) {
-    if (step > MAX_ENV_STEPS) {
-        step = MAX_ENV_STEPS;
+    if (step > Gbs::MAX_ENV_STEPS) {
+        step = Gbs::MAX_ENV_STEPS;
     }
     envelope = step;
 }

@@ -8,53 +8,53 @@ namespace trackerboy {
 static uint8_t DUTY_TABLE[][DUTY_SIZE] = {
     // Duty 12.5%:  00000001
     {
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MAX
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MAX
     },
     // Duty 25%:    10000001
     {
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MAX
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MAX
     },
     // Duty 50%:    10000111
     {
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MAX
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MAX
     },
     // Duty 75%:    01111110
     {
-        Channel::SAMPLE_MIN,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MAX,
-        Channel::SAMPLE_MIN
+        Gbs::SAMPLE_MIN,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MAX,
+        Gbs::SAMPLE_MIN
     }
 };
 
 PulseChannel::PulseChannel() : 
     EnvChannel(),
-    duty((Duty)DEFAULT_DUTY),
+    duty(Gbs::DEFAULT_DUTY),
     dutyCounter(0)
 {        
 }
@@ -65,7 +65,7 @@ void PulseChannel::reset() {
     dutyCounter = 0;
 }
 
-void PulseChannel::setDuty(Duty _duty) {
+void PulseChannel::setDuty(Gbs::Duty _duty) {
     duty = _duty;
 }
 

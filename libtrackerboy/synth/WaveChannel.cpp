@@ -8,7 +8,7 @@ namespace trackerboy {
 WaveChannel::WaveChannel() :
     Channel(true),
     wavedata{0},
-    outputLevel(static_cast<WaveVolume>(DEFAULT_WAVE_LEVEL)),
+    outputLevel(Gbs::DEFAULT_WAVE_LEVEL),
     waveIndex(0)
 {
 }
@@ -18,7 +18,7 @@ void WaveChannel::reset() {
     freqCounter = 0;
 }
 
-void WaveChannel::setOutputLevel(WaveVolume level) {
+void WaveChannel::setOutputLevel(Gbs::WaveVolume level) {
     outputLevel = level;
 }
 
@@ -40,13 +40,13 @@ void WaveChannel::step(unsigned cycles) {
         sample >>= 4;
     }
     switch (outputLevel) {
-        case WaveVolume::mute:
-            sample = SAMPLE_GND;
-        case WaveVolume::full:
+        case Gbs::WAVE_MUTE:
+            sample = Gbs::SAMPLE_GND;
+        case Gbs::WAVE_FULL:
             break; // nothing to do
-        case WaveVolume::half:
+        case Gbs::WAVE_HALF:
             sample >>= 1;
-        case WaveVolume::quarter:
+        case Gbs::WAVE_QUARTER:
             sample >>= 2;
     }
 

@@ -84,8 +84,8 @@ void InstrumentRuntime::step(Synth &synth, uint8_t rowVol, uint16_t rowFreq) {
             bool leftEnable = inst.ctrl & Instruction::PANNING_LEFT;
             bool rightEnable = inst.ctrl & Instruction::PANNING_RIGHT;
             auto &mixer = synth.getMixer();
-            mixer.setEnable(static_cast<ChType>(trackId), Mixer::term_left, leftEnable);
-            mixer.setEnable(static_cast<ChType>(trackId), Mixer::term_right, rightEnable);
+            mixer.setEnable(static_cast<ChType>(trackId), Gbs::TERM_LEFT, leftEnable);
+            mixer.setEnable(static_cast<ChType>(trackId), Gbs::TERM_RIGHT, rightEnable);
         }
 
         // envelope settings (all tracks except 3)

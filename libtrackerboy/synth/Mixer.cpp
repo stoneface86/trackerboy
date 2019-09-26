@@ -19,41 +19,41 @@ static const float VOLUME_TABLE[8] = {
 
 
 Mixer::Mixer() :
-    s01enable(DEFAULT_TERM_ENABLE),
-    s02enable(DEFAULT_TERM_ENABLE),
-    s01vol(DEFAULT_TERM_VOLUME),
-    s02vol(DEFAULT_TERM_VOLUME),
-    outputStat(all_off)
+    s01enable(Gbs::DEFAULT_TERM_ENABLE),
+    s02enable(Gbs::DEFAULT_TERM_ENABLE),
+    s01vol(Gbs::DEFAULT_TERM_VOLUME),
+    s02vol(Gbs::DEFAULT_TERM_VOLUME),
+    outputStat(Gbs::OUT_OFF)
 {
 }
 
 void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
     float left = 0.0f, right = 0.0f;
     if (s01enable) {
-        if (outputStat & left1) {
+        if (outputStat & Gbs::OUT_LEFT1) {
             left += in1 * VOL_MULTIPLIER;
         }
-        if (outputStat & left2) {
+        if (outputStat & Gbs::OUT_LEFT2) {
             left += in2 * VOL_MULTIPLIER;
         }
-        if (outputStat & left3) {
+        if (outputStat & Gbs::OUT_LEFT3) {
             left += in3 * VOL_MULTIPLIER;
         }
-        if (outputStat & left4) {
+        if (outputStat & Gbs::OUT_LEFT4) {
             left += in4 * VOL_MULTIPLIER;
         }
     }
     if (s02enable) {
-        if (outputStat & right1) {
+        if (outputStat & Gbs::OUT_RIGHT1) {
             right += in1 * VOL_MULTIPLIER;
         }
-        if (outputStat & right2) {
+        if (outputStat & Gbs::OUT_RIGHT2) {
             right += in2 * VOL_MULTIPLIER;
         }
-        if (outputStat & right3) {
+        if (outputStat & Gbs::OUT_RIGHT3) {
             right += in3 * VOL_MULTIPLIER;
         }
-        if (outputStat & right4) {
+        if (outputStat & Gbs::OUT_RIGHT4) {
             right += in4 * VOL_MULTIPLIER;
         }
     }
@@ -62,17 +62,17 @@ void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft
     outRight = right * VOLUME_TABLE[s02vol];
 }
 
-void Mixer::setEnable(OutputFlags flags) {
+void Mixer::setEnable(Gbs::OutputFlags flags) {
     outputStat = flags;
 }
 
-void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
+void Mixer::setEnable(ChType ch, Gbs::Terminal term, bool enabled) {
     uint8_t flag = 0;
-    if (term & term_left) {
+    if (term & Gbs::TERM_LEFT) {
         flag = 1 << static_cast<uint8_t>(ch);
     }
 
-    if (term & term_right) {
+    if (term & Gbs::TERM_RIGHT) {
         flag |= flag << 4;
     }
 
@@ -83,26 +83,26 @@ void Mixer::setEnable(ChType ch, Terminal term, bool enabled) {
     }
 }
 
-void Mixer::setTerminalEnable(Terminal term, bool enabled) {
-    if (term & term_left) {
+void Mixer::setTerminalEnable(Gbs::Terminal term, bool enabled) {
+    if (term & Gbs::TERM_LEFT) {
         s01enable = enabled;
     }
 
-    if (term & term_right) {
+    if (term & Gbs::TERM_RIGHT) {
         s02enable = enabled;
     }
 }
 
-void Mixer::setTerminalVolume(Terminal term, uint8_t volume) {
-    if (volume > MAX_TERM_VOLUME) {
-        volume = MAX_TERM_VOLUME;
+void Mixer::setTerminalVolume(Gbs::Terminal term, uint8_t volume) {
+    if (volume > Gbs::MAX_TERM_VOLUME) {
+        volume = Gbs::MAX_TERM_VOLUME;
     }
 
-    if (term & term_left) {
+    if (term & Gbs::TERM_LEFT) {
         s01vol = volume;
     }
 
-    if (term & term_right) {
+    if (term & Gbs::TERM_RIGHT) {
         s02vol = volume;
     }
 }

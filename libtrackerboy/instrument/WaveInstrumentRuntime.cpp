@@ -24,7 +24,7 @@ void WaveInstrumentRuntime::execute(Synth &synth, Instruction inst) {
     }
 
     if (inst.ctrl & Instruction::CTRL_SET_WAVEVOL) {
-        ch3.setOutputLevel(static_cast<WaveVolume>(inst.settings & 0x3));
+        ch3.setOutputLevel(static_cast<Gbs::WaveVolume>(inst.settings & 0x3));
     }
 }
 

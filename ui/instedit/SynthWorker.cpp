@@ -33,8 +33,8 @@ SynthWorker::SynthWorker(QObject *parent) :
     connect(timer, &QTimer::timeout, this, &SynthWorker::onTimeout);
 
     auto &mixer = synth.getMixer();
-    mixer.setTerminalEnable(trackerboy::Mixer::term_both, true);
-    mixer.setEnable(trackerboy::Mixer::all_on);
+    mixer.setTerminalEnable(trackerboy::Gbs::TERM_BOTH, true);
+    mixer.setEnable(trackerboy::Gbs::OUT_ALL);
     //pb.start();
 }
 

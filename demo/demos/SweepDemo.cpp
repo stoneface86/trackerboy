@@ -19,13 +19,13 @@ void SweepDemo::init(Synth &synth) {
     ChannelFile &cf = synth.getChannels();
     Mixer &mixer = synth.getMixer();
 
-    cf.ch1.setEnvStep(EnvChannel::MAX_ENV_STEPS);
+    cf.ch1.setEnvStep(Gbs::MAX_ENV_STEPS);
 
     cf.ch1.setSweepShift(DEMO_SWEEP_SHIFT);
     cf.ch1.setSweepTime(DEMO_SWEEP_TIME);
 
-    mixer.setTerminalEnable(Mixer::term_both, true);
-    mixer.setEnable(Mixer::both1);
+    mixer.setTerminalEnable(Gbs::TERM_BOTH, true);
+    mixer.setEnable(Gbs::OUT_BOTH1);
 }
 
 long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
@@ -33,19 +33,19 @@ long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
     SweepPulseChannel &ch1 = synth.getChannels().ch1;
 
     uint16_t freq;
-    SweepMode mode;
+    Gbs::SweepMode mode;
 
     switch (counter) {
         case 0:
             // sweep subtraction for 4 seconds
             freq = DEMO_SUB_FREQ;
-            mode = SweepMode::subtraction;
+            mode = Gbs::SWEEP_SUBTRACTION;
             std::cout << "Sweep subtraction" << std::endl;
             break;
         case 1:
             // sweep addition for 4 seconds
             freq = DEMO_ADD_FREQ;
-            mode = SweepMode::addition;
+            mode = Gbs::SWEEP_ADDITION;
             std::cout << "Sweep addition" << std::endl;
             break;
         default:
