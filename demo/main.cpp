@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "demo.hpp"
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/Synth.hpp"
 #include "portaudio.h"
 
 

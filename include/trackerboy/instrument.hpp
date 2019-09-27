@@ -9,7 +9,9 @@ using std::uint8_t;
 
 #include "note.hpp"
 #include "track.hpp"
-#include "synth.hpp"
+
+#include "trackerboy/synth/Synth.hpp"
+#include "trackerboy/synth/WaveChannel.hpp"
 
 
 namespace trackerboy {

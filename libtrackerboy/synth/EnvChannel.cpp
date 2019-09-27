@@ -1,5 +1,6 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/EnvChannel.hpp"
+#include "trackerboy/gbs.hpp"
 
 #include <cmath>
 

@@ -3,6 +3,8 @@
 
 #include "../demo.hpp"
 
+#include "trackerboy/synth/utils.hpp"
+
 #define DEMO_RUNTIME 1000
 #define DEMO_FREQ    toGbFreq(440.0f)
 

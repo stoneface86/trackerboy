@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/PulseChannel.hpp"
 
 #define DUTY_SIZE 8
 

@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/Sequencer.hpp"
 
 // 512 Hz, 4194304 / 512 = 8192 cycles per step
 #define FREQ_COUNTER_MAX 8192

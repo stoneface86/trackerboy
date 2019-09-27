@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/Synth.hpp"
 
 #define GB_CLOCK_SPEED 4194304
 

@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/WaveChannel.hpp"
 
 #include <algorithm>
 

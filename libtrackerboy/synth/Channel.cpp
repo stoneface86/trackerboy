@@ -1,5 +1,6 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/Channel.hpp"
+#include "trackerboy/gbs.hpp"
 
 #define calcFreqMax(f) ((2048 - f) * freqMultiplier)
 

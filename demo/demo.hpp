@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/Synth.hpp"
 
 
 class Demo {

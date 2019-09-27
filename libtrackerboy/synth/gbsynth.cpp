@@ -1,5 +1,6 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/utils.hpp"
+#include "trackerboy/gbs.hpp"
 
 #include <cmath>
 

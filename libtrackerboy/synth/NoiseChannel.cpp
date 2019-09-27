@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/NoiseChannel.hpp"
 
 #define LFSR_INIT 0x7FFF
 #define calcCounterMax(drf, scf) (DRF_TABLE[drf] << (scf+1))

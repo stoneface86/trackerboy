@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/Mixer.hpp"
 
 // each channel has a maximum volume of 0.2, so maximum volume of all channels is 0.8
 #define VOL_MULTIPLIER 0.2f

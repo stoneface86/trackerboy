@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth.hpp"
+#include "trackerboy/synth/SweepPulseChannel.hpp"
 
 namespace trackerboy {
 
