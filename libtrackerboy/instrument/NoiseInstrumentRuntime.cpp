@@ -5,7 +5,7 @@ namespace trackerboy {
 
 
 NoiseInstrumentRuntime::NoiseInstrumentRuntime() :
-    InstrumentRuntime(TrackId::ch4)
+    InstrumentRuntime(ChType::ch4)
 {
 }
 

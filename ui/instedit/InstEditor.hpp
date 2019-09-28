@@ -7,7 +7,8 @@
 #include <QCheckBox>
 #include <QLineEdit>
 
-#include "trackerboy.hpp"
+#include "trackerboy/common.hpp"
+#include "trackerboy/instrument.hpp"
 #include "SynthWorker.hpp"
 #include "PianoWidget.hpp"
 
@@ -39,7 +40,7 @@ private:
     
     std::vector<trackerboy::Instruction>* programTable[4];
     trackerboy::InstrumentRuntime* runtimeTable[4];
-    trackerboy::TrackId currentTrackId;
+    trackerboy::ChType currentTrackId;
     trackerboy::WaveTable waveTable;
 
     QStringList programList;

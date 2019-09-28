@@ -24,7 +24,7 @@ InstEditor::InstEditor(QWidget *parent) :
     outputEdit(new QPlainTextEdit),
     pianoWidget(new PianoWidget),
     worker(new SynthWorker(this)),
-    currentTrackId(trackerboy::TrackId::ch1),
+    currentTrackId(trackerboy::ChType::ch1),
     runtimeTable{nullptr},
     programTable{nullptr},
     QWidget(parent)
@@ -56,10 +56,10 @@ InstEditor::InstEditor(QWidget *parent) :
     QRadioButton *radioCh2 = new QRadioButton("CH2");
     QRadioButton *radioCh3 = new QRadioButton("CH3");
     QRadioButton *radioCh4 = new QRadioButton("CH4");
-    group->addButton(radioCh1, static_cast<int>(trackerboy::TrackId::ch1));
-    group->addButton(radioCh2, static_cast<int>(trackerboy::TrackId::ch2));
-    group->addButton(radioCh3, static_cast<int>(trackerboy::TrackId::ch3));
-    group->addButton(radioCh4, static_cast<int>(trackerboy::TrackId::ch4));
+    group->addButton(radioCh1, static_cast<int>(trackerboy::ChType::ch1));
+    group->addButton(radioCh2, static_cast<int>(trackerboy::ChType::ch2));
+    group->addButton(radioCh3, static_cast<int>(trackerboy::ChType::ch3));
+    group->addButton(radioCh4, static_cast<int>(trackerboy::ChType::ch4));
     connect(group, static_cast<void(QButtonGroup::*)(int)>(&QButtonGroup::buttonReleased), this, &InstEditor::channelSelected);
 
 
@@ -128,7 +128,7 @@ void InstEditor::channelSelected(int id) {
         programEdit->setPlainText(programList.at(id));
         outputEdit->setPlainText(outputList.at(id));
 
-        currentTrackId = static_cast<trackerboy::TrackId>(id);
+        currentTrackId = static_cast<trackerboy::ChType>(id);
     }
 }
 

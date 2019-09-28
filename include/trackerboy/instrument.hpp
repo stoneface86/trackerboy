@@ -7,9 +7,8 @@
 #include <cstdint>
 using std::uint8_t;
 
-#include "note.hpp"
-#include "track.hpp"
-
+#include "trackerboy/common.hpp"
+#include "trackerboy/note.hpp"
 #include "trackerboy/synth/Synth.hpp"
 #include "trackerboy/synth/WaveChannel.hpp"
 
@@ -125,16 +124,16 @@ private:
 class Instrument {
 
     uint8_t id;
-    TrackId trackId;
+    ChType trackId;
     // sequence of instructions, one instruction per frame
     std::vector<Instruction> program;
 
 public:
 
-    Instrument(uint8_t id, TrackId track);
+    Instrument(uint8_t id, ChType track);
 
     uint8_t getId();
-    TrackId getTrackId();
+    ChType getTrackId();
     std::vector<Instruction>& getProgram();
 };
 
@@ -146,9 +145,9 @@ class InstrumentRuntime {
     uint8_t pc;
 
 protected:
-    const TrackId trackId;
+    const ChType trackId;
 
-    InstrumentRuntime(TrackId trackId);
+    InstrumentRuntime(ChType trackId);
 
     virtual void execute(Synth &synth, Instruction inst) = 0;
 
@@ -203,7 +202,7 @@ public:
 
 };
 
-Instruction parse(TrackId track, std::string line);
+Instruction parse(ChType track, std::string line);
 
 
 }

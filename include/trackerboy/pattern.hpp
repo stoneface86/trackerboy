@@ -5,8 +5,8 @@
 #include <cstdint>
 using std::uint8_t;
 
-#include "note.hpp"
-#include "track.hpp"
+#include "trackerboy/common.hpp"
+#include "trackerboy/note.hpp"
 
 
 namespace trackerboy {
@@ -71,7 +71,7 @@ public:
 
 	void setEffect( uint8_t row, TrackRow::EffectType effect, uint8_t param = 0);
 
-	void move(TrackId id, uint8_t rowStart, uint8_t rowEnd, uint8_t newrow);
+	void move(ChType id, uint8_t rowStart, uint8_t rowEnd, uint8_t newrow);
 
 private:
 
@@ -86,7 +86,7 @@ public:
 
     Pattern();
 
-	Track& track(TrackId id);
+	Track& track(ChType id);
 
 	
 

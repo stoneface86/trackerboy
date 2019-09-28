@@ -5,7 +5,7 @@
 namespace trackerboy {
 
 
-InstrumentRuntime::InstrumentRuntime(TrackId trackId) :
+InstrumentRuntime::InstrumentRuntime(ChType trackId) :
     program(nullptr),
     pc(0),
     fc(1),
@@ -48,18 +48,18 @@ void InstrumentRuntime::step(Synth &synth, uint8_t rowVol, uint16_t rowFreq) {
         EnvChannel *envCh = nullptr;
         // TODO: might need to extract this later (ie channelFromTrackId)
         switch (trackId) {
-            case TrackId::ch1:
+            case ChType::ch1:
                 envCh = &synth.getChannels().ch1;
                 ch = envCh;
                 break;
-            case TrackId::ch2:
+            case ChType::ch2:
                 envCh = &synth.getChannels().ch2;
                 ch = envCh;
                 break;
-            case TrackId::ch3:
+            case ChType::ch3:
                 ch = &synth.getChannels().ch3;
                 break;
-            case TrackId::ch4:
+            case ChType::ch4:
                 envCh = &synth.getChannels().ch4;
                 ch = envCh;
                 break;
@@ -68,7 +68,7 @@ void InstrumentRuntime::step(Synth &synth, uint8_t rowVol, uint16_t rowFreq) {
         // execute settings for all instructions
         if (inst.ctrl & Instruction::CTRL_INIT) {
             // init sound, channel restarts output
-            if (trackId != TrackId::ch4) {
+            if (trackId != ChType::ch4) {
                 uint16_t freq;
                 if (inst.note == NOTE_NONE) {
                     freq = rowFreq;

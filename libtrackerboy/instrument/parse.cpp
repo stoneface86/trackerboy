@@ -99,7 +99,7 @@ std::vector<std::string> split(std::string str, std::string delims = "", size_t 
 }
 
 
-static Instruction _parsePulseSettings(TrackId trackId, std::vector<std::string> settings) {
+static Instruction _parsePulseSettings(ChType trackId, std::vector<std::string> settings) {
     Instruction inst = { 0 };
 
     uint8_t dutySet = 0;
@@ -126,7 +126,7 @@ static Instruction _parsePulseSettings(TrackId trackId, std::vector<std::string>
                 }
                 break;
             case 'S':
-                if (trackId != TrackId::ch1 || token.length() != 4) {
+                if (trackId != ChType::ch1 || token.length() != 4) {
                     throw ParseError(0);
                 } else {  // else used for scope
                     sweepSet = Instruction::SETTINGS_SET_SWEEP;
@@ -155,7 +155,7 @@ static Instruction _parsePulseSettings(TrackId trackId, std::vector<std::string>
         }
     }
 
-    if (trackId == TrackId::ch1) {
+    if (trackId == ChType::ch1) {
         inst.settings = sweepSet | (sweepTime << 4) | (sweepMode << 3) | sweepShift;
     }
     inst.ctrl = dutySet | duty;
@@ -164,7 +164,7 @@ static Instruction _parsePulseSettings(TrackId trackId, std::vector<std::string>
 }
 
 
-static Instruction _parseWaveSettings(TrackId trackId, std::vector<std::string> settings) {
+static Instruction _parseWaveSettings(ChType trackId, std::vector<std::string> settings) {
     Instruction inst = { 0 };
 
     // TODO: implement wave parser
@@ -173,7 +173,7 @@ static Instruction _parseWaveSettings(TrackId trackId, std::vector<std::string> 
 }
 
 
-static Instruction _parseNoiseSettings(TrackId trackId, std::vector<std::string> settings) {
+static Instruction _parseNoiseSettings(ChType trackId, std::vector<std::string> settings) {
     Instruction inst = { 0 };
 
     // TODO: implement noise parser
@@ -183,7 +183,7 @@ static Instruction _parseNoiseSettings(TrackId trackId, std::vector<std::string>
 
 
 
-Instruction parse(TrackId trackId, std::string line) {
+Instruction parse(ChType trackId, std::string line) {
     // format: [duration:] setting1 [setting2] [setting3]...
     Instruction inst;
     inst.duration = 1; // default to 1 if duration is omitted from line
@@ -234,7 +234,7 @@ Instruction parse(TrackId trackId, std::string line) {
         switch (token[0]) {
             case 'E':          // envelope
             {
-                if (trackId == TrackId::ch3) {
+                if (trackId == ChType::ch3) {
                     throw ParseError(0);
                 }
                 size_t offset;
@@ -310,7 +310,7 @@ Instruction parse(TrackId trackId, std::string line) {
     }
 
     inst.ctrl = init | envCtrl | panning;
-    if (trackId != TrackId::ch3) {
+    if (trackId != ChType::ch3) {
         inst.envSettings = (envVolume << 4) | (envMode << 3) | envLength;
     }
 
@@ -318,14 +318,14 @@ Instruction parse(TrackId trackId, std::string line) {
     Instruction channelInst;
     
     switch (trackId) {
-        case TrackId::ch1:
-        case TrackId::ch2:
+        case ChType::ch1:
+        case ChType::ch2:
             channelInst = _parsePulseSettings(trackId, settings);
             break;
-        case TrackId::ch3:
+        case ChType::ch3:
             channelInst = _parseWaveSettings(trackId, settings);
             break;
-        case TrackId::ch4:
+        case ChType::ch4:
             channelInst = _parseNoiseSettings(trackId, settings);
             break;
     }

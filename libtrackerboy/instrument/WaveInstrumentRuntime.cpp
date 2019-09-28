@@ -6,7 +6,7 @@ namespace trackerboy {
 
 WaveInstrumentRuntime::WaveInstrumentRuntime(WaveTable &waveTable) :
     mWaveTable(waveTable),
-    InstrumentRuntime(TrackId::ch3)
+    InstrumentRuntime(ChType::ch3)
 {
 }
 

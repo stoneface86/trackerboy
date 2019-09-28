@@ -4,7 +4,7 @@
 
 namespace trackerboy {
 
-Instrument::Instrument(uint8_t id, TrackId track) :
+Instrument::Instrument(uint8_t id, ChType track) :
     id(id),
     trackId(track),
     program()
@@ -17,7 +17,7 @@ uint8_t Instrument::getId() {
 }
 
 
-TrackId Instrument::getTrackId() {
+ChType Instrument::getTrackId() {
     return trackId;
 }
 

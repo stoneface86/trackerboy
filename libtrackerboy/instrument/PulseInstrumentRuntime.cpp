@@ -5,7 +5,7 @@ namespace trackerboy {
 
 
 PulseInstrumentRuntime::PulseInstrumentRuntime(bool sweep) :
-    InstrumentRuntime(sweep ? TrackId::ch1 : TrackId::ch2)
+    InstrumentRuntime(sweep ? ChType::ch1 : ChType::ch2)
 {
 }
 
@@ -14,7 +14,7 @@ void PulseInstrumentRuntime::execute(Synth &synth, Instruction inst) {
 
     auto &cf = synth.getChannels();
 
-    if (trackId == TrackId::ch1) {
+    if (trackId == ChType::ch1) {
         ch = &cf.ch1;
         // update sweep if set sweep flag is set
         if (inst.settings & Instruction::SETTINGS_SET_SWEEP) {
