@@ -43,6 +43,7 @@ private:
     std::unique_ptr<float[]> buf;
 
     trackerboy::InstrumentRuntime *runtime; // the runtime to play
+    trackerboy::WaveTable wtable;
     bool playing; // true if a note is being played
     bool frameOut; // true if we are in process of outputting a frame to the queue
     size_t frameOffset; // offset in the frame buffer to start outputting from

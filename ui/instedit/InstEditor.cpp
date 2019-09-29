@@ -10,6 +10,7 @@
 #include <iomanip>
 
 #include "trackerboy.hpp"
+#include "trackerboy/common.hpp"
 
 #include "InstEditor.hpp"
 
@@ -38,10 +39,10 @@ InstEditor::InstEditor(QWidget *parent) :
     outputEdit->setFont(font);
     programEdit->setFont(font);
 
-    runtimeTable[0] = new trackerboy::PulseInstrumentRuntime(true);
-    runtimeTable[1] = new trackerboy::PulseInstrumentRuntime(false);
-    runtimeTable[2] = new trackerboy::WaveInstrumentRuntime(waveTable);
-    runtimeTable[3] = new trackerboy::NoiseInstrumentRuntime();
+    runtimeTable[0] = new trackerboy::InstrumentRuntime(trackerboy::ChType::ch1);
+    runtimeTable[1] = new trackerboy::InstrumentRuntime(trackerboy::ChType::ch2);
+    runtimeTable[2] = new trackerboy::InstrumentRuntime(trackerboy::ChType::ch3);
+    runtimeTable[3] = new trackerboy::InstrumentRuntime(trackerboy::ChType::ch4);
     
     for (int i = 0; i != 4; ++i) {
         programList.append("");

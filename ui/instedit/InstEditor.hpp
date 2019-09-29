@@ -41,7 +41,6 @@ private:
     std::vector<trackerboy::Instruction>* programTable[4];
     trackerboy::InstrumentRuntime* runtimeTable[4];
     trackerboy::ChType currentTrackId;
-    trackerboy::WaveTable waveTable;
 
     QStringList programList;
     QStringList outputList;

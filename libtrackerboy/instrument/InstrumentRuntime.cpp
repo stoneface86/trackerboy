@@ -28,7 +28,7 @@ void InstrumentRuntime::setProgram(std::vector<Instruction> *_program) {
 }
 
 
-void InstrumentRuntime::step(Synth &synth, uint8_t rowVol, uint16_t rowFreq) {
+void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, uint16_t rowFreq) {
 
     if (program == nullptr) {
         return;
@@ -42,28 +42,61 @@ void InstrumentRuntime::step(Synth &synth, uint8_t rowVol, uint16_t rowFreq) {
 
         Instruction inst = (*program)[pc++];
         fc = inst.duration;
-        execute(synth, inst);
 
         Channel *ch = nullptr;
-        EnvChannel *envCh = nullptr;
-        // TODO: might need to extract this later (ie channelFromTrackId)
+        ChannelFile& cf = synth.getChannels();
+       
+        #define executeDuty(ch) do { \
+            if (inst.ctrl & Instruction::CTRL_SET_DUTY) { \
+                ch.setDuty(static_cast<Gbs::Duty>(inst.ctrl & Instruction::CTRL_DUTY)); \
+            } \
+        } while (false)
+        
         switch (trackId) {
             case ChType::ch1:
-                envCh = &synth.getChannels().ch1;
-                ch = envCh;
+                ch = &cf.ch1;
+                // update sweep if set sweep flag is set
+                if (inst.settings & Instruction::SETTINGS_SET_SWEEP) {
+                    cf.ch1.setSweep(inst.settings & 0x7F);
+                }
+                executeDuty(cf.ch1);
                 break;
+
             case ChType::ch2:
-                envCh = &synth.getChannels().ch2;
-                ch = envCh;
+                ch = &synth.getChannels().ch2;
+                
+                executeDuty(cf.ch2);
+
                 break;
+
             case ChType::ch3:
-                ch = &synth.getChannels().ch3;
+                ch = &cf.ch3;
+
+                if (inst.ctrl & Instruction::CTRL_SET_WAVE) {
+                    // WAVE_SETLONG == WAVE_SET for now
+                    uint8_t* waveform = wtable.getWave(inst.envSettings);
+                    if (waveform != nullptr) {
+                        cf.ch3.setWaveform(waveform);
+                    }
+                }
+
+                if (inst.ctrl & Instruction::CTRL_SET_WAVEVOL) {
+                    cf.ch3.setOutputLevel(static_cast<Gbs::WaveVolume>(inst.settings & 0x3));
+                }
+
                 break;
+
             case ChType::ch4:
-                envCh = &synth.getChannels().ch4;
-                ch = envCh;
+                ch = &cf.ch4;
+                
+                if (inst.ctrl & Instruction::CTRL_SET_NOISE) {
+                    cf.ch4.setNoise(inst.settings);
+                }
+
                 break;
         }
+
+        #undef executeDuty
 
         // execute settings for all instructions
         if (inst.ctrl & Instruction::CTRL_INIT) {
@@ -84,13 +117,15 @@ void InstrumentRuntime::step(Synth &synth, uint8_t rowVol, uint16_t rowFreq) {
             bool leftEnable = inst.ctrl & Instruction::PANNING_LEFT;
             bool rightEnable = inst.ctrl & Instruction::PANNING_RIGHT;
             auto &mixer = synth.getMixer();
-            mixer.setEnable(static_cast<ChType>(trackId), Gbs::TERM_LEFT, leftEnable);
-            mixer.setEnable(static_cast<ChType>(trackId), Gbs::TERM_RIGHT, rightEnable);
+            mixer.setEnable(trackId, Gbs::TERM_LEFT, leftEnable);
+            mixer.setEnable(trackId, Gbs::TERM_RIGHT, rightEnable);
         }
 
         // envelope settings (all tracks except 3)
 
-        if (envCh != nullptr) {
+        if (trackId != ChType::ch3) {
+            // downcast to ch to an EnvChannel (all channels except for ch3 subclass EnvChannel)
+            EnvChannel* envCh = static_cast<EnvChannel*>(ch);
             uint8_t envCtrl = inst.ctrl & Instruction::CTRL_SET_ENV;
             if (envCtrl != Instruction::ENV_NOSET) {
                 uint8_t envsettings = inst.envSettings;

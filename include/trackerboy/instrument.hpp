@@ -143,15 +143,11 @@ class InstrumentRuntime {
     std::vector<Instruction> *program;
     uint8_t fc;
     uint8_t pc;
-
-protected:
     const ChType trackId;
 
-    InstrumentRuntime(ChType trackId);
-
-    virtual void execute(Synth &synth, Instruction inst) = 0;
-
 public:
+
+    InstrumentRuntime(ChType trackId);
 
     // returns true if pc is at end of program
     bool isFinished();
@@ -160,45 +156,7 @@ public:
 
     void setProgram(std::vector<Instruction> *program);
 
-    void step(Synth &synth, uint8_t rowVol = 0, uint16_t freq = 0);
-
-};
-
-class PulseInstrumentRuntime : public InstrumentRuntime {
-
-protected:
-
-    void execute(Synth &synth, Instruction inst) override;
-
-public:
-    PulseInstrumentRuntime(bool sweep = false);
-};
-
-
-class WaveInstrumentRuntime : public InstrumentRuntime {
-
-protected:
-
-    void execute(Synth &synth, Instruction inst) override;
-
-public:
-    WaveInstrumentRuntime(WaveTable &waveTable);
-
-private:
-
-    WaveTable &mWaveTable;
-
-};
-
-
-class NoiseInstrumentRuntime : public InstrumentRuntime {
-
-protected:
-
-    void execute(Synth &synth, Instruction inst) override;
-
-public:
-    NoiseInstrumentRuntime();
+    void step(Synth &synth, WaveTable &wtable, uint8_t rowVol = 0, uint16_t freq = 0);
 
 };
 
