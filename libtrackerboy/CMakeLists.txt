@@ -4,8 +4,6 @@ project("libtrackerboy")
 set(INSTRUMENT_SRC
 	"instrument/Instrument.cpp"
 	"instrument/InstrumentRuntime.cpp"
-	"instrument/parse.cpp"
-	"instrument/ParseError.cpp"
 	"instrument/WaveTable.cpp"
 	"note.cpp"
 	"pattern/Track.cpp"

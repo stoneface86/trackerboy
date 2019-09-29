@@ -1,5 +1,6 @@
 
-#include "trackerboy/instrument.hpp"
+#include "trackerboy/instrument/InstrumentRuntime.hpp"
+#include "trackerboy/note.hpp"
 
 
 namespace trackerboy {

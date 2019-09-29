@@ -8,7 +8,7 @@
 #include <QLineEdit>
 
 #include "trackerboy/common.hpp"
-#include "trackerboy/instrument.hpp"
+#include "trackerboy/instrument/InstrumentRuntime.hpp"
 #include "SynthWorker.hpp"
 #include "PianoWidget.hpp"
 

@@ -9,7 +9,8 @@
 #include <vector>
 
 #include "audio.hpp"
-#include "trackerboy.hpp"
+#include "trackerboy/instrument/InstrumentRuntime.hpp"
+#include "trackerboy/note.hpp"
 
 
 namespace instedit {

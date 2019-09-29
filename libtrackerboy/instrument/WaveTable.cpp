@@ -1,7 +1,8 @@
 
-#include "trackerboy/instrument.hpp"
-
 #include <algorithm>
+
+#include "trackerboy/instrument/WaveTable.hpp"
+
 
 #define waveOffset(id) (id * WaveChannel::WAVE_RAMSIZE)
 

@@ -139,40 +139,40 @@ void InstEditor::programChanged() {
 
 
 bool InstEditor::parse() {
-    auto *program = programTable[static_cast<int>(currentTrackId)];
-    program->clear();
-    bool success = true;
+    //auto *program = programTable[static_cast<int>(currentTrackId)];
+    //program->clear();
+    //bool success = true;
 
-    QString source = programEdit->toPlainText();
-    // don't parse an empty string due to a known bug in the parser
-    if (!source.isEmpty()) {
-        QStringList lines = source.split('\n');
-        for (auto iter = lines.begin(); iter != lines.end(); ++iter) {
-            try {
-                program->push_back(trackerboy::parse(currentTrackId, iter->toStdString()));
-            } catch (trackerboy::ParseError err) {
-                success = false;
-                break;
-            }
-        }
-    }
+    //QString source = programEdit->toPlainText();
+    //// don't parse an empty string due to a known bug in the parser
+    //if (!source.isEmpty()) {
+    //    QStringList lines = source.split('\n');
+    //    for (auto iter = lines.begin(); iter != lines.end(); ++iter) {
+    //        try {
+    //            program->push_back(trackerboy::parse(currentTrackId, iter->toStdString()));
+    //        } catch (trackerboy::ParseError err) {
+    //            success = false;
+    //            break;
+    //        }
+    //    }
+    //}
 
-    if (success) {
-        std::ostringstream stream;
-        for (auto iter = program->begin(); iter != program->end(); ++iter) {
-            stream << std::setfill('0') << std::setw(2) << std::hex << static_cast<unsigned>(iter->duration)
-                << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->ctrl)
-                << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->settings)
-                << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->envSettings)
-                << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->note)
-                << '\n';
-        }
-        outputEdit->setPlainText(QString::fromStdString(stream.str()));
-    } else {
-        outputEdit->setPlainText("ERROR!");
-    }
+    //if (success) {
+    //    std::ostringstream stream;
+    //    for (auto iter = program->begin(); iter != program->end(); ++iter) {
+    //        stream << std::setfill('0') << std::setw(2) << std::hex << static_cast<unsigned>(iter->duration)
+    //            << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->ctrl)
+    //            << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->settings)
+    //            << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->envSettings)
+    //            << ' ' << std::setw(2) << std::hex << static_cast<unsigned>(iter->note)
+    //            << '\n';
+    //    }
+    //    outputEdit->setPlainText(QString::fromStdString(stream.str()));
+    //} else {
+    //    outputEdit->setPlainText("ERROR!");
+    //}
 
-    return success;
+    return true;
 
 }
 
