@@ -9,17 +9,15 @@ InstrumentRuntime::InstrumentRuntime(ChType trackId) :
     program(nullptr),
     pc(0),
     fc(1),
+    running(false),
     trackId(trackId)
 {
-}
-
-bool InstrumentRuntime::isFinished() {
-    return program != nullptr && pc >= program->size() && fc == 1;
 }
 
 void InstrumentRuntime::reset() {
     pc = 0;
     fc = 1;
+    running = program != nullptr;
 }
 
 void InstrumentRuntime::setProgram(std::vector<Instruction> *_program) {
@@ -30,13 +28,10 @@ void InstrumentRuntime::setProgram(std::vector<Instruction> *_program) {
 
 void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, uint16_t rowFreq) {
 
-    if (program == nullptr) {
-        return;
-    }
-
-    if (--fc == 0) {
+    if (running && --fc == 0) {
 
         if (pc >= program->size()) {
+            running = false;
             return;
         }
 

@@ -143,14 +143,12 @@ class InstrumentRuntime {
     std::vector<Instruction> *program;
     uint8_t fc;
     uint8_t pc;
+    bool running;
     const ChType trackId;
 
 public:
 
     InstrumentRuntime(ChType trackId);
-
-    // returns true if pc is at end of program
-    bool isFinished();
 
     void reset();
 

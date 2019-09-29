@@ -98,9 +98,7 @@ void SynthWorker::onTimeout() {
         // generate new frame
         synthMutex.lock();
         // execute 1 frame of the program
-        if (!runtime->isFinished()) {
-            runtime->step(synth, wtable);
-        }
+        runtime->step(synth, wtable);
         // synthesize the frame
         synth.fill(frame, FRAMESIZE);
         synthMutex.unlock();
