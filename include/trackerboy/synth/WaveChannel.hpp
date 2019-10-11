@@ -17,7 +17,7 @@ public:
 
     void reset() override;
     void setOutputLevel(Gbs::WaveVolume level);
-    void setWaveform(uint8_t buf[WAVE_RAMSIZE]);
+    void setWaveform(const uint8_t buf[WAVE_RAMSIZE]);
     void step(unsigned cycles) override;
 
 private:

@@ -22,7 +22,7 @@ void WaveChannel::setOutputLevel(Gbs::WaveVolume level) {
     outputLevel = level;
 }
 
-void WaveChannel::setWaveform(uint8_t waveform[WAVE_RAMSIZE]) {
+void WaveChannel::setWaveform(const uint8_t waveform[WAVE_RAMSIZE]) {
     std::copy_n(waveform, WAVE_RAMSIZE, wavedata);
 }
 
@@ -39,15 +39,21 @@ void WaveChannel::step(unsigned cycles) {
         // even number, high nibble
         sample >>= 4;
     }
+    // convert the sample with bias of -SAMPLE_GND
+    int8_t biased = static_cast<int8_t>(sample) - Gbs::SAMPLE_GND;
     switch (outputLevel) {
         case Gbs::WAVE_MUTE:
             sample = Gbs::SAMPLE_GND;
         case Gbs::WAVE_FULL:
             break; // nothing to do
         case Gbs::WAVE_HALF:
-            sample >>= 1;
+            // shift the bias by 1 and set sample to the unbiased form
+            sample = (biased >> 1) + Gbs::SAMPLE_GND;
+            break;
         case Gbs::WAVE_QUARTER:
-            sample >>= 2;
+            // same as WAVE_HALF except shift by 2
+            sample = (biased >> 2) + Gbs::SAMPLE_GND;
+            break;
     }
 
     currentSample = sample;

@@ -116,6 +116,7 @@ int main(int argc, const char *argv[]) {
     demoTableSet("waveTriangle", new WaveDemo(WAVEDATA_TRIANGLE, "Triangle"));
     demoTableSet("waveSawtooth", new WaveDemo(WAVEDATA_SAWTOOTH, "Sawtooth"));
     demoTableSet("waveSine", new WaveDemo(WAVEDATA_SINE, "Sine"));
+    demoTableSet("waveVol", new WaveVolDemo());
     #undef demoTableSet
 
     // get our list of demos to run

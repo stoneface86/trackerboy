@@ -7,6 +7,7 @@ set(DEMO_SRC
 	"demos/DutyDemo.cpp"
 	"demos/SweepDemo.cpp"
 	"demos/WaveDemo.cpp"
+	"demos/WaveVolDemo.cpp"
 )
 
 add_executable(${DEMO} ${DEMO_SRC})

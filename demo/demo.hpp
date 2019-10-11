@@ -58,6 +58,16 @@ public:
 
 };
 
+class WaveVolDemo : public Demo {
+
+public:
+    WaveVolDemo();
+
+    void init(trackerboy::Synth& synth) override;
+    long setupNextRun(trackerboy::Synth& synth, unsigned counter) override;
+
+};
+
 extern const uint8_t WAVEDATA_TRIANGLE[trackerboy::WaveChannel::WAVE_RAMSIZE];
 extern const uint8_t WAVEDATA_SAWTOOTH[trackerboy::WaveChannel::WAVE_RAMSIZE];
 extern const uint8_t WAVEDATA_SINE[trackerboy::WaveChannel::WAVE_RAMSIZE];
