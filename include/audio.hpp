@@ -86,21 +86,21 @@ public:
     // Write the given sample buffer to the playback queue. The stream is then
     // started if the stream was stopped (queue was empty or stop() was called).
     //
-    size_t write(float buf[], size_t nsamples);
+    size_t write(int16_t buf[], size_t nsamples);
 
     //
     // Write the entire sample buffer to the playback queue. If the queue is does
     // not have enough spaces available then this method will wait until there
     // is room.
     //
-    void writeAll(float buf[], size_t nsamples);
+    void writeAll(int16_t buf[], size_t nsamples);
 
 private:
 
     PaStream *mStream;
     PaUtilRingBuffer mQueue;
 
-    std::vector<float> mQueueData;
+    std::vector<int16_t> mQueueData;
 
     float mSamplingRate;
     unsigned mBufferSize; // size in milleseconds of the buffer

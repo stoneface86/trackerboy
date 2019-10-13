@@ -26,7 +26,7 @@ Sequencer& Synth::getSequencer() {
     return sequencer;
 }
 
-void Synth::step(float &left, float &right) {
+void Synth::step(int16_t &left, int16_t &right) {
     mixer.getOutput(
         cf.ch1.getCurrentVolume(),
         cf.ch2.getCurrentVolume(),
@@ -45,13 +45,13 @@ void Synth::step(float &left, float &right) {
 }
 
 
-void Synth::fill(float leftBuf[], float rightBuf[], size_t nsamples) {
+void Synth::fill(int16_t leftBuf[], int16_t rightBuf[], size_t nsamples) {
     for (size_t i = 0; i != nsamples; ++i) {
         step(leftBuf[i], rightBuf[i]);
     }
 }
 
-void Synth::fill(float buf[], size_t nsamples) {
+void Synth::fill(int16_t buf[], size_t nsamples) {
     for (size_t i = 0, j = nsamples * 2; i != j; i += 2) {
         step(buf[i], buf[i + 1]);
     }

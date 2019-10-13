@@ -16,6 +16,7 @@ protected:
     const unsigned freqMultiplier;
     unsigned freqCounter;
     unsigned freqCounterMax;
+    const int16_t *sampleTable;
 
     Channel(bool ch3 = false);
 
@@ -25,7 +26,7 @@ public:
 
     void disable();
     uint8_t getCurrentSample();
-    virtual float getCurrentVolume();
+    int16_t getCurrentVolume();
     void lengthStep();
     virtual void reset();
     void setContinuousOutput(bool continuous);

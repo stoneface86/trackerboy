@@ -22,11 +22,11 @@ public:
     Mixer& getMixer();
     Sequencer& getSequencer();
 
-    void step(float &left, float &right);
+    void step(int16_t &left, int16_t &right);
 
-    void fill(float leftBuf[], float rightBuf[], size_t nsamples);
+    void fill(int16_t leftBuf[], int16_t rightBuf[], size_t nsamples);
 
-    void fill(float buf[], size_t nsamples);
+    void fill(int16_t buf[], size_t nsamples);
 };
 
 }

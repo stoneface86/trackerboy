@@ -3,6 +3,7 @@
 #include "trackerboy/common.hpp"
 #include "trackerboy/gbs.hpp"
 
+#include <cstdint>
 #include <type_traits>
 
 
@@ -14,7 +15,7 @@ public:
 
     Mixer();
 
-    void getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight);
+    void getOutput(int16_t in1, int16_t in2, int16_t in3, int16_t in4, int16_t &outLeft, int16_t &outRight);
     void setEnable(Gbs::OutputFlags flags);
     void setEnable(ChType ch, Gbs::Terminal term, bool enabled);
     void setTerminalEnable(Gbs::Terminal term, bool enabled);

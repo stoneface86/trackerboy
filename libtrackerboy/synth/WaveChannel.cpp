@@ -44,6 +44,7 @@ void WaveChannel::step(unsigned cycles) {
     switch (outputLevel) {
         case Gbs::WAVE_MUTE:
             sample = Gbs::SAMPLE_GND;
+            break;
         case Gbs::WAVE_FULL:
             break; // nothing to do
         case Gbs::WAVE_HALF:

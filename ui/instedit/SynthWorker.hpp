@@ -41,7 +41,7 @@ private:
 
     // run() settings
 
-    std::unique_ptr<float[]> buf;
+    std::unique_ptr<int16_t[]> buf;
 
     trackerboy::InstrumentRuntime *runtime; // the runtime to play
     trackerboy::WaveTable wtable;

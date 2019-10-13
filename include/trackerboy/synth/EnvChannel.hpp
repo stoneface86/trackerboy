@@ -20,7 +20,6 @@ public:
     virtual ~EnvChannel() = default;
 
     void envStep();
-    float getCurrentVolume() override;
     void reset() override;
     void setEnv(uint8_t envReg);
     void setEnvLength(uint8_t length);

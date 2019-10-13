@@ -22,7 +22,7 @@ SynthWorker::SynthWorker(QObject *parent) :
     pb(SAMPLING_RATE),
     synth(SAMPLING_RATE),
     timer(new QTimer(this)),
-    buf(new float[FRAMESIZE * 2]),
+    buf(new int16_t[FRAMESIZE * 2]),
     runtime(nullptr),
     playing(false),
     frameOut(false),

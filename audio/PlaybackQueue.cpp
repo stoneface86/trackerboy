@@ -15,12 +15,12 @@ int playbackCallback(
     void *userData
 ) {
     (void)input;
-    float *out = static_cast<float*>(output);
+    int16_t *out = static_cast<int16_t*>(output);
     PlaybackQueue *pb = static_cast<PlaybackQueue*>(userData);
 
     auto nread = PaUtil_ReadRingBuffer(&pb->mQueue, out, frameCount);
     if (nread != frameCount) {
-        std::fill_n(out + (nread * 2), (frameCount - nread) * 2, 0.0f);
+        std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, 0.0f);
     }
 
     //if (PaUtil_GetRingBufferReadAvailable(&pb->mQueue) == 0) {
@@ -136,7 +136,7 @@ void PlaybackQueue::stop(bool wait) {
 
 }
 
-size_t PlaybackQueue::write(float buf[], size_t nsamples) {
+size_t PlaybackQueue::write(int16_t buf[], size_t nsamples) {
 
     size_t navail = PaUtil_GetRingBufferWriteAvailable(&mQueue) - mSlack;
     size_t samplesToWrite = nsamples > navail ? navail : nsamples;
@@ -162,7 +162,7 @@ void PlaybackQueue::openStream() {
         &mStream,                       // the stream pointer
         0,                              // no input channels
         2,                              // stereo, 2 output channels
-        paFloat32,                      // 32-bit float samples
+        paInt16,                        // 16-bit integer samples
         mSamplingRate,                  // use the set sampling rate
         paFramesPerBufferUnspecified,   // use the best fbp for the host
         playbackCallback,               // callback function
@@ -188,10 +188,10 @@ void PlaybackQueue::resizeQueue() {
     }
 
     // resize the queue vector
-    mQueueData.resize(queueDataSize * 2);
+    mQueueData.resize(static_cast<size_t>(queueDataSize) * 2);
 
     // re-initialize ringbuffer with the new size
-    PaUtil_InitializeRingBuffer(&mQueue, sizeof(float) * 2, queueDataSize, mQueueData.data());
+    PaUtil_InitializeRingBuffer(&mQueue, sizeof(int16_t) * 2, queueDataSize, mQueueData.data());
     
     // update the slack
     // worst case: slack = nsamples+1 (~50% unused)

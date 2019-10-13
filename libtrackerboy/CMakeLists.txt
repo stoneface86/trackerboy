@@ -16,6 +16,7 @@ set(SYNTH_SRC
 	"synth/Mixer.cpp"
 	"synth/NoiseChannel.cpp"
 	"synth/PulseChannel.cpp"
+	"synth/sampletable.cpp"
 	"synth/Sequencer.cpp"
 	"synth/SweepPulseChannel.cpp"
 	"synth/Synth.cpp"

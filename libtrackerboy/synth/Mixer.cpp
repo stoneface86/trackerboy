@@ -1,22 +1,8 @@
 
 #include "trackerboy/synth/Mixer.hpp"
 
-// each channel has a maximum volume of 0.2, so maximum volume of all channels is 0.8
-#define VOL_MULTIPLIER 0.2f
 
 namespace trackerboy {
-
-static const float VOLUME_TABLE[8] = {
-    0.125f,
-    0.25f,
-    0.375f,
-    0.5f,
-    0.625f,
-    0.75f,
-    0.875f,
-    1.0f,
-};
-
 
 Mixer::Mixer() :
     s01enable(Gbs::DEFAULT_TERM_ENABLE),
@@ -27,39 +13,71 @@ Mixer::Mixer() :
 {
 }
 
-void Mixer::getOutput(float in1, float in2, float in3, float in4, float &outLeft, float &outRight) {
-    float left = 0.0f, right = 0.0f;
+void Mixer::getOutput(int16_t in1, int16_t in2, int16_t in3, int16_t in4, int16_t &outLeft, int16_t &outRight) {
+    
+    #define applyVolume(var, volume) do { \
+        switch (volume) { \
+            case 0x0: \
+                var >>= 3; \
+                break; \
+            case 0x1: \
+                var >>= 2; \
+                break; \
+            case 0x2: \
+                var = (var * 3) >> 3; \
+                break; \
+            case 0x3: \
+                var >>= 1; \
+                break; \
+            case 0x4: \
+                var = (static_cast<int32_t>(var) * 5) >> 3; \
+                break; \
+            case 0x5: \
+                var = (var * 3) >> 2; \
+                break; \
+            case 0x6: \
+                var = (static_cast<int32_t>(var) * 7) >> 3; \
+                break; \
+            case 0x7: \
+                break; \
+        } } while (false)
+    
+    int16_t left = 0, right = 0;
     if (s01enable) {
         if (outputStat & Gbs::OUT_LEFT1) {
-            left += in1 * VOL_MULTIPLIER;
+            left += in1;
         }
         if (outputStat & Gbs::OUT_LEFT2) {
-            left += in2 * VOL_MULTIPLIER;
+            left += in2;
         }
         if (outputStat & Gbs::OUT_LEFT3) {
-            left += in3 * VOL_MULTIPLIER;
+            left += in3;
         }
         if (outputStat & Gbs::OUT_LEFT4) {
-            left += in4 * VOL_MULTIPLIER;
+            left += in4;
         }
+
+        applyVolume(left, s01vol);
     }
     if (s02enable) {
         if (outputStat & Gbs::OUT_RIGHT1) {
-            right += in1 * VOL_MULTIPLIER;
+            right += in1;
         }
         if (outputStat & Gbs::OUT_RIGHT2) {
-            right += in2 * VOL_MULTIPLIER;
+            right += in2;
         }
         if (outputStat & Gbs::OUT_RIGHT3) {
-            right += in3 * VOL_MULTIPLIER;
+            right += in3;
         }
         if (outputStat & Gbs::OUT_RIGHT4) {
-            right += in4 * VOL_MULTIPLIER;
+            right += in4;
         }
+
+        applyVolume(right, s02vol);
     }
-    // TODO: cache these table lookups in a member variable
-    outLeft = left * VOLUME_TABLE[s01vol];
-    outRight = right * VOLUME_TABLE[s02vol];
+
+    outLeft = left;
+    outRight = right;
 }
 
 void Mixer::setEnable(Gbs::OutputFlags flags) {

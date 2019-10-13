@@ -1,8 +1,12 @@
 
+#include "sampletable.hpp"
+
 #include "trackerboy/synth/EnvChannel.hpp"
 #include "trackerboy/gbs.hpp"
 
 #include <cmath>
+
+#define adjustSampleTable() SAMPLE_TABLE + (static_cast<size_t>(envelope) * 16)
 
 namespace trackerboy {
 
@@ -33,6 +37,7 @@ EnvChannel::EnvChannel() :
     envMode(Gbs::DEFAULT_ENV_MODE),
     Channel() 
 {
+    sampleTable = SAMPLE_TABLE; // start at envelope 0
 }
 
 void EnvChannel::envStep() {
@@ -43,20 +48,18 @@ void EnvChannel::envStep() {
             if (envMode == Gbs::ENV_AMPLIFY) {
                 if (envelope < Gbs::SAMPLE_MAX) {
                     ++envelope;
+                    sampleTable += 16;
                 }
             } else {
                 if (envelope > Gbs::SAMPLE_MIN) {
                     --envelope;
+                    sampleTable -= 16;
                 }
             }
         } else {
             ++envCounter;
         }
     }
-}
-
-float EnvChannel::getCurrentVolume() {
-    return Channel::getCurrentVolume() * ENV_TABLE[envelope];
 }
 
 void EnvChannel::reset() {
@@ -68,6 +71,7 @@ void EnvChannel::setEnv(uint8_t envReg) {
     envLength = (envReg & 0x7);
     envMode = static_cast<Gbs::EnvMode>((envReg >> 3) & 1);
     envelope = (envReg >> 4);
+    sampleTable = adjustSampleTable();
 }
 
 void EnvChannel::setEnvLength(uint8_t _envLength) {
@@ -86,6 +90,7 @@ void EnvChannel::setEnvStep(uint8_t step) {
         step = Gbs::MAX_ENV_STEPS;
     }
     envelope = step;
+    sampleTable = adjustSampleTable();
 }
 
 }
