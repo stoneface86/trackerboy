@@ -20,7 +20,7 @@ int playbackCallback(
 
     auto nread = PaUtil_ReadRingBuffer(&pb->mQueue, out, frameCount);
     if (nread != frameCount) {
-        std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, 0.0f);
+        std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, 0);
     }
 
     //if (PaUtil_GetRingBufferReadAvailable(&pb->mQueue) == 0) {
@@ -54,7 +54,7 @@ PlaybackQueue::~PlaybackQueue() {
 }
 
 size_t PlaybackQueue::bufferSampleSize() {
-    // divide by two since 1 sample is two floats
+    // divide by two since 1 sample is two shorts
     return (mQueueData.size() / 2) - mSlack;
 }
 
@@ -164,7 +164,7 @@ void PlaybackQueue::openStream() {
         2,                              // stereo, 2 output channels
         paInt16,                        // 16-bit integer samples
         mSamplingRate,                  // use the set sampling rate
-        paFramesPerBufferUnspecified,   // use the best fbp for the host
+        paFramesPerBufferUnspecified,   // use the best fpb for the host
         playbackCallback,               // callback function
         this                            // pass this to the callback function
     );
@@ -177,18 +177,18 @@ void PlaybackQueue::openStream() {
 void PlaybackQueue::resizeQueue() {
     
     // determine the number of samples the queue requires
-    const unsigned nsamples = static_cast<unsigned>(std::round(mSamplingRate * (mBufferSize / 1000.0f)));
+    const size_t nsamples = static_cast<size_t>(std::round(mSamplingRate * (mBufferSize / 1000.0f)));
     
     // find the nearest power of two that is >= nsamples
     // there's a faster way to do this but performance is not a concern here.
 
-    unsigned queueDataSize = 1;
+    size_t queueDataSize = 1;
     while (queueDataSize < nsamples) {
         queueDataSize <<= 1;
     }
 
     // resize the queue vector
-    mQueueData.resize(static_cast<size_t>(queueDataSize) * 2);
+    mQueueData.resize(queueDataSize * 2);
 
     // re-initialize ringbuffer with the new size
     PaUtil_InitializeRingBuffer(&mQueue, sizeof(int16_t) * 2, queueDataSize, mQueueData.data());

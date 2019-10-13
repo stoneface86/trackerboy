@@ -91,7 +91,7 @@ static int synthCallback(
     // synthesize
     data->mutex.lock();
     if (data->synth == nullptr) {
-        std::fill_n(buf, framesPerBuffer, 0.0f);
+        std::fill_n(buf, framesPerBuffer, 0);
     } else {
         data->synth->fill(buf, framesPerBuffer);
     }
