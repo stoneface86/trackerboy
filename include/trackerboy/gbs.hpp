@@ -94,7 +94,6 @@ static constexpr uint8_t DEFAULT_TERM_VOLUME    = MAX_TERM_VOLUME;
 static constexpr bool DEFAULT_TERM_ENABLE       = false;
 static constexpr WaveVolume DEFAULT_WAVE_LEVEL  = WAVE_FULL;
 
-static constexpr uint8_t SAMPLE_GND             = 0x8; // "ground" no sound
 static constexpr uint8_t SAMPLE_MAX             = 0xF;
 static constexpr uint8_t SAMPLE_MIN             = 0x0;
 

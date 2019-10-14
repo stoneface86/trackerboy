@@ -48,7 +48,7 @@ void Channel::disable() {
 }
 
 uint8_t Channel::getCurrentSample() {
-    return enabled ? currentSample : Gbs::SAMPLE_GND;
+    return enabled ? currentSample : Gbs::SAMPLE_MIN;
 }
 
 int16_t Channel::getCurrentVolume() {
@@ -70,7 +70,7 @@ void Channel::lengthStep() {
 void Channel::reset() {
     lengthCounter = length;
     enabled = true;
-    currentSample = Gbs::SAMPLE_GND;
+    currentSample = Gbs::SAMPLE_MIN;
 }
 
 void Channel::setContinuousOutput(bool _continuous) {

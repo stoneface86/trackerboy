@@ -40,20 +40,19 @@ void WaveChannel::step(unsigned cycles) {
         sample >>= 4;
     }
     // convert the sample with bias of -SAMPLE_GND
-    int8_t biased = static_cast<int8_t>(sample) - Gbs::SAMPLE_GND;
+    //int8_t biased = static_cast<int8_t>(sample) - Gbs::SAMPLE_GND;
     switch (outputLevel) {
         case Gbs::WAVE_MUTE:
-            sample = Gbs::SAMPLE_GND;
+            sample = Gbs::SAMPLE_MIN;
             break;
         case Gbs::WAVE_FULL:
             break; // nothing to do
         case Gbs::WAVE_HALF:
-            // shift the bias by 1 and set sample to the unbiased form
-            sample = (biased >> 1) + Gbs::SAMPLE_GND;
+            sample >>= 1;
             break;
         case Gbs::WAVE_QUARTER:
             // same as WAVE_HALF except shift by 2
-            sample = (biased >> 2) + Gbs::SAMPLE_GND;
+            sample >>= 2;
             break;
     }
 
