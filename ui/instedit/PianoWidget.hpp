@@ -5,8 +5,7 @@
 #include <QPixmap>
 #include <QMouseEvent>
 
-#include "trackerboy/pattern.hpp"
-
+#include "trackerboy/note.hpp"
 
 namespace instedit {
 

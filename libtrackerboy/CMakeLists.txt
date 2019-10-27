@@ -1,15 +1,11 @@
 
 project("libtrackerboy")
 
-set(INSTRUMENT_SRC
+set(SRC_FILES
 	"instrument/Instrument.cpp"
 	"instrument/InstrumentRuntime.cpp"
 	"instrument/WaveTable.cpp"
-	"note.cpp"
-	"pattern/Track.cpp"
-)
-
-set(SYNTH_SRC
+	"pattern/Pattern.cpp"
 	"synth/Channel.cpp"
 	"synth/EnvChannel.cpp"
 	"synth/gbsynth.cpp"
@@ -21,12 +17,11 @@ set(SYNTH_SRC
 	"synth/SweepPulseChannel.cpp"
 	"synth/Synth.cpp"
 	"synth/WaveChannel.cpp"
+	"note.cpp"
 )
 
-add_library("trackerboy" STATIC
-	${INSTRUMENT_SRC}
-	${SYNTH_SRC}
-)
+
+add_library("trackerboy" STATIC ${SRC_FILES})
 
 if (MSVC)
 target_compile_options(
