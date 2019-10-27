@@ -7,7 +7,7 @@
 #include <QCheckBox>
 #include <QLineEdit>
 
-#include "trackerboy/common.hpp"
+#include "trackerboy/ChType.hpp"
 #include "trackerboy/instrument/InstrumentRuntime.hpp"
 #include "SynthWorker.hpp"
 #include "PianoWidget.hpp"

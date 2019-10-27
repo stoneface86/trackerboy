@@ -1,6 +1,6 @@
 #pragma once
 
-#include "trackerboy/common.hpp"
+#include "trackerboy/ChType.hpp"
 #include "trackerboy/gbs.hpp"
 
 #include <cstdint>

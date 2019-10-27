@@ -10,7 +10,7 @@
 #include <iomanip>
 
 #include "trackerboy.hpp"
-#include "trackerboy/common.hpp"
+#include "trackerboy/ChType.hpp"
 
 #include "InstEditor.hpp"
 

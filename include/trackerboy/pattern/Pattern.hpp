@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "trackerboy/common.hpp"
+#include "trackerboy/ChType.hpp"
 #include "trackerboy/EffectType.hpp"
 #include "trackerboy/pattern/TrackRow.hpp"
 
