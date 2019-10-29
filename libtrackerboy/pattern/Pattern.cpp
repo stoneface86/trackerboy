@@ -1,7 +1,7 @@
 
 #include "trackerboy/pattern/Pattern.hpp"
 
-#define calcIndex(trackId, row) ((row * 4) + static_cast<uint8_t>(trackId))
+#define calcIndex(trackId, row) ((static_cast<size_t>(row) * 4) + static_cast<uint8_t>(trackId))
 
 
 namespace trackerboy {
@@ -20,7 +20,7 @@ void Pattern::clear(uint8_t rowStart, uint8_t rowEnd) {
     }
 
     TrackRow zeroRow = { 0 };
-    size_t offset = rowStart * 4;
+    size_t offset = static_cast<size_t>(rowStart) * 4;
     do {
         // 4 tracks per row, zero them
         mData[offset++] = zeroRow;
