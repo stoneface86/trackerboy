@@ -14,6 +14,22 @@ Pattern::Pattern(size_t nrows) :
     mData.resize(mSize * 4);
 }
 
+void Pattern::clear(uint8_t rowStart, uint8_t rowEnd) {
+    if (rowStart >= mSize || rowEnd >= mSize || rowEnd > rowStart) {
+        return; // TODO: throw exception
+    }
+
+    TrackRow zeroRow = { 0 };
+    size_t offset = rowStart * 4;
+    do {
+        // 4 tracks per row, zero them
+        mData[offset++] = zeroRow;
+        mData[offset++] = zeroRow;
+        mData[offset++] = zeroRow;
+        mData[offset++] = zeroRow;
+    } while (rowStart++ != rowEnd);
+}
+
 void Pattern::clearNote(ChType trackId, uint8_t row) {
     mData[calcIndex(trackId, row)].flags &= ~TrackRow::COLUMN_NOTE;
 }

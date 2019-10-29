@@ -45,6 +45,8 @@ public:
 
     Pattern(size_t nrows);
 
+    void clear(uint8_t rowStart, uint8_t rowEnd);
+
     void clearEffect(ChType trackId, uint8_t row);
     
     void clearInstrument(ChType trackId, uint8_t row);
