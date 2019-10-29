@@ -21,10 +21,6 @@ option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portau
 option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
 option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
 
-if (TRACKERBOY_ENABLE_TESTS)
-	enable_testing()
-endif ()
-
 include_directories("include")
 
 if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
@@ -59,6 +55,24 @@ macro(use_qt)
 		set(GUI_TYPE "")
 	endif ()
 endmacro(use_qt)
+
+if (TRACKERBOY_ENABLE_TESTS)
+	enable_testing()
+	# catch object library (compiles the header once, used by test programs)
+	set(CATCH "catch")
+	set(CATCH_SRC "catch.cpp")
+	set(CATCH_OPTIONS "")
+	add_library(${CATCH} OBJECT EXCLUDE_FROM_ALL ${CATCH_SRC})
+	target_compile_definitions(${CATCH} PUBLIC ${CATCH_OPTIONS})
+
+	function (add_catch_test name)
+		set(TEST_EXE "test_${name}")
+		add_executable(${TEST_EXE} ${ARGN} $<TARGET_OBJECTS:${CATCH}>)
+		target_include_directories(${TEST_EXE} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+		add_test(NAME ${name} COMMAND ${TEST_EXE})
+	endfunction (add_catch_test)
+
+endif ()
 
 # ============================================================================
 # Sub-projects
