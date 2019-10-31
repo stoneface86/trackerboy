@@ -12,6 +12,11 @@ Pattern::Pattern(size_t nrows) :
     mSize(nrows)
 {
     mData.resize(mSize * 4);
+    clear(0, nrows - 1);
+}
+
+Pattern::PatternData::const_iterator Pattern::begin() {
+    return mData.cbegin();
 }
 
 void Pattern::clear(uint8_t rowStart, uint8_t rowEnd) {
@@ -40,6 +45,14 @@ void Pattern::clearInstrument(ChType trackId, uint8_t row) {
 
 void Pattern::clearEffect(ChType trackId, uint8_t row) {
     mData[calcIndex(trackId, row)].flags &= ~TrackRow::COLUMN_EFFECT;
+}
+
+Pattern::PatternData Pattern::copy() {
+    return PatternData(mData);
+}
+
+Pattern::PatternData::const_iterator Pattern::end() {
+    return mData.cend();
 }
 
 void Pattern::fromStream(std::vector<uint8_t> &streamBuf) {

@@ -30,3 +30,14 @@ target_compile_options(
 	/W4
 )
 endif ()
+
+if (TRACKERBOY_ENABLE_TESTS)
+
+	set(PATTERN_TEST_SRC
+		"pattern/test_Pattern.cpp"
+	)
+
+	add_catch_test(PATTERN_TEST_EXE pattern ${PATTERN_TEST_SRC})
+	add_test(NAME Pattern COMMAND ${PATTERN_TEST_EXE} [pattern])
+
+endif (TRACKERBOY_ENABLE_TESTS)

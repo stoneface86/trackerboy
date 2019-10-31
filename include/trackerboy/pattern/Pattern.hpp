@@ -14,6 +14,8 @@ class Pattern {
 
 public:
 
+    using PatternData = std::vector<TrackRow>;
+
     class TrackIterator {
     
     public:
@@ -45,6 +47,8 @@ public:
 
     Pattern(size_t nrows);
 
+    PatternData::const_iterator begin();
+
     void clear(uint8_t rowStart, uint8_t rowEnd);
 
     void clearEffect(ChType trackId, uint8_t row);
@@ -52,6 +56,10 @@ public:
     void clearInstrument(ChType trackId, uint8_t row);
 
     void clearNote(ChType trackId, uint8_t row);
+
+    PatternData copy();
+
+    PatternData::const_iterator end();
 
     void fromStream(std::vector<uint8_t> &streamBuf);
 
@@ -71,10 +79,9 @@ public:
 
     TrackIterator trackEnd(ChType trackId);
 
-
 private:
     size_t mSize;
-    std::vector<TrackRow> mData;
+    PatternData mData;
 
 
 };
