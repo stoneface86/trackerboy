@@ -18,6 +18,7 @@ set(SRC_FILES
 	"synth/Synth.cpp"
 	"synth/WaveChannel.cpp"
 	"note.cpp"
+	"Table.cpp"
 )
 
 
