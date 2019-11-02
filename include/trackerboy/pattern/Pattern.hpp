@@ -44,8 +44,9 @@ public:
     };
 
     static constexpr size_t MAX_ROWS = 256;
+    static constexpr size_t DEFAULT_ROWS = 64;
 
-    Pattern(size_t nrows);
+    Pattern(size_t nrows = DEFAULT_ROWS);
 
     PatternData::const_iterator begin();
 
