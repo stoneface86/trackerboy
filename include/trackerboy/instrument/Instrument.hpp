@@ -11,18 +11,15 @@ namespace trackerboy {
 
 class Instrument {
 
-    uint8_t id;
-    ChType trackId;
     // sequence of instructions, one instruction per frame
-    std::vector<Instruction> program;
+    std::vector<Instruction> mProgram;
 
 public:
 
-    Instrument(uint8_t id, ChType track);
+    Instrument();
 
-    uint8_t getId();
-    ChType getTrackId();
     std::vector<Instruction>& getProgram();
 };
+
 
 }

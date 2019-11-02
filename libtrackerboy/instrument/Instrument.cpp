@@ -4,26 +4,13 @@
 
 namespace trackerboy {
 
-Instrument::Instrument(uint8_t id, ChType track) :
-    id(id),
-    trackId(track),
-    program()
+Instrument::Instrument()
 {
 }
 
 
-uint8_t Instrument::getId() {
-    return id;
-}
-
-
-ChType Instrument::getTrackId() {
-    return trackId;
-}
-
-
 std::vector<Instruction>& Instrument::getProgram() {
-    return program;
+    return mProgram;
 }
 
 }
