@@ -96,6 +96,8 @@ static constexpr WaveVolume DEFAULT_WAVE_LEVEL  = WAVE_FULL;
 
 static constexpr uint8_t SAMPLE_MAX             = 0xF;
 static constexpr uint8_t SAMPLE_MIN             = 0x0;
+static constexpr size_t WAVE_SIZE               = 32;
+static constexpr size_t WAVE_RAMSIZE            = 16;
 
 }
 

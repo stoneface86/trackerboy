@@ -70,9 +70,9 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
 
                 if (inst.ctrl & Instruction::CTRL_SET_WAVE) {
                     // WAVE_SETLONG == WAVE_SET for now
-                    uint8_t* waveform = wtable.getWave(inst.envSettings);
+                    Waveform *waveform = wtable[inst.envSettings];
                     if (waveform != nullptr) {
-                        cf.ch3.setWaveform(waveform);
+                        cf.ch3.setWaveform(*waveform);
                     }
                 }
 

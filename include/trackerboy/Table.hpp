@@ -5,6 +5,7 @@
 
 #include "trackerboy/instrument/Instrument.hpp"
 #include "trackerboy/pattern/Pattern.hpp"
+#include "trackerboy/synth/Waveform.hpp"
 
 namespace trackerboy {
 
@@ -37,7 +38,7 @@ private:
 typedef Table<Instrument> InstrumentTable;
 typedef Table<Pattern> PatternTable;
 //typedef Table<Song> SongTable;
-//typedef Table<Wave> WaveTable;
+typedef Table<Waveform> WaveTable;
 
 
 

@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <vector>
 
+#include "trackerboy/Table.hpp"
 #include "trackerboy/instrument/Instruction.hpp"
-#include "trackerboy/instrument/WaveTable.hpp"
 #include "trackerboy/synth/Synth.hpp"
 
 

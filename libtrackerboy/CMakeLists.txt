@@ -4,7 +4,6 @@ project("libtrackerboy")
 set(SRC_FILES
 	"instrument/Instrument.cpp"
 	"instrument/InstrumentRuntime.cpp"
-	"instrument/WaveTable.cpp"
 	"pattern/Pattern.cpp"
 	"synth/Channel.cpp"
 	"synth/EnvChannel.cpp"

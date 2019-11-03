@@ -48,10 +48,10 @@ public:
 
 class WaveDemo : public Demo {
 
-    uint8_t wavedata[trackerboy::WaveChannel::WAVE_RAMSIZE];
+    uint8_t wavedata[trackerboy::Gbs::WAVE_RAMSIZE];
 
 public:
-    WaveDemo(const uint8_t wavedata[trackerboy::WaveChannel::WAVE_RAMSIZE], std::string waveName);
+    WaveDemo(const uint8_t wavedata[trackerboy::Gbs::WAVE_RAMSIZE], std::string waveName);
 
     void init(trackerboy::Synth &synth) override;
     long setupNextRun(trackerboy::Synth &synth, unsigned counter) override;
@@ -68,6 +68,6 @@ public:
 
 };
 
-extern const uint8_t WAVEDATA_TRIANGLE[trackerboy::WaveChannel::WAVE_RAMSIZE];
-extern const uint8_t WAVEDATA_SAWTOOTH[trackerboy::WaveChannel::WAVE_RAMSIZE];
-extern const uint8_t WAVEDATA_SINE[trackerboy::WaveChannel::WAVE_RAMSIZE];
+extern const uint8_t WAVEDATA_TRIANGLE[trackerboy::Gbs::WAVE_RAMSIZE];
+extern const uint8_t WAVEDATA_SAWTOOTH[trackerboy::Gbs::WAVE_RAMSIZE];
+extern const uint8_t WAVEDATA_SINE[trackerboy::Gbs::WAVE_RAMSIZE];
