@@ -35,7 +35,8 @@ enum Note : uint8_t {
     OCTAVE_8 = 12 * 6,          // C-8
 
     NOTE_NONE = 0xFF,           // null note index
-    NOTE_LAST = (12 * 7) - 1    // 7 octaves of notes possible, 2-8
+    NOTE_LAST = (12 * 7) - 1,   // 7 octaves of notes possible, 2-8
+    NOTE_CUT = NOTE_LAST + 1    // special index: stop playing the last note (stops instrument)
 };
 
 // note frequency lookup table

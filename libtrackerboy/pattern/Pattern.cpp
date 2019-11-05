@@ -60,7 +60,7 @@ void Pattern::fromStream(std::vector<uint8_t> &streamBuf) {
     // TODO: load pattern data from given pattern stream (model <- file)
 }
 
-void Pattern::setNote(ChType trackId, uint8_t row, Note note) {
+void Pattern::setNote(ChType trackId, uint8_t row, uint8_t note) {
     TrackRow &rowdata = mData[calcIndex(trackId, row)];
     rowdata.note = note;
     // update column flags so that we know a note has been set

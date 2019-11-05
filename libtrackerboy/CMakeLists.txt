@@ -5,6 +5,7 @@ set(SRC_FILES
 	"instrument/Instrument.cpp"
 	"instrument/InstrumentRuntime.cpp"
 	"pattern/Pattern.cpp"
+	"pattern/PatternRuntime.cpp"
 	"synth/Channel.cpp"
 	"synth/EnvChannel.cpp"
 	"synth/gbsynth.cpp"

@@ -26,6 +26,7 @@ public:
         using iterator_category = std::forward_iterator_tag;
         using difference_type = int;
 
+        TrackIterator() = default;
         TrackIterator(pointer ptr);
         TrackIterator(const self_type &iter);
         ~TrackIterator();
@@ -68,7 +69,7 @@ public:
 
     void setInstrument(ChType trackId, uint8_t row, uint8_t instrumentId);
 
-    void setNote(ChType trackId, uint8_t row, Note note);
+    void setNote(ChType trackId, uint8_t row, uint8_t note);
 
     void setSize(size_t nrows);
 
