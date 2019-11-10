@@ -75,9 +75,9 @@ bool PatternRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtab
                             mIsPlaying = true;
                         }
                         mFreq = NOTE_FREQ_TABLE[mCurrentRow.note];
+                        mIr.reset();
                     }
                     // for invalid note values just no-op
-                    // TODO: throw exception? or just warn?
                 }
             }
 
@@ -90,9 +90,9 @@ bool PatternRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtab
                         mLastInstrumentId = mCurrentRow.instrumentId;
                         mIr.setProgram(&inst->getProgram());
                     }
-                    // if mLastInstrument is null, then this is an error in the pattern data
+                    // if inst is null, then this is an error in the pattern data
                     // the given row is attempting to use an instrument that doesn't exist
-                    // TODO: throw/warn?
+                    // no-op again (the show must go on)
                 }
             }
 
