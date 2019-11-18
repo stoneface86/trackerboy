@@ -34,11 +34,13 @@ endif ()
 
 if (TRACKERBOY_ENABLE_TESTS)
 
-	set(PATTERN_TEST_SRC
+	set(TEST_SRC_FILES
 		"pattern/test_Pattern.cpp"
+		"song/test_Order.cpp"
 	)
 
-	add_catch_test(PATTERN_TEST_EXE pattern ${PATTERN_TEST_SRC})
-	add_test(NAME Pattern COMMAND ${PATTERN_TEST_EXE} [pattern])
+	add_catch_test(TEST_EXE ${TEST_SRC_FILES})
+	add_test(NAME Pattern COMMAND ${TEST_EXE} [pattern])
+	add_test(NAME Order COMMAND ${TEST_EXE} [order])
 
 endif (TRACKERBOY_ENABLE_TESTS)
