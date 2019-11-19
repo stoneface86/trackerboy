@@ -6,6 +6,8 @@ set(SRC_FILES
 	"instrument/InstrumentRuntime.cpp"
 	"pattern/Pattern.cpp"
 	"pattern/PatternRuntime.cpp"
+	"song/Order.cpp"
+	"song/Song.cpp"
 	"synth/Channel.cpp"
 	"synth/EnvChannel.cpp"
 	"synth/gbsynth.cpp"

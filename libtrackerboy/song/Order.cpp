@@ -1,7 +1,7 @@
 
 #include "trackerboy/song/Order.hpp"
 
-#include <exception>
+#include <stdexcept>
 
 
 namespace trackerboy {

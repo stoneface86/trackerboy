@@ -54,8 +54,7 @@ void Table<T>::findNextId() {
 
 
 template class Table<Instrument>;
-template class Table<Pattern>;
-//template class Table<Song>;
+template class Table<Song>;
 template class Table<Waveform>;
 
 }
