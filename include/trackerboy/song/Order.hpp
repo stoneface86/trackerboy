@@ -25,7 +25,7 @@ public:
         uint8_t next();
         
     private:
-        static constexpr size_t INFINITE_LOOP = -1;
+        static constexpr size_t INFINITE_LOOP = static_cast<size_t>(-1);
 
         void init(Order &order);
 
