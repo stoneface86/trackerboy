@@ -3,31 +3,19 @@
 
 #include <cstdint>
 
+#include "trackerboy/Q53.hpp"
 #include "trackerboy/pattern/Pattern.hpp"
-#include "trackerboy/pattern/TrackRow.hpp"
-#include "trackerboy/instrument/InstrumentRuntime.hpp"
+#include "trackerboy/pattern/TrackRuntime.hpp"
+
 
 namespace trackerboy {
-
-enum class PatternStepResult {
-    InProgress,     // row is currently being played
-    Done,           // row completed normally, next step will start the next row
-    PatternEnd,     // no more rows after this one, load next pattern
-    PatternSkip     // skip to next pattern and play the next row immediately
-};
 
 
 class PatternRuntime {
 
 public:
 
-    PatternRuntime(ChType trackId);
-
-    //
-    // Sets the runtime to play the next row. Returns true if the next
-    // row exists, false otherwise.
-    //
-    bool nextRow();
+    PatternRuntime(uint8_t speed);
 
     //
     // Reset the runtime to initial state. The pattern will run at the
@@ -41,6 +29,12 @@ public:
     void setPattern(Pattern *pattern);
 
     //
+    // Sets the speed, or frames per row, of the runtime. Speed should be
+    // in Q5.3 format (fixed point) and must be in the range 1.0-31.0
+    //
+    void setSpeed(Q53 speed);
+
+    //
     // Run one frame of the current row from the pattern. If the pattern
     // should stop playing, true is returned.
     //
@@ -49,20 +43,19 @@ public:
 
 private:
     Pattern *mPattern;
-    InstrumentRuntime mIr;
-    const ChType mTrackId;
+    Q53 mSpeed;         // speed (frames per row) (Q5.3 format)
+    Q53 mFc;            // frame counter
 
-    Pattern::TrackIterator mTrack;
-    Pattern::TrackIterator mTrackEnd;
-    TrackRow mCurrentRow;
-    bool mIsNewRow;
+    Pattern::Iterator mIter;
+    Pattern::Iterator mEnd;
+    
+    TrackRuntime mTr1;
+    TrackRuntime mTr2;
+    TrackRuntime mTr3;
+    TrackRuntime mTr4;
 
-    bool mIsPlaying;
-    uint8_t mLastInstrumentId;
-    Instrument *mLastInstrument;
-    uint16_t mFreq;
-
-    // effects: TODO
+    // called when a new pattern is set or reset is called
+    void init();
 
 };
 

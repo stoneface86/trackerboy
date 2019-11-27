@@ -1,5 +1,6 @@
 
 #include "catch.hpp"
+#include "./Track.cpp"
 #include "./Pattern.cpp"
 
 namespace trackerboy {
@@ -29,7 +30,6 @@ TEST_CASE("setting a new size effects rows", "[pattern]") {
 
     constexpr size_t INIT_SIZE = 5, SHRINK_SIZE = 2, GROW_SIZE = 10;
     Pattern pat(INIT_SIZE);
-    Pattern::PatternData copy = pat.copy();
 
     SECTION("newsize < oldsize, data gets truncated") {
         pat.setSize(SHRINK_SIZE);
@@ -52,6 +52,17 @@ TEST_CASE("setting a new size effects rows", "[pattern]") {
         // REQUIRE(pat.copy() == copy);
     }
 }
+
+//TEST_CASE("set methods", "[Pattern]") {
+//
+//    constexpr uint8_t ROWS = 10;
+//    Pattern pat(ROWS);
+//    auto copy = pat.copy();
+//
+//
+//    SECTION("setEffect on all tracks")
+//}
+
 
 //TEST_CASE("track selection", "[pattern]") {
 //    Pattern pat(1);

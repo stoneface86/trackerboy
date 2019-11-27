@@ -6,115 +6,79 @@
 namespace trackerboy {
 
 
-PatternRuntime::PatternRuntime(ChType trackId) :
+PatternRuntime::PatternRuntime(uint8_t speed) :
     mPattern(nullptr),
-    mIr(trackId),
-    mTrackId(trackId),
-    mIsNewRow(false),
-    mIsPlaying(false),
-    mLastInstrumentId(0),
-    mLastInstrument(nullptr),
-    mFreq(0)
+    mSpeed(speed),
+    mFc(speed - Q53_make(1, 0)),
+    mTr1(ChType::ch1),
+    mTr2(ChType::ch2),
+    mTr3(ChType::ch3),
+    mTr4(ChType::ch4)
 {
 }
 
-bool PatternRuntime::nextRow() {
-    if (mPattern != nullptr) {
-        if (++mTrack == mTrackEnd) {
-            return true;
-        }
-
-        mCurrentRow = *mTrack;
-        mIsNewRow = true;
-    }
-    return false;
-}
-
 void PatternRuntime::reset() {
-    if (mPattern != nullptr) {
-        mTrack = mPattern->trackBegin(mTrackId);
-        mTrackEnd = mPattern->trackEnd(mTrackId);
-        if (mTrack != mTrackEnd) {
-            mCurrentRow = *mTrack;
-            mIsNewRow = true;
-        }
-    }
-
-    mIsPlaying = false;
-    mLastInstrument = nullptr;
-    mLastInstrumentId = 0;
-    mFreq = 0;
-    // TODO: reset effects
+    init();
+    mTr1.reset();
+    mTr2.reset();
+    mTr3.reset();
+    mTr4.reset();
 }
 
 void PatternRuntime::setPattern(Pattern *pattern) {
     mPattern = pattern;
-    reset();
+    init();
 }
+
+
+void PatternRuntime::setSpeed(Q53 speed) {
+    if (speed < Q53_make(1, 0) || speed > Q53_make(31, 0)) {
+        throw std::invalid_argument("speed must be in the range of 1.0 to 31.0");
+    }
+    mSpeed = speed;
+}
+
 
 bool PatternRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtable) {
 
-    if (mTrack == mTrackEnd) {
+    if (mIter == mEnd) {
+        // end of pattern, stop
         return true;
-    } else {
-
-        if (mIsNewRow) {
-            if (mCurrentRow.flags & TrackRow::COLUMN_NOTE) {
-                // a note was set
-                if (mCurrentRow.note == NOTE_CUT) {
-                    // cut the current note
-                    if (mIsPlaying) {
-                        synth.getMixer().setEnable(mTrackId, Gbs::TERM_BOTH, false);
-                        mIsPlaying = false;
-                    }
-                } else {
-                    if (mCurrentRow.note <= NOTE_LAST) {
-                        if (!mIsPlaying) {
-                            // re-enable the channel output
-                            synth.getMixer().setEnable(mTrackId, Gbs::TERM_BOTH, true);
-                            mIsPlaying = true;
-                        }
-                        mFreq = NOTE_FREQ_TABLE[mCurrentRow.note];
-                        mIr.reset();
-                    }
-                    // for invalid note values just no-op
-                }
-            }
-
-            if (mCurrentRow.flags & TrackRow::COLUMN_INST) {
-                // an instrument was set
-                if (mLastInstrument == nullptr || mLastInstrumentId != mCurrentRow.instrumentId) {
-                    Instrument *inst = itable[mCurrentRow.instrumentId];
-                    if (inst != nullptr) {
-                        mLastInstrument = inst;
-                        mLastInstrumentId = mCurrentRow.instrumentId;
-                        mIr.setProgram(&inst->getProgram());
-                    }
-                    // if inst is null, then this is an error in the pattern data
-                    // the given row is attempting to use an instrument that doesn't exist
-                    // no-op again (the show must go on)
-                }
-            }
-
-            if (mCurrentRow.flags & TrackRow::COLUMN_EFFECT) {
-                // an effect was set
-                // TODO: effects
-            }
-
-            mIsNewRow = false;
-        }
-
-        // process effect (TODO)
-
-        // step instrument runtime
-        if (mIsPlaying) {
-            mIr.step(synth, wtable, 0, mFreq);
-        }
     }
 
-    // keep going
-    return false;
+    mFc += Q53_make(1, 0); // add 1.0 (00001000)
 
+    if (mFc >= mSpeed) {
+        // new frame
+
+        mTr1.setRow(*mIter++, itable);
+        mTr2.setRow(*mIter++, itable);
+        mTr3.setRow(*mIter++, itable);
+        mTr4.setRow(*mIter++, itable);
+
+        // check for pattern effect (pattern skip, speed change)
+        // certain effects apply to the pattern and not the track
+        // if there are conflicting effects the last one found is used
+
+
+        mFc -= mSpeed;
+    }
+
+    mTr1.step(synth, wtable);
+    mTr2.step(synth, wtable);
+    mTr3.step(synth, wtable);
+    mTr4.step(synth, wtable);
+    
+    return mIter == mEnd;
 }
+
+void PatternRuntime::init() {
+    if (mPattern != nullptr) {
+        mIter = mPattern->begin();
+        mEnd = mPattern->end();
+    }
+    mFc = mSpeed - Q53_make(1, 0);
+}
+
 
 }

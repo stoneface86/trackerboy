@@ -15,6 +15,8 @@ using trackerboy::InstrumentTable;
 using trackerboy::Instruction;
 using trackerboy::Pattern;
 using trackerboy::PatternRuntime;
+using trackerboy::Track;
+using trackerboy::TrackRuntime;
 using trackerboy::ChType;
 using trackerboy::WaveTable;
 
@@ -61,58 +63,59 @@ int main() {
 
 
     Pattern pat(69);
-    pat.setNote(ChType::ch1, 16, trackerboy::NOTE_C + trackerboy::OCTAVE_6);
-    pat.setInstrument(ChType::ch1, 16, 0);
+    Track track = pat.track(ChType::ch1);
 
-    pat.setNote(ChType::ch1, 18, trackerboy::NOTE_CUT);
+    track.setNote(16, trackerboy::NOTE_C + trackerboy::OCTAVE_6);
+    track.setInstrument(16, 0);
+
+    track.setNote(18, trackerboy::NOTE_CUT);
     
-    pat.setNote(ChType::ch1, 22, trackerboy::NOTE_B + trackerboy::OCTAVE_5);
-    pat.setInstrument(ChType::ch1, 22, 0);
+    track.setNote(22, trackerboy::NOTE_B + trackerboy::OCTAVE_5);
+    track.setInstrument(22, 0);
 
-    pat.setNote(ChType::ch1, 24, trackerboy::NOTE_Bb + trackerboy::OCTAVE_5);
-    pat.setInstrument(ChType::ch1, 24, 0);
+    track.setNote(24, trackerboy::NOTE_Bb + trackerboy::OCTAVE_5);
+    track.setInstrument(24, 0);
 
-    pat.setNote(ChType::ch1, 26, trackerboy::NOTE_CUT);
+    track.setNote(26, trackerboy::NOTE_CUT);
 
-    pat.setNote(ChType::ch1, 30, trackerboy::NOTE_A + trackerboy::OCTAVE_5);
-    pat.setInstrument(ChType::ch1, 30, 0);
+    track.setNote(30, trackerboy::NOTE_A + trackerboy::OCTAVE_5);
+    track.setInstrument(30, 0);
 
-    pat.setNote(ChType::ch1, 32, trackerboy::NOTE_Ab + trackerboy::OCTAVE_5);
-    pat.setInstrument(ChType::ch1, 32, 0);
+    track.setNote(32, trackerboy::NOTE_Ab + trackerboy::OCTAVE_5);
+    track.setInstrument(32, 0);
 
-    pat.setNote(ChType::ch1, 34, trackerboy::NOTE_CUT);
+    track.setNote(34, trackerboy::NOTE_CUT);
 
-    pat.setNote(ChType::ch1, 37, trackerboy::NOTE_Eb + trackerboy::OCTAVE_5);
-    pat.setInstrument(ChType::ch1, 37, 0);
+    track.setNote(37, trackerboy::NOTE_Eb + trackerboy::OCTAVE_5);
+    track.setInstrument(37, 0);
 
-    pat.setNote(ChType::ch1, 44, trackerboy::NOTE_CUT);
+    track.setNote(44, trackerboy::NOTE_CUT);
 
-    pat.setNote(ChType::ch1, 0x2F, trackerboy::NOTE_Ab + trackerboy::OCTAVE_5);
-    pat.setInstrument(ChType::ch1, 0x2F, 0);
+    track.setNote(0x2F, trackerboy::NOTE_Ab + trackerboy::OCTAVE_5);
+    track.setInstrument(0x2F, 0);
 
-    pat.setNote(ChType::ch1, 0x31, trackerboy::NOTE_G + trackerboy::OCTAVE_5);
-    pat.setInstrument(ChType::ch1, 0x31, 0);
+    track.setNote(0x31, trackerboy::NOTE_G + trackerboy::OCTAVE_5);
+    track.setInstrument(0x31, 0);
 
-    pat.setNote(ChType::ch1, 0x35, trackerboy::NOTE_CUT);
+    track.setNote(0x35, trackerboy::NOTE_CUT);
 
-    pat.setNote(ChType::ch1, 0x41, trackerboy::NOTE_Gb + trackerboy::OCTAVE_6);
-    pat.setInstrument(ChType::ch1, 0x41, 0);
+    track.setNote(0x41, trackerboy::NOTE_Gb + trackerboy::OCTAVE_6);
+    track.setInstrument(0x41, 0);
 
-    pat.setNote(ChType::ch1, 0x42, trackerboy::NOTE_G + trackerboy::OCTAVE_6);
-    pat.setInstrument(ChType::ch1, 0x42, 0);
+    track.setNote(0x42, trackerboy::NOTE_G + trackerboy::OCTAVE_6);
+    track.setInstrument(0x42, 0);
 
     
-
-
-
-    PatternRuntime runtime(ChType::ch1);
-    runtime.setPattern(&pat);
-
-
     constexpr size_t tempo = 150;
     constexpr size_t rowsPerBeat = 8;
-    constexpr size_t framesPerRow = 3600 / (tempo * rowsPerBeat);
+    constexpr size_t speed = 3600 / (tempo * rowsPerBeat);
     constexpr size_t samplesPerFrame = SAMPLING_RATE / 60;
+
+
+    PatternRuntime pr(0x14);
+    pr.setPattern(&pat);
+
+    
 
     std::vector<int16_t> frameBuf;
     frameBuf.resize(samplesPerFrame * 2);
@@ -120,14 +123,12 @@ int main() {
 
     pb.start();
 
+    bool patternEnded;
     do {
-        for (size_t frames = 0; frames != framesPerRow; ++frames) {
-            runtime.step(synth, itable, wtable);
-            synth.fill(framePtr, samplesPerFrame);
-            outputFrame(framePtr, samplesPerFrame, pb);
-        }
-        
-    } while (!runtime.nextRow());
+        patternEnded = pr.step(synth, itable, wtable);
+        synth.fill(framePtr, samplesPerFrame);
+        outputFrame(framePtr, samplesPerFrame, pb);
+    } while (!patternEnded);
 
     pb.stop(true);
 
