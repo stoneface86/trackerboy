@@ -3,6 +3,7 @@
 
 #include "trackerboy/pattern/Pattern.hpp"
 #include "trackerboy/song/Order.hpp"
+#include "trackerboy/Q53.hpp"
 
 
 namespace trackerboy {
@@ -23,7 +24,7 @@ public:
 
     float actualTempo();
 
-    uint8_t speed();
+    Q53 speed();
 
     Order& order();
 
@@ -33,7 +34,7 @@ public:
 
     void setTempo(float tempo);
 
-    void setSpeed(uint8_t speed);
+    void setSpeed(Q53 speed);
 
 private:
 
@@ -56,7 +57,7 @@ private:
     // 4.75:  4, 5, 5, 5, 4, 5, 5, 5, 4, ...
     // 4.875: 4, 5, 5, 5, 5, 5, 5, 4, ...
 
-    uint8_t mSpeed; // frames per row
+    Q53 mSpeed; // frames per row
 
 };
 

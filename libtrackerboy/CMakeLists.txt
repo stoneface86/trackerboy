@@ -10,6 +10,7 @@ set(SRC_FILES
 	"pattern/Track.cpp"
 	"song/Order.cpp"
 	"song/Song.cpp"
+	"song/SongRuntime.cpp"
 	"synth/Channel.cpp"
 	"synth/EnvChannel.cpp"
 	"synth/gbsynth.cpp"

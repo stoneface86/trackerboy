@@ -15,7 +15,9 @@ class PatternRuntime {
 
 public:
 
-    PatternRuntime(uint8_t speed);
+    static constexpr Q53 DEFAULT_SPEED = Q53_make(6, 0); // 4 rows/beat @ 150 bpm
+
+    PatternRuntime(uint8_t speed = DEFAULT_SPEED);
 
     //
     // Reset the runtime to initial state. The pattern will run at the
