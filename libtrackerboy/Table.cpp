@@ -46,7 +46,7 @@ template <class T>
 void Table<T>::findNextId() {
     if (mData.size() < 256) {
         // find the next available id
-        while (mData.count(++nextId) == 0);
+        while (mData.count(++nextId) != 0);
     }
 }
 

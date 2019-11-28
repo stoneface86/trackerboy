@@ -91,7 +91,7 @@ void Mixer::setEnable(ChType ch, Gbs::Terminal term, bool enabled) {
     }
 
     if (term & Gbs::TERM_RIGHT) {
-        flag |= flag << 4;
+        flag |= 16 << static_cast<uint8_t>(ch);
     }
 
     if (enabled) {
