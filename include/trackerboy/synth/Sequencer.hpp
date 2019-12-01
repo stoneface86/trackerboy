@@ -6,9 +6,9 @@
 namespace trackerboy {
 
 class Sequencer {
-    unsigned freqCounter;
-    unsigned stepCounter;
-    ChannelFile &cf;
+    unsigned mFreqCounter;
+    unsigned mStepCounter;
+    ChannelFile &mCf;
 
 public:
     Sequencer(ChannelFile &cf);

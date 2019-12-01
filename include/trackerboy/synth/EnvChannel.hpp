@@ -6,12 +6,12 @@
 namespace trackerboy {
 
 class EnvChannel : public Channel {
-    uint8_t envCounter;
+    uint8_t mEnvCounter;
 
 protected:
-    uint8_t envelope;
-    Gbs::EnvMode envMode;
-    uint8_t envLength;
+    uint8_t mEnvelope;
+    Gbs::EnvMode mEnvMode;
+    uint8_t mEnvLength;
 
     EnvChannel();
 

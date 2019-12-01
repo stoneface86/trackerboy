@@ -11,14 +11,16 @@ namespace trackerboy {
 
 class Instrument {
 
-    // sequence of instructions, one instruction per frame
-    std::vector<Instruction> mProgram;
-
 public:
 
     Instrument();
 
     std::vector<Instruction>& getProgram();
+
+private:
+
+    // sequence of instructions, one instruction per frame
+    std::vector<Instruction> mProgram;
 };
 
 

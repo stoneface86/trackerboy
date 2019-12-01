@@ -6,8 +6,8 @@
 namespace trackerboy {
 
 class PulseChannel : public EnvChannel {
-    Gbs::Duty duty;
-    unsigned dutyCounter;
+    Gbs::Duty mDuty;
+    unsigned mDutyCounter;
 
 public:
 

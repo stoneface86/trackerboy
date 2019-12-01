@@ -22,9 +22,9 @@ public:
     void setTerminalVolume(Gbs::Terminal term, uint8_t volume);
 
 private:
-    bool s01enable, s02enable;
-    uint8_t s01vol, s02vol;
-    std::underlying_type<Gbs::OutputFlags>::type outputStat;
+    bool mS01enable, mS02enable;
+    uint8_t mS01vol, mS02vol;
+    std::underlying_type<Gbs::OutputFlags>::type mOutputStat;
 
 };
 

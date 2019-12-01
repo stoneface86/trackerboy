@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-#define adjustSampleTable() SAMPLE_TABLE + (static_cast<size_t>(envelope) * 16)
+#define adjustSampleTable() SAMPLE_TABLE + (static_cast<size_t>(mEnvelope) * 16)
 
 namespace trackerboy {
 
@@ -31,66 +31,66 @@ static const float ENV_TABLE[16] = {
 
 
 EnvChannel::EnvChannel() : 
-    envCounter(0),
-    envelope(Gbs::DEFAULT_ENV_STEPS),
-    envLength(Gbs::DEFAULT_ENV_LENGTH),
-    envMode(Gbs::DEFAULT_ENV_MODE),
+    mEnvCounter(0),
+    mEnvelope(Gbs::DEFAULT_ENV_STEPS),
+    mEnvLength(Gbs::DEFAULT_ENV_LENGTH),
+    mEnvMode(Gbs::DEFAULT_ENV_MODE),
     Channel() 
 {
-    sampleTable = SAMPLE_TABLE; // start at envelope 0
+    mSampleTable = SAMPLE_TABLE; // start at envelope 0
 }
 
 void EnvChannel::envStep() {
-    if (envLength) {
+    if (mEnvLength) {
         // do nothing if envLength == 0
-        if (envCounter == envLength) {
-            envCounter = 0;
-            if (envMode == Gbs::ENV_AMPLIFY) {
-                if (envelope < Gbs::SAMPLE_MAX) {
-                    ++envelope;
-                    sampleTable += 16;
+        if (mEnvCounter == mEnvLength) {
+            mEnvCounter = 0;
+            if (mEnvMode == Gbs::ENV_AMPLIFY) {
+                if (mEnvelope < Gbs::SAMPLE_MAX) {
+                    ++mEnvelope;
+                    mSampleTable += 16;
                 }
             } else {
-                if (envelope > Gbs::SAMPLE_MIN) {
-                    --envelope;
-                    sampleTable -= 16;
+                if (mEnvelope > Gbs::SAMPLE_MIN) {
+                    --mEnvelope;
+                    mSampleTable -= 16;
                 }
             }
         } else {
-            ++envCounter;
+            ++mEnvCounter;
         }
     }
 }
 
 void EnvChannel::reset() {
     Channel::reset();
-    envCounter = 0;
+    mEnvCounter = 0;
 }
 
 void EnvChannel::setEnv(uint8_t envReg) {
-    envLength = (envReg & 0x7);
-    envMode = static_cast<Gbs::EnvMode>((envReg >> 3) & 1);
-    envelope = (envReg >> 4);
-    sampleTable = adjustSampleTable();
+    mEnvLength = (envReg & 0x7);
+    mEnvMode = static_cast<Gbs::EnvMode>((envReg >> 3) & 1);
+    mEnvelope = (envReg >> 4);
+    mSampleTable = adjustSampleTable();
 }
 
 void EnvChannel::setEnvLength(uint8_t _envLength) {
     if (_envLength > Gbs::MAX_ENV_LENGTH) {
         _envLength = Gbs::MAX_ENV_LENGTH;
     }
-    envLength = _envLength;
+    mEnvLength = _envLength;
 }
 
 void EnvChannel::setEnvMode(Gbs::EnvMode mode) {
-    this->envMode = mode;
+    this->mEnvMode = mode;
 }
 
 void EnvChannel::setEnvStep(uint8_t step) {
     if (step > Gbs::MAX_ENV_STEPS) {
         step = Gbs::MAX_ENV_STEPS;
     }
-    envelope = step;
-    sampleTable = adjustSampleTable();
+    mEnvelope = step;
+    mSampleTable = adjustSampleTable();
 }
 
 }

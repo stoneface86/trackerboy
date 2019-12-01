@@ -13,12 +13,6 @@ namespace trackerboy {
 
 class InstrumentRuntime {
 
-    std::vector<Instruction>* program;
-    uint8_t fc;
-    uint8_t pc;
-    bool running;
-    const ChType trackId;
-
 public:
 
     InstrumentRuntime(ChType trackId);
@@ -28,6 +22,14 @@ public:
     void setProgram(std::vector<Instruction>* program);
 
     void step(Synth& synth, WaveTable& wtable, uint8_t rowVol = 0, uint16_t freq = 0);
+
+private:
+
+    std::vector<Instruction> *mProgram;
+    uint8_t mFc;
+    uint8_t mPc;
+    bool mRunning;
+    const ChType mTrackId;
 
 };
 

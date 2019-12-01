@@ -5,18 +5,18 @@
 namespace trackerboy {
 
 class Channel {
-    uint8_t lengthCounter;
-    bool continuous;
-    bool enabled;
+    uint8_t mLengthCounter;
+    bool mContinuous;
+    bool mEnabled;
 
 protected:
-    uint8_t currentSample;
-    uint8_t length;
-    uint16_t frequency;
-    const unsigned freqMultiplier;
-    unsigned freqCounter;
-    unsigned freqCounterMax;
-    const int16_t *sampleTable;
+    uint8_t mCurrentSample;
+    uint8_t mLength;
+    uint16_t mFrequency;
+    const unsigned mFreqMultiplier;
+    unsigned mFreqCounter;
+    unsigned mFreqCounterMax;
+    const int16_t *mSampleTable;
 
     Channel(bool ch3 = false);
 

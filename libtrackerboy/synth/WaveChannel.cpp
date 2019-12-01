@@ -7,19 +7,19 @@ namespace trackerboy {
 
 WaveChannel::WaveChannel() :
     Channel(true),
-    outputLevel(Gbs::DEFAULT_WAVE_LEVEL),
+    mOutputLevel(Gbs::DEFAULT_WAVE_LEVEL),
     mWaveform(),
-    waveIndex(0)
+    mWaveIndex(0)
 {
 }
 
 void WaveChannel::reset() {
-    waveIndex = 0;
-    freqCounter = 0;
+    mWaveIndex = 0;
+    mFreqCounter = 0;
 }
 
 void WaveChannel::setOutputLevel(Gbs::WaveVolume level) {
-    outputLevel = level;
+    mOutputLevel = level;
 }
 
 void WaveChannel::setWaveform(const Waveform &waveform) {
@@ -31,12 +31,12 @@ void WaveChannel::setWaveform(const uint8_t waveform[Gbs::WAVE_RAMSIZE]) {
 }
 
 void WaveChannel::step(unsigned cycles) {
-    freqCounter += cycles;
-    unsigned wavesteps = freqCounter / freqCounterMax;
-    freqCounter %= freqCounterMax;
-    waveIndex = (waveIndex + wavesteps) & 0x1F; // & 0x1F == % 32
-    uint8_t sample = mWaveform.data[waveIndex >> 1];
-    if (waveIndex & 1) {
+    mFreqCounter += cycles;
+    unsigned wavesteps = mFreqCounter / mFreqCounterMax;
+    mFreqCounter %= mFreqCounterMax;
+    mWaveIndex = (mWaveIndex + wavesteps) & 0x1F; // & 0x1F == % 32
+    uint8_t sample = mWaveform.data[mWaveIndex >> 1];
+    if (mWaveIndex & 1) {
         // odd number, low nibble
         sample &= 0xF;
     } else {
@@ -45,7 +45,7 @@ void WaveChannel::step(unsigned cycles) {
     }
     // convert the sample with bias of -SAMPLE_GND
     //int8_t biased = static_cast<int8_t>(sample) - Gbs::SAMPLE_GND;
-    switch (outputLevel) {
+    switch (mOutputLevel) {
         case Gbs::WAVE_MUTE:
             sample = Gbs::SAMPLE_MIN;
             break;
@@ -60,7 +60,7 @@ void WaveChannel::step(unsigned cycles) {
             break;
     }
 
-    currentSample = sample;
+    mCurrentSample = sample;
 }
 
 }

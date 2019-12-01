@@ -8,13 +8,13 @@
 namespace trackerboy {
 
 class NoiseChannel : public EnvChannel {
-    uint8_t scf;
-    Gbs::NoiseSteps stepSelection;
-    uint8_t drf;
+    uint8_t mScf;
+    Gbs::NoiseSteps mStepSelection;
+    uint8_t mDrf;
 
-    uint16_t lfsr;
-    unsigned shiftCounter;
-    unsigned shiftCounterMax;
+    uint16_t mLfsr;
+    unsigned mShiftCounter;
+    unsigned mShiftCounterMax;
 
 public:
 

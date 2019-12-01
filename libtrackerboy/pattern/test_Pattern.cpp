@@ -9,7 +9,7 @@ static bool rowIsZero(TrackRow row) {
     return row.flags == 0 &&
         row.note == 0 &&
         row.instrumentId == 0 &&
-        row.effectParameter == 0;
+        row.effect1 == 0;
 }
 
 

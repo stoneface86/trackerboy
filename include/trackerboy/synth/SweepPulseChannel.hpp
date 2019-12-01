@@ -5,11 +5,11 @@
 namespace trackerboy {
 
 class SweepPulseChannel : public PulseChannel {
-    Gbs::SweepMode sweepMode;
-    uint8_t sweepTime;
-    uint8_t sweepShift;
+    Gbs::SweepMode mSweepMode;
+    uint8_t mSweepTime;
+    uint8_t mSweepShift;
 
-    uint8_t sweepCounter;
+    uint8_t mSweepCounter;
 
 public:
 

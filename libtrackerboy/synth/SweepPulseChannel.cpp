@@ -4,51 +4,51 @@
 namespace trackerboy {
 
 SweepPulseChannel::SweepPulseChannel() : 
-    sweepMode(Gbs::DEFAULT_SWEEP_MODE),
-    sweepTime(Gbs::DEFAULT_SWEEP_TIME),
-    sweepShift(Gbs::DEFAULT_SWEEP_SHIFT),
-    sweepCounter(0),
+    mSweepMode(Gbs::DEFAULT_SWEEP_MODE),
+    mSweepTime(Gbs::DEFAULT_SWEEP_TIME),
+    mSweepShift(Gbs::DEFAULT_SWEEP_SHIFT),
+    mSweepCounter(0),
     PulseChannel()
 {
 }
 
 void SweepPulseChannel::reset() {
     PulseChannel::reset();
-    sweepCounter = 0;
+    mSweepCounter = 0;
 }
 
 void SweepPulseChannel::setSweep(uint8_t sweepReg) {
-    sweepShift = sweepReg & 0x7;
-    sweepMode = static_cast<Gbs::SweepMode>((sweepReg >> 3) & 1);
-    sweepTime = (sweepReg >> 4) & 0x7;
+    mSweepShift = sweepReg & 0x7;
+    mSweepMode = static_cast<Gbs::SweepMode>((sweepReg >> 3) & 1);
+    mSweepTime = (sweepReg >> 4) & 0x7;
 }
 
 void SweepPulseChannel::setSweepMode(Gbs::SweepMode mode) {
-    sweepMode = mode;
+    mSweepMode = mode;
 }
 
 void SweepPulseChannel::setSweepShift(uint8_t shift) {
     if (shift > Gbs::MAX_SWEEP_SHIFT) {
         shift = Gbs::MAX_SWEEP_SHIFT;
     }
-    sweepShift = shift;
+    mSweepShift = shift;
 }
 
 void SweepPulseChannel::setSweepTime(uint8_t ts) {
     if (ts > Gbs::MAX_SWEEP_TIME) {
         ts = Gbs::MAX_SWEEP_TIME;
     }
-    sweepTime = ts;
+    mSweepTime = ts;
 }
 
 void SweepPulseChannel::sweepStep() {
-    if (sweepTime) {
-        if (++sweepCounter >= sweepTime) {
-            sweepCounter = 0;
-            if (sweepShift) {
-                int16_t shadow = frequency;
-                int16_t sweepfreq = shadow >> sweepShift;
-                if (sweepMode == Gbs::SWEEP_SUBTRACTION) {
+    if (mSweepTime) {
+        if (++mSweepCounter >= mSweepTime) {
+            mSweepCounter = 0;
+            if (mSweepShift) {
+                int16_t shadow = mFrequency;
+                int16_t sweepfreq = shadow >> mSweepShift;
+                if (mSweepMode == Gbs::SWEEP_SUBTRACTION) {
                     sweepfreq = shadow - sweepfreq;
                     if (sweepfreq < 0) {
                         return; // no change

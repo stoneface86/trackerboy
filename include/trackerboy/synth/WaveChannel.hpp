@@ -21,9 +21,9 @@ public:
     void step(unsigned cycles) override;
 
 private:
-    Gbs::WaveVolume outputLevel;
+    Gbs::WaveVolume mOutputLevel;
     Waveform mWaveform;
-    unsigned waveIndex;
+    unsigned mWaveIndex;
 
 };
 

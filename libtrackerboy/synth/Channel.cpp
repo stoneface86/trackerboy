@@ -4,7 +4,7 @@
 
 #include "sampletable.hpp"
 
-#define calcFreqMax(f) ((2048 - f) * freqMultiplier)
+#define calcFreqMax(f) ((2048 - f) * mFreqMultiplier)
 
 
 namespace trackerboy {
@@ -30,51 +30,51 @@ namespace trackerboy {
 
 
 Channel::Channel(bool ch3) :
-    lengthCounter(Gbs::DEFAULT_LENGTH),
-    continuous(true),
-    enabled(true),
-    currentSample(Gbs::SAMPLE_MIN),
-    length(Gbs::DEFAULT_LENGTH),
-    frequency(Gbs::DEFAULT_FREQUENCY),
-    freqMultiplier(ch3 ? 2 : 4),
-    freqCounter(0),
-    freqCounterMax(calcFreqMax(Gbs::DEFAULT_FREQUENCY)),
-    sampleTable(SAMPLE_TABLE + (16 * Gbs::MAX_ENV_STEPS))
+    mLengthCounter(Gbs::DEFAULT_LENGTH),
+    mContinuous(true),
+    mEnabled(true),
+    mCurrentSample(Gbs::SAMPLE_MIN),
+    mLength(Gbs::DEFAULT_LENGTH),
+    mFrequency(Gbs::DEFAULT_FREQUENCY),
+    mFreqMultiplier(ch3 ? 2 : 4),
+    mFreqCounter(0),
+    mFreqCounterMax(calcFreqMax(Gbs::DEFAULT_FREQUENCY)),
+    mSampleTable(SAMPLE_TABLE + (16 * Gbs::MAX_ENV_STEPS))
 {
 }
 
 void Channel::disable() {
-    enabled = false;
+    mEnabled = false;
 }
 
 uint8_t Channel::getCurrentSample() {
-    return enabled ? currentSample : Gbs::SAMPLE_MIN;
+    return mEnabled ? mCurrentSample : Gbs::SAMPLE_MIN;
 }
 
 int16_t Channel::getCurrentVolume() {
     // convert current sample to a value between 0.0f and 1.0f
     //return enabled ? SAMPLE_TABLE[currentSample] : 0.0f;
-    return enabled ? sampleTable[currentSample] : 0;
+    return mEnabled ? mSampleTable[mCurrentSample] : 0;
 }
 
 void Channel::lengthStep() {
-    if (!continuous) {
-        if (lengthCounter == 0) {
-            enabled = false;
+    if (!mContinuous) {
+        if (mLengthCounter == 0) {
+            mEnabled = false;
         } else {
-            --lengthCounter;
+            --mLengthCounter;
         }
     }
 }
 
 void Channel::reset() {
-    lengthCounter = length;
-    enabled = true;
-    currentSample = Gbs::SAMPLE_MIN;
+    mLengthCounter = mLength;
+    mEnabled = true;
+    mCurrentSample = Gbs::SAMPLE_MIN;
 }
 
 void Channel::setContinuousOutput(bool _continuous) {
-    continuous = _continuous;
+    mContinuous = _continuous;
 }
 
 void Channel::setFrequency(uint16_t _frequency) {
@@ -82,15 +82,15 @@ void Channel::setFrequency(uint16_t _frequency) {
         _frequency = Gbs::MAX_FREQUENCY;
     }
 
-    frequency = _frequency;
-    freqCounterMax = calcFreqMax(frequency);
+    mFrequency = _frequency;
+    mFreqCounterMax = calcFreqMax(mFrequency);
 }
 
 void Channel::setLength(uint8_t _length) {
     if (_length > Gbs::MAX_LENGTH) {
         _length = Gbs::MAX_LENGTH;
     }
-    length = _length;
+    mLength = _length;
 }
 
 }

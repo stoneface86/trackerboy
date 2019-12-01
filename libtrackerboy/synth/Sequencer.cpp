@@ -20,47 +20,47 @@
 namespace trackerboy {
 
 Sequencer::Sequencer(ChannelFile &cf) : 
-    cf(cf),
-    freqCounter(0),
-    stepCounter(0)
+    mCf(cf),
+    mFreqCounter(0),
+    mStepCounter(0)
 {
 }
 
 void Sequencer::reset() {
-    freqCounter = 0;
-    stepCounter = 0;
+    mFreqCounter = 0;
+    mStepCounter = 0;
 }
 
 void Sequencer::step(unsigned cycles) {
     // TODO: check that cycles <= FREQ_COUNTER_MAX
-    freqCounter += cycles;
-    if (freqCounter >= FREQ_COUNTER_MAX) {
-        freqCounter -= FREQ_COUNTER_MAX;
+    mFreqCounter += cycles;
+    if (mFreqCounter >= FREQ_COUNTER_MAX) {
+        mFreqCounter -= FREQ_COUNTER_MAX;
             
-        switch (stepCounter++) {
+        switch (mStepCounter++) {
             case 0:
-                allLengthStep(cf);
+                allLengthStep(mCf);
                 break;
             case 1:
                 break;
             case 2:
-                allLengthStep(cf);
-                cf.ch1.sweepStep();
+                allLengthStep(mCf);
+                mCf.ch1.sweepStep();
                 break;
             case 3:
                 break;
             case 4:
-                allLengthStep(cf);
+                allLengthStep(mCf);
                 break;
             case 5:
                 break;
             case 6:
-                allLengthStep(cf);
-                cf.ch1.sweepStep();
+                allLengthStep(mCf);
+                mCf.ch1.sweepStep();
                 break;
             case 7:
-                stepCounter = 0; // adjust counter since it overflowed
-                allEnvStep(cf);
+                mStepCounter = 0; // adjust counter since it overflowed
+                allEnvStep(mCf);
                 break;
 
         }

@@ -7,41 +7,41 @@ namespace trackerboy {
 
 
 Synth::Synth(float samplingRate) :
-    cf(),
-    sequencer(cf),
-    samplingRate(samplingRate),
-    stepsPerSample((unsigned)(GB_CLOCK_SPEED / samplingRate))
+    mCf(),
+    mSequencer(mCf),
+    mSamplingRate(samplingRate),
+    mStepsPerSample((unsigned)(GB_CLOCK_SPEED / samplingRate))
 {
 }
 
 ChannelFile& Synth::getChannels() {
-    return cf;
+    return mCf;
 }
 
 Mixer& Synth::getMixer() {
-    return mixer;
+    return mMixer;
 }
 
 Sequencer& Synth::getSequencer() {
-    return sequencer;
+    return mSequencer;
 }
 
 void Synth::step(int16_t &left, int16_t &right) {
-    mixer.getOutput(
-        cf.ch1.getCurrentVolume(),
-        cf.ch2.getCurrentVolume(),
-        cf.ch3.getCurrentVolume(),
-        cf.ch4.getCurrentVolume(),
+    mMixer.getOutput(
+        mCf.ch1.getCurrentVolume(),
+        mCf.ch2.getCurrentVolume(),
+        mCf.ch3.getCurrentVolume(),
+        mCf.ch4.getCurrentVolume(),
         left,
         right
     );
 
-    sequencer.step(stepsPerSample);
+    mSequencer.step(mStepsPerSample);
 
-    cf.ch1.step(stepsPerSample);
-    cf.ch2.step(stepsPerSample);
-    cf.ch3.step(stepsPerSample);
-    cf.ch4.step(stepsPerSample);
+    mCf.ch1.step(mStepsPerSample);
+    mCf.ch2.step(mStepsPerSample);
+    mCf.ch3.step(mStepsPerSample);
+    mCf.ch4.step(mStepsPerSample);
 }
 
 

@@ -8,12 +8,12 @@
 namespace trackerboy {
 
 class Synth {
-    ChannelFile cf;
-    Mixer mixer;
-    Sequencer sequencer;
+    ChannelFile mCf;
+    Mixer mMixer;
+    Sequencer mSequencer;
 
-    float samplingRate;
-    unsigned stepsPerSample;
+    float mSamplingRate;
+    unsigned mStepsPerSample;
 
 public:
     Synth(float samplingRate);
