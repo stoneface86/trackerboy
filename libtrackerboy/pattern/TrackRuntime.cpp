@@ -59,10 +59,10 @@ void TrackRuntime::setRow(TrackRow row, InstrumentTable &itable) {
         }
     }
 
-    if (row.flags & TrackRow::COLUMN_EFFECT) {
+    //if (row.flags & TrackRow::COLUMN_EFFECT) {
         // an effect was set
         // TODO: effects
-    }
+    //}
 }
 
 

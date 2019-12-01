@@ -27,9 +27,9 @@ void Track::clear(uint8_t rowStart, uint8_t rowEnd) {
     }
 }
 
-void Track::clearEffect(uint8_t row) {
+void Track::clearEffect(uint8_t row, uint8_t effectNo) {
     TrackRow *rowdata = rowptr(row);
-    rowdata->flags &= ~TrackRow::COLUMN_EFFECT;
+    rowdata->flags &= ~(TrackRow::COLUMN_EFFECT1 << effectNo);
 }
 
 void Track::clearInstrument(uint8_t row) {
@@ -46,12 +46,27 @@ Iterator Track::end() {
     return Iterator(mEnd);
 }
 
-void Track::setEffect(uint8_t row, EffectType effect, uint8_t param) {
+void Track::setEffect(uint8_t row, uint8_t effectNo, EffectType effect, uint8_t param) {
     TrackRow *rowdata = rowptr(row);
-    uint8_t flags = rowdata->flags & 0xF; // discard old effect
+    
+    switch (effectNo) {
+        case TrackRow::EFFECT1:
+            rowdata->effect1 = (rowdata->effect1 & 0xF0) | static_cast<uint8_t>(effect);
+            rowdata->effect1Param = param;
+            break;
+        case TrackRow::EFFECT2:
+            rowdata->effect23 = (rowdata->effect23 & 0xF0) | static_cast<uint8_t>(effect);
+            rowdata->effect2Param = param;
+            break;
+        case TrackRow::EFFECT3:
+            rowdata->effect23 = (rowdata->effect23 & 0x0F) | (static_cast<uint8_t>(effect) << 4);
+            rowdata->effect3Param = param;
+            break;
+        default:
+            throw std::invalid_argument("TrackRow can only have 3 effects");
+    }
     // update column flags so that we know an effect has been set
-    rowdata->flags = flags | static_cast<uint8_t>(effect) | TrackRow::COLUMN_EFFECT;
-    rowdata->effectParameter = param;
+    rowdata->flags |= (TrackRow::COLUMN_EFFECT1 << effectNo);
 
 }
 

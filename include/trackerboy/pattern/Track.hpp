@@ -47,7 +47,7 @@ public:
 
     void clear(uint8_t rowStart, uint8_t rowEnd);
 
-    void clearEffect(uint8_t row);
+    void clearEffect(uint8_t row, uint8_t effectNo);
 
     void clearInstrument(uint8_t row);
 
@@ -55,7 +55,7 @@ public:
 
     Iterator end();
 
-    void setEffect(uint8_t row, EffectType effect, uint8_t param = 0);
+    void setEffect(uint8_t row, uint8_t effectNo, EffectType effect, uint8_t param = 0);
 
     void setInstrument(uint8_t row, uint8_t instrumentId);
 
