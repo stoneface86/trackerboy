@@ -38,6 +38,12 @@ Pattern::Iterator Pattern::end() {
     return mData.cend();
 }
 
+void Pattern::serialize(std::ofstream &stream) {
+    stream.write(reinterpret_cast<const char *>(&mSize), 1);
+
+    stream.write(reinterpret_cast<const char *>(mData.data()), mData.size());
+}
+
 void Pattern::setSize(size_t nrows) {
     mSize = nrows;
     mData.resize(nrows * 4);

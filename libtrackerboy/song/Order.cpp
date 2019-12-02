@@ -1,5 +1,6 @@
 
 #include "trackerboy/song/Order.hpp"
+#include "trackerboy/fileformat.hpp"
 
 #include <stdexcept>
 
@@ -15,6 +16,21 @@ Order::Order() :
 
 std::vector<uint8_t>& Order::indexVec() {
     return mIndexVec;
+}
+
+void Order::serialize(std::ofstream &stream) {
+    uint8_t byte = static_cast<uint8_t>(mLoops);
+    stream.write(reinterpret_cast<const char *>(&byte), 1);
+
+    stream.write(reinterpret_cast<const char *>(&mLoopIndex), 1);
+    
+    byte = static_cast<uint8_t>(mIndexVec.size());
+    stream.write(reinterpret_cast<const char *>(&byte), 1);
+
+    uint32_t word = toLittleEndian(static_cast<uint32_t>(4 + stream.tellp()));
+    stream.write(reinterpret_cast<const char *>(&word), 4);
+
+    stream.write(reinterpret_cast<const char *>(mIndexVec.data()), mIndexVec.size());
 }
 
 void Order::setLoop(uint8_t index) {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <vector>
 
 #include "trackerboy/ChType.hpp"
@@ -28,6 +29,8 @@ public:
     void clear(uint8_t rowStart, uint8_t rowEnd);
 
     Iterator end();
+
+    void serialize(std::ofstream &stream);
 
     void setSize(size_t nrows);
 

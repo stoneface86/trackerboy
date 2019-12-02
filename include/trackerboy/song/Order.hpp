@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cstdint>
+#include <fstream>
 #include <vector>
 
 
@@ -40,6 +41,8 @@ public:
     std::vector<uint8_t>& indexVec();
 
     void setLoop(uint8_t index);
+
+    void serialize(std::ofstream &stream);
 
     void removeLoop();
 
