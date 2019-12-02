@@ -10,7 +10,6 @@ namespace trackerboy {
 
 template <class T>
 Table<T>::TableItem::TableItem() :
-    renamed(false),
     name(""),
     value() 
 {        
@@ -19,7 +18,6 @@ Table<T>::TableItem::TableItem() :
 
 template <class T>
 Table<T>::Table() :
-    mUntitledCounter(0),
     mNextId(0) 
 {        
 }
@@ -101,8 +99,7 @@ void Table<T>::set(uint8_t id, T &data) {
     TableItem &item = mData[id];
     item.value = data;
     if (isNew) {
-        item.name = "Untitled " + std::to_string(mUntitledCounter++);
-        item.renamed = false;
+        item.name = "Untitled " + std::to_string(id);
     }
 
     if (mNextId == id) {
@@ -118,10 +115,6 @@ void Table<T>::setName(uint8_t id, std::string name) {
 
     TableItem &item = mData[id];
     item.name = name;
-    if (!item.renamed) {
-        mUntitledCounter--;
-        item.renamed = true;
-    }
 }
 
 
@@ -129,9 +122,6 @@ template <class T>
 void Table<T>::remove(uint8_t id) {
     auto iter = mData.find(id);
     if (iter != mData.end()) {
-        if (!iter->second.renamed) {
-            mUntitledCounter--;
-        }
         mData.erase(id);
         if (mNextId > id) {
             mNextId = id; // always use the lowest available id first

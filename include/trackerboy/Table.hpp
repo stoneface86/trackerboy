@@ -39,14 +39,11 @@ public:
 private:
 
     struct TableItem {
-        bool renamed;
         std::string name;
         T value;
 
         TableItem();
     };
-
-    uint8_t mUntitledCounter;
 
     uint8_t mNextId;
     std::unordered_map<uint8_t, TableItem> mData;
