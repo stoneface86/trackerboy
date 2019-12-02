@@ -1,5 +1,9 @@
 
 #include "trackerboy/Module.hpp"
+#include "trackerboy/fileformat.hpp"
+
+#include <algorithm>
+#include <cstddef>
 
 
 namespace trackerboy {
@@ -13,9 +17,6 @@ Module::Module() :
     mArtist(""),
     mCopyright("") 
 {
-    mTitle.reserve(INFO_STR_SIZE);
-    mArtist.reserve(INFO_STR_SIZE);
-    mCopyright.reserve(INFO_STR_SIZE);
 }
 
 std::string Module::artist() {
@@ -42,16 +43,69 @@ WaveTable& Module::waveTable() {
     return mWaveTable;
 }
 
+void Module::serialize(std::ofstream &stream) {
+    ModuleHeader header;
+    std::copy_n(FILE_MODULE_SIGNATURE, 12, header.signature);
+    // TODO: have cmake generate a header file with the VERSION string
+    // TODO: write the version string in the header
+    header.revision = FILE_REVISION;
+    auto chars = mTitle.copy(header.title, sizeof(header.title));
+    if (chars < sizeof(header.title)) {
+        std::fill_n(header.title + chars, sizeof(header.title) - chars, '\0');
+    }
+    chars = mArtist.copy(header.artist, sizeof(header.artist));
+    if (chars < sizeof(header.artist)) {
+        std::fill_n(header.artist + chars, sizeof(header.artist) - chars, '\0');
+    }
+    chars = mCopyright.copy(header.copyright, sizeof(header.copyright));
+    if (chars < sizeof(header.copyright)) {
+        std::fill_n(header.copyright + chars, sizeof(header.copyright) - chars, '\0');
+    }
+
+    auto pos = stream.tellp();
+
+    header.instrumentTableOffset = toLittleEndian(static_cast<uint8_t>(sizeof(header) + pos));
+    
+    // ignore the next two offsets for now
+    auto stoffpos = offsetof(ModuleHeader, songTableOffset) + pos;
+    
+    // write the header
+    stream.write(reinterpret_cast<const char *>(&header), sizeof(header));
+
+    // serialize the instrument table
+    mInstrumentTable.serialize(stream);
+    uint32_t stoff = toLittleEndian(static_cast<uint32_t>(stream.tellp()));
+
+    // serialize the song table
+    mSongTable.serialize(stream);
+    uint32_t wtoff = toLittleEndian(static_cast<uint32_t>(stream.tellp()));
+
+    // serialize the wave table
+    mWaveTable.serialize(stream);
+    pos = stream.tellp();
+
+    // go back to the offsets in the header we skipped
+    stream.seekp(stoffpos);
+    stream.write(reinterpret_cast<const char *>(&stoff), 4);
+    stream.write(reinterpret_cast<const char *>(&wtoff), 4);
+
+    // terminate
+    stream.seekp(pos);
+    stream.write(FILE_TERMINATOR, 3);
+
+
+}
+
 void Module::setArtist(std::string artist) {
-    artist.copy(&mArtist.front(), INFO_STR_SIZE);
+    mArtist = artist;
 }
 
 void Module::setCopyright(std::string copyright) {
-    copyright.copy(&mCopyright.front(), INFO_STR_SIZE);
+    mCopyright = copyright;
 }
 
 void Module::setTitle(std::string title) {
-    title.copy(&mTitle.front(), INFO_STR_SIZE);
+    mTitle = title;
 }
 
 }

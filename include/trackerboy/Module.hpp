@@ -3,6 +3,7 @@
 
 #include "trackerboy/Table.hpp"
 
+#include <fstream>
 #include <string>
 
 
@@ -26,6 +27,8 @@ public:
 
     InstrumentTable& instrumentTable();
 
+    void serialize(std::ofstream &stream);
+
     void setArtist(std::string artist);
 
     void setTitle(std::string title);
@@ -34,8 +37,6 @@ public:
 
 
 private:
-
-    static constexpr size_t INFO_STR_SIZE = 32;
 
     SongTable mSongTable;
     WaveTable mWaveTable;
