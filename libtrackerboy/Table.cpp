@@ -1,6 +1,5 @@
 
 #include "trackerboy/Table.hpp"
-#include "trackerboy/fileformat.hpp"
 
 #include <algorithm>
 
@@ -42,6 +41,78 @@ uint8_t Table<T>::add(T &data) {
     uint8_t id = mNextId;
     set(id, data);
     return id;
+}
+
+template <class T>
+FormatError Table<T>::deserialize(std::ifstream &stream) {
+    
+    // read the table header
+    TableHeader header;
+    stream.read(reinterpret_cast<char*>(&header), sizeof(header));
+    if (!stream.good()) {
+        return FormatError::readError;
+    }
+
+    // signature must match
+    if (!std::equal(header.signature, header.signature + 4, FILE_TABLE_SIGNATURE)) {
+        return FormatError::invalidSignature;
+    }
+
+    // do not attempt to deserialize future versions of the format
+    if (header.revision > FILE_REVISION) {
+        return FormatError::invalidRevision;
+    }
+
+    // make sure the table is the right type
+    if (header.tableType != T::TABLE_CODE) {
+        return FormatError::invalidTableCode;
+    }
+
+    // table offset must match where the table is located in the file
+    if (toNativeEndian(header.tableOffset) != stream.tellg()) {
+        return FormatError::badOffset;
+    }
+
+    std::vector<char> nameVec;
+    for (uint8_t i = 0; i != header.tableSize; ++i) {
+        // first byte is the id
+        uint8_t id;
+        stream.read(reinterpret_cast<char*>(&id), 1);
+        if (!stream.good()) {
+            return FormatError::readError;
+        }
+        // now read the null-terminated name string, 1 char at a time
+        nameVec.clear();
+        char ch;
+        do {
+            stream.read(&ch, 1);
+            if (!stream.good()) {
+                return FormatError::readError;
+            }
+            nameVec.push_back(ch);
+        } while (ch != '\0');
+
+        // set the item in the table
+        TableItem &item = mData[id];
+        item.name = std::string(nameVec.data());
+        // deserialize the table data
+        FormatError err = item.value.deserialize(stream);
+        if (err != FormatError::none) {
+            return err;
+        }
+    }
+
+    // check the terminator
+    char terminator[3];
+    stream.read(terminator, 3);
+    if (!std::equal(terminator, terminator + 3, FILE_TERMINATOR)) {
+        return FormatError::invalidTerminator;
+    }
+
+    // all good, now find the next available id
+    findNextId();
+
+    return FormatError::none;
 }
 
 template <class T>

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "trackerboy/ChType.hpp"
+#include "trackerboy/fileformat.hpp"
 #include "trackerboy/instrument/Instruction.hpp"
 
 
@@ -17,6 +18,8 @@ public:
     static constexpr uint8_t TABLE_CODE = 'I';
 
     Instrument();
+
+    FormatError deserialize(std::ifstream &stream);
 
     std::vector<Instruction>& getProgram();
 

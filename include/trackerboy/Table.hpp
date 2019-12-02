@@ -8,6 +8,8 @@
 #include "trackerboy/instrument/Instrument.hpp"
 #include "trackerboy/song/Song.hpp"
 #include "trackerboy/synth/Waveform.hpp"
+#include "trackerboy/fileformat.hpp"
+
 
 namespace trackerboy {
 
@@ -25,6 +27,8 @@ public:
     T* operator[](uint8_t id);
 
     uint8_t add(T &data);
+
+    FormatError deserialize(std::ifstream &stream);
 
     std::string name(uint8_t id);
 

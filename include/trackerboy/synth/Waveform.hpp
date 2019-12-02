@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include "trackerboy/gbs.hpp"
+#include "trackerboy/fileformat.hpp"
 
 
 namespace trackerboy {
@@ -18,6 +19,8 @@ public:
     Waveform();
 
     uint8_t* data();
+
+    FormatError deserialize(std::ifstream &stream);
 
     void serialize(std::ofstream &stream);
 

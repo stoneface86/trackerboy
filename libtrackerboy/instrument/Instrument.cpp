@@ -8,6 +8,9 @@ Instrument::Instrument()
 {
 }
 
+FormatError Instrument::deserialize(std::ifstream &stream) {
+    return FormatError::none;
+}
 
 std::vector<Instruction>& Instrument::getProgram() {
     return mProgram;

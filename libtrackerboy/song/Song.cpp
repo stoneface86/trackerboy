@@ -16,6 +16,11 @@ Song::Song() :
     calcSpeed();
 }
 
+FormatError Song::deserialize(std::ifstream &stream) {
+    return FormatError::none;
+}
+
+
 uint8_t Song::rowsPerBeat() {
     return mRowsPerBeat;
 }

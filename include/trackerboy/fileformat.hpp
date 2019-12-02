@@ -33,6 +33,17 @@ struct ModuleHeader {
 };
 #pragma pack(pop)
 
+enum class FormatError {
+    none,
+    invalidSignature,
+    invalidRevision,
+    invalidTableCode,
+    badOffset,
+    invalidTerminator,
+    readError,
+    writeError
+};
+
 extern const char *FILE_MODULE_SIGNATURE;
 extern const char *FILE_TABLE_SIGNATURE;
 extern const char *FILE_TERMINATOR;

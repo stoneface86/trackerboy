@@ -5,6 +5,7 @@
 
 #include "trackerboy/pattern/Pattern.hpp"
 #include "trackerboy/song/Order.hpp"
+#include "trackerboy/fileformat.hpp"
 #include "trackerboy/Q53.hpp"
 
 
@@ -20,6 +21,8 @@ public:
     static constexpr uint8_t TABLE_CODE = 'S';
 
     Song();
+
+    FormatError deserialize(std::ifstream &stream);
 
     uint8_t rowsPerBeat();
 
