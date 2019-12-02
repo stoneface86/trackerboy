@@ -21,7 +21,10 @@ option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portau
 option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
 option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
 
-include_directories("include")
+include_directories(
+	"include"
+	"${CMAKE_BINARY_DIR}/include"
+)
 
 if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
 	set(PORTAUDIO_REQUIRED TRUE)
@@ -100,3 +103,6 @@ endif()
 if (TRACKERBOY_ENABLE_DEMO)
 	add_subdirectory(demo)
 endif ()
+
+# generate version header
+configure_file(include/version.hpp.in ${CMAKE_BINARY_DIR}/include/version.hpp)

@@ -2,6 +2,8 @@
 #include "trackerboy/Module.hpp"
 #include "trackerboy/fileformat.hpp"
 
+#include "version.hpp"
+
 #include <algorithm>
 #include <cstddef>
 
@@ -46,8 +48,11 @@ WaveTable& Module::waveTable() {
 void Module::serialize(std::ofstream &stream) {
     ModuleHeader header;
     std::copy_n(FILE_MODULE_SIGNATURE, 12, header.signature);
-    // TODO: have cmake generate a header file with the VERSION string
-    // TODO: write the version string in the header
+    // version string
+    std::string version = "v" VERSION_STR;
+    version.resize(sizeof(header.version));
+    version.copy(header.version, sizeof(header.version));
+
     header.revision = FILE_REVISION;
     auto chars = mTitle.copy(header.title, sizeof(header.title));
     if (chars < sizeof(header.title)) {
