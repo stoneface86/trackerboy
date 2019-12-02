@@ -8,7 +8,7 @@ namespace trackerboy {
 WaveChannel::WaveChannel() :
     Channel(true),
     mOutputLevel(Gbs::DEFAULT_WAVE_LEVEL),
-    mWaveform(),
+    mWavedata{ 0 },
     mWaveIndex(0)
 {
 }
@@ -22,12 +22,12 @@ void WaveChannel::setOutputLevel(Gbs::WaveVolume level) {
     mOutputLevel = level;
 }
 
-void WaveChannel::setWaveform(const Waveform &waveform) {
-    std::copy_n(waveform.data, Gbs::WAVE_RAMSIZE, mWaveform.data);
+void WaveChannel::setWaveform(Waveform &waveform) {
+    std::copy_n(waveform.data(), Gbs::WAVE_RAMSIZE, mWavedata);
 }
 
 void WaveChannel::setWaveform(const uint8_t waveform[Gbs::WAVE_RAMSIZE]) {
-    std::copy_n(waveform, Gbs::WAVE_RAMSIZE, mWaveform.data);
+    std::copy_n(waveform, Gbs::WAVE_RAMSIZE, mWavedata);
 }
 
 void WaveChannel::step(unsigned cycles) {
@@ -35,7 +35,7 @@ void WaveChannel::step(unsigned cycles) {
     unsigned wavesteps = mFreqCounter / mFreqCounterMax;
     mFreqCounter %= mFreqCounterMax;
     mWaveIndex = (mWaveIndex + wavesteps) & 0x1F; // & 0x1F == % 32
-    uint8_t sample = mWaveform.data[mWaveIndex >> 1];
+    uint8_t sample = mWavedata[mWaveIndex >> 1];
     if (mWaveIndex & 1) {
         // odd number, low nibble
         sample &= 0xF;

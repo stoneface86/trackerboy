@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <fstream>
+
 #include "trackerboy/pattern/Pattern.hpp"
 #include "trackerboy/song/Order.hpp"
 #include "trackerboy/Q53.hpp"
@@ -15,6 +17,7 @@ public:
 
     static constexpr uint8_t DEFAULT_RPB = 4;
     static constexpr float DEFAULT_TEMPO = 150.0f;
+    static constexpr uint8_t TABLE_CODE = 'S';
 
     Song();
 
@@ -29,6 +32,8 @@ public:
     Order& order();
 
     std::vector<Pattern>& patterns();
+
+    void serialize(std::ofstream &stream);
 
     void setRowsPerBeat(uint8_t rowsPerBeat);
 

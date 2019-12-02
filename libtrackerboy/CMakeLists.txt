@@ -22,6 +22,8 @@ set(SRC_FILES
 	"synth/SweepPulseChannel.cpp"
 	"synth/Synth.cpp"
 	"synth/WaveChannel.cpp"
+	"synth/Waveform.cpp"
+	"fileformat.cpp"
 	"Module.cpp"
 	"note.cpp"
 	"Table.cpp"

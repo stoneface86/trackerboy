@@ -1,7 +1,12 @@
 
 #include "trackerboy/Table.hpp"
+#include "trackerboy/fileformat.hpp"
+
+#include <algorithm>
+
 
 namespace trackerboy {
+
 
 template <class T>
 Table<T>::TableItem::TableItem() :
@@ -48,6 +53,44 @@ std::string Table<T>::name(uint8_t id) {
         throw std::runtime_error("cannot get name: item does not exist");
     }
     return iter->second.name;
+}
+
+template <class T>
+void Table<T>::serialize(std::ofstream &stream) {
+
+
+    // calls stream.write with a casted ptr
+    #define ezwrite(ptr, size) stream.write(reinterpret_cast<const char*>(ptr), size)
+
+    TableHeader header;
+    std::copy_n(FILE_TABLE_SIGNATURE, 4, header.signature);
+    header.revision = FILE_REVISION;
+    header.tableSize = static_cast<uint8_t>(mData.size());
+    header.tableType = T::TABLE_CODE;
+    // the offset is immediately after the header
+    header.tableOffset = toLittleEndian(static_cast<uint32_t>(sizeof(header) + stream.tellp()));
+
+
+    // write the header
+    ezwrite(&header, sizeof(header));
+
+    // table data
+
+    for (auto iter = mData.begin(); iter != mData.end(); ++iter) {
+        // identifier
+        ezwrite(&iter->first, 1);
+        // name
+        std::string name = iter->second.name;
+        ezwrite(name.c_str(), name.size() + 1);
+        // data
+        iter->second.value.serialize(stream);
+        
+    }
+
+    // terminator
+    ezwrite(FILE_TERMINATOR, 3);
+
+    #undef ezwrite
 }
 
 template <class T>

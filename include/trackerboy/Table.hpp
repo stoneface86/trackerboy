@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <fstream>
 #include <unordered_map>
 #include <string>
 
@@ -27,6 +28,8 @@ public:
 
     std::string name(uint8_t id);
 
+    void serialize(std::ofstream &stream);
+
     void set(uint8_t id, T &data);
 
     void setName(uint8_t id, std::string name);
@@ -43,7 +46,7 @@ private:
         TableItem();
     };
 
-    size_t mUntitledCounter;
+    uint8_t mUntitledCounter;
 
     uint8_t mNextId;
     std::unordered_map<uint8_t, TableItem> mData;

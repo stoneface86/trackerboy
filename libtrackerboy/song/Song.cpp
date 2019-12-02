@@ -42,6 +42,10 @@ std::vector<Pattern>& Song::patterns() {
     return mPatterns;
 }
 
+void Song::serialize(std::ofstream &stream) {
+
+}
+
 void Song::setRowsPerBeat(uint8_t rowsPerBeat) {
     if (rowsPerBeat == 0) {
         throw std::invalid_argument("Cannot have 0 rows per beat");

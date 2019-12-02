@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <fstream>
 #include <vector>
 
 #include "trackerboy/ChType.hpp"
@@ -13,9 +14,13 @@ class Instrument {
 
 public:
 
+    static constexpr uint8_t TABLE_CODE = 'I';
+
     Instrument();
 
     std::vector<Instruction>& getProgram();
+
+    void serialize(std::ofstream &stream);
 
 private:
 
