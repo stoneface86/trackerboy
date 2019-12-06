@@ -1,7 +1,7 @@
 
 #include "trackerboy/synth/Synth.hpp"
 
-#define GB_CLOCK_SPEED 4194304
+#define GB_CLOCK_SPEED 4194304.0f
 
 namespace trackerboy {
 
@@ -10,7 +10,8 @@ Synth::Synth(float samplingRate) :
     mCf(),
     mSequencer(mCf),
     mSamplingRate(samplingRate),
-    mStepsPerSample((unsigned)(GB_CLOCK_SPEED / samplingRate))
+    mStepsPerSample(static_cast<uint32_t>((GB_CLOCK_SPEED / samplingRate) * (1 << 25))),
+    mStepCounter(0)
 {
 }
 
@@ -27,6 +28,7 @@ Sequencer& Synth::getSequencer() {
 }
 
 void Synth::step(int16_t &left, int16_t &right) {
+   
     mMixer.getOutput(
         mCf.ch1.getCurrentVolume(),
         mCf.ch2.getCurrentVolume(),
@@ -36,12 +38,23 @@ void Synth::step(int16_t &left, int16_t &right) {
         right
     );
 
-    mSequencer.step(mStepsPerSample);
+    mStepCounter += mStepsPerSample;
+    unsigned steps = mStepCounter >> 25; // floor
+    mStepCounter &= 0x1FFFFFF; // remove integer portion
+    if (mStepCounter >= 0x1000000) {
+        ++steps; // round up
+    }
 
-    mCf.ch1.step(mStepsPerSample);
-    mCf.ch2.step(mStepsPerSample);
-    mCf.ch3.step(mStepsPerSample);
-    mCf.ch4.step(mStepsPerSample);
+    unsigned stepsRun;
+    do {
+        stepsRun = mSequencer.step(steps);
+        mCf.ch1.step(stepsRun);
+        mCf.ch2.step(stepsRun);
+        mCf.ch3.step(stepsRun);
+        mCf.ch4.step(stepsRun);
+    } while (steps -= stepsRun);
+    // if we stopped at a fence, this loops more than once
+    
 }
 
 

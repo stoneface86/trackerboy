@@ -1,7 +1,8 @@
 
 #include "trackerboy/synth/PulseChannel.hpp"
 
-#define DUTY_SIZE 8
+static constexpr size_t DUTY_SIZE = 8;
+
 
 namespace trackerboy {
 

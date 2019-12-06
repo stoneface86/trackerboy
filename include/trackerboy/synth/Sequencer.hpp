@@ -6,15 +6,39 @@
 namespace trackerboy {
 
 class Sequencer {
-    unsigned mFreqCounter;
-    unsigned mStepCounter;
-    ChannelFile &mCf;
+    
 
 public:
     Sequencer(ChannelFile &cf);
 
     void reset();
-    void step(unsigned cycles);
+    unsigned step(unsigned cycles);
+
+
+private:
+
+    enum TriggerType {
+        NONE,
+        LC,
+        LC_AND_SWEEP,
+        ENV
+    };
+    struct Trigger {
+        unsigned nextIndex;     // next index in the sequence
+        unsigned nextFence;      // next wall to stop short
+        TriggerType trigger;    // trigger to do
+    };
+
+    static Trigger const TRIGGER_SEQUENCE[];
+    
+    ChannelFile &mCf;
+    unsigned mFreqCounter;
+    unsigned mFence;
+    unsigned mTriggerIndex;
+    TriggerType mTrigger;
+
+    
+
 };
 
 }

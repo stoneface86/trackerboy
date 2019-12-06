@@ -9,25 +9,6 @@
 
 namespace trackerboy {
 
-//static const float SAMPLE_TABLE[16] = {
-//    -1.0f,
-//    -7.0f / 8.0f,
-//    -6.0f / 8.0f,
-//    -5.0f / 8.0f,
-//    -4.0f / 8.0f,
-//    -3.0f / 8.0f,
-//    -2.0f / 8.0f,
-//    -1.0f / 8.0f,
-//    0.0f,
-//    1.0f / 7.0f,
-//    2.0f / 7.0f,
-//    3.0f / 7.0f,
-//    4.0f / 7.0f,
-//    5.0f / 7.0f,
-//    6.0f / 7.0f,
-//    1.0f
-//};
-
 
 Channel::Channel(bool ch3) :
     mLengthCounter(Gbs::DEFAULT_LENGTH),
@@ -52,8 +33,6 @@ uint8_t Channel::getCurrentSample() {
 }
 
 int16_t Channel::getCurrentVolume() {
-    // convert current sample to a value between 0.0f and 1.0f
-    //return enabled ? SAMPLE_TABLE[currentSample] : 0.0f;
     return mEnabled ? mSampleTable[mCurrentSample] : 0;
 }
 
