@@ -16,6 +16,7 @@ set(SRC_FILES
 	"synth/gbsynth.cpp"
 	"synth/Mixer.cpp"
 	"synth/NoiseChannel.cpp"
+	"synth/Osc.cpp"
 	"synth/PulseChannel.cpp"
 	"synth/sampletable.cpp"
 	"synth/Sequencer.cpp"
