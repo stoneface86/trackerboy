@@ -99,6 +99,8 @@ static constexpr uint8_t SAMPLE_MIN             = 0x0;
 static constexpr size_t WAVE_SIZE               = 32;
 static constexpr size_t WAVE_RAMSIZE            = 16;
 
+static constexpr float CLOCK_SPEED              = 4194304.0f;
+
 }
 
 

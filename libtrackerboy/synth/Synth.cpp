@@ -1,7 +1,6 @@
 
 #include "trackerboy/synth/Synth.hpp"
-
-#define GB_CLOCK_SPEED 4194304.0f
+#include "trackerboy/gbs.hpp"
 
 namespace trackerboy {
 
@@ -10,7 +9,7 @@ Synth::Synth(float samplingRate) :
     mCf(),
     mSequencer(mCf),
     mSamplingRate(samplingRate),
-    mStepsPerSample(static_cast<uint32_t>((GB_CLOCK_SPEED / samplingRate) * (1 << 25))),
+    mStepsPerSample(static_cast<uint32_t>((Gbs::CLOCK_SPEED / samplingRate) * (1 << 25))),
     mStepCounter(0)
 {
 }
