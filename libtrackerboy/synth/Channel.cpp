@@ -20,7 +20,7 @@ Channel::Channel(bool ch3) :
     mFreqMultiplier(ch3 ? 2 : 4),
     mFreqCounter(0),
     mFreqCounterMax(calcFreqMax(Gbs::DEFAULT_FREQUENCY)),
-    mSampleTable(SAMPLE_TABLE + (16 * Gbs::MAX_ENV_STEPS))
+    mSampleTable(SAMPLE_TABLE)
 {
 }
 
