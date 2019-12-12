@@ -12,7 +12,7 @@ jobs:
     - name: Checkout submodules
       uses: textbook/git-checkout-submodule-action@2.0.0
     - name: Install Qt
-      uses: jurplel/install-qt-action@v1.0.1
+      uses: jurplel/install-qt-action@v2.2.1
     - name: configure
       run: mkdir build && cd build && cmake ..
     - name: build
