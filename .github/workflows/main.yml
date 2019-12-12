@@ -12,8 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Checkout submodules
-      uses: textbook/git-checkout-submodule-action@2.0.0
+      with:
+        submodules: true
     - name: Install Qt
       uses: jurplel/install-qt-action@v2.2.1
     - name: configure
