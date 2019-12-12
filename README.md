@@ -1,5 +1,7 @@
 # TrackerBoy
 
+![](https://github.com/stoneface86/trackerboy/workflows/CI/badge.svg)
+
 TrackerBoy is a tracker program for producing music for the gameboy / gameboy color
 consoles.
 
