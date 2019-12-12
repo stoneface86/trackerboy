@@ -7,6 +7,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
@@ -17,6 +18,9 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v2.2.1
     - name: configure
-      run: mkdir build && cd build && cmake ..
+      run: |
+        mkdir build
+        cd build
+        cmake ..
     - name: build
       run: cmake --build build --config Debug
