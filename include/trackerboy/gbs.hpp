@@ -7,6 +7,12 @@
 #pragma once
 #include <cstdint>
 
+#ifdef _MSC_VER
+// disable warnings about unscoped enums
+// as they have scope only in the Gbs namespace
+#pragma warning( disable : 26812 )
+#endif
+
 namespace trackerboy {
 
 
