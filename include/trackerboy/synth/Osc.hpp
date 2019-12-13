@@ -41,8 +41,10 @@ protected:
     //
     // Setup the delta buffer from the given waveform
     //
-    void deltaSet(uint8_t waveform[]);
+    void deltaSet(const uint8_t waveform[]);
 
+    const size_t mWaveformSize;
+    const size_t mMultiplier;
 
 private:
 
@@ -57,9 +59,6 @@ private:
         //float time;     // time, in samples, when this delta occurs
         //float duration; // time, in samples until the next delta
     };
-
-    const size_t mWaveformSize;
-    const size_t mMultiplier;
 
     // samplingRate / gameboy clock rate
     float mFactor;

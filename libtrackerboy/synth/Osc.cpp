@@ -1,5 +1,7 @@
 
 #include "trackerboy/synth/Osc.hpp"
+#include "trackerboy/synth/PulseOsc.hpp"
+#include "trackerboy/synth/WaveOsc.hpp"
 #include "trackerboy/gbs.hpp"
 #include "./sampletable.hpp"
 
@@ -102,33 +104,11 @@ void Osc::setFrequency(uint16_t frequency) {
 
 }
 
+
 void Osc::setMute(bool muted) {
     mMuted = muted;
 }
 
-//template <unsigned multiplier, size_t segments>
-//void Osc<multiplier, segments>::setWaveform(uint8_t waveform[segments / 2]) {
-//
-//    // convert waveform to a delta buffer
-//
-//
-//    // first unpack the waveform so 1 byte = 1 segment
-//    for (size_t i = 0, j = 0; j != segments; i++, j += 2) {
-//        uint8_t byte = waveform[i];
-//        mDeltaBuffer[j] = byte >> 4;
-//        mDeltaBuffer[j + 1] = byte & 0xF;
-//    }
-//
-//    // calculate the deltas
-//    int8_t first = mDeltaBuffer[0]; // save the first value for the last delta
-//    for (size_t i = 0; i != segments - 1; ++i) {
-//        mDeltaBuffer[i] = mDeltaBuffer[i + 1] - mDeltaBuffer[i];;
-//    }
-//    // last one wraps to the start
-//    mDeltaBuffer[segments - 1] = first - mDeltaBuffer[segments - 1];
-//
-//    
-//}
 
 void Osc::generate(int16_t buf[], size_t nsamples) {
     
@@ -158,7 +138,7 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
                 // sample on the left side due to the fractional part of the sample counter
                 // eventually making a whole sample due to repeated summing).
 
-                float time = mDelta.location * mSamplesPerDelta;
+                float time = (mDelta.location + 1) * mSamplesPerDelta;
                 float duration = mDelta.duration * mSamplesPerDelta;
 
                 if (mSampleCounter > time) {
@@ -188,17 +168,20 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
                     transitionBufIter += samples;
                     mTransitionBufRemaining += samples;
                 } else {
-                    leftSteps = samplesFromCenter - mLastStepSize;
+                    leftSteps = std::min(samplesFromCenter - mLastStepSize, SINC_STEP_LEFT);
                 }
 
                 // determine sinc table
                 const float *sincSet = SINC_TABLE[static_cast<size_t>(timeToCenterFract * SINC_PHASES)];
+                //const float *sincSet = SINC_TABLE[0];
 
                 // [B] left part of the step
                 assert(leftSteps <= SINC_STEP_LEFT);
-                for (size_t i = SINC_STEP_LEFT - leftSteps; i != SINC_STEP_LEFT; ++i) {
+                for (size_t i = 0; i != SINC_STEP_LEFT; ++i) {
                     mPrevious += mDelta.change * sincSet[i];
-                    *transitionBufIter++ = mPrevious;
+                    if (i >= SINC_STEP_LEFT - leftSteps) {
+                        *transitionBufIter++ = mPrevious;
+                    }
                 }
                 mSampleCounter += timeToCenter;
                 mTransitionBufRemaining += leftSteps;
@@ -214,9 +197,11 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
 
                 // [C] right part of the step
                 assert(rightSteps <= SINC_STEP_RIGHT);
-                for (size_t i = SINC_STEPS - rightSteps; i != SINC_STEPS; ++i) {
+                for (size_t i = 8; i != SINC_STEPS; ++i) {
                     mPrevious += mDelta.change * sincSet[i];
-                    *transitionBufIter++ = mPrevious;
+                    if (i < 8 + rightSteps) {
+                        *transitionBufIter++ = mPrevious;
+                    }
                 }
                 mTransitionBufRemaining += rightSteps;
                 
@@ -248,6 +233,7 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
 
 // protected methods ---------------------------------------------------------
 
+
 Osc::Osc(float samplingRate, size_t multiplier, size_t waveformSize) :
     mMultiplier(multiplier),
     mWaveformSize(waveformSize),
@@ -264,13 +250,98 @@ Osc::Osc(float samplingRate, size_t multiplier, size_t waveformSize) :
     mTransitionBufRemaining(0),
     mMuted(false)
 {
+    // assert that waveform size is a power of 2
+    assert((mWaveformSize & (mWaveformSize - 1)) == 0);
 }
 
-void Osc::deltaSet(uint8_t waveform[]) {
-        
+
+void Osc::deltaSet(const uint8_t waveform[]) {
+
+    // clear existing waveform
+    mDeltaBuf.clear();
+
+
+    // convert waveform to a delta buffer
+    
+    #define checkDelta(delta, offset) do { \
+            if (delta) { \
+                Delta d = {(delta < 0) ? -SAMPLE_TABLE[std::abs(delta)] : SAMPLE_TABLE[delta], i * 2 + offset, 1}; \
+                mDeltaBuf.push_back(d); \
+                last = &mDeltaBuf.back(); \
+                ++durationCounter; \
+            } else { \
+                if (last != nullptr) { \
+                    last->duration++; \
+                    durationCounter++; \
+                } \
+            } \
+        } while (0)
+
+    size_t durationCounter = 0;
+    Delta *last = nullptr;
+    size_t bufsize = mWaveformSize / 2;
+    // bitmask used to wrap -1 to bufsize-1 or bufsize to 0
+    size_t mask = bufsize - 1;
+    for (size_t i = 0; i != bufsize; ++i) {
+        // the following commented out statements were my first attempt
+        // you can actually invert the waveform by calculating it this way
+
+        //uint8_t loprev = waveform[(i - 1) & mask] & 0xF;
+        uint8_t hinext = waveform[(i + 1) & mask] >> 4;
+        uint8_t hi = waveform[i];
+        uint8_t lo = hi & 0xF;
+        hi >>= 4;
+
+        int8_t delta1 = lo - hi;
+        int8_t delta2 = hinext - lo;
+        //int8_t delta1 = loprev - hi;
+        //int8_t delta2 = hi - lo;
+
+        checkDelta(delta1, 0);
+        checkDelta(delta2, 1);
+    }
+
+    #undef checkDelta
+
+    // make sure we don't have a flat waveform
+    if (mDeltaBuf.size() > 0) {
+        // adjust the duration of the last delta
+        // since the sum of the duration must be mWaveformSize, we just add what's missing
+        mDeltaBuf.back().duration += mWaveformSize - durationCounter;
+
+        // now we need to adjust the sample counter and the current delta
+        // for the new waveform.
+        //
+        // Three options here:
+        //  1. pick the nearest delta time of the new waveform
+        //  2. pick the closest matching delta change of the new waveform
+        //  3. reset the counter to 0 (new waveform starts at the beginning)
+        //
+        // old waveform
+        //  _      ___
+        //   |____|
+        //        ^ current sample counter
+        //
+        // new waveform
+        //    ______
+        //  _|      |_
+        // ^ ^      ^
+        // 3 2      1
+        //
+        // the numbers above are the corresponding options
+        //
+        // we'll go with 3 since it's the easiest, will reconsider if the sound is wonky
+
+        mSampleCounter = 0.0f;
+        mDeltaIndex = 0;
+        mDelta = mDeltaBuf.front();
+    }
+
+    mPrevious = SAMPLE_TABLE[waveform[mWaveformSize / 2] & 0xF];
 }
 
 // private methods -----------------------------------------------------------
+
 
 void Osc::nextDelta() {
     size_t size = mDeltaBuf.size();
