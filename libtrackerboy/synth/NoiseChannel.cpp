@@ -63,15 +63,15 @@ void NoiseChannel::step(unsigned cycles) {
     mShiftCounter %= mShiftCounterMax; // adjust counter if overflow
     for (unsigned i = 0; i != shifts; ++i) {
         // xor bits 1 and 0 of the lfsr
-        uint8_t xor = (mLfsr & 0x1) ^ ((mLfsr >> 1) & 0x1);
+        uint8_t result = (mLfsr & 0x1) ^ ((mLfsr >> 1) & 0x1);
         // shift the register
         mLfsr >>= 1;
         // set the resulting xor to bit 15 (feedback)
-        mLfsr |= xor << 14;
+        mLfsr |= result << 14;
         if (mStepSelection == Gbs::NOISE_STEPS_7) {
             // 7-bit lfsr, set bit 7 with the result
             mLfsr &= ~0x40; // reset bit 7
-            mLfsr |= xor << 6; // set bit 7 result
+            mLfsr |= result << 6; // set bit 7 result
         }
     }
     if (mLfsr & 0x1) {

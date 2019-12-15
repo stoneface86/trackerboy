@@ -21,7 +21,7 @@ uint16_t toGbFreq(float freq) {
     }
 
     float calc = 2048.0f - (131072.0f / freq);
-    if (isnormal(calc) && calc > 0.0f) {
+    if (std::isnormal(calc) && calc > 0.0f) {
         calc = roundf(calc);
         if (calc < 2048.0f) {
             return (uint16_t)calc;

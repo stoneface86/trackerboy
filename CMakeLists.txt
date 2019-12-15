@@ -77,6 +77,13 @@ if (TRACKERBOY_ENABLE_TESTS)
 
 endif ()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	add_compile_options(-std=c++11)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	add_compile_options(-std=c++11)
+endif()
+
+
 # ============================================================================
 # Sub-projects
 # ============================================================================

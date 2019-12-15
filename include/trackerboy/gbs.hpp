@@ -6,6 +6,7 @@
 
 #pragma once
 #include <cstdint>
+#include <cstddef>
 
 #ifdef _MSC_VER
 // disable warnings about unscoped enums

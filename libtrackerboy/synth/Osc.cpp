@@ -226,7 +226,7 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
         // this case should rarely happen
         // (only when the wave channel's waveform is flat)
         std::fill_n(buf, nsamples, (mMuted) ? static_cast<int16_t>(0) : mPrevious);
-        mSampleCounter = std::fmodf(mSampleCounter + nsamples, mSamplesPerPeriod);
+        mSampleCounter = fmodf(mSampleCounter + nsamples, mSamplesPerPeriod);
     }
 
 }
@@ -265,7 +265,8 @@ void Osc::deltaSet(const uint8_t waveform[]) {
     
     #define checkDelta(delta, offset) do { \
             if (delta) { \
-                Delta d = {(delta < 0) ? -SAMPLE_TABLE[std::abs(delta)] : SAMPLE_TABLE[delta], i * 2 + offset, 1}; \
+                Delta d = {(delta < 0) ? static_cast<int16_t>(-SAMPLE_TABLE[std::abs(delta)]) : SAMPLE_TABLE[delta], \
+                            static_cast<uint8_t>(i * 2 + offset), 1}; \
                 mDeltaBuf.push_back(d); \
                 last = &mDeltaBuf.back(); \
                 ++durationCounter; \
