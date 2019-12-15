@@ -79,7 +79,7 @@ endif ()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	add_compile_options(-std=c++11)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 	add_compile_options(-std=c++11)
 endif()
 
