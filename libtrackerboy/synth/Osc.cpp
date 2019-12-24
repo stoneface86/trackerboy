@@ -96,13 +96,13 @@ public:
         mCurrent += rhs;
         ptrdiff_t diff = mEnd - mCurrent;
         if (diff <= 0) {
-            mCurrent = mStart + (abs(diff) % mRange);
+            mCurrent = mBegin + (abs(diff) % mRange);
         }
     }
 
     self_type& operator-=(const size_t rhs) {
         mCurrent -= rhs;
-        ptrdiff_t diff = mCurrent - mStart;
+        ptrdiff_t diff = mCurrent - mBegin;
         if (diff < 0) {
             mCurrent = mEnd - (abs(diff) % mRange);
         }
