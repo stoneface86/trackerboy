@@ -10,7 +10,26 @@ class Osc {
 
 public:
 
+    //
+    // Returns the current frequency setting.
+    //
+    uint16_t frequency();
     
+    //
+    // Generate a given amount of samples and place them in the given buffer.
+    //
+    void generate(int16_t samples[], size_t nsamples);
+
+    //
+    // Returns true if the oscillator is muted
+    //
+    bool muted();
+
+    //
+    // Returns the actual frequency being outputted, in hertz.
+    //
+    float outputFrequency();
+
     //
     // Reset the oscilator to its initial state. Sample generation will now
     // begin at the start of the waveform's period. The frequency and waveform
@@ -20,7 +39,9 @@ public:
 
     //
     // Sets the frequency of the waveform. Valid frequencies range from 0 to
-    // 2047 inclusive.
+    // 2047 inclusive. If the output frequency of the given frequency exceeds
+    // nyquist frequency, then the closest frequency that is under will be used
+    // instead in order to prevent aliasing.
     //
     void setFrequency(uint16_t frequency);
 
@@ -29,10 +50,7 @@ public:
     //
     void setMute(bool muted);
 
-    //
-    // Generate a given amount of samples and place them in the given buffer.
-    //
-    void generate(int16_t samples[], size_t nsamples);
+    
  
 protected:
 
@@ -48,32 +66,37 @@ protected:
 
 private:
 
+    static constexpr size_t STEP_PHASES = 32;
+    static constexpr size_t STEP_COUNT = 15;
+    // this is the index of the center point of the step
+    // i <= STEP_CENTER: left of the step
+    // i > STEP_CENTER: right of the step
+    static constexpr size_t STEP_CENTER = STEP_COUNT / 2;
+
+    static const float STEP_TABLE[STEP_PHASES][STEP_COUNT];
+
     //
     // POD struct containing information about a delta and its
     // location in the waveform.
     //
     struct Delta {
-        int16_t change; // the change in volume
-        uint8_t location;
-        uint8_t duration;
-        //float time;     // time, in samples, when this delta occurs
-        //float duration; // time, in samples until the next delta
+        int16_t change;     // the change in volume
+        uint8_t location;   // location in the waveform
+        int16_t before;     // volume before the transition
+        int16_t after;      // volume after the transition
+        /* to be used by generatePeriods() */
+        size_t samplesBefore;
+        size_t samplesDuringBegin; // 0 - STEP_INDEX_CENTER
+        size_t samplesDuringEnd;   // STEP_INDEX_CENTER - STEP_COUNT
+        size_t samplesAfter;
+        float phase;
     };
 
     // samplingRate / gameboy clock rate
     float mFactor;
 
-    // number of samples per waveform transition (delta)
-    float mSamplesPerDelta;
-
-    // number of samples per waveform period
-    // equal to mSamplesPerDelta * mWaveformSize
-    float mSamplesPerPeriod;
-
-    // time counter, in samples, determines location in the period of the waveform
-    float mSampleCounter;
-
-    int16_t mPrevious; // last sample generated
+    // gameboy frequency (0-2047)
+    uint16_t mFrequency;
 
     // the waveform is represented by amplitude changes (deltas)
     //
@@ -87,16 +110,20 @@ private:
     // output would be periodic due to integer overflow)
     std::vector<Delta> mDeltaBuf;
 
-    Delta mDelta;           // the current delta to generate a transition
-    size_t mDeltaIndex;     // index of the current delta
-    size_t mLastStepSize;   // size in samples, of the previously generated right side
-
-    std::vector<int16_t> mTransitionBuf; // generated samples from the current delta
-    size_t mTransitionBufRemaining;      // number of samples to copy out
-
+    size_t mPeriodCount;                    // number of generated waveform periods
+    std::vector<int16_t> mPeriodBuf;        // sequence of generated waveform periods
+    size_t mPeriodBufSize;                  // size in bytes of the period buffer (NOT the same as mPeriodBuf.size()!)
+    size_t mPeriodPos;                      // position in the period buffer to copy from (aka phase)
+    bool mRegenPeriod;                      // regenerate period sequence if true
+    
+    // if true, generate will output 0
     bool mMuted;
 
-    void nextDelta();
+    void generatePeriods();
+
+    //void generateStep(int16_t *stepBuf, size_t phase, int16_t init, int16_t change);
+    
+
 
 };
 
