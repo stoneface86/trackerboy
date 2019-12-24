@@ -20,6 +20,7 @@ project (
 option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
 option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
 option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
+option(TRACKERBOY_COVERAGE "Enable code coverage" OFF)
 
 include_directories(
 	"include"
@@ -35,6 +36,10 @@ endif ()
 # ============================================================================
 # Dependencies
 # ============================================================================
+
+# C++11 is required
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # portaudio is required for the demo and ui projects
 if (PORTAUDIO_REQUIRED)
@@ -77,10 +82,16 @@ if (TRACKERBOY_ENABLE_TESTS)
 
 endif ()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-	add_compile_options(-std=c++11)
-elseif (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-	add_compile_options(-std=c++11)
+add_library(trackerboyCoverage INTERFACE)
+if (TRACKERBOY_COVERAGE)
+	if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+		target_compile_options(trackerboyCoverage INTERFACE
+			-O0
+			-g
+			--coverage
+		)
+		target_link_options(trackerboyCoverage INTERFACE --coverage)
+	endif()
 endif()
 
 
