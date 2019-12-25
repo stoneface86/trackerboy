@@ -13,7 +13,6 @@ project (
 	trackerboy 
 	VERSION "0.1.0"
 	DESCRIPTION "Gameboy tracker"
-	HOMEPAGE_URL "https://github.com/stoneface86/trackerboy"
 	LANGUAGES C CXX
 )
 
@@ -90,7 +89,11 @@ if (TRACKERBOY_COVERAGE)
 			-g
 			--coverage
 		)
-		target_link_options(trackerboyCoverage INTERFACE --coverage)
+		if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+			target_link_options(trackerboyCoverage INTERFACE --coverage)
+		else ()
+			target_link_libraries(trackerboyCoverage INTERFACE --coverage)
+		endif ()
 	endif()
 endif()
 
