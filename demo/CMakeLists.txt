@@ -2,12 +2,12 @@ project(demo CXX)
 
 set(DEMO "demo")
 set(DEMO_SRC
-	"main.cpp"
-	"Demo.cpp"
-	"demos/DutyDemo.cpp"
-	"demos/SweepDemo.cpp"
-	"demos/WaveDemo.cpp"
-	"demos/WaveVolDemo.cpp"
+    "main.cpp"
+    "Demo.cpp"
+    "demos/DutyDemo.cpp"
+    "demos/SweepDemo.cpp"
+    "demos/WaveDemo.cpp"
+    "demos/WaveVolDemo.cpp"
 )
 
 add_executable(${DEMO} ${DEMO_SRC})
