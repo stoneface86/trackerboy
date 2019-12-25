@@ -1,7 +1,7 @@
 
 #include "catch.hpp"
-#include "./Track.cpp"
-#include "./Pattern.cpp"
+
+#include "trackerboy/pattern/Pattern.hpp"
 
 namespace trackerboy {
 

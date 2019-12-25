@@ -1,8 +1,6 @@
 
 #include "catch.hpp"
-#include "./Order.cpp"
-// fix this later
-#include "../fileformat.cpp"
+#include "trackerboy/song/Order.hpp"
 
 using namespace trackerboy;
 

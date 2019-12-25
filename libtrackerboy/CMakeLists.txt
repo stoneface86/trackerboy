@@ -53,6 +53,9 @@ if (TRACKERBOY_ENABLE_TESTS)
     )
 
     add_catch_test(TEST_EXE ${TEST_SRC_FILES})
+
+    target_link_libraries(${TEST_EXE} PRIVATE trackerboy)
+
     add_test(NAME Pattern COMMAND ${TEST_EXE} [pattern])
     add_test(NAME Order COMMAND ${TEST_EXE} [order])
 
