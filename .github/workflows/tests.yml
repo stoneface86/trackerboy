@@ -24,7 +24,7 @@ jobs:
         cmake -D TRACKERBOY_ENABLE_UI=OFF -D TRACKERBOY_ENABLE_DEMO=OFF -D TRACKERBOY_ENABLE_TESTS=ON -D TRACKERBOY_COVERAGE=ON ..
     - name: build
       run: cmake --build build --config Debug
-	- name: test
-	  run: |
-	    cd build
-		ctest
+    - name: test
+      run: |
+        cd build
+        ctest
