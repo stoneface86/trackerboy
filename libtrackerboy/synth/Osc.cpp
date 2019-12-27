@@ -62,7 +62,7 @@ public:
 
     CircularIterator<T>& operator++(int junk) {
         (void)junk;
-        self_type i = *this;
+        CircularIterator<T> i = *this;
         if (++mCurrent == mEnd) {
             mCurrent = mBegin;
         }
