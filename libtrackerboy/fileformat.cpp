@@ -21,22 +21,12 @@ const char *FILE_TABLE_SIGNATURE = "TBOY";
 const char *FILE_TERMINATOR = "END";
 
 
-
-static bool isLittleEndian() {
-    union {
-        uint32_t i;
-        char c[4];
-    } endiancheck = { 0x01020304 };
-
-    return endiancheck.c[0] == 0x04;
-}
-
 uint32_t correctEndian(uint32_t val) {
-    if (isLittleEndian()) {
-        return val;
-    } else {
-        return bswap32(val);
-    }
+    #ifdef __BIG_ENDIAN
+    return bswap32(val);
+    #else
+    return val;
+    #endif
 }
 
 

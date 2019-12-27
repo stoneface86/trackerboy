@@ -45,6 +45,10 @@ endif ()
 
 target_link_libraries(trackerboy PRIVATE trackerboyCoverage)
 
+if (IS_BIG_ENDIAN)
+    target_compile_definitions(trackerboy PRIVATE -D__BIG_ENDIAN)
+endif ()
+
 if (TRACKERBOY_ENABLE_TESTS)
 
     set(TEST_SRC_FILES

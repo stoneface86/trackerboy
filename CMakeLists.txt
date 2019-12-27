@@ -97,6 +97,8 @@ if (TRACKERBOY_COVERAGE)
     endif()
 endif()
 
+include(TestBigEndian)
+TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 
 # ============================================================================
 # Sub-projects
