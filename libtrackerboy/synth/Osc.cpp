@@ -24,23 +24,8 @@ template <typename T>
 class CircularIterator {
 
 public:
-    using self_type = CircularIterator<T>;
-    using value_type = T;
-    using reference = T&;
-    using pointer = T*;
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type = int;
 
-    CircularIterator() = default;
-    CircularIterator(pointer begin, pointer cur, pointer end) :
-        mBegin(begin),
-        mCurrent(cur),
-        mEnd(end),
-        mRange(end - begin)
-    {
-    }
-
-    CircularIterator(pointer start, size_t endIndex) :
+    CircularIterator(T* start, size_t endIndex) :
         mBegin(start),
         mCurrent(start),
         mEnd(start + endIndex),
@@ -48,7 +33,15 @@ public:
     {
     }
 
-    CircularIterator(const self_type &iter) :
+    CircularIterator(T* start, size_t offset, size_t end) :
+        mBegin(start),
+        mCurrent(start + offset),
+        mEnd(start + end),
+        mRange(end)
+    {
+    }
+
+    CircularIterator(const CircularIterator<T> &iter) :
         mBegin(iter.mBegin),
         mCurrent(iter.mCurrent),
         mEnd(iter.mEnd),
@@ -60,14 +53,14 @@ public:
 
     }
 
-    self_type operator++() {
+    CircularIterator<T>& operator++() {
         if (++mCurrent == mEnd) {
             mCurrent = mBegin;
         }
         return *this;
     }
 
-    self_type operator++(int junk) {
+    CircularIterator<T>& operator++(int junk) {
         (void)junk;
         self_type i = *this;
         if (++mCurrent == mEnd) {
@@ -76,7 +69,8 @@ public:
         return i;
     }
 
-    self_type operator--() {
+    // uncomment if needed
+    /*self_type operator--() {
         if (mCurrent-- == mBegin) {
             mCurrent = mEnd - 1;
         }
@@ -90,9 +84,9 @@ public:
             mCurrent = mEnd - 1;
         }
         return i;
-    }
+    }*/
 
-    self_type& operator+=(const size_t rhs) {
+    CircularIterator<T>& operator+=(const size_t rhs) {
         mCurrent += rhs;
         ptrdiff_t diff = mEnd - mCurrent;
         if (diff <= 0) {
@@ -100,23 +94,23 @@ public:
         }
     }
 
-    self_type& operator-=(const size_t rhs) {
+    /*self_type& operator-=(const size_t rhs) {
         mCurrent -= rhs;
         ptrdiff_t diff = mCurrent - mBegin;
         if (diff < 0) {
             mCurrent = mEnd - (abs(diff) % mRange);
         }
-    }
+    }*/
 
-    reference operator*() {
+    T& operator*() {
         return *mCurrent;
     }
 
-    pointer operator->() {
+    T* operator->() {
         return mCurrent;
     }
 
-    reference operator[](int index) {
+    /*T& operator[](int index) {
         size_t actual;
         if (index < 0) {
             actual = mRange - (abs(index) % mRange);
@@ -124,20 +118,20 @@ public:
             actual = index % mRange;
         }
         return mBegin[actual];
-    }
+    }*/
 
     void setOffset(size_t offset) {
         mCurrent = mBegin + (offset % mRange);
     }
 
-    void setRange(pointer begin, pointer end) {
+    void setRange(T* begin, T* end) {
         mBegin = begin;
         mCurrent = begin;
         mEnd = end;
         mRange = end - begin;
     }
 
-    void setRange(pointer begin, size_t range) {
+    void setRange(T* begin, size_t range) {
         mBegin = begin;
         mCurrent = begin;
         mEnd = begin + range;
@@ -145,9 +139,9 @@ public:
     }
 
 private:
-    pointer mBegin;
-    pointer mCurrent;
-    pointer mEnd;
+    T* mBegin;
+    T* mCurrent;
+    T* mEnd;
     size_t mRange;
 };
 
@@ -419,72 +413,133 @@ void Osc::deltaSet(const uint8_t waveform[]) {
 
 void Osc::generatePeriods() {
 
-    // WIP, do not compile for now
-    #if 0
 
     assert(mRegenPeriod);
     assert(mDeltaBuf.size() > 0);
 
+    float samplesPerDelta = mFactor * mMultiplier * (2048 - mFrequency);
+    float samplesPerPeriod = samplesPerDelta * mWaveformSize;
+
     // determine sample counts for each delta
     size_t deltaCount = mDeltaBuf.size();
-    CircularIterator<Delta> deltaCircle(mDeltaBuf.data(), deltaCount);
-    Delta *curDelta = &*deltaCircle;
-    float curCenter = curDelta->location * mSamplesPerDelta;
+    Delta *curDelta = &mDeltaBuf[0];
+    float curCenter = curDelta->location * samplesPerDelta;
     for (size_t i = 0; i != deltaCount; ++i) {
-        Delta *nextDelta = &*(++deltaCircle);
-        float nextCenter = nextDelta->location * mSamplesPerDelta;
+        Delta *nextDelta;
+        if (i + 1 == deltaCount) {
+            nextDelta = &mDeltaBuf[0];
+        } else {
+            nextDelta = &mDeltaBuf[i + 1];
+        }
+        float nextCenter = nextDelta->location * samplesPerDelta;
         float distance = nextCenter - curCenter;
         if (distance < 0.0f) {
-            distance += mSamples
+            distance += samplesPerPeriod;
         }
 
-        prevDelta = curDelta;
+        size_t distanceInSamples = static_cast<size_t>(distance);
+        size_t samplesNext = distanceInSamples / 2;
+        size_t samplesCurrent = distanceInSamples - samplesNext;
+
+        // right side of the current delta
+        size_t samplesDuring = std::min(samplesCurrent, STEP_RIGHT_COUNT);
+        curDelta->samplesDuringRight = samplesDuring;
+        //curDelta->samplesDuringEnd = samplesDuring + STEP_CENTER + 1;
+        curDelta->samplesAfter = samplesCurrent - samplesDuring;
+
+        // left side of the next delta
+        samplesDuring = std::min(samplesNext, STEP_LEFT_COUNT);
+        nextDelta->samplesDuringLeft = samplesDuring;
+        //nextDelta->samplesDuringBegin = STEP_LEFT_COUNT - samplesDuring;
+        nextDelta->samplesBefore = samplesNext - samplesDuring;
+
+        // determine phase (fractional part of center)
+        {
+            float junk;
+            curDelta->phase = modff(curCenter, &junk) * STEP_PHASES;
+        }
+
         curDelta = nextDelta;
+        curCenter = nextCenter;
     }
 
-    size_t periodOffset = 0;
-    uint8_t periodCounter = 0;
-    uint8_t extraSample = 0;
-    int16_t *periodData = mPeriodBuf.data();
+    // determine who gets the extra sample (always the last delta, which is curDelta)
+    size_t *poorest;
+    {
+        if (curDelta->samplesDuringLeft + curDelta->samplesDuringRight == STEP_COUNT) {
+            if (curDelta->samplesBefore <= curDelta->samplesAfter) {
+                poorest = &curDelta->samplesBefore;
+            } else {
+                poorest = &curDelta->samplesAfter;
+            }
+        } else {
+            if (curDelta->samplesDuringLeft <= curDelta->samplesDuringRight) {
+                poorest = &curDelta->samplesDuringLeft;
+            } else {
+                poorest = &curDelta->samplesDuringRight;
+            }
+        }
+    }
+
+    size_t nperiods = static_cast<size_t>(mPeriodBuf.size() / samplesPerPeriod);
+    size_t bufsize = nperiods * samplesPerPeriod;
+
+    float sppFract;
+    {
+        float temp;
+        sppFract = modff(samplesPerPeriod, &temp);
+    }
+
+    mPeriodBufSize = 0;
+    float periodCounter = 0;
+    bool extra = false;
+    auto periodIter = mPeriodBuf.begin();
+    float phaseIncr = sppFract * STEP_PHASES;
+
     for (size_t period = 0; period != nperiods; ++period) {
 
-        size_t periodSize = mSamplesPerPeriod + extraSample;
-        CircularIterator<int16_t> periodIter(periodData, periodSize);
-        periodIter.setOffset(periodOffset);
-
-        size_t offset = periodOffset;
         for (auto iter = mDeltaBuf.begin(); iter != mDeltaBuf.end(); ++iter) {
             // flat part before the transition
-            std::fill_n(periodIter, iter->samplesBefore, iter->before);
+            int16_t before = iter->before;
+            std::fill_n(periodIter, iter->samplesBefore, before);
             periodIter += iter->samplesBefore;
+            mPeriodBufSize += iter->samplesBefore;
 
-            const float *stepSet;
+            const float *stepSet = STEP_TABLE[static_cast<size_t>(iter->phase)];
 
             // transition
-            for (size_t i = iter->samplesDuringBegin; i != iter->samplesDuringEnd; ++i) {
-                *periodIter++ = static_cast<int16_t>(iter->change * stepSet[i] + 0.5f);
+            size_t start = STEP_LEFT_COUNT - iter->samplesDuringLeft;
+            size_t end = STEP_LEFT_COUNT + iter->samplesDuringRight;
+            for (size_t i = start; i != end; ++i) {
+                *periodIter++ = before + static_cast<int16_t>(iter->change * stepSet[i]);
+                ++mPeriodBufSize;
+            }
+
+            // adjust the phase for next period
+            iter->phase += phaseIncr;
+            if (iter->phase >= STEP_PHASES) {
+                iter->phase -= STEP_PHASES;
             }
 
             // flat part after the transition
             std::fill_n(periodIter, iter->samplesAfter, iter->after);
             periodIter += iter->samplesAfter;
-
+            mPeriodBufSize += iter->samplesAfter;
         }
 
-        periodData += periodSize;
-        periodCounter += mSamplesPerPeriodF;
-        if (periodCounter >= 0x10) {
-            // >= 1.0 (Q4.4)
-            periodCounter -= 0x10;
-            extraSample = 1;
-        } else {
-            extraSample = 0;
+        periodCounter += sppFract;
+        if (periodCounter >= 1.0f) {
+            periodCounter -= 1.0f;
+            if (!extra) {
+                (*poorest)++;
+                extra = true;
+            }
+        } else if (extra) {
+            (*poorest)--;
+            extra = false;
         }
     }
 
-    float phaseOffset;
-
-    #endif
 }
 
 

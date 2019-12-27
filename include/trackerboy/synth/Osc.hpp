@@ -68,6 +68,10 @@ private:
 
     static constexpr size_t STEP_PHASES = 32;
     static constexpr size_t STEP_COUNT = 15;
+
+    static constexpr size_t STEP_RIGHT_COUNT = STEP_COUNT / 2;
+    static constexpr size_t STEP_LEFT_COUNT = STEP_COUNT - STEP_RIGHT_COUNT;
+
     // this is the index of the center point of the step
     // i <= STEP_CENTER: left of the step
     // i > STEP_CENTER: right of the step
@@ -86,8 +90,10 @@ private:
         int16_t after;      // volume after the transition
         /* to be used by generatePeriods() */
         size_t samplesBefore;
-        size_t samplesDuringBegin; // 0 - STEP_INDEX_CENTER
-        size_t samplesDuringEnd;   // STEP_INDEX_CENTER - STEP_COUNT
+        size_t samplesDuringLeft;
+        size_t samplesDuringRight;
+        //size_t samplesDuringBegin; // 0 - STEP_INDEX_CENTER
+        //size_t samplesDuringEnd;   // STEP_INDEX_CENTER - STEP_COUNT
         size_t samplesAfter;
         float phase;
     };
