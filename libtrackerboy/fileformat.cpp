@@ -31,16 +31,7 @@ static bool isLittleEndian() {
     return endiancheck.c[0] == 0x04;
 }
 
-
-uint32_t toLittleEndian(uint32_t val) {
-    if (isLittleEndian()) {
-        return val;
-    } else {
-        return bswap32(val);
-    }
-}
-
-uint32_t toNativeEndian(uint32_t val) {
+uint32_t correctEndian(uint32_t val) {
     if (isLittleEndian()) {
         return val;
     } else {

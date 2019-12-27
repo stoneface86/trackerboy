@@ -69,7 +69,7 @@ FormatError Table<T>::deserialize(std::ifstream &stream) {
     }
 
     // table offset must match where the table is located in the file
-    if (toNativeEndian(header.tableOffset) != stream.tellg()) {
+    if (correctEndian(header.tableOffset) != stream.tellg()) {
         return FormatError::badOffset;
     }
 
@@ -137,7 +137,7 @@ void Table<T>::serialize(std::ofstream &stream) {
     header.tableSize = static_cast<uint8_t>(mData.size());
     header.tableType = T::TABLE_CODE;
     // the offset is immediately after the header
-    header.tableOffset = toLittleEndian(static_cast<uint32_t>(sizeof(header) + stream.tellp()));
+    header.tableOffset = correctEndian(static_cast<uint32_t>(sizeof(header) + stream.tellp()));
 
 
     // write the header

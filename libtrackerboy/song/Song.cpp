@@ -50,7 +50,7 @@ std::vector<Pattern>& Song::patterns() {
 
 void Song::serialize(std::ofstream &stream) {
     
-    uint32_t word = toLittleEndian(static_cast<uint32_t>(mTempo));
+    uint32_t word = correctEndian(static_cast<uint32_t>(mTempo));
     stream.write(reinterpret_cast<const char *>(&word), 4);
 
     stream.write(reinterpret_cast<const char *>(&mRowsPerBeat), 1);
@@ -61,7 +61,7 @@ void Song::serialize(std::ofstream &stream) {
     stream.write(reinterpret_cast<const char *>(&byte), 1);
 
     // order data offset
-    word = toLittleEndian(static_cast<uint32_t>(8 + stream.tellp()));
+    word = correctEndian(static_cast<uint32_t>(8 + stream.tellp()));
     stream.write(reinterpret_cast<const char *>(&word), 4);
 
     auto patternPos = stream.tellp();
@@ -73,7 +73,7 @@ void Song::serialize(std::ofstream &stream) {
 
     // here is the pattern offset
     auto patternDataPos = stream.tellp();
-    word = toLittleEndian(static_cast<uint32_t>(patternDataPos));
+    word = correctEndian(static_cast<uint32_t>(patternDataPos));
     // seek back and rewrite pattern offset
     stream.seekp(patternPos);
     stream.write(reinterpret_cast<const char*>(&word), 4);

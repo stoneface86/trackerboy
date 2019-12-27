@@ -51,15 +51,11 @@ extern const char *FILE_TERMINATOR;
 static constexpr uint8_t FILE_REVISION = 0;
 
 //
-// convert native endian value to little endian
+// Change the endian of the given value if needed. On big endian
+// systems, the value is byte swapped. On little endian systems
+// the same value is returned.
 //
-uint32_t toLittleEndian(uint32_t val);
-
-//
-// convert a little endian value to native endian
-//
-uint32_t toNativeEndian(uint32_t val);
-
+uint32_t correctEndian(uint32_t val);
 
 
 }

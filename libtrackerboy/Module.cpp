@@ -69,7 +69,7 @@ void Module::serialize(std::ofstream &stream) {
 
     auto pos = stream.tellp();
 
-    header.instrumentTableOffset = toLittleEndian(static_cast<uint8_t>(sizeof(header) + pos));
+    header.instrumentTableOffset = correctEndian(static_cast<uint8_t>(sizeof(header) + pos));
     
     // ignore the next two offsets for now
     auto stoffpos = offsetof(ModuleHeader, songTableOffset) + pos;
@@ -79,11 +79,11 @@ void Module::serialize(std::ofstream &stream) {
 
     // serialize the instrument table
     mInstrumentTable.serialize(stream);
-    uint32_t stoff = toLittleEndian(static_cast<uint32_t>(stream.tellp()));
+    uint32_t stoff = correctEndian(static_cast<uint32_t>(stream.tellp()));
 
     // serialize the song table
     mSongTable.serialize(stream);
-    uint32_t wtoff = toLittleEndian(static_cast<uint32_t>(stream.tellp()));
+    uint32_t wtoff = correctEndian(static_cast<uint32_t>(stream.tellp()));
 
     // serialize the wave table
     mWaveTable.serialize(stream);
