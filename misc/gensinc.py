@@ -1,4 +1,4 @@
-#!/usr/bin/evn python3
+#!/usr/bin/env python3
 #
 # File: gensinc.py
 #
@@ -13,6 +13,8 @@
 # and number of samples for each phase. The sum of each set is
 # guarenteed to be equal to (or close enough to) 1.0. Phases range
 # from 1/(n+1) to n/(n+1) where n is the number of phases.
+#
+# This script was used to generate the trackerboy::Osc::SINC_TABLE array
 #
 
 import math
@@ -40,7 +42,6 @@ def sincset(phase, width):
     end = width - start
     start = -start
     
-    # the sum of the set must equal zero
     sset = [sinc(i + phase) for i in range(start, end)]
     error = 1.0 - sum(sset)
         
@@ -65,12 +66,15 @@ def sincsetToArray(sset):
 
 def main(phases, stepwidth):
     sets = []
-    half = phases // 2
-    ldiv = (half + 1) * 2
-    phaseList = [-i / ldiv for i in range(1, half + 1)] + \
-                [-i / phases for i in range(half, phases)]
-    for phase in phaseList:
-        #phase = (-i / phases) if i > 0 else -1 / (phases * 2)
+
+    # phases range from -1/m to -(m-1)/m
+    # where m is the number of phases multiplied by 2
+    # the distance between each phase is 1/phases
+    # ie, phases = 32, then the range is -1/64 to -63/64
+
+    m = phases * -2
+    for i in range(phases):
+        phase = ((2 * i) + 1) / m
         sset = sincset(phase, stepwidth)
         sets.append("/* Phase: {:0.3f} */    ".format(phase) + \
                      sincsetToArray(sset))
