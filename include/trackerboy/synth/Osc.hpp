@@ -14,7 +14,7 @@ public:
     // Returns the current frequency setting.
     //
     uint16_t frequency();
-    
+
     //
     // Generate a given amount of samples and place them in the given buffer.
     //
@@ -50,8 +50,8 @@ public:
     //
     void setMute(bool muted);
 
-    
- 
+
+
 protected:
 
     Osc(float samplingRate, size_t multiplier, size_t waveformSize);
@@ -66,18 +66,16 @@ protected:
 
 private:
 
-    static constexpr size_t STEP_PHASES = 32;
-    static constexpr size_t STEP_COUNT = 15;
+    // number of phases in the sinc table
+    static constexpr size_t SINC_PHASES = 32;
+    // sample size per sinc set
+    static constexpr size_t SINC_STEPS = 15;
+    // center index of the sinc set
+    static constexpr size_t SINC_CENTER = SINC_STEPS / 2;
 
-    static constexpr size_t STEP_RIGHT_COUNT = STEP_COUNT / 2;
-    static constexpr size_t STEP_LEFT_COUNT = STEP_COUNT - STEP_RIGHT_COUNT;
-
-    // this is the index of the center point of the step
-    // i <= STEP_CENTER: left of the step
-    // i > STEP_CENTER: right of the step
-    static constexpr size_t STEP_CENTER = STEP_COUNT / 2;
-
-    static const float STEP_TABLE[STEP_PHASES][STEP_COUNT];
+    // table of sinc sets, each set contains samples from a normalized sinc function
+    // at a given phase.
+    static const float SINC_TABLE[SINC_PHASES][SINC_STEPS];
 
     //
     // POD struct containing information about a delta and its
@@ -88,14 +86,8 @@ private:
         uint8_t location;   // location in the waveform
         int16_t before;     // volume before the transition
         int16_t after;      // volume after the transition
-        /* to be used by generatePeriods() */
-        size_t samplesBefore;
-        size_t samplesDuringLeft;
-        size_t samplesDuringRight;
-        //size_t samplesDuringBegin; // 0 - STEP_INDEX_CENTER
-        //size_t samplesDuringEnd;   // STEP_INDEX_CENTER - STEP_COUNT
-        size_t samplesAfter;
-        float phase;
+        /* to be used by generate() */
+        float position;
     };
 
     // samplingRate / gameboy clock rate
@@ -103,6 +95,19 @@ private:
 
     // gameboy frequency (0-2047)
     uint16_t mFrequency;
+
+    // used by generate()
+
+    bool mRecalc;
+
+    float mSamplesPerDelta;
+
+    float mSamplesPerPeriod;
+
+    // last sample generated
+    int16_t mPrevious;
+
+    int16_t mLeftovers[SINC_STEPS - 1];
 
     // the waveform is represented by amplitude changes (deltas)
     //
@@ -116,20 +121,8 @@ private:
     // output would be periodic due to integer overflow)
     std::vector<Delta> mDeltaBuf;
 
-    size_t mPeriodCount;                    // number of generated waveform periods
-    std::vector<int16_t> mPeriodBuf;        // sequence of generated waveform periods
-    size_t mPeriodBufSize;                  // size in bytes of the period buffer (NOT the same as mPeriodBuf.size()!)
-    size_t mPeriodPos;                      // position in the period buffer to copy from (aka phase)
-    bool mRegenPeriod;                      // regenerate period sequence if true
-    
     // if true, generate will output 0
     bool mMuted;
-
-    void generatePeriods();
-
-    //void generateStep(int16_t *stepBuf, size_t phase, int16_t init, int16_t change);
-    
-
 
 };
 
