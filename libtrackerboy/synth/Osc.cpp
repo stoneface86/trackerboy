@@ -100,18 +100,20 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
 
         // add steps for each delta until this limit is reached
         const size_t limit = nsamples + SINC_CENTER;
+        // when a center of transition exceeds this limit, the transition is outside of the output buffer
+        // (which will be the first transition to generate on the next call)
         for (auto iter = mDeltaBuf.begin(); iter != deltaEnd; ++iter) {
             // cache these values
-            float position = iter->position;
+            float position = iter->position; // this is the location in the buffer, in samples, of the current transition 
             int16_t change = iter->change;
-            
+
             while (position < limit) {
 
                 // index of the center of the step
                 size_t centerIndex = static_cast<size_t>(position);
                 // the sinc set chosen is determined by the fractional part of position
                 const float *sincset = SINC_TABLE[static_cast<size_t>((position - centerIndex) * SINC_PHASES)];
-                
+
                 // ending index of the band limited step
                 size_t endIndex = centerIndex + (SINC_STEPS - SINC_CENTER);
 
@@ -132,7 +134,7 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
 
                 if (endIndex > nsamples) {
                     // we are at the end of the buffer
-                    sincEnd = endIndex - nsamples;
+                    sincEnd = SINC_STEPS - (endIndex - nsamples);
                 } else {
                     sincEnd = SINC_STEPS;
                 }
@@ -150,7 +152,7 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
                 for (size_t i = sincEnd; i != SINC_STEPS; ++i) {
                     int16_t sample = change * sincset[i];
                     error += sample;
-                    *dest++ = sample;
+                    *dest++ += sample;
                 }
 
                 // add the error so that the sum of the step is equal to change
@@ -167,7 +169,7 @@ void Osc::generate(int16_t buf[], size_t nsamples) {
             }
 
             iter->position = position - nsamples;
-            
+
         }
 
         // do the running sum
@@ -218,7 +220,7 @@ Osc::Osc(float samplingRate, size_t multiplier, size_t waveformSize) :
     mPrevious(0),
     mLeftovers{ 0 },
     mDeltaBuf(),
-    mMuted(false) 
+    mMuted(false)
 {
     // assert that waveform size is a power of 2
     assert((mWaveformSize & (mWaveformSize - 1)) == 0);
