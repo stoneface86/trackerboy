@@ -90,11 +90,14 @@ private:
         float position;
     };
 
-    // samplingRate / gameboy clock rate
+    // scaling factor: samplingRate / gameboy clock rate
     float mFactor;
 
     // gameboy frequency (0-2047)
     uint16_t mFrequency;
+
+    // highest allowable frequency that is <= the nyquist frequency
+    uint16_t mNyquist;
 
     // used by generate()
 
@@ -123,6 +126,9 @@ private:
 
     // if true, generate will output 0
     bool mMuted;
+
+    // setup timing information for generating samples at the start of the period
+    void resetPeriod();
 
 };
 
