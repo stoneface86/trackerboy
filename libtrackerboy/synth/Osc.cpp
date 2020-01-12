@@ -274,13 +274,13 @@ void Osc::deltaSet(const uint8_t waveform[]) {
         int8_t delta;
         if ((i & 1) == 1) {
             // for odd numbered indices, the delta is calculated by
-            // subtracting the high nibble from the next sample and the current low nibble
-            delta = lo - hi;
+            // subtracting the high nibble of the next byte from the low nibble of the current byte
+            delta = (waveform[(waveIndex + 1) & mask] >> 4) - lo;
             ++waveIndex;
         } else {
             // even numbered indices, the delta is the lower nibble
             // minus the high nibble of the current byte
-            delta = (waveform[(waveIndex + 1) & mask] >> 4) - lo;
+            delta = lo - hi;
         }
 
         if (delta) {
@@ -292,7 +292,6 @@ void Osc::deltaSet(const uint8_t waveform[]) {
             d.location = static_cast<uint8_t>(i);
             d.before = previous;
             previous += d.change;
-            d.after = previous;
             mDeltaBuf.push_back(d);
             ++deltaIndex;
         }

@@ -85,7 +85,6 @@ private:
         int16_t change;     // the change in volume
         uint8_t location;   // location in the waveform
         int16_t before;     // volume before the transition
-        int16_t after;      // volume after the transition
         /* to be used by generate() */
         float position;
     };
