@@ -26,6 +26,7 @@ set(SRC_FILES
     "synth/WaveChannel.cpp"
     "synth/Waveform.cpp"
     "synth/WaveOsc.cpp"
+    "File.cpp"
     "fileformat.cpp"
     "Module.cpp"
     "note.cpp"
