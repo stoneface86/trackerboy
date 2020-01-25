@@ -8,6 +8,7 @@
 
 namespace trackerboy {
 
+#pragma pack(push, 1)
 struct TrackRow {
 
     enum Columns {
@@ -66,5 +67,6 @@ struct TrackRow {
 
 
 };
+#pragma pack(pop)
 
 }

@@ -188,6 +188,11 @@ void Table<T>::setName(uint8_t id, std::string name) {
     item.name = name;
 }
 
+template <class T>
+size_t Table<T>::size() {
+    return mData.size();
+}
+
 
 template <class T>
 void Table<T>::remove(uint8_t id) {

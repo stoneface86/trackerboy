@@ -18,6 +18,14 @@ std::vector<uint8_t>& Order::indexVec() {
     return mIndexVec;
 }
 
+uint8_t Order::loopIndex() {
+    return (mLoops) ? mLoopIndex : 0;
+}
+
+bool Order::loops() {
+    return mLoops;
+}
+
 void Order::serialize(std::ofstream &stream) {
     uint8_t byte = static_cast<uint8_t>(mLoops);
     stream.write(reinterpret_cast<const char *>(&byte), 1);

@@ -29,5 +29,22 @@ uint32_t correctEndian(uint32_t val) {
     #endif
 }
 
+float correctEndian(float val) {
+    static_assert(sizeof(float) == sizeof(uint32_t), "sizeof(float) != 4");
+
+    #ifdef __BIG_ENDIAN
+    union {
+        float f;
+        uint32_t i;
+    } temp;
+
+    temp.f = val;
+    temp.i = bswap32(temp.i);
+    return temp.f;
+    #else
+    return val;
+    #endif
+}
+
 
 }

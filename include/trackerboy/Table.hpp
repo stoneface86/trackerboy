@@ -38,6 +38,8 @@ public:
 
     void setName(uint8_t id, std::string name);
 
+    size_t size();
+
     void remove(uint8_t id);
 
 private:
