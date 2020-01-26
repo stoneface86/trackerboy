@@ -115,7 +115,7 @@ struct Header {
 };
 #pragma pack(pop)
 
-enum class ChunkType : uint8_t {
+enum class FileType : uint8_t {
 
     // chunk for a module file, contains chunk data for instrument, song
     // and wave tables.

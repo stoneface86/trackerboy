@@ -40,7 +40,7 @@ public:
 
     void setTitle(std::string title);
 
-    void setChunkType(ChunkType type);
+    void setFileType(FileType type);
 
     uint8_t revision();
 
@@ -50,7 +50,7 @@ public:
 
     std::string copyright();
 
-    ChunkType chunkType();
+    FileType fileType();
 
 
 private:
@@ -59,7 +59,7 @@ private:
     std::string mTitle;
     std::string mArtist;
     std::string mCopyright;
-    ChunkType mChunkType;
+    FileType mFileType;
 
     FormatError serialize(std::ostream &stream, Song &song);
     FormatError serialize(std::ostream &stream, Instrument &inst);

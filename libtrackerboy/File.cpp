@@ -43,7 +43,7 @@ File::File() :
     mTitle(""),
     mArtist(""),
     mCopyright(""),
-    mChunkType(ChunkType::mod)
+    mFileType(FileType::mod)
 {
 }
 
@@ -67,13 +67,13 @@ FormatError File::loadHeader(std::istream &stream) {
         return FormatError::invalidRevision;
     }
 
-    // check chunk type
-    if (header.type > static_cast<uint8_t>(ChunkType::last)) {
+    // check file type
+    if (header.type > static_cast<uint8_t>(FileType::last)) {
         return FormatError::invalidTableCode;
     }
 
     mRevision = header.revision;
-    mChunkType = static_cast<ChunkType>(header.type);
+    mFileType = static_cast<FileType>(header.type);
 
     // ensure strings are null terminated
     header.title[Header::TITLE_LENGTH - 1] = '\0';
@@ -106,7 +106,7 @@ FormatError File::saveHeader(std::ostream &stream) {
     // revision remains the same as the one that was loaded.
     // for new files, it is set to the current revision.
     header.revision = mRevision;
-    header.type = static_cast<uint8_t>(mChunkType);
+    header.type = static_cast<uint8_t>(mFileType);
 
     #define copyStringToFixed(dest, string, count) do { \
             size_t len = std::min(count - 1, string.length()); \
@@ -141,8 +141,8 @@ void File::setTitle(std::string title) {
     mTitle = title;
 }
 
-void File::setChunkType(ChunkType type) {
-    mChunkType = type;
+void File::setFileType(FileType type) {
+    mFileType = type;
 }
 
 template <class T>
