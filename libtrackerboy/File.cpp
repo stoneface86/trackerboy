@@ -160,6 +160,21 @@ FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     uint8_t tableSize = static_cast<uint8_t>(table.size());
     writeAndCheck(stream, &tableSize, sizeof(tableSize));
 
+    // write all items in the table in this order: id, name, item
+    for (auto iter : table) {
+        // id
+        uint8_t id = iter.first;
+        writeAndCheck(stream, &id, 1);
+        // name
+        writeAndCheck(stream, iter.second.name.front(), iter.second.name.size());
+
+        // item
+        FormatError error = serialize(stream, iter.second.value);
+        if (error != FormatError::none) {
+            return error;
+        }
+    }
+
     return FormatError::none;
     
 }
@@ -241,9 +256,31 @@ FormatError File::serialize(std::ostream &stream, Song &song) {
     return FormatError::none;
 }
 
-template FormatError File::saveTable<Instrument>(std::ostream &stream, Table<Instrument> &table);
-template FormatError File::saveTable<Song>(std::ostream &stream, Table<Song> &table);
-template FormatError File::saveTable<Waveform>(std::ostream &stream, Table<Waveform> &table);
+FormatError File::serialize(std::ostream &stream, Instrument &inst) {
+    
+    auto &program = inst.getProgram();
+
+    // size of the program
+    uint8_t size = static_cast<uint8_t>(program.size());
+    writeAndCheck(stream, &size, sizeof(size));
+
+    // since the Instruction structure only has byte fields, we don't need to
+    // worry about endianness, so just write the entire program
+    writeAndCheck(stream, program.data(), size * sizeof(Instruction));
+    
+    return FormatError::none;
+}
+
+FormatError File::serialize(std::ostream &stream, Waveform &wave) {
+    
+    writeAndCheck(stream, wave.data(), Gbs::WAVE_RAMSIZE);
+    
+    return FormatError::none;
+}
+
+template FormatError File::saveTable<Instrument>(std::ostream &stream, InstrumentTable &table);
+template FormatError File::saveTable<Song>(std::ostream &stream, SongTable &table);
+template FormatError File::saveTable<Waveform>(std::ostream &stream, WaveTable &table);
 
 
 

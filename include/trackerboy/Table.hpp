@@ -19,6 +19,16 @@ class Table {
 
 public:
 
+    struct TableItem {
+        std::string name;
+        T value;
+
+        TableItem();
+    };
+
+    using TableData = typename std::unordered_map<uint8_t, TableItem>;
+    using Iterator = typename TableData::iterator;
+
     // 8-bit IDs so we can only have 256 items
     static constexpr size_t MAX_SIZE = 256;
 
@@ -27,6 +37,10 @@ public:
     T* operator[](uint8_t id);
 
     uint8_t add(T &data);
+
+    Iterator begin();
+
+    Iterator end();
 
     std::string name(uint8_t id);
 
@@ -40,15 +54,8 @@ public:
 
 private:
 
-    struct TableItem {
-        std::string name;
-        T value;
-
-        TableItem();
-    };
-
     uint8_t mNextId;
-    std::unordered_map<uint8_t, TableItem> mData;
+    TableData mData;
 
     void findNextId();
 

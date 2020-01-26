@@ -44,6 +44,16 @@ uint8_t Table<T>::add(T &data) {
 }
 
 template <class T>
+typename Table<T>::Iterator Table<T>::begin() {
+    return mData.begin();
+}
+
+template <class T>
+typename Table<T>::Iterator Table<T>::end() {
+    return mData.end();
+}
+
+template <class T>
 std::string Table<T>::name(uint8_t id) {
     auto iter = mData.find(id);
     if (iter == mData.end()) {
