@@ -146,7 +146,7 @@ void File::setChunkType(ChunkType type) {
 }
 
 template <class T>
-FormatError File::saveTable(std::ofstream &stream, Table<T> &table) {
+FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     
     // before we do anything, check the file's revision. If it differs from
     // the current one then we must use the older format for
@@ -168,7 +168,7 @@ FormatError File::saveTable(std::ofstream &stream, Table<T> &table) {
 
 
 
-FormatError File::serialize(std::ofstream &stream, Song &song) {
+FormatError File::serialize(std::ostream &stream, Song &song) {
     #pragma pack(push, 1)
     
     struct SongFormat {
@@ -241,9 +241,9 @@ FormatError File::serialize(std::ofstream &stream, Song &song) {
     return FormatError::none;
 }
 
-template FormatError File::saveTable<Instrument>(std::ofstream &stream, Table<Instrument> &table);
-template FormatError File::saveTable<Song>(std::ofstream &stream, Table<Song> &table);
-template FormatError File::saveTable<Waveform>(std::ofstream &stream, Table<Waveform> &table);
+template FormatError File::saveTable<Instrument>(std::ostream &stream, Table<Instrument> &table);
+template FormatError File::saveTable<Song>(std::ostream &stream, Table<Song> &table);
+template FormatError File::saveTable<Waveform>(std::ostream &stream, Table<Waveform> &table);
 
 
 

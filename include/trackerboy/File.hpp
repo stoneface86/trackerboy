@@ -29,7 +29,7 @@ public:
     FormatError saveHeader(std::ostream &stream);
 
     template <class T>
-    FormatError saveTable(std::ofstream &stream, Table<T> &table);
+    FormatError saveTable(std::ostream &stream, Table<T> &table);
 
     // upgrades a loaded file from an older revision to the current
     //void upgrade();
@@ -61,9 +61,9 @@ private:
     std::string mCopyright;
     ChunkType mChunkType;
 
-    FormatError serialize(std::ofstream &stream, Song &song);
-    FormatError serialize(std::ofstream &stream, Instrument &inst);
-    FormatError serialize(std::ofstream &stream, Waveform &wave);
+    FormatError serialize(std::ostream &stream, Song &song);
+    FormatError serialize(std::ostream &stream, Instrument &inst);
+    FormatError serialize(std::ostream &stream, Waveform &wave);
 
 
 
