@@ -18,15 +18,32 @@
 // revision before saving/loading with the new format. By default, the current
 // revision is used for new files.
 
+#define readAndCheck(stream, buf, count) \
+    do { \
+        stream.read(reinterpret_cast<char*>(buf), count); \
+        if (!stream.good()) { \
+            return FormatError::readError; \
+        } \
+    } while (false)
+
+
+// wrapper for stream.write, will return writeError on failure
+#define writeAndCheck(stream, buf, count) \
+    do {\
+        stream.write(reinterpret_cast<char*>(buf), count); \
+        if (!stream.good()) { \
+            return FormatError::writeError; \
+        } \
+    } while (false)
+
 namespace trackerboy {
 
-File::File(std::string path) :
+File::File() :
     mRevision(FILE_REVISION),
     mTitle(""),
     mArtist(""),
     mCopyright(""),
-    mChunkType(ChunkType::mod),
-    mChunkSize(0)
+    mChunkType(ChunkType::mod)
 {
 }
 
@@ -34,122 +51,82 @@ File::~File() {
 
 }
 
-std::ifstream File::load(std::string path, FormatError &error) {
+FormatError File::loadHeader(std::istream &stream) {
 
+    // read in the header
     Header header;
-    std::ifstream input(path, std::ios::binary | std::ios::in);
+    readAndCheck(stream, &header, sizeof(header));
 
-    if (input.is_open()) {
-
-        // do once loop
-        do {
-            // read in the header (160 bytes at the start of the file)
-            input.read(reinterpret_cast<char*>(&header), sizeof(header));
-
-            if (!input.good()) {
-                error = FormatError::readError;
-                break;
-            }
-
-            // check the signature
-            if (!std::equal(header.signature, header.signature + Header::SIGNATURE_SIZE, FILE_MODULE_SIGNATURE)) {
-                error = FormatError::invalidSignature;
-                break;
-            }
-
-            // check revision, do not attempt to parse future versions
-            if (header.revision > FILE_REVISION) {
-                error = FormatError::invalidRevision;
-                break;
-            }
-
-            // check chunk type
-            if (header.type > static_cast<uint8_t>(ChunkType::last)) {
-                error = FormatError::invalidTableCode;
-                break;
-            }
-
-            // no errors with format
-            error = FormatError::none;
-
-            mRevision = header.revision;
-            mChunkType = static_cast<ChunkType>(header.type);
-            mChunkSize = correctEndian(header.chunkSize);
-
-            // ensure strings are null terminated
-            header.title[Header::TITLE_LENGTH - 1] = '\0';
-            header.artist[Header::ARTIST_LENGTH - 1] = '\0';
-            header.copyright[Header::COPYRIGHT_LENGTH - 1] = '\0';
-
-            mTitle = std::string(header.title);
-            mArtist = std::string(header.artist);
-            mCopyright = std::string(header.copyright);
-
-        } while (false);
-
-    } else {
-        // couldn't open file, just set error
-        error = FormatError::readError;
+    // check the signature
+    if (!std::equal(header.signature, header.signature + Header::SIGNATURE_SIZE, FILE_MODULE_SIGNATURE)) {
+        return FormatError::invalidSignature;
     }
 
-    return input;
+    // check revision, do not attempt to parse future versions
+    if (header.revision > FILE_REVISION) {
+        return FormatError::invalidRevision;
+    }
+
+    // check chunk type
+    if (header.type > static_cast<uint8_t>(ChunkType::last)) {
+        return FormatError::invalidTableCode;
+    }
+
+    mRevision = header.revision;
+    mChunkType = static_cast<ChunkType>(header.type);
+
+    // ensure strings are null terminated
+    header.title[Header::TITLE_LENGTH - 1] = '\0';
+    header.artist[Header::ARTIST_LENGTH - 1] = '\0';
+    header.copyright[Header::COPYRIGHT_LENGTH - 1] = '\0';
+
+    mTitle = std::string(header.title);
+    mArtist = std::string(header.artist);
+    mCopyright = std::string(header.copyright);
+
+    return FormatError::none;
 }
 
-std::ofstream File::save(std::string path, FormatError &error) {
+FormatError File::saveHeader(std::ostream &stream) {
 
-    std::ofstream output(path, std::ios::out | std::ios::binary);
+    // setup the header
 
-    if (output.is_open()) {
-
-        // setup the header
-
-        Header header{ 0 };
+    Header header{ 0 };
         
-        // signature
-        std::copy(FILE_MODULE_SIGNATURE, FILE_MODULE_SIGNATURE + Header::SIGNATURE_SIZE, header.signature);
+    // signature
+    std::copy(FILE_MODULE_SIGNATURE, FILE_MODULE_SIGNATURE + Header::SIGNATURE_SIZE, header.signature);
 
-        // version information (saving always overrides what was loaded)
-        header.versionMajor = correctEndian(VERSION_MAJOR);
-        header.versionMinor = correctEndian(VERSION_MINOR);
-        header.versionPatch = correctEndian(VERSION_PATCH);
+    // version information (saving always overrides what was loaded)
+    header.versionMajor = correctEndian(VERSION_MAJOR);
+    header.versionMinor = correctEndian(VERSION_MINOR);
+    header.versionPatch = correctEndian(VERSION_PATCH);
 
-        // file information
+    // file information
 
-        // revision remains the same as the one that was loaded.
-        // for new files, it is set to the current revision.
-        header.revision = mRevision;
-        header.type = static_cast<uint8_t>(mChunkType);
+    // revision remains the same as the one that was loaded.
+    // for new files, it is set to the current revision.
+    header.revision = mRevision;
+    header.type = static_cast<uint8_t>(mChunkType);
 
-        #define copyStringToFixed(dest, string, count) do { \
-                size_t len = std::min(count - 1, string.length()); \
-                string.copy(dest, len); \
-                dest[len] = '\0'; \
-            } while (false)
+    #define copyStringToFixed(dest, string, count) do { \
+            size_t len = std::min(count - 1, string.length()); \
+            string.copy(dest, len); \
+            dest[len] = '\0'; \
+        } while (false)
 
-        copyStringToFixed(header.title, mTitle, Header::TITLE_LENGTH);
-        copyStringToFixed(header.artist, mArtist, Header::ARTIST_LENGTH);
-        copyStringToFixed(header.copyright, mCopyright, Header::COPYRIGHT_LENGTH);
+    copyStringToFixed(header.title, mTitle, Header::TITLE_LENGTH);
+    copyStringToFixed(header.artist, mArtist, Header::ARTIST_LENGTH);
+    copyStringToFixed(header.copyright, mCopyright, Header::COPYRIGHT_LENGTH);
 
-        #undef copyStringToFixed
+    #undef copyStringToFixed
         
-        // reserved was zero'd on initialization of header
+    // reserved was zero'd on initialization of header
 
-        header.chunkSize = correctEndian(mChunkSize);
+    // write the header
+    writeAndCheck(stream, &header, sizeof(header));
 
-        // write the header
-        output.write(reinterpret_cast<char*>(&header), sizeof(header));
-        if (output.good()) {
-            error = FormatError::none;
-        } else {
-            error = FormatError::writeError;
-        }
+    return FormatError::none;
 
-    } else {
-        // could not open file
-        error = FormatError::writeError;
-    }
-
-    return output;
 }
 
 void File::setArtist(std::string artist) {
@@ -164,20 +141,13 @@ void File::setTitle(std::string title) {
     mTitle = title;
 }
 
-void File::setChunkSize(uint32_t size) {
-    mChunkSize = size;
-}
-
 void File::setChunkType(ChunkType type) {
     mChunkType = type;
 }
 
 template <class T>
 FormatError File::saveTable(std::ofstream &stream, Table<T> &table) {
-    if (!stream.good()) {
-        return FormatError::writeError;
-    }
-
+    
     // before we do anything, check the file's revision. If it differs from
     // the current one then we must use the older format for
     // backwards-compatibility. New files always use the current revision.
@@ -187,21 +157,16 @@ FormatError File::saveTable(std::ofstream &stream, Table<T> &table) {
 
 
     // write the size of the table
-    uint8_t tableSize = table.size();
-    stream.write(reinterpret_cast<char*>(&tableSize), 1);
+    uint8_t tableSize = static_cast<uint8_t>(table.size());
+    writeAndCheck(stream, &tableSize, sizeof(tableSize));
+
+    return FormatError::none;
     
 }
 
 // privates
 
-// wrapper for stream.write, will return writeError on failure
-#define writeAndCheck(stream, buf, count) \
-    do {\
-        stream.write(reinterpret_cast<char*>(buf), count); \
-        if (!stream.good()) { \
-            return FormatError::writeError; \
-        } \
-    } while (false)
+
 
 FormatError File::serialize(std::ofstream &stream, Song &song) {
     #pragma pack(push, 1)
@@ -275,6 +240,11 @@ FormatError File::serialize(std::ofstream &stream, Song &song) {
     
     return FormatError::none;
 }
+
+template FormatError File::saveTable<Instrument>(std::ofstream &stream, Table<Instrument> &table);
+template FormatError File::saveTable<Song>(std::ofstream &stream, Table<Song> &table);
+template FormatError File::saveTable<Waveform>(std::ofstream &stream, Table<Waveform> &table);
+
 
 
 }

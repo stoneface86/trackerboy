@@ -13,20 +13,20 @@ namespace trackerboy {
 class File {
 
 public:
-    File(std::string path);
+    File();
     ~File();
 
     //
-    // Reads from the file and loads header data if the file is valid. The
-    // chunk data can then be read by the caller afterwards.
+    // Reads just the header from the stream and updates header settings if
+    // valid. FormatError::none is returned on success.
     //
-    std::ifstream load(std::string path, FormatError &error);
+    FormatError loadHeader(std::istream &stream);
 
     //
-    // Writes the header and terminator to the file. The chunk data is to be
-    // written by the caller afterwards.
+    // Writes just the header to the given output stream. FormatError::writeError
+    // is returned if an io error occured with the given stream.
     //
-    std::ofstream save(std::string path, FormatError &error);
+    FormatError saveHeader(std::ostream &stream);
 
     template <class T>
     FormatError saveTable(std::ofstream &stream, Table<T> &table);
@@ -40,8 +40,6 @@ public:
 
     void setTitle(std::string title);
 
-    void setChunkSize(uint32_t size);
-
     void setChunkType(ChunkType type);
 
     uint8_t revision();
@@ -54,17 +52,14 @@ public:
 
     ChunkType chunkType();
 
-    uint32_t chunkSize();
 
 private:
-
     // header settings
     uint8_t mRevision;
     std::string mTitle;
     std::string mArtist;
     std::string mCopyright;
     ChunkType mChunkType;
-    uint32_t mChunkSize;
 
     FormatError serialize(std::ofstream &stream, Song &song);
     FormatError serialize(std::ofstream &stream, Instrument &inst);

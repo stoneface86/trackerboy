@@ -50,8 +50,8 @@ struct ModuleHeader {
 // 20  +---------------------------+
 //     | version patch             |
 // 24  +------+------+-------------+
-//     | rev  | type |             |
-//     +------+------+             |
+//     | rev  | type | reserved0   |
+// 28  +------+------+-------------+
 //     |                           |
 //     |                           |
 //     |                           |
@@ -59,16 +59,17 @@ struct ModuleHeader {
 //     |                           |
 //     |                           |
 //     |                           |
-// 56  +---------------------------+
+//     |                           |
+// 60  +---------------------------+
 //     |                           |
 //     |                           |
 //     |                           |
 //     | artist                    |
 //     |                           |
 //     |                           |
-//     |            +--------------|
-//     |            |              |
-// 96  +------------+              |
+//     |                           |
+//     |                           |
+// 92  +---------------------------|
 //     |                           |
 //     |                           |
 //     |                           |
@@ -76,17 +77,18 @@ struct ModuleHeader {
 //     |                           |
 //     |                           |
 //     |                           |
-// 128 +---------------------------+
+//     |                           |
+// 124 +---------------------------+
 //     |                           |
 //     |                           |
 //     |                           |
-//     | reserved                  |
+//     |                           |
+//     | reserved1                 |
 //     |                           |
 //     |                           |
 //     |                           |
-// 156 +---------------------------+
-//     | chunk size                |
-//     +---------------------------+
+//     |                           |
+// 160 +---------------------------+
 //
 // the chunk then follows (contents depend on type)
 
@@ -104,13 +106,12 @@ struct Header {
     uint32_t versionPatch;
     uint8_t revision;
     uint8_t type;
+    uint16_t reserved0;
     char title[TITLE_LENGTH];
     char artist[ARTIST_LENGTH];
     char copyright[COPYRIGHT_LENGTH];
-    // 28 bytes (7 words) are reserved for future revisions of the format
-    uint32_t reserved[7];
-    // chunkSize starts at offset 156
-    uint32_t chunkSize;
+    // 36 bytes (9 words) are reserved for future revisions of the format
+    uint32_t reserved1[9];
 };
 #pragma pack(pop)
 
