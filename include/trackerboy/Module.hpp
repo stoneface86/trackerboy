@@ -27,8 +27,6 @@ public:
 
     InstrumentTable& instrumentTable();
 
-    void serialize(std::ofstream &stream);
-
     void setArtist(std::string artist);
 
     void setTitle(std::string title);

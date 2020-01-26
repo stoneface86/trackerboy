@@ -28,11 +28,7 @@ public:
 
     uint8_t add(T &data);
 
-    FormatError deserialize(std::ifstream &stream);
-
     std::string name(uint8_t id);
-
-    void serialize(std::ofstream &stream);
 
     void set(uint8_t id, T &data);
 

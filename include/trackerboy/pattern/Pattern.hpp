@@ -30,8 +30,6 @@ public:
 
     Iterator end();
 
-    void serialize(std::ofstream &stream);
-
     void setSize(size_t nrows);
 
     size_t size();

@@ -58,7 +58,7 @@ FormatError File::loadHeader(std::istream &stream) {
     readAndCheck(stream, &header, sizeof(header));
 
     // check the signature
-    if (!std::equal(header.signature, header.signature + Header::SIGNATURE_SIZE, FILE_MODULE_SIGNATURE)) {
+    if (!std::equal(header.signature, header.signature + Header::SIGNATURE_SIZE, FILE_SIGNATURE)) {
         return FormatError::invalidSignature;
     }
 
@@ -69,7 +69,7 @@ FormatError File::loadHeader(std::istream &stream) {
 
     // check file type
     if (header.type > static_cast<uint8_t>(FileType::last)) {
-        return FormatError::invalidTableCode;
+        return FormatError::invalidType;
     }
 
     mRevision = header.revision;
@@ -94,7 +94,7 @@ FormatError File::saveHeader(std::ostream &stream) {
     Header header{ 0 };
         
     // signature
-    std::copy(FILE_MODULE_SIGNATURE, FILE_MODULE_SIGNATURE + Header::SIGNATURE_SIZE, header.signature);
+    std::copy(FILE_SIGNATURE, FILE_SIGNATURE + Header::SIGNATURE_SIZE, header.signature);
 
     // version information (saving always overrides what was loaded)
     header.versionMajor = correctEndian(VERSION_MAJOR);

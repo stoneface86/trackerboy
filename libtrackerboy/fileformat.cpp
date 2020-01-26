@@ -14,11 +14,7 @@
 namespace trackerboy {
 
 
-const char *FILE_MODULE_SIGNATURE = "~TRACKERBOY~";
-
-const char *FILE_TABLE_SIGNATURE = "TBOY";
-
-const char *FILE_TERMINATOR = "END";
+const char *FILE_SIGNATURE = "~TRACKERBOY~";
 
 
 uint32_t correctEndian(uint32_t val) {

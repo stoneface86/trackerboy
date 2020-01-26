@@ -16,11 +16,6 @@ Song::Song() :
     calcSpeed();
 }
 
-FormatError Song::deserialize(std::ifstream &stream) {
-    return FormatError::none;
-}
-
-
 uint8_t Song::rowsPerBeat() {
     return mRowsPerBeat;
 }
@@ -46,45 +41,6 @@ Order& Song::order() {
 
 std::vector<Pattern>& Song::patterns() {
     return mPatterns;
-}
-
-void Song::serialize(std::ofstream &stream) {
-    
-    uint32_t word = correctEndian(static_cast<uint32_t>(mTempo));
-    stream.write(reinterpret_cast<const char *>(&word), 4);
-
-    stream.write(reinterpret_cast<const char *>(&mRowsPerBeat), 1);
-
-    stream.write(reinterpret_cast<const char *>(&mSpeed), 1);
-
-    uint8_t byte = static_cast<uint8_t>(mPatterns.size());
-    stream.write(reinterpret_cast<const char *>(&byte), 1);
-
-    // order data offset
-    word = correctEndian(static_cast<uint32_t>(8 + stream.tellp()));
-    stream.write(reinterpret_cast<const char *>(&word), 4);
-
-    auto patternPos = stream.tellp();
-
-    // skip the pattern offset for now, (we don't know how big the order is)
-    stream.write(reinterpret_cast<const char *>(&word), 4);
-
-    mOrder.serialize(stream);
-
-    // here is the pattern offset
-    auto patternDataPos = stream.tellp();
-    word = correctEndian(static_cast<uint32_t>(patternDataPos));
-    // seek back and rewrite pattern offset
-    stream.seekp(patternPos);
-    stream.write(reinterpret_cast<const char*>(&word), 4);
-
-    stream.seekp(patternDataPos);
-
-    for (auto iter = mPatterns.begin(); iter != mPatterns.end(); ++iter) {
-        iter->serialize(stream);
-    }
-
-
 }
 
 void Song::setRowsPerBeat(uint8_t rowsPerBeat) {

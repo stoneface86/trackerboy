@@ -53,8 +53,6 @@ public:
 
     void setLoop(uint8_t index);
 
-    void serialize(std::ofstream &stream);
-
     void removeLoop();
 
 private:
