@@ -3,6 +3,7 @@
 [![build-lib][build-lib-badge]][build-lib-link]
 [![build-ui][build-ui-badge]][build-ui-link]
 [![tests][tests-badge]][tests-link]
+[![codecov](https://codecov.io/gh/stoneface86/trackerboy/branch/develop/graph/badge.svg)](https://codecov.io/gh/stoneface86/trackerboy)
 
 TrackerBoy is a tracker program for producing music for the gameboy / gameboy color
 consoles.
