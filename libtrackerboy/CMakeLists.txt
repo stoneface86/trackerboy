@@ -47,7 +47,7 @@ endif ()
 target_link_libraries(trackerboy PRIVATE trackerboyCoverage)
 
 if (IS_BIG_ENDIAN)
-    target_compile_definitions(trackerboy PRIVATE -D__BIG_ENDIAN)
+    target_compile_definitions(trackerboy PRIVATE -DTRACKERBOY_BIG_ENDIAN)
 endif ()
 
 if (TRACKERBOY_ENABLE_TESTS)
@@ -63,7 +63,7 @@ if (TRACKERBOY_ENABLE_TESTS)
     target_link_libraries(${TEST_EXE} PRIVATE trackerboy)
 
     if (IS_BIG_ENDIAN)
-        target_compile_definitions(${TEST_EXE} PRIVATE -D__BIG_ENDIAN)
+        target_compile_definitions(${TEST_EXE} PRIVATE -DTRACKERBOY_BIG_ENDIAN)
     endif ()
 
     add_test(NAME Pattern COMMAND ${TEST_EXE} [pattern])

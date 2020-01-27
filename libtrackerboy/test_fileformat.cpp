@@ -11,18 +11,20 @@ namespace otherEndian {
 // recompile correctEndian functions with the "other" endian (if we are a big
 // endian system then recompile for little endian and vice versa).
 
-#ifdef __BIG_ENDIAN
-#define TEMP __BIG_ENDIAN
-#undef __BIG_ENDIAN
+#ifdef TRACKERBOY_BIG_ENDIAN
+#define TEMP TRACKERBOY_BIG_ENDIAN
+#undef TRACKERBOY_BIG_ENDIAN
 #else
-#define __BIG_ENDIAN
+#define TRACKERBOY_BIG_ENDIAN
 #endif
 
 #include "fileformat.cpp"
 
 #ifdef TEMP
-#define __BIG_ENDIAN TEMP
+#define TRACKERBOY_BIG_ENDIAN TEMP
 #undef TEMP
+#else
+#undef TRACKERBOY_BIG_ENDIAN
 #endif
 
 }
@@ -70,7 +72,7 @@ TEST_CASE("correctEndian", "[fileformat]") {
             uint32_t test = TEST_CASES[i];
             uint32_t expected;
             uint32_t expectedOther;
-            #ifdef __BIGENDIAN
+            #ifdef TRACKERBOY_BIG_ENDIAN
             // big endian system, result should be byte swapped
             expected = TEST_CASES_SWAPPED[i];
             expectedOther = test;

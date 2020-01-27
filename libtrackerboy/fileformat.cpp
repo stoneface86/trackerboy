@@ -18,7 +18,7 @@ const char *FILE_SIGNATURE = "~TRACKERBOY~";
 
 
 uint32_t correctEndian(uint32_t val) {
-    #ifdef __BIG_ENDIAN
+    #ifdef TRACKERBOY_BIG_ENDIAN
     return bswap32(val);
     #else
     return val;
@@ -28,7 +28,7 @@ uint32_t correctEndian(uint32_t val) {
 float correctEndian(float val) {
     static_assert(sizeof(float) == sizeof(uint32_t), "sizeof(float) != 4");
 
-    #ifdef __BIG_ENDIAN
+    #ifdef TRACKERBOY_BIG_ENDIAN
     union {
         float f;
         uint32_t i;
