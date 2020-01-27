@@ -179,6 +179,26 @@ FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     
 }
 
+uint8_t File::revision() {
+    return mRevision;
+}
+
+std::string File::artist() {
+    return mArtist;
+}
+
+std::string File::copyright() {
+    return mCopyright;
+}
+
+std::string File::title() {
+    return mTitle;
+}
+
+FileType File::fileType() {
+    return mFileType;
+}
+
 // privates
 
 

@@ -55,6 +55,7 @@ if (TRACKERBOY_ENABLE_TESTS)
     set(TEST_SRC_FILES
         "pattern/test_Pattern.cpp"
         "song/test_Order.cpp"
+        "test_File.cpp"
         "test_fileformat.cpp"
     )
 
@@ -68,6 +69,7 @@ if (TRACKERBOY_ENABLE_TESTS)
 
     add_test(NAME Pattern COMMAND ${TEST_EXE} [pattern])
     add_test(NAME Order COMMAND ${TEST_EXE} [order])
+    add_test(NAME File COMMAND ${TEST_EXE} [File])
     add_test(NAME fileformat COMMAND ${TEST_EXE} [fileformat])
 
 endif (TRACKERBOY_ENABLE_TESTS)

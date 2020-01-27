@@ -1,7 +1,7 @@
 
 #include "catch.hpp"
 #include "trackerboy/File.hpp"
-#include "version.h"
+#include "version.hpp"
 
 #include <strstream>
 
@@ -16,12 +16,15 @@ TEST_CASE("header", "[File]") {
     file.setCopyright("Copyright 2020 foo");
     file.setTitle("bar");
     
+    std::ostrstream out(headerBuf.get(), sizeof(Header), std::ios::binary | std::ios::out);
+    FormatError errorOnSave = file.saveHeader(out);
+    std::istrstream in(headerBuf.get(), sizeof(Header));
+    Header *header = reinterpret_cast<Header*>(headerBuf.get());
+    File f;
+
 
     SECTION("load == save") {
-        std::ostrstream out(headerBuf.get(), sizeof(Header), std::ios::binary | std::ios::out);
-        REQUIRE(file.saveHeader(out) == FormatError::none);
-        File f;
-        std::istrstream in(headerBuf.get(), sizeof(Header), std::ios::binary | std::ios::in);
+        REQUIRE(errorOnSave == FormatError::none);
         REQUIRE(f.loadHeader(in) == FormatError::none);
 
         CHECK(f.artist() == file.artist());
@@ -31,29 +34,24 @@ TEST_CASE("header", "[File]") {
         CHECK(f.revision() == file.revision());
     }
 
-    SECTION("invalid header when loading") {
-        std::ostrstream out(headerBuf.get(), sizeof(Header), std::ios::binary | std::ios::out);
-        file.saveHeader(out);
-        std::istrstream in(headerBuf.get(), sizeof(Header), std::ios::binary | std::ios::in);
-        Header *header = reinterpret_cast<Header*>(headerBuf.get());
-        File f;
+        
 
-        SECTION("incorrect signature in header") {
-            // make the signature incorrect
-            header->signature[0] = ~FILE_SIGNATURE[0];
-            REQUIRE(f.loadHeader(in) == FormatError::invalidSignature);
-        }
-
-        SECTION("future revision") {
-            header->revision++;
-            REQUIRE(f.loadHeader(in) == FormatError::invalidRevision);
-        }
-
-        SECTION("invalid type") {
-            header->type = static_cast<uint8_t>(FileType::last) + 1;
-            REQUIRE(f.loadHeader(in) == FormatError::invalidType);
-        }
-
+    SECTION("incorrect signature in header") {
+        // make the signature incorrect
+        header->signature[0] = ~FILE_SIGNATURE[0];
+        REQUIRE(f.loadHeader(in) == FormatError::invalidSignature);
     }
+
+    SECTION("future revision") {
+        header->revision++;
+        REQUIRE(f.loadHeader(in) == FormatError::invalidRevision);
+    }
+
+    SECTION("invalid type") {
+        header->type = static_cast<uint8_t>(FileType::last) + 1;
+        REQUIRE(f.loadHeader(in) == FormatError::invalidType);
+    }
+
+    
 
 }
