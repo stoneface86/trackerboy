@@ -55,13 +55,19 @@ if (TRACKERBOY_ENABLE_TESTS)
     set(TEST_SRC_FILES
         "pattern/test_Pattern.cpp"
         "song/test_Order.cpp"
+        "test_fileformat.cpp"
     )
 
     add_catch_test(TEST_EXE ${TEST_SRC_FILES})
 
     target_link_libraries(${TEST_EXE} PRIVATE trackerboy)
 
+    if (IS_BIG_ENDIAN)
+        target_compile_definitions(${TEST_EXE} PRIVATE -D__BIG_ENDIAN)
+    endif ()
+
     add_test(NAME Pattern COMMAND ${TEST_EXE} [pattern])
     add_test(NAME Order COMMAND ${TEST_EXE} [order])
+    add_test(NAME fileformat COMMAND ${TEST_EXE} [fileformat])
 
 endif (TRACKERBOY_ENABLE_TESTS)
