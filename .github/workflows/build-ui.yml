@@ -16,7 +16,7 @@ jobs:
       with:
         submodules: true
     - name: Install Qt
-      uses: jurplel/install-qt-action@v2.2.1
+      uses: jurplel/install-qt-action@v2.3.0
     - name: configure
       run: |
         mkdir build
