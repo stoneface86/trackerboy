@@ -44,7 +44,7 @@ target_compile_options(
 )
 endif ()
 
-target_link_libraries(trackerboy PRIVATE trackerboyCoverage)
+target_link_libraries(trackerboy PUBLIC trackerboyCoverage)
 
 if (IS_BIG_ENDIAN)
     target_compile_definitions(trackerboy PRIVATE -DTRACKERBOY_BIG_ENDIAN)
