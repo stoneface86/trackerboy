@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <sstream>
+#include <cstring>
 
 using namespace trackerboy;
 
