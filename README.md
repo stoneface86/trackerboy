@@ -16,6 +16,27 @@ WIP! This project is currently in the development phase (major version 0).
  * __Contribute:__ For contributing to this repo, see the [contributing guidelines](CONTRIBUTING.md) and [source code organization](ORGANIZATION.md)
  * __Use:__ For details on how to use the tracker, see TBD
 
+## Roadmap
+
+The following are planned features to be worked on, in order. Once all features are complete, the project will be released (v1.0.0)
+
+ * [x] (v.0.0.1) Initial version
+ * [ ] (v.0.1.0) [libtrackerboy](https://github.com/stoneface86/trackerboy/projects/1)
+ * [ ] (v.0.2.0) demos
+ * [ ] (v.0.3.0) Command line player
+ * [ ] (v.0.4.0) famitracker converter utility (converts .ftm -> .tbm)
+ * [ ] (v.0.5.0) Instrument/Waveform editor UI
+ * [ ] (v.0.6.0) Pattern editor UI
+ * [ ] (v.0.7.0) Initial main UI design
+ * [ ] (v.0.8.0) Revised UI design
+
+### Post release features
+
+ * gameboy player / module compiler
+ * export to ASM, GBS
+ * MIDI support
+ * more to be added later!
+
 ## Versioning
 
 This project uses Semantic Versioning v2.0.0
