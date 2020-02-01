@@ -1,6 +1,7 @@
 
 #pragma once
 
+
 #include "trackerboy/fileformat.hpp"
 #include "trackerboy/Table.hpp"
 
@@ -52,6 +53,16 @@ public:
 
     FileType fileType();
 
+    FormatError deserialize(std::istream &stream, Instrument &inst);
+    FormatError deserialize(std::istream &stream, Song &song);
+    FormatError deserialize(std::istream &stream, Waveform &wave);
+
+
+    // serialization methods
+
+    FormatError serialize(std::ostream &stream, Song &song);
+    FormatError serialize(std::ostream &stream, Instrument &inst);
+    FormatError serialize(std::ostream &stream, Waveform &wave);
 
 private:
     // header settings
@@ -61,9 +72,7 @@ private:
     std::string mCopyright;
     FileType mFileType;
 
-    FormatError serialize(std::ostream &stream, Song &song);
-    FormatError serialize(std::ostream &stream, Instrument &inst);
-    FormatError serialize(std::ostream &stream, Waveform &wave);
+    
 
 
 

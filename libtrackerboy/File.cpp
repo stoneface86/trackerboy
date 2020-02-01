@@ -36,6 +36,36 @@
         } \
     } while (false)
 
+namespace {
+
+#pragma pack(push, 1)
+
+struct SongFormat {
+    float tempo;
+    uint8_t rowsPerBeat;
+    uint8_t speed;
+    uint8_t numberOfPatterns;
+    // order data...
+    // pattern data...
+
+};
+
+struct OrderFormat {
+    uint8_t loopFlag;
+    uint8_t loopIndex;
+    uint8_t orderListSize;
+    // order list data
+};
+
+struct PatternFormat {
+    uint8_t rows;
+    // row data follows
+};
+
+#pragma pack(pop)
+
+}
+
 namespace trackerboy {
 
 File::File() :
@@ -199,39 +229,85 @@ FileType File::fileType() {
     return mFileType;
 }
 
-// privates
+FormatError File::deserialize(std::istream &stream, Instrument &inst) {
+    auto& program = inst.getProgram();
+    program.clear();
 
+    uint8_t size;
+    readAndCheck(stream, &size, sizeof(size));
+
+    program.resize(size);
+    readAndCheck(stream, program.data(), sizeof(Instruction) * size);
+
+    return FormatError::none;
+}
+
+
+FormatError File::deserialize(std::istream &stream, Song &song) {
+
+    // read in the song settings
+    SongFormat songHeader;
+    readAndCheck(stream, &songHeader, sizeof(songHeader));
+
+    // correct endian if needed
+    songHeader.tempo = correctEndian(songHeader.tempo);
+
+    song.setTempo(songHeader.tempo);
+    song.setRowsPerBeat(songHeader.rowsPerBeat);
+    song.setSpeed(songHeader.speed);
+    
+    // read in the order
+    {
+        OrderFormat orderHeader;
+        readAndCheck(stream, &orderHeader, sizeof(orderHeader));
+        auto &order = song.order();
+        auto &orderVec = order.indexVec();
+        orderVec.clear();
+        orderVec.resize(orderHeader.orderListSize);
+        readAndCheck(stream, orderVec.data(), orderHeader.orderListSize);
+        
+        if (orderHeader.loopFlag) {
+            order.setLoop(orderHeader.loopIndex);
+        } else {
+            order.removeLoop();
+        }
+    }
+
+    // read in the patterns
+    
+    auto &patterns = song.patterns();
+    patterns.clear();
+    for (uint8_t i = 0; i != songHeader.numberOfPatterns; ++i) {
+        // first byte is the size of the pattern
+        PatternFormat patternHeader;
+        readAndCheck(stream, &patternHeader, sizeof(patternHeader));
+
+        // pattern size ranges from 1-256, so add one to what we read in
+        size_t rows = static_cast<size_t>(patternHeader.rows) + 1;
+        Pattern p(rows);
+        readAndCheck(stream, p.data(), sizeof(TrackRow) * 4 * rows);
+
+        patterns.push_back(p);
+        
+    }
+
+
+    
+
+
+    return FormatError::none;
+}
+
+
+FormatError File::deserialize(std::istream &stream, Waveform &wave) {
+
+    readAndCheck(stream, wave.data(), Gbs::WAVE_RAMSIZE);
+
+    return FormatError::none;
+}
 
 
 FormatError File::serialize(std::ostream &stream, Song &song) {
-    #pragma pack(push, 1)
-    
-    struct SongFormat {
-        float tempo;
-        uint8_t rowsPerBeat;
-        uint8_t speed;
-        uint8_t numberOfPatterns;
-        // order data...
-        // pattern data...
-
-    };
-
-    struct OrderFormat {
-        uint8_t loopFlag;
-        uint8_t loopIndex;
-        uint8_t orderListSize;
-        // order list data
-    };
-
-    struct PatternFormat {
-        uint8_t rows;
-        // row data follows
-    };
-
-    #pragma pack(pop)
-
-    // since this is a private helper method, the stream is assumed to be good
-    // before calling this method
     
     // song settings
 
@@ -263,14 +339,10 @@ FormatError File::serialize(std::ostream &stream, Song &song) {
     for (auto iter = patterns.begin(); iter != patternListEnd; ++iter) {
         // pattern settings (just the size)
         PatternFormat patternHeader;
-        patternHeader.rows = static_cast<uint8_t>(iter->size());
+        patternHeader.rows = static_cast<uint8_t>(iter->size() - 1);
         writeAndCheck(stream, &patternHeader, sizeof(patternHeader));
         // pattern data
-        auto patternEnd = iter->end();
-        // write every trackrow in order
-        for (auto trackIter = iter->begin(); trackIter != patternEnd; ++trackIter) {
-            writeAndCheck(stream, &trackIter, sizeof(*trackIter));
-        }
+        writeAndCheck(stream, iter->data(), sizeof(TrackRow) * 4 * iter->size());
     }
     
     return FormatError::none;

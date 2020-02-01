@@ -28,6 +28,8 @@ public:
 
     void clear(uint8_t rowStart, uint8_t rowEnd);
 
+    TrackRow* data();
+
     Iterator end();
 
     void setSize(size_t nrows);

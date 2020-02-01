@@ -34,6 +34,10 @@ void Pattern::clear(uint8_t rowStart, uint8_t rowEnd) {
     } while (rowStart++ != rowEnd);
 }
 
+TrackRow* Pattern::data() {
+    return mData.data();
+}
+
 Pattern::Iterator Pattern::end() {
     return mData.cend();
 }
