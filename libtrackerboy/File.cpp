@@ -217,13 +217,17 @@ FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     uint16_t tableSize = correctEndian(static_cast<uint16_t>(table.size()));
     writeAndCheck(stream, &tableSize, sizeof(tableSize));
 
+    //std::vector<char> stringToWrite;
+
     //// write all items in the table in this order: id, name, item
     for (auto iter : table) {
         // id
         uint8_t id = iter.id;
         writeAndCheck(stream, &id, 1);
         // name
-        writeAndCheck(stream, iter.name.front(), iter.name.size());
+        //stringToWrite.resize(iter.name.size());
+        //iter.name.
+        writeAndCheck(stream, const_cast<char*>(iter.name.c_str()), iter.name.size() + 1);
 
         // item
         FormatError error = serialize(stream, iter.value);

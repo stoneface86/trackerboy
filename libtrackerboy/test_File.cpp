@@ -76,6 +76,20 @@ TEST_CASE("save/load equivalence", "[File]") {
         CHECK(f.revision() == file.revision());
     }
 
+    SECTION("table") {
+        InstrumentTable sample;
+        sample.insert();
+        sample.insert(5, "foo");
+        sample.insert(2, "bar");
+
+        REQUIRE(file.saveTable(out, sample) == FormatError::none);
+
+        in.str(out.str());
+
+        InstrumentTable sampleReadIn;
+        REQUIRE(file.loadTable(in, sampleReadIn) == FormatError::none);
+    }
+
     SECTION("Instrument") {
         Instrument sample;
         auto &program = sample.getProgram();
