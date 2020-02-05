@@ -31,9 +31,11 @@ set(SRC_FILES
     "Module.cpp"
     "note.cpp"
     "Table.cpp"
+    "version.cpp"
 )
 
-
+# give version information to version.cpp via preproccessor macros
+set_source_files_properties("version.cpp" PROPERTIES COMPILE_DEFINITIONS "VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR};VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR};VERSION_PATCH=${CMAKE_PROJECT_VERSION_PATCH}")
 add_library("trackerboy" STATIC ${SRC_FILES})
 
 if (MSVC)
