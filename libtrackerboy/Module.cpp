@@ -2,8 +2,6 @@
 #include "trackerboy/Module.hpp"
 #include "trackerboy/fileformat.hpp"
 
-#include "version.hpp"
-
 #include <algorithm>
 #include <cstddef>
 

@@ -5,6 +5,7 @@
 #include "trackerboy/fileformat.hpp"
 #include "trackerboy/Table.hpp"
 #include "trackerboy/Module.hpp"
+#include "trackerboy/Version.hpp"
 
 
 namespace trackerboy {
@@ -51,6 +52,8 @@ public:
 
     void setFileType(FileType type);
 
+    void setVersion(Version version);
+
     uint8_t revision();
 
     std::string title();
@@ -60,6 +63,8 @@ public:
     std::string copyright();
 
     FileType fileType();
+
+    Version version();
 
     FormatError deserialize(std::istream &stream, Instrument &inst);
     FormatError deserialize(std::istream &stream, Song &song);
@@ -74,6 +79,7 @@ public:
 
 private:
     // header settings
+    Version mVersion;
     uint8_t mRevision;
     std::string mTitle;
     std::string mArtist;

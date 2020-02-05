@@ -21,8 +21,12 @@ struct Version {
 extern const Version VERSION;
 
 bool operator==(const Version &lhs, const Version &rhs);
+inline bool operator!=(const Version &lhs, const Version &rhs) { return !(lhs == rhs); }
 
 bool operator<(const Version &lhs, const Version &rhs);
+inline bool operator> (const Version &lhs, const Version &rhs) { return rhs < lhs; }
+inline bool operator<=(const Version &lhs, const Version &rhs) { return !(lhs > rhs); }
+inline bool operator>=(const Version &lhs, const Version &rhs) { return !(lhs < rhs); }
 
 
 

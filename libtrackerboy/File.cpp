@@ -1,8 +1,6 @@
 
 #include <algorithm>
 
-#include "version.hpp"
-
 #include "trackerboy/File.hpp"
 #include "trackerboy/Table.hpp"
 
@@ -69,6 +67,7 @@ struct PatternFormat {
 namespace trackerboy {
 
 File::File() :
+    mVersion(VERSION),
     mRevision(FILE_REVISION),
     mTitle(""),
     mArtist(""),
@@ -127,9 +126,9 @@ FormatError File::saveHeader(std::ostream &stream) {
     std::copy(FILE_SIGNATURE, FILE_SIGNATURE + Header::SIGNATURE_SIZE, header.signature);
 
     // version information (saving always overrides what was loaded)
-    header.versionMajor = correctEndian(VERSION_MAJOR);
-    header.versionMinor = correctEndian(VERSION_MINOR);
-    header.versionPatch = correctEndian(VERSION_PATCH);
+    header.versionMajor = correctEndian(mVersion.major);
+    header.versionMinor = correctEndian(mVersion.minor);
+    header.versionPatch = correctEndian(mVersion.patch);
 
     // file information
 

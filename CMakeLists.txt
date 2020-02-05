@@ -23,7 +23,6 @@ option(TRACKERBOY_COVERAGE "Enable code coverage" OFF)
 
 include_directories(
     "include"
-    "${CMAKE_BINARY_DIR}/include"
 )
 
 if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
@@ -126,6 +125,3 @@ endif()
 if (TRACKERBOY_ENABLE_DEMO)
     add_subdirectory(demo)
 endif ()
-
-# generate version header
-configure_file(include/version.hpp.in ${CMAKE_BINARY_DIR}/include/version.hpp)

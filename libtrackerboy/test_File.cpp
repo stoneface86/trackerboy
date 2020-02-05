@@ -1,7 +1,6 @@
 
 #include "catch.hpp"
 #include "trackerboy/File.hpp"
-#include "version.hpp"
 
 #include <algorithm>
 #include <sstream>
