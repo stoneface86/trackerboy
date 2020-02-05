@@ -176,6 +176,33 @@ void File::setFileType(FileType type) {
 }
 
 template <class T>
+FormatError File::loadTable(std::istream &stream, Table<T> &table) {
+
+    // get the size of the table
+    uint16_t tableSize;
+    readAndCheck(stream, &tableSize, sizeof(tableSize));
+    tableSize = correctEndian(tableSize);
+
+    for (uint16_t i = 0; i != tableSize; ++i) {
+        uint8_t id;
+        readAndCheck(stream, &id, sizeof(id));
+        std::string name;
+        std::getline(stream, name, '\0');
+        if (!stream.good()) {
+            return FormatError::readError;
+        }
+
+        T& item = table.insert(id, name);
+        FormatError error = deserialize(stream, item);
+        if (error != FormatError::none) {
+            return error;
+        }
+    }
+
+    return FormatError::none;
+}
+
+template <class T>
 FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     
     // before we do anything, check the file's revision. If it differs from
@@ -187,19 +214,19 @@ FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
 
 
     // write the size of the table
-    uint8_t tableSize = static_cast<uint8_t>(table.size());
+    uint16_t tableSize = correctEndian(static_cast<uint16_t>(table.size()));
     writeAndCheck(stream, &tableSize, sizeof(tableSize));
 
-    // write all items in the table in this order: id, name, item
+    //// write all items in the table in this order: id, name, item
     for (auto iter : table) {
         // id
-        uint8_t id = iter.first;
+        uint8_t id = iter.id;
         writeAndCheck(stream, &id, 1);
         // name
-        writeAndCheck(stream, iter.second.name.front(), iter.second.name.size());
+        writeAndCheck(stream, iter.name.front(), iter.name.size());
 
         // item
-        FormatError error = serialize(stream, iter.second.value);
+        FormatError error = serialize(stream, iter.value);
         if (error != FormatError::none) {
             return error;
         }
@@ -312,7 +339,7 @@ FormatError File::serialize(std::ostream &stream, Song &song) {
     // song settings
 
     SongFormat songHeader;
-    songHeader.tempo = correctEndian(song.actualTempo());
+    songHeader.tempo = correctEndian(song.tempo());
     songHeader.rowsPerBeat = song.rowsPerBeat();
     songHeader.speed = song.speed();
     songHeader.numberOfPatterns = static_cast<uint8_t>(song.patterns().size());
@@ -369,6 +396,10 @@ FormatError File::serialize(std::ostream &stream, Waveform &wave) {
     
     return FormatError::none;
 }
+
+template FormatError File::loadTable<Instrument>(std::istream &stream, InstrumentTable &table);
+template FormatError File::loadTable<Song>(std::istream &stream, SongTable &table);
+template FormatError File::loadTable<Waveform>(std::istream &stream, WaveTable &table);
 
 template FormatError File::saveTable<Instrument>(std::ostream &stream, InstrumentTable &table);
 template FormatError File::saveTable<Song>(std::ostream &stream, SongTable &table);

@@ -18,6 +18,8 @@ public:
 
     static constexpr uint8_t DEFAULT_RPB = 4;
     static constexpr float DEFAULT_TEMPO = 150.0f;
+    // Tempo = 150, RPB = 4  => 6 frames per row
+    static constexpr Q53 DEFAULT_SPEED = Q53_make(6, 0);
 
     Song();
 
@@ -37,11 +39,14 @@ public:
 
     void setTempo(float tempo);
 
+    // sets the speed from the tempo and rowsPerBeat settings
+    void setSpeed();
+
     void setSpeed(Q53 speed);
 
 private:
 
-    void calcSpeed();
+    //void calcSpeed();
 
     std::vector<Pattern> mPatterns;
     Order mOrder;

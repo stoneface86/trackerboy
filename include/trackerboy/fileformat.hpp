@@ -134,6 +134,8 @@ static constexpr uint8_t FILE_REVISION = 0;
 //
 uint32_t correctEndian(uint32_t val);
 
+uint16_t correctEndian(uint16_t val);
+
 float correctEndian(float val);
 
 

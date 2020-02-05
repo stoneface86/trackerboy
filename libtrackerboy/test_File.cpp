@@ -100,6 +100,45 @@ TEST_CASE("save/load equivalence", "[File]") {
 
     SECTION("Song") {
         Song sample;
+
+        // sample song has 3 patterns, order is 0, 1, 1, 2 and loops at 1
+        auto &order = sample.order();
+        auto &indexVec = order.indexVec();
+        indexVec.push_back(0);
+        indexVec.push_back(1);
+        indexVec.push_back(1);
+        indexVec.push_back(2);
+        order.setLoop(1);
+
+        auto &patterns = sample.patterns();
+        patterns.resize(3);
+
+        sample.setTempo(165.0f);
+        sample.setRowsPerBeat(8);
+        sample.setSpeed();
+        
+        REQUIRE(file.serialize(out, sample) == FormatError::none);
+
+        in.str(out.str());
+
+        Song sampleReadIn;
+        REQUIRE(file.deserialize(in, sampleReadIn) == FormatError::none);
+
+        // check song settings
+        CHECK(sampleReadIn.tempo() == sample.tempo());
+        CHECK(sampleReadIn.rowsPerBeat() == sample.rowsPerBeat());
+        CHECK(sampleReadIn.speed() == sample.speed());
+
+        // check the order
+        auto &orderReadIn = sampleReadIn.order();
+        CHECK(orderReadIn.loops() == order.loops());
+        CHECK(orderReadIn.loopIndex() == order.loopIndex());
+        auto &indexVecReadIn = orderReadIn.indexVec();
+        CHECK(std::equal(indexVecReadIn.begin(), indexVecReadIn.end(), order.indexVec().begin()));
+
+        CHECK(sampleReadIn.patterns().size() == sample.patterns().size());
+
+
     }
 
     SECTION("Waveform") {

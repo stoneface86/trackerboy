@@ -11,9 +11,9 @@ namespace trackerboy {
 
 Song::Song() :
     mRowsPerBeat(DEFAULT_RPB),
-    mTempo(DEFAULT_TEMPO) 
+    mTempo(DEFAULT_TEMPO),
+    mSpeed(DEFAULT_SPEED)
 {
-    calcSpeed();
 }
 
 uint8_t Song::rowsPerBeat() {
@@ -48,7 +48,7 @@ void Song::setRowsPerBeat(uint8_t rowsPerBeat) {
         throw std::invalid_argument("Cannot have 0 rows per beat");
     }
     mRowsPerBeat = rowsPerBeat;
-    calcSpeed();
+   // calcSpeed();
 }
 
 void Song::setTempo(float tempo) {
@@ -56,19 +56,10 @@ void Song::setTempo(float tempo) {
         throw std::invalid_argument("tempo most be positive and nonzero");
     }
     mTempo = tempo;
-    calcSpeed();
+    //calcSpeed();
 }
 
-void Song::setSpeed(Q53 speed) {
-    if (speed == 0) {
-        throw std::invalid_argument("speed must be nonzero");
-    }
-    mSpeed = speed;
-    mTempo = actualTempo();
-}
-
-
-void Song::calcSpeed() {
+void Song::setSpeed() {
     float speed = 3600.0f / (mRowsPerBeat * mTempo);
     // F5.3 so round to nearest 1/8th
     speed = std::roundf(speed * 8) / 8;
@@ -82,6 +73,29 @@ void Song::calcSpeed() {
     uint8_t fract = static_cast<uint8_t>(std::modf(speed, &junk) * 8);
     mSpeed |= fract;
 }
+
+void Song::setSpeed(Q53 speed) {
+    if (speed == 0) {
+        throw std::invalid_argument("speed must be nonzero");
+    }
+    mSpeed = speed;
+}
+
+
+//void Song::calcSpeed() {
+//    float speed = 3600.0f / (mRowsPerBeat * mTempo);
+//    // F5.3 so round to nearest 1/8th
+//    speed = std::roundf(speed * 8) / 8;
+//
+//    // now convert floating point -> fixed point
+//
+//    // calculate the integral part
+//    mSpeed = static_cast<uint8_t>(speed) << 3;
+//    // calculate the fractional part
+//    float junk; // we only want the fractional part
+//    uint8_t fract = static_cast<uint8_t>(std::modf(speed, &junk) * 8);
+//    mSpeed |= fract;
+//}
 
 
 }

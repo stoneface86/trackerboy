@@ -59,6 +59,10 @@ TEST_CASE("correctEndian", "[fileformat]") {
         for (auto const &test : TEST_CASES) {
             CHECK(correctEndian(correctEndian(test)) == test);
             CHECK(correctEndian_other(correctEndian_other(test)) == test);
+            // same thing but with a 16-bit word
+            uint16_t i16 = static_cast<uint16_t>(test);
+            CHECK(correctEndian(correctEndian(i16)) == i16);
+            CHECK(correctEndian_other(correctEndian_other(i16)) == i16);
             // same thing but treat the test case as a float
             float f;
             memcpy(&f, &test, sizeof(test));

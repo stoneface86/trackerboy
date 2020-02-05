@@ -30,6 +30,9 @@ public:
     FormatError saveHeader(std::ostream &stream);
 
     template <class T>
+    FormatError loadTable(std::istream &stream, Table<T> &table);
+    
+    template <class T>
     FormatError saveTable(std::ostream &stream, Table<T> &table);
 
     // upgrades a loaded file from an older revision to the current
