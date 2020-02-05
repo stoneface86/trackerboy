@@ -4,6 +4,7 @@
 
 #include "trackerboy/fileformat.hpp"
 #include "trackerboy/Table.hpp"
+#include "trackerboy/Module.hpp"
 
 
 namespace trackerboy {
@@ -28,6 +29,10 @@ public:
     // is returned if an io error occured with the given stream.
     //
     FormatError saveHeader(std::ostream &stream);
+
+    FormatError loadModule(std::istream &stream, Module &mod);
+
+    FormatError saveModule(std::ostream &stream, Module &mod);
 
     template <class T>
     FormatError loadTable(std::istream &stream, Table<T> &table);

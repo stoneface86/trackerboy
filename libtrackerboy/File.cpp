@@ -175,6 +175,44 @@ void File::setFileType(FileType type) {
     mFileType = type;
 }
 
+FormatError File::loadModule(std::istream &stream, Module &mod) {
+
+    FormatError error;
+
+    error = loadTable(stream, mod.instrumentTable());
+    if (error != FormatError::none) {
+        return error;
+    }
+
+    error = loadTable(stream, mod.songTable());
+    if (error != FormatError::none) {
+        return error;
+    }
+
+    error = loadTable(stream, mod.waveTable());
+
+
+    return error;
+}
+
+FormatError File::saveModule(std::ostream &stream, Module &mod) {
+
+    FormatError error;
+    error = saveTable(stream, mod.instrumentTable());
+    if (error != FormatError::none) {
+        return error;
+    }
+
+    error = saveTable(stream, mod.songTable());
+    if (error != FormatError::none) {
+        return error;
+    }
+
+    error = saveTable(stream, mod.waveTable());
+
+    return error;
+}
+
 template <class T>
 FormatError File::loadTable(std::istream &stream, Table<T> &table) {
 
@@ -183,6 +221,11 @@ FormatError File::loadTable(std::istream &stream, Table<T> &table) {
     readAndCheck(stream, &tableSize, sizeof(tableSize));
     tableSize = correctEndian(tableSize);
 
+    if (tableSize > Table<T>::MAX_SIZE) {
+        return FormatError::tableSizeBounds;
+    }
+
+    table.clear();
     for (uint16_t i = 0; i != tableSize; ++i) {
         uint8_t id;
         readAndCheck(stream, &id, sizeof(id));
@@ -217,16 +260,12 @@ FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     uint16_t tableSize = correctEndian(static_cast<uint16_t>(table.size()));
     writeAndCheck(stream, &tableSize, sizeof(tableSize));
 
-    //std::vector<char> stringToWrite;
-
     //// write all items in the table in this order: id, name, item
     for (auto iter : table) {
         // id
         uint8_t id = iter.id;
         writeAndCheck(stream, &id, 1);
         // name
-        //stringToWrite.resize(iter.name.size());
-        //iter.name.
         writeAndCheck(stream, const_cast<char*>(iter.name.c_str()), iter.name.size() + 1);
 
         // item

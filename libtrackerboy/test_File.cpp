@@ -88,6 +88,15 @@ TEST_CASE("save/load equivalence", "[File]") {
 
         InstrumentTable sampleReadIn;
         REQUIRE(file.loadTable(in, sampleReadIn) == FormatError::none);
+
+        CHECK(sampleReadIn[0] != nullptr);
+        CHECK(sampleReadIn[5] != nullptr);
+        CHECK(sampleReadIn[2] != nullptr);
+
+        CHECK(sample.name(0) == sampleReadIn.name(0));
+        CHECK(sample.name(2) == sampleReadIn.name(2));
+        CHECK(sample.name(5) == sampleReadIn.name(5));
+
     }
 
     SECTION("Instrument") {

@@ -109,12 +109,13 @@ enum class FileType : uint8_t {
 
 
 enum class FormatError {
-    none,
-    invalidSignature,
-    invalidRevision,
-    invalidType,
-    readError,
-    writeError
+    none,                   // no error
+    invalidSignature,       // signature does not match
+    invalidRevision,        // unsupported file revision
+    invalidType,            // unknown payload type
+    tableSizeBounds,        // size of table exceeds maximum
+    readError,              // read error occurred
+    writeError              // write error occurred
 };
 
 extern const char *FILE_SIGNATURE;
