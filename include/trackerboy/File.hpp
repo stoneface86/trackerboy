@@ -5,7 +5,7 @@
 #include "trackerboy/fileformat.hpp"
 #include "trackerboy/Table.hpp"
 #include "trackerboy/Module.hpp"
-#include "trackerboy/Version.hpp"
+#include "trackerboy/version.hpp"
 
 
 namespace trackerboy {
