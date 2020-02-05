@@ -29,3 +29,4 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
+        yml: ./codecov.yml
