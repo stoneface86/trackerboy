@@ -96,6 +96,13 @@ typename Table<T>::Iterator Table<T>::begin() {
 }
 
 template <class T>
+void Table<T>::clear() {
+    mItemData.clear();
+    mMap.fill(MAX_SIZE - 1);
+    mNextId = 0;
+}
+
+template <class T>
 typename Table<T>::Iterator Table<T>::end() {
     return mItemData.end();
 }

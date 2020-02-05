@@ -45,6 +45,8 @@ public:
 
     Iterator begin();
 
+    void clear();
+
     Iterator end();
 
     //
