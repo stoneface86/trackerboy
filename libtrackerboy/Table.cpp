@@ -117,7 +117,7 @@ T& Table<T>::insert(uint8_t id, std::string name) {
     uint8_t *mapping = mMap.data() + id;
     size_t size = mItemData.size();
 
-    if (*mapping <= size) {
+    if (*mapping < size) {
         throw std::runtime_error("cannot insert: item already exists");
     } else if (size == MAX_SIZE) {
         throw std::runtime_error("cannot insert: table is full");
