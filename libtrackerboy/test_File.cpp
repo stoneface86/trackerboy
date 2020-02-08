@@ -51,6 +51,24 @@ TEST_CASE("header", "[File]") {
 
 }
 
+TEST_CASE("invalid table size", "[File]") {
+
+    std::stringstream ss;
+    InstrumentTable itable;
+    File file;
+    REQUIRE(file.saveTable(ss, itable) == FormatError::none);
+
+    ss.seekp(0);
+    uint16_t size = InstrumentTable::MAX_SIZE + 1;
+    ss << correctEndian(size); // overwrite the table size with an illegal one
+    ss.seekg(0);
+
+    InstrumentTable itable2;
+    REQUIRE(file.loadTable(ss, itable2) == FormatError::tableSizeBounds);
+
+
+}
+
 TEST_CASE("save/load equivalence", "[File]") {
     File file;
     std::istringstream in(std::ios::in | std::ios::binary);
@@ -60,19 +78,24 @@ TEST_CASE("save/load equivalence", "[File]") {
         file.setArtist("foo");
         file.setCopyright("Copyright 2020 foo");
         file.setTitle("bar");
+        file.setFileType(FileType::mod);
 
         REQUIRE(file.saveHeader(out) == FormatError::none);
+        CHECK(out.tellp() == sizeof(Header));
         
         File f;
         in.str(out.str());
 
         REQUIRE(f.loadHeader(in) == FormatError::none);
+        CHECK(in.tellg() == sizeof(Header));
 
         CHECK(f.artist() == file.artist());
         CHECK(f.title() == file.title());
         CHECK(f.copyright() == file.copyright());
         CHECK(f.fileType() == file.fileType());
         CHECK(f.revision() == file.revision());
+
+        
     }
 
     SECTION("table") {
