@@ -16,21 +16,20 @@ SweepDemo::SweepDemo() :
 }
 
 void SweepDemo::init(Synth &synth) {
-    ChannelFile &cf = synth.getChannels();
-    Mixer &mixer = synth.getMixer();
+    Mixer &mixer = synth.mixer();
+    HardwareFile &hf = synth.hardware();
 
-    cf.ch1.setEnvStep(Gbs::MAX_ENV_STEPS);
+    //cf.ch1.setEnvStep(Gbs::MAX_ENV_STEPS);
+    hf.env1.setRegister(Gbs::MAX_ENV_STEPS);
 
-    cf.ch1.setSweepShift(DEMO_SWEEP_SHIFT);
-    cf.ch1.setSweepTime(DEMO_SWEEP_TIME);
+    hf.sweep1.setRegister((DEMO_SWEEP_SHIFT << 4) | DEMO_SWEEP_TIME);
 
-    mixer.setTerminalEnable(Gbs::TERM_BOTH, true);
     mixer.setEnable(Gbs::OUT_BOTH1);
 }
 
 long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
 
-    SweepPulseChannel &ch1 = synth.getChannels().ch1;
+    HardwareFile &hf = synth.hardware();
 
     uint16_t freq;
     Gbs::SweepMode mode;
@@ -54,8 +53,8 @@ long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
     }
 
 
-    ch1.setFrequency(freq);
-    ch1.setSweepMode(mode);
+    hf.osc1.setFrequency(freq);
+    hf.sweep1.setSweepMode(mode);
     ch1.reset();
 
     return DEMO_RUNTIME;

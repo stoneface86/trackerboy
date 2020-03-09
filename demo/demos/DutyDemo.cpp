@@ -24,14 +24,16 @@ DutyDemo::DutyDemo() :
 
 
 void DutyDemo::init(Synth &synth) {
-    Mixer &mixer = synth.getMixer();
-    PulseChannel &ch2 = synth.getChannels().ch2;
+    Mixer &mixer = synth.mixer();
+    //PulseChannel &ch2 = synth.getChannels().ch2;
+    PulseOsc &osc2 = synth.hardware().osc2;
+    Envelope &env2 = synth.hardware().env2;
 
-    ch2.setEnvStep(Gbs::MAX_ENV_STEPS);
-    ch2.setFrequency(DEMO_FREQ);
-    ch2.reset();
+    //ch2.setEnvStep(Gbs::MAX_ENV_STEPS);
+    env2.setRegister(Gbs::MAX_ENV_STEPS << 4);
+    osc2.setFrequency(DEMO_FREQ);
+    osc2.reset();
 
-    mixer.setTerminalEnable(Gbs::TERM_BOTH, true);
     mixer.setEnable(Gbs::OUT_BOTH2);
 }
 
@@ -40,7 +42,7 @@ long DutyDemo::setupNextRun(Synth &synth, unsigned counter) {
         return 0;
     } else {
         std::cout << "Duty: " << DUTY_STRINGS[counter] << "%" << std::endl;
-        synth.getChannels().ch2.setDuty(static_cast<Gbs::Duty>(counter));
+        synth.hardware().osc2.setDuty(static_cast<Gbs::Duty>(counter));
         return DEMO_RUNTIME;
     }
 }

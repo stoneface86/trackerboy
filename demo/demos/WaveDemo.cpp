@@ -46,7 +46,7 @@ WaveDemo::WaveDemo(const uint8_t wavedata[Gbs::WAVE_RAMSIZE], std::string waveNa
 }
 
 void WaveDemo::init(Synth &synth) {
-    Mixer &mixer = synth.getMixer();
+    Mixer &mixer = synth.mixer();
     WaveChannel &ch3 = synth.getChannels().ch3;
 
     ch3.setOutputLevel(Gbs::WAVE_FULL);

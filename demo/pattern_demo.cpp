@@ -46,9 +46,6 @@ int main() {
     }
 
     Synth synth(SAMPLING_RATE);
-    auto &mixer = synth.getMixer();
-    mixer.setTerminalEnable(trackerboy::Gbs::TERM_BOTH, true);
-    mixer.setTerminalVolume(trackerboy::Gbs::TERM_BOTH, trackerboy::Gbs::MAX_TERM_VOLUME);
     PlaybackQueue pb(SAMPLING_RATE);
 
     InstrumentTable itable;
@@ -117,15 +114,21 @@ int main() {
     
 
     std::vector<int16_t> frameBuf;
+    std::vector<float> fframeBuf;
     frameBuf.resize(samplesPerFrame * 2);
+    fframeBuf.resize(frameBuf.size());
     int16_t *framePtr = frameBuf.data();
+    float *fframePtr = fframeBuf.data();
 
     pb.start();
 
     bool patternEnded;
     do {
         patternEnded = pr.step(synth, itable, wtable);
-        synth.fill(framePtr, samplesPerFrame);
+        synth.fill(fframePtr, samplesPerFrame);
+        for (size_t i = 0; i != fframeBuf.size(); ++i) {
+            frameBuf[i] = INT16_MAX * fframeBuf[i];
+        }
         outputFrame(framePtr, samplesPerFrame, pb);
     } while (!patternEnded);
 

@@ -11,6 +11,14 @@ class Osc {
 public:
 
     //
+    // Disables oscillator output, generate will only silence. To re-enable,
+    // call reset()
+    //
+    void disable();
+
+    bool disabled();
+
+    //
     // Returns the current frequency setting.
     //
     uint16_t frequency();
@@ -18,12 +26,7 @@ public:
     //
     // Generate a given amount of samples and place them in the given buffer.
     //
-    void generate(int16_t samples[], size_t nsamples);
-
-    //
-    // Returns true if the oscillator is muted
-    //
-    bool muted();
+    void generate(float samples[], size_t nsamples);
 
     //
     // Returns the actual frequency being outputted, in hertz.
@@ -37,6 +40,8 @@ public:
     //
     void reset();
 
+    void run(size_t nsamples);
+
     //
     // Sets the frequency of the waveform. Valid frequencies range from 0 to
     // 2047 inclusive. If the output frequency of the given frequency exceeds
@@ -45,71 +50,29 @@ public:
     //
     void setFrequency(uint16_t frequency);
 
-    //
-    // Mute the oscillator. When muted, the oscillator will only output 0 (silence)
-    //
-    void setMute(bool muted);
+    // delete this later
 
+    void fillPeriod();
+    std::vector<float>& period();
 
+    static constexpr unsigned PERIOD_BUFFER_SIZE_DEFAULT = 100;
+
+    static constexpr unsigned PERIOD_BUFFER_SIZE_MAX = 1000;
+    // 1/64 of the sampling rate ~ 16 milleseconds
+    static constexpr unsigned PERIOD_BUFFER_SIZE_MIN = 16;
 
 protected:
 
     Osc(float samplingRate, size_t multiplier, size_t waveformSize);
 
     //
-    // Setup the delta buffer from the given waveform
-    //
-    void deltaSet(const uint8_t waveform[]);
-
-    const size_t mWaveformSize;
-    const size_t mMultiplier;
-
-private:
-
-    // number of phases in the sinc table
-    static constexpr size_t SINC_PHASES = 32;
-    // sample size per sinc set
-    static constexpr size_t SINC_STEPS = 15;
-    // center index of the sinc set
-    static constexpr size_t SINC_CENTER = SINC_STEPS / 2;
-
-    // table of sinc sets, each set contains samples from a normalized sinc function
-    // at a given phase.
-    static const float SINC_TABLE[SINC_PHASES][SINC_STEPS];
-
-    //
     // POD struct containing information about a delta and its
     // location in the waveform.
     //
     struct Delta {
-        int16_t change;     // the change in volume
         uint8_t location;   // location in the waveform
-        int16_t before;     // volume before the transition
-        /* to be used by generate() */
-        float position;
+        float change;       // the change in volume
     };
-
-    // scaling factor: samplingRate / gameboy clock rate
-    float mFactor;
-
-    // gameboy frequency (0-2047)
-    uint16_t mFrequency;
-
-    // highest allowable frequency that is <= the nyquist frequency
-    uint16_t mNyquist;
-
-    // used by generate()
-
-    bool mRecalc;
-
-    float mSamplesPerDelta;
-
-    float mSamplesPerPeriod;
-
-    // last sample generated
-    int16_t mPrevious;
-
-    int16_t mLeftovers[SINC_STEPS - 1];
 
     // the waveform is represented by amplitude changes (deltas)
     //
@@ -123,11 +86,47 @@ private:
     // output would be periodic due to integer overflow)
     std::vector<Delta> mDeltaBuf;
 
-    // if true, generate will output 0
-    bool mMuted;
+    float mInitialVolume;
 
-    // setup timing information for generating samples at the start of the period
-    void resetPeriod();
+    // if true the period will be regenerated
+    bool mRegenPeriod;
+
+    const size_t mWaveformSize;
+    const size_t mMultiplier;
+
+    static constexpr float VOLUME_MAX = 1.0f;
+    static constexpr float VOLUME_MIN = -1.0f;
+    static constexpr float VOLUME_STEP = 1.0f / 7.5f;
+
+private:
+
+    static constexpr size_t STEP_PHASES = 32;
+    static constexpr size_t STEP_WIDTH = 16;
+    static constexpr size_t STEP_CENTER = STEP_WIDTH / 2;
+
+    static const float STEP_TABLE[STEP_PHASES][STEP_WIDTH];
+
+    // scaling factor: samplingRate / gameboy clock rate
+    float mFactor;
+
+    // gameboy frequency (0-2047)
+    uint16_t mFrequency;
+
+    // highest allowable frequency that is <= the nyquist frequency
+    uint16_t mNyquist;
+
+    bool mDisabled;
+
+    // maximum size of the period buffer in milleseconds
+    unsigned mPeriodBufSize;
+
+    std::vector<float> mPeriodBuf;
+    size_t mPeriodOffset;
+
+
+    // private methods
+
+    //void fillPeriod();
 
 };
 

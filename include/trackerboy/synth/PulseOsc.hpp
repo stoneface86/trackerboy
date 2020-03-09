@@ -15,13 +15,10 @@ public:
 
     void setDuty(Gbs::Duty duty);
 
-    void setEnvelope(uint8_t envelope);
-
 private:
     void setDeltaBuf();
 
     Gbs::Duty mDuty;
-    uint8_t mEnvelope;
 
 };
 

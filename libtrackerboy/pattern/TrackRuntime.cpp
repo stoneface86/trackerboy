@@ -74,14 +74,14 @@ void TrackRuntime::step(Synth &synth, WaveTable &wtable) {
     switch (mOutputMode) {
         case OutputMode::STOPPED_DISABLE_MIXER:
             // turn off sound output for this channel
-            synth.getMixer().setEnable(mTrackId, Gbs::TERM_BOTH, false);
+            synth.setOutputEnable(mTrackId, Gbs::TERM_BOTH, false);
             mOutputMode = OutputMode::STOPPED;
             // fall-through
         case OutputMode::STOPPED:
             break; // do nothing
         case OutputMode::PLAYING_ENABLE_MIXER:
             // re-enable the channel output
-            synth.getMixer().setEnable(mTrackId, Gbs::TERM_BOTH, true);
+            synth.setOutputEnable(mTrackId, Gbs::TERM_BOTH, true);
             mOutputMode = OutputMode::PLAYING;
             // fall-through
         case OutputMode::PLAYING:

@@ -1,38 +1,66 @@
 #pragma once
 
-#include "ChannelFile.hpp"
-#include "Mixer.hpp"
-#include "Sequencer.hpp"
+#include <vector>
+
+#include "trackerboy/synth/HardwareFile.hpp"
+#include "trackerboy/ChType.hpp"
 
 
 namespace trackerboy {
 
 class Synth {
-    ChannelFile mCf;
-    Mixer mMixer;
-    Sequencer mSequencer;
-
-    float mSamplingRate;
-    // fixed point Q7.25
-    uint32_t mStepsPerSample;
-    uint32_t mStepCounter;
     
-
 public:
 
     Synth(float samplingRate);
 
-    ChannelFile& getChannels();
-    Mixer& getMixer();
-    Sequencer& getSequencer();
+    HardwareFile& hardware();
 
-    void setQuality(float quality);
+    void fill(float buf[], size_t nsamples);
 
-    void step(int16_t &left, int16_t &right);
+    void setOutputEnable(Gbs::OutputFlags flags);
+    void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled);
 
-    void fill(int16_t leftBuf[], int16_t rightBuf[], size_t nsamples);
+private:
 
-    void fill(int16_t buf[], size_t nsamples);
+    enum TriggerType {
+        NONE,
+        SWEEP,
+        ENV
+    };
+
+    // three triggers, two for sweep and one for envelope
+    static constexpr size_t TRIGGER_COUNT = 3;
+    // trigger sequence
+    static TriggerType const TRIGGER_SEQUENCE[TRIGGER_COUNT];
+
+
+
+    float mSamplingRate;
+
+    HardwareFile mHf;
+
+    // number of cycles needed to execute to produce 1 sample
+    // equal to the gameboy clock speed divided by the sampling rate
+    float mCyclesPerSample;
+
+    // sample times between each trigger
+    float mTriggerTimings[3];
+
+    float mSampleCounter;
+    float mSamplesToTrigger;
+    unsigned mTriggerIndex;
+
+    // input buffer for generating samples, size is the largest trigger timing
+    std::vector<float> mInputBuffer;
+
+    uint8_t mOutputStat;
+
+    // methods
+
+    template <ChType ch>
+    void run(float inbuf[], float out[], size_t nsamples);
+
 };
 
 }
