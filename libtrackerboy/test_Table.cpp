@@ -5,6 +5,9 @@
 using namespace trackerboy;
 using Catch::Contains;
 
+// https://github.com/catchorg/Catch2/issues/1134
+static constexpr auto MAX_SIZE = SongTable::MAX_SIZE;
+
 TEMPLATE_TEST_CASE("table is empty", "[Table]", InstrumentTable, SongTable, WaveTable) {
 
     TestType table;
@@ -31,7 +34,7 @@ TEMPLATE_TEST_CASE("table is full", "[Table]", Instrument, Song, Waveform) {
         CHECK_NOTHROW(table.insert());
     }
 
-    CHECK(table.size() == Table<TestType>::MAX_SIZE);
+    CHECK(table.size() == MAX_SIZE);
 
     SECTION("inserting into a full table throws exception") {
         CHECK_THROWS_AS(table.insert(), std::runtime_error);
