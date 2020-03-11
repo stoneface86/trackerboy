@@ -1,7 +1,6 @@
 # TrackerBoy
 
 [![build-lib][build-lib-badge]][build-lib-link]
-[![build-ui][build-ui-badge]][build-ui-link]
 [![tests][tests-badge]][tests-link]
 [![codecov](https://codecov.io/gh/stoneface86/trackerboy/branch/develop/graph/badge.svg)](https://codecov.io/gh/stoneface86/trackerboy)
 
@@ -51,7 +50,5 @@ This project is licensed under the MIT License - See [LICENSE](LICENSE) for more
 
 [build-lib-badge]: https://github.com/stoneface86/trackerboy/workflows/build-lib/badge.svg
 [build-lib-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Abuild-lib
-[build-ui-badge]: https://github.com/stoneface86/trackerboy/workflows/build-ui/badge.svg
-[build-ui-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Abuild-ui
 [tests-badge]: https://github.com/stoneface86/trackerboy/workflows/tests/badge.svg
 [tests-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Atests
