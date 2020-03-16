@@ -25,7 +25,7 @@ void WaveOsc::setWaveform(Waveform &wave) {
     uint8_t lo; // keep lo out here cause we need the last one for initSample
     size_t waveIndex = 0;
 
-    mInitialVolume = (wavedata[0] >> 4) * VOLUME_STEP - VOLUME_MIN;
+    mInitialVolume = (wavedata[0] >> 4) * VOLUME_STEP + VOLUME_MIN;
 
     for (size_t i = 0; i != mWaveformSize; ++i) {
 
