@@ -1,11 +1,14 @@
 
 
+#include "trackerboy/export/Wav.hpp"
 #include "trackerboy/pattern/Pattern.hpp"
 #include "trackerboy/pattern/PatternRuntime.hpp"
 #include "trackerboy/instrument/Instrument.hpp"
 #include "trackerboy/synth/Synth.hpp"
 
 #include "audio.hpp"
+
+#include <fstream>
 
 using audio::PlaybackQueue;
 
@@ -19,6 +22,7 @@ using trackerboy::Track;
 using trackerboy::TrackRuntime;
 using trackerboy::ChType;
 using trackerboy::WaveTable;
+using trackerboy::Wav;
 
 static constexpr float SAMPLING_RATE = 44100;
 
@@ -53,12 +57,10 @@ int main() {
 
     Instrument &inst = itable.insert(0, "test instrument");
     auto &prgm = inst.getProgram();
-    prgm.push_back({ 1, 0x8E, 0x0, 0xF0, trackerboy::NOTE_NONE });
-    //prgm.push_back({ 1, 0x87, 0x0, 0x00, trackerboy::NOTE_NONE });
+    prgm.push_back({ 1, 0x8E, 0x0, 0xF1, trackerboy::NOTE_NONE });
 
 
-
-    Pattern pat(69);
+    Pattern pat(128);
     Track track = pat.track(ChType::ch1);
 
     track.setNote(16, trackerboy::NOTE_C + trackerboy::OCTAVE_6);
@@ -100,7 +102,6 @@ int main() {
 
     track.setNote(0x42, trackerboy::NOTE_G + trackerboy::OCTAVE_6);
     track.setInstrument(0x42, 0);
-
     
     constexpr size_t tempo = 150;
     constexpr size_t rowsPerBeat = 8;
@@ -120,6 +121,9 @@ int main() {
     int16_t *framePtr = frameBuf.data();
     float *fframePtr = fframeBuf.data();
 
+    std::ofstream file("pattern_demo.wav", std::ios::binary | std::ios::out);
+    Wav wav(file, 2, SAMPLING_RATE);
+    wav.begin();
     pb.start();
 
     bool patternEnded;
@@ -130,9 +134,13 @@ int main() {
             frameBuf[i] = INT16_MAX * fframeBuf[i];
         }
         outputFrame(framePtr, samplesPerFrame, pb);
+        wav.write(fframePtr, samplesPerFrame);
     } while (!patternEnded);
 
     pb.stop(true);
+
+    wav.finish();
+    file.close();
 
     Pa_Terminate();
     return 0;

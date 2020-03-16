@@ -2,6 +2,7 @@
 project("libtrackerboy")
 
 set(SRC_FILES
+    "export/Wav.cpp"
     "instrument/Instrument.cpp"
     "instrument/InstrumentRuntime.cpp"
     "pattern/Pattern.cpp"
