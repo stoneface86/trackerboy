@@ -11,6 +11,11 @@ class Osc {
 public:
 
     //
+    // Copy the internal period buffer into the given vector.
+    //
+    void copyPeriod(std::vector<float> &buf);
+
+    //
     // Disables oscillator output, generate will only silence. To re-enable,
     // call reset()
     //
@@ -50,16 +55,15 @@ public:
     //
     void setFrequency(uint16_t frequency);
 
-    // delete this later
-
-    void fillPeriod();
-    std::vector<float>& period();
+    //
+    // Set the maximum size of the internal period buffer, in milleseconds.
+    // A smaller buffer uses less memory, but results in less accurate frequency
+    // output. At the minimum size, some frequencies will have the exact same
+    // period buffer (output frequency is the same).
+    //
+    void setBufferSize(unsigned milleseconds);
 
     static constexpr unsigned PERIOD_BUFFER_SIZE_DEFAULT = 100;
-
-    static constexpr unsigned PERIOD_BUFFER_SIZE_MAX = 1000;
-    // 1/64 of the sampling rate ~ 16 milleseconds
-    static constexpr unsigned PERIOD_BUFFER_SIZE_MIN = 16;
 
 protected:
 
@@ -94,6 +98,8 @@ protected:
     const size_t mWaveformSize;
     const size_t mMultiplier;
 
+    unsigned mMinBufferSize;
+
     static constexpr float VOLUME_MAX = 1.0f;
     static constexpr float VOLUME_MIN = -1.0f;
     static constexpr float VOLUME_STEP = 1.0f / 7.5f;
@@ -106,8 +112,7 @@ private:
 
     static const float STEP_TABLE[STEP_PHASES][STEP_WIDTH];
 
-    // scaling factor: samplingRate / gameboy clock rate
-    float mFactor;
+    float mSamplingRate;
 
     // gameboy frequency (0-2047)
     uint16_t mFrequency;
@@ -117,16 +122,17 @@ private:
 
     bool mDisabled;
 
-    // maximum size of the period buffer in milleseconds
-    unsigned mPeriodBufSize;
+    // max possible size, in samples, of the period buffer
+    size_t mPeriodMaxSize;
 
+    // period buffer
     std::vector<float> mPeriodBuf;
     size_t mPeriodOffset;
 
 
     // private methods
 
-    //void fillPeriod();
+    void fillPeriod();
 
 };
 

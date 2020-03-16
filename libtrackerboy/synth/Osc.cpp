@@ -8,29 +8,6 @@
 #include <cstddef>
 
 
-namespace {
-
-template <typename T>
-void circlecopy(T src[], size_t srcSize, int destPos, T dest[], size_t dstSize) {
-    for (size_t i = 0; i != srcSize; ++i) {
-        int index;
-        if (destPos < 0) {
-            auto dstSizeInt = static_cast<int>(dstSize);
-            index = ((destPos % dstSizeInt) + dstSizeInt) % dstSizeInt;
-        } else if (destPos >= dstSize) {
-            index = destPos % dstSize;
-        } else {
-            index = destPos;
-        }
-        dest[index] += src[i];
-        ++destPos;
-    }
-}
-
-
-}
-
-
 namespace trackerboy {
 
 const float Osc::STEP_TABLE[Osc::STEP_PHASES][Osc::STEP_WIDTH] = {
@@ -71,6 +48,16 @@ const float Osc::STEP_TABLE[Osc::STEP_PHASES][Osc::STEP_WIDTH] = {
 };
 
 // Public methods ------------------------------------------------------------
+
+void Osc::copyPeriod(std::vector<float> &buf) {
+    if (mRegenPeriod) {
+        fillPeriod();
+        mRegenPeriod = false;
+    }
+
+    buf.resize(mPeriodBuf.size());
+    std::copy(mPeriodBuf.begin(), mPeriodBuf.end(), buf.begin());
+}
 
 void Osc::disable() {
     mDisabled = true;
@@ -160,59 +147,141 @@ void Osc::setFrequency(uint16_t frequency) {
     }
 }
 
+void Osc::setBufferSize(unsigned milleseconds) {
+    if (milleseconds < mMinBufferSize) {
+        milleseconds = mMinBufferSize;
+    }
+    mPeriodMaxSize = static_cast<size_t>(mSamplingRate * milleseconds / 1000);
+    mRegenPeriod = true;
+}
+
 // protected methods ---------------------------------------------------------
 
 
 Osc::Osc(float samplingRate, size_t multiplier, size_t waveformSize) :
     mMultiplier(multiplier),
     mWaveformSize(waveformSize),
-    mFactor(samplingRate / Gbs::CLOCK_SPEED),
+    mSamplingRate(samplingRate),
     mFrequency(Gbs::DEFAULT_FREQUENCY),
     mDeltaBuf(),
     mInitialVolume(0.0f),
     mRegenPeriod(true),
     mDisabled(false),
-    mPeriodBufSize(PERIOD_BUFFER_SIZE_DEFAULT),
+    mPeriodMaxSize(0),
     mPeriodBuf(),
     mPeriodOffset(0)
 {
     // assert that waveform size is a power of 2
     assert((mWaveformSize & (mWaveformSize - 1)) == 0);
 
+    // the minimum buffer size is the period of the lowest frequency (f = 0, so 2048 - 0 = 2048)
+    float minimum = ceilf((2048 * mMultiplier * mWaveformSize * 1000) / Gbs::CLOCK_SPEED);
+    mMinBufferSize = static_cast<unsigned>(minimum);
+
     float nyquist = samplingRate * 0.5f;
     mNyquist = static_cast<uint16_t>(2048 - Gbs::CLOCK_SPEED / (nyquist * multiplier * waveformSize));
-
+    setBufferSize(PERIOD_BUFFER_SIZE_DEFAULT);
 }
 
 
 void Osc::fillPeriod() {
 
-    // TODO: determine best fitting LSB from a fixed period buffer size
-
-    // LSB for quantizing the frequency
-    // PulseOsc: 8 * 1/128 -> 1/16, 16 max unique periods
-    // WaveOsc:  32 * 1/128 -> 1/4, 4 max unique periods
-    // lowering the LSB lowers the maximum size of the period buffer but
-    // increases frequency error
+    // This method fills the period buffer with multiple periods, such that they
+    // can be looped seamlessly, as if an infinite signal could be generated using
+    // this buffer alone. In order to do this, the time of all periods must result
+    // in a whole number. Since our calculations involve dividing by the clock rate,
+    // 4194304, we can simply use 4194304 total periods to get a whole number. However,
+    // this would require a really large buffer, so instead we use quantization so
+    // that the actual divisor is much smaller. By quantizing we reduce this fraction, at a slight
+    // cost to accuracy due to roundoff error. Accuracy can be controlled by the size of the
+    // buffer, (larger = more accurate).
     //
-    // we quantize the timing variables so that we limit the number of max unique
-    // periods. A unique period has a unique set of phases for each transition.
-    // Doing so we can sample a buffer that loops seamlessly, which we can
-    // sample from to fill any sized buffer.
+    // So the contents of the period buffer is a sequence of periods, with a subset of these
+    // being unique. A unique period has a unique set of phases for its transitions.
+    //
+    // Example:
+    // 50% square wave with frequency f = 1923 (C-6), sampling rate is 44100 Hz, buffer size = 100ms
+    // determine timing variables // NOTE: Q format, Q42.22
+    // qSpd = (2048 - 1923) * 4 * 44100 = 22050000 (~5.257129669)
+    // qSpp = 22050000 * 8 = 176400000 (~42.05703735)
+    //
+    // determine periods (4410 is 100ms of 44100) // NOTE: periods is not in Q format!
+    // periods = (4194304 * 4410) / 176400000 = 104.8576 = 104
+    // 2^floor(log2(104)) = 64
+    // so we will have 64 periods total in the buffer
+    //
+    // now we quantize qSpd with LSB = 1 / (64 * 8) = 1/512
+    // 512 = 2^9 so we need to shift the mask by 22 - 9 = 13
+    //
+    //   000101.0100000111010011010000
+    // + 000000.0000000001000000000000  // add 1 << (shift - 1)
+    // -------------------------------
+    //   000101.0100001000010011010000
+    // & 111111.1111111110000000000000  // and -1 << (shift)
+    // -------------------------------
+    //   000101.0100001000000000000000
+    //
+    // so our quantized qSpd is now 22052864 or 5.2578125
+    // recalculate qSpp with the quantized qSpd
+    // qSpp = 22052864 * 8 = 176422912 or 42.0625 (.0625 is 1/16 so we have 16 unique periods)
+    //
+    // now determine the total time of the buffer (or the actual number of samples that is utilized)
+    // qTime = 176422912 * 64 = 11291066368 or 2692.0
+    // NOTE: qTime should be a whole number! If it isn't our calculation is wrong.
+    //
+    // Conclusion
+    // the period buffer is 2692 samples long, with 64 periods and 16 unique periods.
+    // Utilization of the buffer is 2692/4410 or 61%, utilization will always be > 50% of the maximum
+    // We can compare the accuracy of the frequency through the quantized and non-quantized period times
+    // (non-quantized) spp = 42.05703735, frequency = 44100 / 42.05603735 = 1048.576    Hz
+    //     (quantized) spp = 42.0625,     frequency = 44100 / 42.0625     = 1048.439822 Hz
+    //
+    // since the clock speed is 2^22, we can use fixed point, Q42.22 for calculations
+    // instead of floating point. Variables that are prefixed with q are in Q42.22 format
 
-    constexpr float LSB = 1 / 128.0f;
+    // diving this value by 4194304 gives us the number of samples per delta transition
+    // spd is the length of time, in samples, for a transition in the waveform
+    uint64_t qSpd = (2048 - mFrequency) * mMultiplier * static_cast<uint64_t>(mSamplingRate);
+    // spp is the length of time for an entire period
+    uint64_t qSpp = qSpd * mWaveformSize;
 
-    // spd : samples per delta transition
-    float spd = (2048 - mFrequency) * mMultiplier * mFactor;
-    // quantize spd
-    spd = LSB * floorf((spd / LSB) + 0.5f);
-    // spp : samples per period
-    float spp = spd * mWaveformSize;
+    // determine the number of periods we can fit in our buffer
+    uint64_t periods = (mPeriodMaxSize * 4194304) / qSpp;
+    assert(periods > 0);
 
-    unsigned nperiods = static_cast<unsigned>(1.0f / (LSB * mWaveformSize));
-    // spp is casted to double to prevent stupid arithmetic overflow warnings
-    size_t bufsize = static_cast<size_t>(nperiods * static_cast<double>(spp));
-    assert((nperiods * spp) - bufsize == 0);
+    // reduce this to the previous power of 2 for quantizing
+    // also equal to 2^floor(log2(num))
+    periods |= periods >> 1;
+    periods |= periods >> 2;
+    periods |= periods >> 4;
+    periods |= periods >> 8;
+    periods |= periods >> 16;
+    periods |= periods >> 32;
+    periods -= periods >> 1;
+
+    // shift = log2(periods)
+    int shift = 0;
+    uint64_t temp = periods * mWaveformSize;
+    while (temp != 1) {
+        temp >>= 1;
+        shift++;
+    }
+
+    shift = 22 - shift;
+    assert(shift > 0);
+
+    // quantize
+    qSpd += static_cast<uint64_t>(1) << (shift - 1);
+    qSpd &= static_cast<uint64_t>(-1) << shift;
+    qSpp = qSpd * mWaveformSize;
+
+    // total time of the period buffer from our quantized spd
+    uint64_t qTime = qSpp * periods;
+    // the fractional part of qTime must equal 0 (whole number)
+    assert((qTime & (4194304 - 1)) == 0);
+    size_t bufsize = qTime >> 22;
+    // bufsize must not exceed our maximum
+    assert(bufsize <= mPeriodMaxSize);
 
     // adjust phase proportionally to new buffer size
     if (mPeriodBuf.size() != 0) {
@@ -234,24 +303,27 @@ void Osc::fillPeriod() {
 
 
         for (auto &delta : mDeltaBuf) {
-            float position = delta.location * spd;
+            uint64_t qPosition = delta.location * qSpd;
             float change = delta.change;
 
-            for (size_t p = 0; p != nperiods; ++p) {
+            for (size_t p = 0; p != periods; ++p) {
 
                 // determine step set
-                float positionWhole;
-                float positionFract = modff(position, &positionWhole);
+                // get the integral part of qPosition
+                uint64_t qPositionWhole = qPosition >> 22;
+                // get the fractional part of qPosition
+                uint64_t qPositionFract = qPosition & ((1 << 22) - 1);
+                
                 // the step set chosen is determined by the fractional part of position
-                float phase = positionFract * STEP_PHASES;
-                const float *stepset = STEP_TABLE[static_cast<size_t>(phase)];
+                const float *stepset = STEP_TABLE[(qPositionFract * STEP_PHASES) >> 22];
 
                 // calculate indexing of the step
-                size_t positionIndex = static_cast<size_t>(positionWhole);
+                size_t positionIndex = static_cast<size_t>(qPositionWhole);
                 size_t endIndex = positionIndex + STEP_WIDTH;
                 size_t stepEnd; // how much of the step that gets copied, remainder goes to wraparound
-                size_t center1 = positionIndex + STEP_CENTER - 1;
                 size_t center2 = positionIndex + STEP_CENTER;
+                size_t center1 = center2 - 1;
+
                 if (endIndex > bufsize) {
                     // at the end of buffer
                     stepEnd = bufsize - positionIndex;
@@ -294,7 +366,7 @@ void Osc::fillPeriod() {
                 
 
                 // advance position to the next period
-                position += spp;
+                qPosition += qSpp;
             }
         }
 
@@ -319,19 +391,7 @@ void Osc::fillPeriod() {
             mPeriodBuf[i] = cur;
             previous = cur;
         }
-
-        // OPTIONAL: shift by the period by STEP_CENTER so that transitions are
-        //           centered at the time they occur.
-        //
-        //     /----      /----
-        // ---/       ---/
-        // ^              ^
-        // before         after
     }
-}
-
-std::vector<float>& Osc::period() {
-    return mPeriodBuf;
 }
 
 }
