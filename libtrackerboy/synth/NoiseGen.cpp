@@ -1,6 +1,4 @@
 
-#pragma once
-
 #include "trackerboy/synth/NoiseGen.hpp"
 
 #include <cmath>
