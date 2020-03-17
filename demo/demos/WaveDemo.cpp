@@ -36,24 +36,22 @@ const uint8_t WAVEDATA_SINE[Gbs::WAVE_RAMSIZE] = {
 
 
 WaveDemo::WaveDemo(const uint8_t wavedata[Gbs::WAVE_RAMSIZE], std::string waveName) :
-    wavedata{0},
+    mWave(),
     Demo("")
 {
-    std::copy_n(wavedata, Gbs::WAVE_RAMSIZE, this->wavedata);
+    std::copy_n(wavedata, Gbs::WAVE_RAMSIZE, mWave.data());
     std::ostringstream stream;
     stream << "Wave (" << waveName << ")";
     name = stream.str();
 }
 
 void WaveDemo::init(Synth &synth) {
-    Mixer &mixer = synth.mixer();
-    WaveChannel &ch3 = synth.getChannels().ch3;
+    WaveOsc &osc3 = synth.hardware().osc3;
 
-    ch3.setOutputLevel(Gbs::WAVE_FULL);
-    ch3.setWaveform(wavedata);
+    //ch3.setOutputLevel(Gbs::WAVE_FULL);
+    osc3.setWaveform(mWave);
 
-    mixer.setTerminalEnable(Gbs::TERM_BOTH, true);
-    mixer.setEnable(Gbs::OUT_BOTH3);
+    synth.setOutputEnable(Gbs::OUT_BOTH3);
 }
 
 long WaveDemo::setupNextRun(Synth &synth, unsigned counter) {
@@ -62,7 +60,7 @@ long WaveDemo::setupNextRun(Synth &synth, unsigned counter) {
     } else {
         uint16_t freq = FREQ_TABLE[counter];
         std::cout << "Frequency: " << freq << std::endl;
-        synth.getChannels().ch3.setFrequency(freq);
+        synth.hardware().osc3.setFrequency(freq);
         return DEMO_RUNTIME;
     }
 }

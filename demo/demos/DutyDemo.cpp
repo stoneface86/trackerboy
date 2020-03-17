@@ -24,8 +24,6 @@ DutyDemo::DutyDemo() :
 
 
 void DutyDemo::init(Synth &synth) {
-    Mixer &mixer = synth.mixer();
-    //PulseChannel &ch2 = synth.getChannels().ch2;
     PulseOsc &osc2 = synth.hardware().osc2;
     Envelope &env2 = synth.hardware().env2;
 
@@ -34,7 +32,7 @@ void DutyDemo::init(Synth &synth) {
     osc2.setFrequency(DEMO_FREQ);
     osc2.reset();
 
-    mixer.setEnable(Gbs::OUT_BOTH2);
+    synth.setOutputEnable(Gbs::OUT_BOTH2);
 }
 
 long DutyDemo::setupNextRun(Synth &synth, unsigned counter) {

@@ -26,8 +26,8 @@ using trackerboy::Wav;
 
 static constexpr float SAMPLING_RATE = 44100;
 
-static void outputFrame(int16_t *framePtr, size_t framesize, PlaybackQueue &queue) {
-    int16_t *fp = framePtr;
+static void outputFrame(float *framePtr, size_t framesize, PlaybackQueue &queue) {
+    float *fp = framePtr;
     size_t toWrite = framesize;
     size_t nwritten = 0;
     for (;;) {
@@ -114,12 +114,9 @@ int main() {
 
     
 
-    std::vector<int16_t> frameBuf;
-    std::vector<float> fframeBuf;
+    std::vector<float> frameBuf;
     frameBuf.resize(samplesPerFrame * 2);
-    fframeBuf.resize(frameBuf.size());
-    int16_t *framePtr = frameBuf.data();
-    float *fframePtr = fframeBuf.data();
+    float *framePtr = frameBuf.data();
 
     std::ofstream file("pattern_demo.wav", std::ios::binary | std::ios::out);
     Wav wav(file, 2, SAMPLING_RATE);
@@ -129,12 +126,9 @@ int main() {
     bool patternEnded;
     do {
         patternEnded = pr.step(synth, itable, wtable);
-        synth.fill(fframePtr, samplesPerFrame);
-        for (size_t i = 0; i != fframeBuf.size(); ++i) {
-            frameBuf[i] = INT16_MAX * fframeBuf[i];
-        }
+        synth.fill(framePtr, samplesPerFrame);
         outputFrame(framePtr, samplesPerFrame, pb);
-        wav.write(fframePtr, samplesPerFrame);
+        wav.write(framePtr, samplesPerFrame);
     } while (!patternEnded);
 
     pb.stop(true);

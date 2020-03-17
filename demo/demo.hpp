@@ -48,7 +48,7 @@ public:
 
 class WaveDemo : public Demo {
 
-    uint8_t wavedata[trackerboy::Gbs::WAVE_RAMSIZE];
+    trackerboy::Waveform mWave;
 
 public:
     WaveDemo(const uint8_t wavedata[trackerboy::Gbs::WAVE_RAMSIZE], std::string waveName);

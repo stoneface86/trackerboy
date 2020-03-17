@@ -5,7 +5,7 @@
 #define DEMO_RUNTIME 4000
 #define DEMO_SWEEP_SHIFT 7
 #define DEMO_SWEEP_TIME 1
-#define DEMO_SUB_FREQ 2000
+#define DEMO_SUB_FREQ 2030
 #define DEMO_ADD_FREQ 256
 
 using namespace trackerboy;
@@ -16,15 +16,13 @@ SweepDemo::SweepDemo() :
 }
 
 void SweepDemo::init(Synth &synth) {
-    Mixer &mixer = synth.mixer();
     HardwareFile &hf = synth.hardware();
 
-    //cf.ch1.setEnvStep(Gbs::MAX_ENV_STEPS);
-    hf.env1.setRegister(Gbs::MAX_ENV_STEPS);
+    hf.env1.setRegister(0xF0);
 
     hf.sweep1.setRegister((DEMO_SWEEP_SHIFT << 4) | DEMO_SWEEP_TIME);
 
-    mixer.setEnable(Gbs::OUT_BOTH1);
+    synth.setOutputEnable(Gbs::OUT_BOTH1);
 }
 
 long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
@@ -54,8 +52,8 @@ long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
 
 
     hf.osc1.setFrequency(freq);
-    hf.sweep1.setSweepMode(mode);
-    ch1.reset();
+    hf.sweep1.setRegister((DEMO_SWEEP_TIME << 4) | (static_cast<uint8_t>(mode) << 3) | DEMO_SWEEP_SHIFT);
+    hf.osc1.reset();
 
     return DEMO_RUNTIME;
 }
