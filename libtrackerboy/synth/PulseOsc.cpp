@@ -72,7 +72,8 @@ void PulseOsc::setDeltaBuf() {
             break;
     }
 
-    mRegenPeriod = true;
+    mRegenFlags |= REGEN_FLAG_WAVEFORM;
+    //mRegenPeriod = true;
 }
 
 

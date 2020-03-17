@@ -91,14 +91,18 @@ protected:
     std::vector<Delta> mDeltaBuf;
 
     float mInitialVolume;
-
-    // if true the period will be regenerated
-    bool mRegenPeriod;
+    
+    // Bit 0: if set the frequency has been changed
+    // Bit 1: if set the waveform (mDeltaBuf) has been changed
+    int mRegenFlags;
 
     const size_t mWaveformSize;
     const size_t mMultiplier;
 
     unsigned mMinBufferSize;
+
+    static constexpr int REGEN_FLAG_WAVEFORM  = 0x1;
+    static constexpr int REGEN_FLAG_FREQUENCY = 0x2;
 
     static constexpr float VOLUME_MAX = 1.0f;
     static constexpr float VOLUME_MIN = -1.0f;
@@ -128,6 +132,13 @@ private:
     // period buffer
     std::vector<float> mPeriodBuf;
     size_t mPeriodOffset;
+
+    // frequency settings (calculated when REGEN_FLAG_FREQUENCY is set)
+    // Q indicates that the number is in Q format (Q42.22)
+    uint64_t mSamplesPerDeltaQ;
+    uint64_t mSamplesPerPeriodQ;
+    size_t mPeriods;
+
 
 
     // private methods

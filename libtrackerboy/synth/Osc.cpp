@@ -50,9 +50,9 @@ const float Osc::STEP_TABLE[Osc::STEP_PHASES][Osc::STEP_WIDTH] = {
 // Public methods ------------------------------------------------------------
 
 void Osc::copyPeriod(std::vector<float> &buf) {
-    if (mRegenPeriod) {
+    if (mRegenFlags) {
         fillPeriod();
-        mRegenPeriod = false;
+        mRegenFlags = 0;
     }
 
     buf.resize(mPeriodBuf.size());
@@ -82,9 +82,9 @@ void Osc::generate(float buf[], size_t nsamples) {
         run(nsamples);
     } else {
 
-        if (mRegenPeriod) {
+        if (mRegenFlags) {
             fillPeriod();
-            mRegenPeriod = false;
+            mRegenFlags = 0;
         }
 
         size_t remaining = nsamples;
@@ -132,9 +132,9 @@ void Osc::reset() {
 }
 
 void Osc::run(size_t nsamples) {
-    if (mRegenPeriod) {
+    if (mRegenFlags) {
         fillPeriod();
-        mRegenPeriod = false;
+        mRegenFlags = 0;
     }
 
     mPeriodOffset = (mPeriodOffset + nsamples) % mPeriodBuf.size();
@@ -143,7 +143,7 @@ void Osc::run(size_t nsamples) {
 void Osc::setFrequency(uint16_t frequency) {
     if (frequency != mFrequency) {
         mFrequency = frequency;
-        mRegenPeriod = true;
+        mRegenFlags |= REGEN_FLAG_FREQUENCY;
     }
 }
 
@@ -152,7 +152,7 @@ void Osc::setBufferSize(unsigned milleseconds) {
         milleseconds = mMinBufferSize;
     }
     mPeriodMaxSize = static_cast<size_t>(mSamplingRate * milleseconds / 1000);
-    mRegenPeriod = true;
+    mRegenFlags |= REGEN_FLAG_FREQUENCY;
 }
 
 // protected methods ---------------------------------------------------------
@@ -165,11 +165,13 @@ Osc::Osc(float samplingRate, size_t multiplier, size_t waveformSize) :
     mFrequency(Gbs::DEFAULT_FREQUENCY),
     mDeltaBuf(),
     mInitialVolume(0.0f),
-    mRegenPeriod(true),
+    mRegenFlags(REGEN_FLAG_WAVEFORM | REGEN_FLAG_FREQUENCY),
     mDisabled(false),
     mPeriodMaxSize(0),
-    mPeriodBuf(),
-    mPeriodOffset(0)
+    mPeriodBuf(1),
+    mPeriodOffset(0),
+    mSamplesPerDeltaQ(0),
+    mSamplesPerPeriodQ(0)
 {
     // assert that waveform size is a power of 2
     assert((mWaveformSize & (mWaveformSize - 1)) == 0);
@@ -239,56 +241,68 @@ void Osc::fillPeriod() {
     // since the clock speed is 2^22, we can use fixed point, Q42.22 for calculations
     // instead of floating point. Variables that are prefixed with q are in Q42.22 format
 
-    // diving this value by 4194304 gives us the number of samples per delta transition
-    // spd is the length of time, in samples, for a transition in the waveform
-    uint64_t qSpd = (2048 - mFrequency) * mMultiplier * static_cast<uint64_t>(mSamplingRate);
-    // spp is the length of time for an entire period
-    uint64_t qSpp = qSpd * mWaveformSize;
+    size_t bufsize;
 
-    // determine the number of periods we can fit in our buffer
-    uint64_t periods = (mPeriodMaxSize * 4194304) / qSpp;
-    assert(periods > 0);
+    if (mRegenFlags & REGEN_FLAG_FREQUENCY) {
+        // diving this value by 4194304 gives us the number of samples per delta transition
+        // spd is the length of time, in samples, for a transition in the waveform
+        uint64_t qSpd = (2048 - mFrequency) * mMultiplier * static_cast<uint64_t>(mSamplingRate);
+        uint64_t qSpp = qSpd * mWaveformSize;
 
-    // reduce this to the previous power of 2 for quantizing
-    // also equal to 2^floor(log2(num))
-    periods |= periods >> 1;
-    periods |= periods >> 2;
-    periods |= periods >> 4;
-    periods |= periods >> 8;
-    periods |= periods >> 16;
-    periods |= periods >> 32;
-    periods -= periods >> 1;
+        size_t periods = (mPeriodMaxSize * 4194304) / qSpp;
+        assert(periods > 0);
 
-    // shift = log2(periods)
-    int shift = 0;
-    uint64_t temp = periods * mWaveformSize;
-    while (temp != 1) {
-        temp >>= 1;
-        shift++;
-    }
+        // reduce this to the previous power of 2 for quantizing
+        // also equal to 2^floor(log2(num))
+        periods |= periods >> 1;
+        periods |= periods >> 2;
+        periods |= periods >> 4;
+        periods |= periods >> 8;
+        periods |= periods >> 16;
+        periods |= periods >> 32;
+        periods -= periods >> 1;
 
-    shift = 22 - shift;
-    assert(shift > 0);
+        // shift = log2(periods)
+        int shift = 0;
+        uint64_t temp = periods * mWaveformSize;
+        while (temp != 1) {
+            temp >>= 1;
+            shift++;
+        }
 
-    // quantize
-    qSpd += static_cast<uint64_t>(1) << (shift - 1);
-    qSpd &= static_cast<uint64_t>(-1) << shift;
-    qSpp = qSpd * mWaveformSize;
+        shift = 22 - shift;
+        assert(shift > 0);
 
-    // total time of the period buffer from our quantized spd
-    uint64_t qTime = qSpp * periods;
-    // the fractional part of qTime must equal 0 (whole number)
-    assert((qTime & (4194304 - 1)) == 0);
-    size_t bufsize = qTime >> 22;
-    // bufsize must not exceed our maximum
-    assert(bufsize <= mPeriodMaxSize);
+        // quantize
+        qSpd += static_cast<uint64_t>(1) << (shift - 1);
+        qSpd &= static_cast<uint64_t>(-1) << shift;
+        qSpp = qSpd * mWaveformSize;
 
-    // adjust phase proportionally to new buffer size
-    if (mPeriodBuf.size() != 0) {
-        mPeriodOffset = (mPeriodOffset * bufsize) / mPeriodBuf.size();
+        // total time of the period buffer from our quantized spd
+        uint64_t qTime = qSpp * periods;
+        // the fractional part of qTime must equal 0 (whole number)
+        assert((qTime & (4194304 - 1)) == 0);
+        bufsize = qTime >> 22;
+        // bufsize must not exceed our maximum
+        assert(bufsize <= mPeriodMaxSize);
+
+        double ratio = (mPeriodOffset * static_cast<double>(mPeriods)) / mPeriodBuf.size();
+        double junk;
+        ratio = modf(ratio, &junk);
+        mPeriodOffset = static_cast<size_t>(ratio * (static_cast<double>(bufsize) / periods));
+
+        // this only works when periods == mPeriods
+        //mPeriodOffset = (mPeriodOffset * bufsize) / mPeriodBuf.size();
+
+        mSamplesPerDeltaQ = qSpd;
+        mSamplesPerPeriodQ = qSpp;
+        mPeriods = periods;
+
+
     } else {
-        mPeriodOffset = 0;
+        bufsize = mPeriodBuf.size();
     }
+
     mPeriodBuf.resize(bufsize);
     std::fill(mPeriodBuf.begin(), mPeriodBuf.end(), 0.0f);
 
@@ -303,10 +317,10 @@ void Osc::fillPeriod() {
 
 
         for (auto &delta : mDeltaBuf) {
-            uint64_t qPosition = delta.location * qSpd;
+            uint64_t qPosition = delta.location * mSamplesPerDeltaQ;
             float change = delta.change;
 
-            for (size_t p = 0; p != periods; ++p) {
+            for (size_t p = 0; p != mPeriods; ++p) {
 
                 // determine step set
                 // get the integral part of qPosition
@@ -366,7 +380,7 @@ void Osc::fillPeriod() {
                 
 
                 // advance position to the next period
-                qPosition += qSpp;
+                qPosition += mSamplesPerPeriodQ;
             }
         }
 

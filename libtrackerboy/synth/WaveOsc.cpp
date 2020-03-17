@@ -53,7 +53,7 @@ void WaveOsc::setWaveform(Waveform &wave) {
         }
     }
 
-    mRegenPeriod = true;
+    mRegenFlags |= REGEN_FLAG_WAVEFORM;
 }
 
 
