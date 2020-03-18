@@ -48,8 +48,8 @@ WaveDemo::WaveDemo(const uint8_t wavedata[Gbs::WAVE_RAMSIZE], std::string waveNa
 void WaveDemo::init(Synth &synth) {
     WaveOsc &osc3 = synth.hardware().osc3;
 
-    //ch3.setOutputLevel(Gbs::WAVE_FULL);
-    osc3.setWaveform(mWave);
+    synth.setWaveVolume(Gbs::WAVE_FULL);
+    synth.setWaveform(mWave);
 
     synth.setOutputEnable(Gbs::OUT_BOTH3);
 }

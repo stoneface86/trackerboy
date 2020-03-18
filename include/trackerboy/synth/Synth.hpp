@@ -21,6 +21,9 @@ public:
     void setOutputEnable(Gbs::OutputFlags flags);
     void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled);
 
+    void setWaveform(Waveform &wave);
+    void setWaveVolume(Gbs::WaveVolume volume);
+
 private:
 
     enum TriggerType {
@@ -56,10 +59,15 @@ private:
 
     uint8_t mOutputStat;
 
+    Waveform mWaveform;
+    Gbs::WaveVolume mWaveVolume;
+
     // methods
 
     template <ChType ch>
     void run(float inbuf[], float out[], size_t nsamples);
+
+    void updateWave();
 
 };
 

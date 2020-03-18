@@ -13,6 +13,8 @@ class WaveOsc : public Osc {
 public:
     WaveOsc(float samplingRate);
 
+    void clearWaveform();
+
     void setWaveform(Waveform &wave);
 
 

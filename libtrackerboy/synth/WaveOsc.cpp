@@ -10,6 +10,11 @@ WaveOsc::WaveOsc(float samplingRate) :
 {
 }
 
+void WaveOsc::clearWaveform() {
+    mDeltaBuf.clear();
+    mRegenFlags |= REGEN_FLAG_WAVEFORM;
+}
+
 void WaveOsc::setWaveform(Waveform &wave) {
 
     auto wavedata = wave.data();

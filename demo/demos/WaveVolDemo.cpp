@@ -27,7 +27,7 @@ void WaveVolDemo::init(Synth &synth) {
 
     Waveform wave;
     std::copy_n(WAVEDATA_TRIANGLE, Gbs::WAVE_RAMSIZE, wave.data());
-    osc3.setWaveform(wave);
+    synth.setWaveform(wave);
     osc3.setFrequency(1045);
 
     synth.setOutputEnable(Gbs::OUT_BOTH3);
@@ -39,6 +39,7 @@ long WaveVolDemo::setupNextRun(Synth &synth, unsigned counter) {
     } else {
         //WaveChannel &ch3 = synth.getChannels().ch3;
         //ch3.setOutputLevel(static_cast<Gbs::WaveVolume>(counter));
+        synth.setWaveVolume(static_cast<Gbs::WaveVolume>(counter));
         std::cout << "Volume: " << VOL_STRINGS[counter] << std::endl;
         return DEMO_RUNTIME;
     }

@@ -61,6 +61,7 @@ void mix(float *inptr, float *outptr, float gain, size_t nsamples) {
 }
 
 
+
 }
 
 
@@ -105,7 +106,9 @@ Synth::Synth(float samplingRate) :
     mSamplesToTrigger(mTriggerTimings[0]),
     mTriggerIndex(0),
     mInputBuffer(1 + static_cast<size_t>((CYCLES_PER_TRIGGER * 4) / mCyclesPerSample)),
-    mOutputStat(Gbs::OUT_ALL)
+    mOutputStat(Gbs::OUT_ALL),
+    mWaveform(),
+    mWaveVolume(Gbs::WAVE_FULL)
 {
     // NOTE: mTriggerTimings will need to be recalculated if the sampling rate
     // changes. Currently there is no way to change it after construction,
@@ -200,6 +203,19 @@ void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) {
         mOutputStat &= ~flag;
     }
 }
+
+void Synth::setWaveform(Waveform &wave) {
+    mWaveform = wave;
+    updateWave();
+}
+
+void Synth::setWaveVolume(Gbs::WaveVolume volume) {
+    if (mWaveVolume != volume) {
+        mWaveVolume = volume;
+        updateWave();
+    }
+}
+
 
 template <ChType ch>
 void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
@@ -315,6 +331,45 @@ void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
 
     }
     
+}
+
+void Synth::updateWave() {
+
+    int shift = 0;
+    switch (mWaveVolume) {
+        case Gbs::WAVE_MUTE:
+            // clear the delta buffer in the oscillator
+            mHf.osc3.clearWaveform();
+            return;
+        case Gbs::WAVE_FULL:
+            // waveform remains unchanged
+            mHf.osc3.setWaveform(mWaveform);
+            return;
+        case Gbs::WAVE_HALF:
+            // shift all samples by 1 (divide by 2)
+            // samples range from 0-7 (adjusted 4-B)
+            shift = 1;
+            break;
+        case Gbs::WAVE_QUARTER:
+            // shift all samples by 2 (divide by 4)
+            // samples range from 0-3 (adjusted 6-9)
+            shift = 2;
+            break;
+    }
+
+    Waveform tempWave = mWaveform;
+    auto tempData = tempWave.data();
+    // ground is in between 7 and 8, 0 is minimum, so we must offset the resulting samples by this
+    uint8_t offset = 8 - (1 << shift);
+    for (size_t i = 0; i < Gbs::WAVE_RAMSIZE; ++i) {
+        uint8_t samples = tempData[i];
+        uint8_t hi = samples >> 4;
+        uint8_t lo = samples & 0xF;
+        hi = (hi >> shift) + offset;
+        lo = (lo >> shift) + offset;
+        tempData[i] = (hi << 4) | lo;
+    }
+    mHf.osc3.setWaveform(tempWave);
 }
 
 
