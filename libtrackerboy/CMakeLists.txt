@@ -29,16 +29,20 @@ set(SRC_FILES
 )
 
 # give version information to version.cpp via preproccessor macros
-set_source_files_properties("version.cpp" PROPERTIES COMPILE_DEFINITIONS "VERSION_MAJOR=${CMAKE_PROJECT_VERSION_MAJOR};VERSION_MINOR=${CMAKE_PROJECT_VERSION_MINOR};VERSION_PATCH=${CMAKE_PROJECT_VERSION_PATCH}")
+set_source_files_properties("version.cpp" PROPERTIES COMPILE_DEFINITIONS "VERSION_MAJOR=${trackerboy_VERSION_MAJOR};VERSION_MINOR=${trackerboy_VERSION_MINOR};VERSION_PATCH=${trackerboy_VERSION_PATCH}")
 add_library("trackerboy" STATIC ${SRC_FILES})
 
 if (MSVC)
+set(WARNFLAGS /W4)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+set(WARNFLAGS -Wall -Wextra -pedantic)
+endif ()
+
 target_compile_options(
     trackerboy
     PRIVATE
-    /W4
+    ${WARNFLAGS}
 )
-endif ()
 
 target_link_libraries(trackerboy PUBLIC trackerboyCoverage)
 

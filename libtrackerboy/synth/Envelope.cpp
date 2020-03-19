@@ -5,10 +5,10 @@
 namespace trackerboy {
 
 Envelope::Envelope() :
-    mEnvCounter(0),
     mEnvelope(Gbs::DEFAULT_ENV_STEPS),
+    mEnvMode(Gbs::DEFAULT_ENV_MODE),
     mEnvLength(Gbs::DEFAULT_ENV_LENGTH),
-    mEnvMode(Gbs::DEFAULT_ENV_MODE)
+    mEnvCounter(0)
 {
 }
 

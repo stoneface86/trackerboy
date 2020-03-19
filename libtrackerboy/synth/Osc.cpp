@@ -159,19 +159,20 @@ void Osc::setBufferSize(unsigned milleseconds) {
 
 
 Osc::Osc(float samplingRate, size_t multiplier, size_t waveformSize) :
-    mMultiplier(multiplier),
-    mWaveformSize(waveformSize),
-    mSamplingRate(samplingRate),
-    mFrequency(Gbs::DEFAULT_FREQUENCY),
     mDeltaBuf(),
     mInitialVolume(0.0f),
     mRegenFlags(REGEN_FLAG_WAVEFORM | REGEN_FLAG_FREQUENCY),
+    mWaveformSize(waveformSize),
+    mMultiplier(multiplier),
+    mSamplingRate(samplingRate),
+    mFrequency(Gbs::DEFAULT_FREQUENCY),
     mDisabled(false),
     mPeriodMaxSize(0),
     mPeriodBuf(1),
     mPeriodOffset(0),
     mSamplesPerDeltaQ(0),
-    mSamplesPerPeriodQ(0)
+    mSamplesPerPeriodQ(0),
+    mPeriods(0)
 {
     // assert that waveform size is a power of 2
     assert((mWaveformSize & (mWaveformSize - 1)) == 0);

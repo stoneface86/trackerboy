@@ -8,8 +8,8 @@ namespace trackerboy {
 
 InstrumentRuntime::InstrumentRuntime(ChType mTrackId) :
     mProgram(nullptr),
-    mPc(0),
-    mFc(1),
+    mFc(0),
+    mPc(1),
     mRunning(false),
     mTrackId(mTrackId)
 {
