@@ -30,7 +30,7 @@ private:
     uint8_t mEnvLength;
 
     uint8_t mEnvCounter;
-
+    uint8_t mRegister;
 
 };
 

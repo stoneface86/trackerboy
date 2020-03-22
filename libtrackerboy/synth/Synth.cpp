@@ -183,6 +183,28 @@ void Synth::fill(float buf[], size_t nsamples) {
 
 }
 
+void Synth::restart(ChType ch) {
+    switch (ch) {
+        case ChType::ch1:
+            mHf.env1.reset();
+            mHf.sweep1.reset();
+            mHf.osc1.reset();
+            break;
+        case ChType::ch2:
+            mHf.env2.reset();
+            mHf.osc2.reset();
+            break;
+        case ChType::ch3:
+            mHf.osc3.reset();
+            break;
+        case ChType::ch4:
+            mHf.env4.reset();
+            mHf.gen4.reset();
+            break;
+    }
+}
+
+
 void Synth::setOutputEnable(Gbs::OutputFlags flags) {
     mOutputStat = flags;
 }

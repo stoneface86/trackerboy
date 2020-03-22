@@ -18,6 +18,10 @@ public:
 
     void fill(float buf[], size_t nsamples);
 
+    // reinitialize channel
+    // this is equivalent to writing bit 7 in NRx4 registers
+    void restart(ChType ch);
+
     void setOutputEnable(Gbs::OutputFlags flags);
     void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled);
 

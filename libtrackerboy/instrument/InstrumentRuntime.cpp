@@ -94,22 +94,7 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
 
         #undef executeDuty
 
-        // execute settings for all instructions
-        if (inst.ctrl & Instruction::CTRL_INIT) {
-            // init sound, channel restarts output
-            if (mTrackId == ChType::ch4) {
-                hf.gen4.reset();
-            } else {
-                uint16_t freq;
-                if (inst.note == NOTE_NONE) {
-                    freq = rowFreq;
-                } else {
-                    freq = NOTE_FREQ_TABLE[inst.note];
-                }
-                osc->setFrequency(freq);
-                osc->reset();
-            }
-        }
+        
 
         if (inst.ctrl & Instruction::CTRL_PANNING) {
             bool leftEnable = inst.ctrl & Instruction::PANNING_LEFT;
@@ -130,6 +115,25 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
                 }
                 env->setRegister(envsettings);
             }
+        }
+
+        // execute settings for all instructions
+        if (inst.ctrl & Instruction::CTRL_INIT) {
+            // init sound, channel restarts output
+            if (mTrackId == ChType::ch4) {
+                //hf.gen4.reset();
+            } else {
+                uint16_t freq;
+                if (inst.note == NOTE_NONE) {
+                    freq = rowFreq;
+                } else {
+                    freq = NOTE_FREQ_TABLE[inst.note];
+                }
+                osc->setFrequency(freq);
+                //osc->reset();
+            }
+
+            synth.restart(mTrackId);
         }
     }
 }

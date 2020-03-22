@@ -89,6 +89,9 @@ static constexpr Duty DEFAULT_DUTY              = DUTY_75;
 static constexpr uint8_t DEFAULT_ENV_STEPS      = 0;
 static constexpr uint8_t DEFAULT_ENV_LENGTH     = 0;
 static constexpr EnvMode DEFAULT_ENV_MODE       = ENV_ATTENUATE;
+static constexpr uint8_t DEFAULT_ENV_REGISTER   = (DEFAULT_ENV_STEPS << 4) | 
+                                                  (static_cast<uint8_t>(DEFAULT_ENV_MODE) << 3) |
+                                                  (DEFAULT_ENV_LENGTH);
 static constexpr uint16_t DEFAULT_FREQUENCY     = 0;
 static constexpr uint8_t DEFAULT_LENGTH         = 0;
 static constexpr OutputFlags DEFAULT_OUTPUT     = OUT_OFF;
@@ -97,6 +100,9 @@ static constexpr NoiseSteps DEFAULT_STEP_COUNT  = NOISE_STEPS_15;
 static constexpr uint8_t DEFAULT_SWEEP_TIME     = MAX_SWEEP_TIME;
 static constexpr SweepMode DEFAULT_SWEEP_MODE   = SWEEP_ADDITION;
 static constexpr uint8_t DEFAULT_SWEEP_SHIFT    = 0;
+static constexpr uint8_t DEFAULT_SWEEP_REGISTER = (DEFAULT_SWEEP_TIME << 4) |
+                                                  (static_cast<uint8_t>(DEFAULT_SWEEP_MODE) << 3) |
+                                                  (DEFAULT_SWEEP_SHIFT);
 static constexpr uint8_t DEFAULT_TERM_VOLUME    = MAX_TERM_VOLUME;
 static constexpr bool DEFAULT_TERM_ENABLE       = false;
 static constexpr WaveVolume DEFAULT_WAVE_LEVEL  = WAVE_FULL;

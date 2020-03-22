@@ -10,18 +10,22 @@ Sweep::Sweep(Osc &osc) :
     mSweepMode(Gbs::DEFAULT_SWEEP_MODE),
     mSweepTime(Gbs::DEFAULT_SWEEP_TIME),
     mSweepShift(Gbs::DEFAULT_SWEEP_SHIFT),
-    mSweepCounter(0)
+    mSweepCounter(0),
+    mRegister(Gbs::DEFAULT_SWEEP_REGISTER),
+    mShadow(0)
 {
 }
 
 void Sweep::reset() {
     mSweepCounter = 0;
+    mSweepShift = mRegister & 0x7;
+    mSweepMode = static_cast<Gbs::SweepMode>((mRegister >> 3) & 1);
+    mSweepTime = (mRegister >> 4) & 0x7;
+    mShadow = mOsc.frequency();
 }
 
 void Sweep::setRegister(uint8_t reg) {
-    mSweepShift = reg & 0x7;
-    mSweepMode = static_cast<Gbs::SweepMode>((reg >> 3) & 1);
-    mSweepTime = (reg >> 4) & 0x7;
+    mRegister = reg;
 }
 
 void Sweep::trigger() {
@@ -29,22 +33,24 @@ void Sweep::trigger() {
         if (++mSweepCounter >= mSweepTime) {
             mSweepCounter = 0;
             if (mSweepShift) {
-                int16_t shadow = mOsc.frequency();
-                int16_t sweepfreq = shadow >> mSweepShift;
+                int16_t sweepfreq = mShadow >> mSweepShift;
                 if (mSweepMode == Gbs::SWEEP_SUBTRACTION) {
-                    sweepfreq = shadow - sweepfreq;
+                    sweepfreq = mShadow - sweepfreq;
                     if (sweepfreq < 0) {
                         return; // no change
                     }
                 } else {
-                    sweepfreq = shadow + sweepfreq;
+                    sweepfreq = mShadow + sweepfreq;
                     if (sweepfreq > Gbs::MAX_FREQUENCY) {
                         // sweep will overflow, disable the oscillator
                         mOsc.disable();
                         return;
                     }
                 }
+                // no overflow/underflow
+                // write-back the shadow register to CH1's frequency register
                 mOsc.setFrequency(static_cast<uint16_t>(sweepfreq));
+                mShadow = sweepfreq;
             }
         }
     }

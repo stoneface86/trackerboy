@@ -8,18 +8,20 @@ Envelope::Envelope() :
     mEnvelope(Gbs::DEFAULT_ENV_STEPS),
     mEnvMode(Gbs::DEFAULT_ENV_MODE),
     mEnvLength(Gbs::DEFAULT_ENV_LENGTH),
-    mEnvCounter(0)
+    mEnvCounter(0),
+    mRegister(Gbs::DEFAULT_ENV_REGISTER)
 {
 }
 
 void Envelope::reset() {
     mEnvCounter = 0;
+    mEnvLength = (mRegister & 0x7);
+    mEnvMode = static_cast<Gbs::EnvMode>((mRegister >> 3) & 1);
+    mEnvelope = (mRegister >> 4);
 }
 
 void Envelope::setRegister(uint8_t envReg) {
-    mEnvLength = (envReg & 0x7);
-    mEnvMode = static_cast<Gbs::EnvMode>((envReg >> 3) & 1);
-    mEnvelope = (envReg >> 4);
+    mRegister = envReg;
 }
 
 void Envelope::trigger() {
