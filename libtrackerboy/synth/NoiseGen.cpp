@@ -1,8 +1,6 @@
 
 #include "trackerboy/synth/NoiseGen.hpp"
 
-#include <cmath>
-
 constexpr uint16_t LFSR_INIT = 0x7FFF;
 #define calcCounterMax(drf, scf) (DRF_TABLE[drf] << (scf+1))
 
@@ -24,29 +22,23 @@ static const uint8_t DRF_TABLE[] = {
 namespace trackerboy {
 
 NoiseGen::NoiseGen() :
+    Generator(calcCounterMax(Gbs::DEFAULT_DRF, Gbs::DEFAULT_SCF), 0),
     mRegister(Gbs::DEFAULT_NOISE_REGISTER),
-    mScf(Gbs::DEFAULT_SCF),
     mStepSelection(Gbs::DEFAULT_STEP_COUNT),
-    mDrf(Gbs::DEFAULT_DRF),
-    mLfsr(LFSR_INIT),
-    mShiftCounter(0),
-    mShiftCounterMax(calcCounterMax(mDrf, mScf))
+    mLfsr(LFSR_INIT)
 {
 }
 
 void NoiseGen::restart() {
-    mShiftCounter = 0;
+    Generator::restart();
     mLfsr = LFSR_INIT;
-    mDrf = mRegister & 0x7;
-    mStepSelection = static_cast<Gbs::NoiseSteps>((mRegister >> 3) & 1);
-    mScf = mRegister >> 4;
-    mShiftCounterMax = calcCounterMax(mDrf, mScf);
+    mOutput = 0;
 }
 
-uint8_t NoiseGen::step(unsigned cycles) {
-    mShiftCounter += cycles;
-    while (mShiftCounter >= mShiftCounterMax) {
-        mShiftCounter -= mShiftCounterMax;
+void NoiseGen::step(unsigned cycles) {
+    mFreqCounter += cycles;
+    while (mFreqCounter >= mPeriod) {
+        mFreqCounter -= mPeriod;
 
         // xor bits 1 and 0 of the lfsr
         uint8_t result = (mLfsr & 0x1) ^ ((mLfsr >> 1) & 0x1);
@@ -62,7 +54,7 @@ uint8_t NoiseGen::step(unsigned cycles) {
     }
 
     // output is bit 0 inverted, so if bit 0 == 1, output MIN
-    return (mLfsr & 0x1) ? Gbs::SAMPLE_MIN : Gbs::SAMPLE_MAX;
+    mOutput = (~mLfsr) & 0x1;
 }
 
 uint8_t NoiseGen::readRegister() {
@@ -71,6 +63,10 @@ uint8_t NoiseGen::readRegister() {
 
 void NoiseGen::writeRegister(uint8_t reg) {
     mRegister = reg;
+    uint8_t drf = mRegister & 0x7;
+    mStepSelection = static_cast<Gbs::NoiseSteps>((mRegister >> 3) & 1);
+    uint8_t scf = mRegister >> 4;
+    mPeriod = calcCounterMax(drf, scf);
 }
 
 
