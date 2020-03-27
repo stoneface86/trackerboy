@@ -12,7 +12,14 @@ class Generator {
 public:
 
     //
-    // Restart (retrigger) the generator. Counters are reset to 0.
+    // Disables the generator. A disabled generator always outputs 0
+    // Generators can only be re-enabled by restarting.
+    //
+    void disable();
+
+    //
+    // Restart (retrigger) the generator. Counters are reset to 0. If the
+    // generator was disabled, it is re-enabled.
     //
     virtual void restart();
 
@@ -28,7 +35,7 @@ public:
     // return 1 for the current envelope value and 0 for off.
     //
     inline uint8_t output() {
-        return mOutput;
+        return mDisableMask & mOutput;
     }
 
 
@@ -44,7 +51,10 @@ protected:
 
 private:
 
+    static constexpr uint8_t ENABLED  = 0xFF;
+    static constexpr uint8_t DISABLED = 0x00;
 
+    uint8_t mDisableMask;
 
 };
 
