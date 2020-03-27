@@ -13,6 +13,7 @@ set(SRC_FILES
     "song/Song.cpp"
     "song/SongRuntime.cpp"
     "synth/Envelope.cpp"
+    "synth/Generator.cpp"
     "synth/NoiseGen.cpp"
     "synth/Osc.cpp"
     "synth/PulseGen.cpp"

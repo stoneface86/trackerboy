@@ -3,31 +3,27 @@
 #include <cstdint>
 
 #include "trackerboy/gbs.hpp"
+#include "trackerboy/synth/Generator.hpp"
 
 
 namespace trackerboy {
 
-class PulseGen {
+class PulseGen : public Generator {
 
 public:
 
     PulseGen();
 
     //
-    // minimum number of cycles to step one duty
-    //
-    unsigned remainder();
-
-    //
     // Restart the generator, counters are reset to 0
     //
-    void restart();
+    void restart() override;
 
     //
     // Step the generator for the given number of cycles, returning the
     // current output (1 for output on, 0 for off)
     //
-    uint8_t step(unsigned cycles);
+    void step(unsigned cycles);
 
     //
     // Set the duty of the pulse. Does not require restart.
@@ -47,10 +43,8 @@ private:
     uint16_t mFrequency;
     Gbs::Duty mDuty;
     
-    unsigned mFreqCounter;
     unsigned mDutyCounter;
-    unsigned mPeriod;
-    
+
 
 };
 
