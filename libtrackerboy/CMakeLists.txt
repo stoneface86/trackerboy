@@ -15,6 +15,7 @@ set(SRC_FILES
     "synth/Envelope.cpp"
     "synth/NoiseGen.cpp"
     "synth/Osc.cpp"
+    "synth/PulseGen.cpp"
     "synth/PulseOsc.cpp"
     "synth/Sweep.cpp"
     "synth/Synth.cpp"
