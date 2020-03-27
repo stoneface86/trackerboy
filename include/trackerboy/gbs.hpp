@@ -107,6 +107,10 @@ static constexpr uint8_t DEFAULT_TERM_VOLUME    = MAX_TERM_VOLUME;
 static constexpr bool DEFAULT_TERM_ENABLE       = false;
 static constexpr WaveVolume DEFAULT_WAVE_LEVEL  = WAVE_FULL;
 
+static constexpr uint8_t DEFAULT_NOISE_REGISTER = (DEFAULT_SCF << 4) |
+                                                  (DEFAULT_STEP_COUNT << 3) |
+                                                  (DEFAULT_DRF);
+
 static constexpr uint8_t SAMPLE_MAX             = 0xF;
 static constexpr uint8_t SAMPLE_MIN             = 0x0;
 static constexpr size_t WAVE_SIZE               = 32;

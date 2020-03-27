@@ -199,7 +199,7 @@ void Synth::restart(ChType ch) {
             break;
         case ChType::ch4:
             mHf.env4.reset();
-            mHf.gen4.reset();
+            mHf.gen4.restart();
             break;
     }
 }
@@ -294,7 +294,7 @@ void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
                 mHf.osc3.generate(inbuf, nsamples);
                 break;
             case ChType::ch4:
-                mHf.gen4.generate(inbuf, nsamples, mCyclesPerSample);
+                //mHf.gen4.generate(inbuf, nsamples, mCyclesPerSample);
                 env = &mHf.env4;
                 break;
 
@@ -345,7 +345,7 @@ void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
                 mHf.osc3.run(nsamples);
                 break;
             case ChType::ch4:
-                mHf.gen4.run(nsamples, mCyclesPerSample);
+                //mHf.gen4.run(nsamples, mCyclesPerSample);
                 break;
 
         }

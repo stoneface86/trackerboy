@@ -24,63 +24,27 @@ static const uint8_t DRF_TABLE[] = {
 namespace trackerboy {
 
 NoiseGen::NoiseGen() :
+    mRegister(Gbs::DEFAULT_NOISE_REGISTER),
     mScf(Gbs::DEFAULT_SCF),
     mStepSelection(Gbs::DEFAULT_STEP_COUNT),
     mDrf(Gbs::DEFAULT_DRF),
     mLfsr(LFSR_INIT),
     mShiftCounter(0),
-    mShiftCounterMax(calcCounterMax(mDrf, mScf)),
-    mDrift(0.0f)
+    mShiftCounterMax(calcCounterMax(mDrf, mScf))
 {
 }
 
-
-void NoiseGen::generate(float buf[], size_t nsamples, float cps) {
-    for (size_t i = 0; i != nsamples; ++i) {
-        // determine the number of cylces to run for this sample
-        float cycles = cps + mDrift;
-        unsigned cyclesWhole = static_cast<unsigned>(cycles);
-        // drift is the fractional part of the total cycles
-        mDrift = cycles - cyclesWhole;
-        // update the shift counter, determine how many shifts are needed
-        mShiftCounter += cyclesWhole;
-
-        shift();
-
-        if (mLfsr & 0x1) {
-            // output is bit 0 inverted, so if bit 0 == 1, output MIN
-            *buf++ = -1.0f;
-        } else {
-            *buf++ = 1.0f;
-        }
-
-
-    }
-}
-
-void NoiseGen::reset() {
+void NoiseGen::restart() {
     mShiftCounter = 0;
-    mDrift = 0.0f;
     mLfsr = LFSR_INIT;
-}
-
-void NoiseGen::run(size_t nsamples, float cps) {
-    // this might overflow
-    float cycles = (nsamples * cps) + mDrift;
-    unsigned cyclesWhole = static_cast<unsigned>(cycles);
-    mDrift = cycles - cyclesWhole;
-    mShiftCounter += cyclesWhole;
-    shift();
-}
-
-void NoiseGen::setNoise(uint8_t noiseReg) {
-    mDrf = noiseReg & 0x7;
-    mStepSelection = static_cast<Gbs::NoiseSteps>((noiseReg >> 3) & 1);
-    mScf = noiseReg >> 4;
+    mDrf = mRegister & 0x7;
+    mStepSelection = static_cast<Gbs::NoiseSteps>((mRegister >> 3) & 1);
+    mScf = mRegister >> 4;
     mShiftCounterMax = calcCounterMax(mDrf, mScf);
 }
 
-void NoiseGen::shift() {
+uint8_t NoiseGen::step(unsigned cycles) {
+    mShiftCounter += cycles;
     while (mShiftCounter >= mShiftCounterMax) {
         mShiftCounter -= mShiftCounterMax;
 
@@ -96,7 +60,19 @@ void NoiseGen::shift() {
             mLfsr |= result << 6; // set bit 7 result
         }
     }
+
+    // output is bit 0 inverted, so if bit 0 == 1, output MIN
+    return (mLfsr & 0x1) ? Gbs::SAMPLE_MIN : Gbs::SAMPLE_MAX;
 }
+
+uint8_t NoiseGen::readRegister() {
+    return mRegister;
+}
+
+void NoiseGen::writeRegister(uint8_t reg) {
+    mRegister = reg;
+}
+
 
 
 }

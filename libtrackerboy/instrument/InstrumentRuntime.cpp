@@ -86,7 +86,7 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
                 env = &hf.env4;
 
                 if (inst.ctrl & Instruction::CTRL_SET_NOISE) {
-                    hf.gen4.setNoise(inst.settings);
+                    hf.gen4.writeRegister(inst.settings);
                 }
 
                 break;

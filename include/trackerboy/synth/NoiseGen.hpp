@@ -12,19 +12,32 @@ public:
 
     NoiseGen();
 
-    void generate(float buf[], size_t nsamples, float cps);
+    //
+    // channel retrigger. LFSR is re-initialized, counters are reset
+    // and the period is reloaded from the set register
+    //
+    void restart();
 
-    void reset();
+    //
+    // Step the generator for the given number of cycles, returning the
+    // current output.
+    //
+    uint8_t step(unsigned cycles);
 
-    void run(size_t nsamples, float cps);
+    //
+    // Write the given value to this generator's register, NR43
+    //
+    void writeRegister(uint8_t reg);
 
-    void setNoise(uint8_t reg);
-
+    //
+    // Returns the contents of this generator's register
+    //
+    uint8_t readRegister();
 
 private:
 
-    // shift the lfsr as needed
-    void shift();
+    // NR43 register contents
+    uint8_t mRegister;
 
     // scf: Shift clock frequency
     uint8_t mScf;
@@ -34,10 +47,11 @@ private:
     uint8_t mDrf;
     // lfsr: linear feedback shift register
     uint16_t mLfsr;
+
+    // frequency counter
     unsigned mShiftCounter;
     unsigned mShiftCounterMax;
-    // the fractional part that is truncated when generating samples
-    float mDrift;
+
 };
 
 
