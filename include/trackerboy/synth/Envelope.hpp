@@ -15,7 +15,7 @@ public:
 
     Envelope();
 
-    void reset();
+    void restart();
 
     void setRegister(uint8_t reg);
 

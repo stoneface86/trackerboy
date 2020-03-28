@@ -13,7 +13,7 @@ Envelope::Envelope() :
 {
 }
 
-void Envelope::reset() {
+void Envelope::restart() {
     mEnvCounter = 0;
     mEnvLength = (mRegister & 0x7);
     mEnvMode = static_cast<Gbs::EnvMode>((mRegister >> 3) & 1);

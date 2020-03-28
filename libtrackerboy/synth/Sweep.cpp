@@ -16,7 +16,7 @@ Sweep::Sweep(Osc &osc) :
 {
 }
 
-void Sweep::reset() {
+void Sweep::restart() {
     mSweepCounter = 0;
     mSweepShift = mRegister & 0x7;
     mSweepMode = static_cast<Gbs::SweepMode>((mRegister >> 3) & 1);

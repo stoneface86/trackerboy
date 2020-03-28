@@ -16,7 +16,7 @@ public:
 
     Sweep(Osc &osc);
 
-    void reset();
+    void restart();
 
     void setRegister(uint8_t reg);
 
