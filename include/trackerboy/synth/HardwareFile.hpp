@@ -3,8 +3,8 @@
 
 #include "trackerboy/synth/Envelope.hpp"
 #include "trackerboy/synth/Sweep.hpp"
-#include "trackerboy/synth/PulseOsc.hpp"
-#include "trackerboy/synth/WaveOsc.hpp"
+#include "trackerboy/synth/PulseGen.hpp"
+#include "trackerboy/synth/WaveGen.hpp"
 #include "trackerboy/synth/NoiseGen.hpp"
 
 namespace trackerboy {
@@ -17,18 +17,18 @@ struct HardwareFile {
 
     Envelope env1, env2, env4;
     Sweep sweep1;
-    PulseOsc osc1, osc2;
-    WaveOsc osc3;
+    PulseGen gen1, gen2;
+    WaveGen gen3;
     NoiseGen gen4;
 
-    HardwareFile(float samplingRate) :
+    HardwareFile() :
         env1(),
         env2(),
         env4(),
-        sweep1(osc1),
-        osc1(samplingRate),
-        osc2(samplingRate),
-        osc3(samplingRate),
+        sweep1(gen1),
+        gen1(),
+        gen2(),
+        gen3(),
         gen4()
     {
     }

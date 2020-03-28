@@ -2,7 +2,7 @@
 #pragma once
 
 #include "trackerboy/gbs.hpp"
-#include "trackerboy/synth/Osc.hpp"
+#include "trackerboy/synth/PulseGen.hpp"
 
 #include <cstdint>
 
@@ -14,7 +14,7 @@ class Sweep {
 
 public:
 
-    Sweep(Osc &osc);
+    Sweep(PulseGen &gen);
 
     void restart();
 
@@ -24,7 +24,7 @@ public:
 
 private:
 
-    Osc &mOsc;
+    PulseGen &mGen;
 
     Gbs::SweepMode mSweepMode;
     uint8_t mSweepTime;

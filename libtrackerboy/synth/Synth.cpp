@@ -95,7 +95,7 @@ Synth::TriggerType const Synth::TRIGGER_SEQUENCE[] = {
 
 Synth::Synth(float samplingRate) :
     mSamplingRate(samplingRate),
-    mHf(samplingRate),
+    mHf(),
     mCyclesPerSample(Gbs::CLOCK_SPEED / samplingRate),
     mTriggerTimings{
         (CYCLES_PER_TRIGGER * 3) / mCyclesPerSample, // 3 steps from 7 to 2
@@ -106,9 +106,7 @@ Synth::Synth(float samplingRate) :
     mSamplesToTrigger(mTriggerTimings[0]),
     mTriggerIndex(0),
     mInputBuffer(1 + static_cast<size_t>((CYCLES_PER_TRIGGER * 4) / mCyclesPerSample)),
-    mOutputStat(Gbs::OUT_ALL),
-    mWaveform(),
-    mWaveVolume(Gbs::WAVE_FULL)
+    mOutputStat(Gbs::OUT_ALL)
 {
     // NOTE: mTriggerTimings will need to be recalculated if the sampling rate
     // changes. Currently there is no way to change it after construction,
@@ -188,14 +186,14 @@ void Synth::restart(ChType ch) {
         case ChType::ch1:
             mHf.env1.restart();
             mHf.sweep1.restart();
-            mHf.osc1.reset();
+            mHf.gen1.restart();
             break;
         case ChType::ch2:
             mHf.env2.restart();
-            mHf.osc2.reset();
+            mHf.gen2.restart();
             break;
         case ChType::ch3:
-            mHf.osc3.reset();
+            mHf.gen3.restart();
             break;
         case ChType::ch4:
             mHf.env4.restart();
@@ -226,18 +224,6 @@ void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) {
     }
 }
 
-void Synth::setWaveform(Waveform &wave) {
-    mWaveform = wave;
-    updateWave();
-}
-
-void Synth::setWaveVolume(Gbs::WaveVolume volume) {
-    if (mWaveVolume != volume) {
-        mWaveVolume = volume;
-        updateWave();
-    }
-}
-
 
 template <ChType ch>
 void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
@@ -262,13 +248,13 @@ void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
         // now we must check the hardware
         switch (ch) {
             case ChType::ch1:
-                hasOutput = mHf.env1.value() != 0 && !mHf.osc1.disabled();
+                hasOutput = mHf.env1.value() != 0 && !mHf.gen1.disabled();
                 break;
             case ChType::ch2:
-                hasOutput = mHf.env2.value() != 0 && !mHf.osc2.disabled();
+                hasOutput = mHf.env2.value() != 0 && !mHf.gen2.disabled();
                 break;
             case ChType::ch3:
-                hasOutput = !mHf.osc3.disabled();
+                hasOutput = !mHf.gen4.disabled();
                 break;
             case ChType::ch4:
                 hasOutput = mHf.env4.value() != 0;
@@ -283,15 +269,15 @@ void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
 
         switch (ch) {
             case ChType::ch1:
-                mHf.osc1.generate(inbuf, nsamples);
+                //mHf.osc1.generate(inbuf, nsamples);
                 env = &mHf.env1;
                 break;
             case ChType::ch2:
-                mHf.osc2.generate(inbuf, nsamples);
+                //mHf.osc2.generate(inbuf, nsamples);
                 env = &mHf.env2;
                 break;
             case ChType::ch3:
-                mHf.osc3.generate(inbuf, nsamples);
+                //mHf.osc3.generate(inbuf, nsamples);
                 break;
             case ChType::ch4:
                 //mHf.gen4.generate(inbuf, nsamples, mCyclesPerSample);
@@ -336,13 +322,13 @@ void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
         // as generate except without actually generating samples).
         switch (ch) {
             case ChType::ch1:
-                mHf.osc1.run(nsamples);
+                //mHf.osc1.run(nsamples);
                 break;
             case ChType::ch2:
-                mHf.osc2.run(nsamples);
+                //mHf.osc2.run(nsamples);
                 break;
             case ChType::ch3:
-                mHf.osc3.run(nsamples);
+                //mHf.osc3.run(nsamples);
                 break;
             case ChType::ch4:
                 //mHf.gen4.run(nsamples, mCyclesPerSample);
@@ -355,44 +341,44 @@ void Synth::run(float inbuf[], float outbuf[], size_t nsamples) {
     
 }
 
-void Synth::updateWave() {
-
-    int shift = 0;
-    switch (mWaveVolume) {
-        case Gbs::WAVE_MUTE:
-            // clear the delta buffer in the oscillator
-            mHf.osc3.clearWaveform();
-            return;
-        case Gbs::WAVE_FULL:
-            // waveform remains unchanged
-            mHf.osc3.setWaveform(mWaveform);
-            return;
-        case Gbs::WAVE_HALF:
-            // shift all samples by 1 (divide by 2)
-            // samples range from 0-7 (adjusted 4-B)
-            shift = 1;
-            break;
-        case Gbs::WAVE_QUARTER:
-            // shift all samples by 2 (divide by 4)
-            // samples range from 0-3 (adjusted 6-9)
-            shift = 2;
-            break;
-    }
-
-    Waveform tempWave = mWaveform;
-    auto tempData = tempWave.data();
-    // ground is in between 7 and 8, 0 is minimum, so we must offset the resulting samples by this
-    uint8_t offset = 8 - (1 << shift);
-    for (size_t i = 0; i < Gbs::WAVE_RAMSIZE; ++i) {
-        uint8_t samples = tempData[i];
-        uint8_t hi = samples >> 4;
-        uint8_t lo = samples & 0xF;
-        hi = (hi >> shift) + offset;
-        lo = (lo >> shift) + offset;
-        tempData[i] = (hi << 4) | lo;
-    }
-    mHf.osc3.setWaveform(tempWave);
-}
+//void Synth::updateWave() {
+//
+//    int shift = 0;
+//    switch (mWaveVolume) {
+//        case Gbs::WAVE_MUTE:
+//            // clear the delta buffer in the oscillator
+//            mHf.osc3.clearWaveform();
+//            return;
+//        case Gbs::WAVE_FULL:
+//            // waveform remains unchanged
+//            mHf.osc3.setWaveform(mWaveform);
+//            return;
+//        case Gbs::WAVE_HALF:
+//            // shift all samples by 1 (divide by 2)
+//            // samples range from 0-7 (adjusted 4-B)
+//            shift = 1;
+//            break;
+//        case Gbs::WAVE_QUARTER:
+//            // shift all samples by 2 (divide by 4)
+//            // samples range from 0-3 (adjusted 6-9)
+//            shift = 2;
+//            break;
+//    }
+//
+//    Waveform tempWave = mWaveform;
+//    auto tempData = tempWave.data();
+//    // ground is in between 7 and 8, 0 is minimum, so we must offset the resulting samples by this
+//    uint8_t offset = 8 - (1 << shift);
+//    for (size_t i = 0; i < Gbs::WAVE_RAMSIZE; ++i) {
+//        uint8_t samples = tempData[i];
+//        uint8_t hi = samples >> 4;
+//        uint8_t lo = samples & 0xF;
+//        hi = (hi >> shift) + offset;
+//        lo = (lo >> shift) + offset;
+//        tempData[i] = (hi << 4) | lo;
+//    }
+//    mHf.osc3.setWaveform(tempWave);
+//}
 
 
 }

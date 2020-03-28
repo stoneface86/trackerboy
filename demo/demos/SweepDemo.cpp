@@ -51,7 +51,7 @@ long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
     }
 
 
-    hf.osc1.setFrequency(freq);
+    hf.gen1.setFrequency(freq);
     hf.sweep1.setRegister((DEMO_SWEEP_TIME << 4) | (static_cast<uint8_t>(mode) << 3) | DEMO_SWEEP_SHIFT);
     synth.restart(ChType::ch1);
 

@@ -14,6 +14,8 @@ public:
 
     PulseGen();
 
+    uint16_t frequency();
+
     //
     // Restart the generator, counters are reset to 0
     //

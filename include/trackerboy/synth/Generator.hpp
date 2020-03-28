@@ -18,6 +18,11 @@ public:
     void disable();
 
     //
+    // Returns true if the generator is disabled, false otherwise.
+    //
+    bool disabled();
+
+    //
     // Restart (retrigger) the generator. Counters are reset to 0. If the
     // generator was disabled, it is re-enabled.
     //

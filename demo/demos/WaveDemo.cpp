@@ -46,10 +46,10 @@ WaveDemo::WaveDemo(const uint8_t wavedata[Gbs::WAVE_RAMSIZE], std::string waveNa
 }
 
 void WaveDemo::init(Synth &synth) {
-    WaveOsc &osc3 = synth.hardware().osc3;
+    WaveGen &gen3 = synth.hardware().gen3;
 
-    synth.setWaveVolume(Gbs::WAVE_FULL);
-    synth.setWaveform(mWave);
+    gen3.setVolume(Gbs::WAVE_FULL);
+    gen3.copyWave(mWave);
 
     synth.setOutputEnable(Gbs::OUT_BOTH3);
 }
@@ -60,7 +60,7 @@ long WaveDemo::setupNextRun(Synth &synth, unsigned counter) {
     } else {
         uint16_t freq = FREQ_TABLE[counter];
         std::cout << "Frequency: " << freq << std::endl;
-        synth.hardware().osc3.setFrequency(freq);
+        synth.hardware().gen3.setFrequency(freq);
         return DEMO_RUNTIME;
     }
 }

@@ -16,6 +16,10 @@ void Generator::disable() {
     mDisableMask = DISABLED;
 }
 
+bool Generator::disabled() {
+    return mDisableMask == DISABLED;
+}
+
 void Generator::restart() {
     mFreqCounter = 0;
     mDisableMask = ENABLED;

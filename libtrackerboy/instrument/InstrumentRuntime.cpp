@@ -41,12 +41,12 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
 
         HardwareFile &hf = synth.hardware();
         Envelope *env = nullptr;
-        Osc *osc = nullptr;
+        Generator *gen = nullptr;
         
         switch (mTrackId) {
             case ChType::ch1:
                 env = &hf.env1;
-                osc = &hf.osc1;
+                gen = &hf.gen1;
                 // update sweep if set sweep flag is set
                 if (inst.settings & Instruction::SETTINGS_SET_SWEEP) {
                     hf.sweep1.setRegister(inst.settings & 0x7F);
@@ -56,22 +56,22 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
 
             case ChType::ch2:
                 env = &hf.env2;
-                osc = &hf.osc2;
+                gen = &hf.gen2;
 
             setduty:
                 if (inst.ctrl & Instruction::CTRL_SET_DUTY) {
-                    static_cast<PulseOsc*>(osc)->setDuty(static_cast<Gbs::Duty>(inst.ctrl & Instruction::CTRL_DUTY));
+                    static_cast<PulseGen*>(gen)->setDuty(static_cast<Gbs::Duty>(inst.ctrl & Instruction::CTRL_DUTY));
                 }
                 break;
 
             case ChType::ch3:
-                osc = &hf.osc3;
+                gen = &hf.gen3;
 
                 if (inst.ctrl & Instruction::CTRL_SET_WAVE) {
                     // WAVE_SETLONG == WAVE_SET for now
                     Waveform *waveform = wtable[inst.envSettings];
                     if (waveform != nullptr) {
-                        hf.osc3.setWaveform(*waveform);
+                        hf.gen3.copyWave(*waveform);
                     }
                 }
 
@@ -129,7 +129,8 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
                 } else {
                     freq = NOTE_FREQ_TABLE[inst.note];
                 }
-                osc->setFrequency(freq);
+                // TODO: Fix this later, this entire portion needs to be rewritten anyway
+                //osc->setFrequency(freq);
                 //osc->reset();
             }
 

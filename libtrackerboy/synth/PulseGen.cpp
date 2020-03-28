@@ -33,6 +33,10 @@ PulseGen::PulseGen() :
 {
 }
 
+uint16_t PulseGen::frequency() {
+    return mFrequency;
+}
+
 
 void PulseGen::restart() {
     Generator::restart();

@@ -22,12 +22,12 @@ DutyDemo::DutyDemo() :
 
 
 void DutyDemo::init(Synth &synth) {
-    PulseOsc &osc2 = synth.hardware().osc2;
+    PulseGen &gen2 = synth.hardware().gen2;
     Envelope &env2 = synth.hardware().env2;
 
     //ch2.setEnvStep(Gbs::MAX_ENV_STEPS);
     env2.setRegister(Gbs::MAX_ENV_STEPS << 4);
-    osc2.setFrequency(DEMO_FREQ);
+    gen2.setFrequency(DEMO_FREQ);
     //osc2.reset();
     synth.restart(ChType::ch2);
 
@@ -39,7 +39,7 @@ long DutyDemo::setupNextRun(Synth &synth, unsigned counter) {
         return 0;
     } else {
         std::cout << "Duty: " << DUTY_STRINGS[counter] << "%" << std::endl;
-        synth.hardware().osc2.setDuty(static_cast<Gbs::Duty>(counter));
+        synth.hardware().gen2.setDuty(static_cast<Gbs::Duty>(counter));
         synth.restart(ChType::ch2);
         return DEMO_RUNTIME;
     }
