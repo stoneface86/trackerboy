@@ -35,7 +35,7 @@ void NoiseGen::restart() {
     mOutput = 0;
 }
 
-void NoiseGen::step(unsigned cycles) {
+void NoiseGen::step(uint32_t cycles) {
     mFreqCounter += cycles;
     while (mFreqCounter >= mPeriod) {
         mFreqCounter -= mPeriod;

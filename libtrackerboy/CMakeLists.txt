@@ -21,6 +21,7 @@ set(SRC_FILES
     "synth/Sweep.cpp"
     "synth/Synth.cpp"
     "synth/Waveform.cpp"
+    "synth/WaveGen.cpp"
     "synth/WaveOsc.cpp"
     "File.cpp"
     "fileformat.cpp"

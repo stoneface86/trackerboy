@@ -24,7 +24,7 @@ public:
     // Step the generator for the given number of cycles, returning the
     // current output.
     //
-    void step(unsigned cycles);
+    void step(uint32_t cycles);
 
     //
     // Write the given value to this generator's register, NR43

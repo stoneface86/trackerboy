@@ -23,7 +23,7 @@ public:
     // Step the generator for the given number of cycles, returning the
     // current output (1 for output on, 0 for off)
     //
-    void step(unsigned cycles);
+    void step(uint32_t cycles);
 
     //
     // Set the duty of the pulse. Does not require restart.

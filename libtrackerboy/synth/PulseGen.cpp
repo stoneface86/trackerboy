@@ -50,13 +50,13 @@ void PulseGen::setFrequency(uint16_t frequency) {
     mPeriod = (2048 - mFrequency) * PULSE_MULTIPLIER;
 }
 
-void PulseGen::step(unsigned cycles) {
+void PulseGen::step(uint32_t cycles) {
     // this implementation uses bit shifting instead of a lookup table
 
     // advance the counter
     mFreqCounter += cycles;
     // number of duty steps to cycle through
-    unsigned dutysteps = mFreqCounter / mPeriod;
+    uint32_t dutysteps = mFreqCounter / mPeriod;
     mFreqCounter %= mPeriod;
     mDutyCounter = (mDutyCounter + dutysteps) & 0x7; // & 7 == % 8
 

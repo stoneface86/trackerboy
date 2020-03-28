@@ -27,7 +27,7 @@ public:
     // Returns the fence, or the number of cycles to complete a period.
     //
     inline uint32_t fence() {
-        return mPeriod - mFreqCounter;
+        return (mFreqCounter > mPeriod) ? 0 : mPeriod - mFreqCounter;
     }
 
     //
