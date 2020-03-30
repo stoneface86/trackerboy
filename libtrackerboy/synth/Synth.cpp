@@ -85,6 +85,7 @@ size_t Synth::run() {
 
 uint8_t Synth::readRegister(uint16_t addr) {
     // TODO
+    return 0;
 }
 
 

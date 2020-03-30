@@ -4,7 +4,7 @@ Use the main CMakeLists.txt to build the library. The ui and demo programs are o
 and can be enabled/disabled by setting their respective options.
 
 Requirements:
- * C/C++ compiler with the C++11 standard or later
+ * C/C++ compiler with the C++17 standard or later
  * CMake
  * Portaudio
  * Qt 5
