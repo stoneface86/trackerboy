@@ -19,6 +19,8 @@ static constexpr uint32_t DUTY_MASK = 0x7EE18180;
 static constexpr uint32_t DEFAULT_PERIOD = (2048 - trackerboy::Gbs::DEFAULT_FREQUENCY) * PULSE_MULTIPLIER;
 static constexpr uint8_t DEFAULT_OUTPUT = (DUTY_MASK >> (trackerboy::Gbs::DEFAULT_DUTY << 3)) & 1;
 
+#define setOutput() mOutput = (~((DUTY_MASK >> ((mDuty << 3) + mDutyCounter)) & 1) + 1) 
+
 }
 
 
@@ -45,7 +47,7 @@ uint16_t PulseGen::frequency() {
 void PulseGen::restart() {
     Generator::restart();
     mDutyCounter = 0;
-    mOutput = (DUTY_MASK >> (mDuty << 3)) & 1;
+    setOutput();
 }
 
 void PulseGen::setDuty(Gbs::Duty duty) {
@@ -70,8 +72,7 @@ void PulseGen::step(uint32_t cycles) {
 
     // DUTY_MASK contains all duty waveforms
     // first byte is 12.5% second is 25% and so on
-    unsigned shift = (static_cast<uint8_t>(mDuty) << 3) + mDutyCounter;
-    mOutput = (DUTY_MASK >> shift) & 1;
+    setOutput();
 }
 
 

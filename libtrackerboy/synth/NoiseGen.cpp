@@ -54,7 +54,13 @@ void NoiseGen::step(uint32_t cycles) {
     }
 
     // output is bit 0 inverted, so if bit 0 == 1, output MIN
-    mOutput = (~mLfsr) & 0x1;
+    // V = (~mLfsr) & 0x1 gives us 0 for no sample, 1 for envelope value
+    // ~V + 1 = 0 for no sample, 0xFF for envelope value (mask)
+    // using de morgan's laws
+    // ~((~mLfsr) & 0x1) + 1 -> (mLfsr | (~1)) + 1
+    // so we get 0xFF when bit 0 is 0, and 0x00 when bit 0 is 1
+
+    mOutput = (mLfsr | static_cast<uint8_t>(~1)) + 1;
 }
 
 uint8_t NoiseGen::readRegister() {
