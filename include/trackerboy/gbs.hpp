@@ -71,6 +71,37 @@ enum Terminal : uint8_t {
     TERM_BOTH = TERM_LEFT | TERM_RIGHT
 };
 
+enum Reg : uint16_t {
+    // CH1 - Square 1 --------------------------------------------------------
+    REG_NR10        = 0xFF10, // -PPP NSSS | sweep period, negate, shift
+    REG_NR11        = 0xFF11, // DDLL LLLL | duty, length
+    REG_NR12        = 0xFF12, // VVVV APPP | envelope volume, mode, period
+    REG_NR13        = 0xFF13, // FFFF FFFF | Frequency LSB
+    REG_NR14        = 0xFF14, // TL-- -FFF | Trigger, length enable, freq MSB
+    // CH2 - Square 2 --------------------------------------------------------
+    REG_UNUSED1     = 0xFF15,
+    REG_NR21        = 0xFF16, // DDLL LLLL | duty, length
+    REG_NR22        = 0xFF17, // VVVV APPP | envelope volume, mode, period
+    REG_NR23        = 0xFF18, // FFFF FFFF | frequency LSB
+    REG_NR24        = 0xFF19, // TL-- -FFF | Trigger, length enable, freq MSB
+    // CH3 - Wave ------------------------------------------------------------
+    REG_NR30        = 0xFF1A, // E--- ---- | DAC Power
+    REG_NR31        = 0xFF1B, // LLLL LLLL | length
+    REG_NR32        = 0xFF1C, // -VV- ---- | wave volume 
+    REG_NR33        = 0xFF1D, // FFFF FFFF | frequency LSB
+    REG_NR34        = 0xFF1E, // TL-- -FFF | Trigger, length enable, freq MSB
+    // CH4 - Noise -----------------------------------------------------------
+    REG_UNUSED2     = 0xFF1F,
+    REG_NR41        = 0xFF20, // --LL LLLL | length
+    REG_NR42        = 0xFF21, // VVVV APPP | envelope volume, mode, period 
+    REG_NR43        = 0xFF22, // SSSS WDDD | clock shift, width, divisor mode
+    REG_NR44        = 0xFF23, // TL-- ---- | trigger, length enable
+    // Control/Status --------------------------------------------------------
+    REG_NR50        = 0xFF24, // ALLL BRRR | Terminal enable/volume
+    REG_NR51        = 0xFF25, // 4321 4321 | channel terminal enables
+    REG_NR52        = 0xFF26, // P--- 4321 | Power control, channel len. stat
+};
+
 
 // constants
 static constexpr uint8_t MAX_ENV_STEPS          = 0xF;

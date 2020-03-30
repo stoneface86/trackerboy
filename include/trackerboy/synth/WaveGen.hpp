@@ -16,6 +16,8 @@ public:
 
     void copyWave(Waveform &wave);
 
+    uint16_t frequency();
+
     void restart() override;
 
     void setFrequency(uint16_t frequency);
@@ -24,8 +26,11 @@ public:
 
     void step(uint32_t cycles);
 
+    Gbs::WaveVolume volume();
+
 private:
 
+    uint16_t mFrequency;
     Gbs::WaveVolume mVolume;
     uint8_t mWaveIndex;
     uint8_t mWaveram[Gbs::WAVE_RAMSIZE];

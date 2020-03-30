@@ -18,6 +18,7 @@ namespace trackerboy {
 
 WaveGen::WaveGen() :
     Generator(DEFAULT_PERIOD, 0),
+    mFrequency(Gbs::DEFAULT_FREQUENCY),
     mVolume(Gbs::DEFAULT_WAVE_LEVEL),
     mWaveIndex(0),
     mWaveram{0}
@@ -28,12 +29,17 @@ void WaveGen::copyWave(Waveform &wave) {
     std::copy_n(wave.data(), Gbs::WAVE_RAMSIZE, mWaveram);
 }
 
+uint16_t WaveGen::frequency() {
+    return mFrequency;
+}
+
 void WaveGen::restart() {
     Generator::restart();
     mWaveIndex = 0;
 }
 
 void WaveGen::setFrequency(uint16_t frequency) {
+    mFrequency = frequency;
     mPeriod = (2048 - frequency) * WAVE_MULTIPLIER;
 }
 
@@ -72,6 +78,10 @@ void WaveGen::step(uint32_t cycles) {
     }
 
     mOutput = sample;
+}
+
+Gbs::WaveVolume WaveGen::volume() {
+    return mVolume;
 }
 
 

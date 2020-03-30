@@ -49,7 +49,7 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
                 gen = &hf.gen1;
                 // update sweep if set sweep flag is set
                 if (inst.settings & Instruction::SETTINGS_SET_SWEEP) {
-                    hf.sweep1.setRegister(inst.settings & 0x7F);
+                    hf.sweep1.writeRegister(inst.settings & 0x7F);
                 }
                 // forgive me for I must goto sin
                 goto setduty;
@@ -113,7 +113,7 @@ void InstrumentRuntime::step(Synth &synth, WaveTable &wtable, uint8_t rowVol, ui
                     // replace volume (bits 4-7) with volume from row
                     envsettings = (rowVol << 4) | (envsettings & 0xF);
                 }
-                env->setRegister(envsettings);
+                env->writeRegister(envsettings);
             }
         }
 

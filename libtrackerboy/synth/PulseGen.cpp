@@ -33,6 +33,10 @@ PulseGen::PulseGen() :
 {
 }
 
+Gbs::Duty PulseGen::duty() {
+    return mDuty;
+}
+
 uint16_t PulseGen::frequency() {
     return mFrequency;
 }

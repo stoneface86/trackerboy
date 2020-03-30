@@ -26,7 +26,7 @@ void DutyDemo::init(Synth &synth) {
     Envelope &env2 = synth.hardware().env2;
 
     //ch2.setEnvStep(Gbs::MAX_ENV_STEPS);
-    env2.setRegister(Gbs::MAX_ENV_STEPS << 4);
+    env2.writeRegister(Gbs::MAX_ENV_STEPS << 4);
     gen2.setFrequency(DEMO_FREQ);
     //osc2.reset();
     synth.restart(ChType::ch2);

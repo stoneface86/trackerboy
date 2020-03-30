@@ -14,6 +14,8 @@ public:
 
     PulseGen();
 
+    Gbs::Duty duty();
+
     uint16_t frequency();
 
     //

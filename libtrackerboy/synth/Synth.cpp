@@ -84,8 +84,72 @@ size_t Synth::run() {
 }
 
 uint8_t Synth::readRegister(uint16_t addr) {
-    // TODO
-    return 0;
+    
+    /*
+    Read masks
+
+         NRx0 NRx1 NRx2 NRx3 NRx4
+        ---------------------------
+    NR1x  $80  $3F $00  $FF  $BF 
+    NR2x  $FF  $3F $00  $FF  $BF 
+    NR3x  $7F  $FF $9F  $FF  $BF 
+    NR4x  $FF  $FF $00  $00  $BF 
+    NR5x  $00  $00 $70
+
+    $FF27-$FF2F always read back as $FF
+    */
+
+    #define readDuty(gen) (0x3F | (gen.duty() << 6))
+
+    switch (addr) {
+        case Gbs::REG_NR10:
+            return mHf.sweep1.readRegister();
+        case Gbs::REG_NR11:
+            return readDuty(mHf.gen1);
+        case Gbs::REG_NR12:
+            return mHf.env1.readRegister();
+        case Gbs::REG_NR13:
+            return 0xFF;
+        case Gbs::REG_NR14:
+            return 0xBF;
+        case Gbs::REG_NR21:
+            return readDuty(mHf.gen2);
+        case Gbs::REG_NR22:
+            return mHf.env2.readRegister();
+        case Gbs::REG_NR23:
+            return 0xFF;
+        case Gbs::REG_NR24:
+            return 0xBF;
+        case Gbs::REG_NR30:
+            // TODO
+            return 0x7F;
+        case Gbs::REG_NR31:
+            return 0xFF;
+        case Gbs::REG_NR32:
+            return 0x9F | (mHf.gen3.volume());
+        case Gbs::REG_NR33:
+            return 0xFF;
+        case Gbs::REG_NR34:
+            return 0xBF;
+        case Gbs::REG_NR41:
+            return 0xBF;
+        case Gbs::REG_NR42:
+            return mHf.env4.readRegister();
+        case Gbs::REG_NR43:
+            return mHf.gen4.readRegister();
+        case Gbs::REG_NR44:
+            return 0xBF;
+        case Gbs::REG_NR50:
+            return 0;
+        case Gbs::REG_NR51:
+            return mOutputStat;
+        case Gbs::REG_NR52:
+            return 0x70;
+        default:
+            return 0xFF;
+
+
+    }
 }
 
 
@@ -138,7 +202,83 @@ void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) {
 }
 
 void Synth::writeRegister(uint16_t addr, uint8_t value) {
-    // TODO
+
+    #define writeDuty(gen) gen.setDuty(static_cast<Gbs::Duty>(value >> 6))
+    #define writeFreqLSB(gen) gen.setFrequency((gen.frequency() & 0xF0) | value)
+    #define writeFreqMSB(gen) gen.setFrequency((gen.frequency() & 0x0F) | (value << 8))
+    #define trigger(ch) if (value & 0x80) restart(ch)
+
+    switch (addr) {
+        case Gbs::REG_NR10:
+            mHf.sweep1.writeRegister(value);
+            break;
+        case Gbs::REG_NR11:
+            writeDuty(mHf.gen1);
+            // length counters aren't implemented so ignore the other 6 bits
+            break;
+        case Gbs::REG_NR12:
+            mHf.env1.writeRegister(value);
+            break;
+        case Gbs::REG_NR13:
+            writeFreqLSB(mHf.gen1);
+            break;
+        case Gbs::REG_NR14:
+            writeFreqMSB(mHf.gen1);
+            trigger(ChType::ch1);
+            break;
+        case Gbs::REG_NR21:
+            writeDuty(mHf.gen2);
+            break;
+        case Gbs::REG_NR22:
+            mHf.env2.writeRegister(value);
+            break;
+        case Gbs::REG_NR23:
+            writeFreqLSB(mHf.gen2);
+            break;
+        case Gbs::REG_NR24:
+            writeFreqMSB(mHf.gen2);
+            trigger(ChType::ch2);
+            break;
+        case Gbs::REG_NR30:
+            // TODO: implement functionality in WaveGen
+            break;
+        case Gbs::REG_NR31:
+            // no length counter so do nothing
+            break;
+        case Gbs::REG_NR32:
+            mHf.gen3.setVolume(static_cast<Gbs::WaveVolume>((value >> 5) & 0x3));
+            break;
+        case Gbs::REG_NR33:
+            writeFreqLSB(mHf.gen3);
+            break;
+        case Gbs::REG_NR34:
+            writeFreqMSB(mHf.gen3);
+            trigger(ChType::ch3);
+            break;
+        case Gbs::REG_NR41:
+            // no length counter do nothing
+            break;
+        case Gbs::REG_NR42:
+            mHf.env4.writeRegister(value);
+            break;
+        case Gbs::REG_NR43:
+            mHf.gen4.writeRegister(value);
+            break;
+        case Gbs::REG_NR44:
+            trigger(ChType::ch4);
+            break;
+        case Gbs::REG_NR50:
+            // not implemented, do nothing
+            break;
+        case Gbs::REG_NR51:
+            mOutputStat = value;
+            break;
+        case Gbs::REG_NR52:
+            // not implemented
+            break;
+        default:
+            break;
+    }
 }
 
 }

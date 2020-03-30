@@ -18,9 +18,9 @@ SweepDemo::SweepDemo() :
 void SweepDemo::init(Synth &synth) {
     HardwareFile &hf = synth.hardware();
 
-    hf.env1.setRegister(0xF0);
+    hf.env1.writeRegister(0xF0);
 
-    hf.sweep1.setRegister((DEMO_SWEEP_SHIFT << 4) | DEMO_SWEEP_TIME);
+    hf.sweep1.writeRegister((DEMO_SWEEP_SHIFT << 4) | DEMO_SWEEP_TIME);
 
     synth.setOutputEnable(Gbs::OUT_BOTH1);
 }
@@ -52,7 +52,7 @@ long SweepDemo::setupNextRun(Synth &synth, unsigned counter) {
 
 
     hf.gen1.setFrequency(freq);
-    hf.sweep1.setRegister((DEMO_SWEEP_TIME << 4) | (static_cast<uint8_t>(mode) << 3) | DEMO_SWEEP_SHIFT);
+    hf.sweep1.writeRegister((DEMO_SWEEP_TIME << 4) | (static_cast<uint8_t>(mode) << 3) | DEMO_SWEEP_SHIFT);
     synth.restart(ChType::ch1);
 
     return DEMO_RUNTIME;

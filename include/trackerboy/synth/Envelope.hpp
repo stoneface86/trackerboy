@@ -15,9 +15,11 @@ public:
 
     Envelope();
 
+    uint8_t readRegister();
+
     void restart();
 
-    void setRegister(uint8_t reg);
+    void writeRegister(uint8_t reg);
 
     void trigger();
 

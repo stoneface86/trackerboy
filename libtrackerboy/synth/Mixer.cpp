@@ -27,13 +27,13 @@ template <Mixer::Pan pan>
 inline void mix(float sample, float *&dest) {
     constexpr int panInt = static_cast<int>(pan);
 
-    if (panInt & static_cast<int>(Mixer::Pan::left)) {
+    if constexpr (!!(panInt & static_cast<int>(Mixer::Pan::left))) {
         *dest++ += sample;
     } else {
         dest++;
     }
 
-    if (panInt & static_cast<int>(Mixer::Pan::right)) {
+    if constexpr (!!(panInt & static_cast<int>(Mixer::Pan::right))) {
         *dest++ += sample;
     } else {
         dest++;
@@ -102,7 +102,6 @@ Mixer::Mixer(float samplingRate) :
 
 template <Mixer::Pan pan>
 void Mixer::addStep(float step, float time) {
-
 
     float timeWhole;
     float timeFract = modff(time, &timeWhole);

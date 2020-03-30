@@ -13,6 +13,10 @@ Envelope::Envelope() :
 {
 }
 
+uint8_t Envelope::readRegister() {
+    return mRegister;
+}
+
 void Envelope::restart() {
     mEnvCounter = 0;
     mEnvLength = (mRegister & 0x7);
@@ -20,7 +24,7 @@ void Envelope::restart() {
     mEnvelope = (mRegister >> 4);
 }
 
-void Envelope::setRegister(uint8_t envReg) {
+void Envelope::writeRegister(uint8_t envReg) {
     mRegister = envReg;
 }
 

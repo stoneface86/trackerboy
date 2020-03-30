@@ -16,6 +16,10 @@ Sweep::Sweep(PulseGen &gen) :
 {
 }
 
+uint8_t Sweep::readRegister() {
+    return mRegister;
+}
+
 void Sweep::restart() {
     mSweepCounter = 0;
     mSweepShift = mRegister & 0x7;
@@ -24,8 +28,8 @@ void Sweep::restart() {
     mShadow = mGen.frequency();
 }
 
-void Sweep::setRegister(uint8_t reg) {
-    mRegister = reg;
+void Sweep::writeRegister(uint8_t reg) {
+    mRegister = reg & 0x7F;
 }
 
 void Sweep::trigger() {
