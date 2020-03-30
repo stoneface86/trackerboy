@@ -11,7 +11,7 @@
 #ifdef _MSC_VER
 // disable warnings about unscoped enums
 // as they have scope only in the Gbs namespace
-#pragma warning( disable : 26812 )
+#pragma warning(disable : 26812)
 #endif
 
 namespace trackerboy {
@@ -117,6 +117,8 @@ static constexpr size_t WAVE_SIZE               = 32;
 static constexpr size_t WAVE_RAMSIZE            = 16;
 
 static constexpr float CLOCK_SPEED              = 4194304.0f;
+static constexpr float FRAMERATE_GB             = 59.7f;    // vblank interrupt rate for DMG/CGB
+static constexpr float FRAMERATE_SGB            = 61.1f;    // vblank interrupt rate for SGB
 
 }
 

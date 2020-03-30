@@ -14,6 +14,7 @@ set(SRC_FILES
     "song/SongRuntime.cpp"
     "synth/Envelope.cpp"
     "synth/Generator.cpp"
+    "synth/Mixer.cpp"
     "synth/NoiseGen.cpp"
     "synth/PulseGen.cpp"
     "synth/Sweep.cpp"
