@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.0.4] - 2020-04-01
+### Added
+ - Wav class, for writing wav files (only supports 32-bit float format)
+ - Generator class, base class for PulseGen, WaveGen and NoiseGen
+ - PulseGen class, similar to the previously removed PulseChannel
+ - WaveGen class, similar to the previously removed WaveChannel
+ - Mixer class, adds bandlimited steps to left/right channels
+ - Sequencer class, similar to the previously removed one
+### Changed
+ - Minimum required C++ standard is now C++17
+ - PlaybackQueue uses float samples instead of int16_t
+ - Synth was rewritten to use emulation based synthesis, generates samples on
+   a per frame basis.
+ - Synth can now read and write APU registers
+ - reset() renamed to restart() in synth APU components
+ - setRegister renamed to writeRegister
+ - Sweep has its own shadow register and now longer uses the channel's on trigger
+   (this behavior now matches the hardware)
+ - Sweep and Envelope register contents get applied on restart
+### Removed
+ - include/trackerboy/synth/utils.hpp, no longer being used
+ - libtrackerboy/synth/test_Osc.cpp, was unused
+ - Osc, PulseOsc and WaveOsc, since we are now using emulation based synthesis
+
 ## [0.0.3] - 2020-03-09
 ### Added
  - More test cases for File
