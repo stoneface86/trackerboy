@@ -4,6 +4,7 @@
 
 #include "trackerboy/synth/HardwareFile.hpp"
 #include "trackerboy/synth/Mixer.hpp"
+#include "trackerboy/synth/Sequencer.hpp"
 #include "trackerboy/ChType.hpp"
 
 
@@ -46,16 +47,6 @@ public:
 
 private:
 
-    enum TriggerType {
-        NONE,
-        SWEEP,
-        ENV
-    };
-
-    // three triggers, two for sweep and one for envelope
-    static constexpr size_t TRIGGER_COUNT = 3;
-    // trigger sequence
-    static TriggerType const TRIGGER_SEQUENCE[TRIGGER_COUNT];
 
 
 
@@ -65,6 +56,7 @@ private:
     HardwareFile mHf;
 
     Mixer mMixer;
+    Sequencer mSequencer;
 
     // number of cycles needed to execute to produce 1 sample
     // equal to the gameboy clock speed divided by the sampling rate
@@ -75,19 +67,20 @@ private:
     // fraction offset of cycles when determining frame length
     float mCycleOffset;
 
+    // fractional offset of samples
+    float mSampleOffset;
+
     std::vector<float> mFrameBuf;
 
-    // sequencer stuff
-
-    // sample times between each trigger
-    float mTriggerTimings[3];
-
-    float mSampleCounter;
-    float mSamplesToTrigger;
-    unsigned mTriggerIndex;
-
-
     uint8_t mOutputStat;
+
+    uint8_t mChPrev[8];
+
+    size_t mFillPos;
+    size_t mLastFrameSize;
+
+    template <ChType ch>
+    void updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence);
 
 };
 

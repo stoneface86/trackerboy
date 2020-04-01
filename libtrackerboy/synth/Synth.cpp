@@ -10,35 +10,13 @@ namespace {
 
 constexpr unsigned CYCLES_PER_TRIGGER = 8192;
 
+// largest delta = 60 (0xF * 4), so the maximum volume is 15/16 (-0.56 dB)
+constexpr float GAIN = 1.0f / 64.0f; 
+
 }
 
 
 namespace trackerboy {
-
-// Frame sequencer
-// this part of the APU controls when components such as sweep, envelope
-// and length counters are triggered. The sequencer itself is stepped every
-// 8192 cycles or at 512 Hz. The table below shows which steps the components
-// are triggered (except for length counters).
-//
-// Step:                 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
-// --------------------------+---+---+---+---+---+---+---+-------------------
-// Sweep        (128 Hz) |         x               x       
-// envelope     ( 64 Hz) |                             x 
-//
-// The synthesizer emulates this by generating samples before each trigger,
-// applying the trigger, and then repeating until the buffer is filled.
-//
-// The time between each trigger is stored in the mTriggerTimings array. For
-// the first element, this value is the number of samples needed until the
-// first trigger (which is Sweep @ step 2).
-//
-
-Synth::TriggerType const Synth::TRIGGER_SEQUENCE[] = {
-    TriggerType::SWEEP,     // Sweep    @ step 2
-    TriggerType::SWEEP,     // Sweep    @ step 6
-    TriggerType::ENV        // Envelope @ step 7
-};
 
 
 Synth::Synth(float samplingRate, float framerate) :
@@ -46,19 +24,16 @@ Synth::Synth(float samplingRate, float framerate) :
     mFramerate(framerate),
     mHf(),
     mMixer(samplingRate),
+    mSequencer(mHf),
     mCyclesPerSample(Gbs::CLOCK_SPEED / samplingRate),
     mCyclesPerFrame(Gbs::CLOCK_SPEED / framerate),
     mCycleOffset(0.0f),
-    mFrameBuf(static_cast<size_t>(samplingRate / framerate)),
-    mTriggerTimings{
-        (CYCLES_PER_TRIGGER * 3) / mCyclesPerSample, // 3 steps from 7 to 2
-        (CYCLES_PER_TRIGGER * 4) / mCyclesPerSample, // 4 steps from 2 to 6
-        (CYCLES_PER_TRIGGER * 1) / mCyclesPerSample  // 1 step from  6 to 7
-    },
-    mSampleCounter(0.0f),
-    mSamplesToTrigger(mTriggerTimings[0]),
-    mTriggerIndex(0),
-    mOutputStat(Gbs::OUT_ALL)
+    mSampleOffset(0.0f),
+    mFrameBuf((static_cast<size_t>(samplingRate / framerate) + 1) * 2),
+    mOutputStat(Gbs::OUT_ALL),
+    mChPrev{0},
+    mFillPos(0),
+    mLastFrameSize(0)
 {
     // NOTE: mTriggerTimings will need to be recalculated if the sampling rate
     // changes. Currently there is no way to change it after construction,
@@ -74,12 +49,87 @@ HardwareFile& Synth::hardware() {
 }
 
 void Synth::fill(float buf[], size_t nsamples) {
-    // TODO: implement later
+    float *dest = buf;
+
+    while (nsamples) {
+        if (mFillPos == mLastFrameSize) {
+            mLastFrameSize = run();
+            mFillPos = 0;
+        }
+
+        size_t samples = std::min(mLastFrameSize - mFillPos, nsamples);
+        size_t amount = samples * 2; // stereo, so 2 values per sample
+        std::copy_n(mFrameBuf.begin() + (mFillPos * 2), amount, dest);
+        dest += amount;
+
+        nsamples -= samples;
+        mFillPos += samples;
+    }
 }
 
 size_t Synth::run() {
-    // TODO: implement later
-    return 0;
+    // determine number of cycles to run
+    float cycles = mCyclesPerFrame + mCycleOffset;
+    float wholeCycles;
+    mCycleOffset = modff(cycles, &wholeCycles);
+
+    // determine number of samples needed
+    float samples = (mCyclesPerFrame / mCyclesPerSample) + mSampleOffset;
+    float wholeSamples;
+    mSampleOffset = modff(samples, &wholeSamples);
+    size_t nsamples = static_cast<size_t>(wholeSamples);
+
+    // setup the buffer
+    mMixer.beginFrame(mFrameBuf.data(), nsamples);
+
+    uint32_t remaining = static_cast<uint32_t>(wholeCycles);
+    uint32_t cycletime = 0;
+    while (remaining) {
+        // delta is the amount of change from the previous output
+        // 0 indicates no change, or no transition
+        int8_t leftdelta = 0;
+        int8_t rightdelta = 0;
+
+        // keep track of the smallest fence
+        // a fence is the minimum number of cycles until state changes
+        // ie generator output changing, envelope volume decreasing, etc
+        uint32_t fence = std::min(remaining, mSequencer.fence());
+        updateOutput<ChType::ch1>(leftdelta, rightdelta, fence);
+        updateOutput<ChType::ch2>(leftdelta, rightdelta, fence);
+        updateOutput<ChType::ch3>(leftdelta, rightdelta, fence);
+        updateOutput<ChType::ch4>(leftdelta, rightdelta, fence);
+
+        if (leftdelta || rightdelta) {
+            // convert time in cycles to time in samples
+            float sampletime = cycletime / mCyclesPerSample;
+            if (leftdelta == rightdelta) {
+                // since both deltas are the same, we can add the step to both terminals
+                mMixer.addStep<Mixer::Pan::both>(leftdelta * GAIN, sampletime);
+            } else {
+                if (leftdelta) {
+                    mMixer.addStep<Mixer::Pan::left>(leftdelta * GAIN, sampletime);
+                }
+                if (rightdelta) {
+                    mMixer.addStep<Mixer::Pan::right>(rightdelta * GAIN, sampletime);
+                }
+            }
+        }
+
+        // run all components to the smallest fence
+        mSequencer.step(fence);
+        mHf.gen1.step(fence);
+        mHf.gen2.step(fence);
+        mHf.gen3.step(fence);
+        mHf.gen4.step(fence);
+
+        // update cycle counters
+        remaining -= fence;
+        cycletime += fence;
+    }
+
+    // we are done adding steps, end the frame
+    mMixer.endFrame();
+    return nsamples;
 
 }
 
@@ -279,6 +329,58 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) {
         default:
             break;
     }
+}
+
+
+template <ChType ch>
+void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) {
+    Generator *gen = nullptr;
+    uint8_t mask = 0xF;
+    switch (ch) {
+        case ChType::ch1:
+            gen = &mHf.gen1;
+            mask = mHf.env1.value();
+            break;
+        case ChType::ch2:
+            gen = &mHf.gen2;
+            mask = mHf.env2.value();
+            break;
+        case ChType::ch3:
+            gen = &mHf.gen3;
+            break;
+        case ChType::ch4:
+            gen = &mHf.gen4;
+            mask = mHf.env4.value();
+            break;
+
+    }
+
+    uint8_t output = gen->output();
+    if constexpr (ch != ChType::ch3) {
+        output &= mask;
+    }
+    
+
+    constexpr size_t chint = static_cast<size_t>(ch);
+    uint8_t &prevL = mChPrev[chint];
+    uint8_t &prevR = mChPrev[chint + 4];
+
+    uint8_t maskL = ~((mOutputStat >> chint) & 1) + 1;
+    uint8_t maskR = ~((mOutputStat >> (chint + 4)) & 1) + 1;
+
+    uint8_t outputL = output & maskL;
+    uint8_t outputR = output & maskR;
+    int8_t deltaL = static_cast<int8_t>(outputL) - static_cast<int8_t>(prevL);
+    int8_t deltaR = static_cast<int8_t>(outputR) - static_cast<int8_t>(prevR);
+
+    leftdelta += deltaL;
+    rightdelta += deltaR;
+
+
+
+    prevL = outputL;
+    prevR = outputR;
+    fence = std::min(fence, gen->fence());
 }
 
 }
