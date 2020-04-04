@@ -74,6 +74,7 @@ size_t Synth::run() {
     mCycleOffset = modff(cycles, &wholeCycles);
 
     // determine number of samples needed
+    float oldOffset = mSampleOffset;
     float samples = (mCyclesPerFrame / mCyclesPerSample) + mSampleOffset;
     float wholeSamples;
     mSampleOffset = modff(samples, &wholeSamples);
@@ -101,7 +102,7 @@ size_t Synth::run() {
 
         if (leftdelta || rightdelta) {
             // convert time in cycles to time in samples
-            float sampletime = cycletime / mCyclesPerSample;
+            float sampletime = (cycletime / mCyclesPerSample) + oldOffset;
             if (leftdelta == rightdelta) {
                 // since both deltas are the same, we can add the step to both terminals
                 mMixer.addStep<Mixer::Pan::both>(leftdelta * GAIN, sampletime);
