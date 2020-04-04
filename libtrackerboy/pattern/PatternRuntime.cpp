@@ -10,10 +10,10 @@ PatternRuntime::PatternRuntime(uint8_t speed) :
     mPattern(nullptr),
     mSpeed(speed),
     mFc(speed - Q53_make(1, 0)),
-    mTr1(ChType::ch1),
-    mTr2(ChType::ch2),
-    mTr3(ChType::ch3),
-    mTr4(ChType::ch4)
+    mTr1(),
+    mTr2(),
+    mTr3(),
+    mTr4()
 {
 }
 

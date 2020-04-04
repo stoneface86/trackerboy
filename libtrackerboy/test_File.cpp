@@ -124,8 +124,11 @@ TEST_CASE("save/load equivalence", "[File]") {
     SECTION("Instrument") {
         Instrument sample;
         auto &program = sample.getProgram();
-        program.push_back({ 1, 33, 22, 44, 50 });
-        program.push_back({ 0 });
+        // Frame 0: retrigger, env = 0xF1, duty = 0x2
+        program.push_back(0x4D);
+        program.push_back(0xF1);
+        // Frame 1: duty = 0x1
+        program.push_back(0x05);
 
         // serialize the sample instrument
         REQUIRE(file.serialize(out, sample) == FormatError::none);
@@ -139,7 +142,7 @@ TEST_CASE("save/load equivalence", "[File]") {
         auto &samplePrgm = sample.getProgram();
         auto &sampleReadInPrgm = sampleReadIn.getProgram();
         REQUIRE(samplePrgm.size() == sampleReadInPrgm.size());
-        REQUIRE(memcmp(samplePrgm.data(), sampleReadInPrgm.data(), samplePrgm.size() * sizeof(Instruction)) == 0);
+        REQUIRE(memcmp(samplePrgm.data(), sampleReadInPrgm.data(), samplePrgm.size()) == 0);
         
     }
 

@@ -15,7 +15,6 @@ using audio::PlaybackQueue;
 using trackerboy::Synth;
 using trackerboy::Instrument;
 using trackerboy::InstrumentTable;
-using trackerboy::Instruction;
 using trackerboy::Pattern;
 using trackerboy::PatternRuntime;
 using trackerboy::Track;
@@ -57,7 +56,11 @@ int main() {
 
     Instrument &inst = itable.insert(0, "test instrument");
     auto &prgm = inst.getProgram();
-    prgm.push_back({ 1, 0x8E, 0x0, 0xF1, trackerboy::NOTE_NONE });
+    // Frame 0: retrigger, env = 0xF1, duty = 0x2
+    prgm.push_back(0x4D);
+    prgm.push_back(0xF1);
+    // Frame 1: duty = 0x1
+    prgm.push_back(0x05);
 
 
     Pattern pat(128);

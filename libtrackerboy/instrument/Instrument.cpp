@@ -8,8 +8,8 @@ Instrument::Instrument()
 {
 }
 
-std::vector<Instruction>& Instrument::getProgram() {
-    return mProgram;
+std::vector<uint8_t>& Instrument::getProgram() {
+    return mStream;
 }
 
 }

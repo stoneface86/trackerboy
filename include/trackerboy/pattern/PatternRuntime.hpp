@@ -51,10 +51,10 @@ private:
     Pattern::Iterator mIter;
     Pattern::Iterator mEnd;
     
-    TrackRuntime mTr1;
-    TrackRuntime mTr2;
-    TrackRuntime mTr3;
-    TrackRuntime mTr4;
+    TrackRuntime<ChType::ch1> mTr1;
+    TrackRuntime<ChType::ch2> mTr2;
+    TrackRuntime<ChType::ch3> mTr3;
+    TrackRuntime<ChType::ch4> mTr4;
 
     // called when a new pattern is set or reset is called
     void init();

@@ -5,9 +5,9 @@
 namespace trackerboy {
 
 
-TrackRuntime::TrackRuntime(ChType trackId) :
-    mTrackId(trackId),
-    mIr(trackId),
+template <ChType ch>
+TrackRuntime<ch>::TrackRuntime() :
+    mIr(),
     mOutputMode(OutputMode::STOPPED),
     mLastInstrumentId(0),
     mLastInstrument(nullptr),
@@ -15,7 +15,8 @@ TrackRuntime::TrackRuntime(ChType trackId) :
 {
 }
 
-void TrackRuntime::reset() {
+template <ChType ch>
+void TrackRuntime<ch>::reset() {
     mIr.reset();
     mOutputMode = OutputMode::STOPPED;
     mLastInstrumentId = 0;
@@ -24,7 +25,8 @@ void TrackRuntime::reset() {
     // TODO: reset effect
 }
 
-void TrackRuntime::setRow(TrackRow row, InstrumentTable &itable) {
+template <ChType ch>
+void TrackRuntime<ch>::setRow(TrackRow row, InstrumentTable &itable) {
     if (row.flags & TrackRow::COLUMN_NOTE) {
         // a note was set
         if (row.note == NOTE_CUT) {
@@ -65,8 +67,8 @@ void TrackRuntime::setRow(TrackRow row, InstrumentTable &itable) {
     //}
 }
 
-
-void TrackRuntime::step(Synth &synth, WaveTable &wtable) {
+template <ChType ch>
+void TrackRuntime<ch>::step(Synth &synth, WaveTable &wtable) {
 
     // process effect (TODO)
 
@@ -74,22 +76,28 @@ void TrackRuntime::step(Synth &synth, WaveTable &wtable) {
     switch (mOutputMode) {
         case OutputMode::STOPPED_DISABLE_MIXER:
             // turn off sound output for this channel
-            synth.setOutputEnable(mTrackId, Gbs::TERM_BOTH, false);
+            synth.setOutputEnable(ch, Gbs::TERM_BOTH, false);
             mOutputMode = OutputMode::STOPPED;
             // fall-through
         case OutputMode::STOPPED:
             break; // do nothing
         case OutputMode::PLAYING_ENABLE_MIXER:
             // re-enable the channel output
-            synth.setOutputEnable(mTrackId, Gbs::TERM_BOTH, true);
+            synth.setOutputEnable(ch, Gbs::TERM_BOTH, true);
             mOutputMode = OutputMode::PLAYING;
             // fall-through
         case OutputMode::PLAYING:
-            mIr.step(synth, wtable, 0, mFreq);
+            mIr.step(synth, wtable, mFreq);
             break;
     }
 
 }
+
+template class TrackRuntime<ChType::ch1>;
+template class TrackRuntime<ChType::ch2>;
+template class TrackRuntime<ChType::ch3>;
+template class TrackRuntime<ChType::ch4>;
+
 
 
 }

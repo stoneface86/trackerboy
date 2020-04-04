@@ -9,13 +9,11 @@
 namespace trackerboy {
 
 
+template <ChType ch>
 class TrackRuntime {
 
-
 public:
-
-    TrackRuntime(ChType trackId);
-
+    TrackRuntime();
 
     //
     // Reset the runtime to initial state. The pattern will run at the
@@ -34,7 +32,6 @@ public:
     //
     void step(Synth &synth, WaveTable &wt);
 
-
 private:
 
     enum class OutputMode {
@@ -44,15 +41,13 @@ private:
         PLAYING
     };
 
-    const ChType mTrackId;
-    InstrumentRuntime mIr;
-
     OutputMode mOutputMode;
 
     uint8_t mLastInstrumentId;
     Instrument *mLastInstrument;
     uint16_t mFreq;
 
+    InstrumentRuntime<ch> mIr;
 
 };
 

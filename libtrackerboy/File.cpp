@@ -306,7 +306,7 @@ FormatError File::deserialize(std::istream &stream, Instrument &inst) {
     readAndCheck(stream, &size, sizeof(size));
 
     program.resize(size);
-    readAndCheck(stream, program.data(), sizeof(Instruction) * size);
+    readAndCheck(stream, program.data(), size);
 
     return FormatError::none;
 }
@@ -425,9 +425,8 @@ FormatError File::serialize(std::ostream &stream, Instrument &inst) {
     uint8_t size = static_cast<uint8_t>(program.size());
     writeAndCheck(stream, &size, sizeof(size));
 
-    // since the Instruction structure only has byte fields, we don't need to
-    // worry about endianness, so just write the entire program
-    writeAndCheck(stream, program.data(), size * sizeof(Instruction));
+    // program is just a byte array, no need to worry about endianness
+    writeAndCheck(stream, program.data(), size);
     
     return FormatError::none;
 }

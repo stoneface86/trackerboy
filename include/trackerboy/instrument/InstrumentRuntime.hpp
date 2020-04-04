@@ -5,32 +5,39 @@
 #include <vector>
 
 #include "trackerboy/Table.hpp"
-#include "trackerboy/instrument/Instruction.hpp"
 #include "trackerboy/synth/Synth.hpp"
 
 
 namespace trackerboy {
 
-class InstrumentRuntime {
+class InstrumentRuntimeBase {
 
 public:
 
-    InstrumentRuntime(ChType trackId);
-
     void reset();
 
-    void setProgram(std::vector<Instruction>* program);
+    void setProgram(std::vector<uint8_t>* program);
 
-    void step(Synth& synth, WaveTable& wtable, uint8_t rowVol = 0, uint16_t freq = 0);
+protected:
 
-private:
+    InstrumentRuntimeBase();
 
-    std::vector<Instruction> *mProgram;
-    uint8_t mFc;
+    std::vector<uint8_t> *mProgram;
     uint8_t mPc;
+    int8_t mPitchOffset;
+    int8_t mFinePitchOffset;
     bool mRunning;
-    const ChType mTrackId;
+};
 
+
+template <ChType ch>
+class InstrumentRuntime : public InstrumentRuntimeBase {
+
+public:
+
+    InstrumentRuntime();
+
+    void step(Synth& synth, WaveTable& wtable, uint16_t freq = 0);
 };
 
 }
