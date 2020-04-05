@@ -11,8 +11,8 @@ namespace trackerboy {
 
 namespace {
 
-constexpr double PI = 3.141592653589793f;
-constexpr double DOUBLE_PI = 6.283185307179586f;
+constexpr double PI = 3.141592653589793;
+constexpr double DOUBLE_PI = 6.283185307179586;
 
 double sinc(double x) {
     if (x == 0.0f) {
@@ -56,8 +56,8 @@ Mixer::Mixer(float samplingRate) :
     constexpr float FREQUENCY = 32.0f;
 
     const unsigned HARMONICS = static_cast<unsigned>(floorf(samplingRate / (2 * FREQUENCY)));
-    const double samplingRateInverted = 1.0f / samplingRate;
-    constexpr double AMPLITUDE = 0.5f / 0.7853f;
+    const double samplingRateInverted = 1.0 / samplingRate;
+    constexpr double AMPLITUDE = 0.5 / 0.7853;
 
     float *stepset = mStepTable.get();
     for (size_t i = 0; i != STEP_PHASES; ++i) {
