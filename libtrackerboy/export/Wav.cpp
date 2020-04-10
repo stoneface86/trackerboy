@@ -113,8 +113,8 @@ void Wav::begin() {
 void Wav::finish() {
 
 
-    uint32_t totalSamples = mSampleCount * mChannels;
-    uint32_t dataChunkSize = totalSamples * 4;
+    uint32_t totalSamples = mSampleCount;
+    uint32_t dataChunkSize = totalSamples * mChannels * 4;
     
     // chunk size totals
     // 4: riff chunk
