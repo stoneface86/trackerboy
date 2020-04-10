@@ -3,7 +3,7 @@
 
 #include <fstream>
 
-#include "trackerboy/pattern/Pattern.hpp"
+#include "trackerboy/pattern/PatternMaster.hpp"
 #include "trackerboy/song/Order.hpp"
 #include "trackerboy/fileformat.hpp"
 #include "trackerboy/Q53.hpp"
@@ -31,9 +31,11 @@ public:
 
     Q53 speed();
 
-    Order& order();
+    std::vector<Order>& orders();
 
-    std::vector<Pattern>& patterns();
+    PatternMaster& patterns();
+
+    Pattern getPattern(uint8_t orderNo);
 
     void setRowsPerBeat(uint8_t rowsPerBeat);
 
@@ -48,8 +50,8 @@ private:
 
     //void calcSpeed();
 
-    std::vector<Pattern> mPatterns;
-    Order mOrder;
+    PatternMaster mMaster;
+    std::vector<Order> mOrder;
 
     uint8_t mRowsPerBeat;
     float mTempo;

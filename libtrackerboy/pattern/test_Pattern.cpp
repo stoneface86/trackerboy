@@ -5,6 +5,7 @@
 
 namespace trackerboy {
 
+#if 0
 static bool rowIsZero(TrackRow row) {
     return row.flags == 0 &&
         row.note == 0 &&
@@ -76,5 +77,7 @@ TEST_CASE("setting a new size effects rows", "[pattern]") {
 //
 //
 //}
+
+#endif
 
 }

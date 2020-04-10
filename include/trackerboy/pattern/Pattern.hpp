@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <iterator>
 #include <vector>
 
 #include "trackerboy/ChType.hpp"
@@ -12,35 +13,16 @@
 namespace trackerboy {
 
 
-class Pattern {
+// Pattern data is stored in the PatternMaster and is accessed
+// via Track objects. So a Pattern is just a bunch of Track objects
+// for each channel
+struct Pattern {
 
-public:
 
-    using PatternData = std::vector<TrackRow>;
-    using Iterator = PatternData::const_iterator;
-
-    static constexpr size_t MAX_ROWS = 256;
-    static constexpr size_t DEFAULT_ROWS = 64;
-
-    Pattern(size_t nrows = DEFAULT_ROWS);
-
-    Iterator begin();
-
-    void clear(uint8_t rowStart, uint8_t rowEnd);
-
-    TrackRow* data();
-
-    Iterator end();
-
-    void setSize(size_t nrows);
-
-    size_t size();
-
-    Track track(ChType id);
-
-private:
-    size_t mSize;
-    PatternData mData;
+    Track track1;
+    Track track2;
+    Track track3;
+    Track track4;
 
 };
 

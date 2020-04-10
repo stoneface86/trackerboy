@@ -6,8 +6,8 @@
 namespace trackerboy {
 
 
-PatternRuntime::PatternRuntime(uint8_t speed) :
-    mPattern(nullptr),
+PatternRuntime::PatternRuntime(Pattern pattern, uint8_t speed) :
+    mPattern(pattern),
     mSpeed(speed),
     mFc(speed - Q53_make(1, 0)),
     mTr1(),
@@ -15,6 +15,7 @@ PatternRuntime::PatternRuntime(uint8_t speed) :
     mTr3(),
     mTr4()
 {
+    init();
 }
 
 void PatternRuntime::reset() {
@@ -25,7 +26,7 @@ void PatternRuntime::reset() {
     mTr4.reset();
 }
 
-void PatternRuntime::setPattern(Pattern *pattern) {
+void PatternRuntime::setPattern(Pattern pattern) {
     mPattern = pattern;
     init();
 }
@@ -41,7 +42,7 @@ void PatternRuntime::setSpeed(Q53 speed) {
 
 bool PatternRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtable) {
 
-    if (mIter == mEnd) {
+    if (mIter1 == mEnd1) {
         // end of pattern, stop
         return true;
     }
@@ -51,10 +52,10 @@ bool PatternRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtab
     if (mFc >= mSpeed) {
         // new frame
 
-        mTr1.setRow(*mIter++, itable);
-        mTr2.setRow(*mIter++, itable);
-        mTr3.setRow(*mIter++, itable);
-        mTr4.setRow(*mIter++, itable);
+        mTr1.setRow(*(mIter1++), itable);
+        mTr2.setRow(*(mIter2++), itable);
+        mTr3.setRow(*(mIter3++), itable);
+        mTr4.setRow(*(mIter4++), itable);
 
         // check for pattern effect (pattern skip, speed change)
         // certain effects apply to the pattern and not the track
@@ -69,14 +70,15 @@ bool PatternRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtab
     mTr3.step(synth, wtable);
     mTr4.step(synth, wtable);
     
-    return mIter == mEnd;
+    return mIter1 == mEnd1;
 }
 
 void PatternRuntime::init() {
-    if (mPattern != nullptr) {
-        mIter = mPattern->begin();
-        mEnd = mPattern->end();
-    }
+    mIter1 = mPattern.track1.begin();
+    mIter2 = mPattern.track2.begin();
+    mIter3 = mPattern.track3.begin();
+    mIter4 = mPattern.track4.begin();
+    mEnd1 = mPattern.track1.end();
     mFc = mSpeed - Q53_make(1, 0);
 }
 

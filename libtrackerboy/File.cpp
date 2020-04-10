@@ -326,7 +326,7 @@ FormatError File::deserialize(std::istream &stream, Song &song) {
     song.setSpeed(songHeader.speed);
     
     // read in the order
-    {
+    /*{
         OrderFormat orderHeader;
         readAndCheck(stream, &orderHeader, sizeof(orderHeader));
         auto &order = song.order();
@@ -340,25 +340,25 @@ FormatError File::deserialize(std::istream &stream, Song &song) {
         } else {
             order.removeLoop();
         }
-    }
+    }*/
 
     // read in the patterns
     
-    auto &patterns = song.patterns();
-    patterns.clear();
-    for (uint8_t i = 0; i != songHeader.numberOfPatterns; ++i) {
-        // first byte is the size of the pattern
-        PatternFormat patternHeader;
-        readAndCheck(stream, &patternHeader, sizeof(patternHeader));
+    //auto &patterns = song.patterns();
+    //patterns.clear();
+    //for (uint8_t i = 0; i != songHeader.numberOfPatterns; ++i) {
+    //    // first byte is the size of the pattern
+    //    PatternFormat patternHeader;
+    //    readAndCheck(stream, &patternHeader, sizeof(patternHeader));
 
-        // pattern size ranges from 1-256, so add one to what we read in
-        size_t rows = static_cast<size_t>(patternHeader.rows) + 1;
-        Pattern p(rows);
-        readAndCheck(stream, p.data(), sizeof(TrackRow) * 4 * rows);
+    //    // pattern size ranges from 1-256, so add one to what we read in
+    //    size_t rows = static_cast<size_t>(patternHeader.rows) + 1;
+    //    Pattern p(rows);
+    //    readAndCheck(stream, p.data(), sizeof(TrackRow) * 4 * rows);
 
-        patterns.push_back(p);
-        
-    }
+    //    patterns.push_back(p);
+    //    
+    //}
 
 
     
@@ -384,35 +384,35 @@ FormatError File::serialize(std::ostream &stream, Song &song) {
     songHeader.tempo = correctEndian(song.tempo());
     songHeader.rowsPerBeat = song.rowsPerBeat();
     songHeader.speed = song.speed();
-    songHeader.numberOfPatterns = static_cast<uint8_t>(song.patterns().size());
+    //songHeader.numberOfPatterns = static_cast<uint8_t>(song.patterns().size());
 
     writeAndCheck(stream, &songHeader, sizeof(songHeader));
     
     // order settings
 
-    auto &order = song.order();
-    OrderFormat orderHeader;
-    orderHeader.loopFlag = static_cast<uint8_t>(order.loops());
-    orderHeader.loopIndex = order.loopIndex();
-    orderHeader.orderListSize = static_cast<uint8_t>(order.indexVec().size());
+    //auto &order = song.order();
+    //OrderFormat orderHeader;
+    //orderHeader.loopFlag = static_cast<uint8_t>(order.loops());
+    //orderHeader.loopIndex = order.loopIndex();
+    //orderHeader.orderListSize = static_cast<uint8_t>(order.indexVec().size());
 
-    writeAndCheck(stream, &orderHeader, sizeof(orderHeader));
-    
-    // order data
-    writeAndCheck(stream, order.indexVec().data(), orderHeader.orderListSize);
+    //writeAndCheck(stream, &orderHeader, sizeof(orderHeader));
+    //
+    //// order data
+    //writeAndCheck(stream, order.indexVec().data(), orderHeader.orderListSize);
 
     // patterns
 
-    auto &patterns = song.patterns();
-    auto patternListEnd = patterns.end();
-    for (auto iter = patterns.begin(); iter != patternListEnd; ++iter) {
-        // pattern settings (just the size)
-        PatternFormat patternHeader;
-        patternHeader.rows = static_cast<uint8_t>(iter->size() - 1);
-        writeAndCheck(stream, &patternHeader, sizeof(patternHeader));
-        // pattern data
-        writeAndCheck(stream, iter->data(), sizeof(TrackRow) * 4 * iter->size());
-    }
+    //auto &patterns = song.patterns();
+    //auto patternListEnd = patterns.end();
+    //for (auto iter = patterns.begin(); iter != patternListEnd; ++iter) {
+    //    // pattern settings (just the size)
+    //    PatternFormat patternHeader;
+    //    patternHeader.rows = static_cast<uint8_t>(iter->size() - 1);
+    //    writeAndCheck(stream, &patternHeader, sizeof(patternHeader));
+    //    // pattern data
+    //    writeAndCheck(stream, iter->data(), sizeof(TrackRow) * 4 * iter->size());
+    //}
     
     return FormatError::none;
 }

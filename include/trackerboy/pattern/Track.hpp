@@ -1,49 +1,23 @@
 
 #pragma once
 
-#include <iterator>
-
+#include "trackerboy/pattern/TrackData.hpp"
 #include "trackerboy/pattern/TrackRow.hpp"
 
 
 namespace trackerboy {
 
 
+// Track class provides access to the pattern data for a specific location
+// in the master pattern.
+
 class Track {
 
 public:
 
-    class Iterator {
+    Track(TrackData::iterator begin, TrackData::iterator end);
 
-    public:
-        using self_type = Iterator;
-        using value_type = TrackRow;
-        using reference = value_type&;
-        using pointer = value_type*;
-        using iterator_category = std::forward_iterator_tag;
-        using difference_type = int;
-
-        Iterator() = default;
-        Iterator(pointer ptr);
-        Iterator(const self_type &iter);
-        ~Iterator();
-
-        self_type operator++();
-        self_type operator++(int junk);
-        const reference operator*();
-        const pointer operator->();
-        bool operator==(const self_type &rhs);
-        bool operator!=(const self_type &rhs);
-        self_type operator=(const self_type &rhs);
-
-    private:
-        pointer mPtr;
-
-    };
-
-    Track(TrackRow *begin, TrackRow *end);
-
-    Iterator begin();
+    TrackData::iterator begin();
 
     void clear(uint8_t rowStart, uint8_t rowEnd);
 
@@ -53,7 +27,7 @@ public:
 
     void clearNote(uint8_t row);
 
-    Iterator end();
+    TrackData::iterator end();
 
     void setEffect(uint8_t row, uint8_t effectNo, EffectType effect, uint8_t param = 0);
 
@@ -63,8 +37,10 @@ public:
 
 private:
 
-    TrackRow *mBegin;
-    TrackRow *mEnd;
+    TrackData::iterator mBegin;
+    TrackData::iterator mEnd;
+
+
 
 };
 

@@ -10,10 +10,13 @@ namespace trackerboy {
 
 
 Song::Song() :
+    mMaster(64),
+    mOrder(),
     mRowsPerBeat(DEFAULT_RPB),
     mTempo(DEFAULT_TEMPO),
     mSpeed(DEFAULT_SPEED)
 {
+    mOrder.push_back({ 0 });
 }
 
 uint8_t Song::rowsPerBeat() {
@@ -35,12 +38,26 @@ Q53 Song::speed() {
     return mSpeed;
 }
 
-Order& Song::order() {
+std::vector<Order>& Song::orders() {
     return mOrder;
 }
 
-std::vector<Pattern>& Song::patterns() {
-    return mPatterns;
+PatternMaster& Song::patterns() {
+    return mMaster;
+}
+
+Pattern Song::getPattern(uint8_t orderNo) {
+    if (orderNo >= mOrder.size()) {
+        throw std::invalid_argument("order does not exist");
+    }
+
+    Order &order = mOrder[orderNo];
+    return mMaster.getPattern(
+        order.track1Id,
+        order.track2Id,
+        order.track3Id,
+        order.track4Id
+    );
 }
 
 void Song::setRowsPerBeat(uint8_t rowsPerBeat) {

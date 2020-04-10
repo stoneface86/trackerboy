@@ -15,9 +15,7 @@ class PatternRuntime {
 
 public:
 
-    static constexpr Q53 DEFAULT_SPEED = Q53_make(6, 0); // 4 rows/beat @ 150 bpm
-
-    PatternRuntime(uint8_t speed = DEFAULT_SPEED);
+    PatternRuntime(Pattern pattern, Q53 speed);
 
     //
     // Reset the runtime to initial state. The pattern will run at the
@@ -28,7 +26,7 @@ public:
     //
     // Sets the pattern to run and resets the runtime
     //
-    void setPattern(Pattern *pattern);
+    void setPattern(Pattern pattern);
 
     //
     // Sets the speed, or frames per row, of the runtime. Speed should be
@@ -44,12 +42,18 @@ public:
 
 
 private:
-    Pattern *mPattern;
+    Pattern mPattern;
     Q53 mSpeed;         // speed (frames per row) (Q5.3 format)
     Q53 mFc;            // frame counter
 
-    Pattern::Iterator mIter;
-    Pattern::Iterator mEnd;
+    TrackData::iterator mIter1;
+    TrackData::iterator mIter2;
+    TrackData::iterator mIter3;
+    TrackData::iterator mIter4;
+
+    // all tracks are the same length so we only need the end iterator
+    // for 1
+    TrackData::iterator mEnd1;
     
     TrackRuntime<ChType::ch1> mTr1;
     TrackRuntime<ChType::ch2> mTr2;

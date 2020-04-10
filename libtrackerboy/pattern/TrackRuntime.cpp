@@ -1,5 +1,6 @@
 
 #include "trackerboy/pattern/TrackRuntime.hpp"
+#include "trackerboy/note.hpp"
 
 
 namespace trackerboy {

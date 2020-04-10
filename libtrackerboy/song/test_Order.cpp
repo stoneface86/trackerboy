@@ -2,6 +2,7 @@
 #include "catch.hpp"
 #include "trackerboy/song/Order.hpp"
 
+#if 0
 using namespace trackerboy;
 
 static constexpr size_t SAMPLE_ORDER_SIZE = 10;
@@ -97,3 +98,4 @@ TEST_CASE("Sequencer testing", "[order]") {
 
 }
 
+#endif

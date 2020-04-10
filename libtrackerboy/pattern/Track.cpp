@@ -1,129 +1,102 @@
 
 #include "trackerboy/pattern/Track.hpp"
 
+#include <cassert>
+
+#ifdef _MSC_VER
+// supress the warnings caused by:
+// rowdata->effects[effectNo]
+// effectNo is checked via assert
+// although this would be a very bad buffer overrun to debug
+#pragma warning(disable : 6385 6386)
+#endif
 
 namespace trackerboy {
 
-using Iterator = Track::Iterator;
+namespace {
 
-#define rowptr(row) (mBegin + (static_cast<size_t>(row) * 4))
+constexpr TrackRow NULL_ROW = { 0 };
+constexpr Effect NULL_EFFECT = { static_cast<EffectType>(0), 0 };
 
-
-Track::Track(TrackRow *begin, TrackRow *end) :
-    mBegin(begin),
-    mEnd(end) {
 }
 
-Iterator Track::begin() {
-    return Iterator(mBegin);
+Track::Track(TrackData::iterator begin, TrackData::iterator end) :
+    mBegin(begin),
+    mEnd(end)
+{
+    assert(begin < end);
+}
+
+TrackData::iterator Track::begin() {
+    return mBegin;
 }
 
 void Track::clear(uint8_t rowStart, uint8_t rowEnd) {
-    TrackRow *row = rowptr(rowStart);
-    unsigned count = rowEnd - rowStart;
-    while (row < mEnd && count--) {
-        *row = { 0 };
-        row += 4;
+
+    auto end = mBegin + rowEnd;
+    if (end > mEnd) {
+        end = mEnd;
+    }
+
+    for (auto iter = mBegin + rowStart; iter < end; ++iter) {
+        *iter = NULL_ROW;
     }
 }
 
 void Track::clearEffect(uint8_t row, uint8_t effectNo) {
-    TrackRow *rowdata = rowptr(row);
+    assert(effectNo < TrackRow::MAX_EFFECTS);
+    auto rowdata = mBegin + row;
+    assert(rowdata < mEnd);
     rowdata->flags &= ~(TrackRow::COLUMN_EFFECT1 << effectNo);
+    rowdata->effects[effectNo] = NULL_EFFECT; // Warning C6386
 }
 
 void Track::clearInstrument(uint8_t row) {
-    TrackRow *rowdata = rowptr(row);
+    auto rowdata = mBegin + row;
+    assert(rowdata < mEnd);
     rowdata->flags &= ~TrackRow::COLUMN_INST;
+    rowdata->instrumentId = 0;
 }
 
 void Track::clearNote(uint8_t row) {
-    TrackRow *rowdata = rowptr(row);
+    auto rowdata = mBegin + row;
+    assert(rowdata < mEnd);
     rowdata->flags &= ~TrackRow::COLUMN_NOTE;
+    rowdata->note = 0;
 }
 
-Iterator Track::end() {
-    return Iterator(mEnd);
+TrackData::iterator Track::end() {
+    return mEnd;
 }
 
 void Track::setEffect(uint8_t row, uint8_t effectNo, EffectType effect, uint8_t param) {
-    TrackRow *rowdata = rowptr(row);
-    
-    switch (effectNo) {
-        case TrackRow::EFFECT1:
-            rowdata->effect1 = (rowdata->effect1 & 0xF0) | static_cast<uint8_t>(effect);
-            rowdata->effect1Param = param;
-            break;
-        case TrackRow::EFFECT2:
-            rowdata->effect23 = (rowdata->effect23 & 0xF0) | static_cast<uint8_t>(effect);
-            rowdata->effect2Param = param;
-            break;
-        case TrackRow::EFFECT3:
-            rowdata->effect23 = (rowdata->effect23 & 0x0F) | (static_cast<uint8_t>(effect) << 4);
-            rowdata->effect3Param = param;
-            break;
-        default:
-            throw std::invalid_argument("TrackRow can only have 3 effects");
-    }
+    auto rowdata = mBegin + row;
+    assert(rowdata < mEnd);
+    assert(effectNo < TrackRow::MAX_EFFECTS);
+
+    Effect &effectInRow = rowdata->effects[effectNo]; // Warning C6385
+
+    effectInRow.type = effect;
+    effectInRow.param = param;
+
     // update column flags so that we know an effect has been set
     rowdata->flags |= (TrackRow::COLUMN_EFFECT1 << effectNo);
+    
 
 }
 
 void Track::setInstrument(uint8_t row, uint8_t instrumentId) {
-    TrackRow *rowdata = rowptr(row);
+    auto rowdata = mBegin + row;
+    assert(rowdata < mEnd);
     rowdata->instrumentId = instrumentId;
     rowdata->flags |= TrackRow::COLUMN_INST;
 }
 
 void Track::setNote(uint8_t row, uint8_t note) {
-    TrackRow *rowdata = rowptr(row);
+    auto rowdata = mBegin + row;
+    assert(rowdata < mEnd);
     rowdata->note = note;
     rowdata->flags |= TrackRow::COLUMN_NOTE;
-}
-
-Iterator::Iterator(Iterator::pointer ptr) :
-    mPtr(ptr) {
-}
-
-Iterator::Iterator(const Iterator::self_type &iter) :
-    mPtr(iter.mPtr) {
-}
-
-Iterator::~Iterator() {
-}
-
-Iterator::self_type Iterator::operator++() {
-    mPtr += 4; // each row in the pattern has 4 track rows
-    return *this;
-}
-
-Iterator::self_type Iterator::operator++(int junk) {
-    (void)junk;
-    Iterator::self_type *i = this;
-    mPtr += 4;
-    return *i;
-}
-
-const Iterator::reference Iterator::operator*() {
-    return *mPtr;
-}
-
-const Iterator::pointer Iterator::operator->() {
-    return mPtr;
-}
-
-bool Iterator::operator==(const Iterator::self_type &rhs) {
-    return mPtr == rhs.mPtr;
-}
-
-bool Iterator::operator!=(const Iterator::self_type &rhs) {
-    return mPtr != rhs.mPtr;
-}
-
-Iterator::self_type Iterator::operator=(const Iterator::self_type &rhs) {
-    mPtr = rhs.mPtr;
-    return *this;
 }
 
 

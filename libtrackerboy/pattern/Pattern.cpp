@@ -6,6 +6,19 @@
 
 namespace trackerboy {
 
+Pattern::Iterator::Iterator(Track &track1, Track &track2, Track &track3, Track &track4) :
+    mIters{ track1.begin(), track2.begin(), track3.begin(), track4.begin() },
+    mTrackId(0)
+{
+}
+
+Pattern::Iterator::self_type Pattern::Iterator::operator++() {
+    mTrackId = (++mTrackId) & 0x3;
+
+}
+
+
+
 Pattern::Pattern(size_t nrows) :
     mSize(nrows)
 {
