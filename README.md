@@ -14,6 +14,9 @@ WIP! This project is currently in the development phase (major version 0).
 ### Pattern 
 
 Here is some sample output of the synthesizer + pattern playback.
+
+[![Pattern Demo youtube](https://img.youtube.com/vi/QDRJqGgkCDM/0.jpg)](https://www.youtube.com/watch?v=QDRJqGgkCDM)
+
 [pattern_demo.wav](misc/pattern_demo.wav)
 
 ## Getting Started
