@@ -90,7 +90,7 @@ void Wav::begin() {
     WavHeader header;
     header.fmtChannels = mChannels;
     header.fmtSampleRate = mSamplingRate;
-    uint32_t bytesPerChannel = mChannels * 4;
+    uint16_t bytesPerChannel = mChannels * 4;
     header.fmtAvgBytesPerSec = bytesPerChannel * mSamplingRate;
     header.fmtBlockAlign = bytesPerChannel;
 
@@ -113,7 +113,7 @@ void Wav::begin() {
 void Wav::finish() {
 
 
-    uint32_t totalSamples = mSampleCount;
+    uint32_t totalSamples = static_cast<uint32_t>(mSampleCount);
     uint32_t dataChunkSize = totalSamples * mChannels * 4;
     
     // chunk size totals
