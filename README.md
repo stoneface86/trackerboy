@@ -9,6 +9,13 @@ consoles.
 
 WIP! This project is currently in the development phase (major version 0).
 
+## Demos
+
+### Pattern 
+
+Here is some sample output of the synthesizer + pattern playback.
+[pattern_demo.wav](misc/pattern_demo.wav)
+
 ## Getting Started
 
  * __Build:__ To compile TrackerBoy from source, see the [build instructions](BUILD.md)
