@@ -52,52 +52,7 @@ Mixer::Mixer(float samplingRate) :
     mBuf(nullptr),
     mBufsize(0)
 {
-    // generate the step table
-    constexpr float FREQUENCY = 32.0f;
-
-    const unsigned HARMONICS = static_cast<unsigned>(floorf(samplingRate / (2 * FREQUENCY)));
-    const double samplingRateInverted = 1.0 / samplingRate;
-    constexpr double AMPLITUDE = 0.5 / 0.7853;
-
-    float *stepset = mStepTable.get();
-    for (size_t i = 0; i != STEP_PHASES; ++i) {
-        double phase = static_cast<double>(i) / STEP_PHASES * -1.0f;
-        
-        // sample the step
-        for (size_t j = 0; j != STEP_WIDTH; ++j) {
-            int index = static_cast<int>(j) - STEP_CENTER + 1;
-            double angle = (static_cast<double>(index) + 0.5 + phase) * samplingRateInverted;
-            // start at 0.5 so the wave goes from 0 to 1
-            double sample = 0.5f;
-            // add the sines of every odd harmonic
-            for (unsigned h = 1; h < HARMONICS; h += 2) {
-                // lanczos factor, reduces gibbs phenomenon 
-                double lanczos = sinc(static_cast<double>(h) / HARMONICS);
-                sample += lanczos * AMPLITUDE * (sin(h * DOUBLE_PI * angle * FREQUENCY) / h);
-            }
-            stepset[j] = static_cast<float>(sample);
-        }
-
-        // differentiate (first difference)
-        float prev = 0.0f; // prev is 0 from the way we setup the step
-        float error = 1.0f;
-        for (size_t j = 0; j != STEP_WIDTH; ++j) {
-            float cur = stepset[j];
-            float delta = cur - prev;
-            prev = cur;
-            stepset[j] = delta;
-            error -= delta;
-        }
-
-        // add error so that the step sums to 1.0f
-        float halferror = error * 0.5f;
-        stepset[STEP_CENTER] += halferror;
-        stepset[STEP_CENTER - 1] += halferror;
-
-        stepset += STEP_WIDTH;
-    }
-
-
+    setSamplingRate(samplingRate);
 }
 
 template <Mixer::Pan pan>
@@ -184,6 +139,53 @@ void Mixer::reset() {
     std::fill_n(mFuture, FUTURE_SIZE, 0.0f);
     mPreviousL = 0.0f;
     mPreviousR = 0.0f;
+}
+
+void Mixer::setSamplingRate(float samplingRate) {
+    // (re)generate the step table
+    constexpr float FREQUENCY = 32.0f;
+
+    const unsigned HARMONICS = static_cast<unsigned>(floorf(samplingRate / (2 * FREQUENCY)));
+    const double samplingRateInverted = 1.0 / samplingRate;
+    constexpr double AMPLITUDE = 0.5 / 0.7853;
+
+    float *stepset = mStepTable.get();
+    for (size_t i = 0; i != STEP_PHASES; ++i) {
+        double phase = static_cast<double>(i) / STEP_PHASES * -1.0f;
+
+        // sample the step
+        for (size_t j = 0; j != STEP_WIDTH; ++j) {
+            int index = static_cast<int>(j) - STEP_CENTER + 1;
+            double angle = (static_cast<double>(index) + 0.5 + phase) * samplingRateInverted;
+            // start at 0.5 so the wave goes from 0 to 1
+            double sample = 0.5f;
+            // add the sines of every odd harmonic
+            for (unsigned h = 1; h < HARMONICS; h += 2) {
+                // lanczos factor, reduces gibbs phenomenon 
+                double lanczos = sinc(static_cast<double>(h) / HARMONICS);
+                sample += lanczos * AMPLITUDE * (sin(h * DOUBLE_PI * angle * FREQUENCY) / h);
+            }
+            stepset[j] = static_cast<float>(sample);
+        }
+
+        // differentiate (first difference)
+        float prev = 0.0f; // prev is 0 from the way we setup the step
+        float error = 1.0f;
+        for (size_t j = 0; j != STEP_WIDTH; ++j) {
+            float cur = stepset[j];
+            float delta = cur - prev;
+            prev = cur;
+            stepset[j] = delta;
+            error -= delta;
+        }
+
+        // add error so that the step sums to 1.0f
+        float halferror = error * 0.5f;
+        stepset[STEP_CENTER] += halferror;
+        stepset[STEP_CENTER - 1] += halferror;
+
+        stepset += STEP_WIDTH;
+    }
 }
 
 

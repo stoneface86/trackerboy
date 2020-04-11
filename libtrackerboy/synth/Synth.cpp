@@ -251,6 +251,7 @@ void Synth::setFramerate(float framerate) {
 void Synth::setSamplingRate(float samplingRate) {
     mSamplingRate = samplingRate;
     mCyclesPerSample = Gbs::CLOCK_SPEED / samplingRate;
+    mMixer.setSamplingRate(samplingRate);
     resizeFrameBuf();
     reset();
 }

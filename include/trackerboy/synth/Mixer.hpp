@@ -39,6 +39,7 @@ public:
 
     void reset();
 
+    void setSamplingRate(float samplingRate);
     
 
 private:
