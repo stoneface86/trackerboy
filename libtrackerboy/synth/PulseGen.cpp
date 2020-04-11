@@ -43,6 +43,11 @@ uint16_t PulseGen::frequency() {
     return mFrequency;
 }
 
+void PulseGen::reset() {
+    mFrequency = Gbs::DEFAULT_FREQUENCY;
+    mDuty = Gbs::DEFAULT_DUTY;
+    restart();
+}
 
 void PulseGen::restart() {
     Generator::restart();

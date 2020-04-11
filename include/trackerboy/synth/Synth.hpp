@@ -40,19 +40,24 @@ public:
     //
     size_t run();
 
+    
+    void setFramerate(float framerate);
+
     void setOutputEnable(Gbs::OutputFlags flags);
     void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled);
+
+    void setSamplingRate(float samplingRate);
 
     void writeRegister(uint16_t addr, uint8_t value);
 
 private:
 
-
-
-
+    // output sampling rate
     float mSamplingRate;
+    // interrupt rate of the gameboy VBlank interrupt
     float mFramerate;
 
+    // Hardware components
     HardwareFile mHf;
 
     Mixer mMixer;
@@ -62,6 +67,8 @@ private:
     // equal to the gameboy clock speed divided by the sampling rate
     float mCyclesPerSample;
 
+    // number of cycles executed in 1 frame
+    // equal to the gameboy clock speed divided by the framerate
     float mCyclesPerFrame;
 
     // fraction offset of cycles when determining frame length
@@ -70,14 +77,22 @@ private:
     // fractional offset of samples
     float mSampleOffset;
 
+    // buffer of generated samples from the last run()
     std::vector<float> mFrameBuf;
 
+    // channel panning settings
+    // bits 7-4: Right panning enable for channels 1,2,3,4 (bit 4 = 1, ...)
+    // bits 3-0: Left panning enable for channels 1,2,3,4 (bit 0 = 1, ...)
     uint8_t mOutputStat;
 
+    // previous output from last run for each channel terminals
     uint8_t mChPrev[8];
 
+    // used by fill()
     size_t mFillPos;
     size_t mLastFrameSize;
+
+    void resizeFrameBuf();
 
     template <ChType ch>
     void updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence);

@@ -14,6 +14,8 @@ public:
 
     NoiseGen();
 
+    void reset() override;
+
     //
     // channel retrigger. LFSR is re-initialized, counters are reset
     // and the period is reloaded from the set register

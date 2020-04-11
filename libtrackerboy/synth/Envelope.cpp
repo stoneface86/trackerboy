@@ -17,6 +17,11 @@ uint8_t Envelope::readRegister() {
     return mRegister;
 }
 
+void Envelope::reset() {
+    mRegister = Gbs::DEFAULT_ENV_REGISTER;
+    restart();
+}
+
 void Envelope::restart() {
     mEnvCounter = 0;
     mEnvLength = (mRegister & 0x7);

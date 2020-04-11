@@ -23,6 +23,11 @@ public:
     bool disabled();
 
     //
+    // Hardware reset the generator.
+    //
+    virtual void reset() = 0;
+
+    //
     // Restart (retrigger) the generator. Counters are reset to 0. If the
     // generator was disabled, it is re-enabled.
     //

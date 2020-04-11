@@ -8,8 +8,6 @@
 
 namespace {
 
-constexpr unsigned CYCLES_PER_TRIGGER = 8192;
-
 // largest delta = 60 (0xF * 4), so the maximum volume is 15/16 (-0.56 dB)
 constexpr float GAIN = 1.0f / 64.0f; 
 
@@ -29,15 +27,13 @@ Synth::Synth(float samplingRate, float framerate) :
     mCyclesPerFrame(Gbs::CLOCK_SPEED / framerate),
     mCycleOffset(0.0f),
     mSampleOffset(0.0f),
-    mFrameBuf((static_cast<size_t>(samplingRate / framerate) + 1) * 2),
+    mFrameBuf(),
     mOutputStat(Gbs::OUT_ALL),
     mChPrev{0},
     mFillPos(0),
     mLastFrameSize(0)
 {
-    // NOTE: mTriggerTimings will need to be recalculated if the sampling rate
-    // changes. Currently there is no way to change it after construction,
-    // although this may change in the future.
+    resizeFrameBuf();
 }
 
 float* Synth::buffer() {
@@ -205,7 +201,22 @@ uint8_t Synth::readRegister(uint16_t addr) {
 
 
 void Synth::reset() {
-    // TODO: implement later
+    mCycleOffset = 0.0f;
+    mSampleOffset = 0.0f;
+    std::fill_n(mChPrev, 8, static_cast<uint8_t>(0));
+    mFillPos = 0;
+    mLastFrameSize = 0;
+    // reset hardware components
+    mSequencer.reset();
+    mMixer.reset();
+    mHf.env1.reset();
+    mHf.env2.reset();
+    mHf.env4.reset();
+    mHf.sweep1.reset();
+    mHf.gen1.reset();
+    mHf.gen2.reset();
+    mHf.gen3.reset();
+    mHf.gen4.reset();
 }
 
 
@@ -230,6 +241,19 @@ void Synth::restart(ChType ch) {
     }
 }
 
+void Synth::setFramerate(float framerate) {
+    mFramerate = framerate;
+    mCyclesPerFrame = Gbs::CLOCK_SPEED / framerate;
+    resizeFrameBuf();
+    reset();
+}
+
+void Synth::setSamplingRate(float samplingRate) {
+    mSamplingRate = samplingRate;
+    mCyclesPerSample = Gbs::CLOCK_SPEED / samplingRate;
+    resizeFrameBuf();
+    reset();
+}
 
 void Synth::setOutputEnable(Gbs::OutputFlags flags) {
     mOutputStat = flags;
@@ -332,6 +356,9 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) {
     }
 }
 
+void Synth::resizeFrameBuf() {
+    mFrameBuf.resize((static_cast<size_t>(mSamplingRate / mFramerate) + 1) * 2);
+}
 
 template <ChType ch>
 void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) {

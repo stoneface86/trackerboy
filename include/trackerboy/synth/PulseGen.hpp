@@ -18,6 +18,8 @@ public:
 
     uint16_t frequency();
 
+    void reset() override;
+
     //
     // Restart the generator, counters are reset to 0
     //

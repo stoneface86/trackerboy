@@ -33,6 +33,13 @@ uint16_t WaveGen::frequency() {
     return mFrequency;
 }
 
+void WaveGen::reset() {
+    mFrequency = Gbs::DEFAULT_FREQUENCY;
+    mVolume = Gbs::DEFAULT_WAVE_LEVEL;
+    std::fill_n(mWaveram, Gbs::WAVE_RAMSIZE, static_cast<uint8_t>(0));
+    restart();
+}
+
 void WaveGen::restart() {
     Generator::restart();
     mWaveIndex = 0;

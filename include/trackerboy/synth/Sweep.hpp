@@ -18,6 +18,8 @@ public:
 
     uint8_t readRegister();
 
+    void reset();
+
     void restart();
 
     void writeRegister(uint8_t reg);

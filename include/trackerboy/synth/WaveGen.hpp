@@ -18,6 +18,8 @@ public:
 
     uint16_t frequency();
 
+    void reset() override;
+
     void restart() override;
 
     void setFrequency(uint16_t frequency);

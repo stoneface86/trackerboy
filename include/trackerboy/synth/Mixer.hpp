@@ -37,6 +37,8 @@ public:
     template <Pan pan>
     void addStep(float step, float time);
 
+    void reset();
+
     
 
 private:

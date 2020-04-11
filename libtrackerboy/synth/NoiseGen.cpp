@@ -29,6 +29,11 @@ NoiseGen::NoiseGen() :
 {
 }
 
+void NoiseGen::reset() {
+    mRegister = Gbs::DEFAULT_NOISE_REGISTER;
+    restart();
+}
+
 void NoiseGen::restart() {
     Generator::restart();
     mLfsr = LFSR_INIT;

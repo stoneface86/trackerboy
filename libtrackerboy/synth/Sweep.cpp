@@ -20,6 +20,11 @@ uint8_t Sweep::readRegister() {
     return mRegister;
 }
 
+void Sweep::reset() {
+    mRegister = Gbs::DEFAULT_SWEEP_REGISTER;
+    restart();
+}
+
 void Sweep::restart() {
     mSweepCounter = 0;
     mSweepShift = mRegister & 0x7;

@@ -179,6 +179,13 @@ void Mixer::endFrame() {
 
 }
 
+void Mixer::reset() {
+    // clear previous and future values
+    std::fill_n(mFuture, FUTURE_SIZE, 0.0f);
+    mPreviousL = 0.0f;
+    mPreviousR = 0.0f;
+}
+
 
 template void Mixer::addStep<Mixer::Pan::left>(float step, float time);
 template void Mixer::addStep<Mixer::Pan::right>(float step, float time);
