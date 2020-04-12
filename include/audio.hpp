@@ -11,6 +11,10 @@
 namespace audio {
 
 
+//
+// Exception class for a portaudio error. The portaudio error code
+// that caused this exception can be accessed via the getError() method
+//
 class PaException : public std::runtime_error {
     PaError err;
 public:
@@ -19,7 +23,11 @@ public:
     PaError getError();
 };
 
-
+//
+// Class for an audio playback queue. Samples to be played out are stored in
+// the queue by calling write or writeAll. The samples will be played out
+// to the default device when the stream is started.
+//
 class PlaybackQueue {
 
 public:
@@ -39,7 +47,7 @@ public:
     size_t bufferSampleSize();
 
     //
-    // Size of the playback queue, in milleseconds.
+    // Minimum size of the playback queue, in milleseconds.
     //
     unsigned bufferSize();
 
@@ -55,7 +63,7 @@ public:
     void flush();
 
     //
-    // Change the buffer size of the playback queue. The given size, in
+    // Change the minimum buffer size of the playback queue. The given size, in
     // milleseconds, should be in the range of MIN_BUFFER_SIZE and
     // MAX_BUFFER_SIZE
     //
@@ -89,9 +97,8 @@ public:
     size_t write(float buf[], size_t nsamples);
 
     //
-    // Write the entire sample buffer to the playback queue. If the queue is does
-    // not have enough spaces available then this method will wait until there
-    // is room.
+    // Write the entire sample buffer to the playback queue. This method will
+    // block until the entire buffer is written to the queue.
     //
     void writeAll(float buf[], size_t nsamples);
 
@@ -104,7 +111,7 @@ private:
 
     float mSamplingRate;
     unsigned mBufferSize; // size in milleseconds of the buffer
-    size_t mSlack; // unusable slots in the queue since the size of the queue must be a power of 2
+    unsigned mWaitTime; // time in milleseconds to sleep when buffer is full
     
 
     friend PaStreamCallback playbackCallback;

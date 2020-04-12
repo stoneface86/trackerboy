@@ -20,21 +20,6 @@ using namespace trackerboy;
 
 static constexpr float SAMPLING_RATE = 44100;
 
-static void outputFrame(float *framePtr, size_t framesize, PlaybackQueue &queue) {
-    float *fp = framePtr;
-    size_t toWrite = framesize;
-    size_t nwritten = 0;
-    for (;;) {
-        nwritten = queue.write(fp, toWrite);
-        if (nwritten == toWrite) {
-            break;
-        }
-        Pa_Sleep(10);
-        toWrite -= nwritten;
-        fp += nwritten * 2;
-    }
-}
-
 
 int main() {
 
@@ -308,7 +293,8 @@ int main() {
     do {
         patternEnded = pr.step(synth, itable, wtable);
         size_t framesize = synth.run();
-        outputFrame(synth.buffer(), framesize, pb);
+        //outputFrame(synth.buffer(), framesize, pb);
+        pb.writeAll(synth.buffer(), framesize);
         wav.write(synth.buffer(), framesize);
     } while (!patternEnded);
 

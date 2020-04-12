@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <chrono>
+#include <thread>
 
 namespace audio {
 
@@ -22,19 +24,16 @@ int playbackCallback(
     if (nread != frameCount) {
         std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, 0.0f);
     }
-
-    //if (PaUtil_GetRingBufferReadAvailable(&pb->mQueue) == 0) {
-        // buffer is now empty, stop the stream
-    //    return paComplete;
-    //} else {
-        return paContinue;
-    //}
+    
+    return paContinue;
+    
 }
 
 PlaybackQueue::PlaybackQueue(float samplingRate, unsigned bufferSize) :
     mStream(nullptr),
     mSamplingRate(samplingRate),
-    mBufferSize(bufferSize)
+    mBufferSize(bufferSize),
+    mWaitTime(bufferSize / 4)
 {
     checkSamplingRate(samplingRate);
     checkBufferSize(bufferSize);
@@ -55,7 +54,7 @@ PlaybackQueue::~PlaybackQueue() {
 
 size_t PlaybackQueue::bufferSampleSize() {
     // divide by two since 1 sample is two shorts
-    return (mQueueData.size() / 2) - mSlack;
+    return (mQueueData.size() / 2);
 }
 
 unsigned PlaybackQueue::bufferSize() {
@@ -64,10 +63,14 @@ unsigned PlaybackQueue::bufferSize() {
 
 
 bool PlaybackQueue::canWrite(size_t nsamples) {
-    return  PaUtil_GetRingBufferWriteAvailable(&mQueue) - mSlack >= nsamples;
+    return  PaUtil_GetRingBufferWriteAvailable(&mQueue) >= nsamples;
 }
 
 void PlaybackQueue::flush() {
+    if (mStream != nullptr && Pa_IsStreamActive(mStream)) {
+        throw std::runtime_error("cannot flush buffer while stream is active");
+    }
+
     PaUtil_FlushRingBuffer(&mQueue);
 }
 
@@ -81,6 +84,7 @@ void PlaybackQueue::setBufferSize(unsigned bufferSize) {
 
     flush();
     mBufferSize = bufferSize;
+    mWaitTime = bufferSize / 4;
     resizeQueue();
 }
 
@@ -116,17 +120,10 @@ void PlaybackQueue::stop(bool wait) {
     // wait until all samples have been played out
     if (wait) {
         const size_t queueSize = mQueueData.size() / 2;
-        const size_t remainingSamples = queueSize - PaUtil_GetRingBufferWriteAvailable(&mQueue);
-        // determine how long to sleep until the queue is read out
-        unsigned sleepTime = static_cast<unsigned>(std::round(
-            (mSamplingRate / (remainingSamples * 1000.0f))
-        ));
-
-        Pa_Sleep(sleepTime);
 
         while (PaUtil_GetRingBufferWriteAvailable(&mQueue) != queueSize) {
             // just spin lock until the stream ends
-            Pa_Sleep(10);
+            std::this_thread::sleep_for(std::chrono::milliseconds(mWaitTime));
         }
     } 
     PaError err = Pa_StopStream(mStream);
@@ -138,9 +135,24 @@ void PlaybackQueue::stop(bool wait) {
 
 size_t PlaybackQueue::write(float buf[], size_t nsamples) {
 
-    size_t navail = PaUtil_GetRingBufferWriteAvailable(&mQueue) - mSlack;
+    size_t navail = PaUtil_GetRingBufferWriteAvailable(&mQueue);
     size_t samplesToWrite = nsamples > navail ? navail : nsamples;
     return PaUtil_WriteRingBuffer(&mQueue, buf, samplesToWrite);
+}
+
+void PlaybackQueue::writeAll(float buf[], size_t nsamples) {
+    float *fp = buf;
+    size_t toWrite = nsamples;
+    size_t nwritten = 0;
+    for (;;) {
+        nwritten = write(fp, toWrite);
+        if (nwritten == toWrite) {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(mWaitTime));
+        toWrite -= nwritten;
+        fp += nwritten * 2;
+    }
 }
 
 // private methods
@@ -193,10 +205,6 @@ void PlaybackQueue::resizeQueue() {
     // re-initialize ringbuffer with the new size
     PaUtil_InitializeRingBuffer(&mQueue, sizeof(float) * 2, queueDataSize, mQueueData.data());
     
-    // update the slack
-    // worst case: slack = nsamples+1 (~50% unused)
-    // best case: slack = 0 (0% unused)
-    mSlack = queueDataSize - nsamples;
     
 }
 
