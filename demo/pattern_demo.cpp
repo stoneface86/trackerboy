@@ -109,16 +109,14 @@ int main() {
     // Note data, volume and tempo should be 100% accurate with the game
     // Only differences should be timing and vibrato (none so far currently)
 
-    // Pattern container with 128-row patterns
+    // Pattern container with 64-row patterns
     PatternMaster pm(64);
+
 
     #define note(n, o) trackerboy::NOTE_##n + trackerboy::OCTAVE_##o
 
-    Track tr1 = pm.getTrack(ChType::ch1, 0);
-    Track tr2 = pm.getTrack(ChType::ch2, 0);
-    Track tr3 = pm.getTrack(ChType::ch3, 0);
-
     #if 1
+    Track tr1 = pm.getTrack(ChType::ch1, 0);
     tr1.setInstrument(2, 0);
     tr1.setNote(0x02, note(Ab, 3));
     tr1.setNote(0x08, note(F, 4));
@@ -181,6 +179,8 @@ int main() {
     #endif
 
     #if 1
+    
+    Track tr3 = pm.getTrack(ChType::ch3, 0);
     tr3.setInstrument(0, 2);
     tr3.setNote(0x00, note(Ab, 5));
 
@@ -201,6 +201,7 @@ int main() {
     #endif
 
     #if 1
+    Track tr2 = pm.getTrack(ChType::ch2, 0);
     tr2.setInstrument(2, 1);
     tr2.setNote(0x02, note(Db, 3));
 

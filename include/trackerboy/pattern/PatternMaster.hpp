@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <unordered_map>
-#include <vector>
 
 namespace trackerboy {
 
@@ -26,6 +25,10 @@ public:
 
     uint16_t rowSize();
 
+    //
+    // Utility method. Calls getTrack for all 4 channels and stores each track
+    // into a Pattern struct.
+    //
     Pattern getPattern(uint8_t track1, uint8_t track2, uint8_t track3, uint8_t track4);
 
     // Get the track from the given channel with the given track id. If the track does
@@ -40,14 +43,17 @@ public:
 
 private:
 
-    struct TrackMaster {
-        TrackData data;
-        std::unordered_map<uint8_t, size_t> map;
-    };
-
     uint16_t mRows;
 
-    TrackMaster mTrackMasters[4];
+    // maps a track id -> TrackData
+    // the map index is the track id offset by a multiple of 256
+    // id 0-255     (CH1 id + (256 * 0))
+    //    256-511   (CH2 id + (256 * 1))
+    //    512-767   (CH3 id + (256 * 2))
+    //    768-1023  (CH4 id + (256 * 3))
+    //    
+    std::unordered_map<uint16_t, TrackData> mMap;
+
 
 };
 

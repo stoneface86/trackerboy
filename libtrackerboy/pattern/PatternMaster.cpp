@@ -1,9 +1,17 @@
 
 #include "trackerboy/pattern/PatternMaster.hpp"
 
-
 namespace trackerboy {
 
+
+namespace {
+
+static inline uint16_t trackId(ChType ch, uint8_t track) {
+    return track + (256 * static_cast<uint16_t>(ch));
+}
+
+
+}
 
 PatternMaster::PatternMaster(uint16_t rows) :
     mRows(rows)
@@ -25,29 +33,34 @@ Pattern PatternMaster::getPattern(uint8_t track1, uint8_t track2, uint8_t track3
 }
 
 Track PatternMaster::getTrack(ChType ch, uint8_t track) {
-    TrackMaster &tm = mTrackMasters[static_cast<size_t>(ch)];
-    auto iter = tm.map.find(track);
-    
-    size_t offset;
+    uint16_t trackIndex = trackId(ch, track);
+    auto iter = mMap.find(trackIndex);
 
-    if (iter == tm.map.end()) {
-        // allocate the track since it does not exist
-        offset = tm.data.size();
-        tm.data.resize(tm.data.size() + MAX_ROWS);
-        tm.map[track] = offset / MAX_ROWS;
-
-    } else {
-        offset = iter->second * MAX_ROWS;
+    if (iter == mMap.end()) {
+        // track does not exist, add it
+        TrackData data(mRows);
+        mMap[trackIndex].swap(data);
+        iter = mMap.find(trackIndex);
     }
 
-    auto dataIter = tm.data.begin() + offset;
-    return Track(dataIter, dataIter + mRows);
+    return Track(iter->second.begin(), iter->second.end());
+}
+
+void PatternMaster::remove(ChType ch, uint8_t track) {
+    uint16_t trackIndex = trackId(ch, track);
+
+    mMap.erase(trackIndex);
 }
 
 void PatternMaster::setRowSize(uint16_t newsize) {
     // invalidates all Tracks return from getTrack!
     mRows = newsize;
+
+    for (auto &iter : mMap) {
+        iter.second.resize(mRows);
+    }
 }
+
 
 
 }
