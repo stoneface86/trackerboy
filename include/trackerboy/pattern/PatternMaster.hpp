@@ -1,8 +1,8 @@
 
 #pragma once
 
+#include "trackerboy/ChType.hpp"
 #include "trackerboy/pattern/Pattern.hpp"
-#include "trackerboy/pattern/TrackData.hpp"
 #include "trackerboy/pattern/TrackRow.hpp"
 #include "trackerboy/pattern/Track.hpp"
 
@@ -33,7 +33,9 @@ public:
 
     // Get the track from the given channel with the given track id. If the track does
     // not exist yet, it will be created.
-    Track getTrack(ChType ch, uint8_t track);
+    Track& getTrack(ChType ch, uint8_t track);
+
+    void getTrackIds(ChType ch, std::vector<uint8_t> &trackIds);
 
     // Removes a given track from the master
     void remove(ChType ch, uint8_t track);
@@ -46,13 +48,8 @@ private:
     uint16_t mRows;
 
     // maps a track id -> TrackData
-    // the map index is the track id offset by a multiple of 256
-    // id 0-255     (CH1 id + (256 * 0))
-    //    256-511   (CH2 id + (256 * 1))
-    //    512-767   (CH3 id + (256 * 2))
-    //    768-1023  (CH4 id + (256 * 3))
-    //    
-    std::unordered_map<uint16_t, TrackData> mMap;
+        
+    std::unordered_map<uint8_t, Track> mMap[4];
 
 
 };

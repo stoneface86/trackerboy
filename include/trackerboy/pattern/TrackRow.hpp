@@ -22,7 +22,8 @@ struct TrackRow {
         COLUMN_INST = 0x2,
         COLUMN_EFFECT1 = 0x4,
         COLUMN_EFFECT2 = 0x8,
-        COLUMN_EFFECT3 = 0x10
+        COLUMN_EFFECT3 = 0x10,
+        COLUMN_EFFECTS = COLUMN_EFFECT1 | COLUMN_EFFECT2 | COLUMN_EFFECT3
     };
 
     static constexpr uint8_t EFFECT1 = 0;

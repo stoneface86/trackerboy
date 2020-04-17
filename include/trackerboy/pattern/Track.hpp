@@ -1,25 +1,27 @@
 
 #pragma once
 
-#include "trackerboy/pattern/TrackData.hpp"
+#include <vector>
+
 #include "trackerboy/pattern/TrackRow.hpp"
 
 
 namespace trackerboy {
 
 
-// Track class provides access to the pattern data for a specific location
-// in the master pattern.
+// container class for track data
 
 class Track {
 
 public:
 
-    Track(TrackData::iterator begin, TrackData::iterator end);
+    using Data = std::vector<TrackRow>;
 
-    TrackData::iterator begin();
+    Track(uint16_t rows);
 
-    void clear(uint8_t rowStart, uint8_t rowEnd);
+    Data::iterator begin();
+
+    void clear(uint16_t rowStart, uint16_t rowEnd);
 
     void clearEffect(uint8_t row, uint8_t effectNo);
 
@@ -27,7 +29,7 @@ public:
 
     void clearNote(uint8_t row);
 
-    TrackData::iterator end();
+    Data::iterator end();
 
     void setEffect(uint8_t row, uint8_t effectNo, EffectType effect, uint8_t param = 0);
 
@@ -35,12 +37,19 @@ public:
 
     void setNote(uint8_t row, uint8_t note);
 
+    void replace(uint8_t rowno, TrackRow &row);
+
+    void resize(uint16_t newSize);
+
+    uint16_t rowCount();
+
 private:
 
-    TrackData::iterator mBegin;
-    TrackData::iterator mEnd;
+    uint16_t mRowCounter; // how many rows are set
+    Data mData;
 
-
+    template <bool clear>
+    TrackRow& updateColumns(uint8_t rowNo, uint8_t columns);
 
 };
 

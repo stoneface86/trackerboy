@@ -2,12 +2,12 @@
 #include "trackerboy/Table.hpp"
 #include "trackerboy/pattern/PatternRuntime.hpp"
 
+#include <utility>
 
 namespace trackerboy {
 
 
-PatternRuntime::PatternRuntime(Pattern pattern, uint8_t speed) :
-    mPattern(pattern),
+PatternRuntime::PatternRuntime(Pattern &&pattern, uint8_t speed) :
     mSpeed(speed),
     mFc(speed - Q53_make(1, 0)),
     mTr1(),
@@ -15,20 +15,16 @@ PatternRuntime::PatternRuntime(Pattern pattern, uint8_t speed) :
     mTr3(),
     mTr4()
 {
-    init();
+    setPattern(std::move(pattern));
 }
 
-void PatternRuntime::reset() {
-    init();
-    mTr1.reset();
-    mTr2.reset();
-    mTr3.reset();
-    mTr4.reset();
-}
-
-void PatternRuntime::setPattern(Pattern pattern) {
-    mPattern = pattern;
-    init();
+void PatternRuntime::setPattern(Pattern &&pattern) {
+    mIter1 = std::get<0>(pattern).begin();
+    mIter2 = std::get<1>(pattern).begin();
+    mIter3 = std::get<2>(pattern).begin();
+    mIter4 = std::get<3>(pattern).begin();
+    mEnd1 = std::get<0>(pattern).end();
+    mFc = mSpeed - Q53_make(1, 0);
 }
 
 
@@ -71,15 +67,6 @@ bool PatternRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtab
     mTr4.step(synth, wtable);
     
     return mIter1 == mEnd1;
-}
-
-void PatternRuntime::init() {
-    mIter1 = mPattern.track1.begin();
-    mIter2 = mPattern.track2.begin();
-    mIter3 = mPattern.track3.begin();
-    mIter4 = mPattern.track4.begin();
-    mEnd1 = mPattern.track1.end();
-    mFc = mSpeed - Q53_make(1, 0);
 }
 
 
