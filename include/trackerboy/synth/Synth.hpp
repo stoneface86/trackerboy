@@ -14,41 +14,40 @@ class Synth {
     
 public:
 
-    Synth(float samplingRate, float framerate = Gbs::FRAMERATE_GB);
+    Synth(float samplingRate, float framerate = Gbs::FRAMERATE_GB) noexcept;
 
-    float* buffer();
+    float* buffer() noexcept;
 
-    HardwareFile& hardware();
+    HardwareFile& hardware() noexcept;
 
-    
-    void fill(float buf[], size_t nsamples);
+    void fill(float buf[], size_t nsamples) noexcept;
 
     //
     // Reset the synthesizer by reseting all hardware components to defaults.
     //
-    void reset();
+    void reset() noexcept;
     
-    uint8_t readRegister(uint16_t addr);
+    uint8_t readRegister(uint16_t addr) const noexcept;
 
     // reinitialize channel
     // this is equivalent to writing bit 7 in NRx4 registers
-    void restart(ChType ch);
+    void restart(ChType ch) noexcept;
 
     //
     // Run the synth for 1 frame. Synthesized output is stored in
     // the synth's frame buffer. The number of samples generated is returned
     //
-    size_t run();
+    size_t run() noexcept;
 
     
     void setFramerate(float framerate);
 
-    void setOutputEnable(Gbs::OutputFlags flags);
-    void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled);
+    void setOutputEnable(Gbs::OutputFlags flags) noexcept;
+    void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled) noexcept;
 
     void setSamplingRate(float samplingRate);
 
-    void writeRegister(uint16_t addr, uint8_t value);
+    void writeRegister(uint16_t addr, uint8_t value) noexcept;
 
 private:
 
@@ -95,7 +94,7 @@ private:
     void resizeFrameBuf();
 
     template <ChType ch>
-    void updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence);
+    void updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) noexcept;
 
 };
 

@@ -22,24 +22,24 @@ public:
         both = 3
     };
 
-    Mixer(float samplingRate);
+    Mixer(float samplingRate) noexcept;
 
     //
     // Prepares the frame buffer for mixing
     //
-    void beginFrame(float buf[], size_t bufsize);
+    void beginFrame(float buf[], size_t bufsize) noexcept;
 
     //
     // Finish sampling the buffer by integrating (running sum).
     //
-    void endFrame();
+    void endFrame() noexcept;
 
     template <Pan pan>
-    void addStep(float step, float time);
+    void addStep(float step, float time) noexcept;
 
-    void reset();
+    void reset() noexcept;
 
-    void setSamplingRate(float samplingRate);
+    void setSamplingRate(float samplingRate) noexcept;
     
 
 private:

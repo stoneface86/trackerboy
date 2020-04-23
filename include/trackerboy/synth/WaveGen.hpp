@@ -12,23 +12,23 @@ class WaveGen : public Generator {
 
 public:
 
-    WaveGen();
+    WaveGen() noexcept;
 
-    void copyWave(Waveform &wave);
+    void copyWave(Waveform &wave) noexcept;
 
-    uint16_t frequency();
+    uint16_t frequency() const noexcept;
 
-    void reset() override;
+    void reset() noexcept override;
 
-    void restart() override;
+    void restart() noexcept override;
 
-    void setFrequency(uint16_t frequency);
+    void setFrequency(uint16_t frequency) noexcept;
 
-    void setVolume(Gbs::WaveVolume volume);
+    void setVolume(Gbs::WaveVolume volume) noexcept;
 
-    void step(uint32_t cycles);
+    void step(uint32_t cycles) noexcept;
 
-    Gbs::WaveVolume volume();
+    Gbs::WaveVolume volume() const noexcept;
 
 private:
 

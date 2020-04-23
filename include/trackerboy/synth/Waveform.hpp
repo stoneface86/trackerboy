@@ -14,9 +14,9 @@ class Waveform {
 
 public:
 
-    Waveform();
+    Waveform() noexcept;
 
-    uint8_t* data();
+    uint8_t* data() noexcept;
 
 private:
     uint8_t mData[Gbs::WAVE_RAMSIZE];

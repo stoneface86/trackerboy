@@ -21,7 +21,7 @@ static const uint8_t DRF_TABLE[] = {
 
 namespace trackerboy {
 
-NoiseGen::NoiseGen() :
+NoiseGen::NoiseGen() noexcept :
     Generator(calcCounterMax(Gbs::DEFAULT_DRF, Gbs::DEFAULT_SCF), 0),
     mRegister(Gbs::DEFAULT_NOISE_REGISTER),
     mStepSelection(Gbs::DEFAULT_STEP_COUNT),
@@ -29,18 +29,18 @@ NoiseGen::NoiseGen() :
 {
 }
 
-void NoiseGen::reset() {
+void NoiseGen::reset() noexcept {
     mRegister = Gbs::DEFAULT_NOISE_REGISTER;
     restart();
 }
 
-void NoiseGen::restart() {
+void NoiseGen::restart() noexcept {
     Generator::restart();
     mLfsr = LFSR_INIT;
     mOutput = 0;
 }
 
-void NoiseGen::step(uint32_t cycles) {
+void NoiseGen::step(uint32_t cycles) noexcept {
     mFreqCounter += cycles;
     while (mFreqCounter >= mPeriod) {
         mFreqCounter -= mPeriod;
@@ -68,11 +68,11 @@ void NoiseGen::step(uint32_t cycles) {
     mOutput = static_cast<uint8_t>(mLfsr | static_cast<uint8_t>(~1)) + 1;
 }
 
-uint8_t NoiseGen::readRegister() {
+uint8_t NoiseGen::readRegister() const noexcept {
     return mRegister;
 }
 
-void NoiseGen::writeRegister(uint8_t reg) {
+void NoiseGen::writeRegister(uint8_t reg) noexcept {
     mRegister = reg;
     uint8_t drf = mRegister & 0x7;
     mStepSelection = static_cast<Gbs::NoiseSteps>((mRegister >> 3) & 1);

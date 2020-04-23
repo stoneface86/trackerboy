@@ -14,7 +14,7 @@ namespace {
 constexpr double PI = 3.141592653589793;
 constexpr double DOUBLE_PI = 6.283185307179586;
 
-double sinc(double x) {
+double sinc(double x) noexcept {
     if (x == 0.0f) {
         return 1.0f;
     } else {
@@ -24,7 +24,7 @@ double sinc(double x) {
 }
 
 template <Mixer::Pan pan>
-inline void mix(float sample, float *&dest) {
+inline void mix(float sample, float *&dest) noexcept {
     constexpr int panInt = static_cast<int>(pan);
 
     if constexpr (!!(panInt & static_cast<int>(Mixer::Pan::left))) {
@@ -44,7 +44,7 @@ inline void mix(float sample, float *&dest) {
 
 
 
-Mixer::Mixer(float samplingRate) :
+Mixer::Mixer(float samplingRate) noexcept :
     mStepTable(new float[STEP_PHASES * STEP_WIDTH]),
     mFuture{ 0.0f },
     mPreviousL(0.0f),
@@ -56,7 +56,7 @@ Mixer::Mixer(float samplingRate) :
 }
 
 template <Mixer::Pan pan>
-void Mixer::addStep(float step, float time) {
+void Mixer::addStep(float step, float time) noexcept {
 
     float timeWhole;
     float timeFract = modff(time, &timeWhole);
@@ -99,7 +99,7 @@ void Mixer::addStep(float step, float time) {
 }
 
 
-void Mixer::beginFrame(float buf[], size_t bufsize) {
+void Mixer::beginFrame(float buf[], size_t bufsize) noexcept {
     // copy future steps to the start of the buffer
     std::copy_n(mFuture, FUTURE_SIZE, buf);
     // zero the rest
@@ -111,7 +111,7 @@ void Mixer::beginFrame(float buf[], size_t bufsize) {
     mBufsize = bufsize;
 }
 
-void Mixer::endFrame() {
+void Mixer::endFrame() noexcept {
     assert(mBuf != nullptr);
 
     #ifdef _MSC_VER
@@ -134,14 +134,14 @@ void Mixer::endFrame() {
 
 }
 
-void Mixer::reset() {
+void Mixer::reset() noexcept {
     // clear previous and future values
     std::fill_n(mFuture, FUTURE_SIZE, 0.0f);
     mPreviousL = 0.0f;
     mPreviousR = 0.0f;
 }
 
-void Mixer::setSamplingRate(float samplingRate) {
+void Mixer::setSamplingRate(float samplingRate) noexcept {
     // (re)generate the step table
     constexpr float FREQUENCY = 32.0f;
 
@@ -189,9 +189,9 @@ void Mixer::setSamplingRate(float samplingRate) {
 }
 
 
-template void Mixer::addStep<Mixer::Pan::left>(float step, float time);
-template void Mixer::addStep<Mixer::Pan::right>(float step, float time);
-template void Mixer::addStep<Mixer::Pan::both>(float step, float time);
+template void Mixer::addStep<Mixer::Pan::left>(float step, float time) noexcept;
+template void Mixer::addStep<Mixer::Pan::right>(float step, float time) noexcept;
+template void Mixer::addStep<Mixer::Pan::both>(float step, float time) noexcept;
 
 
 

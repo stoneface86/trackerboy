@@ -12,31 +12,31 @@ class NoiseGen : public Generator {
 
 public:
 
-    NoiseGen();
+    NoiseGen() noexcept;
 
-    void reset() override;
+    void reset() noexcept override;
 
     //
     // channel retrigger. LFSR is re-initialized, counters are reset
     // and the period is reloaded from the set register
     //
-    void restart() override;
+    void restart() noexcept override;
 
     //
     // Step the generator for the given number of cycles, returning the
     // current output.
     //
-    void step(uint32_t cycles);
+    void step(uint32_t cycles) noexcept;
 
     //
     // Write the given value to this generator's register, NR43
     //
-    void writeRegister(uint8_t reg);
+    void writeRegister(uint8_t reg) noexcept;
 
     //
     // Returns the contents of this generator's register
     //
-    uint8_t readRegister();
+    uint8_t readRegister() const noexcept;
 
 private:
 

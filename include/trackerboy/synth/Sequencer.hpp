@@ -11,16 +11,16 @@ class Sequencer {
 
 public:
 
-    Sequencer(HardwareFile &hf);
+    Sequencer(HardwareFile &hf) noexcept;
 
     // time in cycles til the next trigger
-    inline uint32_t fence() { 
+    inline uint32_t fence() const noexcept { 
         return mFence;
     }
 
-    void reset();
+    void reset() noexcept;
 
-    void step(uint32_t cycles);
+    void step(uint32_t cycles) noexcept;
 
 private:
 

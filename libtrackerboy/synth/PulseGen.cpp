@@ -27,7 +27,7 @@ static constexpr uint8_t DEFAULT_OUTPUT = (DUTY_MASK >> (trackerboy::Gbs::DEFAUL
 namespace trackerboy {
 
 
-PulseGen::PulseGen() :
+PulseGen::PulseGen() noexcept :
     Generator(DEFAULT_PERIOD, DEFAULT_OUTPUT),
     mFrequency(Gbs::DEFAULT_FREQUENCY),
     mDuty(Gbs::DEFAULT_DUTY),
@@ -35,37 +35,37 @@ PulseGen::PulseGen() :
 {
 }
 
-Gbs::Duty PulseGen::duty() {
+Gbs::Duty PulseGen::duty() const noexcept {
     return mDuty;
 }
 
-uint16_t PulseGen::frequency() {
+uint16_t PulseGen::frequency() const noexcept {
     return mFrequency;
 }
 
-void PulseGen::reset() {
+void PulseGen::reset() noexcept {
     mFrequency = Gbs::DEFAULT_FREQUENCY;
     mDuty = Gbs::DEFAULT_DUTY;
     restart();
 }
 
-void PulseGen::restart() {
+void PulseGen::restart() noexcept {
     Generator::restart();
     mDutyCounter = 0;
     setOutput();
 }
 
-void PulseGen::setDuty(Gbs::Duty duty) {
+void PulseGen::setDuty(Gbs::Duty duty) noexcept {
     mDuty = duty;
 }
 
-void PulseGen::setFrequency(uint16_t frequency) {
+void PulseGen::setFrequency(uint16_t frequency) noexcept {
     frequency &= Gbs::MAX_FREQUENCY;
     mFrequency = frequency;
     mPeriod = (2048 - mFrequency) * PULSE_MULTIPLIER;
 }
 
-void PulseGen::step(uint32_t cycles) {
+void PulseGen::step(uint32_t cycles) noexcept {
     // this implementation uses bit shifting instead of a lookup table
 
     // advance the counter

@@ -16,7 +16,7 @@ static constexpr uint32_t DEFAULT_PERIOD = (2048 - trackerboy::Gbs::DEFAULT_FREQ
 
 namespace trackerboy {
 
-WaveGen::WaveGen() :
+WaveGen::WaveGen() noexcept :
     Generator(DEFAULT_PERIOD, 0),
     mFrequency(Gbs::DEFAULT_FREQUENCY),
     mVolume(Gbs::DEFAULT_WAVE_LEVEL),
@@ -25,36 +25,36 @@ WaveGen::WaveGen() :
 {
 }
 
-void WaveGen::copyWave(Waveform &wave) {
+void WaveGen::copyWave(Waveform &wave) noexcept {
     std::copy_n(wave.data(), Gbs::WAVE_RAMSIZE, mWaveram);
 }
 
-uint16_t WaveGen::frequency() {
+uint16_t WaveGen::frequency() const noexcept {
     return mFrequency;
 }
 
-void WaveGen::reset() {
+void WaveGen::reset() noexcept {
     mFrequency = Gbs::DEFAULT_FREQUENCY;
     mVolume = Gbs::DEFAULT_WAVE_LEVEL;
     std::fill_n(mWaveram, Gbs::WAVE_RAMSIZE, static_cast<uint8_t>(0));
     restart();
 }
 
-void WaveGen::restart() {
+void WaveGen::restart() noexcept {
     Generator::restart();
     mWaveIndex = 0;
 }
 
-void WaveGen::setFrequency(uint16_t frequency) {
+void WaveGen::setFrequency(uint16_t frequency) noexcept {
     mFrequency = frequency;
     mPeriod = (2048 - frequency) * WAVE_MULTIPLIER;
 }
 
-void WaveGen::setVolume(Gbs::WaveVolume volume) {
+void WaveGen::setVolume(Gbs::WaveVolume volume) noexcept {
     mVolume = volume;
 }
 
-void WaveGen::step(uint32_t cycles) {
+void WaveGen::step(uint32_t cycles) noexcept {
     mFreqCounter += cycles;
     uint32_t wavesteps = mFreqCounter / mPeriod;
     mFreqCounter %= mPeriod;
@@ -87,7 +87,7 @@ void WaveGen::step(uint32_t cycles) {
     mOutput = sample;
 }
 
-Gbs::WaveVolume WaveGen::volume() {
+Gbs::WaveVolume WaveGen::volume() const noexcept {
     return mVolume;
 }
 

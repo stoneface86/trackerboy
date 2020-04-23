@@ -5,12 +5,12 @@
 namespace trackerboy {
 
 
-Waveform::Waveform() :
+Waveform::Waveform() noexcept :
     mData{0}
 {       
 }
 
-uint8_t* Waveform::data() {
+uint8_t* Waveform::data() noexcept {
     return mData;
 }
 

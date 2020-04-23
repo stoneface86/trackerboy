@@ -17,7 +17,7 @@ constexpr float GAIN = 1.0f / 64.0f;
 namespace trackerboy {
 
 
-Synth::Synth(float samplingRate, float framerate) :
+Synth::Synth(float samplingRate, float framerate) noexcept :
     mSamplingRate(samplingRate),
     mFramerate(framerate),
     mHf(),
@@ -36,15 +36,15 @@ Synth::Synth(float samplingRate, float framerate) :
     resizeFrameBuf();
 }
 
-float* Synth::buffer() {
+float* Synth::buffer() noexcept {
     return mFrameBuf.data();
 }
 
-HardwareFile& Synth::hardware() {
+HardwareFile& Synth::hardware() noexcept {
     return mHf;
 }
 
-void Synth::fill(float buf[], size_t nsamples) {
+void Synth::fill(float buf[], size_t nsamples) noexcept {
     float *dest = buf;
 
     while (nsamples) {
@@ -63,7 +63,7 @@ void Synth::fill(float buf[], size_t nsamples) {
     }
 }
 
-size_t Synth::run() {
+size_t Synth::run() noexcept {
     // determine number of cycles to run
     float cycles = mCyclesPerFrame + mCycleOffset;
     float wholeCycles;
@@ -130,7 +130,7 @@ size_t Synth::run() {
 
 }
 
-uint8_t Synth::readRegister(uint16_t addr) {
+uint8_t Synth::readRegister(uint16_t addr) const noexcept {
     
     /*
     Read masks
@@ -200,7 +200,7 @@ uint8_t Synth::readRegister(uint16_t addr) {
 }
 
 
-void Synth::reset() {
+void Synth::reset() noexcept {
     mCycleOffset = 0.0f;
     mSampleOffset = 0.0f;
     std::fill_n(mChPrev, 8, static_cast<uint8_t>(0));
@@ -220,7 +220,7 @@ void Synth::reset() {
 }
 
 
-void Synth::restart(ChType ch) {
+void Synth::restart(ChType ch) noexcept {
     switch (ch) {
         case ChType::ch1:
             mHf.env1.restart();
@@ -256,11 +256,11 @@ void Synth::setSamplingRate(float samplingRate) {
     reset();
 }
 
-void Synth::setOutputEnable(Gbs::OutputFlags flags) {
+void Synth::setOutputEnable(Gbs::OutputFlags flags) noexcept {
     mOutputStat = flags;
 }
 
-void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) {
+void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) noexcept {
     uint8_t flag = 0;
     if (term & Gbs::TERM_LEFT) {
         flag = 1 << static_cast<uint8_t>(ch);
@@ -277,7 +277,7 @@ void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) {
     }
 }
 
-void Synth::writeRegister(uint16_t addr, uint8_t value) {
+void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
 
     #define writeDuty(gen) gen.setDuty(static_cast<Gbs::Duty>(value >> 6))
     #define writeFreqLSB(gen) gen.setFrequency((gen.frequency() & 0xF0) | value)
@@ -362,7 +362,7 @@ void Synth::resizeFrameBuf() {
 }
 
 template <ChType ch>
-void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) {
+void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) noexcept {
     Generator *gen = nullptr;
     uint8_t mask = 0xF;
     switch (ch) {

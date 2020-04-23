@@ -12,29 +12,29 @@ class PulseGen : public Generator {
 
 public:
 
-    PulseGen();
+    PulseGen() noexcept;
 
-    Gbs::Duty duty();
+    Gbs::Duty duty() const noexcept;
 
-    uint16_t frequency();
+    uint16_t frequency() const noexcept;
 
-    void reset() override;
+    void reset() noexcept override;
 
     //
     // Restart the generator, counters are reset to 0
     //
-    void restart() override;
+    void restart() noexcept override;
 
     //
     // Step the generator for the given number of cycles, returning the
     // current output (1 for output on, 0 for off)
     //
-    void step(uint32_t cycles);
+    void step(uint32_t cycles) noexcept;
 
     //
     // Set the duty of the pulse. Does not require restart.
     //
-    void setDuty(Gbs::Duty duty);
+    void setDuty(Gbs::Duty duty) noexcept;
 
     //
     // Set the frequency of the output waveform. Does not require restart. If a sweep
@@ -42,7 +42,7 @@ public:
     // trigger. (ie, changing this frequency does not modify the sweep's shadow
     // frequency).
     //
-    void setFrequency(uint16_t frequency);
+    void setFrequency(uint16_t frequency) noexcept;
 
 private:
 

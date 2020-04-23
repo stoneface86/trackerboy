@@ -5,7 +5,7 @@
 namespace trackerboy {
 
 
-Sweep::Sweep(PulseGen &gen) :
+Sweep::Sweep(PulseGen &gen) noexcept :
     mGen(gen),
     mSweepMode(Gbs::DEFAULT_SWEEP_MODE),
     mSweepTime(Gbs::DEFAULT_SWEEP_TIME),
@@ -16,16 +16,16 @@ Sweep::Sweep(PulseGen &gen) :
 {
 }
 
-uint8_t Sweep::readRegister() {
+uint8_t Sweep::readRegister() const noexcept {
     return mRegister;
 }
 
-void Sweep::reset() {
+void Sweep::reset() noexcept {
     mRegister = Gbs::DEFAULT_SWEEP_REGISTER;
     restart();
 }
 
-void Sweep::restart() {
+void Sweep::restart() noexcept {
     mSweepCounter = 0;
     mSweepShift = mRegister & 0x7;
     mSweepMode = static_cast<Gbs::SweepMode>((mRegister >> 3) & 1);
@@ -33,11 +33,11 @@ void Sweep::restart() {
     mShadow = mGen.frequency();
 }
 
-void Sweep::writeRegister(uint8_t reg) {
+void Sweep::writeRegister(uint8_t reg) noexcept {
     mRegister = reg & 0x7F;
 }
 
-void Sweep::trigger() {
+void Sweep::trigger() noexcept {
     if (mSweepTime) {
         if (++mSweepCounter >= mSweepTime) {
             mSweepCounter = 0;

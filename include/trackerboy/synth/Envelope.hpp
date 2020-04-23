@@ -13,19 +13,19 @@ class Envelope {
 
 public:
 
-    Envelope();
+    Envelope() noexcept;
 
-    uint8_t readRegister();
+    uint8_t readRegister() const noexcept;
 
-    void reset();
+    void reset() noexcept;
 
-    void restart();
+    void restart() noexcept;
 
-    void writeRegister(uint8_t reg);
+    void writeRegister(uint8_t reg) noexcept;
 
-    void trigger();
+    void trigger() noexcept;
 
-    uint8_t value();
+    uint8_t value() const noexcept;
 
 private:
 

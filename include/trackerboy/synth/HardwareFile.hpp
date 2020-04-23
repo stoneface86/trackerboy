@@ -21,7 +21,7 @@ struct HardwareFile {
     WaveGen gen3;
     NoiseGen gen4;
 
-    HardwareFile() :
+    HardwareFile() noexcept :
         env1(),
         env2(),
         env4(),

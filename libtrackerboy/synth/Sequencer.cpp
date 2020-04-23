@@ -44,19 +44,19 @@ Sequencer::Trigger const Sequencer::TRIGGER_SEQUENCE[] = {
     {0, CYCLES_PER_STEP * 3,     TriggerType::env}
 };
 
-Sequencer::Sequencer(HardwareFile &hf) :
+Sequencer::Sequencer(HardwareFile &hf) noexcept :
     mHf(hf),
     mFence(DEFAULT_FENCE),
     mTriggerIndex(0)
 {
 }
 
-void Sequencer::reset() {
+void Sequencer::reset() noexcept {
     mFence = DEFAULT_FENCE;
     mTriggerIndex = 0;
 }
 
-void Sequencer::step(uint32_t cycles) {
+void Sequencer::step(uint32_t cycles) noexcept {
     assert(cycles <= mFence);
 
     mFence -= cycles;
