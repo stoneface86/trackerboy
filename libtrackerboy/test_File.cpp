@@ -6,6 +6,10 @@
 #include <sstream>
 #include <cstring>
 
+#ifdef _MSC_VER
+#pragma warning(disable : 6319 6237)
+#endif
+
 using namespace trackerboy;
 
 
@@ -149,21 +153,17 @@ TEST_CASE("save/load equivalence", "[File]") {
     SECTION("Song") {
         Song sample;
 
-        // sample song has 3 patterns, order is 0, 1, 1, 2 and loops at 1
-        /*auto &order = sample.order();
-        auto &indexVec = order.indexVec();
-        indexVec.push_back(0);
-        indexVec.push_back(1);
-        indexVec.push_back(1);
-        indexVec.push_back(2);
-        order.setLoop(1);
-
-        auto &patterns = sample.patterns();
-        patterns.resize(3);*/
+        // sample song has 4 tracks, but only 1 has note data
+        auto &tr = sample.patterns().getTrack(ChType::ch1, 0);
+        tr.setNote(10, 22);
+        sample.patterns().getPattern(0, 0, 0, 0);
 
         sample.setTempo(165.0f);
         sample.setRowsPerBeat(8);
         sample.setSpeed();
+
+        auto &order = sample.orders();
+        order[0].track2Id = 2;
         
         REQUIRE(file.serialize(out, sample) == FormatError::none);
 
@@ -178,13 +178,11 @@ TEST_CASE("save/load equivalence", "[File]") {
         CHECK(sampleReadIn.speed() == sample.speed());
 
         // check the order
-        //auto &orderReadIn = sampleReadIn.order();
-        /*CHECK(orderReadIn.loops() == order.loops());
-        CHECK(orderReadIn.loopIndex() == order.loopIndex());*/
-        //auto &indexVecReadIn = orderReadIn.indexVec();
-        //CHECK(std::equal(indexVecReadIn.begin(), indexVecReadIn.end(), order.indexVec().begin()));
+        auto &orderReadIn = sampleReadIn.orders();
+        CHECK(memcmp(orderReadIn.data(), order.data(), orderReadIn.size() * sizeof(Order)));
 
-        //CHECK(sampleReadIn.patterns().size() == sample.patterns().size());
+        //auto &trackReadIn = sampleReadIn.patterns().getTrack(ChType::ch1, 0);
+        //CHECK(std::equal(trackReadIn.begin(), trackReadIn.end(), tr.begin()));
 
 
     }

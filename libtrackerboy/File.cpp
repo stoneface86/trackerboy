@@ -42,25 +42,29 @@ struct SongFormat {
     float tempo;
     uint8_t rowsPerBeat;
     uint8_t speed;
-    uint8_t numberOfPatterns;
+    uint8_t orderCount;         // 1-256
+    uint16_t rowsPerTrack;      // 1-256
+    uint16_t tracks;            // 0-1024
     // order data...
     // pattern data...
 
 };
 
-struct OrderFormat {
-    uint8_t loopFlag;
-    uint8_t loopIndex;
-    uint8_t orderListSize;
-    // order list data
-};
-
-struct PatternFormat {
-    uint8_t rows;
+struct TrackFormat {
+    uint8_t channel;
+    uint8_t trackId;
+    uint8_t rows;      // counter is less one
     // row data follows
 };
 
+
+struct RowFormat {
+    uint8_t row;
+    trackerboy::TrackRow data;
+};
+
 #pragma pack(pop)
+
 
 }
 
@@ -320,46 +324,40 @@ FormatError File::deserialize(std::istream &stream, Song &song) {
 
     // correct endian if needed
     songHeader.tempo = correctEndian(songHeader.tempo);
+    songHeader.tracks = correctEndian(songHeader.tracks);
+    songHeader.rowsPerTrack = correctEndian(songHeader.rowsPerTrack);
 
     song.setTempo(songHeader.tempo);
     song.setRowsPerBeat(songHeader.rowsPerBeat);
     song.setSpeed(songHeader.speed);
     
-    // read in the order
-    /*{
-        OrderFormat orderHeader;
-        readAndCheck(stream, &orderHeader, sizeof(orderHeader));
-        auto &order = song.order();
-        auto &orderVec = order.indexVec();
-        orderVec.clear();
-        orderVec.resize(orderHeader.orderListSize);
-        readAndCheck(stream, orderVec.data(), orderHeader.orderListSize);
-        
-        if (orderHeader.loopFlag) {
-            order.setLoop(orderHeader.loopIndex);
-        } else {
-            order.removeLoop();
+    auto &orders = song.orders();
+    size_t orderCount = static_cast<size_t>(songHeader.orderCount) + 1;
+    for (size_t i = 0; i != orderCount; ++i) {
+        Order ord;
+        readAndCheck(stream, &ord, sizeof(ord));
+        orders.push_back(ord);
+    }
+
+    auto &pm = song.patterns();
+    pm.setRowSize(songHeader.rowsPerTrack);
+
+    for (uint16_t i = 0; i != songHeader.tracks; ++i) {
+        TrackFormat trackFormat;
+        readAndCheck(stream, &trackFormat, sizeof(TrackFormat));
+        if (trackFormat.channel > static_cast<uint8_t>(ChType::ch4)) {
+            return FormatError::readError;
         }
-    }*/
 
-    // read in the patterns
-    
-    //auto &patterns = song.patterns();
-    //patterns.clear();
-    //for (uint8_t i = 0; i != songHeader.numberOfPatterns; ++i) {
-    //    // first byte is the size of the pattern
-    //    PatternFormat patternHeader;
-    //    readAndCheck(stream, &patternHeader, sizeof(patternHeader));
-
-    //    // pattern size ranges from 1-256, so add one to what we read in
-    //    size_t rows = static_cast<size_t>(patternHeader.rows) + 1;
-    //    Pattern p(rows);
-    //    readAndCheck(stream, p.data(), sizeof(TrackRow) * 4 * rows);
-
-    //    patterns.push_back(p);
-    //    
-    //}
-
+        Track &track = pm.getTrack(static_cast<ChType>(trackFormat.channel), trackFormat.trackId);
+        size_t rowCount = static_cast<size_t>(trackFormat.rows) + 1;
+        for (uint16_t r = 0; r != rowCount; ++r) {
+            RowFormat rowFormat;
+            readAndCheck(stream, &rowFormat, sizeof(rowFormat));
+            // only byte fields in RowFormat and TrackRow so endian correction isn't needed
+            track.replace(rowFormat.row, rowFormat.data);
+        }
+    }
 
     
 
@@ -379,40 +377,81 @@ FormatError File::deserialize(std::istream &stream, Waveform &wave) {
 FormatError File::serialize(std::ostream &stream, Song &song) {
     
     // song settings
+    auto startpos = stream.tellp();
 
-    SongFormat songHeader;
-    songHeader.tempo = correctEndian(song.tempo());
-    songHeader.rowsPerBeat = song.rowsPerBeat();
-    songHeader.speed = song.speed();
-    //songHeader.numberOfPatterns = static_cast<uint8_t>(song.patterns().size());
-
-    writeAndCheck(stream, &songHeader, sizeof(songHeader));
+    SongFormat songFormat;
+    songFormat.tempo = correctEndian(song.tempo());
+    songFormat.rowsPerBeat = song.rowsPerBeat();
+    songFormat.speed = song.speed();
     
-    // order settings
+    auto &orders = song.orders();
 
-    //auto &order = song.order();
-    //OrderFormat orderHeader;
-    //orderHeader.loopFlag = static_cast<uint8_t>(order.loops());
-    //orderHeader.loopIndex = order.loopIndex();
-    //orderHeader.orderListSize = static_cast<uint8_t>(order.indexVec().size());
+    // orderCount is a byte so the count has a bias of -1
+    // the size of an order can never be 0
+    // [0...255] == [1...256]
+    songFormat.orderCount = static_cast<uint8_t>(orders.size() - 1);
+    songFormat.rowsPerTrack = correctEndian(song.patterns().rowSize());
+    songFormat.tracks = 0; // we'll overwrite this later
 
-    //writeAndCheck(stream, &orderHeader, sizeof(orderHeader));
-    //
-    //// order data
-    //writeAndCheck(stream, order.indexVec().data(), orderHeader.orderListSize);
+    writeAndCheck(stream, &songFormat, sizeof(songFormat));
+    
+    // order data
 
-    // patterns
+    for (auto &order : orders) {
+        // TODO: Order struct must be packed for this to work on all machines
+        writeAndCheck(stream, &order, sizeof(order));
+    }
 
-    //auto &patterns = song.patterns();
-    //auto patternListEnd = patterns.end();
-    //for (auto iter = patterns.begin(); iter != patternListEnd; ++iter) {
-    //    // pattern settings (just the size)
-    //    PatternFormat patternHeader;
-    //    patternHeader.rows = static_cast<uint8_t>(iter->size() - 1);
-    //    writeAndCheck(stream, &patternHeader, sizeof(patternHeader));
-    //    // pattern data
-    //    writeAndCheck(stream, iter->data(), sizeof(TrackRow) * 4 * iter->size());
-    //}
+    // track data
+    // we go through every track in the song's pattern master
+    // only non-empty tracks get saved (tracks with at least 1 row set)
+
+    auto &pm = song.patterns();
+
+    uint16_t trackCounter = 0;
+
+    // iterate all channels
+    for (uint8_t ch = 0; ch <= static_cast<uint8_t>(ChType::ch4); ++ch) {
+        // track iterators for the current channel
+        auto begin = pm.tracksBegin(static_cast<ChType>(ch));
+        auto end = pm.tracksEnd(static_cast<ChType>(ch));
+
+        // iterate all tracks for this channel
+        for (auto pair = begin; pair != end; ++pair) {
+            // make sure the track isn't empty (we only serialize non-empty tracks)
+            if (pair->second.rowCount() > 0) {
+                // write out the track data
+                TrackFormat trackFormat;
+                trackFormat.channel = ch;
+                trackFormat.trackId = pair->first;
+                trackFormat.rows = static_cast<uint8_t>(pair->second.rowCount() - 1);
+                writeAndCheck(stream, &trackFormat, sizeof(trackFormat));
+                uint8_t rowno = 0;
+                for (auto &row : pair->second) {
+                    if (row.flags) {
+                        // row is non-empty, write out the row
+                        RowFormat rowFormat;
+                        rowFormat.row = rowno;
+                        rowFormat.data = row;
+                        writeAndCheck(stream, &rowFormat, sizeof(rowFormat));
+                    }
+
+                    ++rowno;
+                }
+
+                ++trackCounter;
+            }
+        }
+
+    }
+
+    // go back to the song format, we need to update the track count
+    auto curpos = stream.tellp();
+    stream.seekp(static_cast<size_t>(startpos) + offsetof(SongFormat, tracks));
+    trackCounter = correctEndian(trackCounter);
+    writeAndCheck(stream, &trackCounter, sizeof(trackCounter));
+
+    stream.seekp(curpos);
     
     return FormatError::none;
 }

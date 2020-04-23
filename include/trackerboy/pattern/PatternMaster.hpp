@@ -19,11 +19,17 @@ class PatternMaster {
 
 public:
 
+    using Data = std::unordered_map<uint8_t, Track>;
+
     static constexpr uint16_t MAX_ROWS = 256;
 
     PatternMaster(uint16_t mRows);
 
     uint16_t rowSize();
+
+    Data::iterator tracksBegin(ChType ch);
+
+    Data::iterator tracksEnd(ChType ch);
 
     //
     // Utility method. Calls getTrack for all 4 channels and stores each track
@@ -35,7 +41,7 @@ public:
     // not exist yet, it will be created.
     Track& getTrack(ChType ch, uint8_t track);
 
-    void getTrackIds(ChType ch, std::vector<uint8_t> &trackIds);
+    
 
     // Removes a given track from the master
     void remove(ChType ch, uint8_t track);
@@ -49,7 +55,7 @@ private:
 
     // maps a track id -> TrackData
         
-    std::unordered_map<uint8_t, Track> mMap[4];
+    Data mMap[4];
 
 
 };

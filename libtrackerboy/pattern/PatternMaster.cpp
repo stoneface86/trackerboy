@@ -55,6 +55,13 @@ void PatternMaster::setRowSize(uint16_t newsize) {
     }
 }
 
+PatternMaster::Data::iterator PatternMaster::tracksBegin(ChType ch) {
+    return mMap[static_cast<size_t>(ch)].begin();
+}
+
+PatternMaster::Data::iterator PatternMaster::tracksEnd(ChType ch) {
+    return mMap[static_cast<size_t>(ch)].end();
+}
 
 
 }
