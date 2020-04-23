@@ -13,7 +13,7 @@ namespace trackerboy {
 //     +0     +1     +2     +3
 // 0   +---------------------------+
 //     |                           |
-//     | signature (~TRACKERBOY~)  |
+//     | signature ( TRACKERBOY )  |
 //     |                           |
 // 12  +---------------------------+
 //     | version major             |

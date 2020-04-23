@@ -17,7 +17,7 @@
 namespace trackerboy {
 
 
-const char *FILE_SIGNATURE = "~TRACKERBOY~";
+const char *FILE_SIGNATURE = "\0TRACKERBOY\0";
 
 
 uint32_t correctEndian(uint32_t val) {
