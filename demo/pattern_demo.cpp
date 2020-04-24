@@ -39,7 +39,8 @@ int main() {
         auto &prgm = inst.getProgram();
         // Frame 0: retrigger, env = 0xF1, duty = 0x2
         prgm.push_back(0x6D); // ctrl: xctrl, aux2, duty = 1
-        prgm.push_back(0x05); // xctrl byte: panning = L
+        prgm.push_back(0x45); // xctrl byte: panning = L
+        prgm.push_back(0x01);
         prgm.push_back(0x77); // aux2: env = 0x77
     }
 
@@ -58,23 +59,7 @@ int main() {
         prgm.push_back(0x00); // aux2: wave id = 0
 
         Waveform &wave2 = wtable.insert(0, "curved triangle");
-        auto *data = wave2.data();
-        data[0] = 0x02;
-        data[1] = 0x46;
-        data[2] = 0x8A;
-        data[3] = 0xCE;
-        data[4] = 0xEF;
-        data[5] = 0xFF;
-        data[6] = 0xFE;
-        data[7] = 0xEE;
-        data[8] = 0xDD;
-        data[9] = 0xCB;
-        data[10] = 0xA9;
-        data[11] = 0x87;
-        data[12] = 0x65;
-        data[13] = 0x43;
-        data[14] = 0x22;
-        data[15] = 0x11;
+        wave2.fromString("02468ACEEFFFFEEEDDCBA98765432211");
     }
 
     {

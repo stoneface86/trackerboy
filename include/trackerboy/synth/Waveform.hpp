@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <fstream>
 
@@ -16,10 +17,18 @@ public:
 
     Waveform() noexcept;
 
+    Waveform(std::string &hexstring);
+
     uint8_t* data() noexcept;
 
+    // convenience method, sets the waveform data from a string of hex nibbles
+    void fromString(std::string hexstring);
+
+    uint8_t& operator[](int index);
+
 private:
-    uint8_t mData[Gbs::WAVE_RAMSIZE];
+    //uint8_t mData[Gbs::WAVE_RAMSIZE];
+    std::array<uint8_t, Gbs::WAVE_RAMSIZE> mData;
 };
 
 }
