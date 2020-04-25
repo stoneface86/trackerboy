@@ -5,6 +5,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.5] - 2020-04-24
+### Added
+ - PatternMaster class, container for all tracks in a Song
+ - Synth::reset() and for all APU components also
+### Changed
+ - Instruments are now a sequence of commands, 1 command per frame
+ - All runtime classes have been rewritten to use the new pattern format
+ - Song serialization has been rewritten to use new pattern format
+ - File format signature changed so that it starts with a non-printable character
+ - TrackRuntime and InstrumentRuntime are now template classes
+ - Patterns function like FamiTracker's, a pattern is a combination of resuable track data
+ - Pattern is now a tuple of Track references
+ - Order is now a POD struct of track ids, one for each channel
+ - Track no longer behaves like an iterator and now contains data
+ - pattern demo now plays a recreation of national park from pokemon G/S/C
+ - implemented writeAll method in PlaybackQueue
+ - PlaybackQueue uses standard library for sleeping instead of using Pa_Sleep
+ - Synth methods now have noexcept and const qualifiers where applicable
+ - Fix issue in Wav writer, where the sample count in the fact chunk was
+   incorrect for multichannel data.
+ - The Mixer and Synth sampling rates can now be changed
+ - SongRuntime is now single-use, or, you can no longer set a new song
+### Removed
+ - Instruction struct, no longer needed
+ - PatternRuntime::reset()
+
 ## [0.0.4] - 2020-04-01
 ### Added
  - Wav class, for writing wav files (only supports 32-bit float format)
