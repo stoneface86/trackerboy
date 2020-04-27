@@ -6,7 +6,7 @@
 #include "trackerboy/pattern/PatternMaster.hpp"
 #include "trackerboy/song/Order.hpp"
 #include "trackerboy/fileformat.hpp"
-#include "trackerboy/Q53.hpp"
+#include "trackerboy/Speed.hpp"
 
 
 namespace trackerboy {
@@ -18,8 +18,8 @@ public:
 
     static constexpr uint8_t DEFAULT_RPB = 4;
     static constexpr float DEFAULT_TEMPO = 150.0f;
-    // Tempo = 150, RPB = 4  => 6 frames per row
-    static constexpr Q53 DEFAULT_SPEED = Q53_make(6, 0);
+    // Tempo = 150, RPB = 4  => 6.0 frames per row
+    static constexpr Speed DEFAULT_SPEED = 0x30;
 
     Song();
 
@@ -29,7 +29,7 @@ public:
 
     float actualTempo();
 
-    Q53 speed();
+    Speed speed();
 
     std::vector<Order>& orders();
 
@@ -44,7 +44,7 @@ public:
     // sets the speed from the tempo and rowsPerBeat settings
     void setSpeed();
 
-    void setSpeed(Q53 speed);
+    void setSpeed(Speed speed);
 
 private:
 
@@ -56,7 +56,7 @@ private:
     uint8_t mRowsPerBeat;
     float mTempo;
 
-    // Speed - fixed point F5.3
+    // Speed - fixed point Q5.3
     // frame timing for each row
     // 4.0:   4, 4, 4, 4, ...
     // 4.125: 4, 4, 4, 4, 4, 4, 4, 5, ...
@@ -67,7 +67,7 @@ private:
     // 4.75:  4, 5, 5, 5, 4, 5, 5, 5, 4, ...
     // 4.875: 4, 5, 5, 5, 5, 5, 5, 4, ...
 
-    Q53 mSpeed; // frames per row
+    Speed mSpeed; // frames per row
 
 };
 

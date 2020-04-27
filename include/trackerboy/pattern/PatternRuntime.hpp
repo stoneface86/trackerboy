@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "trackerboy/Q53.hpp"
+#include "trackerboy/Speed.hpp"
 #include "trackerboy/pattern/Pattern.hpp"
 #include "trackerboy/pattern/TrackRuntime.hpp"
 
@@ -15,10 +15,20 @@ class PatternRuntime {
 
 public:
 
-    PatternRuntime(Pattern &&pattern, Q53 speed);
+    enum class State {
+        ready,      // ready to step the pattern
+        next,       // end of pattern reached: load the next pattern in order
+        jump,       // pattern effect: jump to new pattern
+        halt        // pattern effect: stop playback completely
+    };
+
+    PatternRuntime(Pattern &&pattern, Speed speed, uint8_t lastOrder);
+
+    State processEffects(uint8_t &patternJump);
 
     //
-    // Sets the pattern to run from the beginning
+    // Sets the pattern to run from the beginning, the runtime is now ready to
+    // step after calling this method
     //
     void setPattern(Pattern &&pattern);
 
@@ -28,18 +38,26 @@ public:
     // TODO: this method may not be needed as the speed is only set
     //       in the constructor
     //
-    void setSpeed(Q53 speed);
+    void setSpeed(Speed speed);
+
+    State status();
+
+    //
+    // if status is jump, this method will return the pattern to jump to
+    //
+    uint8_t jumpPattern();
 
     //
     // Run one frame of the current row from the pattern. If the pattern
     // should stop playing, true is returned.
     //
-    bool step(Synth &synth, InstrumentTable &itable, WaveTable &wt);
+    void step(Synth &synth, InstrumentTable &itable, WaveTable &wt);
 
 
 private:
-    Q53 mSpeed;         // speed (frames per row) (Q5.3 format)
-    Q53 mFc;            // frame counter
+    Speed mSpeed;         // speed (frames per row) (Q5.3 format)
+    Speed mFc;            // frame counter
+    uint8_t const mLastOrder; // index of the last order for the song
 
     Track::Data::iterator mIter1;
     Track::Data::iterator mIter2;
@@ -55,6 +73,11 @@ private:
     TrackRuntime<ChType::ch3> mTr3;
     TrackRuntime<ChType::ch4> mTr4;
 
+    State mStatus;
+    State mNextStatus; // status to set at end of row
+    uint8_t mJumpTo;
+
+    void parseEffects(TrackRow &row);
 
 };
 

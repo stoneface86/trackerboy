@@ -267,7 +267,7 @@ int main() {
     // setup the runtime for playback of a pattern with track #0 for all channels
     // 0x14 is the speed, or 2.5 frames per row
     constexpr uint8_t SPEED = 0x48;
-    PatternRuntime pr(pm.getPattern(0, 0, 0, 0), SPEED);
+    PatternRuntime pr(pm.getPattern(0, 0, 0, 0), SPEED, 0);
     
     std::ofstream file("pattern_demo.wav", std::ios::binary | std::ios::out);
     Wav wav(file, 2, SAMPLING_RATE);
@@ -275,14 +275,18 @@ int main() {
     pb.start();
 
     
-    bool patternEnded;
+    PatternRuntime::State status;
     do {
-        patternEnded = pr.step(synth, itable, wtable);
+        pr.step(synth, itable, wtable);
+        status = pr.status();
+        if (status == PatternRuntime::State::halt) {
+            break;
+        }
         size_t framesize = synth.run();
         //outputFrame(synth.buffer(), framesize, pb);
         pb.writeAll(synth.buffer(), framesize);
         wav.write(synth.buffer(), framesize);
-    } while (!patternEnded);
+    } while (status == PatternRuntime::State::ready);
 
     pb.stop(true);
 

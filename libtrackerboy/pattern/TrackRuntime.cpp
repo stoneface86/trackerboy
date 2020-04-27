@@ -87,6 +87,7 @@ void TrackRuntime<ch>::step(Synth &synth, WaveTable &wtable) {
             synth.setOutputEnable(ch, Gbs::TERM_BOTH, true);
             mOutputMode = OutputMode::PLAYING;
             // fall-through
+            [[fallthrough]];
         case OutputMode::PLAYING:
             mIr.step(synth, wtable, mFreq);
             break;

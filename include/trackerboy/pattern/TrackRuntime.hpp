@@ -49,6 +49,11 @@ private:
 
     InstrumentRuntime<ch> mIr;
 
+    // persistent note settings
+    uint8_t mEnvelope; // CH1, CH2 envelope register, CH3 = wave id
+    uint8_t mTimbre; // CH1, CH2 = duty sequence, CH3 = wave volume
+
+
 };
 
 

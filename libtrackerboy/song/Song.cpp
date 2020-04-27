@@ -34,7 +34,7 @@ float Song::actualTempo() {
     return 3600.0f / (speed * mRowsPerBeat);
 }
 
-Q53 Song::speed() {
+Speed Song::speed() {
     return mSpeed;
 }
 
@@ -91,7 +91,7 @@ void Song::setSpeed() {
     mSpeed |= fract;
 }
 
-void Song::setSpeed(Q53 speed) {
+void Song::setSpeed(Speed speed) {
     if (speed == 0) {
         throw std::invalid_argument("speed must be nonzero");
     }

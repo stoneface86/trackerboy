@@ -7,7 +7,7 @@ namespace trackerboy {
 
 SongRuntime::SongRuntime(Song &song, uint8_t start) :
     mSong(song),
-    mPr(song.getPattern(start), song.speed()),
+    mPr(song.getPattern(start), song.speed(), song.orders().size() - 1),
     mLoadPattern(false),
     mOc(start)
 {
@@ -15,16 +15,28 @@ SongRuntime::SongRuntime(Song &song, uint8_t start) :
 
 
 bool SongRuntime::step(Synth &synth, InstrumentTable &itable, WaveTable &wtable) {
-    if (mLoadPattern) {
-        if (++mOc >= mSong.orders().size()) {
-            mOc = 0;
-        }
 
-        mPr.setPattern(mSong.getPattern(mOc));
+    switch (mPr.status()) {
+        
+        case PatternRuntime::State::ready:
+            break;
+        case PatternRuntime::State::next:
+            if (++mOc >= mSong.orders().size()) {
+                mOc = 0;
+            }
+            mPr.setPattern(mSong.getPattern(mOc));
+            break;
+        case PatternRuntime::State::jump:
+            mPr.setPattern(mSong.getPattern(mPr.jumpPattern()));
+            break;
+        case PatternRuntime::State::halt:
+            return false;
+
     }
 
-    mLoadPattern = mPr.step(synth, itable, wtable);
-    return true;
+
+    mPr.step(synth, itable, wtable);
+    return mPr.status() != PatternRuntime::State::halt;
 
 }
 
