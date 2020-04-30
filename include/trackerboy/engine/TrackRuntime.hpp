@@ -2,7 +2,7 @@
 #pragma once
 
 #include "trackerboy/instrument/Instrument.hpp"
-#include "trackerboy/instrument/InstrumentRuntime.hpp"
+#include "trackerboy/engine/InstrumentRuntime.hpp"
 #include "trackerboy/pattern/Track.hpp"
 
 

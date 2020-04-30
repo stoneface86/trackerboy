@@ -3,7 +3,7 @@
 #include "trackerboy/export/Wav.hpp"
 #include "trackerboy/pattern/Pattern.hpp"
 #include "trackerboy/pattern/PatternMaster.hpp"
-#include "trackerboy/pattern/PatternRuntime.hpp"
+#include "trackerboy/engine/PatternRuntime.hpp"
 #include "trackerboy/instrument/Instrument.hpp"
 #include "trackerboy/synth/Synth.hpp"
 #include "trackerboy/note.hpp"

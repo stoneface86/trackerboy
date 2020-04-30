@@ -1,6 +1,6 @@
 
 #include "trackerboy/Table.hpp"
-#include "trackerboy/pattern/PatternRuntime.hpp"
+#include "trackerboy/engine/PatternRuntime.hpp"
 
 #include <cassert>
 #include <utility>

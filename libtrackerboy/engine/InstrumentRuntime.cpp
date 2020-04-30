@@ -1,5 +1,5 @@
 
-#include "trackerboy/instrument/InstrumentRuntime.hpp"
+#include "trackerboy/engine/InstrumentRuntime.hpp"
 #include "trackerboy/note.hpp"
 
 //

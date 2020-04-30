@@ -2,10 +2,11 @@
 #pragma once
 
 #include <cstdint>
+#include <queue>
 
 #include "trackerboy/Speed.hpp"
 #include "trackerboy/pattern/Pattern.hpp"
-#include "trackerboy/pattern/TrackRuntime.hpp"
+#include "trackerboy/engine/TrackRuntime.hpp"
 
 
 namespace trackerboy {
@@ -23,8 +24,6 @@ public:
     };
 
     PatternRuntime(Pattern &&pattern, Speed speed, uint8_t lastOrder);
-
-    State processEffects(uint8_t &patternJump);
 
     //
     // Sets the pattern to run from the beginning, the runtime is now ready to

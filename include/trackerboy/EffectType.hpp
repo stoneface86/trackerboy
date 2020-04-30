@@ -25,6 +25,8 @@ enum class EffectType : uint8_t {
     tuning,             //   1 2 3   Pxx fine tuning
     noteSlideUp,        // * 1 2 3   Qxy note slide up
     noteSlideDown,      // * 1 2 3   Rxy note slide down
+    sfx,                // * 1 2 3 4 Sxx play sound effect
+    sfxStop,            //   1 2 3 4 T0x stop the sound effect playing on the given channels
     setTimbre           //   1 2 3   Vxx set persistent duty/wave volume setting
 };
 

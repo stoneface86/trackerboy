@@ -3,14 +3,14 @@ project("libtrackerboy")
 
 set(SRC_FILES
     "export/Wav.cpp"
+    "engine/InstrumentRuntime.cpp"
+    "engine/PatternRuntime.cpp"
+    "engine/SongRuntime.cpp"
+    "engine/TrackRuntime.cpp"
     "instrument/Instrument.cpp"
-    "instrument/InstrumentRuntime.cpp"
     "pattern/PatternMaster.cpp"
-    "pattern/PatternRuntime.cpp"
-    "pattern/TrackRuntime.cpp"
     "pattern/Track.cpp"
     "song/Song.cpp"
-    "song/SongRuntime.cpp"
     "synth/Envelope.cpp"
     "synth/Generator.cpp"
     "synth/Mixer.cpp"

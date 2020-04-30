@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "trackerboy/pattern/PatternRuntime.hpp"
+#include "trackerboy/engine/PatternRuntime.hpp"
 #include "trackerboy/song/Song.hpp"
 
 namespace trackerboy {
