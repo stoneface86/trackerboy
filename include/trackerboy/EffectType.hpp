@@ -18,6 +18,7 @@ enum class EffectType : uint8_t {
     patternSkip,        //   1 2 3 4 D00 begin playing next pattern immediately
     setEnvelope,        //   1 2 3 4 Exx set the persistent envelope/wave id setting
     setTempo,           //   1 2 3 4 Fxx set the tempo
+    delayedNote,        //   1 2 3 4 Gxx note trigger delayed by xx frames
     setSweep,           //   1       Hxx set the persistent sweep setting (CH1 only)
     setPanning,         //   1 2 3 4 Ixy set channel panning setting
     runMacro,           //   1 2 3 4 Mxx run the given macro
@@ -25,9 +26,10 @@ enum class EffectType : uint8_t {
     tuning,             //   1 2 3   Pxx fine tuning
     noteSlideUp,        // * 1 2 3   Qxy note slide up
     noteSlideDown,      // * 1 2 3   Rxy note slide down
-    sfx,                // * 1 2 3 4 Sxx play sound effect
-    sfxStop,            //   1 2 3 4 T0x stop the sound effect playing on the given channels
-    setTimbre           //   1 2 3   Vxx set persistent duty/wave volume setting
+    delayedCut,         //   1 2 3 4 Sxx note cut delayed by xx frames
+    sfx,                // * 1 2 3 4 Txx play sound effect
+    sfxStop,            //   1 2 3 4 U00 (unlock) stop the sound effect on the current channel
+    setTimbre           //   1 2 3 4 Vxx set persistent duty/wave volume setting
 };
 
 }

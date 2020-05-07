@@ -3,9 +3,9 @@ project("libtrackerboy")
 
 set(SRC_FILES
     "export/Wav.cpp"
+    "engine/Engine.cpp"
     "engine/InstrumentRuntime.cpp"
     "engine/PatternRuntime.cpp"
-    "engine/SongRuntime.cpp"
     "engine/TrackRuntime.cpp"
     "instrument/Instrument.cpp"
     "pattern/PatternMaster.cpp"
