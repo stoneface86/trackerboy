@@ -9,7 +9,6 @@ set(SRC_FILES
     "engine/PatternCursor.cpp"
     "engine/PatternRuntime.cpp"
     "engine/Timer.cpp"
-    "engine/TrackControl.cpp"
     "engine/TrackRuntime.cpp"
     "instrument/Instrument.cpp"
     "pattern/PatternMaster.cpp"
