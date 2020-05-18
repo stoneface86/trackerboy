@@ -5,9 +5,11 @@ set(SRC_FILES
     "export/Wav.cpp"
     "engine/Engine.cpp"
     "engine/InstrumentRuntime.cpp"
+    "engine/NoteControl.cpp"
     "engine/PatternCursor.cpp"
     "engine/PatternRuntime.cpp"
     "engine/Timer.cpp"
+    "engine/TrackControl.cpp"
     "engine/TrackRuntime.cpp"
     "instrument/Instrument.cpp"
     "pattern/PatternMaster.cpp"
@@ -56,6 +58,8 @@ endif ()
 if (TRACKERBOY_ENABLE_TESTS)
 
     set(TEST_SRC_FILES
+        "engine/test_Timer.cpp"
+        "engine/test_NoteControl.cpp"
         "pattern/test_Pattern.cpp"
         "song/test_Order.cpp"
         "test_File.cpp"
@@ -76,5 +80,7 @@ if (TRACKERBOY_ENABLE_TESTS)
     add_test(NAME File COMMAND ${TEST_EXE} [File])
     add_test(NAME fileformat COMMAND ${TEST_EXE} [fileformat])
     add_test(NAME Table COMMAND ${TEST_EXE} [Table])
+    add_test(NAME Timer COMMAND ${TEST_EXE} [Timer])
+    add_test(NAME NoteControl COMMAND ${TEST_EXE} [NoteControl])
 
 endif (TRACKERBOY_ENABLE_TESTS)
