@@ -51,11 +51,6 @@ namespace trackerboy {
 
 namespace {
 
-// sampling rate for the synth
-static constexpr float SAMPLING_RATE = 44100.0f;
-// just use CH1 for testing
-static constexpr ChType TEST_TRACK_ID = ChType::ch1;
-
 static constexpr uint8_t TEST_NOTE = NOTE_C + OCTAVE_5;
 
 // invalid note index
@@ -68,8 +63,7 @@ static constexpr uint8_t DELAY = 3;
 
 TEST_CASE("behavior testing", "[NoteControl]") {
 
-    NoteControl nc(TEST_TRACK_ID);
-    Synth synth(SAMPLING_RATE);
+    NoteControl nc;
 
     SECTION("note triggers") {
 
@@ -79,7 +73,7 @@ TEST_CASE("behavior testing", "[NoteControl]") {
         SECTION("note triggers immediately [1]") {
             // C-5 ... ...
             nc.noteTrigger(TEST_NOTE, 0);
-            nc.step(synth);
+            nc.step();
             REQUIRE(nc.isPlaying());
         }
 
@@ -88,7 +82,7 @@ TEST_CASE("behavior testing", "[NoteControl]") {
             nc.noteTrigger(TEST_NOTE, DELAY);
             for (uint8_t i = 0; i != DELAY + 1; ++i) {
                 REQUIRE(!nc.isPlaying());
-                nc.step(synth);
+                nc.step();
             }
             REQUIRE(nc.isPlaying());
 
@@ -98,7 +92,7 @@ TEST_CASE("behavior testing", "[NoteControl]") {
     SECTION("note cuts") {
         // pre-condition
         nc.noteTrigger(TEST_NOTE);
-        nc.step(synth);
+        nc.step();
         REQUIRE(nc.isPlaying());
 
         SECTION("immediately") {
@@ -112,7 +106,7 @@ TEST_CASE("behavior testing", "[NoteControl]") {
                 nc.noteCut(DELAY);
             }
 
-            nc.step(synth);
+            nc.step();
             REQUIRE(!nc.isPlaying());
         }
 
@@ -132,36 +126,22 @@ TEST_CASE("behavior testing", "[NoteControl]") {
 
             for (uint8_t i = 0; i != DELAY + 1; ++i) {
                 REQUIRE(nc.isPlaying());
-                nc.step(synth);
+                nc.step();
             }
             REQUIRE(!nc.isPlaying());
         }
 
     }
 
-
-
-    SECTION("Ch4 does not set frequency") {
-        NoteControl nc4(ChType::ch4);
-        
-        REQUIRE(nc4.frequency() == 0);
-        // C-5 ... ...
-        nc4.noteTrigger(TEST_NOTE, 0);
-        nc4.step(synth);
-        
-        // CH4 frequency should always be 0
-        REQUIRE(nc4.frequency() == 0);
-    }
-
     SECTION("reset") {
         nc.noteTrigger(TEST_NOTE);
-        nc.step(synth);
+        nc.step();
 
         nc.reset();
-        REQUIRE(nc.frequency() == 0);
+        REQUIRE(nc.note() == 0);
         for (int i = 0; i != 256; ++i) {
             REQUIRE(!nc.isPlaying());
-            nc.step(synth);
+            nc.step();
         }
     }
 
