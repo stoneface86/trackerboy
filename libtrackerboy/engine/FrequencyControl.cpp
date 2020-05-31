@@ -1,6 +1,8 @@
 
 #include "trackerboy/engine/FrequencyControl.hpp"
 #include "trackerboy/note.hpp"
+#include "trackerboy/gbs.hpp"
+
 
 #include <algorithm>
 

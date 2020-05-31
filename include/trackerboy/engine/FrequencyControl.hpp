@@ -1,11 +1,7 @@
 
 #pragma once
 
-#include "trackerboy/ChType.hpp"
-#include "trackerboy/synth/Synth.hpp"
-#include "trackerboy/Table.hpp"
-
-#include <type_traits>
+#include <cstdint>
 
 namespace trackerboy {
 
@@ -24,9 +20,9 @@ public:
 
     // used for testing
 
-    bool slideActive() const noexcept;
+    /*bool slideActive() const noexcept;
     bool portamentoActive() const noexcept;
-    bool arpeggioActive() const noexcept;
+    bool arpeggioActive() const noexcept;*/
 
 
     // Effects 1xx and 2xx
