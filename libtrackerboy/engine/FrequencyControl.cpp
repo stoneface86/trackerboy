@@ -81,13 +81,12 @@ const int8_t FrequencyControl::VIBRATO_TABLE[FrequencyControl::VIBRATO_TABLE_EXT
 
 FrequencyControl::FrequencyControl() noexcept :
     mFlags(0),
-    mEffect(Effect::none),
+    mMod(ModType::none),
     mNote(0),
     mTune(0),
     mFrequency(0),
     mSlideAmount(0),
     mSlideTarget(0),
-    mSlideNote(0),
     mChordParam(0),
     mChordIndex(0),
     mChord{ 0 },
@@ -108,55 +107,19 @@ uint16_t FrequencyControl::frequency() const noexcept {
     }
 
     return static_cast<uint16_t>(std::clamp(
-        freq, 
+        freq,
         static_cast<int16_t>(0),
         static_cast<int16_t>(Gbs::MAX_FREQUENCY))
-    );
+        );
 
 }
 
 void FrequencyControl::setPitchSlide(SlideDirection dir, uint8_t param) noexcept {
-    mFlags &= ~FLAG_PORTAMENTO;
-    if (param == 0) {
-        mEffect = Effect::none;
-    } else {
-        mEffect = Effect::slide;
-        mSlideAmount = param;
-        setTarget(dir == SlideDirection::up ? Gbs::MAX_FREQUENCY : 0);
-    }
-    
+    setEffect(EFF_PITCH, dir, param);
 }
 
 void FrequencyControl::setNoteSlide(SlideDirection dir, uint8_t param) noexcept {
-
-    // turn off arpeggio and portamento
-    mFlags &= ~FLAG_PORTAMENTO;
-
-    // enable slide
-    mEffect = Effect::slide;
-    // lower 4 bits of param is the slide amount
-    // the speed is determined by the formula 2x + 1
-    // (1 to 31 pitch units/frame)
-    mSlideAmount = 1 + (2 * (param & 0xF));
-    // upper 4 bits is the # of semitones to slide to
-    uint8_t semitones = param >> 4;
-    uint8_t targetNote = mNote;
-    
-    if (dir == SlideDirection::up) {
-        targetNote += semitones;
-        if (targetNote > NOTE_LAST) {
-            targetNote = NOTE_LAST; // clamp to highest note
-        }
-    } else {
-        if (targetNote < semitones) {
-            targetNote = 0; // clamp to the lowest possible note
-        } else {
-            targetNote -= semitones;
-        }
-    }
-
-    mSlideNote = targetNote;
-    mFlags |= FLAG_NOTE_SLIDE_SET;
+    setEffect(EFF_NOTE, dir, param);
 
 }
 
@@ -174,36 +137,13 @@ void FrequencyControl::setVibrato(uint8_t param) noexcept {
 }
 
 void FrequencyControl::setArpeggio(uint8_t param) noexcept {
-    // disable slide (if set)
-    mFlags &= ~FLAG_PORTAMENTO;
 
-    if (param == 0) {
-        mEffect = Effect::none;
-        // reset note frequency
-        mFlags |= FLAG_NOTE_SET;
-    } else {    
-        // enable arpeggio
-        mEffect = Effect::arpeggio;
+    setEffect(EFF_ARP, SlideDirection::down, param);
 
-        mChordIndex = 0;
-        mChordParam = param;
-        setChord();
-        
-    }
 }
 
 void FrequencyControl::setPortamento(uint8_t param) noexcept {
-    
-    if (param == 0) {
-        // turn off pitch slide w/ portamento
-        mEffect = Effect::none;
-        mFlags &= ~FLAG_PORTAMENTO;
-    } else {
-        // turn on pitch slide w/ portamento
-        mEffect = Effect::slide;
-        mFlags |= FLAG_PORTAMENTO;
-        mSlideAmount = param;
-    }
+    setEffect(EFF_PORTAMENTO, SlideDirection::down, param);
 }
 
 void FrequencyControl::setNote(uint8_t note) noexcept {
@@ -221,27 +161,105 @@ void FrequencyControl::setTune(uint8_t param) noexcept {
     mTune = static_cast<int8_t>(param - 0x80);
 }
 
-void FrequencyControl::step() noexcept {
+void FrequencyControl::apply() noexcept {
+    bool updateFreq = false;
+    int16_t freq = mFrequency;
 
     if (!!(mFlags & FLAG_NOTE_SET)) {
-        mChordIndex = 0;
-        uint16_t noteFreq = NOTE_FREQ_TABLE[mNote];
-        if (mEffect == Effect::arpeggio) {
+        freq = NOTE_FREQ_TABLE[mNote];
+        updateFreq = true;
+        if (mMod == ModType::arpeggio) {
             setChord();
-        } else if (!!(mFlags & FLAG_PORTAMENTO) && !!(mFlags & FLAG_FIRST)) {
-            setTarget(noteFreq);
-        } else {
-            mFrequency = noteFreq;
+        } else if (!!(mFlags & FLAG_PORTAMENTO)) {
+            setTarget(freq);
         }
+
         mFlags &= ~FLAG_NOTE_SET;
-        mFlags |= FLAG_FIRST;
     }
 
-    if (!!(mFlags & FLAG_NOTE_SLIDE_SET)) {
-        setTarget(NOTE_FREQ_TABLE[mSlideNote]);
-        mNote = mSlideNote;
-        mFlags &= ~FLAG_NOTE_SLIDE_SET;
+    mFlags &= ~FLAG_PORTAMENTO;
+
+    if (!!(mFlags & FLAG_EFFECT_SET)) {
+        EffectCommand cmd = static_cast<EffectCommand>(mFlags & FLAG_EFFECT_CMD);
+
+        bool hasTarget = true;
+        uint16_t target = 0;
+        mFlags &= ~FLAG_PORTAMENTO;
+
+        switch (cmd) {
+            case EFF_ARP:
+                if (mEffectParam == 0) {
+                    mMod = ModType::none;
+                } else {
+                    mMod = ModType::arpeggio;
+                    mChordParam = mEffectParam;
+                    setChord();
+                }
+                hasTarget = false;
+                break;
+            case EFF_PITCH:
+                if (mEffectParam == 0) {
+                    mMod = ModType::none;
+                    hasTarget = false;
+                } else {
+                    if (!!(mFlags & FLAG_EFFECT_DIR)) {
+                        target = 0x7FF;
+                    }
+                    mSlideAmount = mEffectParam;
+                }
+                break;
+            case EFF_NOTE:
+                // lower 4 bits of param is the slide amount
+                // the speed is determined by the formula 2x + 1
+                // (1 to 31 pitch units/frame)
+                mSlideAmount = 1 + (2 * (mEffectParam & 0xF));
+                // upper 4 bits is the # of semitones to slide to
+                {
+                    uint8_t semitones = mEffectParam >> 4;
+                    uint8_t targetNote = mNote;
+                    if (!!(mFlags & FLAG_EFFECT_DIR)) {
+                        targetNote += semitones;
+                        if (targetNote > NOTE_LAST) {
+                            targetNote = NOTE_LAST; // clamp to highest note
+                        }
+                    } else {
+                        if (targetNote < semitones) {
+                            targetNote = 0; // clamp to the lowest possible note
+                        } else {
+                            targetNote -= semitones;
+                        }
+                    }
+                    target = NOTE_FREQ_TABLE[targetNote];
+                    mNote = targetNote;
+                }
+                break;
+            case EFF_PORTAMENTO:
+                if (mEffectParam == 0) {
+                    mMod = ModType::none;
+                    hasTarget = false;
+                } else {
+                    mFlags |= FLAG_PORTAMENTO;
+                    target = freq;
+                    updateFreq = false;
+                    mSlideAmount = mEffectParam;
+                }
+                break;
+        }
+
+        if (hasTarget) {
+            setTarget(target);
+        }
+
+        mFlags &= ~(FLAG_EFFECT_CMD | FLAG_EFFECT_DIR | FLAG_EFFECT_SET);
     }
+
+    if (updateFreq) {
+        mFrequency = freq;
+    }
+
+}
+
+void FrequencyControl::step() noexcept {
 
     if (!!(mFlags & FLAG_VIBRATO)) {
         uint8_t qindex = mVibratoIndex & VIBRATO_HALF_MASK;
@@ -262,15 +280,15 @@ void FrequencyControl::step() noexcept {
             }
         }
 
-        
+
         // add the speed to the index
         mVibratoIndex = (mVibratoIndex + mVibratoSpeed) & VIBRATO_MASK;
     }
 
-    switch (mEffect) {
-        case Effect::none:
+    switch (mMod) {
+        case ModType::none:
             break;
-        case Effect::slide:
+        case ModType::slide:
             if (!!(mFlags & FLAG_SLIDING)) {
                 if (mFrequency < mSlideTarget) {
                     // sliding up
@@ -289,7 +307,7 @@ void FrequencyControl::step() noexcept {
                 }
             }
             break;
-        case Effect::arpeggio:
+        case ModType::arpeggio:
             mFrequency = mChord[mChordIndex];
             if (++mChordIndex == CHORD_LEN) {
                 mChordIndex = 0;
@@ -302,6 +320,7 @@ void FrequencyControl::step() noexcept {
 }
 
 void FrequencyControl::setTarget(uint16_t freq) noexcept {
+    mMod = ModType::slide;
     mSlideTarget = freq;
     if (mFrequency != mSlideTarget) {
         mFlags |= FLAG_SLIDING;
@@ -315,6 +334,16 @@ void FrequencyControl::setChord() noexcept {
     mChord[1] = NOTE_FREQ_TABLE[std::min(mNote + (mChordParam >> 4), static_cast<int>(NOTE_LAST))];
     // third note is the lower nibble + current (also clamped)
     mChord[2] = NOTE_FREQ_TABLE[std::min(mNote + (mChordParam & 0xF), static_cast<int>(NOTE_LAST))];
+}
+
+void FrequencyControl::setEffect(EffectCommand cmd, SlideDirection dir, uint8_t param) noexcept {
+    mFlags = (mFlags & ~FLAG_EFFECT_CMD) | cmd | FLAG_EFFECT_SET;
+    if (dir == SlideDirection::up) {
+        mFlags |= FLAG_EFFECT_DIR;
+    } else {
+        mFlags &= ~FLAG_EFFECT_DIR;
+    }
+    mEffectParam = param;
 }
 
 

@@ -46,18 +46,31 @@ public:
     // Effect Pxx
     void setTune(uint8_t param) noexcept;
 
+    void apply() noexcept;
+
     void step() noexcept;
 
 private:
 
+
+
+
+    enum EffectCommand {
+        EFF_ARP = 0,
+        EFF_PITCH = 1,
+        EFF_NOTE = 2,
+        EFF_PORTAMENTO = 3
+    };
+
+    enum class ModType {
+        none,               // no frequency modulation
+        slide,              // frequency slides toward a target
+        arpeggio            // frequency alternates between 3 notes
+    };
+
+    void setEffect(EffectCommand cmd, SlideDirection dir, uint8_t param) noexcept;
     void setTarget(uint16_t freq) noexcept;
     void setChord() noexcept;
-
-    enum class Effect {
-        none,
-        slide,
-        arpeggio
-    };
 
     static constexpr size_t CHORD_LEN = 3;
 
@@ -70,21 +83,21 @@ private:
     static constexpr size_t VIBRATO_TABLE_LEN = VIBRATO_PERIOD_SIZE / 4;
     static const int8_t VIBRATO_TABLE[VIBRATO_TABLE_EXTENTS][VIBRATO_TABLE_LEN];
 
-    static constexpr int FLAG_NOTE_SET          = 0x1;
-    static constexpr int FLAG_NOTE_SLIDE_SET    = 0x2;
-    static constexpr int FLAG_SLIDING           = 0x4;
-    static constexpr int FLAG_PORTAMENTO        = 0x8;
-    static constexpr int FLAG_VIBRATO           = 0x10;
-    // this bit is reset for the first note being set 
-    // (prevents a portamento slide from the initial frequency setting)
-    static constexpr int FLAG_FIRST             = 0x20;
+    static constexpr int FLAG_EFFECT_CMD = 0x3;
+    static constexpr int FLAG_EFFECT_DIR = 0x4;
+    static constexpr int FLAG_EFFECT_SET = 0x8;
+    static constexpr int FLAG_NOTE_SET = 0x10;
+    static constexpr int FLAG_PORTAMENTO = 0x20;
+    static constexpr int FLAG_VIBRATO = 0x40;
+    static constexpr int FLAG_SLIDING = 0x80;
 
     // only 1 slide can be active note/pitch/portamento
     // arpeggio cannot be used with slides
     // (setting a slide disables arpeggio, setting arpeggio disables a slide)
 
     int mFlags;
-    Effect mEffect;
+    uint8_t mEffectParam;
+    ModType mMod;
 
     uint8_t mNote;
 
@@ -95,8 +108,7 @@ private:
 
     uint8_t mSlideAmount;
     uint16_t mSlideTarget;
-    uint8_t mSlideNote;
-    
+
 
     // arpeggio
 
