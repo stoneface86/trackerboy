@@ -35,6 +35,9 @@ public:
     // Effect 4xy
     void setVibrato(uint8_t vibrato) noexcept;
 
+    // Effect 5xx
+    void setVibratoDelay(uint8_t delay) noexcept;
+
     // Effect 0xy
     void setArpeggio(uint8_t param) noexcept;
 
@@ -74,15 +77,6 @@ private:
 
     static constexpr size_t CHORD_LEN = 3;
 
-    static constexpr uint8_t VIBRATO_PERIOD_SIZE = 64;
-    static constexpr uint8_t VIBRATO_MASK = VIBRATO_PERIOD_SIZE - 1;
-    static constexpr uint8_t VIBRATO_HALF_MASK = VIBRATO_PERIOD_SIZE / 2 - 1;
-    static_assert((VIBRATO_PERIOD_SIZE & VIBRATO_MASK) == 0);
-
-    static constexpr size_t VIBRATO_TABLE_EXTENTS = 16;
-    static constexpr size_t VIBRATO_TABLE_LEN = VIBRATO_PERIOD_SIZE / 4;
-    static const int8_t VIBRATO_TABLE[VIBRATO_TABLE_EXTENTS][VIBRATO_TABLE_LEN];
-
     static constexpr int FLAG_EFFECT_CMD = 0x3;
     static constexpr int FLAG_EFFECT_DIR = 0x4;
     static constexpr int FLAG_EFFECT_SET = 0x8;
@@ -120,11 +114,12 @@ private:
     uint16_t mChord[CHORD_LEN];
 
     // vibrato
-    int8_t mVibratoCounter;
-    uint8_t mVibratoIndex;
-    uint8_t mVibratoSpeed;
-    int8_t const *mVibratoTable;
+    uint8_t mVibratoDelayCounter;
+    uint8_t mVibratoCounter;
 
+    int8_t mVibratoValue;
+    uint8_t mVibratoDelay;
+    uint8_t mVibratoParam;
 };
 
 
