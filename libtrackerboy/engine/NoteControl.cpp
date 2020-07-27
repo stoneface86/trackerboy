@@ -6,7 +6,7 @@
 namespace trackerboy {
 
 NoteControl::NoteControl() :
-    mStatus(0),
+    mPlaying(false),
     mTriggerCounter(0),
     mCutCounter(0),
     mNote(0)
@@ -14,53 +14,47 @@ NoteControl::NoteControl() :
 }
 
 bool NoteControl::isPlaying() const noexcept {
-    return !!(mStatus & STAT_PLAYING);
+    return mPlaying;
 }
 
-uint8_t NoteControl::note() const noexcept {
-    return mNote;
+void NoteControl::noteTrigger(uint8_t note, uint8_t delay) noexcept {
+    if (note == NOTE_CUT) {
+        mCutCounter = delay + 1;
+    } else {
+        mNote = note;
+        mTriggerCounter = delay + 1;
+    }
 }
 
-void NoteControl::noteTrigger(uint8_t note, uint8_t delay) {
-    mNote = note;
-    mStatus |= STAT_TRIGGER;
-    mTriggerCounter = delay;
-}
-
-void NoteControl::noteCut(uint8_t delay) {
-    mStatus |= STAT_CUT;
-    mCutCounter = delay;
+void NoteControl::noteCut(uint8_t delay) noexcept {
+    mCutCounter = delay + 1;
 }
 
 void NoteControl::reset() noexcept {
-    mStatus = 0;
+    mPlaying = false;
     mTriggerCounter = 0;
     mCutCounter = 0;
     mNote = 0;
 }
 
 
-void NoteControl::step() noexcept {
+std::optional<uint8_t> NoteControl::step() noexcept {
 
-    if (!!(mStatus & STAT_TRIGGER) && mTriggerCounter-- == 0) {
+    bool trigger = false;
 
-        if (mNote == NOTE_CUT) {
-            cut();
-        } else if (mNote <= NOTE_LAST) {
-            mStatus |= STAT_PLAYING;
-        }
-
-        mStatus &= ~STAT_TRIGGER;
+    if (mTriggerCounter && --mTriggerCounter == 0) {
+        mPlaying = true;
+        trigger = true;
     }
 
-    if (!!(mStatus & STAT_CUT) && mCutCounter-- == 0) {
-        cut();
+    if (mCutCounter && --mCutCounter == 0) {
+        mPlaying = false;
+        trigger = false;
     }
+
+    return (trigger) ? std::optional<uint8_t>{mNote} : std::nullopt;
 
 }
 
-void NoteControl::cut() noexcept {
-    mStatus &= ~(STAT_PLAYING | STAT_CUT);
-}
 
 }
