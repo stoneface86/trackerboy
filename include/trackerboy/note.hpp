@@ -36,11 +36,14 @@ enum Note : uint8_t {
 
     NOTE_NONE = 0xFF,           // null note index
     NOTE_LAST = (12 * 7) - 1,   // 7 octaves of notes possible, 2-8
+    NOTE_NOISE_LAST = (12 * 5) - 1, // last possible note for CH4
     NOTE_CUT = NOTE_LAST + 1    // special index: stop playing the last note (stops instrument)
 };
 
 // note frequency lookup table
 extern const uint16_t NOTE_FREQ_TABLE[NOTE_LAST + 1];
+
+extern const uint8_t NOTE_NOISE_TABLE[NOTE_NOISE_LAST + 1];
 
 
 }
