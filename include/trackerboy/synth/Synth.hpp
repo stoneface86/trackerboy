@@ -42,6 +42,9 @@ public:
     
     void setFramerate(float framerate);
 
+    // util method
+    void setFrequency(ChType ch, uint16_t freq);
+
     void setOutputEnable(Gbs::OutputFlags flags) noexcept;
     void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled) noexcept;
 

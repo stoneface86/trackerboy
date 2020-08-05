@@ -14,14 +14,15 @@ namespace {
 constexpr double PI = 3.141592653589793;
 constexpr double DOUBLE_PI = 6.283185307179586;
 
-double sinc(double x) noexcept {
-    if (x == 0.0f) {
-        return 1.0f;
-    } else {
-        double pix = PI * x;
-        return sin(pix) / pix;
-    }
-}
+// this is only needed for sigma-approximation
+//double sinc(double x) noexcept {
+//    if (x == 0.0f) {
+//        return 1.0f;
+//    } else {
+//        double pix = PI * x;
+//        return sin(pix) / pix;
+//    }
+//}
 
 template <Mixer::Pan pan>
 inline void mix(float sample, float *&dest) noexcept {
@@ -162,8 +163,8 @@ void Mixer::setSamplingRate(float samplingRate) noexcept {
             // add the sines of every odd harmonic
             for (unsigned h = 1; h < HARMONICS; h += 2) {
                 // lanczos factor, reduces gibbs phenomenon 
-                double lanczos = sinc(static_cast<double>(h) / HARMONICS);
-                sample += lanczos * AMPLITUDE * (sin(h * DOUBLE_PI * angle * FREQUENCY) / h);
+                //double lanczos = sinc(static_cast<double>(h) / HARMONICS);
+                sample += /*lanczos **/ AMPLITUDE * (sin(h * DOUBLE_PI * angle * FREQUENCY) / h);
             }
             stepset[j] = static_cast<float>(sample);
         }

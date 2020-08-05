@@ -248,6 +248,22 @@ void Synth::setFramerate(float framerate) {
     reset();
 }
 
+void Synth::setFrequency(ChType ch, uint16_t freq) {
+    switch (ch) {
+        case ChType::ch1:
+            mHf.gen1.setFrequency(freq);
+            break;
+        case ChType::ch2:
+            mHf.gen2.setFrequency(freq);
+            break;
+        case ChType::ch3:
+            mHf.gen3.setFrequency(freq);
+            break;
+        case ChType::ch4:
+            break;
+    }
+}
+
 void Synth::setSamplingRate(float samplingRate) {
     mSamplingRate = samplingRate;
     mCyclesPerSample = Gbs::CLOCK_SPEED / samplingRate;
