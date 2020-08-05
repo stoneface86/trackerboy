@@ -54,6 +54,24 @@ uint16_t FrequencyControl::frequency() const noexcept {
 
 }
 
+void FrequencyControl::reset() noexcept {
+    mFlags = 0;
+    mMod = ModType::none;
+    mNote = 0;
+    mTune = 0;
+    mFrequency = 0;
+    mSlideAmount = 0;
+    mSlideTarget = 0;
+    mChordParam = 0;
+    mChordIndex = 0;
+    mVibratoDelayCounter = 0;
+    mVibratoCounter = 0;
+    mVibratoValue = 0;
+    mVibratoDelay = 0;
+    mVibratoParam = 0;
+}
+
+
 void FrequencyControl::setPitchSlide(SlideDirection dir, uint8_t param) noexcept {
     setEffect(EFF_PITCH, dir, param);
 }
@@ -72,6 +90,14 @@ void FrequencyControl::setVibrato(uint8_t param) noexcept {
     } else {
         // both nibbles are non-zero, set vibrato
         mFlags |= FLAG_VIBRATO;
+        if (mVibratoValue) {
+            int8_t newvalue = param & 0xF;
+            if (mVibratoValue < 0) {
+                mVibratoValue = -newvalue;
+            } else {
+                mVibratoValue = newvalue;
+            }
+        }
     }
 }
 

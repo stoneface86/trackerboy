@@ -25,6 +25,7 @@ public:
     bool portamentoActive() const noexcept;
     bool arpeggioActive() const noexcept;*/
 
+    void reset() noexcept;
 
     // Effects 1xx and 2xx
     void setPitchSlide(SlideDirection dir, uint8_t param) noexcept;
