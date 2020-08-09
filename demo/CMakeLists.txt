@@ -16,3 +16,6 @@ target_link_libraries(${DEMO} trackerboy portaudio_static)
 
 add_executable(demo_pattern "pattern_demo.cpp")
 target_link_libraries(demo_pattern trackerboy portaudio_static audio)
+
+add_executable(demo_song "song_demo.cpp")
+target_link_libraries(demo_song trackerboy portaudio_static audio)
