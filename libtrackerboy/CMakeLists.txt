@@ -39,7 +39,8 @@ add_library("trackerboy" STATIC ${SRC_FILES})
 if (MSVC)
 set(WARNFLAGS /W4)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-set(WARNFLAGS -Wall -Wextra -pedantic)
+# -Wno-missing-field-initializers prevents warnings when zero-initializing a struct
+set(WARNFLAGS -Wall -Wextra -pedantic -Wno-missing-field-initializers)
 endif ()
 
 target_compile_options(

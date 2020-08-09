@@ -61,6 +61,8 @@ void Engine::play(Song &song, uint8_t orderNo, uint8_t patternRow) {
 
 bool Engine::step(Synth &synth, InstrumentTable &itable, WaveTable &wtable) {
 
+    (void)synth; (void)itable; (void)wtable;
+
     // make sure we have a context, otherwise just return false (no-op)
     if (mContext) {
 
@@ -126,10 +128,10 @@ bool Engine::step(Synth &synth, InstrumentTable &itable, WaveTable &wtable) {
         // channel locked -> step sfx runtime
         // channel unlocked -> step track runtime
 
-
+        return false;
     } else {
         // no context, nothing to play: caller should halt
-        return false;
+        return true;
     }
 
 }
@@ -138,9 +140,9 @@ bool Engine::step(Synth &synth, InstrumentTable &itable, WaveTable &wtable) {
 template <int channel>
 bool Engine::setRows() {
     if constexpr (channel <= static_cast<int>(ChType::ch4)) {
-        constexpr ChType ch = static_cast<ChType>(channel);
+        //constexpr ChType ch = static_cast<ChType>(channel);
 
-        TrackRow &row = mCursor.get<ch>();
+        //TrackRow &row = mCursor.get<ch>();
 
         //tr.setRow(row);
 

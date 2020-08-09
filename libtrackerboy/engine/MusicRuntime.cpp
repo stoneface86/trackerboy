@@ -247,6 +247,8 @@ bool MusicRuntime::processPatternEffect(Effect effect) {
             break;
         case EffectType::sfx:
             break; // TODO
+        default:
+            break; // should never happen
     }
 
     return false;
