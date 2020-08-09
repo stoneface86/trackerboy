@@ -7,8 +7,9 @@
 
 #include "trackerboy/engine/Timer.hpp"
 #include "trackerboy/engine/PatternCursor.hpp"
-#include "trackerboy/engine/PatternRuntime.hpp"
 #include "trackerboy/song/Song.hpp"
+#include "trackerboy/synth/Synth.hpp"
+#include "trackerboy/Table.hpp"
 
 namespace trackerboy {
 
@@ -58,18 +59,6 @@ private:
 
     Timer mTimer;
     PatternCursor mCursor;
-
-    std::tuple<
-        TrackRuntime<ChType::ch1>,
-        TrackRuntime<ChType::ch2>,
-        TrackRuntime<ChType::ch3>,
-        TrackRuntime<ChType::ch4>
-    > mTrTuple;
-
-    /*TrackRuntime<ChType::ch1> mTr1;
-    TrackRuntime<ChType::ch2> mTr2;
-    TrackRuntime<ChType::ch3> mTr3;
-    TrackRuntime<ChType::ch4> mTr4;*/
 
 };
 

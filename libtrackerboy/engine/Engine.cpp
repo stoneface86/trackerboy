@@ -142,7 +142,6 @@ bool Engine::setRows() {
 
         TrackRow &row = mCursor.get<ch>();
 
-        TrackRuntime<ch> &tr = std::get<channel>(mTrTuple);
         //tr.setRow(row);
 
         return setRows<channel + 1>();
