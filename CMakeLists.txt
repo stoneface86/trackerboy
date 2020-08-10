@@ -11,7 +11,7 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOverrides.
 
 project (
     trackerboy 
-    VERSION "0.0.5"
+    VERSION "0.0.6"
     LANGUAGES C CXX
 )
 

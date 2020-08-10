@@ -5,6 +5,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.0.6] - 2020-08-09
+### Added
+ - song_demo, demonstrates playback of a Song
+ - Engine class, handles playback for Songs and sound effects
+ - FrequencyControl, frequency effect logic for channels 1, 2 and 3
+ - Note lookup table for channel 4, NOTE_NOISE_TABLE
+ - MusicRuntime, handles song playback (replaces SongRuntime + PatternRutime + TrackRuntime)
+ - NoteControl, handles note triggers and cuts with an optional delay.
+ - PatternCursor, utility class for random access/iteration of a Pattern
+ - RuntimeContext struct, utility struct containing Synth and Table references
+ - Timer class, used for tempo/speed
+### Changed
+ - Fixed warnings for ubuntu build
+ - Mixer no longer uses sigma approximation when calculating the STEP_TABLE, this was done as
+   an experiment and also worked as a low pass filter. Filtering will be done elsewhere in the future.
+ - added utility method Synth::setFrequency
+ - added several new effects. Effects are now categorized by pattern, track and frequency.
+### Removed
+ - InstrumentRuntime, TrackRuntime, PatternRuntime and SongRuntime classes. These are being replaced
+   with the newly added classes in the engine folder.
+ - Q53.hpp, replaced by Speed.hpp
+
 ## [0.0.5] - 2020-04-24
 ### Added
  - PatternMaster class, container for all tracks in a Song
