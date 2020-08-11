@@ -2,7 +2,7 @@
 #pragma once
 
 #include "trackerboy/synth/Synth.hpp"
-#include "trackerboy/Table.hpp"
+#include "trackerboy/data/Table.hpp"
 
 namespace trackerboy {
 

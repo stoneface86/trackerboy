@@ -3,8 +3,8 @@
 
 #include <fstream>
 
-#include "trackerboy/pattern/PatternMaster.hpp"
-#include "trackerboy/song/Order.hpp"
+#include "trackerboy/data/PatternMaster.hpp"
+#include "trackerboy/data/Order.hpp"
 #include "trackerboy/fileformat.hpp"
 #include "trackerboy/Speed.hpp"
 

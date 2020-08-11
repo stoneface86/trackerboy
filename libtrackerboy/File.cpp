@@ -2,7 +2,7 @@
 #include <algorithm>
 
 #include "trackerboy/File.hpp"
-#include "trackerboy/Table.hpp"
+#include "trackerboy/data/Table.hpp"
 
 // NOTE: Trackerboy file revision will remain at 0 until changes are made
 // to the file format AFTER release (>= v1.0.0). The file format is subject

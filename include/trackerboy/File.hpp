@@ -3,8 +3,8 @@
 
 
 #include "trackerboy/fileformat.hpp"
-#include "trackerboy/Table.hpp"
-#include "trackerboy/Module.hpp"
+#include "trackerboy/data/Table.hpp"
+#include "trackerboy/data/Module.hpp"
 #include "trackerboy/version.hpp"
 
 

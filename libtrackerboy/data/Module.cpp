@@ -1,5 +1,5 @@
 
-#include "trackerboy/Module.hpp"
+#include "trackerboy/data/Module.hpp"
 #include "trackerboy/fileformat.hpp"
 
 #include <algorithm>

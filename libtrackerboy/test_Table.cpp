@@ -1,6 +1,6 @@
 
 #include "catch.hpp"
-#include "trackerboy/Table.hpp"
+#include "trackerboy/data/Table.hpp"
 
 using namespace trackerboy;
 using Catch::Contains;

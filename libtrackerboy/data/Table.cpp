@@ -1,5 +1,5 @@
 
-#include "trackerboy/Table.hpp"
+#include "trackerboy/data/Table.hpp"
 
 #include <algorithm>
 

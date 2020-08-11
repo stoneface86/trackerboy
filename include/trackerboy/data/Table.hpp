@@ -6,8 +6,8 @@
 #include <unordered_map>
 #include <string>
 
-#include "trackerboy/instrument/Instrument.hpp"
-#include "trackerboy/song/Song.hpp"
+#include "trackerboy/data/Instrument.hpp"
+#include "trackerboy/data/Song.hpp"
 #include "trackerboy/synth/Waveform.hpp"
 #include "trackerboy/fileformat.hpp"
 

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "trackerboy/pattern/TrackRow.hpp"
+#include "trackerboy/data/TrackRow.hpp"
 
 
 namespace trackerboy {

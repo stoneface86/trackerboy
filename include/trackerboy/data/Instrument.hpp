@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "trackerboy/ChType.hpp"
-#include "trackerboy/fileformat.hpp"
 
 
 namespace trackerboy {

@@ -1,6 +1,6 @@
 
 #include "catch.hpp"
-#include "trackerboy/song/Order.hpp"
+#include "trackerboy/data/Order.hpp"
 
 #if 0
 using namespace trackerboy;

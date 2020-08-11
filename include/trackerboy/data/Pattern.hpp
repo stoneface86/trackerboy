@@ -2,7 +2,7 @@
 
 #include <tuple>
 
-#include "trackerboy/pattern/Track.hpp"
+#include "trackerboy/data/Track.hpp"
 
 
 namespace trackerboy {

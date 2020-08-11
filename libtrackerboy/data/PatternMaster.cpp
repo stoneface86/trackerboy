@@ -1,5 +1,5 @@
 
-#include "trackerboy/pattern/PatternMaster.hpp"
+#include "trackerboy/data/PatternMaster.hpp"
 
 namespace trackerboy {
 

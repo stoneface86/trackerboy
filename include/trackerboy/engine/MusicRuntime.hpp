@@ -3,13 +3,12 @@
 
 #include <cstdint>
 
+#include "trackerboy/data/Song.hpp"
 #include "trackerboy/engine/FrequencyControl.hpp"
 #include "trackerboy/engine/NoteControl.hpp"
 #include "trackerboy/engine/PatternCursor.hpp"
 #include "trackerboy/engine/RuntimeContext.hpp"
 #include "trackerboy/engine/Timer.hpp"
-
-#include "trackerboy/song/Song.hpp"
 
 #define BIT(x) (1 << x)
 

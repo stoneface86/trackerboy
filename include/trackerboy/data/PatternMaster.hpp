@@ -2,9 +2,9 @@
 #pragma once
 
 #include "trackerboy/ChType.hpp"
-#include "trackerboy/pattern/Pattern.hpp"
-#include "trackerboy/pattern/TrackRow.hpp"
-#include "trackerboy/pattern/Track.hpp"
+#include "trackerboy/data/Pattern.hpp"
+#include "trackerboy/data/TrackRow.hpp"
+#include "trackerboy/data/Track.hpp"
 
 #include <cstdint>
 #include <unordered_map>

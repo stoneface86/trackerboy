@@ -1,5 +1,5 @@
 
-#include "trackerboy/song/Song.hpp"
+#include "trackerboy/data/Song.hpp"
 #include "trackerboy/fileformat.hpp"
 
 #include <cmath>

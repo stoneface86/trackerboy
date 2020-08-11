@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "trackerboy/Table.hpp"
+#include "trackerboy/data/Table.hpp"
 
 #include <fstream>
 #include <string>

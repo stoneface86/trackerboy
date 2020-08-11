@@ -7,9 +7,9 @@
 
 #include "trackerboy/engine/Timer.hpp"
 #include "trackerboy/engine/PatternCursor.hpp"
-#include "trackerboy/song/Song.hpp"
+#include "trackerboy/data/Song.hpp"
 #include "trackerboy/synth/Synth.hpp"
-#include "trackerboy/Table.hpp"
+#include "trackerboy/data/Table.hpp"
 
 namespace trackerboy {
 

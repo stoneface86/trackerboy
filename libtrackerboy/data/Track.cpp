@@ -1,5 +1,5 @@
 
-#include "trackerboy/pattern/Track.hpp"
+#include "trackerboy/data/Track.hpp"
 
 #include <algorithm>
 #include <cassert>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "trackerboy/pattern/Pattern.hpp"
+#include "trackerboy/data/Pattern.hpp"
 #include "trackerboy/ChType.hpp"
 
 namespace trackerboy {
