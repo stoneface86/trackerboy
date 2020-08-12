@@ -303,14 +303,17 @@ FileType File::fileType() {
 }
 
 FormatError File::deserialize(std::istream &stream, Instrument &inst) {
-    auto& program = inst.getProgram();
+    /*auto& program = inst.getProgram();
     program.clear();
 
     uint8_t size;
     readAndCheck(stream, &size, sizeof(size));
 
     program.resize(size);
-    readAndCheck(stream, program.data(), size);
+    readAndCheck(stream, program.data(), size);*/
+
+    // just read the entire struct
+    readAndCheck(stream, &inst, sizeof(Instrument));
 
     return FormatError::none;
 }
@@ -458,15 +461,17 @@ FormatError File::serialize(std::ostream &stream, Song &song) {
 
 FormatError File::serialize(std::ostream &stream, Instrument &inst) {
     
-    auto &program = inst.getProgram();
+    //auto &program = inst.getProgram();
 
     // size of the program
-    uint8_t size = static_cast<uint8_t>(program.size());
-    writeAndCheck(stream, &size, sizeof(size));
+    //uint8_t size = static_cast<uint8_t>(program.size());
+    //writeAndCheck(stream, &size, sizeof(size));
 
     // program is just a byte array, no need to worry about endianness
-    writeAndCheck(stream, program.data(), size);
+    //writeAndCheck(stream, program.data(), size);
     
+    writeAndCheck(stream, &inst, sizeof(Instrument));
+
     return FormatError::none;
 }
 

@@ -127,13 +127,9 @@ TEST_CASE("save/load equivalence", "[File]") {
 
     SECTION("Instrument") {
         Instrument sample;
-        auto &program = sample.getProgram();
-        // Frame 0: retrigger, env = 0xF1, duty = 0x2
-        program.push_back(0x4D);
-        program.push_back(0xF1);
-        // Frame 1: duty = 0x1
-        program.push_back(0x05);
-
+        sample.envelope = 0xF1;
+        sample.timbre = 0x02;
+        
         // serialize the sample instrument
         REQUIRE(file.serialize(out, sample) == FormatError::none);
         
@@ -143,11 +139,7 @@ TEST_CASE("save/load equivalence", "[File]") {
         REQUIRE(file.deserialize(in, sampleReadIn) == FormatError::none);
 
         // check that both instruments are equal
-        auto &samplePrgm = sample.getProgram();
-        auto &sampleReadInPrgm = sampleReadIn.getProgram();
-        REQUIRE(samplePrgm.size() == sampleReadInPrgm.size());
-        REQUIRE(memcmp(samplePrgm.data(), sampleReadInPrgm.data(), samplePrgm.size()) == 0);
-        
+        REQUIRE(memcmp(&sample, &sampleReadIn, sizeof(Instrument)) == 0);
     }
 
     SECTION("Song") {
