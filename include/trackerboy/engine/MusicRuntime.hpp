@@ -72,6 +72,15 @@ private:
     template <ChType ch>
     void update();
 
+    template <ChType ch>
+    void setEnvelope(uint8_t envelope);
+
+    template <ChType ch>
+    void setTimbre(uint8_t timbre);
+
+    template <ChType ch>
+    void setPanning(uint8_t panning);
+
     //
     // Write the given envelope to the channel's registers. For channels 1, 2 and 4 this
     // value is written to the channel's envelope register (NRx2). For channel 3, the

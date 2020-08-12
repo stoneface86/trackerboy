@@ -63,6 +63,30 @@ bool MusicRuntime::setRows() {
         }
     }
 
+    if (!!(row.flags & TrackRow::COLUMN_INST)) {
+        auto instrument = mRc.instTable[row.instrumentId];
+        if (instrument != nullptr) {
+            setTimbre<ch>(instrument->timbre);
+            setEnvelope<ch>(instrument->envelope);
+            if (instrument->panning) {
+                setPanning<ch>(instrument->panning);
+            }
+
+            auto &nc = mNc[chint];
+            mNoteDelay = instrument->delay;
+            if (instrument->duration) {
+                nc.noteCut(instrument->duration);
+            }
+
+            if constexpr (ch != ChType::ch4) {
+                auto &fc = mFc[chint];
+                fc.setTune(static_cast<uint8_t>(instrument->tune) + 0x80);
+                fc.setVibrato(instrument->vibrato);
+                fc.setVibratoDelay(instrument->vibratoDelay);
+            }
+        }
+    }
+
     if (!!(row.flags & TrackRow::COLUMN_NOTE)) {
         mNc[chint].noteTrigger(row.note, mNoteDelay);
     } else {
@@ -261,26 +285,13 @@ void MusicRuntime::processTrackEffect(Effect effect) {
     switch (effect.type) {
         case EffectType::setEnvelope:
             //
-            mEnvelope[chint] = effect.param;
-            if constexpr (ch != ChType::ch3) {
-                if ((effect.param & 0x7) == 0) {
-                    // constant volume, disable AREN
-                    mFlags &= ~(FLAGS_AREN1 << chint);
-                } else {
-                    // envelope is increasing/decreasing, enable AREN
-                    mFlags |= FLAGS_AREN1 << chint;
-                }
-            }
-            writeEnvelope<ch>(effect.param);
+            setEnvelope<ch>(effect.param);
             break;
         case EffectType::setTimbre:
-            mTimbre[chint] = effect.param & 0x3;
-            writeTimbre<ch>(mTimbre[chint]);
+            setTimbre<ch>(effect.param);
             break;
         case EffectType::setPanning:
-            mPanning &= static_cast<uint8_t>(~(0x11 << chint));
-            mPanning |= (effect.param & 0x11) << chint;
-            mFlags |= FLAGS_PANNING;
+            setPanning<ch>(effect.param);
             break;
         case EffectType::setSweep:
             // this effect only modifies CH1's sweep register and can be used on any channel
@@ -332,6 +343,37 @@ bool MusicRuntime::processFreqEffect(Effect effect, FrequencyControl &fc) {
         default:
             return false;
     }
+}
+
+template <ChType ch>
+void MusicRuntime::setEnvelope(uint8_t envelope) {
+    constexpr int chint = static_cast<int>(ch);
+    mEnvelope[chint] = envelope;
+    if constexpr (ch != ChType::ch3) {
+        if ((envelope & 0x7) == 0) {
+            // constant volume, disable AREN
+            mFlags &= ~(FLAGS_AREN1 << chint);
+        } else {
+            // envelope is increasing/decreasing, enable AREN
+            mFlags |= FLAGS_AREN1 << chint;
+        }
+    }
+    writeEnvelope<ch>(envelope);
+}
+
+template <ChType ch>
+void MusicRuntime::setTimbre(uint8_t timbre) {
+    constexpr int chint = static_cast<int>(ch);
+    mTimbre[chint] = timbre & 0x3;
+    writeTimbre<ch>(mTimbre[chint]);
+}
+
+template <ChType ch>
+void MusicRuntime::setPanning(uint8_t panning) {
+    constexpr int chint = static_cast<int>(ch);
+    mPanning &= static_cast<uint8_t>(~(0x11 << chint));
+    mPanning |= (panning & 0x11) << chint;
+    mFlags |= FLAGS_PANNING;
 }
 
 template <ChType ch>

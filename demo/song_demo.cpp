@@ -30,6 +30,18 @@ int main() {
     InstrumentTable itable;
     WaveTable wtable;
 
+    {
+        auto &inst = itable.insert();
+        inst.envelope = 0x57;
+        inst.timbre = 1;
+    }
+
+    {
+        auto &inst = itable.insert();
+        inst.envelope = 0x77;
+        inst.timbre = 0x0;
+    }
+
     auto &triangle = wtable.insert();
     triangle.fromString("0123456789ABCDEFFEDCBA9876543210");
 
@@ -142,14 +154,16 @@ int main() {
 
     {
         auto &tr = pm.getTrack(ChType::ch2, 0);
-        tr.setEffect(0, 0, EffectType::setTimbre, 1);
-        tr.setEffect(0, 1, EffectType::setEnvelope, 0x57);
+        //tr.setEffect(0, 0, EffectType::setTimbre, 1);
+        //tr.setEffect(0, 1, EffectType::setEnvelope, 0x57);
+        tr.setInstrument(0, 0);
         tr.setNote(0x00, NOTE_G + OCTAVE_5);
 
         tr.setNote(0x08, NOTE_CUT);
 
-        tr.setEffect(0x0C, 0, EffectType::setTimbre, 0);
-        tr.setEffect(0x0C, 1, EffectType::setEnvelope, 0x77);
+        /*tr.setEffect(0x0C, 0, EffectType::setTimbre, 0);
+        tr.setEffect(0x0C, 1, EffectType::setEnvelope, 0x77);*/
+        tr.setInstrument(0x0C, 1);
         tr.setNote(0x0C, NOTE_F + OCTAVE_3);
 
         tr.setNote(0x10, NOTE_G + OCTAVE_3);
