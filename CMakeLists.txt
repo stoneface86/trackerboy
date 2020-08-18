@@ -46,12 +46,10 @@ if (PORTAUDIO_REQUIRED)
     target_include_directories(portaudio_ringbuffer PUBLIC "portaudio/src/common")
 endif ()
 
-# qt is required for the ui project
-macro(use_qt)
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTOUIC ON)
-    set(CMAKE_AUTORCC ON)
-    find_package(Qt5 COMPONENTS ${ARGV} REQUIRED)
+if (TRACKERBOY_ENABLE_UI)
+
+    find_package(wxWidgets REQUIRED COMPONENTS base core)
+    include(${wxWidgets_USE_FILE})
     if (WIN32)
         set(GUI_TYPE WIN32)
     elseif (APPLE)
@@ -59,7 +57,8 @@ macro(use_qt)
     else ()
         set(GUI_TYPE "")
     endif ()
-endmacro(use_qt)
+
+endif ()
 
 if (TRACKERBOY_ENABLE_TESTS)
     enable_testing()
