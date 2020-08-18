@@ -1,8 +1,8 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-	<file>images/whitekey_down.png</file>
-	<file>images/whitekey_up.png</file>
-  <file>images/blackkey_down.png</file>
-  <file>images/blackkey_up.png</file>
+    <file>images/whitekey_down.png</file>
+    <file>images/blackkey_down.png</file>
+    <file>images/piano_whitekeys.png</file>
+    <file>images/piano_blackkeys.png</file>
 </qresource>
 </RCC>

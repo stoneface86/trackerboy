@@ -4,8 +4,8 @@ use_qt(Widgets Core)
 
 set(INSTEDIT_SRC
     "instedit/instedit.cpp"
-    "instedit/InstEditor.cpp"
-    "instedit/SynthWorker.cpp"
+#    "instedit/InstEditor.cpp"
+#    "instedit/SynthWorker.cpp"
     "instedit/PianoWidget.cpp"
     "instedit/keys.qrc"
 )

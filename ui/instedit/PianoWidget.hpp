@@ -9,7 +9,10 @@
 
 namespace instedit {
 
-
+//
+// Custom widget for a piano control. This control displays a piano keyboard with an
+// 8 octaves. Individual keys can be pressed using the mouse.
+//
 class PianoWidget : public QWidget {
 
     Q_OBJECT
@@ -29,20 +32,16 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    QPixmap whiteKeyDown;
-    QPixmap whiteKeyUp;
-    QPixmap blackKeyDown;
-    QPixmap blackKeyUp;
-    bool isKeyDown;
-    int bkeyIndex; // index of the black key being played
-    int wkeyIndex; // index of the white key being played
+    QPixmap mWhiteKeyDown;
+    QPixmap mBlackKeyDown;
+    QPixmap mPianoWhitePix;
+    QPixmap mPianoBlackPix;
 
-    // offsets from an octave to draw a black key
-    // 0 = C#, ..., 4 = A#
-    int blackKeyOffsets[5];
+    bool mIsKeyDown;
+    trackerboy::Note mNote;
 
-    bool updateKeySelection(QMouseEvent *event);
-    trackerboy::Note note();
+    void setNoteFromMouse(int x, int y);
+
 
 };
 

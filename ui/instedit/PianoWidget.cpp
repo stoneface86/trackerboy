@@ -8,6 +8,20 @@ constexpr int N_OCTAVES = 7;
 constexpr int N_WHITEKEYS = 7;
 constexpr int N_BLACKKEYS = 5;
 
+// IMPORTANT! these widths must match the widths of the key images
+
+constexpr int WKEY_WIDTH = 12;
+constexpr int BKEY_WIDTH = 8;
+constexpr int BKEY_HEIGHT = 42;
+constexpr int PIANO_WIDTH = N_OCTAVES * N_WHITEKEYS * WKEY_WIDTH;
+constexpr int PIANO_HEIGHT = 64;
+
+constexpr int BKEY_WIDTH_HALF = BKEY_WIDTH / 2;
+
+// white key index: 0..6 ==> C, D, E, F, G, A, B
+// black key index: 0..4 ==> C#, D#, F#, G#, A#
+
+
 // lookup table gets the black key to the left of the given white key index
 // for the right of a white key, increment the index by 1
 static const int BLACKKEY_LEFTOF[] = {
@@ -20,7 +34,28 @@ static const int BLACKKEY_LEFTOF[] = {
     4,              // B -> A#
 };
 
-static const int WHITEKEY_TO_NOTE[] = {
+struct KeyPaintInfo {
+    bool isBlack;
+    int xoffset;
+};
+
+static const KeyPaintInfo KEY_INFO[] = {
+    { false,    0 },                                    // C
+    { true,     WKEY_WIDTH - BKEY_WIDTH_HALF },         // C#
+    { false,    WKEY_WIDTH * 1 },                       // D
+    { true,     WKEY_WIDTH * 2 - BKEY_WIDTH_HALF },     // D#
+    { false,    WKEY_WIDTH * 2 },                       // E
+    { false,    WKEY_WIDTH * 3 },                       // F
+    { true,     WKEY_WIDTH * 4 - BKEY_WIDTH_HALF },     // F#
+    { false,    WKEY_WIDTH * 4 },                       // G
+    { true,     WKEY_WIDTH * 5 - BKEY_WIDTH_HALF },     // G#
+    { false,    WKEY_WIDTH * 5 },                       // A
+    { true,     WKEY_WIDTH * 6 - BKEY_WIDTH_HALF },     // A#
+    { false,    WKEY_WIDTH * 6 },                       // B
+};
+
+// table to convert a white key index to a trackerboy note
+static const trackerboy::Note WHITEKEY_TO_NOTE[] = {
     trackerboy::NOTE_C,
     trackerboy::NOTE_D,
     trackerboy::NOTE_E,
@@ -30,7 +65,8 @@ static const int WHITEKEY_TO_NOTE[] = {
     trackerboy::NOTE_B
 };
 
-static const int BLACKKEY_TO_NOTE[] = {
+// table converts a black key index to a trackerboy note
+static const trackerboy::Note BLACKKEY_TO_NOTE[] = {
     trackerboy::NOTE_Db, // C#
     trackerboy::NOTE_Eb, // D#
     trackerboy::NOTE_Gb, // F#
@@ -43,169 +79,126 @@ namespace instedit {
 
 
 PianoWidget::PianoWidget(QWidget *parent) :
-    whiteKeyDown(":/images/whitekey_down.png"),
-    whiteKeyUp(":/images/whitekey_up.png"),
-    blackKeyDown(":/images/blackkey_down.png"),
-    blackKeyUp(":/images/blackkey_up.png"),
-    isKeyDown(false),
-    bkeyIndex(KEYINDEX_NULL),
-    wkeyIndex(KEYINDEX_NULL),
+    mWhiteKeyDown(":/images/whitekey_down.png"),
+    mBlackKeyDown(":/images/blackkey_down.png"),
+    mPianoWhitePix(":/images/piano_whitekeys.png"),
+    mPianoBlackPix(":/images/piano_blackkeys.png"),
+    mIsKeyDown(false),
+    mNote(trackerboy::NOTE_C),
     QWidget(parent)
 {
-    int wkwidth = whiteKeyUp.width();
-    int bkhalf = blackKeyUp.width() / 2;
 
-    setFixedWidth(wkwidth * N_WHITEKEYS * N_OCTAVES);
-    setFixedHeight(whiteKeyUp.height());
-    setMouseTracking(true);
-
-    blackKeyOffsets[0] = wkwidth - bkhalf;       // C#
-    blackKeyOffsets[1] = (wkwidth * 2) - bkhalf; // D#
-    blackKeyOffsets[2] = (wkwidth * 4) - bkhalf; // F#
-    blackKeyOffsets[3] = (wkwidth * 5) - bkhalf; // G#
-    blackKeyOffsets[4] = (wkwidth * 6) - bkhalf; // A#
+    setFixedWidth(PIANO_WIDTH);
+    setFixedHeight(PIANO_HEIGHT);
 
 }
 
 
 void PianoWidget::paintEvent(QPaintEvent *event) {
+    int octaveOffset;
+    KeyPaintInfo keyInfo;
+
+    if (mIsKeyDown) {
+        octaveOffset = mNote / 12;
+        int keyInOctave = mNote % 12;
+        octaveOffset *= N_WHITEKEYS * WKEY_WIDTH;
+
+        keyInfo = KEY_INFO[keyInOctave];
+    }
+
 
     QPainter painter(this);
-    painter.drawTiledPixmap(0, 0, width(), height(), whiteKeyUp);
-    if (isKeyDown && wkeyIndex != KEYINDEX_NULL) {
-        painter.drawPixmap(wkeyIndex * whiteKeyDown.width(), 0, whiteKeyDown);
+    painter.drawPixmap(0, 0, mPianoWhitePix);
+    
+    if (mIsKeyDown && !keyInfo.isBlack) {
+        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, mWhiteKeyDown);
     }
 
-    // black keys
-    int x = 0;
-    int octaveWidth = whiteKeyUp.width() * N_OCTAVES;
-    int index = 0;
-    for (int i = 0; i != N_OCTAVES; ++i) {
-        for (int j = 0; j != sizeof(blackKeyOffsets) / sizeof(int); ++j) {
-            painter.drawPixmap(
-                x + blackKeyOffsets[j],
-                0,
-                (bkeyIndex == index && isKeyDown) ? blackKeyDown : blackKeyUp
-            );
+    painter.drawPixmap(0, 0, mPianoBlackPix);
 
-            ++index;
-        }
-        x += octaveWidth;
+    if (mIsKeyDown && keyInfo.isBlack) {
+        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, mBlackKeyDown);
     }
-
 
 }
 
 void PianoWidget::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
-        isKeyDown = true;
-        updateKeySelection(event);
+        mIsKeyDown = true;
+        setNoteFromMouse(event->x(), event->y());
         repaint();
-        emit keyDown(note());
+        emit keyDown(mNote);
 
-        
     }
     
 }
 
 void PianoWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
-        isKeyDown = false;
-        updateKeySelection(event);
+        mIsKeyDown = false;
         repaint();
         emit keyUp();
+
     }
 }
 
 void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
 
-    if (isKeyDown) {
-        
-        if (updateKeySelection(event)) {
-            repaint();
-            emit keyDown(note());
-        }
-
-    }
-}
-
-bool PianoWidget::updateKeySelection(QMouseEvent *event) {
     int x = event->x();
     int y = event->y();
-
-    int wkwidth = whiteKeyUp.width();
-    int bkhalf = blackKeyUp.width() / 2;
-
-
-    int wkeyIndexNew = KEYINDEX_NULL;
-    int bkeyIndexNew = KEYINDEX_NULL;
-
     if (rect().contains(x, y)) {
-        wkeyIndexNew = x / wkwidth;
-        // check if we hit a black key
-        if (y < blackKeyUp.height()) {
-            int wkey = wkeyIndexNew % N_WHITEKEYS;
-            int octave = wkeyIndexNew / N_WHITEKEYS;
-            int wkeyx = x % wkwidth;
+        auto oldNote = mNote;
+        setNoteFromMouse(x, y);
+        if (!mIsKeyDown || oldNote != mNote) {
+            mIsKeyDown = true;
+            repaint();
+            emit keyDown(mNote);
+        }
+    } else {
+        mIsKeyDown = false;
+        repaint();
+        emit keyUp();
+    }
+        
 
-            // lookup the black key to the left of the selected white key
-            int bkeyLookup = BLACKKEY_LEFTOF[wkey];
-            bool bkeyFound = false;
+    
+}
 
-            // check for the black key on the left side of wkeyIndexNew
-            if (bkeyLookup != KEYINDEX_NULL && wkeyx <= bkhalf) {
-                bkeyFound = true;
-            } else {
-                // lookup the black key to the right of the selected white key
-                bkeyLookup = BLACKKEY_LEFTOF[wkey == N_WHITEKEYS-1 ? 0 : wkey + 1];
+void PianoWidget::setNoteFromMouse(int x, int y) {
+    bool isBlack = false;
+    int wkeyInOctave = x / WKEY_WIDTH;
+    int octave = wkeyInOctave / N_WHITEKEYS;
+    wkeyInOctave %= N_WHITEKEYS;
+    int bkeyInOctave = 0;
 
-                // check for the black key on the right side of wkeyIndexNew
-                if (bkeyLookup != KEYINDEX_NULL && wkeyx >= wkwidth - bkhalf) {
-                    bkeyFound = true;
-                }
-            }
+    if (y < BKEY_HEIGHT) {
+        // check if the mouse is over a black key
+        bkeyInOctave = BLACKKEY_LEFTOF[wkeyInOctave];
+        int wkeyx = x % WKEY_WIDTH;
 
-            if (bkeyFound) {
-                bkeyIndexNew = (octave * N_BLACKKEYS) + bkeyLookup;
-                wkeyIndexNew = KEYINDEX_NULL;
+        if (bkeyInOctave != KEYINDEX_NULL && wkeyx <= BKEY_WIDTH_HALF) {
+            // mouse is over the black key to the left of the white key
+            isBlack = true;
+        } else {
+            // now check the right
+            
+            // get the black key to the left of the next white key
+            bkeyInOctave = BLACKKEY_LEFTOF[wkeyInOctave == N_WHITEKEYS - 1 ? 0 : wkeyInOctave + 1];
+            
+            if (bkeyInOctave != KEYINDEX_NULL && wkeyx >= WKEY_WIDTH - BKEY_WIDTH_HALF) {
+                isBlack = true;
             }
         }
     }
 
-    bool newkey = false;
-    if (wkeyIndex != wkeyIndexNew) {
-        wkeyIndex = wkeyIndexNew;
-        newkey = true;
-    }
-    if (bkeyIndex != bkeyIndexNew) {
-        bkeyIndex = bkeyIndexNew;
-        newkey = true;
+    int note = octave * 12;
+    if (isBlack) {
+        note += BLACKKEY_TO_NOTE[bkeyInOctave];
+    } else {
+        note += WHITEKEY_TO_NOTE[wkeyInOctave];
     }
 
-    return newkey;
-
+    mNote = static_cast<trackerboy::Note>(note);
 }
-
-trackerboy::Note PianoWidget::note() {
-    
-    int index;
-    int divisor;
-    const int *lookuptable;
-    if (wkeyIndex != KEYINDEX_NULL) {
-        index = wkeyIndex;
-        divisor = N_WHITEKEYS;
-        lookuptable = WHITEKEY_TO_NOTE;
-    } else if (bkeyIndex != KEYINDEX_NULL) {
-        index = bkeyIndex;
-        divisor = N_BLACKKEYS;
-        lookuptable = BLACKKEY_TO_NOTE;
-    }
-
-    int octave = index / divisor;
-    int offset = lookuptable[index % divisor];
-    return static_cast<trackerboy::Note>((octave * 12) + offset);
-}
-
-
 
 }

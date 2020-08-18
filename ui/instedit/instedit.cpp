@@ -10,7 +10,7 @@
 #include <QApplication>
 #include "portaudio.h"
 
-#include "InstEditor.hpp"
+#include "PianoWidget.hpp"
 
 
 
@@ -26,9 +26,13 @@ int main(int argc, char *argv[]) {
 
 
     QApplication app(argc, argv);
-    instedit::InstEditor editor;
-    editor.show();
-    editor.setWindowTitle("Instrument Editor");
+    //instedit::InstEditor editor;
+    //editor.show();
+    //editor.setWindowTitle("Instrument Editor");
+    instedit::PianoWidget widget;
+    widget.show();
+
+    
     exitcode = app.exec();
 
 
