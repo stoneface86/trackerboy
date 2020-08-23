@@ -19,6 +19,15 @@ Module::Module() :
 {
 }
 
+void Module::clear() {
+    mTitle = "";
+    mArtist = "";
+    mCopyright = "";
+    mSongTable.clear();
+    mInstrumentTable.clear();
+    mWaveTable.clear();
+}
+
 std::string Module::artist() {
     return mArtist;
 }

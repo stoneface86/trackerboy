@@ -15,6 +15,8 @@ class Module {
 public:
     Module();
 
+    void clear();
+
     std::string artist();
 
     std::string title();
