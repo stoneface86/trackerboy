@@ -1,19 +1,22 @@
 project(ui CXX)
 
 
-set(UI_SRC
-    "TrackerboyApp.cpp"
-    "MainWindow.cpp"
-    "docview/ModuleDocument.cpp"
-    "docview/ModuleView.cpp"
+use_qt(Widgets Core)
+
+set(INSTEDIT_SRC
+    "instedit/instedit.cpp"
+#    "instedit/InstEditor.cpp"
+#    "instedit/SynthWorker.cpp"
+    "instedit/PianoWidget.cpp"
+    "instedit/keys.qrc"
 )
 
-add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC})
-target_include_directories(trackerboy_ui PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(trackerboy_ui 
-    ${wxWidgets_LIBRARIES}
+
+add_executable(instedit ${GUI_TYPE} ${INSTEDIT_SRC})
+target_link_libraries(instedit
     trackerboy
-    portaudio_static
     audio
+    Qt5::Widgets
+    Qt5::Core
 )
 
