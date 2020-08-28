@@ -28,9 +28,18 @@ target_link_libraries(trackerboy_ui
 
 # Test UIs
 
-#add_executable(ui_test_WaveEditor ${GUI_TYPE}
-#    "waveeditor.ui"
-#    "ui_test_WaveEditor.cpp"
-#    "WaveEditor"
-#)
+# Wave editor widget
+add_executable(ui_test_WaveEditor ${GUI_TYPE}
+    "designer/waveeditor.ui"
+    "resources/keys.qrc"
+    "ui_test_WaveEditor.cpp"
+    "PianoWidget.cpp"
+    "WaveEditor.cpp"
+    "WaveGraph.cpp"
+)
+target_link_libraries(ui_test_WaveEditor
+    trackerboy
+    Qt5::Widgets
+    Qt5::Core
+)
 

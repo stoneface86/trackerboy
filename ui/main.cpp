@@ -1,27 +1,16 @@
 
 #include <QApplication>
-//#include "MainWindow.hpp"
-#include "WaveEditor.hpp"
+#include "MainWindow.hpp"
 
 
 int main(int argc, char *argv[]) {
 
-    int exitcode = 0;
-
-
-
     QApplication app(argc, argv);
-    //instedit::InstEditor editor;
-    //editor.show();
-    //editor.setWindowTitle("Instrument Editor");
-    //MainWindow win;
-    //win.show();
-    WaveEditor win;
+    QCoreApplication::setOrganizationName("Trackerboy");
+    QCoreApplication::setApplicationName("Trackerboy");
+
+    MainWindow win;
     win.show();
 
-
-    exitcode = app.exec();
-
-
-    return exitcode;
+    return app.exec();
 }
