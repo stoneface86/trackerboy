@@ -3,34 +3,19 @@ project(ui CXX)
 
 use_qt(Widgets Core)
 
-set(INSTEDIT_SRC
-    "instedit/instedit.cpp"
-#    "instedit/InstEditor.cpp"
-#    "instedit/SynthWorker.cpp"
-    "instedit/PianoWidget.cpp"
-    "instedit/keys.qrc"
-)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(UI_SRC
-    "mainwindow.ui"
-    "waveeditor.ui"
+    "designer/mainwindow.ui"
+    "designer/waveeditor.ui"
+    "resources/keys.qrc"
     "main.cpp"
+    "MainWidget.cpp"
     "MainWindow.cpp"
     "OrderEditor.cpp"
-    "MainWidget.cpp"
     "PianoWidget.cpp"
     "WaveEditor.cpp"
     "WaveGraph.cpp"
-    "instedit/keys.qrc"
-)
-
-
-add_executable(instedit ${GUI_TYPE} ${INSTEDIT_SRC})
-target_link_libraries(instedit
-    trackerboy
-    audio
-    Qt5::Widgets
-    Qt5::Core
 )
 
 
@@ -40,4 +25,12 @@ target_link_libraries(trackerboy_ui
     Qt5::Widgets
     Qt5::Core
 )
+
+# Test UIs
+
+#add_executable(ui_test_WaveEditor ${GUI_TYPE}
+#    "waveeditor.ui"
+#    "ui_test_WaveEditor.cpp"
+#    "WaveEditor"
+#)
 

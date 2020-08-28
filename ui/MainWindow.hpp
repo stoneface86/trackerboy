@@ -2,7 +2,7 @@
 #pragma once
 
 #include <QMainWindow>
-#include "ui_mainwindow.h"
+#include "designer/ui_mainwindow.h"
 
 class MainWindow : public QMainWindow, private Ui::MainWindow {
 

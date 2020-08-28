@@ -2,7 +2,7 @@
 #pragma once
 
 #include <QWidget>
-#include "ui_waveeditor.h"
+#include "designer/ui_waveeditor.h"
 
 class WaveEditor : public QWidget, private Ui::WaveEditor {
 
