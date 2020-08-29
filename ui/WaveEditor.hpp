@@ -4,7 +4,10 @@
 #include <array>
 
 #include <QWidget>
+
+#pragma warning(push, 0)
 #include "designer/ui_waveeditor.h"
+#pragma warning(pop)
 
 class WaveEditor : public QWidget, private Ui::WaveEditor {
 

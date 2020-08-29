@@ -18,6 +18,11 @@ set(UI_SRC
     "WaveGraph.cpp"
 )
 
+if (MSVC)
+    # prevent warnings from external libraries
+    add_compile_options(/W4 /experimental:external /external:W0 /external:anglebrackets)
+endif ()
+
 
 add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC})
 target_link_libraries(trackerboy_ui
