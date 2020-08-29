@@ -52,7 +52,7 @@ void WaveEditor::onWaveramEdited(const QString &text) {
     for (auto ch : text) {
         
         QString s(ch);
-        mWavedata[pos] = s.toUInt(nullptr, 16);
+        mWavedata[pos] = static_cast<uint8_t>(s.toUInt(nullptr, 16));
         ++pos;
     }
     // redraw the graph
@@ -131,12 +131,12 @@ void WaveEditor::setFromPreset(Preset preset) {
                 float sample = 0.0f;
                 // upwards
                 for (int i = 0; i != 16; ++i) {
-                    presetData[i] = std::roundf(sample);
+                    presetData[i] = static_cast<uint8_t>(std::roundf(sample));
                     sample += step;
                 }
                 // and then back down
                 for (int i = 16; i != 32; ++i) {
-                    presetData[i] = std::roundf(sample);
+                    presetData[i] = static_cast<uint8_t>(std::roundf(sample));
                     sample -= step;
                 }
             }
@@ -146,7 +146,7 @@ void WaveEditor::setFromPreset(Preset preset) {
                 float step = amplitude / 31.0f;
                 float sample = 0.0f;
                 for (int i = 0; i != 32; ++i) {
-                    presetData[i] = std::roundf(sample);
+                    presetData[i] = static_cast<uint8_t>(std::roundf(sample));
                     sample += step;
                 }
             }
@@ -157,7 +157,7 @@ void WaveEditor::setFromPreset(Preset preset) {
                 float angle = 0.0f;
                 for (int i = 0; i != 32; ++i) {
                     // translate sine from [-1, 1] to [0, 1] and apply amplitude
-                    presetData[i] = std::roundf(0.5f * amplitude * (sin(angle) + 1.0f));
+                    presetData[i] = static_cast<uint8_t>(std::roundf(0.5f * amplitude * (sin(angle) + 1.0f)));
                     angle += 0.1963495408f; // ==> 2pi / 32
                 }
             }

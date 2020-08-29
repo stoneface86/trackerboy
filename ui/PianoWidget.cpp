@@ -92,8 +92,10 @@ PianoWidget::PianoWidget(QWidget *parent) :
 
 
 void PianoWidget::paintEvent(QPaintEvent *event) {
-    int octaveOffset;
-    KeyPaintInfo keyInfo;
+    (void)event;
+
+    int octaveOffset = 0;
+    KeyPaintInfo keyInfo{ 0 };
 
     if (mIsKeyDown) {
         octaveOffset = mNote / 12;
