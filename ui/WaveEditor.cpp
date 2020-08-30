@@ -135,6 +135,7 @@ void WaveEditor::setFromPreset(Preset preset) {
                     sample += step;
                 }
                 // and then back down
+                sample = amplitude;
                 for (int i = 16; i != 32; ++i) {
                     presetData[i] = static_cast<uint8_t>(std::roundf(sample));
                     sample -= step;

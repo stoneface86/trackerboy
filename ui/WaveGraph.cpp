@@ -56,6 +56,7 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
 
     QBrush brush(mPlotLineColor);
     painter.setBrush(brush);
+    painter.setPen(mPlotSampleColor);
 
     if (mData == nullptr) {
         return;
@@ -64,8 +65,13 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
     int x = xaxis + 1;
     for (int i = 0; i != 32; ++i) {
 
-        int y = ((16 - mData[i]) * STEP_Y) + mPlotRect.top();
-        painter.drawRect(x, y, STEP_X - 2, yaxis - y - 1);
+        uint8_t sample = mData[i];
+        if (sample) {
+            int y = ((16 - mData[i]) * STEP_Y) + mPlotRect.top();
+            painter.drawRect(x, y, STEP_X - 2, yaxis - y - 1);
+        } else {
+            painter.drawLine(x, yaxis, x + STEP_X - 2, yaxis);
+        }
 
         x += STEP_X;
     }
