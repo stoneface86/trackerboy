@@ -10,7 +10,7 @@
 #include "model/WaveListModel.hpp"
 
 #pragma warning(push, 0)
-#include "designer/ui_waveeditor.h"
+#include "designer/ui_WaveEditor.h"
 #pragma warning(pop)
 
 class WaveEditor : public QWidget, private Ui::WaveEditor {

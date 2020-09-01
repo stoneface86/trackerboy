@@ -6,8 +6,9 @@ use_qt(Widgets Core)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(UI_SRC
-    "designer/mainwindow.ui"
-    "designer/waveeditor.ui"
+    "designer/MainWindow.ui"
+    "designer/WaveEditor.ui"
+    "designer/InstrumentEditor.ui"
     #"model/ModuleDocument.cpp"
     #"model/ModuleModel.cpp"
     "model/WaveListModel.cpp"

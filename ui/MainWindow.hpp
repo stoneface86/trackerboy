@@ -4,7 +4,7 @@
 #include <QMainWindow>
 
 #pragma warning(push, 0)
-#include "designer/ui_mainwindow.h"
+#include "designer/ui_MainWindow.h"
 #pragma warning(pop)
 
 class MainWindow : public QMainWindow, private Ui::MainWindow {
