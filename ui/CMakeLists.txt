@@ -8,7 +8,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(UI_SRC
     "designer/mainwindow.ui"
     "designer/waveeditor.ui"
+    #"model/ModuleDocument.cpp"
+    #"model/ModuleModel.cpp"
+    "model/WaveListModel.cpp"
     "resources/keys.qrc"
+    "InstrumentEditor.cpp"
     "main.cpp"
     "MainWidget.cpp"
     "MainWindow.cpp"
@@ -36,6 +40,7 @@ target_link_libraries(trackerboy_ui
 # Wave editor widget
 add_executable(ui_test_WaveEditor ${GUI_TYPE}
     "designer/waveeditor.ui"
+    "model/WaveListModel.cpp"
     "resources/keys.qrc"
     "ui_test_WaveEditor.cpp"
     "PianoWidget.cpp"

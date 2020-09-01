@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>606</width>
-    <height>377</height>
+    <height>378</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,21 +23,9 @@
    <item>
     <layout class="QGridLayout" name="gridLayout">
      <item row="2" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item alignment="Qt::AlignHCenter">
+      <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,0">
+       <item>
         <widget class="WaveGraph" name="mWaveGraph">
-         <property name="minimumSize">
-          <size>
-           <width>400</width>
-           <height>200</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>400</width>
-           <height>200</height>
-          </size>
-         </property>
          <property name="frameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
@@ -82,14 +70,7 @@
      <item row="1" column="2">
       <widget class="QComboBox" name="mWaveSelect">
        <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QLabel" name="mCoordsLabel">
-       <property name="text">
-        <string/>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -252,6 +233,43 @@
         </item>
        </layout>
       </widget>
+     </item>
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="mCoordsLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="mNameEdit">
+         <property name="placeholderText">
+          <string>Name</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>

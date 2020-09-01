@@ -9,12 +9,16 @@
 #include "WaveEditor.hpp"
 
 
-WaveEditor::WaveEditor() :
+WaveEditor::WaveEditor(trackerboy::Module &mod) :
+    mMod(mod),
     mWavedata{0},
     QWidget()
 {
     setupUi(this);
     setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
+
+    WaveListModel *model = new WaveListModel(mod.waveTable(), this);
+    mWaveSelect->setModel(model);
 
     // let the graph widget use our sample data to display
     mWaveGraph->setData(mWavedata.data());

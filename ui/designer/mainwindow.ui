@@ -6,22 +6,29 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1397</width>
-    <height>1015</height>
+    <width>1200</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
-  <widget class="MainWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_3"/>
-  </widget>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
+  <property name="dockNestingEnabled">
+   <bool>false</bool>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AnimatedDocks</set>
+  </property>
+  <widget class="MainWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1397</width>
+     <width>1200</width>
      <height>21</height>
     </rect>
    </property>
@@ -102,8 +109,33 @@
     <addaction name="actionOrders"/>
     <addaction name="actionModule_properties"/>
    </widget>
+   <widget class="QMenu" name="menuSong">
+    <property name="title">
+     <string>Order</string>
+    </property>
+    <addaction name="actionInsert_order"/>
+    <addaction name="actionRemove_order"/>
+    <addaction name="actionDuplicate_order"/>
+    <addaction name="actionDuplicate_pattern"/>
+    <addaction name="separator"/>
+    <addaction name="actionMove_order_up"/>
+    <addaction name="actionMove_order_down"/>
+   </widget>
+   <widget class="QMenu" name="menuInstrument">
+    <property name="title">
+     <string>Instrument</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuWaveform">
+    <property name="title">
+     <string>Waveform</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuSong"/>
+   <addaction name="menuInstrument"/>
+   <addaction name="menuWaveform"/>
    <addaction name="menuTracker"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
@@ -181,59 +213,51 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockModuleProperties">
-   <property name="maximumSize">
-    <size>
-     <width>301</width>
-     <height>112</height>
-    </size>
+   <property name="floating">
+    <bool>false</bool>
    </property>
    <property name="windowTitle">
     <string>Module properties</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>1</number>
+    <number>4</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QFormLayout" name="formLayout_2">
-     <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Title</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
       <widget class="QLineEdit" name="modProp_titleEdit">
        <property name="maxLength">
         <number>30</number>
        </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Artist</string>
+       <property name="placeholderText">
+        <string>title</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item>
       <widget class="QLineEdit" name="modProp_artistEdit">
        <property name="maxLength">
         <number>30</number>
        </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Copyright</string>
+       <property name="placeholderText">
+        <string>artist</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item>
       <widget class="QLineEdit" name="modProp_copyrightEdit">
        <property name="maxLength">
         <number>30</number>
+       </property>
+       <property name="placeholderText">
+        <string>copyright</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPlainTextEdit" name="plainTextEdit">
+       <property name="placeholderText">
+        <string>Comments</string>
        </property>
       </widget>
      </item>
@@ -252,35 +276,20 @@
    </attribute>
    <addaction name="actionNew"/>
   </widget>
-  <widget class="QDockWidget" name="dockWidget">
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
-   </property>
-   <property name="allowedAreas">
-    <set>Qt::AllDockWidgetAreas</set>
-   </property>
+  <widget class="QDockWidget" name="dockWidget_3">
    <property name="windowTitle">
-    <string>Browser</string>
+    <string>Instruments</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>1</number>
+    <number>4</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents_3">
-    <layout class="QHBoxLayout" name="horizontalLayout">
+   <widget class="QWidget" name="dockWidgetContents_5">
+    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1">
      <item>
-      <widget class="QTreeView" name="treeView"/>
+      <widget class="QListView" name="listView_3"/>
      </item>
     </layout>
    </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWidget_2">
-   <property name="windowTitle">
-    <string>Song properties</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_4"/>
   </widget>
   <action name="actionNew">
    <property name="text">
@@ -310,6 +319,9 @@
    </property>
    <property name="statusTip">
     <string>Save the module</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionSave_As">
@@ -495,6 +507,36 @@
    </property>
    <property name="text">
     <string>Module properties</string>
+   </property>
+  </action>
+  <action name="actionInsert_order">
+   <property name="text">
+    <string>Insert order</string>
+   </property>
+  </action>
+  <action name="actionRemove_order">
+   <property name="text">
+    <string>Remove order</string>
+   </property>
+  </action>
+  <action name="actionMove_order_up">
+   <property name="text">
+    <string>Move order up</string>
+   </property>
+  </action>
+  <action name="actionMove_order_down">
+   <property name="text">
+    <string>Move order down</string>
+   </property>
+  </action>
+  <action name="actionDuplicate_order">
+   <property name="text">
+    <string>Duplicate order</string>
+   </property>
+  </action>
+  <action name="actionDuplicate_pattern">
+   <property name="text">
+    <string>Duplicate pattern</string>
    </property>
   </action>
  </widget>

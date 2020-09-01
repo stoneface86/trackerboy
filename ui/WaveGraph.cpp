@@ -23,7 +23,7 @@ WaveGraph::WaveGraph(QWidget *parent) :
 {
     calcGraph();
     setMouseTracking(true);
-    setFixedSize(400, 200);
+    //setFixedSize(400, 200);
 }
 
 void WaveGraph::setData(uint8_t *_data) {
