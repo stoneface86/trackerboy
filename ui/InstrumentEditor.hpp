@@ -16,5 +16,12 @@ public:
 
 private slots:
     void onChannelSelect(int channel);
+    void envelopeChanged(int value);
+    void envelopeEditChanged(int value);
+
+private:
+    //void updateEnvelopeEditor();
+
+    bool mUpdating;
 
 };

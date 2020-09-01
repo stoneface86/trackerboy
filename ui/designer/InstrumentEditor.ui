@@ -158,6 +158,9 @@
             <property name="maximum">
              <number>255</number>
             </property>
+            <property name="value">
+             <number>240</number>
+            </property>
             <property name="displayIntegerBase">
              <number>16</number>
             </property>
@@ -268,7 +271,14 @@
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QSpinBox" name="mEnvelopeInitVolumeSpin"/>
+             <widget class="QSpinBox" name="mEnvelopeInitVolumeSpin">
+              <property name="maximum">
+               <number>15</number>
+              </property>
+              <property name="value">
+               <number>15</number>
+              </property>
+             </widget>
             </item>
             <item row="1" column="1">
              <widget class="QCheckBox" name="mEnvelopeIncreasingCheckbox">
@@ -285,7 +295,11 @@
              </widget>
             </item>
             <item row="2" column="1">
-             <widget class="QSpinBox" name="mEnvelopePeriodSpin"/>
+             <widget class="QSpinBox" name="mEnvelopePeriodSpin">
+              <property name="maximum">
+               <number>7</number>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
