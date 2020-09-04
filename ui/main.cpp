@@ -13,8 +13,5 @@ int main(int argc, char *argv[]) {
     MainWindow win;
     win.show();
 
-    InstrumentEditor edit(&win);
-    edit.show();
-
     return app.exec();
 }

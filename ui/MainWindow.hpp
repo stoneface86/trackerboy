@@ -7,6 +7,8 @@
 #include "designer/ui_MainWindow.h"
 #pragma warning(pop)
 
+#include "InstrumentEditor.hpp"
+
 class MainWindow : public QMainWindow, private Ui::MainWindow {
 
     Q_OBJECT
@@ -14,5 +16,9 @@ class MainWindow : public QMainWindow, private Ui::MainWindow {
 public:
     explicit MainWindow();
 
+
+private:
+
+    InstrumentEditor *mInstrumentEditor;
 
 };

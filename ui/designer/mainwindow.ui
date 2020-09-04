@@ -20,7 +20,7 @@
    <bool>false</bool>
   </property>
   <property name="dockOptions">
-   <set>QMainWindow::AnimatedDocks</set>
+   <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
   </property>
   <widget class="MainWidget" name="centralwidget"/>
   <widget class="QMenuBar" name="menubar">
@@ -125,14 +125,43 @@
     <property name="title">
      <string>Instrument</string>
     </property>
+    <addaction name="actionNew_instrument"/>
+    <addaction name="actionRemove_instrument"/>
+    <addaction name="actionDuplicate_instrument"/>
+    <addaction name="separator"/>
+    <addaction name="actionImport_from_file"/>
+    <addaction name="actionExport_to_file"/>
+    <addaction name="separator"/>
+    <addaction name="actionEdit_instrument"/>
    </widget>
    <widget class="QMenu" name="menuWaveform">
     <property name="title">
      <string>Waveform</string>
     </property>
+    <addaction name="actionNew_waveform"/>
+    <addaction name="actionRemove_waveform"/>
+    <addaction name="actionDuplicate_waveform"/>
+    <addaction name="separator"/>
+    <addaction name="actionImport_from_file_2"/>
+    <addaction name="actionExport_to_file_2"/>
+    <addaction name="separator"/>
+    <addaction name="actionEdit_waveform"/>
+   </widget>
+   <widget class="QMenu" name="menuSong_2">
+    <property name="title">
+     <string>Module</string>
+    </property>
+    <addaction name="actionNew_song"/>
+    <addaction name="actionRemove_song"/>
+    <addaction name="separator"/>
+    <addaction name="actionNext_song"/>
+    <addaction name="actionPrevious_song"/>
+    <addaction name="separator"/>
+    <addaction name="actionModule_properties_2"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuSong_2"/>
    <addaction name="menuSong"/>
    <addaction name="menuInstrument"/>
    <addaction name="menuWaveform"/>
@@ -153,6 +182,18 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QGridLayout" name="gridLayout_2">
+     <property name="leftMargin">
+      <number>4</number>
+     </property>
+     <property name="topMargin">
+      <number>4</number>
+     </property>
+     <property name="rightMargin">
+      <number>4</number>
+     </property>
+     <property name="bottomMargin">
+      <number>4</number>
+     </property>
      <item row="0" column="0">
       <layout class="QGridLayout" name="gridLayout">
        <item row="0" column="1">
@@ -212,61 +253,9 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="dockModuleProperties">
-   <property name="floating">
-    <bool>false</bool>
-   </property>
+  <widget class="QToolBar" name="toolbarFile">
    <property name="windowTitle">
-    <string>Module properties</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>4</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
-      <widget class="QLineEdit" name="modProp_titleEdit">
-       <property name="maxLength">
-        <number>30</number>
-       </property>
-       <property name="placeholderText">
-        <string>title</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="modProp_artistEdit">
-       <property name="maxLength">
-        <number>30</number>
-       </property>
-       <property name="placeholderText">
-        <string>artist</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="modProp_copyrightEdit">
-       <property name="maxLength">
-        <number>30</number>
-       </property>
-       <property name="placeholderText">
-        <string>copyright</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPlainTextEdit" name="plainTextEdit">
-       <property name="placeholderText">
-        <string>Comments</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QToolBar" name="toolBar">
-   <property name="windowTitle">
-    <string>toolBar</string>
+    <string>File toolbar</string>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -275,20 +264,93 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionNew"/>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="separator"/>
+   <addaction name="actionCut"/>
+   <addaction name="actionCopy"/>
+   <addaction name="actionPaste"/>
   </widget>
   <widget class="QDockWidget" name="dockWidget_3">
    <property name="windowTitle">
     <string>Instruments</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>4</number>
+    <number>2</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_5">
     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1">
      <item>
-      <widget class="QListView" name="listView_3"/>
+      <widget class="QListView" name="mInstrumentView">
+       <property name="isWrapping" stdset="0">
+        <bool>true</bool>
+       </property>
+       <property name="viewMode">
+        <enum>QListView::IconMode</enum>
+       </property>
+      </widget>
      </item>
     </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget">
+   <property name="windowTitle">
+    <string>Waveforms</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_3">
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="0" column="0">
+      <widget class="QListView" name="listView"/>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QToolBar" name="toolBar_2">
+   <property name="windowTitle">
+    <string>Order toolbar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionInsert_order"/>
+   <addaction name="actionRemove_order"/>
+   <addaction name="actionMove_order_up"/>
+   <addaction name="actionMove_order_down"/>
+   <addaction name="actionDuplicate_order"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar_3">
+   <property name="windowTitle">
+    <string>Tracker toolbar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionPlay"/>
+   <addaction name="actionPlay_Order"/>
+   <addaction name="actionStop"/>
+   <addaction name="actionToggle_edit_mode"/>
+   <addaction name="separator"/>
+   <addaction name="actionPrevious_song"/>
+   <addaction name="actionNext_song"/>
+  </widget>
+  <widget class="QDockWidget" name="dockWidget_2">
+   <property name="windowTitle">
+    <string>Song properties</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_4">
+    <layout class="QVBoxLayout" name="verticalLayout"/>
    </widget>
   </widget>
   <action name="actionNew">
@@ -539,6 +601,106 @@
     <string>Duplicate pattern</string>
    </property>
   </action>
+  <action name="actionNew_instrument">
+   <property name="text">
+    <string>New instrument</string>
+   </property>
+  </action>
+  <action name="actionRemove_instrument">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove instrument</string>
+   </property>
+  </action>
+  <action name="actionDuplicate_instrument">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Duplicate instrument</string>
+   </property>
+  </action>
+  <action name="actionImport_from_file">
+   <property name="text">
+    <string>Import from file...</string>
+   </property>
+  </action>
+  <action name="actionExport_to_file">
+   <property name="text">
+    <string>Export to file...</string>
+   </property>
+  </action>
+  <action name="actionEdit_instrument">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit instrument</string>
+   </property>
+  </action>
+  <action name="actionNew_waveform">
+   <property name="text">
+    <string>New waveform</string>
+   </property>
+  </action>
+  <action name="actionRemove_waveform">
+   <property name="text">
+    <string>Remove waveform</string>
+   </property>
+  </action>
+  <action name="actionDuplicate_waveform">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Duplicate waveform</string>
+   </property>
+  </action>
+  <action name="actionImport_from_file_2">
+   <property name="text">
+    <string>Import from file...</string>
+   </property>
+  </action>
+  <action name="actionExport_to_file_2">
+   <property name="text">
+    <string>Export to file...</string>
+   </property>
+  </action>
+  <action name="actionEdit_waveform">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Edit waveform</string>
+   </property>
+  </action>
+  <action name="actionNew_song">
+   <property name="text">
+    <string>New song</string>
+   </property>
+  </action>
+  <action name="actionRemove_song">
+   <property name="text">
+    <string>Remove song</string>
+   </property>
+  </action>
+  <action name="actionNext_song">
+   <property name="text">
+    <string>Next song</string>
+   </property>
+  </action>
+  <action name="actionPrevious_song">
+   <property name="text">
+    <string>Previous song</string>
+   </property>
+  </action>
+  <action name="actionModule_properties_2">
+   <property name="text">
+    <string>Module properties</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -555,70 +717,5 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>actionOrders</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>dockOrders</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>127</x>
-     <y>432</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>dockOrders</sender>
-   <signal>visibilityChanged(bool)</signal>
-   <receiver>actionOrders</receiver>
-   <slot>setChecked(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>150</x>
-     <y>449</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>dockModuleProperties</sender>
-   <signal>visibilityChanged(bool)</signal>
-   <receiver>actionModule_properties</receiver>
-   <slot>setChecked(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>107</x>
-     <y>938</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionModule_properties</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>dockModuleProperties</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>107</x>
-     <y>938</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>
