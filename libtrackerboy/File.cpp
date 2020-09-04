@@ -187,7 +187,21 @@ FormatError File::loadModule(std::istream &stream, Module &mod) {
         return error;
     }
 
-    error = loadTable(stream, mod.songTable());
+    auto &songs = mod.songs();
+
+    uint8_t songCount;
+    readAndCheck(stream, &songCount, 1);
+    size_t adjSongCount = static_cast<size_t>(songCount) + 1;
+    songs.resize(adjSongCount);
+    for (size_t i = 0; i != adjSongCount; ++i) {
+        auto &song = songs[i];
+        error = deserialize(stream, song);
+        if (error != FormatError::none) {
+            return error;
+        }
+    }
+
+
     if (error != FormatError::none) {
         return error;
     }
@@ -206,10 +220,16 @@ FormatError File::saveModule(std::ostream &stream, Module &mod) {
         return error;
     }
 
-    error = saveTable(stream, mod.songTable());
-    if (error != FormatError::none) {
-        return error;
+    auto &songs = mod.songs();
+    uint8_t songCount = static_cast<uint8_t>(songs.size()) - 1;
+    writeAndCheck(stream, &songCount, 1);
+    for (auto &song : songs) {
+        error = serialize(stream, song);
+        if (error != FormatError::none) {
+            return error;
+        }
     }
+    
 
     error = saveTable(stream, mod.waveTable());
 
@@ -483,11 +503,9 @@ FormatError File::serialize(std::ostream &stream, Waveform &wave) {
 }
 
 template FormatError File::loadTable<Instrument>(std::istream &stream, InstrumentTable &table);
-template FormatError File::loadTable<Song>(std::istream &stream, SongTable &table);
 template FormatError File::loadTable<Waveform>(std::istream &stream, WaveTable &table);
 
 template FormatError File::saveTable<Instrument>(std::ostream &stream, InstrumentTable &table);
-template FormatError File::saveTable<Song>(std::ostream &stream, SongTable &table);
 template FormatError File::saveTable<Waveform>(std::ostream &stream, WaveTable &table);
 
 

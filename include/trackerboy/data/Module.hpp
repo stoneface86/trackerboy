@@ -23,7 +23,8 @@ public:
 
     std::string copyright();
 
-    SongTable& songTable();
+    //SongTable& songTable();
+    std::vector<Song>& songs();
 
     WaveTable& waveTable();
 
@@ -38,7 +39,8 @@ public:
 
 private:
 
-    SongTable mSongTable;
+    //SongTable mSongTable;
+    std::vector<Song> mSongs;
     WaveTable mWaveTable;
     InstrumentTable mInstrumentTable;
 

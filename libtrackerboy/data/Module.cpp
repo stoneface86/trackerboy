@@ -10,7 +10,7 @@ namespace trackerboy {
 
 
 Module::Module() :
-    mSongTable(),
+    mSongs(),
     mWaveTable(),
     mInstrumentTable(),
     mTitle(""),
@@ -23,7 +23,7 @@ void Module::clear() {
     mTitle = "";
     mArtist = "";
     mCopyright = "";
-    mSongTable.clear();
+    mSongs.clear();
     mInstrumentTable.clear();
     mWaveTable.clear();
 }
@@ -40,8 +40,12 @@ std::string Module::copyright() {
     return mCopyright;
 }
 
-SongTable& Module::songTable() {
-    return mSongTable;
+//SongTable& Module::songTable() {
+//    return mSongTable;
+//}
+
+std::vector<Song>& Module::songs() {
+    return mSongs;
 }
 
 InstrumentTable& Module::instrumentTable() {

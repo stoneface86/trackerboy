@@ -202,7 +202,6 @@ void Table<T>::findNextId() {
 // we will only use the following tables:
 
 template class Table<Instrument>;
-template class Table<Song>;
 template class Table<Waveform>;
 
 }

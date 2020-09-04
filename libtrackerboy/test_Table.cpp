@@ -8,7 +8,7 @@ using Catch::Contains;
 // https://github.com/catchorg/Catch2/issues/1134
 static constexpr auto MAX_SIZE = SongTable::MAX_SIZE;
 
-TEMPLATE_TEST_CASE("table is empty", "[Table]", InstrumentTable, SongTable, WaveTable) {
+TEMPLATE_TEST_CASE("table is empty", "[Table]", InstrumentTable, WaveTable) {
 
     TestType table;
 
@@ -26,7 +26,7 @@ TEMPLATE_TEST_CASE("table is empty", "[Table]", InstrumentTable, SongTable, Wave
 
 }
 
-TEMPLATE_TEST_CASE("table is full", "[Table]", Instrument, Song, Waveform) {
+TEMPLATE_TEST_CASE("table is full", "[Table]", Instrument, Waveform) {
 
     Table<TestType> table;
     // populate the table
