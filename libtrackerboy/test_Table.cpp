@@ -6,7 +6,7 @@ using namespace trackerboy;
 using Catch::Contains;
 
 // https://github.com/catchorg/Catch2/issues/1134
-static constexpr auto MAX_SIZE = SongTable::MAX_SIZE;
+static constexpr auto MAX_SIZE = BaseTable::MAX_SIZE;
 
 TEMPLATE_TEST_CASE("table is empty", "[Table]", InstrumentTable, WaveTable) {
 

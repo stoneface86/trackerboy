@@ -286,13 +286,13 @@ FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     //// write all items in the table in this order: id, name, item
     for (auto iter : table) {
         // id
-        uint8_t id = iter.id;
+        uint8_t id = iter.index;
         writeAndCheck(stream, &id, 1);
         // name
         writeAndCheck(stream, const_cast<char*>(iter.name.c_str()), iter.name.size() + 1);
 
         // item
-        FormatError error = serialize(stream, iter.value);
+        FormatError error = serialize(stream, *(table[id]));
         if (error != FormatError::none) {
             return error;
         }

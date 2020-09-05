@@ -5,17 +5,22 @@
 
 #include "trackerboy/data/Table.hpp"
 
+#include "model/BaseTableModel.hpp"
+
+// Model for QListView (Waveforms dock widget) or QComboBox
 // used by QComboBox for selecting a waveform in the Instrument editor or Wave editor
-class WaveListModel : public QAbstractListModel {
+class WaveListModel : public BaseTableModel {
 
     Q_OBJECT
 
 public:
     WaveListModel(trackerboy::WaveTable &table, QObject *parent = nullptr);
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-
-    QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
+    
+protected:
+    QVariant iconData(const QModelIndex &index) const override;
+    void insertItemInTable() override;
+    void removeItemInTable(uint8_t index) override;
 
 private:
 

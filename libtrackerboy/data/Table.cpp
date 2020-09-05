@@ -55,24 +55,74 @@
 // lookups, as well as improving the public interface
 //
 
+
 namespace trackerboy {
 
-
-template <class T>
-Table<T>::TableItem::TableItem(uint8_t id, std::string name, T value) :
-    id(id),
-    name(name),
-    value(value) 
-{        
+BaseTable::BaseTable() :
+    mMap(),
+    mMapList(),
+    mNextId(0),
+    mLastId(0)
+{
+    mMap.fill(0xFF);
 }
+
+BaseTable::Iterator BaseTable::begin() {
+    return mMapList.cbegin();
+}
+
+BaseTable::Iterator BaseTable::end() {
+    return mMapList.cend();
+}
+
+uint8_t BaseTable::lastIndex() {
+    return mLastId;
+}
+
+std::string BaseTable::name(uint8_t id) {
+    uint8_t index = mMap[id];
+    if (index > mMapList.size()) {
+        throw std::runtime_error("cannot get name: item does not exist");
+    } else {
+        return mMapList[index].name;
+    }
+}
+
+void BaseTable::setName(uint8_t id, std::string name) {
+    uint8_t index = mMap[id];
+    if (index > mMapList.size()) {
+        throw std::runtime_error("cannot set name: item does not exist");
+    } else {
+        mMapList[index].name = name;
+    }
+}
+
+size_t BaseTable::size() {
+    return mMapList.size();
+}
+
+void BaseTable::clear() {
+    mMap.fill(0xFF);
+    mMapList.clear();
+    mNextId = 0;
+    mLastId = 0;
+}
+
+void BaseTable::findNextId() {
+    size_t size = mMapList.size();
+    if (size < MAX_SIZE) {
+        // find the next available id
+        while (mMap[++mNextId] < size);
+    }
+}
+
 
 
 template <class T>
 Table<T>::Table() :
-    mItemData(),
-    mNextId(0) 
+    mItems(),
+    BaseTable()
 {
-    mMap.fill(MAX_SIZE - 1);
 }
 
 template <class T>
@@ -83,28 +133,18 @@ Table<T>::~Table() {
 template <class T>
 T* Table<T>::operator[](uint8_t id) {
     uint8_t index = mMap[id];
-    if (index > mItemData.size()) {
+    if (index > mMapList.size()) {
         return nullptr;
     } else {
-        return &mItemData[index].value;
+        return &mItems[index];
     }
 }
 
-template <class T>
-typename Table<T>::Iterator Table<T>::begin() {
-    return mItemData.begin();
-}
 
 template <class T>
 void Table<T>::clear() {
-    mItemData.clear();
-    mMap.fill(MAX_SIZE - 1);
-    mNextId = 0;
-}
-
-template <class T>
-typename Table<T>::Iterator Table<T>::end() {
-    return mItemData.end();
+    mItems.clear();
+    BaseTable::clear();
 }
 
 template <class T>
@@ -114,8 +154,9 @@ T& Table<T>::insert() {
 
 template <class T>
 T& Table<T>::insert(uint8_t id, std::string name) {
+    
     uint8_t *mapping = mMap.data() + id;
-    size_t size = mItemData.size();
+    size_t size = mMapList.size();
 
     if (*mapping < size) {
         throw std::runtime_error("cannot insert: item already exists");
@@ -123,50 +164,42 @@ T& Table<T>::insert(uint8_t id, std::string name) {
         throw std::runtime_error("cannot insert: table is full");
     }
 
-    mItemData.emplace_back(id, name, T());
+    mItems.emplace_back();
+    mMapList.push_back({ id, name });
     uint8_t itemIndex = static_cast<uint8_t>(size);
-    TableItem &item = mItemData[itemIndex];
-    //item.id = id;
-    //item.name = name;
+    
 
+    mLastId = id;
     *mapping = itemIndex;
     if (mNextId == id) {
         findNextId();
     }
 
-    return item.value;
-}
+    return mItems[itemIndex];
 
-template <class T>
-std::string Table<T>::name(uint8_t id) {
-    uint8_t index = mMap[id];
-    if (index > mItemData.size()) {
-        throw std::runtime_error("cannot get name: item does not exist");
-    } else {
-        return mItemData[index].name;
-    }
-}
-
-template <class T>
-void Table<T>::setName(uint8_t id, std::string name) {
-    uint8_t index = mMap[id];
-    if (index > mItemData.size()) {
-        throw std::runtime_error("cannot set name: item does not exist");
+    /*auto iter = mMap.find(id);
+    if (iter != mMap.end()) {
+        throw std::runtime_error("cannot insert: item already exists");
+    } else if (mMap.size() == MAX_SIZE) {
+        throw std::runtime_error("cannot insert: table is full");
     }
 
-    mItemData[index].name = name;
-}
+    mItems.emplace_back();
+    uint8_t itemIndex = static_cast<uint8_t>(mItems.size()) - 1;
+    mMap.insert({ id, {itemIndex, name} });
 
-template <class T>
-size_t Table<T>::size() {
-    return mItemData.size();
-}
+    mLastId = id;
+    if (mNextId == id) {
+        findNextId();
+    }
 
+    return mItems[itemIndex];*/
+}
 
 template <class T>
 void Table<T>::remove(uint8_t id) {
     uint8_t index = mMap[id];
-    if (index > mItemData.size()) {
+    if (index > mItems.size()) {
         throw std::runtime_error("cannot remove: item does not exist");
     }
 
@@ -178,23 +211,15 @@ void Table<T>::remove(uint8_t id) {
     mMap[id] = MAX_SIZE - 1;
 
     // remove the item
-    mItemData.erase(mItemData.begin() + index);
+    mMapList.erase(mMapList.begin() + index);
+    mItems.erase(mItems.begin() + index);
     // now adjust the mappings for all items ahead of the one we erased
-    for (uint8_t i = index; i != mItemData.size(); ++i) {
-        mMap[mItemData[i].id] = i;
+    for (uint8_t i = index; i != mItems.size(); ++i) {
+        mMap[mMapList[i].index] = i;
     }
 
     if (mNextId > id) {
         mNextId = id; // always use the lowest available id first
-    }
-}
-
-template <class T>
-void Table<T>::findNextId() {
-    size_t size = mItemData.size();
-    if (size < MAX_SIZE) {
-        // find the next available id
-        while (mMap[++mNextId] < size);
     }
 }
 
