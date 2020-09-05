@@ -281,7 +281,7 @@
    <widget class="QWidget" name="dockWidgetContents_5">
     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1">
      <item>
-      <widget class="QListView" name="mInstrumentView">
+      <widget class="QListView" name="mInstrumentListView">
        <property name="isWrapping" stdset="0">
         <bool>true</bool>
        </property>
@@ -303,7 +303,14 @@
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QGridLayout" name="gridLayout_3">
      <item row="0" column="0">
-      <widget class="QListView" name="listView"/>
+      <widget class="QListView" name="mWaveformListView">
+       <property name="flow">
+        <enum>QListView::TopToBottom</enum>
+       </property>
+       <property name="viewMode">
+        <enum>QListView::IconMode</enum>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>

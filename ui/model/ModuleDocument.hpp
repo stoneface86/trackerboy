@@ -3,11 +3,12 @@
 
 #include <QObject>
 #include <QUndoStack>
+#include <QStringListModel>
 
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/File.hpp"
 
-#include "model/ModuleModel.hpp"
+#include "model/WaveListModel.hpp"
 
 
 //
@@ -22,6 +23,8 @@ class ModuleDocument : public QObject {
 public:
     ModuleDocument(QObject *parent = nullptr);
 
+    WaveListModel* waveListModel();
+
     bool isModified() const;
 
     //void save(QString)
@@ -31,6 +34,8 @@ signals:
 
 public slots:
     void clear();
+    void addInstrument();
+    void addWaveform();
 
 
 private:
@@ -42,7 +47,9 @@ private:
     trackerboy::Module mModule;
     trackerboy::File mFile;
 
-    ModuleModel *mModel;
+    WaveListModel *mWaveListModel;
+    
+    //ModuleModel *mModel;
 
     // the undo stack is for the current song, the stack is
     // cleared when changing songs

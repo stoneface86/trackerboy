@@ -5,8 +5,7 @@
 
 #include <QWidget>
 
-#include "trackerboy/data/Module.hpp"
-
+#include "model/ModuleDocument.hpp"
 #include "model/WaveListModel.hpp"
 
 #pragma warning(push, 0)
@@ -18,11 +17,17 @@ class WaveEditor : public QWidget, private Ui::WaveEditor {
     Q_OBJECT
 
 public:
-    explicit WaveEditor(trackerboy::Module &mod);
+    explicit WaveEditor(ModuleDocument *doc, QWidget *parent = nullptr);
+
+public slots:
+    void selectWaveform(const QModelIndex &index);
+
 
 private slots:
     void onSampleChanged(QPoint sample);
     void onWaveramEdited(const QString &text);
+    void selectionChanged(int index);
+    void nameEdited(const QString &text);
     
     // function buttons
     void onRotateLeft();
@@ -31,6 +36,8 @@ private slots:
     void onClear();
 
 private:
+
+    void pack();
 
     enum class Preset {
         square,
@@ -43,8 +50,9 @@ private:
 
     void setFromPreset(Preset preset);
 
-    trackerboy::Module &mMod;
-
+    //trackerboy::Module &mMod;
+    ModuleDocument *mDocument;
+    trackerboy::Waveform *mCurrentWaveform;
 
     // unpacked version of the waveform data for convenience
     std::array<uint8_t, 32> mWavedata;

@@ -32,3 +32,13 @@ void BaseTableModel::addItem() {
     endInsertRows();
 }
 
+QString BaseTableModel::name(int index) {
+    auto iter = mBaseTable.begin() + index;
+    return QString::fromStdString(iter->name);
+}
+
+void BaseTableModel::setName(int index, QString name) {
+    auto iter = mBaseTable.begin() + index;
+    mBaseTable.setName(iter->index, name.toStdString());
+    emit dataChanged(createIndex(index, 0, nullptr), createIndex(index, 0, nullptr), { Qt::DisplayRole });
+}

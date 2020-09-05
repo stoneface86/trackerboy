@@ -10,7 +10,7 @@ set(UI_SRC
     "designer/WaveEditor.ui"
     "designer/InstrumentEditor.ui"
     "model/BaseTableModel.cpp"
-    #"model/ModuleDocument.cpp"
+    "model/ModuleDocument.cpp"
     #"model/ModuleModel.cpp"
     "model/WaveListModel.cpp"
     "resources/keys.qrc"

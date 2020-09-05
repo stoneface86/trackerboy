@@ -16,6 +16,8 @@ class WaveListModel : public BaseTableModel {
 public:
     WaveListModel(trackerboy::WaveTable &table, QObject *parent = nullptr);
 
+    // get the waveform associated with the model index
+    trackerboy::Waveform* waveform(int modelIndex);
     
 protected:
     QVariant iconData(const QModelIndex &index) const override;

@@ -9,16 +9,17 @@
 #include "WaveEditor.hpp"
 
 
-WaveEditor::WaveEditor(trackerboy::Module &mod) :
-    mMod(mod),
+WaveEditor::WaveEditor(ModuleDocument *document, QWidget *parent) :
+    mDocument(document),
+    mCurrentWaveform(nullptr),
     mWavedata{0},
-    QWidget()
+    QWidget(parent)
 {
     setupUi(this);
     setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
 
-    WaveListModel *model = new WaveListModel(mod.waveTable(), this);
-    mWaveSelect->setModel(model);
+    //WaveListModel *model = new WaveListModel(mod.waveTable(), this);
+    mWaveSelect->setModel(document->waveListModel());
 
     // let the graph widget use our sample data to display
     mWaveGraph->setData(mWavedata.data());
@@ -33,6 +34,8 @@ WaveEditor::WaveEditor(trackerboy::Module &mod) :
     connect(mInvertButton, &QPushButton::clicked, this, &WaveEditor::onInvert);
     connect(mRotateLeftButton, &QPushButton::clicked, this, &WaveEditor::onRotateLeft);
     connect(mRotateRightButton, &QPushButton::clicked, this, &WaveEditor::onRotateRight);
+    connect(mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WaveEditor::selectionChanged);
+    connect(mNameEdit, &QLineEdit::textEdited, this, &WaveEditor::nameEdited);
 
     // presets
     connect(mPresetSineButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sine); });
@@ -41,11 +44,54 @@ WaveEditor::WaveEditor(trackerboy::Module &mod) :
     connect(mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
 }
 
+void WaveEditor::selectWaveform(const QModelIndex &index) {
+    if (mWaveSelect->currentIndex() != index.row()) {
+        mWaveSelect->setCurrentIndex(index.row());
+        // get the waveform data
+    }
+}
+
+// when the user changes mWaveSelect or is set from the MainWindow
+void WaveEditor::selectionChanged(int index) {
+    auto model = mDocument->waveListModel();
+    
+    mCurrentWaveform = model->waveform(index);
+    auto data = mCurrentWaveform->data();
+    // unpack the waveform into mWavedata
+    for (int i = 0, j = 0; i != 16; ++i) {
+        uint8_t samples = data[i];
+        mWavedata[j++] = samples >> 4;
+        mWavedata[j++] = samples & 0xF;
+    }
+
+    updateWaveramText();
+    mNameEdit->setText(model->name(index));
+}
+
+void WaveEditor::nameEdited(const QString &text) {
+    // update the name change to the model
+    auto model = mDocument->waveListModel();
+    model->setName(mWaveSelect->currentIndex(), text);
+}
+
 void WaveEditor::onSampleChanged(QPoint point) {
     // user changed a sample using the graph control, so update the wave ram line edit
     auto text = mWaveramEdit->text();
     text.replace(point.x(), 1, QString::number(point.y(), 16).toUpper());
     mWaveramEdit->setText(text);
+
+    // update the current waveform's data
+    if (mCurrentWaveform != nullptr) {
+        int index = point.x() / 2;
+        auto data = mCurrentWaveform->data();
+        uint8_t sample = data[index];
+        if (!!(point.x() & 1)) {
+            sample = (sample & 0xF0) | point.y();
+        } else {
+            sample = (sample & 0x0F) | (point.y() << 4);
+        }
+        data[index] = sample;
+    }
 }
 
 void WaveEditor::onWaveramEdited(const QString &text) {
@@ -61,6 +107,7 @@ void WaveEditor::onWaveramEdited(const QString &text) {
     }
     // redraw the graph
     mWaveGraph->repaint();
+    pack();
 }
 
 
@@ -69,6 +116,7 @@ void WaveEditor::onWaveramEdited(const QString &text) {
 void WaveEditor::onClear() {
     std::fill_n(mWavedata.begin(), 32, 0);
     updateWaveramText();
+    pack();
 }
 
 void WaveEditor::onInvert() {
@@ -78,6 +126,7 @@ void WaveEditor::onInvert() {
         sample = (~sample) & 0xF;
     }
     updateWaveramText();
+    pack();
 }
 
 void WaveEditor::onRotateLeft() {
@@ -90,6 +139,7 @@ void WaveEditor::onRotateLeft() {
     // wrap-around
     mWavedata[31] = sampleFirst;
     updateWaveramText();
+    pack();
 }
 
 void WaveEditor::onRotateRight() {
@@ -102,6 +152,7 @@ void WaveEditor::onRotateRight() {
     // wrap-around
     mWavedata[0] = sampleEnd;
     updateWaveramText();
+    pack();
 }
 
 void WaveEditor::updateWaveramText() {
@@ -184,4 +235,15 @@ void WaveEditor::setFromPreset(Preset preset) {
     }
 
     updateWaveramText();
+    pack();
+}
+
+void WaveEditor::pack() {
+    if (mCurrentWaveform != nullptr) {
+        auto data = mCurrentWaveform->data();
+        for (int i = 0, j = 0; i != 16; ++i) {
+            data[i] = (mWavedata[j++] << 4) | (mWavedata[j++]);
+        }
+        
+    }
 }

@@ -15,6 +15,10 @@ public:
 
     void addItem();
 
+    QString name(int index);
+
+    void setName(int index, QString name);
+
 protected:
     BaseTableModel(trackerboy::BaseTable &table, QObject *parent = nullptr);
 

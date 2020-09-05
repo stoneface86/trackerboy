@@ -7,6 +7,11 @@ WaveListModel::WaveListModel(trackerboy::WaveTable &table, QObject *parent) :
 {
 }
 
+trackerboy::Waveform* WaveListModel::waveform(int modelIndex) {
+    auto iter = mBaseTable.begin() + modelIndex;
+    return static_cast<trackerboy::WaveTable&>(mBaseTable)[iter->index];
+}
+
 QVariant WaveListModel::iconData(const QModelIndex &index) const {
     return QVariant();
 }
