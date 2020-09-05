@@ -17,6 +17,9 @@ WIP! This project is currently in the development phase (major version 0).
 
 ## Status
 
+### Wave Editor Demo
+![Wave Editor Demo](/misc/wave_editor_demo.gif)
+
 The library is (almost) finished and the UI is being worked on now.
 
 Here is a general list of what needs to be completed:
