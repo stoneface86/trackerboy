@@ -9,6 +9,10 @@ DataItem::DataItem() :
 {
 }
 
+DataItem::~DataItem() {
+
+}
+
 uint8_t DataItem::id() const noexcept {
     return mId;
 }
@@ -23,6 +27,36 @@ void DataItem::setId(uint8_t id) noexcept {
 
 void DataItem::setName(std::string name) noexcept {
     mName = name;
+}
+
+bool DataItem::serialize(std::ofstream &stream) noexcept {
+    // id
+    stream.write(reinterpret_cast<const char *>(&mId), 1);
+    if (!stream.good()) {
+        return false;
+    }
+
+    // name
+    stream.write(mName.c_str(), mName.size() + 1);
+    if (!stream.good()) {
+        return false;
+    }
+
+    return serializeData(stream);
+}
+
+bool DataItem::deserialize(std::ifstream &stream) noexcept {
+    stream.read(reinterpret_cast<char *>(&mId), 1);
+    if (!stream.good()) {
+        return false;
+    }
+
+    std::getline(stream, mName, '\0');
+    if (!stream.good()) {
+        return false;
+    }
+
+    return deserializeData(stream);
 }
 
 

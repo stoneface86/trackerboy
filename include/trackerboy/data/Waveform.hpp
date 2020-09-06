@@ -27,6 +27,11 @@ public:
 
     uint8_t& operator[](int index);
 
+protected:
+    virtual bool serializeData(std::ofstream &stream) noexcept override;
+    virtual bool deserializeData(std::ifstream &stream) noexcept override;
+
+
 private:
     //uint8_t mData[Gbs::WAVE_RAMSIZE];
     std::array<uint8_t, Gbs::WAVE_RAMSIZE> mData;

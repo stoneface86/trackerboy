@@ -36,6 +36,10 @@ public:
 
     Data& data();
 
+protected:
+    virtual bool serializeData(std::ofstream &stream) noexcept override;
+    virtual bool deserializeData(std::ifstream &stream) noexcept override;
+
 private:
     Data mData;
 };
