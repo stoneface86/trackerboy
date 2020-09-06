@@ -276,7 +276,7 @@
     <string>Instruments</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>2</number>
+    <number>4</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_5">
     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1">
@@ -298,12 +298,15 @@
     <string>Waveforms</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>2</number>
+    <number>4</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QGridLayout" name="gridLayout_3">
      <item row="0" column="0">
       <widget class="QListView" name="mWaveformListView">
+       <property name="movement">
+        <enum>QListView::Static</enum>
+       </property>
        <property name="flow">
         <enum>QListView::TopToBottom</enum>
        </property>
@@ -354,10 +357,138 @@
     <string>Song properties</string>
    </property>
    <attribute name="dockWidgetArea">
-    <number>1</number>
+    <number>4</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
-    <layout class="QVBoxLayout" name="verticalLayout"/>
+    <layout class="QFormLayout" name="formLayout_3">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Rows/Beat</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSpinBox" name="spinBox">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>128</number>
+       </property>
+       <property name="value">
+        <number>4</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Mode</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QRadioButton" name="mTempoRadioBtn">
+         <property name="text">
+          <string>Tempo</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="mSpeedRadioBtn">
+         <property name="text">
+          <string>Speed</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Tempo</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QSpinBox" name="mTempoSpin">
+       <property name="minimum">
+        <number>32</number>
+       </property>
+       <property name="maximum">
+        <number>3600</number>
+       </property>
+       <property name="value">
+        <number>150</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Speed</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Orders</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QSpinBox" name="spinBox_3">
+       <property name="minimum">
+        <number>1</number>
+       </property>
+       <property name="maximum">
+        <number>256</number>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="mSpeedSpin">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="decimals">
+        <number>3</number>
+       </property>
+       <property name="minimum">
+        <double>1.000000000000000</double>
+       </property>
+       <property name="maximum">
+        <double>30.875000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.125000000000000</double>
+       </property>
+       <property name="value">
+        <double>6.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <action name="actionNew">
@@ -653,6 +784,9 @@
    </property>
   </action>
   <action name="actionRemove_waveform">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Remove waveform</string>
    </property>
@@ -724,5 +858,38 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>mTempoRadioBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>mTempoSpin</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>95</x>
+     <y>111</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>200</x>
+     <y>138</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>mSpeedRadioBtn</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>mSpeedSpin</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>155</x>
+     <y>111</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>200</x>
+     <y>164</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
