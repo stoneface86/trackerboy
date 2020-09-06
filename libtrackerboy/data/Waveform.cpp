@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/Waveform.hpp"
+#include "trackerboy/data/Waveform.hpp"
 
 
 namespace trackerboy {

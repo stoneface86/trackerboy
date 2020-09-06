@@ -2,8 +2,8 @@
 #pragma once
 
 
+#include "trackerboy/data/Waveform.hpp"
 #include "trackerboy/synth/Generator.hpp"
-#include "trackerboy/synth/Waveform.hpp"
 
 
 namespace trackerboy {
