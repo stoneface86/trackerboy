@@ -2,7 +2,9 @@
 #pragma once
 
 #include <array>
+#include <istream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -10,6 +12,7 @@
 #include "trackerboy/data/DataItem.hpp"
 #include "trackerboy/data/Instrument.hpp"
 #include "trackerboy/data/Waveform.hpp"
+#include "trackerboy/fileformat.hpp"
 
 
 namespace trackerboy {
@@ -18,6 +21,8 @@ namespace trackerboy {
 class BaseTable {
 
 public:
+    virtual ~BaseTable() noexcept;
+
     // 8-bit IDs so we can only have 256 items
     static constexpr size_t MAX_SIZE = 256;
 
@@ -26,6 +31,8 @@ public:
     Iterator begin() const;
 
     void clear() noexcept;
+
+    FormatError deserialize(std::istream &stream) noexcept;
 
     Iterator end() const;
 
@@ -37,11 +44,12 @@ public:
 
     void remove(uint8_t id);
 
+    FormatError serialize(std::ostream &stream) noexcept;
+
     size_t size() const noexcept;
 
 protected:
     BaseTable() noexcept;
-    ~BaseTable() noexcept;
 
     void findNextId() noexcept;
 

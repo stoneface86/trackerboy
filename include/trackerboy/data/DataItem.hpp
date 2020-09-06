@@ -3,7 +3,8 @@
 
 #include <cstdint>
 #include <string>
-#include <fstream>
+#include <ostream>
+#include <istream>
 
 namespace trackerboy {
 
@@ -21,16 +22,16 @@ public:
 
     void setId(uint8_t id) noexcept;
 
-    bool serialize(std::ofstream &stream) noexcept;
+    bool serialize(std::ostream &stream) noexcept;
 
-    bool deserialize(std::ifstream &stream) noexcept;
+    bool deserialize(std::istream &stream) noexcept;
 
 
 protected:
     DataItem();
 
-    virtual bool serializeData(std::ofstream &stream) noexcept = 0;
-    virtual bool deserializeData(std::ifstream &stream) noexcept = 0;
+    virtual bool serializeData(std::ostream &stream) noexcept = 0;
+    virtual bool deserializeData(std::istream &stream) noexcept = 0;
     
     uint8_t mId;
     std::string mName;

@@ -28,6 +28,53 @@ BaseTable::Iterator BaseTable::begin() const {
     return mItemOrder.cbegin();
 }
 
+FormatError BaseTable::deserialize(std::istream &stream) noexcept {
+
+    // get the size of the table
+    uint16_t tableSize;
+    stream.read(reinterpret_cast<char*>(tableSize), sizeof(tableSize));
+    if (!stream.good()) {
+        return FormatError::readError;
+    }
+    tableSize = correctEndian(tableSize);
+
+    if (tableSize > MAX_SIZE) {
+        return FormatError::tableSizeBounds;
+    }
+
+    // clear just in case
+    clear();
+
+    for (uint16_t i = 0; i != tableSize; ++i) {
+        DataItem *item = createItem();
+        if (item->deserialize(stream)) {
+            // item deserialize successfully
+            auto id = item->id();
+            auto &ptr = (*mData)[id];
+            if (ptr) {
+                // duplicate id!
+                delete item;
+                return FormatError::tableDuplicateId;
+            }
+
+            ptr.reset(item);
+            // no need to sort, serializing writes items in order
+            mItemOrder.push_back(id);
+        } else {
+            // read error occurred, delete item and return
+            delete item;
+            return FormatError::readError;
+        }
+    }
+
+    // if there was an item with id = 0, find the next available id
+    if ((*mData)[0]) {
+        findNextId();
+    }
+
+    return FormatError::none;
+}
+
 BaseTable::Iterator BaseTable::end() const {
     return mItemOrder.cend();
 }
@@ -59,6 +106,24 @@ void BaseTable::remove(uint8_t id) {
     if (mNextId > id) {
         mNextId = id; // always use the lowest available id first
     }
+}
+
+FormatError BaseTable::serialize(std::ostream &stream) noexcept {
+
+    uint16_t count = correctEndian(static_cast<uint16_t>(size()));
+    stream.write(reinterpret_cast<const char *>(&count), sizeof(count));
+    if (!stream.good()) {
+        return FormatError::writeError;
+    }
+
+    for (auto id : mItemOrder) {
+        DataItem *item = get(id);
+        if (!item->serialize(stream)) {
+            return FormatError::writeError;
+        }
+    }
+
+    return FormatError::none;
 }
 
 size_t BaseTable::size() const noexcept {

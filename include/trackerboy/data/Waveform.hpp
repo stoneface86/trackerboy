@@ -28,8 +28,8 @@ public:
     uint8_t& operator[](int index);
 
 protected:
-    virtual bool serializeData(std::ofstream &stream) noexcept override;
-    virtual bool deserializeData(std::ifstream &stream) noexcept override;
+    virtual bool serializeData(std::ostream &stream) noexcept override;
+    virtual bool deserializeData(std::istream &stream) noexcept override;
 
 
 private:

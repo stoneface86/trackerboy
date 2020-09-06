@@ -114,6 +114,7 @@ enum class FormatError {
     invalidRevision,        // unsupported file revision
     invalidType,            // unknown payload type
     tableSizeBounds,        // size of table exceeds maximum
+    tableDuplicateId,       // 2 or more items with the same id
     readError,              // read error occurred
     writeError              // write error occurred
 };

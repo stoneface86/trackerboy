@@ -38,12 +38,12 @@ uint8_t& Waveform::operator[](int index) {
     return mData[index];
 }
 
-bool Waveform::serializeData(std::ofstream &stream) noexcept {
+bool Waveform::serializeData(std::ostream &stream) noexcept {
     stream.write(reinterpret_cast<const char *>(mData.data()), Gbs::WAVE_RAMSIZE);
     return stream.good();
 }
 
-bool Waveform::deserializeData(std::ifstream &stream) noexcept {
+bool Waveform::deserializeData(std::istream &stream) noexcept {
     stream.read(reinterpret_cast<char*>(mData.data()), Gbs::WAVE_RAMSIZE);
     return stream.good();
 }

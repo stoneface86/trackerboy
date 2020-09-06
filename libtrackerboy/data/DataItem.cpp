@@ -29,7 +29,7 @@ void DataItem::setName(std::string name) noexcept {
     mName = name;
 }
 
-bool DataItem::serialize(std::ofstream &stream) noexcept {
+bool DataItem::serialize(std::ostream &stream) noexcept {
     // id
     stream.write(reinterpret_cast<const char *>(&mId), 1);
     if (!stream.good()) {
@@ -45,7 +45,7 @@ bool DataItem::serialize(std::ofstream &stream) noexcept {
     return serializeData(stream);
 }
 
-bool DataItem::deserialize(std::ifstream &stream) noexcept {
+bool DataItem::deserialize(std::istream &stream) noexcept {
     stream.read(reinterpret_cast<char *>(&mId), 1);
     if (!stream.good()) {
         return false;
