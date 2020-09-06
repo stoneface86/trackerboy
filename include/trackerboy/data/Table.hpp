@@ -2,88 +2,79 @@
 #pragma once
 
 #include <array>
-#include <fstream>
+#include <memory>
 #include <string>
+#include <type_traits>
+#include <vector>
 
+#include "trackerboy/data/DataItem.hpp"
 #include "trackerboy/data/Instrument.hpp"
-#include "trackerboy/data/Song.hpp"
 #include "trackerboy/synth/Waveform.hpp"
-#include "trackerboy/fileformat.hpp"
 
 
 namespace trackerboy {
-
 
 // "thin-template" idiom
 class BaseTable {
 
 public:
-
-    struct Mapping {
-        uint8_t index;
-        std::string name;
-    };
-
-    using Iterator = std::vector<Mapping>::const_iterator;
-
     // 8-bit IDs so we can only have 256 items
     static constexpr size_t MAX_SIZE = 256;
 
-    // iterator for the mapping vecotr
-    Iterator begin();
+    using Iterator = std::vector<uint8_t>::const_iterator;
 
-    Iterator end();
+    Iterator begin() const;
 
-    uint8_t lastIndex();
+    void clear() noexcept;
 
-    //
-    // Get the name of the item at the given id.
-    //
-    std::string name(uint8_t id);
+    Iterator end() const;
 
-    //
-    // Set a new name for the given item if exists.
-    //
-    void setName(uint8_t id, std::string name);
+    DataItem* get(uint8_t id) const;
 
-    size_t size();
+    DataItem* getFromOrder(uint8_t order) const;
+
+    uint8_t lookup(uint8_t order) const;
+
+    void remove(uint8_t id);
+
+    size_t size() const noexcept;
 
 protected:
+    BaseTable() noexcept;
+    ~BaseTable() noexcept;
 
-    BaseTable();
+    void findNextId() noexcept;
 
-    void clear();
+    DataItem& _insert();
+    DataItem& _insert(uint8_t id, std::string name);
 
-    void findNextId();
+    virtual DataItem* createItem() = 0;
 
-    std::array<uint8_t, MAX_SIZE> mMap;
-    std::vector<Mapping> mMapList;
+    // array of unique_ptr of DataItem
+    // if the pointer is empty, then there is no item with id = index
+    // each table will require 256 pointers, or 256 * 8 => 2048 bytes
+    using ArrayType = std::array<std::unique_ptr<DataItem>, MAX_SIZE>;
+
+    std::unique_ptr<ArrayType> mData;
+    std::vector<uint8_t> mItemOrder;
     uint8_t mNextId;
-    uint8_t mLastId;
-
 
 };
 
-
-
 template <class T>
 class Table : public BaseTable {
+    static_assert(std::is_base_of<DataItem, T>::value, "T must inherit from DataItem");
 
 public:
 
-    
-
     Table();
     ~Table();
-    //Table(Table<T> &table);
 
     //
     // Retrieves the item located at the given index, if set. If an item is
     // not set at the index, nullptr is returned.
     //
     T* operator[](uint8_t id);
-
-    void clear();
 
     //
     // constructs and inserts a new item at the next available id. A reference
@@ -98,14 +89,9 @@ public:
     //
     T& insert(uint8_t id, std::string name);
 
-    
+protected:
 
-    void remove(uint8_t id);
-
-private:
-
-    std::vector<T> mItems;
-
+    DataItem* createItem() override;
 
 };
 

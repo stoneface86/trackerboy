@@ -17,8 +17,6 @@ TEMPLATE_TEST_CASE("table is empty", "[Table]", InstrumentTable, WaveTable) {
     for (size_t i = 0; i != TestType::MAX_SIZE; ++i) {
         uint8_t id = static_cast<uint8_t>(i);
         CHECK(table[id] == nullptr);
-        CHECK_THROWS_AS(table.name(id), std::runtime_error);
-        CHECK_THROWS_AS(table.setName(id, "test"), std::runtime_error);
         CHECK_THROWS_AS(table.remove(id), std::runtime_error);
     }
 

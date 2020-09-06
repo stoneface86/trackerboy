@@ -5,13 +5,14 @@
 #include <cstdint>
 #include <fstream>
 
+#include "trackerboy/data/DataItem.hpp"
 #include "trackerboy/gbs.hpp"
 #include "trackerboy/fileformat.hpp"
 
 
 namespace trackerboy {
 
-class Waveform {
+class Waveform : public DataItem {
 
 public:
 

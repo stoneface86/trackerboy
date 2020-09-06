@@ -8,8 +8,7 @@ WaveListModel::WaveListModel(trackerboy::WaveTable &table, QObject *parent) :
 }
 
 trackerboy::Waveform* WaveListModel::waveform(int modelIndex) {
-    auto iter = mBaseTable.begin() + modelIndex;
-    return static_cast<trackerboy::WaveTable&>(mBaseTable)[iter->index];
+    return mTable[mTable.lookup(modelIndex)];
 }
 
 QVariant WaveListModel::iconData(const QModelIndex &index) const {
@@ -17,7 +16,7 @@ QVariant WaveListModel::iconData(const QModelIndex &index) const {
 }
 
 void WaveListModel::insertItemInTable() {
-    static_cast<trackerboy::WaveTable&>(mTable).insert();
+    mTable.insert();
 }
 
 void WaveListModel::removeItemInTable(uint8_t id) {

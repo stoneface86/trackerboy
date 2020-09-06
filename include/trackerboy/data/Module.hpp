@@ -2,9 +2,11 @@
 #pragma once
 
 #include "trackerboy/data/Table.hpp"
+#include "trackerboy/data/Song.hpp"
 
 #include <fstream>
 #include <string>
+#include <vector>
 
 
 namespace trackerboy {

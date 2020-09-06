@@ -15,9 +15,9 @@ int BaseTableModel::rowCount(const QModelIndex &parent) const {
 
 QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
     if (role == Qt::DisplayRole) {
-        auto iter = mBaseTable.begin() + index.row();
+        auto *item = mBaseTable.getFromOrder(index.row());
         QString str("%1 - %2");
-        return QVariant(str.arg(QString::number(iter->index), QString::fromStdString(iter->name)));
+        return QVariant(str.arg(QString::number(item->id()), QString::fromStdString(item->name())));
     } else if (role == Qt::DecorationRole) {
         return iconData(index);
     } else {
@@ -33,12 +33,10 @@ void BaseTableModel::addItem() {
 }
 
 QString BaseTableModel::name(int index) {
-    auto iter = mBaseTable.begin() + index;
-    return QString::fromStdString(iter->name);
+    return QString::fromStdString(mBaseTable.getFromOrder(index)->name());
 }
 
 void BaseTableModel::setName(int index, QString name) {
-    auto iter = mBaseTable.begin() + index;
-    mBaseTable.setName(iter->index, name.toStdString());
+    mBaseTable.getFromOrder(index)->setName(name.toStdString());
     emit dataChanged(createIndex(index, 0, nullptr), createIndex(index, 0, nullptr), { Qt::DisplayRole });
 }

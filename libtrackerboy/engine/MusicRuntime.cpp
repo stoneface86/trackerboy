@@ -66,23 +66,24 @@ bool MusicRuntime::setRows() {
     if (!!(row.flags & TrackRow::COLUMN_INST)) {
         auto instrument = mRc.instTable[row.instrumentId];
         if (instrument != nullptr) {
-            setTimbre<ch>(instrument->timbre);
-            setEnvelope<ch>(instrument->envelope);
-            if (instrument->panning) {
-                setPanning<ch>(instrument->panning);
+            auto &idata = instrument->data();
+            setTimbre<ch>(idata.timbre);
+            setEnvelope<ch>(idata.envelope);
+            if (idata.panning) {
+                setPanning<ch>(idata.panning);
             }
 
             auto &nc = mNc[chint];
-            mNoteDelay = instrument->delay;
-            if (instrument->duration) {
-                nc.noteCut(instrument->duration);
+            mNoteDelay = idata.delay;
+            if (idata.duration) {
+                nc.noteCut(idata.duration);
             }
 
             if constexpr (ch != ChType::ch4) {
                 auto &fc = mFc[chint];
-                fc.setTune(static_cast<uint8_t>(instrument->tune) + 0x80);
-                fc.setVibrato(instrument->vibrato);
-                fc.setVibratoDelay(instrument->vibratoDelay);
+                fc.setTune(static_cast<uint8_t>(idata.tune) + 0x80);
+                fc.setVibrato(idata.vibrato);
+                fc.setVibratoDelay(idata.vibratoDelay);
             }
         }
     }

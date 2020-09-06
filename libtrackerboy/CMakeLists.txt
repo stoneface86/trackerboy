@@ -10,6 +10,8 @@ set(SRC_FILES
     "engine/PatternCursor.cpp"
     "engine/RuntimeContext.cpp"
     "engine/Timer.cpp"
+    "data/DataItem.cpp"
+    "data/Instrument.cpp"
     "data/Module.cpp"
     "data/PatternMaster.cpp"
     "data/Song.cpp"

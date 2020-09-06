@@ -284,15 +284,18 @@ FormatError File::saveTable(std::ostream &stream, Table<T> &table) {
     writeAndCheck(stream, &tableSize, sizeof(tableSize));
 
     //// write all items in the table in this order: id, name, item
-    for (auto iter : table) {
+    for (auto id : table) {
         // id
-        uint8_t id = iter.index;
         writeAndCheck(stream, &id, 1);
+
+        T* item = table[id];
+
         // name
-        writeAndCheck(stream, const_cast<char*>(iter.name.c_str()), iter.name.size() + 1);
+        auto name = item->name();
+        writeAndCheck(stream, const_cast<char*>(name.c_str()), name.size() + 1);
 
         // item
-        FormatError error = serialize(stream, *(table[id]));
+        FormatError error = serialize(stream, *item);
         if (error != FormatError::none) {
             return error;
         }
@@ -333,7 +336,8 @@ FormatError File::deserialize(std::istream &stream, Instrument &inst) {
     readAndCheck(stream, program.data(), size);*/
 
     // just read the entire struct
-    readAndCheck(stream, &inst, sizeof(Instrument));
+    auto &data = inst.data();
+    readAndCheck(stream, &data, sizeof(Instrument::Data));
 
     return FormatError::none;
 }
@@ -490,7 +494,7 @@ FormatError File::serialize(std::ostream &stream, Instrument &inst) {
     // program is just a byte array, no need to worry about endianness
     //writeAndCheck(stream, program.data(), size);
     
-    writeAndCheck(stream, &inst, sizeof(Instrument));
+    writeAndCheck(stream, &inst.data(), sizeof(Instrument::Data));
 
     return FormatError::none;
 }

@@ -115,20 +115,29 @@ TEST_CASE("save/load equivalence", "[File]") {
         InstrumentTable sampleReadIn;
         REQUIRE(file.loadTable(in, sampleReadIn) == FormatError::none);
 
-        CHECK(sampleReadIn[0] != nullptr);
-        CHECK(sampleReadIn[5] != nullptr);
-        CHECK(sampleReadIn[2] != nullptr);
+        Instrument *inst, *instIn;
 
-        CHECK(sample.name(0) == sampleReadIn.name(0));
-        CHECK(sample.name(2) == sampleReadIn.name(2));
-        CHECK(sample.name(5) == sampleReadIn.name(5));
+        inst = sample[0];
+        instIn = sampleReadIn[0];
+        CHECK(instIn != nullptr);
+        CHECK(inst->name() == instIn->name());
+
+        inst = sample[5];
+        instIn = sampleReadIn[5];
+        CHECK(instIn != nullptr);
+        CHECK(inst->name() == instIn->name());
+
+        inst = sample[2];
+        instIn = sampleReadIn[2];
+        CHECK(instIn != nullptr);
+        CHECK(inst->name() == instIn->name());
 
     }
 
     SECTION("Instrument") {
         Instrument sample;
-        sample.envelope = 0xF1;
-        sample.timbre = 0x02;
+        sample.data().envelope = 0xF1;
+        sample.data().timbre = 0x02;
         
         // serialize the sample instrument
         REQUIRE(file.serialize(out, sample) == FormatError::none);
@@ -139,7 +148,7 @@ TEST_CASE("save/load equivalence", "[File]") {
         REQUIRE(file.deserialize(in, sampleReadIn) == FormatError::none);
 
         // check that both instruments are equal
-        REQUIRE(memcmp(&sample, &sampleReadIn, sizeof(Instrument)) == 0);
+        REQUIRE(memcmp(&sample.data(), &sampleReadIn.data(), sizeof(Instrument::Data)) == 0);
     }
 
     SECTION("Song") {

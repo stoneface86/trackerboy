@@ -6,7 +6,8 @@ namespace trackerboy {
 
 
 Waveform::Waveform() noexcept :
-    mData{0}
+    mData{0},
+    DataItem()
 {       
 }
 
