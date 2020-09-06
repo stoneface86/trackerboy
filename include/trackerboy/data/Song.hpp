@@ -18,7 +18,7 @@ class Song : public DataItem {
 
 public:
 
-    enum class Mode {
+    enum class Mode : uint8_t {
         speed,              // use the speed setting
         speedFromTempo      // determine speed from tempo setting
     };
