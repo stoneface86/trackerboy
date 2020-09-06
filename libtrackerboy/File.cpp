@@ -214,8 +214,8 @@ FormatError File::loadModule(std::istream &stream, Module &mod) {
 
 FormatError File::saveModule(std::ostream &stream, Module &mod) {
 
-    FormatError error;
-    error = saveTable(stream, mod.instrumentTable());
+    FormatError error = mod.instrumentTable().serialize(stream);
+    //error = saveTable(stream, mod.instrumentTable());
     if (error != FormatError::none) {
         return error;
     }
@@ -231,7 +231,8 @@ FormatError File::saveModule(std::ostream &stream, Module &mod) {
     }
     
 
-    error = saveTable(stream, mod.waveTable());
+    error = mod.waveTable().serialize(stream);
+    //error = saveTable(stream, mod.waveTable());
 
     return error;
 }

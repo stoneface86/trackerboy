@@ -3,31 +3,40 @@
 
 #include <fstream>
 
+#include "trackerboy/data/DataItem.hpp"
 #include "trackerboy/data/PatternMaster.hpp"
 #include "trackerboy/data/Order.hpp"
 #include "trackerboy/fileformat.hpp"
 #include "trackerboy/Speed.hpp"
+#include "trackerboy/gbs.hpp"
 
 
 namespace trackerboy {
 
 
-class Song {
+class Song : public DataItem {
 
 public:
 
+    enum class Mode {
+        speed,              // use the speed setting
+        speedFromTempo      // determine speed from tempo setting
+    };
+
     static constexpr uint8_t DEFAULT_RPB = 4;
-    static constexpr float DEFAULT_TEMPO = 150.0f;
+    static constexpr uint16_t DEFAULT_TEMPO = 150;
+    static constexpr Mode DEFAULT_MODE = Mode::speedFromTempo;
     // Tempo = 150, RPB = 4  => 6.0 frames per row
     static constexpr Speed DEFAULT_SPEED = 0x30;
 
     Song();
+    ~Song();
 
     uint8_t rowsPerBeat();
 
-    float tempo();
+    Mode mode();
 
-    float actualTempo();
+    uint16_t tempo();
 
     Speed speed();
 
@@ -39,12 +48,21 @@ public:
 
     void setRowsPerBeat(uint8_t rowsPerBeat);
 
-    void setTempo(float tempo);
+    void setTempo(uint16_t tempo);
 
-    // sets the speed from the tempo and rowsPerBeat settings
-    void setSpeed();
+    void setMode(Mode mode);
 
     void setSpeed(Speed speed);
+
+    // apply the current mode to tempo/speed
+    void apply(float framerate = Gbs::FRAMERATE_GB);
+
+protected:
+
+    virtual bool deserializeData(std::istream &stream) noexcept override;
+    
+    virtual bool serializeData(std::ostream &stream) noexcept override;
+
 
 private:
 
@@ -54,7 +72,8 @@ private:
     std::vector<Order> mOrder;
 
     uint8_t mRowsPerBeat;
-    float mTempo;
+    uint16_t mTempo;
+    Mode mMode;
 
     // Speed - fixed point Q5.3
     // frame timing for each row

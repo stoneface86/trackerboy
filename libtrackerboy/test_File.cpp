@@ -161,7 +161,7 @@ TEST_CASE("save/load equivalence", "[File]") {
 
         sample.setTempo(165.0f);
         sample.setRowsPerBeat(8);
-        sample.setSpeed();
+        sample.apply();
 
         auto &order = sample.orders();
         order[0].track2Id = 2;
