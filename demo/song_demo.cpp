@@ -3,6 +3,7 @@
 #include "trackerboy/export/Wav.hpp"
 #include "trackerboy/engine/MusicRuntime.hpp"
 #include "trackerboy/note.hpp"
+#include "trackerboy/File.hpp"
 
 #include "audio.hpp"
 
@@ -27,19 +28,22 @@ int main() {
     Synth synth(SAMPLING_RATE);
     PlaybackQueue pb(SAMPLING_RATE);
 
-    InstrumentTable itable;
-    WaveTable wtable;
+    Module mod;
+    InstrumentTable &itable = mod.instrumentTable();
+    WaveTable &wtable = mod.waveTable();
 
     {
         auto &inst = itable.insert();
-        inst.envelope = 0x57;
-        inst.timbre = 1;
+        auto &idata = inst.data();
+        idata.envelope = 0x57;
+        idata.timbre = 1;
     }
 
     {
         auto &inst = itable.insert();
-        inst.envelope = 0x77;
-        inst.timbre = 0x0;
+        auto &idata = inst.data();
+        idata.envelope = 0x77;
+        idata.timbre = 0x0;
     }
 
     auto &triangle = wtable.insert();
@@ -47,8 +51,9 @@ int main() {
 
     RuntimeContext rc(synth, itable, wtable);
     
-
-    Song testsong;
+    auto &songs = mod.songs();
+    songs.emplace_back();
+    Song &testsong = songs[0];
     testsong.setSpeed(0x11);
 
     auto &orders = testsong.orders();
@@ -314,6 +319,14 @@ int main() {
         tr.setNote(0x38, NOTE_A + OCTAVE_4);
 
         tr.setNote(0x3F, NOTE_CUT);
+    }
+
+    {
+        File file;
+        std::ofstream modfile("song_demo.tbm", std::ios::binary | std::ios::out);
+        file.saveHeader(modfile);
+        file.saveModule(modfile, mod);
+        modfile.close();
     }
 
 
