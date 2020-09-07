@@ -27,6 +27,8 @@ public:
 
     uint16_t rowSize();
 
+    size_t tracks(ChType ch);
+
     Data::iterator tracksBegin(ChType ch);
 
     Data::iterator tracksEnd(ChType ch);
