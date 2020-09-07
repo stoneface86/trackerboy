@@ -49,6 +49,14 @@ std::string Module::copyright() const noexcept {
     return mCopyright;
 }
 
+Version Module::version() const noexcept {
+    return mVersion;
+}
+
+uint8_t Module::revision() const noexcept {
+    return mRevision;
+}
+
 std::vector<Song>& Module::songs() noexcept {
     return mSongs;
 }

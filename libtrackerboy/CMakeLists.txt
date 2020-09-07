@@ -60,6 +60,7 @@ if (TRACKERBOY_ENABLE_TESTS)
     set(TEST_SRC_FILES
         "data/test_DataItem.cpp"
         "data/test_Instrument.cpp"
+        "data/test_Module.cpp"
         "data/test_PatternMaster.cpp"
         "engine/test_NoteControl.cpp"
         "engine/test_Timer.cpp"
@@ -75,13 +76,17 @@ if (TRACKERBOY_ENABLE_TESTS)
         target_compile_definitions(${TEST_EXE} PRIVATE -DTRACKERBOY_BIG_ENDIAN)
     endif ()
 
-    add_test(NAME DataItem COMMAND ${TEST_EXE} [DataItem])
-    add_test(NAME Instrument COMMAND ${TEST_EXE} [Instrument])
-    add_test(NAME PatternMaster COMMAND ${TEST_EXE} [PatternMaster])
-    add_test(NAME NoteControl COMMAND ${TEST_EXE} [NoteControl])
-    add_test(NAME Timer COMMAND ${TEST_EXE} [Timer])
-    add_test(NAME fileformat COMMAND ${TEST_EXE} [fileformat])
-    add_test(NAME Table COMMAND ${TEST_EXE} [Table])
+    macro(unit_test unit)
+        add_test(NAME ${unit} COMMAND ${TEST_EXE} "[${unit}]")
+    endmacro(unit_test)
+
+    unit_test(DataItem)
+    unit_test(Module)
+    unit_test(PatternMaster)
+    unit_test(NoteControl)
+    unit_test(Timer)
+    unit_test(fileformat)
+    unit_test(Table)
     
     
 
