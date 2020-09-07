@@ -66,7 +66,7 @@ TEST_CASE("setRowSize resizes all Tracks", "[PatternMaster]") {
 
     for (uint8_t i = 0; i != 4; ++i) {
         auto begin = pm.tracksBegin(static_cast<ChType>(i));
-        auto end = pm.tracksBegin(static_cast<ChType>(i));
+        auto end = pm.tracksEnd(static_cast<ChType>(i));
         for (auto iter = begin; iter != end; ++iter) {
             REQUIRE(iter->second.end() - iter->second.begin() == OLD_SIZE);
         }
@@ -78,10 +78,47 @@ TEST_CASE("setRowSize resizes all Tracks", "[PatternMaster]") {
 
     for (uint8_t i = 0; i != 4; ++i) {
         auto begin = pm.tracksBegin(static_cast<ChType>(i));
-        auto end = pm.tracksBegin(static_cast<ChType>(i));
+        auto end = pm.tracksEnd(static_cast<ChType>(i));
         for (auto iter = begin; iter != end; ++iter) {
             REQUIRE(iter->second.end() - iter->second.begin() == NEW_SIZE);
         }
     }
+
+}
+
+TEST_CASE("getPattern", "[PatternMaster]") {
+    PatternMaster pm(64);
+
+    SECTION("creates non-existing tracks") {
+        REQUIRE(pm.tracks(ChType::ch1) == 0);
+        REQUIRE(pm.tracks(ChType::ch2) == 0);
+        REQUIRE(pm.tracks(ChType::ch3) == 0);
+        REQUIRE(pm.tracks(ChType::ch4) == 0);
+
+        REQUIRE_NOTHROW(pm.getPattern(0, 0, 0, 0));
+
+        REQUIRE(pm.tracks(ChType::ch1) == 1);
+        REQUIRE(pm.tracks(ChType::ch2) == 1);
+        REQUIRE(pm.tracks(ChType::ch3) == 1);
+        REQUIRE(pm.tracks(ChType::ch4) == 1);
+    }
+
+    SECTION("returns existing tracks") {
+        Track& tr0 = pm.getTrack(ChType::ch1, 0);
+        Track& tr1 = pm.getTrack(ChType::ch2, 0);
+        Track& tr2 = pm.getTrack(ChType::ch3, 0);
+        Track& tr3 = pm.getTrack(ChType::ch4, 0);
+
+        Pattern pattern = pm.getPattern(0, 0, 0, 0);
+
+        REQUIRE(&tr0 == &std::get<0>(pattern));
+        REQUIRE(&tr1 == &std::get<1>(pattern));
+        REQUIRE(&tr2 == &std::get<2>(pattern));
+        REQUIRE(&tr3 == &std::get<3>(pattern));
+
+
+    }
+
+
 
 }
