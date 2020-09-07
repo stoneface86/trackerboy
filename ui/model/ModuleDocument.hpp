@@ -6,7 +6,6 @@
 #include <QStringListModel>
 
 #include "trackerboy/data/Module.hpp"
-#include "trackerboy/File.hpp"
 
 #include "model/WaveListModel.hpp"
 
@@ -45,7 +44,6 @@ private:
     bool mModified;
     
     trackerboy::Module mModule;
-    trackerboy::File mFile;
 
     WaveListModel *mWaveListModel;
     

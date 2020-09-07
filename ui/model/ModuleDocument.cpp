@@ -4,7 +4,6 @@
 ModuleDocument::ModuleDocument(QObject *parent) :
     mModified(true),
     mModule(),
-    mFile(),
     mWaveListModel(new WaveListModel(mModule.waveTable(), this)),
     mUndoStack(new QUndoStack(this)),
     QObject(parent)

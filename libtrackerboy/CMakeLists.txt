@@ -27,7 +27,6 @@ set(SRC_FILES
     "synth/Sweep.cpp"
     "synth/Synth.cpp"
     "synth/WaveGen.cpp"
-    "File.cpp"
     "fileformat.cpp"
     "note.cpp"
     "version.cpp"
@@ -62,7 +61,6 @@ if (TRACKERBOY_ENABLE_TESTS)
         "engine/test_Timer.cpp"
         "engine/test_NoteControl.cpp"
         "data/test_Order.cpp"
-        "test_File.cpp"
         "test_fileformat.cpp"
         "test_Table.cpp"
     )
@@ -77,7 +75,6 @@ if (TRACKERBOY_ENABLE_TESTS)
 
     add_test(NAME Pattern COMMAND ${TEST_EXE} [pattern])
     add_test(NAME Order COMMAND ${TEST_EXE} [order])
-    add_test(NAME File COMMAND ${TEST_EXE} [File])
     add_test(NAME fileformat COMMAND ${TEST_EXE} [fileformat])
     add_test(NAME Table COMMAND ${TEST_EXE} [Table])
     add_test(NAME Timer COMMAND ${TEST_EXE} [Timer])
