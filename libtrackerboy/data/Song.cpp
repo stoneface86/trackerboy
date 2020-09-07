@@ -214,6 +214,13 @@ FormatError Song::serializeData(std::ostream &stream) noexcept {
 
     checkedWrite(stream, &songHeader, sizeof(songHeader));
 
+    // order data
+
+    for (auto &order : mOrder) {
+        // TODO: Order struct must be packed for this to work on all machines
+        checkedWrite(stream, &order, sizeof(order));
+    }
+
     // track data
     // we go through every track in the song's pattern master
     // only non-empty tracks get saved (tracks with at least 1 row set)
