@@ -1,6 +1,7 @@
 
 #include "trackerboy/data/Instrument.hpp"
 
+#include "./checkedstream.hpp"
 
 namespace trackerboy {
 
@@ -15,14 +16,14 @@ Instrument::Data& Instrument::data() {
     return mData;
 }
 
-bool Instrument::serializeData(std::ostream &stream) noexcept {
-    stream.write(reinterpret_cast<const char *>(&mData), sizeof(Data));
-    return stream.good();
+FormatError Instrument::serializeData(std::ostream &stream) noexcept {
+    checkedWrite(stream, &mData, sizeof(Data));
+    return FormatError::none;
 }
 
-bool Instrument::deserializeData(std::istream &stream) noexcept {
-    stream.read(reinterpret_cast<char*>(&mData), sizeof(Data));
-    return stream.good();
+FormatError Instrument::deserializeData(std::istream &stream) noexcept {
+    checkedRead(stream, &mData, sizeof(Data));
+    return FormatError::none;
 }
 
 

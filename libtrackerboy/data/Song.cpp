@@ -2,6 +2,8 @@
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/fileformat.hpp"
 
+#include "./checkedstream.hpp"
+
 #include <cmath>
 #include <stdexcept>
 
@@ -152,16 +154,7 @@ struct RowFormat {
 
 namespace trackerboy {
 
-
-#define checkedRead(stream, buf, count) \
-    do { \
-        stream.read(reinterpret_cast<char*>(buf), count); \
-        if (!stream.good()) { \
-            return false; \
-        } \
-    } while (false)
-
-bool Song::deserializeData(std::istream &stream) noexcept {
+FormatError Song::deserializeData(std::istream &stream) noexcept {
 
     // read in the song settings
     SongFormat songHeader;
@@ -187,7 +180,7 @@ bool Song::deserializeData(std::istream &stream) noexcept {
         TrackFormat trackFormat;
         checkedRead(stream, &trackFormat, sizeof(TrackFormat));
         if (trackFormat.channel > static_cast<uint8_t>(ChType::ch4)) {
-            return false;
+            return FormatError::unknownChannel;
         }
 
         Track &track = mMaster.getTrack(static_cast<ChType>(trackFormat.channel), trackFormat.trackId);
@@ -199,19 +192,10 @@ bool Song::deserializeData(std::istream &stream) noexcept {
             track.replace(rowFormat.row, rowFormat.data);
         }
     }
-    return true;
+    return FormatError::none;
 }
 
-// wrapper for stream.write, will return writeError on failure
-#define checkedWrite(stream, buf, count) \
-    do {\
-        stream.write(reinterpret_cast<char*>(buf), count); \
-        if (!stream.good()) { \
-            return false; \
-        } \
-    } while (false)
-
-bool Song::serializeData(std::ostream &stream) noexcept {
+FormatError Song::serializeData(std::ostream &stream) noexcept {
     
     auto startpos = stream.tellp();
 
@@ -279,7 +263,7 @@ bool Song::serializeData(std::ostream &stream) noexcept {
 
     stream.seekp(curpos);
 
-    return true;
+    return FormatError::none;
 }
 
 }

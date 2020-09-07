@@ -1,6 +1,8 @@
 
 #include "trackerboy/data/Table.hpp"
 
+#include "./checkedstream.hpp"
+
 #include <algorithm>
 
 // IMPLEMENTATION DETAILS
@@ -31,11 +33,8 @@ BaseTable::Iterator BaseTable::begin() const {
 FormatError BaseTable::deserialize(std::istream &stream) noexcept {
 
     // get the size of the table
-    uint16_t tableSize;
-    stream.read(reinterpret_cast<char*>(tableSize), sizeof(tableSize));
-    if (!stream.good()) {
-        return FormatError::readError;
-    }
+    uint16_t tableSize = 0;
+    checkedRead(stream, &tableSize, sizeof(tableSize));
     tableSize = correctEndian(tableSize);
 
     if (tableSize > MAX_SIZE) {
@@ -47,7 +46,8 @@ FormatError BaseTable::deserialize(std::istream &stream) noexcept {
 
     for (uint16_t i = 0; i != tableSize; ++i) {
         DataItem *item = createItem();
-        if (item->deserialize(stream)) {
+        FormatError error = item->deserialize(stream);
+        if (error == FormatError::none) {
             // item deserialize successfully
             auto id = item->id();
             auto &ptr = (*mData)[id];
@@ -63,7 +63,7 @@ FormatError BaseTable::deserialize(std::istream &stream) noexcept {
         } else {
             // read error occurred, delete item and return
             delete item;
-            return FormatError::readError;
+            return error;
         }
     }
 
@@ -118,8 +118,9 @@ FormatError BaseTable::serialize(std::ostream &stream) noexcept {
 
     for (auto id : mItemOrder) {
         DataItem *item = get(id);
-        if (!item->serialize(stream)) {
-            return FormatError::writeError;
+        FormatError error = item->serialize(stream);
+        if (error != FormatError::none) {
+            return error;
         }
     }
 

@@ -1,6 +1,8 @@
 
 #include "trackerboy/data/DataItem.hpp"
 
+#include "./checkedstream.hpp"
+
 namespace trackerboy {
 
 DataItem::DataItem() :
@@ -29,33 +31,28 @@ void DataItem::setName(std::string name) noexcept {
     mName = name;
 }
 
-bool DataItem::serialize(std::ostream &stream) noexcept {
+FormatError DataItem::serialize(std::ostream &stream) noexcept {
     // id
-    stream.write(reinterpret_cast<const char *>(&mId), 1);
-    if (!stream.good()) {
-        return false;
-    }
+    checkedWrite(stream, &mId, sizeof(mId));
 
     // name
-    stream.write(mName.c_str(), mName.size() + 1);
-    if (!stream.good()) {
-        return false;
-    }
+    checkedWrite(stream, mName.c_str(), mName.size() + 1);
 
+    // payload (implementation-specific)
     return serializeData(stream);
 }
 
-bool DataItem::deserialize(std::istream &stream) noexcept {
-    stream.read(reinterpret_cast<char *>(&mId), 1);
-    if (!stream.good()) {
-        return false;
-    }
-
+FormatError DataItem::deserialize(std::istream &stream) noexcept {
+    // id
+    checkedRead(stream, &mId, sizeof(mId));
+    
+    // name
     std::getline(stream, mName, '\0');
     if (!stream.good()) {
-        return false;
+        return FormatError::readError;
     }
 
+    // payload
     return deserializeData(stream);
 }
 

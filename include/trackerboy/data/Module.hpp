@@ -3,6 +3,7 @@
 
 #include "trackerboy/data/Table.hpp"
 #include "trackerboy/data/Song.hpp"
+#include "trackerboy/version.hpp"
 
 #include <fstream>
 #include <string>
@@ -15,38 +16,47 @@ namespace trackerboy {
 class Module {
 
 public:
-    Module();
+    Module() noexcept;
+    ~Module() noexcept;
 
-    void clear();
+    void clear() noexcept;
 
-    std::string artist();
+    std::string artist() const noexcept;
 
-    std::string title();
+    std::string title() const noexcept;
 
-    std::string copyright();
+    std::string copyright() const noexcept;
 
-    //SongTable& songTable();
-    std::vector<Song>& songs();
+    Version version() const noexcept;
 
-    WaveTable& waveTable();
+    uint8_t revision() const noexcept;
 
-    InstrumentTable& instrumentTable();
+    std::vector<Song>& songs() noexcept;
 
-    void setArtist(std::string artist);
+    WaveTable& waveTable() noexcept;
 
-    void setTitle(std::string title);
+    InstrumentTable& instrumentTable() noexcept;
 
-    void setCopyright(std::string copyright);
+    FormatError deserialize(std::istream &stream) noexcept;
+
+    FormatError serialize(std::ostream &stream) noexcept;
+
+    void setArtist(std::string artist) noexcept;
+
+    void setTitle(std::string title) noexcept;
+
+    void setCopyright(std::string copyright) noexcept;
 
 
 private:
 
-    //SongTable mSongTable;
     std::vector<Song> mSongs;
     WaveTable mWaveTable;
     InstrumentTable mInstrumentTable;
 
-
+    // header settings
+    Version mVersion;
+    uint8_t mRevision;
     // information about the module (same format as *.gbs)
     std::string mTitle;
     std::string mArtist;

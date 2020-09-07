@@ -6,6 +6,8 @@
 #include <ostream>
 #include <istream>
 
+#include "trackerboy/fileformat.hpp"
+
 namespace trackerboy {
 
 class DataItem {
@@ -22,16 +24,16 @@ public:
 
     void setId(uint8_t id) noexcept;
 
-    bool serialize(std::ostream &stream) noexcept;
+    FormatError serialize(std::ostream &stream) noexcept;
 
-    bool deserialize(std::istream &stream) noexcept;
+    FormatError deserialize(std::istream &stream) noexcept;
 
 
 protected:
     DataItem();
 
-    virtual bool serializeData(std::ostream &stream) noexcept = 0;
-    virtual bool deserializeData(std::istream &stream) noexcept = 0;
+    virtual FormatError serializeData(std::ostream &stream) noexcept = 0;
+    virtual FormatError deserializeData(std::istream &stream) noexcept = 0;
     
     uint8_t mId;
     std::string mName;

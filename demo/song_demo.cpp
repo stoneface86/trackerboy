@@ -324,10 +324,11 @@ int main() {
     }
 
     {
-        File file;
+        //File file;
         std::ofstream modfile("song_demo.tbm", std::ios::binary | std::ios::out);
-        file.saveHeader(modfile);
-        file.saveModule(modfile, mod);
+        mod.serialize(modfile);
+        //file.saveHeader(modfile);
+        //file.saveModule(modfile, mod);
         modfile.close();
     }
 

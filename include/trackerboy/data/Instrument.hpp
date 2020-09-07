@@ -37,8 +37,8 @@ public:
     Data& data();
 
 protected:
-    virtual bool serializeData(std::ostream &stream) noexcept override;
-    virtual bool deserializeData(std::istream &stream) noexcept override;
+    virtual FormatError serializeData(std::ostream &stream) noexcept override;
+    virtual FormatError deserializeData(std::istream &stream) noexcept override;
 
 private:
     Data mData;

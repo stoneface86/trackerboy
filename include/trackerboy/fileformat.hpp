@@ -115,6 +115,7 @@ enum class FormatError {
     invalidType,            // unknown payload type
     tableSizeBounds,        // size of table exceeds maximum
     tableDuplicateId,       // 2 or more items with the same id
+    unknownChannel,         // unknown channel id for track data
     readError,              // read error occurred
     writeError              // write error occurred
 };

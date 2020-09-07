@@ -1,6 +1,7 @@
 
 #include "trackerboy/data/Waveform.hpp"
 
+#include "./checkedstream.hpp"
 
 namespace trackerboy {
 
@@ -38,14 +39,14 @@ uint8_t& Waveform::operator[](int index) {
     return mData[index];
 }
 
-bool Waveform::serializeData(std::ostream &stream) noexcept {
-    stream.write(reinterpret_cast<const char *>(mData.data()), Gbs::WAVE_RAMSIZE);
-    return stream.good();
+FormatError Waveform::serializeData(std::ostream &stream) noexcept {
+    checkedWrite(stream, mData.data(), Gbs::WAVE_RAMSIZE);
+    return FormatError::none;
 }
 
-bool Waveform::deserializeData(std::istream &stream) noexcept {
-    stream.read(reinterpret_cast<char*>(mData.data()), Gbs::WAVE_RAMSIZE);
-    return stream.good();
+FormatError Waveform::deserializeData(std::istream &stream) noexcept {
+    checkedRead(stream, mData.data(), Gbs::WAVE_RAMSIZE);
+    return FormatError::none;
 }
 
 
