@@ -3,7 +3,7 @@
 #include "trackerboy/export/Wav.hpp"
 #include "trackerboy/engine/MusicRuntime.hpp"
 #include "trackerboy/note.hpp"
-#include "trackerboy/File.hpp"
+#include "trackerboy/data/Module.hpp"
 
 #include "audio.hpp"
 
@@ -17,6 +17,8 @@ using namespace trackerboy;
 
 static constexpr float SAMPLING_RATE = 44100;
 
+//#define READ_FILE
+
 
 int main() {
 
@@ -29,8 +31,19 @@ int main() {
     PlaybackQueue pb(SAMPLING_RATE);
 
     Module mod;
+    #ifdef READ_FILE
+    {
+        std::ifstream modfile("song_demo.tbm", std::ios::binary | std::ios::in);
+        mod.deserialize(modfile);
+    }
+    #endif
+
     InstrumentTable &itable = mod.instrumentTable();
     WaveTable &wtable = mod.waveTable();
+    RuntimeContext rc(synth, itable, wtable);
+
+    #ifndef READ_FILE
+    
 
     {
         auto &inst = itable.insert();
@@ -49,7 +62,7 @@ int main() {
     auto &triangle = wtable.insert();
     triangle.fromString("0123456789ABCDEFFEDCBA9876543210");
 
-    RuntimeContext rc(synth, itable, wtable);
+    
     
     auto &songs = mod.songs();
     songs.emplace_back();
@@ -331,10 +344,10 @@ int main() {
         //file.saveModule(modfile, mod);
         modfile.close();
     }
-
+    #endif
 
    
-    MusicRuntime musicRun(rc, testsong, 0, 0);
+    MusicRuntime musicRun(rc, mod.songs()[0], 0, 0);
     std::ofstream file("song_demo.wav", std::ios::binary | std::ios::out);
     Wav wav(file, 2, SAMPLING_RATE);
     wav.begin();
