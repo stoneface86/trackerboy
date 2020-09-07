@@ -81,6 +81,7 @@ if (TRACKERBOY_ENABLE_TESTS)
     endmacro(unit_test)
 
     unit_test(DataItem)
+    unit_test(Instrument)
     unit_test(Module)
     unit_test(PatternMaster)
     unit_test(NoteControl)

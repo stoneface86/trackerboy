@@ -23,8 +23,6 @@ protected:
     BaseTableModel(trackerboy::BaseTable &table, QObject *parent = nullptr);
 
     virtual QVariant iconData(const QModelIndex &index) const = 0;
-    virtual void insertItemInTable() = 0;
-    virtual void removeItemInTable(uint8_t index) = 0;
 
 
     trackerboy::BaseTable &mBaseTable;

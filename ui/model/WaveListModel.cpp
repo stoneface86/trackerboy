@@ -15,11 +15,4 @@ QVariant WaveListModel::iconData(const QModelIndex &index) const {
     return QVariant();
 }
 
-void WaveListModel::insertItemInTable() {
-    mTable.insert();
-}
-
-void WaveListModel::removeItemInTable(uint8_t id) {
-
-}
 

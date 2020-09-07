@@ -147,11 +147,11 @@ void BaseTable::findNextId() noexcept {
     }
 }
 
-DataItem& BaseTable::_insert() {
-    return _insert(mNextId, "Untitled " + std::to_string(mNextId));
+DataItem& BaseTable::insertItem() {
+    return insertItem(mNextId, "Untitled " + std::to_string(mNextId));
 }
 
-DataItem& BaseTable::_insert(uint8_t id, std::string name) {
+DataItem& BaseTable::insertItem(uint8_t id, std::string name) {
     if (size() == MAX_SIZE) {
         throw std::runtime_error("cannot insert: table is full");
     }
@@ -192,12 +192,12 @@ T* Table<T>::operator[](uint8_t id) {
 
 template <class T>
 T& Table<T>::insert() {
-    return static_cast<T&>(_insert());
+    return static_cast<T&>(insertItem());
 }
 
 template <class T>
 T& Table<T>::insert(uint8_t id, std::string name) {
-    return static_cast<T&>(_insert(id, name));
+    return static_cast<T&>(insertItem(id, name));
 }
 
 template <class T>

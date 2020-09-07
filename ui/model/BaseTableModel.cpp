@@ -28,7 +28,7 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
 void BaseTableModel::addItem() {
     int row = mBaseTable.size();
     beginInsertRows(QModelIndex(), row, row);
-    insertItemInTable();
+    mBaseTable.insertItem();
     endInsertRows();
 }
 

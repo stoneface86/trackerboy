@@ -40,6 +40,10 @@ public:
 
     DataItem* getFromOrder(uint8_t order) const;
 
+    DataItem& insertItem();
+
+    DataItem& insertItem(uint8_t id, std::string name);
+
     uint8_t lookup(uint8_t order) const;
 
     void remove(uint8_t id);
@@ -52,9 +56,6 @@ protected:
     BaseTable() noexcept;
 
     void findNextId() noexcept;
-
-    DataItem& _insert();
-    DataItem& _insert(uint8_t id, std::string name);
 
     virtual DataItem* createItem() = 0;
 

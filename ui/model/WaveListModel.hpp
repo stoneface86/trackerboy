@@ -21,8 +21,6 @@ public:
     
 protected:
     QVariant iconData(const QModelIndex &index) const override;
-    void insertItemInTable() override;
-    void removeItemInTable(uint8_t index) override;
 
 private:
 
