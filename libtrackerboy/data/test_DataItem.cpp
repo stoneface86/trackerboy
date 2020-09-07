@@ -3,6 +3,7 @@
 #include "trackerboy/data/DataItem.hpp"
 
 #include <sstream>
+#include <cstring>
 
 using namespace trackerboy;
 

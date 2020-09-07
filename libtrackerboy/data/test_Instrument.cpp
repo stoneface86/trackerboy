@@ -2,6 +2,7 @@
 #include "trackerboy/data/Instrument.hpp"
 
 #include <sstream>
+#include <cstring>
 
 using namespace trackerboy;
 
