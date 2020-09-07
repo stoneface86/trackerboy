@@ -5,6 +5,8 @@
 
 namespace trackerboy {
 
+#pragma pack(push, 1)
+
 // An order is an assignment of track Ids for each channel. A sequence of these
 // determines the layout of a song.
 struct Order {
@@ -18,6 +20,8 @@ struct Order {
 
 
 };
+
+#pragma pack(pop)
 
 
 
