@@ -12,6 +12,7 @@ set(UI_SRC
     "model/BaseTableModel.cpp"
     "model/ModuleDocument.cpp"
     #"model/ModuleModel.cpp"
+    "model/InstrumentListModel.cpp"
     "model/WaveListModel.cpp"
     "resources/keys.qrc"
     "InstrumentEditor.cpp"

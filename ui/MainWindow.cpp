@@ -17,6 +17,7 @@ MainWindow::MainWindow() :
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
 
+    mInstrumentListView->setModel(mDocument->instrumentListModel());
     mWaveformListView->setModel(mDocument->waveListModel());
 
     mInstrumentEditor = new InstrumentEditor(this);
@@ -26,8 +27,14 @@ MainWindow::MainWindow() :
     mModuleFileDialog->setWindowModality(Qt::WindowModal);
     mModuleFileDialog->setAcceptMode(QFileDialog::AcceptSave);
 
+    auto __style = style();
+    actionNew->setIcon(__style->standardIcon(QStyle::SP_FileIcon));
+    actionOpen->setIcon(__style->standardIcon(QStyle::SP_DialogOpenButton));
+    actionSave->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
+    actionSaveAs->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
     
     connect(actionNew_waveform, &QAction::triggered, mDocument, &ModuleDocument::addWaveform);
+    connect(actionNew_instrument, &QAction::triggered, mDocument, &ModuleDocument::addInstrument);
     connect(mWaveformListView, &QAbstractItemView::clicked, mWaveEditor, &WaveEditor::selectWaveform);
     connect(mWaveformListView, &QAbstractItemView::doubleClicked, this, &MainWindow::waveformDoubleClicked);
 
@@ -40,6 +47,7 @@ MainWindow::MainWindow() :
     connectAction(actionOpen, fileOpen);
     connectAction(actionSave, fileSave);
     connectAction(actionSaveAs, fileSaveAs);
+    connectAction(actionQuit, close);
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
@@ -74,6 +82,7 @@ void MainWindow::fileNew() {
 void MainWindow::fileOpen() {
     if (maybeSave()) {
         mModuleFileDialog->setFileMode(QFileDialog::FileMode::ExistingFile);
+        mModuleFileDialog->setWindowTitle("Open");
         if (mModuleFileDialog->exec() == QDialog::Accepted) {
             QString filename = mModuleFileDialog->selectedFiles().first();
             auto error = mDocument->open(filename);
@@ -94,6 +103,7 @@ bool MainWindow::fileSave() {
 
 bool MainWindow::fileSaveAs() {
     mModuleFileDialog->setFileMode(QFileDialog::FileMode::AnyFile);
+    mModuleFileDialog->setWindowTitle("Save As");
     if (mModuleFileDialog->exec() != QDialog::Accepted) {
         return false;
     }

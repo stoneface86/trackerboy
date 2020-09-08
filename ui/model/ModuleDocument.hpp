@@ -7,6 +7,7 @@
 
 #include "trackerboy/data/Module.hpp"
 
+#include "model/InstrumentListModel.hpp"
 #include "model/WaveListModel.hpp"
 
 
@@ -22,6 +23,7 @@ class ModuleDocument : public QObject {
 public:
     ModuleDocument(QObject *parent = nullptr);
 
+    InstrumentListModel* instrumentListModel();
     WaveListModel* waveListModel();
 
     bool isModified() const;
@@ -51,6 +53,7 @@ private:
     
     trackerboy::Module mModule;
 
+    InstrumentListModel *mInstrumentListModel;
     WaveListModel *mWaveListModel;
     
     //ModuleModel *mModel;

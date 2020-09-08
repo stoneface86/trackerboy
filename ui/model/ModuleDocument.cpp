@@ -6,6 +6,7 @@
 ModuleDocument::ModuleDocument(QObject *parent) :
     mModified(false),
     mModule(),
+    mInstrumentListModel(new InstrumentListModel(mModule.instrumentTable(), this)),
     mWaveListModel(new WaveListModel(mModule.waveTable(), this)),
     mUndoStack(new QUndoStack(this)),
     QObject(parent)
@@ -13,8 +14,10 @@ ModuleDocument::ModuleDocument(QObject *parent) :
 }
 
 void ModuleDocument::clear() {
+    mInstrumentListModel->setEnabled(false);
     mWaveListModel->setEnabled(false);
     mModule.clear();
+    mInstrumentListModel->setEnabled(true);
     mWaveListModel->setEnabled(true);
 
     mUndoStack->clear();
@@ -33,6 +36,10 @@ bool ModuleDocument::isModified() const {
     return mModified;
 }
 
+InstrumentListModel* ModuleDocument::instrumentListModel() {
+    return mInstrumentListModel;
+}
+
 WaveListModel* ModuleDocument::waveListModel() {
     return mWaveListModel;
 }
@@ -41,8 +48,10 @@ trackerboy::FormatError ModuleDocument::open(QString filename) {
     trackerboy::FormatError error = trackerboy::FormatError::none;
     std::ifstream in(filename.toStdString(), std::ios::binary | std::ios::in);
     if (in.good()) {
+        mInstrumentListModel->setEnabled(false);
         mWaveListModel->setEnabled(false);
         error = mModule.deserialize(in);
+        mInstrumentListModel->setEnabled(true);
         mWaveListModel->setEnabled(true);
         if (error == trackerboy::FormatError::none) {
             setModified(false);
@@ -74,7 +83,8 @@ bool ModuleDocument::save(QString filename) {
 
 
 void ModuleDocument::addInstrument() {
-    
+    setModified(true);
+    mInstrumentListModel->addItem();
 }
 
 void ModuleDocument::addWaveform() {
