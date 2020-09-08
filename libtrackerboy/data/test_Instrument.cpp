@@ -32,6 +32,7 @@ static const uint8_t SAMPLE_DATA[] = {
     5, // ID = 5
     'C', 'H', '1', ' ', 'L', 'e', 'a', 'd', 0, // name = "CH1 Lead"
     // payload (Instrument::Data)
+    0x00, // CH1
     0x03, // timbre = 0x03 (Duty 75%)
     0xF2, // envelope = 0xF2
     0x11, // pan middle
@@ -53,6 +54,7 @@ TEST_CASE("serialization matches sample data", "[Instrument]") {
     sample.setName("CH1 Lead");
 
     auto &data = sample.data();
+    data.channel = 0;
     data.timbre = 0x03;
     data.envelope = 0xF2;
     data.panning = 0x11;
