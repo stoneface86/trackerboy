@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QFileDialog>
 
 #pragma warning(push, 0)
 #include "designer/ui_MainWindow.h"
@@ -18,14 +19,37 @@ class MainWindow : public QMainWindow, private Ui::MainWindow {
 public:
     explicit MainWindow();
 
+protected:
+
+    void closeEvent(QCloseEvent *evt) override;
+
 private slots:
     void waveformDoubleClicked(const QModelIndex &index);
+    void updateWindowTitle();
+
+    // actions
+    void fileNew();
+    void fileOpen();
+    bool fileSave();
+    bool fileSaveAs();
 
 private:
+
+    // To be called before loading a new document. Prompts user to save if the
+    // current document is modified. Returns false if the user does not want to continue
+    bool maybeSave();
+
+    void setFilename(QString filename);
+
+    QFileDialog *mModuleFileDialog;
 
     ModuleDocument *mDocument;
 
     InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
+
+    // file name of the currently open file or "Untitled" for a new file
+    QString mFilename;
+    QString mDocumentName;
 
 };

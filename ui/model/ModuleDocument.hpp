@@ -26,7 +26,10 @@ public:
 
     bool isModified() const;
 
-    //void save(QString)
+    trackerboy::FormatError open(QString filename);
+
+    // saves the document to the current filename
+    bool save(QString filename);
 
 signals:
     void modifiedChanged(bool value);
@@ -40,6 +43,9 @@ public slots:
 private:
 
     void setModified(bool value);
+
+
+    
 
     bool mModified;
     

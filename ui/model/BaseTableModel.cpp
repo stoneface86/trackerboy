@@ -4,25 +4,28 @@
 
 BaseTableModel::BaseTableModel(trackerboy::BaseTable &table, QObject *parent) :
     mBaseTable(table),
+    mEnabled(true),
     QAbstractListModel(parent)
 {
 }
 
 int BaseTableModel::rowCount(const QModelIndex &parent) const {
     (void)parent;
-    return mBaseTable.size();
+    return (mEnabled) ? mBaseTable.size() : 0;
 }
 
 QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
-    if (role == Qt::DisplayRole) {
-        auto *item = mBaseTable.getFromOrder(index.row());
-        QString str("%1 - %2");
-        return QVariant(str.arg(QString::number(item->id()), QString::fromStdString(item->name())));
-    } else if (role == Qt::DecorationRole) {
-        return iconData(index);
-    } else {
-        return QVariant();
+    if (mEnabled) {
+        if (role == Qt::DisplayRole) {
+            auto *item = mBaseTable.getFromOrder(index.row());
+            QString str("%1 - %2");
+            return QVariant(str.arg(QString::number(item->id()), QString::fromStdString(item->name())));
+        } else if (role == Qt::DecorationRole) {
+            return iconData(index);
+        }
     }
+
+    return QVariant();
 }
 
 void BaseTableModel::addItem() {
@@ -34,6 +37,14 @@ void BaseTableModel::addItem() {
 
 QString BaseTableModel::name(int index) {
     return QString::fromStdString(mBaseTable.getFromOrder(index)->name());
+}
+
+void BaseTableModel::setEnabled(bool enable) {
+    if (enable != mEnabled) {
+        beginResetModel();
+        mEnabled = enable;
+        endResetModel();
+    }
 }
 
 void BaseTableModel::setName(int index, QString name) {

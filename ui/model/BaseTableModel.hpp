@@ -17,6 +17,9 @@ public:
 
     QString name(int index);
 
+    // disable or enable the model, used when opening files or clearing the module
+    void setEnabled(bool enable);
+
     void setName(int index, QString name);
 
 protected:
@@ -26,5 +29,7 @@ protected:
 
 
     trackerboy::BaseTable &mBaseTable;
+
+    bool mEnabled;
 
 };
