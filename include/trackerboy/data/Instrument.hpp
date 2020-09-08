@@ -21,6 +21,7 @@ public:
 
     #pragma pack(push, 1)
     struct Data {
+        uint8_t channel;        // channel id, used by the ui
         uint8_t timbre;         // V0x effect
         uint8_t envelope;       // Exx
         uint8_t panning;        // Ixy

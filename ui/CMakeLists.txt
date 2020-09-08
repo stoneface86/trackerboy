@@ -14,6 +14,7 @@ set(UI_SRC
     #"model/ModuleModel.cpp"
     "model/InstrumentListModel.cpp"
     "model/WaveListModel.cpp"
+    "resources/icons.qrc"
     "resources/keys.qrc"
     "InstrumentEditor.cpp"
     "main.cpp"
