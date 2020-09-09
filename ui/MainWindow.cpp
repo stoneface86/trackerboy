@@ -35,7 +35,7 @@ MainWindow::MainWindow() :
     
     connect(actionNew_waveform, &QAction::triggered, mDocument, &ModuleDocument::addWaveform);
     connect(actionNew_instrument, &QAction::triggered, mDocument, &ModuleDocument::addInstrument);
-    connect(mWaveformListView, &QAbstractItemView::clicked, mWaveEditor, &WaveEditor::selectWaveform);
+    connect(mWaveformListView, &QAbstractItemView::clicked, mDocument->waveListModel(), QOverload<const QModelIndex&>::of(&WaveListModel::select));
     connect(mWaveformListView, &QAbstractItemView::doubleClicked, this, &MainWindow::waveformDoubleClicked);
 
     connect(mDocument, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);

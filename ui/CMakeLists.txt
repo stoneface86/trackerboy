@@ -9,6 +9,7 @@ set(UI_SRC
     "designer/MainWindow.ui"
     "designer/WaveEditor.ui"
     "designer/InstrumentEditor.ui"
+    "model/BaseModel.cpp"
     "model/BaseTableModel.cpp"
     "model/ModuleDocument.cpp"
     #"model/ModuleModel.cpp"

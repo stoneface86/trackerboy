@@ -19,8 +19,8 @@ class WaveEditor : public QWidget, private Ui::WaveEditor {
 public:
     explicit WaveEditor(ModuleDocument *doc, QWidget *parent = nullptr);
 
-public slots:
-    void selectWaveform(const QModelIndex &index);
+//public slots:
+//    void selectWaveform(const QModelIndex &index);
 
 
 private slots:

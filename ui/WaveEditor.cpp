@@ -19,7 +19,8 @@ WaveEditor::WaveEditor(ModuleDocument *document, QWidget *parent) :
     setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
 
     //WaveListModel *model = new WaveListModel(mod.waveTable(), this);
-    mWaveSelect->setModel(document->waveListModel());
+    auto model = document->waveListModel();
+    mWaveSelect->setModel(model);
 
     // let the graph widget use our sample data to display
     mWaveGraph->setData(mWavedata.data());
@@ -34,7 +35,8 @@ WaveEditor::WaveEditor(ModuleDocument *document, QWidget *parent) :
     connect(mInvertButton, &QPushButton::clicked, this, &WaveEditor::onInvert);
     connect(mRotateLeftButton, &QPushButton::clicked, this, &WaveEditor::onRotateLeft);
     connect(mRotateRightButton, &QPushButton::clicked, this, &WaveEditor::onRotateRight);
-    connect(mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WaveEditor::selectionChanged);
+    connect(mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), model, QOverload<int>::of(&WaveListModel::select));
+    connect(model, &WaveListModel::currentIndexChanged, this, &WaveEditor::selectionChanged);
     connect(mNameEdit, &QLineEdit::textEdited, this, &WaveEditor::nameEdited);
 
     // presets
@@ -44,16 +46,17 @@ WaveEditor::WaveEditor(ModuleDocument *document, QWidget *parent) :
     connect(mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
 }
 
-void WaveEditor::selectWaveform(const QModelIndex &index) {
-    if (mWaveSelect->currentIndex() != index.row()) {
-        mWaveSelect->setCurrentIndex(index.row());
-        // get the waveform data
-    }
-}
+//void WaveEditor::selectWaveform(const QModelIndex &index) {
+//    if (mWaveSelect->currentIndex() != index.row()) {
+//        mWaveSelect->setCurrentIndex(index.row());
+//        // get the waveform data
+//    }
+//}
 
 // when the user changes mWaveSelect or is set from the MainWindow
 void WaveEditor::selectionChanged(int index) {
     auto model = mDocument->waveListModel();
+    mWaveSelect->setCurrentIndex(index);
     
     mCurrentWaveform = model->waveform(index);
     auto data = mCurrentWaveform->data();
@@ -65,13 +68,13 @@ void WaveEditor::selectionChanged(int index) {
     }
 
     updateWaveramText();
-    mNameEdit->setText(model->name(index));
+    mNameEdit->setText(model->name());
 }
 
 void WaveEditor::nameEdited(const QString &text) {
     // update the name change to the model
     auto model = mDocument->waveListModel();
-    model->setName(mWaveSelect->currentIndex(), text);
+    model->setName(text);
 }
 
 void WaveEditor::onSampleChanged(QPoint point) {
