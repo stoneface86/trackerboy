@@ -30,7 +30,7 @@ WaveGraph::WaveGraph(QWidget *parent) :
 
 void WaveGraph::setModel(WaveListModel *model) {
     mModel = model;
-    connect(mModel, &WaveListModel::currentIndexChanged, this, [this](int index) { waveformUpdated(); });
+    connect(mModel, &WaveListModel::currentIndexChanged, this, [this](int index) { (void)index;  waveformUpdated(); });
     connect(mModel, QOverload<>::of(&WaveListModel::waveformChanged), this, &WaveGraph::waveformUpdated);
 }
 
@@ -150,9 +150,9 @@ void WaveGraph::resizeEvent(QResizeEvent *evt) {
 }
 
 void WaveGraph::waveformUpdated() {
-    auto data = mModel->currentWaveform()->data();
+    auto wavedata = mModel->currentWaveform()->data();
     for (int i = 0, j = 0; i != 16; ++i) {
-        uint8_t sample = data[i];
+        uint8_t sample = wavedata[i];
         mData[j++] = sample >> 4;
         mData[j++] = sample & 0xF;
     }

@@ -63,6 +63,7 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
 
 // open the wave editor with the selected index
 void MainWindow::waveformDoubleClicked(const QModelIndex &index) {
+    (void)index;
     mWaveEditor->show();
 }
 

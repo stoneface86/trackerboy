@@ -11,14 +11,14 @@ BaseTableModel::BaseTableModel(trackerboy::BaseTable &table, QObject *parent) :
 
 int BaseTableModel::rowCount(const QModelIndex &parent) const {
     (void)parent;
-    return mBaseTable.size();
+    return static_cast<int>(mBaseTable.size());
     //return (mEnabled) ? mBaseTable.size() : 0;
 }
 
 QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
     //if (mEnabled) {
         if (role == Qt::DisplayRole) {
-            auto *item = mBaseTable.getFromOrder(index.row());
+            auto *item = mBaseTable.getFromOrder(static_cast<uint8_t>(index.row()));
             QString str("%1 - %2");
             return QVariant(str.arg(
                 QString::number(item->id(), 16).toUpper().rightJustified(2, '0'), 
@@ -33,16 +33,16 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
 }
 
 void BaseTableModel::addItem() {
-    int row = mBaseTable.size();
+    int row = static_cast<int>(mBaseTable.size());
     beginInsertRows(QModelIndex(), row, row);
     mBaseTable.insertItem();
     endInsertRows();
 }
 
 QString BaseTableModel::name() {
-    return QString::fromStdString(mBaseTable.getFromOrder(mCurrentIndex)->name());
+    return QString::fromStdString(mBaseTable.getFromOrder(static_cast<uint8_t>(mCurrentIndex))->name());
 }
 
 void BaseTableModel::setNameInData(QString name) {
-    mBaseTable.getFromOrder(mCurrentIndex)->setName(name.toStdString());
+    mBaseTable.getFromOrder(static_cast<uint8_t>(mCurrentIndex))->setName(name.toStdString());
 }

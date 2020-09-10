@@ -78,11 +78,11 @@ void WaveEditor::onWaveramEdited(const QString &text) {
 void WaveEditor::updateWaveramText() {
     // probably should use QString but eh
     if (!mIgnoreNextUpdate) {
-        auto data = mModel.currentWaveform()->data();
+        auto wavedata = mModel.currentWaveform()->data();
         std::stringstream ss;
         ss << std::hex << std::uppercase;
         for (int i = 0; i != trackerboy::Gbs::WAVE_RAMSIZE; ++i) {
-            ss << std::setw(2) << std::setfill('0') << static_cast<unsigned>(data[i]);
+            ss << std::setw(2) << std::setfill('0') << static_cast<unsigned>(wavedata[i]);
         }
         mWaveramEdit->setText(QString::fromStdString(ss.str()));
         mWaveGraph->repaint();
@@ -116,7 +116,7 @@ void WaveEditor::setFromPreset(Preset preset) {
                     sample += step;
                 }
                 // and then back down
-                sample = amplitude;
+                sample = static_cast<float>(amplitude);
                 for (int i = 16; i != 32; ++i) {
                     presetData[i] = static_cast<uint8_t>(std::roundf(sample));
                     sample -= step;

@@ -11,7 +11,7 @@ InstrumentListModel::InstrumentListModel(trackerboy::InstrumentTable &table, QOb
 }
 
 trackerboy::Instrument* InstrumentListModel::instrument(int modelIndex) const {
-    return static_cast<trackerboy::InstrumentTable&>(mBaseTable)[mBaseTable.lookup(modelIndex)];
+    return static_cast<trackerboy::InstrumentTable&>(mBaseTable)[mBaseTable.lookup(static_cast<uint8_t>(modelIndex))];
 }
 
 QVariant InstrumentListModel::iconData(const QModelIndex &index) const {

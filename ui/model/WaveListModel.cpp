@@ -7,7 +7,7 @@ WaveListModel::WaveListModel(trackerboy::WaveTable &table, QObject *parent) :
 }
 
 trackerboy::Waveform* WaveListModel::waveform(int modelIndex) {
-    return static_cast<trackerboy::WaveTable&>(mBaseTable)[mBaseTable.lookup(modelIndex)];
+    return static_cast<trackerboy::WaveTable&>(mBaseTable)[mBaseTable.lookup(static_cast<uint8_t>(modelIndex))];
 }
 
 trackerboy::Waveform* WaveListModel::currentWaveform() {
@@ -15,6 +15,7 @@ trackerboy::Waveform* WaveListModel::currentWaveform() {
 }
 
 QVariant WaveListModel::iconData(const QModelIndex &index) const {
+    (void)index;
     return QVariant();
 }
 
@@ -28,10 +29,10 @@ void WaveListModel::setSample(QPoint point) {
     uint8_t sample = data[index];
     if (!!(point.x() & 1)) {
         // even index, target sample is the lower nibble
-        sample = (sample & 0xF0) | point.y();
+        sample = (sample & 0xF0) | static_cast<uint8_t>(point.y());
     } else {
         // odd index, target sample is the upper nibble
-        sample = (sample & 0x0F) | (point.y() << 4);
+        sample = (sample & 0x0F) | (static_cast<uint8_t>(point.y()) << 4);
     }
     data[index] = sample;
     emit waveformChanged(point);
