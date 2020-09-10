@@ -85,7 +85,7 @@ void WaveListModel::rotateLeft() {
         sample = next;
     }
     // wrap-around
-    data[15] |= sampleFirst;
+    data[15] = sampleFirst | (data[15] << 4);
 
     emit waveformChanged();
 }
@@ -94,17 +94,15 @@ void WaveListModel::rotateRight() {
     auto currentWaveform = waveform(mCurrentIndex);
     auto data = currentWaveform->data();
 
-    // save the last sample for later
 
     uint8_t prev = data[15];
-    uint8_t sampleLast = prev << 4;
     for (size_t i = 0; i != trackerboy::Gbs::WAVE_RAMSIZE - 1; ++i) {
         uint8_t sample = data[i];
         data[i] = (sample >> 4) | (prev << 4);
         prev = sample;
     }
     // wrap-around
-    data[15] |= sampleLast;
+    data[15] = (prev << 4) | (data[15] >> 4);
 
     emit waveformChanged();
 }
