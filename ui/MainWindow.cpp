@@ -21,7 +21,7 @@ MainWindow::MainWindow() :
     mWaveformListView->setModel(mDocument->waveListModel());
 
     mInstrumentEditor = new InstrumentEditor(this);
-    mWaveEditor = new WaveEditor(mDocument, this);
+    mWaveEditor = new WaveEditor(*mDocument->waveListModel(), this);
 
     mModuleFileDialog->setNameFilter(tr("Trackerboy Module (*.tbm)"));
     mModuleFileDialog->setWindowModality(Qt::WindowModal);

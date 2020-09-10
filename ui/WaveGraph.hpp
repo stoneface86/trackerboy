@@ -1,9 +1,13 @@
 
 #pragma once
 
+#include <array>
+
 #include <QFrame>
 #include <QMouseEvent>
 #include <QPainter>
+
+#include "model/WaveListModel.hpp"
 
 
 class WaveGraph : public QFrame {
@@ -13,19 +17,13 @@ class WaveGraph : public QFrame {
 public:
     WaveGraph(QWidget *parent = nullptr);
 
-    void setData(uint8_t *data);
+    void setModel(WaveListModel *model);
 
 signals:
     // when the mouse is within the widget, this signal is emitted whenever
     // the current coordinates the mouse points to changes. The string emitted
     // is in the format "(x, y)" where x is the sample index and y is the sample value
     void coordsTextChanged(const QString &string);
-
-    //
-    // emitted when the user changes a sample via clicking on the plot. The new sample value
-    // is stored in a QPoint's y member and the corresponding index in the x member.
-    //
-    void sampleChanged(QPoint sample);
 
 protected:
 
@@ -37,12 +35,16 @@ protected:
 
     void resizeEvent(QResizeEvent *evt) override;
 
+private slots:
+    void waveformUpdated();
 
 private:
 
     // resize the plot rectangle
     void calcGraph();
     
+    WaveListModel *mModel;
+
     // true when the left mouse button is down
     bool mDragging;
     
@@ -59,9 +61,7 @@ private:
     // boundary of the plot, centered within the widget
     QRect mPlotRect;
     
-    // pointer to the sample data (array of 32 bytes, stored in the WaveEditor class)
-    uint8_t *mData;
-
+    std::array<uint8_t, 32> mData;
 
 
 };

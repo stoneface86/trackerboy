@@ -1,5 +1,6 @@
 
 #include <algorithm>
+#include <iomanip>
 #include <sstream>
 #include <cstddef>
 #include <cmath>
@@ -9,34 +10,37 @@
 #include "WaveEditor.hpp"
 
 
-WaveEditor::WaveEditor(ModuleDocument *document, QWidget *parent) :
-    mDocument(document),
-    mCurrentWaveform(nullptr),
-    mWavedata{0},
+WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
+    mModel(model),
+    mIgnoreNextUpdate(false),
     QWidget(parent)
 {
     setupUi(this);
     setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
 
     //WaveListModel *model = new WaveListModel(mod.waveTable(), this);
-    auto model = document->waveListModel();
-    mWaveSelect->setModel(model);
-
-    // let the graph widget use our sample data to display
-    mWaveGraph->setData(mWavedata.data());
+    mWaveSelect->setModel(&mModel);
+    mWaveGraph->setModel(&mModel);
 
     // use system monospace font for the waveram line edit
     mWaveramEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
+    // coordinate label will get updated via WaveGraph signal
     connect(mWaveGraph, &WaveGraph::coordsTextChanged, mCoordsLabel, &QLabel::setText);
-    connect(mWaveGraph, &WaveGraph::sampleChanged, this, &WaveEditor::onSampleChanged);
+
+    // update waveram text when the current waveform changes
+    connect(&mModel, QOverload<QPoint>::of(&WaveListModel::waveformChanged), this, &WaveEditor::onSampleChanged);
+    connect(&mModel, QOverload<>::of(&WaveListModel::waveformChanged), this, &WaveEditor::updateWaveramText);
+    
     connect(mWaveramEdit, &QLineEdit::textEdited, this, &WaveEditor::onWaveramEdited);
-    connect(mClearButton, &QPushButton::clicked, this, &WaveEditor::onClear);
-    connect(mInvertButton, &QPushButton::clicked, this, &WaveEditor::onInvert);
-    connect(mRotateLeftButton, &QPushButton::clicked, this, &WaveEditor::onRotateLeft);
-    connect(mRotateRightButton, &QPushButton::clicked, this, &WaveEditor::onRotateRight);
-    connect(mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), model, QOverload<int>::of(&WaveListModel::select));
-    connect(model, &WaveListModel::currentIndexChanged, this, &WaveEditor::selectionChanged);
+    // connect buttons to model functions
+    connect(mClearButton, &QPushButton::clicked, &mModel, &WaveListModel::clear);
+    connect(mInvertButton, &QPushButton::clicked, &mModel, &WaveListModel::invert);
+    connect(mRotateLeftButton, &QPushButton::clicked, &mModel, &WaveListModel::rotateLeft);
+    connect(mRotateRightButton, &QPushButton::clicked, &mModel, &WaveListModel::rotateRight);
+    // mWaveSelect can also be used to change the current waveform
+    connect(mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), &mModel, QOverload<int>::of(&WaveListModel::select));
+    connect(&mModel, &WaveListModel::currentIndexChanged, this, &WaveEditor::selectionChanged);
     connect(mNameEdit, &QLineEdit::textEdited, this, &WaveEditor::nameEdited);
 
     // presets
@@ -46,35 +50,16 @@ WaveEditor::WaveEditor(ModuleDocument *document, QWidget *parent) :
     connect(mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
 }
 
-//void WaveEditor::selectWaveform(const QModelIndex &index) {
-//    if (mWaveSelect->currentIndex() != index.row()) {
-//        mWaveSelect->setCurrentIndex(index.row());
-//        // get the waveform data
-//    }
-//}
-
 // when the user changes mWaveSelect or is set from the MainWindow
 void WaveEditor::selectionChanged(int index) {
-    auto model = mDocument->waveListModel();
     mWaveSelect->setCurrentIndex(index);
-    
-    mCurrentWaveform = model->waveform(index);
-    auto data = mCurrentWaveform->data();
-    // unpack the waveform into mWavedata
-    for (int i = 0, j = 0; i != 16; ++i) {
-        uint8_t samples = data[i];
-        mWavedata[j++] = samples >> 4;
-        mWavedata[j++] = samples & 0xF;
-    }
-
     updateWaveramText();
-    mNameEdit->setText(model->name());
+    mNameEdit->setText(mModel.name());
 }
 
 void WaveEditor::nameEdited(const QString &text) {
     // update the name change to the model
-    auto model = mDocument->waveListModel();
-    model->setName(text);
+    mModel.setName(text);
 }
 
 void WaveEditor::onSampleChanged(QPoint point) {
@@ -82,97 +67,35 @@ void WaveEditor::onSampleChanged(QPoint point) {
     auto text = mWaveramEdit->text();
     text.replace(point.x(), 1, QString::number(point.y(), 16).toUpper());
     mWaveramEdit->setText(text);
-
-    // update the current waveform's data
-    if (mCurrentWaveform != nullptr) {
-        int index = point.x() / 2;
-        auto data = mCurrentWaveform->data();
-        uint8_t sample = data[index];
-        if (!!(point.x() & 1)) {
-            sample = (sample & 0xF0) | point.y();
-        } else {
-            sample = (sample & 0x0F) | (point.y() << 4);
-        }
-        data[index] = sample;
-    }
 }
 
 void WaveEditor::onWaveramEdited(const QString &text) {
-    // user edited the wave ram line edit, update the wave sample data
-
-    // probably a better way of doing this
-    uint8_t pos = 0;
-    for (auto ch : text) {
-        
-        QString s(ch);
-        mWavedata[pos] = static_cast<uint8_t>(s.toUInt(nullptr, 16));
-        ++pos;
-    }
-    // redraw the graph
-    mWaveGraph->repaint();
-    pack();
+    mIgnoreNextUpdate = true;
+    mModel.setData(text);
 }
 
-
-// function buttons
-
-void WaveEditor::onClear() {
-    std::fill_n(mWavedata.begin(), 32, 0);
-    updateWaveramText();
-    pack();
-}
-
-void WaveEditor::onInvert() {
-    
-    // invert is just the compliment
-    for (auto &sample : mWavedata) {
-        sample = (~sample) & 0xF;
-    }
-    updateWaveramText();
-    pack();
-}
-
-void WaveEditor::onRotateLeft() {
-    // save the first sample for later
-    uint8_t sampleFirst = mWavedata[0];
-    for (size_t i = 0; i != 31; ++i) {
-        // current sample gets the one ahead of it
-        mWavedata[i] = mWavedata[i + 1];
-    }
-    // wrap-around
-    mWavedata[31] = sampleFirst;
-    updateWaveramText();
-    pack();
-}
-
-void WaveEditor::onRotateRight() {
-    // save the last sample for later
-    uint8_t sampleEnd = mWavedata[31];
-    for (size_t i = 31; i != 0; --i) {
-        // current sample gets the one before it
-        mWavedata[i] = mWavedata[i - 1];
-    }
-    // wrap-around
-    mWavedata[0] = sampleEnd;
-    updateWaveramText();
-    pack();
-}
 
 void WaveEditor::updateWaveramText() {
     // probably should use QString but eh
-    std::stringstream ss;
-    ss << std::hex << std::uppercase;
-    for (auto sample : mWavedata) {
-        ss << static_cast<int>(sample);
+    if (!mIgnoreNextUpdate) {
+        auto data = mModel.currentWaveform()->data();
+        std::stringstream ss;
+        ss << std::hex << std::uppercase;
+        for (int i = 0; i != trackerboy::Gbs::WAVE_RAMSIZE; ++i) {
+            ss << std::setw(2) << std::setfill('0') << static_cast<unsigned>(data[i]);
+        }
+        mWaveramEdit->setText(QString::fromStdString(ss.str()));
+        mWaveGraph->repaint();
+    } else {
+        mIgnoreNextUpdate = false;
     }
-    mWaveramEdit->setText(QString::fromStdString(ss.str()));
-    mWaveGraph->repaint();
 }
 
 void WaveEditor::setFromPreset(Preset preset) {
 
     // waveform to sample from
     uint8_t presetData[32];
+    uint8_t waveData[32];
 
     auto amplitude = mPresetAmpSpin->value();
     switch (preset) {
@@ -232,21 +155,10 @@ void WaveEditor::setFromPreset(Preset preset) {
     int presetIndex = phase;
     for (int i = 0; i != 32; ++i) {
         // sample from the preset data
-        mWavedata[i] = presetData[presetIndex];
+        waveData[i] = presetData[presetIndex];
         // set index to the next sample
         presetIndex = (presetIndex + periods) & 0x1F;
     }
-
-    updateWaveramText();
-    pack();
+    mModel.setData(waveData);
 }
 
-void WaveEditor::pack() {
-    if (mCurrentWaveform != nullptr) {
-        auto data = mCurrentWaveform->data();
-        for (int i = 0, j = 0; i != 16; ++i) {
-            data[i] = (mWavedata[j++] << 4) | (mWavedata[j++]);
-        }
-        
-    }
-}

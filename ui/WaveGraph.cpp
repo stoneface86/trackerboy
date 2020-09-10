@@ -10,6 +10,7 @@ constexpr int PLOT_HEIGHT = STEP_Y * 16;
 
 
 WaveGraph::WaveGraph(QWidget *parent) :
+    mModel(nullptr),
     mDragging(false),
     mCurX(0),
     mCurY(0),
@@ -18,7 +19,7 @@ WaveGraph::WaveGraph(QWidget *parent) :
     mPlotLineColor(0xF0, 0xF0, 0xF0),
     mPlotSampleColor(0xFF, 0xFF, 0xFF),
     mPlotRect(0, 0, PLOT_WIDTH, PLOT_HEIGHT),
-    mData(nullptr),
+    mData{ 0 },
     QFrame(parent)
 {
     calcGraph();
@@ -26,8 +27,11 @@ WaveGraph::WaveGraph(QWidget *parent) :
     //setFixedSize(400, 200);
 }
 
-void WaveGraph::setData(uint8_t *_data) {
-    mData = _data;
+
+void WaveGraph::setModel(WaveListModel *model) {
+    mModel = model;
+    connect(mModel, &WaveListModel::currentIndexChanged, this, [this](int index) { waveformUpdated(); });
+    connect(mModel, QOverload<>::of(&WaveListModel::waveformChanged), this, &WaveGraph::waveformUpdated);
 }
 
 
@@ -39,7 +43,7 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
     auto r = rect();
 
     painter.fillRect(r, QColorConstants::Black);
-    
+
 
     int const xaxis = mPlotRect.left();
     int const yaxis = mPlotRect.bottom();
@@ -58,22 +62,20 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
     painter.setBrush(brush);
     painter.setPen(mPlotSampleColor);
 
-    if (mData == nullptr) {
-        return;
-    }
-    
     int x = xaxis + 1;
     for (int i = 0; i != 32; ++i) {
 
         uint8_t sample = mData[i];
+
         if (sample) {
-            int y = ((16 - mData[i]) * STEP_Y) + mPlotRect.top();
+            int y = ((16 - sample) * STEP_Y) + mPlotRect.top();
             painter.drawRect(x, y, STEP_X - 2, yaxis - y - 1);
         } else {
             painter.drawLine(x, yaxis, x + STEP_X - 2, yaxis);
         }
 
         x += STEP_X;
+        
     }
 
 }
@@ -82,7 +84,9 @@ void WaveGraph::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
         mDragging = true;
         mData[mCurX] = mCurY;
-        emit sampleChanged(QPoint(mCurX, mCurY));
+        if (mModel != nullptr) {
+            mModel->setSample(QPoint(mCurX, mCurY));
+        }
         repaint();
     }
 }
@@ -124,7 +128,9 @@ void WaveGraph::mouseMoveEvent(QMouseEvent *evt) {
         if (mDragging) {
             if (mData[mCurX] != mCurY) {
                 mData[mCurX] = mCurY;
-                emit sampleChanged(QPoint(mCurX, mCurY));
+                if (mModel != nullptr) {
+                    mModel->setSample(QPoint(mCurX, mCurY));
+                }
                 repaint();
             }
         }
@@ -140,6 +146,16 @@ void WaveGraph::leaveEvent(QEvent *evt) {
 void WaveGraph::resizeEvent(QResizeEvent *evt) {
     (void)evt;
     calcGraph();
+    repaint();
+}
+
+void WaveGraph::waveformUpdated() {
+    auto data = mModel->currentWaveform()->data();
+    for (int i = 0, j = 0; i != 16; ++i) {
+        uint8_t sample = data[i];
+        mData[j++] = sample >> 4;
+        mData[j++] = sample & 0xF;
+    }
     repaint();
 }
 

@@ -17,10 +17,7 @@ class WaveEditor : public QWidget, private Ui::WaveEditor {
     Q_OBJECT
 
 public:
-    explicit WaveEditor(ModuleDocument *doc, QWidget *parent = nullptr);
-
-//public slots:
-//    void selectWaveform(const QModelIndex &index);
+    explicit WaveEditor(WaveListModel &model, QWidget *parent = nullptr);
 
 
 private slots:
@@ -28,16 +25,8 @@ private slots:
     void onWaveramEdited(const QString &text);
     void selectionChanged(int index);
     void nameEdited(const QString &text);
-    
-    // function buttons
-    void onRotateLeft();
-    void onRotateRight();
-    void onInvert();
-    void onClear();
 
 private:
-
-    void pack();
 
     enum class Preset {
         square,
@@ -50,12 +39,10 @@ private:
 
     void setFromPreset(Preset preset);
 
-    //trackerboy::Module &mMod;
-    ModuleDocument *mDocument;
-    trackerboy::Waveform *mCurrentWaveform;
+    //ModuleDocument *mDocument;
+    WaveListModel &mModel;
 
-    // unpacked version of the waveform data for convenience
-    std::array<uint8_t, 32> mWavedata;
+    bool mIgnoreNextUpdate;
 
 
     
