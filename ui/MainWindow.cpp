@@ -51,6 +51,7 @@ MainWindow::MainWindow() :
     connectAction(actionSave, fileSave);
     connectAction(actionSaveAs, fileSaveAs);
     connectAction(actionQuit, close);
+    connect(actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {

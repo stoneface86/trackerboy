@@ -2,6 +2,7 @@ project(audio CXX C)
 
 
 set(AUDIO_SRC
+    "DeviceManager.cpp"
     "PlaybackQueue.cpp"
     "PaException.cpp"
 )

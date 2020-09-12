@@ -1,3 +1,9 @@
+/*
+** Header file for the audio library.
+**
+** This library is a utility library for the demo and ui projects.
+** Handles querying available devices and buffered audio playback.
+*/
 
 #pragma once
 
@@ -10,6 +16,15 @@
 
 namespace audio {
 
+enum class Samplerate {
+    s11025 = 0x1,
+    s22050 = 0x2,
+    s44100 = 0x4,
+    s48000 = 0x8,
+    s96000 = 0x10
+};
+
+//double const SAMPLERATE_TABLE[5];
 
 //
 // Exception class for a portaudio error. The portaudio error code
@@ -21,6 +36,79 @@ public:
     PaException(PaError err);
 
     PaError getError();
+};
+
+//
+// Container class for all available output devices on the system.
+// Essentially a wrapper for Pa_GetDeviceInfo, but filters out input devices and
+// devices that do not support any of our supported sampling rates.
+//
+class DeviceManager {
+
+public:
+
+    struct Device {
+        int const deviceId;
+        int const mSamplerates;
+        PaDeviceInfo const * const mInfo;
+    };
+
+    DeviceManager();
+
+    //
+    // The current host api in use.
+    //
+    int currentHost() const noexcept;
+
+    //
+    // The current device in use.
+    //
+    int currentDevice() const noexcept;
+
+    //
+    // Return a vector of all available Devices for the current host api
+    //
+    std::vector<Device> const& devices() const noexcept;
+
+    //
+    // Return a vector of all available host api information
+    //
+    std::vector<PaHostApiInfo const *> const& hosts() const noexcept;
+
+    //
+    // Setup the given PaStreamParameters structure with the current
+    // device.
+    //
+    void getOutputParameters(PaStreamParameters &param);
+
+    //
+    // Query all available devices on the system and add them to the device list
+    // Only output devices get added to the list.
+    //
+    void queryDevices();
+
+    //
+    // Set the Host Api to use. The default device for the api will be selected.
+    //
+    void setCurrentApi(int index);
+    
+    //
+    // Set the current device index. This index is relative to the current host api.
+    //
+    void setCurrentDevice(int index);
+
+
+
+
+private:
+
+    int mCurrentApi;
+    int mCurrentDevice;
+    Samplerate mCurrentSamplerate;
+    std::vector<PaHostApiInfo const *> mApis;
+
+    // device list for the current api
+    std::vector<Device> mDeviceList;
 };
 
 //
