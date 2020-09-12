@@ -9,6 +9,7 @@
 #pragma warning(pop)
 
 #include "model/ModuleDocument.hpp"
+#include "ConfigDialog.hpp"
 #include "InstrumentEditor.hpp"
 #include "WaveEditor.hpp"
 
@@ -39,7 +40,11 @@ private:
     // current document is modified. Returns false if the user does not want to continue
     bool maybeSave();
 
+    void readSettings();
+
     void setFilename(QString filename);
+
+    void writeSettings();
 
     QFileDialog *mModuleFileDialog;
 
@@ -47,6 +52,7 @@ private:
 
     InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
+    ConfigDialog *mConfigDialog;
 
     // file name of the currently open file or "Untitled" for a new file
     QString mFilename;

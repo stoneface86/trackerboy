@@ -4,16 +4,20 @@
 #include <QFileInfo>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QSettings>
+#include <QScreen>
 
 
 MainWindow::MainWindow() :
     mModuleFileDialog(new QFileDialog(this)),
     mDocument(new ModuleDocument(this)),
+    mConfigDialog(new ConfigDialog(this)),
     mInstrumentEditor(nullptr),
     mWaveEditor(nullptr),
     QMainWindow()
 {
     setupUi(this);
+    readSettings();
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
 
@@ -25,7 +29,6 @@ MainWindow::MainWindow() :
 
     mModuleFileDialog->setNameFilter(tr("Trackerboy Module (*.tbm)"));
     mModuleFileDialog->setWindowModality(Qt::WindowModal);
-    mModuleFileDialog->setAcceptMode(QFileDialog::AcceptSave);
 
     auto __style = style();
     actionNew->setIcon(__style->standardIcon(QStyle::SP_FileIcon));
@@ -52,7 +55,7 @@ MainWindow::MainWindow() :
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
     if (maybeSave()) {
-        //writeSettings();
+        writeSettings();
         evt->accept();
     } else {
         evt->ignore();
@@ -83,6 +86,7 @@ void MainWindow::fileNew() {
 void MainWindow::fileOpen() {
     if (maybeSave()) {
         mModuleFileDialog->setFileMode(QFileDialog::FileMode::ExistingFile);
+        mModuleFileDialog->setAcceptMode(QFileDialog::AcceptOpen);
         mModuleFileDialog->setWindowTitle("Open");
         if (mModuleFileDialog->exec() == QDialog::Accepted) {
             QString filename = mModuleFileDialog->selectedFiles().first();
@@ -104,6 +108,7 @@ bool MainWindow::fileSave() {
 
 bool MainWindow::fileSaveAs() {
     mModuleFileDialog->setFileMode(QFileDialog::FileMode::AnyFile);
+    mModuleFileDialog->setAcceptMode(QFileDialog::AcceptSave);
     mModuleFileDialog->setWindowTitle("Save As");
     if (mModuleFileDialog->exec() != QDialog::Accepted) {
         return false;
@@ -142,6 +147,20 @@ bool MainWindow::maybeSave() {
     return true;
 }
 
+void MainWindow::readSettings() {
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
+    if (geometry.isEmpty()) {
+        const QRect availableGeometry = screen()->availableGeometry();
+        resize(availableGeometry.width() / 3, availableGeometry.height() / 2);
+        move((availableGeometry.width() - width()) / 2,
+            (availableGeometry.height() - height()) / 2);
+    } else {
+        restoreGeometry(geometry);
+    }
+    restoreState(settings.value("windowState").toByteArray());
+}
+
 void MainWindow::setFilename(QString filename) {
     mFilename = filename;
     if (filename.isEmpty()) {
@@ -153,3 +172,8 @@ void MainWindow::setFilename(QString filename) {
     updateWindowTitle();
 }
 
+void MainWindow::writeSettings() {
+    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    settings.setValue("geometry", saveGeometry());
+    settings.setValue("windowState", saveState());
+}

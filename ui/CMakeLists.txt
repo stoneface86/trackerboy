@@ -6,6 +6,7 @@ use_qt(Widgets Core)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(UI_SRC
+    "designer/ConfigDialog.ui"
     "designer/MainWindow.ui"
     "designer/WaveEditor.ui"
     "designer/InstrumentEditor.ui"
@@ -17,6 +18,7 @@ set(UI_SRC
     "model/WaveListModel.cpp"
     "resources/icons.qrc"
     "resources/keys.qrc"
+    "ConfigDialog.cpp"
     "InstrumentEditor.cpp"
     "main.cpp"
     "MainWidget.cpp"
@@ -36,6 +38,8 @@ endif ()
 add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC})
 target_link_libraries(trackerboy_ui
     trackerboy
+    portaudio_static
+    audio
     Qt5::Widgets
     Qt5::Core
 )
