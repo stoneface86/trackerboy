@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QPoint>
 
 #include "trackerboy/data/Table.hpp"
 

@@ -42,7 +42,7 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
 
     auto r = rect();
 
-    painter.fillRect(r, QColorConstants::Black);
+    painter.fillRect(r, QColor(0, 0, 0));
 
 
     int const xaxis = mPlotRect.left();
