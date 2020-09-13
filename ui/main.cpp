@@ -1,6 +1,9 @@
 
 #include <QApplication>
+#include <QMessageBox>
 #include "portaudio.h"
+
+#include "audio.hpp"
 
 #include "MainWindow.hpp"
 #include "InstrumentEditor.hpp"
@@ -13,17 +16,28 @@ int main(int argc, char *argv[]) {
     if (err != paNoError) {
         return 1;
     }
-    
+
     QApplication app(argc, argv);
-    QCoreApplication::setOrganizationName("Trackerboy");
+    QCoreApplication::setOrganizationName("stoneface86");
     QCoreApplication::setApplicationName("Trackerboy");
 
-    MainWindow *win = new MainWindow();
-    win->show();
+    audio::DeviceTable& deviceTable = audio::DeviceTable::instance();
+    if (deviceTable.isEmpty()) {
+        QMessageBox::critical(
+            nullptr,
+            "Trackerboy",
+            "The application cannot start. There are no available sound devices."
+        );
+        code = 1; 
+    } else {
 
-    code = app.exec();
+        MainWindow *win = new MainWindow();
+        win->show();
 
-    delete win;
+        code = app.exec();
+
+        delete win;
+    }
     
     Pa_Terminate();
     return code;

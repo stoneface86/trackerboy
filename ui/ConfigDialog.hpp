@@ -9,19 +9,18 @@
 
 #include "audio.hpp"
 
+#include "Config.hpp"
+
 class ConfigDialog : public QDialog, private Ui::ConfigDialog {
 
     Q_OBJECT
 
 public:
-    ConfigDialog(QWidget *parent = nullptr);
-
-
-    void loadSettings(QSettings &settings);
-
-    void saveSettings(QSettings &settings);
+    ConfigDialog(Config &config, QWidget *parent = nullptr);
 
     void accept() override;
+
+    void reject() override;
 
 private slots:
     void bufferSizeSliderChanged(int value);
@@ -31,12 +30,17 @@ private slots:
     void samplerateSelected(int index);
 
     void gainChanged(int channel, int value);
-
+    
 private:
 
+    void fillDeviceCombo(int hostIndex);
+    void fillSamplerateCombo();
+
+    void resetControls();
+
+    Config &mConfig;
+
     audio::DeviceManager mDeviceManager;
-    std::vector<audio::Samplerate> mSamplerateVec;
-    audio::Samplerate mLastSamplerate;
-    bool mIgnoreSamplerateSelection;
+    bool mIgnoreSelections;
 
 };

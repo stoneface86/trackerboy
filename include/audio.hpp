@@ -16,15 +16,22 @@
 
 namespace audio {
 
-enum class Samplerate {
-    s11025 = 0x1,
-    s22050 = 0x2,
-    s44100 = 0x4,
-    s48000 = 0x8,
-    s96000 = 0x10
+//
+// Enum of sample rates for audio output. Since devices only support a limited
+// range or specific rates we will limit the user to this selection. Output is
+// bandlimited so using a higher sampling rate to avoid aliasing is unnecessary.
+//
+enum Samplerate {
+    SR_11025,           // Bit 0, 11,025 Hz
+    SR_22050,           // Bit 1, 22,050 Hz
+    SR_44100,           // Bit 2, 44,100 Hz
+    SR_48000,           // Bit 3, 48,000 Hz
+    SR_96000,           // Bit 4, 96,000 Hz
+
+    SR_COUNT
 };
 
-//double const SAMPLERATE_TABLE[5];
+extern double const SAMPLERATE_TABLE[SR_COUNT];
 
 //
 // Exception class for a portaudio error. The portaudio error code
@@ -39,19 +46,78 @@ public:
 };
 
 //
-// Container class for all available output devices on the system.
-// Essentially a wrapper for Pa_GetDeviceInfo, but filters out input devices and
-// devices that do not support any of our supported sampling rates.
+// Container class for all available devices on the system exposed to us
+// via portaudio. Only output devices that support one or more of our
+// supported sample rates are stored here.
+//
+// It is possible that the table is empty (the host list is empty), if
+// this occurs the application should not start as there won't be any
+// devices to output sound to.
+// 
+class DeviceTable {
+
+public:
+    struct Host {
+        int const hostId;                   // Portaudio host api index
+        int const deviceOffset;             // starting offset in device vector
+        int const deviceCount;              // count of devices this api has
+        int const deviceDefault;            // index of the default device
+        PaHostApiInfo const * const info;   // info structure
+    };
+
+    struct Device {
+        int const deviceId;                 // Portaudio device index
+        int const samplerates;              // bitfield of supported samplerates
+        PaDeviceInfo const * const info;    // info structure
+    };
+
+    using HostVec = std::vector<Host>;
+    using DeviceVec = std::vector<Device>;
+    using HostIterator = HostVec::const_iterator;
+    using DeviceIterator = DeviceVec::const_iterator;
+
+    DeviceTable(DeviceTable const&) = delete;
+    void operator=(DeviceTable const&) = delete;
+
+    static DeviceTable& instance();
+
+    //
+    // Returns true if there are no available devices, false otherwise.
+    //
+    bool isEmpty() const noexcept;
+
+    //
+    // Get the vector of available host apis
+    //
+    HostVec const& hosts() const noexcept;
+
+    HostIterator hostsBegin() const noexcept;
+    HostIterator hostsEnd() const noexcept;
+
+    //
+    // Device iterators for the given host api index
+    //
+    DeviceIterator devicesBegin(int host) const noexcept;
+    DeviceIterator devicesEnd(int host) const noexcept;
+
+
+private:
+    DeviceTable();
+
+    HostVec mHostList;
+    DeviceVec mDeviceList;
+
+
+};
+
+
+
+//
+// Container class keeping track of a user selected host api, device and samplerate
 //
 class DeviceManager {
 
 public:
-
-    struct Device {
-        int const deviceId;
-        int const mSamplerates;
-        PaDeviceInfo const * const mInfo;
-    };
 
     DeviceManager();
 
@@ -65,27 +131,17 @@ public:
     //
     int currentDevice() const noexcept;
 
-    //
-    // Return a vector of all available Devices for the current host api
-    //
-    std::vector<Device> const& devices() const noexcept;
+    int currentSamplerate() const noexcept;
 
     //
-    // Return a vector of all available host api information
+    // Portaudio device id of the current device
     //
-    std::vector<PaHostApiInfo const *> const& hosts() const noexcept;
+    int portaudioDevice() const noexcept;
 
     //
-    // Setup the given PaStreamParameters structure with the current
-    // device.
+    // Return a vector of available sample rates for the current device
     //
-    void getOutputParameters(PaStreamParameters &param);
-
-    //
-    // Query all available devices on the system and add them to the device list
-    // Only output devices get added to the list.
-    //
-    void queryDevices();
+    std::vector<Samplerate> const& samplerates() const noexcept;
 
     //
     // Set the Host Api to use. The default device for the api will be selected.
@@ -97,18 +153,30 @@ public:
     //
     void setCurrentDevice(int index);
 
+    //
+    // Set the current device and api from the PaDeviceIndex
+    //
+    void setPortaudioDevice(int deviceIndex);
+
+    void setCurrentSamplerate(int samplerateIndex);
+
 
 
 
 private:
 
+    DeviceTable &mTable;
+
     int mCurrentApi;
     int mCurrentDevice;
+    int mSamplerateIndex;
     Samplerate mCurrentSamplerate;
-    std::vector<PaHostApiInfo const *> mApis;
 
-    // device list for the current api
-    std::vector<Device> mDeviceList;
+    // list of available sample rates for the current device
+    std::vector<Samplerate> mSamplerates;
+
+    DeviceTable::HostIterator mCurrentApiIter;
+    DeviceTable::DeviceIterator mCurrentDeviceIter;
 };
 
 //

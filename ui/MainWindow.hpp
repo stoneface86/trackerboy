@@ -48,6 +48,7 @@ private:
 
     QFileDialog *mModuleFileDialog;
 
+    Config *mConfig;
     ModuleDocument *mDocument;
 
     InstrumentEditor *mInstrumentEditor;

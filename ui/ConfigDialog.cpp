@@ -15,14 +15,21 @@ static const char *SAMPLING_RATE_STR[] = {
 };
 
 
-ConfigDialog::ConfigDialog(QWidget *parent) :
+ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
+    mConfig(config),
     mDeviceManager(),
-    mSamplerateVec(),
-    mLastSamplerate(audio::Samplerate::s44100),
-    mIgnoreSamplerateSelection(false),
+    mIgnoreSelections(false),
     QDialog(parent)
 {
     setupUi(this);
+
+    // populate the host combo with all available host apis
+    // we only need to do this once
+    auto &deviceTable = audio::DeviceTable::instance();
+    auto &hosts = deviceTable.hosts();
+    for (auto &host : hosts) {
+        mHostApiCombo->addItem(QString::fromLatin1(host.info->name));
+    }
 
     connect(mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
     connect(mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
@@ -36,18 +43,31 @@ ConfigDialog::ConfigDialog(QWidget *parent) :
     connect(mDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::deviceSelected);
     connect(mSamplerateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::samplerateSelected);
 
-
-    auto &hosts = mDeviceManager.hosts();
-    for (auto host : hosts) {
-        mHostApiCombo->addItem(QString::fromLatin1(host->name));
-    }
-    mHostApiCombo->setCurrentIndex(mDeviceManager.currentHost());
+    // reset all controls to our Config's settings
+    resetControls();
 
 }
 
 void ConfigDialog::accept() {
     // update all changes to the Config object
+    mConfig.setDeviceId(mDeviceManager.portaudioDevice());
+    mConfig.setSamplerate(mDeviceManager.samplerates()[mDeviceManager.currentSamplerate()]);
+    mConfig.setBuffersize(mBufferSizeSlider->value());
+    mConfig.setVolume(mVolumeSlider->value());
+    mConfig.setGain(trackerboy::ChType::ch1, mGainSlider1->value());
+    mConfig.setGain(trackerboy::ChType::ch2, mGainSlider2->value());
+    mConfig.setGain(trackerboy::ChType::ch3, mGainSlider3->value());
+    mConfig.setGain(trackerboy::ChType::ch4, mGainSlider4->value());
+
+
     QDialog::accept();
+}
+
+void ConfigDialog::reject() {
+    // reset all settings
+    resetControls();
+
+    QDialog::reject();
 }
 
 
@@ -62,72 +82,37 @@ void ConfigDialog::volumeSliderChanged(int value) {
 }
 
 void ConfigDialog::hostApiSelected(int index) {
-    mDeviceManager.setCurrentApi(index);
-    mDeviceCombo->clear();
-    auto &devices = mDeviceManager.devices();
-    for (auto dev : devices) {
-        mDeviceCombo->addItem(QString::fromLatin1(dev.mInfo->name));
-    }
-    mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
+    if (!mIgnoreSelections) {
+        mDeviceManager.setCurrentApi(index);
 
+        // populate the device combo box with devices for this host
+        mIgnoreSelections = true;
+        fillDeviceCombo(index);
+        mIgnoreSelections = false;
+
+        mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
+    }
 }
 
 void ConfigDialog::deviceSelected(int index) {
-    if (index == -1) {
-        return;
+    
+    // ignore this signal when items are being added to the combobox
+    if (!mIgnoreSelections) {
+        mIgnoreSelections = true;
+        mDeviceManager.setCurrentDevice(index);
+        fillSamplerateCombo();
+        mSamplerateCombo->setCurrentIndex(mDeviceManager.currentSamplerate());
+        mIgnoreSelections = false;
     }
-
-    // update the sampling rate combo with this device's supported sampling rates
-    mIgnoreSamplerateSelection = true;
-
-    int curSamplerateIndex = mSamplerateCombo->currentIndex();
-    mSamplerateCombo->clear();
-    mSamplerateVec.clear();
-
-    auto &dev = mDeviceManager.devices()[index];
-    for (int i = 0; i != 5; ++i) {
-        int samplerateFlag = 1 << i;
-        if (!!(dev.mSamplerates & samplerateFlag)) {
-            mSamplerateCombo->addItem(QString::fromLatin1(SAMPLING_RATE_STR[i]));
-            mSamplerateVec.push_back(static_cast<audio::Samplerate>(samplerateFlag));
-        }
-    }
-
-    mIgnoreSamplerateSelection = false;
-
-    if (mSamplerateVec.size() == 1) {
-        mSamplerateCombo->setCurrentIndex(0); // no need to search
-    } else {
-        // search for the last set sampling rate
-        int rateIndex = 0;
-        for (auto rate : mSamplerateVec) {
-            if (static_cast<int>(rate) == static_cast<int>(mLastSamplerate)) {
-                break;
-            } else if (static_cast<int>(rate) > static_cast<int>(mLastSamplerate)) {
-                // could not find it, use the closest one
-                --rateIndex;
-                break;
-            }
-            ++rateIndex;
-        }
-        mSamplerateCombo->setCurrentIndex(rateIndex);
-    }
-
-
-    //mSamplerateCombo->setCurrentIndex(std::min(curSamplerateIndex, mSamplerateCombo->count() - 1));
 }
 
 void ConfigDialog::samplerateSelected(int index) {
-    if (!mIgnoreSamplerateSelection) {
-        mLastSamplerate = mSamplerateVec[index];
+    if (!mIgnoreSelections) {
+        mDeviceManager.setCurrentSamplerate(index);
     }
 }
 
 void ConfigDialog::gainChanged(int channel, int value) {
-    int integral = value / 10;
-    int fractional = abs(value) % 10;
-    QString text; // = QString("%1.%2 dB").arg(QString::number(value / 10), QString::number(value % 10));
-    text.sprintf("%+d.%d dB", integral, fractional);
     QLabel *label;
     switch (channel) {
         case 0:
@@ -143,5 +128,66 @@ void ConfigDialog::gainChanged(int channel, int value) {
             label = mGainLabel4;
             break;
     }
-    label->setText(text);
+    label->setText(QString::asprintf("%+d.%d dB", value / 10, abs(value) % 10));
 }
+
+void ConfigDialog::fillDeviceCombo(int hostIndex) {
+    mDeviceCombo->clear();
+
+    auto &deviceTable = audio::DeviceTable::instance();
+    auto devicesBegin = deviceTable.devicesBegin(hostIndex);
+    auto devicesEnd = deviceTable.devicesEnd(hostIndex);
+    for (auto iter = devicesBegin; iter != devicesEnd; ++iter) {
+        mDeviceCombo->addItem(QString::fromLatin1(iter->info->name));
+    }
+}
+
+void ConfigDialog::fillSamplerateCombo() {
+    mSamplerateCombo->clear();
+    auto &samplerates = mDeviceManager.samplerates();
+    for (auto rate : samplerates) {
+        mSamplerateCombo->addItem(QString::fromLatin1(SAMPLING_RATE_STR[rate]));
+    }
+}
+
+
+void ConfigDialog::resetControls() {
+    auto &deviceTable = audio::DeviceTable::instance();
+
+    mIgnoreSelections = true;
+    mDeviceManager.setPortaudioDevice(mConfig.deviceId());
+
+    int host = mDeviceManager.currentHost();
+    mHostApiCombo->setCurrentIndex(host);
+    fillDeviceCombo(host);
+
+    mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
+
+    // reset samplerate
+    fillSamplerateCombo();
+    int samplerate = mConfig.samplerate();
+    int samplerateIndex = 0;
+    for (auto rate : mDeviceManager.samplerates()) {
+        if (rate >= samplerate) {
+            break;
+        }
+        ++samplerateIndex;
+    }
+
+    mDeviceManager.setCurrentSamplerate(samplerateIndex);
+    mSamplerateCombo->setCurrentIndex(samplerateIndex);
+
+    mIgnoreSelections = false;
+
+    mBufferSizeSlider->setValue(mConfig.buffersize());
+    mVolumeSlider->setValue(mConfig.volume());
+    mGainSlider1->setValue(mConfig.gain(trackerboy::ChType::ch1));
+    mGainSlider2->setValue(mConfig.gain(trackerboy::ChType::ch2));
+    mGainSlider3->setValue(mConfig.gain(trackerboy::ChType::ch3));
+    mGainSlider4->setValue(mConfig.gain(trackerboy::ChType::ch4));
+
+
+}
+
+
+

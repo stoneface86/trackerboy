@@ -11,13 +11,16 @@
 MainWindow::MainWindow() :
     mModuleFileDialog(new QFileDialog(this)),
     mDocument(new ModuleDocument(this)),
-    mConfigDialog(new ConfigDialog(this)),
+    mConfig(new Config(this)),
+    mConfigDialog(nullptr),
     mInstrumentEditor(nullptr),
     mWaveEditor(nullptr),
     QMainWindow()
 {
     setupUi(this);
     readSettings();
+
+    mConfigDialog = new ConfigDialog(*mConfig, this);
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
 
@@ -160,6 +163,7 @@ void MainWindow::readSettings() {
         restoreGeometry(geometry);
     }
     restoreState(settings.value("windowState").toByteArray());
+    mConfig->readSettings(settings);
 }
 
 void MainWindow::setFilename(QString filename) {
@@ -177,4 +181,5 @@ void MainWindow::writeSettings() {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
+    mConfig->writeSettings(settings);
 }

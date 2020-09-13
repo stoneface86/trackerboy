@@ -1,7 +1,8 @@
 
 #include "audio.hpp"
 
-namespace {
+
+namespace audio {
 
 const double SAMPLERATE_TABLE[] = {
     11025.0,
@@ -11,35 +12,17 @@ const double SAMPLERATE_TABLE[] = {
     96000.0
 };
 
-}
-
-
-namespace audio {
-
-
 DeviceManager::DeviceManager() :
+    mTable(DeviceTable::instance()),
     mCurrentApi(0),
     mCurrentDevice(0),
-    mCurrentSamplerate(Samplerate::s44100),
-    mApis(),
-    mDeviceList()
+    mSamplerateIndex(0),
+    mCurrentSamplerate(SR_44100),
+    mSamplerates(),
+    mCurrentApiIter(mTable.hostsBegin()),
+    mCurrentDeviceIter(mTable.devicesBegin(0))
 {
-    // query all available APIs
-
-    int apiCount = Pa_GetHostApiCount();
-    for (int i = 0; i < apiCount; ++i) {
-        mApis.push_back(Pa_GetHostApiInfo(i));
-    }
-
     setCurrentApi(Pa_GetDefaultHostApi());
-}
-
-std::vector<DeviceManager::Device> const& DeviceManager::devices() const noexcept {
-    return mDeviceList;
-}
-
-std::vector<PaHostApiInfo const *> const& DeviceManager::hosts() const noexcept {
-    return mApis;
 }
 
 int DeviceManager::currentHost() const noexcept {
@@ -47,67 +30,79 @@ int DeviceManager::currentHost() const noexcept {
 }
 
 int DeviceManager::currentDevice() const noexcept {
-    return mCurrentApi;
+    return mCurrentDevice;
 }
 
-void DeviceManager::getOutputParameters(PaStreamParameters &param) {
-    auto &device = mDeviceList[mCurrentDevice];
-    param.channelCount = 2;
-    param.device = mCurrentDevice;
-    param.hostApiSpecificStreamInfo = NULL;
-    param.suggestedLatency = device.mInfo->defaultLowOutputLatency;
-    param.sampleFormat = paFloat32;
+int DeviceManager::currentSamplerate() const noexcept {
+    return mSamplerateIndex;
 }
 
-void DeviceManager::queryDevices() {
-    mDeviceList.clear();
+int DeviceManager::portaudioDevice() const noexcept {
+    auto iter = mTable.devicesBegin(mCurrentApi) + mCurrentDevice;
+    return iter->deviceId;
+}
 
-    auto hostInfo = mApis[mCurrentApi];
-    mCurrentDevice = 0;
-
-    for (int i = 0; i != hostInfo->deviceCount; ++i) {
-
-        int deviceId = Pa_HostApiDeviceIndexToDeviceIndex(mCurrentApi, i);
-        auto info = Pa_GetDeviceInfo(deviceId);
-        if (info->maxOutputChannels == 0) {
-            // no output channels, probably a microphone
-            // or is not from the current api
-            continue;
-        }
-
-        PaStreamParameters outputParam;
-
-        outputParam.channelCount = 2;
-        outputParam.device = deviceId;
-        outputParam.hostApiSpecificStreamInfo = NULL;
-        outputParam.suggestedLatency = info->defaultLowOutputLatency;
-        outputParam.sampleFormat = paFloat32;
-
-        int sampleRateFlags = 0;
-        for (int j = 0; j != 5; ++j) {
-            // now see if the device supports each samplerate
-            double samplerate = SAMPLERATE_TABLE[j];
-            if (Pa_IsFormatSupported(nullptr, &outputParam, samplerate) == paFormatIsSupported) {
-                /// samplerate is supported, add it to the flags
-                sampleRateFlags |= (1 << j);
-            }
-        }
-        
-        // do not add the device if it doesn't support any of our samplerates
-        if (sampleRateFlags) {
-            mDeviceList.push_back({ deviceId, sampleRateFlags, info });
-            if (deviceId == hostInfo->defaultOutputDevice) {
-                mCurrentDevice = i;
-            }
-        }
-        
-
-    }
+std::vector<Samplerate> const& DeviceManager::samplerates() const noexcept {
+    return mSamplerates;
 }
 
 void DeviceManager::setCurrentApi(int index) {
     mCurrentApi = index;
-    queryDevices();
+    mCurrentApiIter = mTable.hostsBegin() + index;
+    setCurrentDevice(mCurrentApiIter->deviceDefault);
+}
+
+void DeviceManager::setCurrentDevice(int index) {
+    if (mCurrentDevice != index) {
+        mCurrentDevice = index;
+        mCurrentDeviceIter = mTable.devicesBegin(mCurrentApi) + index;
+        // populate the samplerateVec with all available samplerates
+        mSamplerates.clear();
+        mSamplerateIndex = 0;
+        for (int i = 0; i != SR_COUNT; ++i) {
+            int samplerateFlag = 1 << i;
+            if (!!(mCurrentDeviceIter->samplerates & samplerateFlag)) {
+                Samplerate rate = static_cast<Samplerate>(i);
+                if (mCurrentSamplerate == rate) {
+                    mSamplerateIndex = mSamplerates.size();
+                }
+                mSamplerates.push_back(rate);
+            }
+        }
+    }
+}
+
+void DeviceManager::setCurrentSamplerate(int index) {
+    mSamplerateIndex = index;
+    mCurrentSamplerate = mSamplerates[index];
+}
+
+void DeviceManager::setPortaudioDevice(int device) {
+    auto info = Pa_GetDeviceInfo(device);
+    int hostIndex = 0;
+    for (auto &host : mTable.hosts()) {
+        if (host.hostId == info->hostApi) {
+            break;
+        }
+        ++hostIndex;
+    }
+
+    mCurrentApi = hostIndex;
+    mCurrentApiIter = mTable.hostsBegin() + hostIndex;
+
+    // find the table device index
+    int devIndex = 0;
+    auto devicesBegin = mTable.devicesBegin(hostIndex);
+    auto devicesEnd = mTable.devicesEnd(hostIndex);
+    for (auto iter = devicesBegin; iter != devicesEnd; ++iter) {
+        if (iter->deviceId == device) {
+            break;
+        }
+        ++devIndex;
+    }
+
+    setCurrentDevice(devIndex);
+    
 }
 
 

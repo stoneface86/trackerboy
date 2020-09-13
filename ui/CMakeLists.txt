@@ -18,6 +18,7 @@ set(UI_SRC
     "model/WaveListModel.cpp"
     "resources/icons.qrc"
     "resources/keys.qrc"
+    "Config.cpp"
     "ConfigDialog.cpp"
     "InstrumentEditor.cpp"
     "main.cpp"
