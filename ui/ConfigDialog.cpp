@@ -160,8 +160,6 @@ void ConfigDialog::fillSamplerateCombo() {
 
 
 void ConfigDialog::resetControls() {
-    auto &deviceTable = audio::DeviceTable::instance();
-
     mIgnoreSelections = true;
     mDeviceManager.setPortaudioDevice(mConfig.deviceId());
 
