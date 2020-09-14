@@ -18,11 +18,11 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTabWidget" name="tabWidget">
+    <widget class="QTabWidget" name="mTabWidget">
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="mTabSound">
       <attribute name="title">
        <string>Sound</string>
       </attribute>
@@ -379,7 +379,7 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>tabWidget</tabstop>
+  <tabstop>mTabWidget</tabstop>
   <tabstop>mHostApiCombo</tabstop>
   <tabstop>mDeviceCombo</tabstop>
   <tabstop>mSamplerateCombo</tabstop>

@@ -14,6 +14,11 @@
 #include "portaudio.h"
 #include "pa_ringbuffer.h"
 
+#ifdef _MSC_VER
+// disable warnings about unscoped enums
+#pragma warning(disable : 26812)
+#endif
+
 namespace audio {
 
 //

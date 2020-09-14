@@ -2,6 +2,7 @@
 
 #include <QDialog>
 #include <QSettings>
+#include <QShowEvent>
 
 #pragma warning(push, 0)
 #include "designer/ui_ConfigDialog.h"
@@ -21,6 +22,10 @@ public:
     void accept() override;
 
     void reject() override;
+
+protected:
+
+    void showEvent(QShowEvent *evt) override;
 
 private slots:
     void bufferSizeSliderChanged(int value);

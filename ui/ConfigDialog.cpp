@@ -70,6 +70,10 @@ void ConfigDialog::reject() {
     QDialog::reject();
 }
 
+void ConfigDialog::showEvent(QShowEvent *evt) {
+    mTabWidget->setCurrentIndex(0);
+    QDialog::showEvent(evt);
+}
 
 void ConfigDialog::bufferSizeSliderChanged(int value) {
     QString text("%1 ms");
@@ -113,22 +117,26 @@ void ConfigDialog::samplerateSelected(int index) {
 }
 
 void ConfigDialog::gainChanged(int channel, int value) {
-    QLabel *label;
+    QLabel *gainLabel;
     switch (channel) {
         case 0:
-            label = mGainLabel1;
+            gainLabel = mGainLabel1;
             break;
         case 1:
-            label = mGainLabel2;
+            gainLabel = mGainLabel2;
             break;
         case 2:
-            label = mGainLabel3;
+            gainLabel = mGainLabel3;
             break;
         default:
-            label = mGainLabel4;
+            gainLabel = mGainLabel4;
             break;
     }
-    label->setText(QString::asprintf("%+d.%d dB", value / 10, abs(value) % 10));
+    QString text = QString("%1%2.%3 dB")
+                    .arg(value < 0 ? '-' : '+')
+                    .arg(value / 10)
+                    .arg(abs(value) % 10);
+    gainLabel->setText(text);
 }
 
 void ConfigDialog::fillDeviceCombo(int hostIndex) {
