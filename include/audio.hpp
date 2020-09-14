@@ -199,7 +199,7 @@ public:
     static constexpr unsigned DEFAULT_BUFFER_SIZE = 40;
 
 
-    PlaybackQueue(float samplingRate, unsigned bufferSize = DEFAULT_BUFFER_SIZE);
+    PlaybackQueue(Samplerate samplerate, unsigned bufferSize = DEFAULT_BUFFER_SIZE);
     ~PlaybackQueue();
 
     //
@@ -231,11 +231,17 @@ public:
     void setBufferSize(unsigned bufferSize);
 
     //
+    // Set the output device to use. The stream must be stopped before calling this
+    // method.
+    //
+    void setDevice(int deviceId);
+
+    //
     // Change the sampling rate for the playback output. The stream must
     // be stopped before calling this method, as a new one will have to be
     // opened. The queue is also flushed.
     //
-    void setSamplingRate(float samplingRate);
+    void setSamplingRate(Samplerate samplerate);
 
     //
     // Begin audio playback. Audio data written to the queue is then
@@ -270,10 +276,11 @@ private:
 
     std::vector<float> mQueueData;
 
-    float mSamplingRate;
+    Samplerate mSamplerate;
     unsigned mBufferSize; // size in milleseconds of the buffer
     unsigned mWaitTime; // time in milleseconds to sleep when buffer is full
-    
+    bool mResizeRequired;
+    int mDevice; // device id to use
 
     friend PaStreamCallback playbackCallback;
 
@@ -283,18 +290,6 @@ private:
     //
     void checkBufferSize(unsigned bufferSize);
 
-    //
-    // Check if the given sampling rate is valid, throw invalid_argument otherwise
-    // A valid sampling rate is nonzero and positive.
-    //
-    void checkSamplingRate(float samplingRate);
-
-    //
-    // Opens the PaStream stored in mStream
-    //
-    void openStream();
-
-    void resizeQueue();
 };
 
 

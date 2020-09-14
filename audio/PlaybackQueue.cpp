@@ -22,6 +22,9 @@ int playbackCallback(
 
     auto nread = PaUtil_ReadRingBuffer(&pb->mQueue, out, frameCount);
     if (nread != frameCount) {
+        // underrun, just output silence
+        // a gap will be noticeable in the output
+        // TODO: update a counter in PlaybackQueue for total underruns
         std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, 0.0f);
     }
     
@@ -29,21 +32,15 @@ int playbackCallback(
     
 }
 
-PlaybackQueue::PlaybackQueue(float samplingRate, unsigned bufferSize) :
+PlaybackQueue::PlaybackQueue(Samplerate samplerate, unsigned bufferSize) :
     mStream(nullptr),
-    mSamplingRate(samplingRate),
+    mSamplerate(samplerate),
     mBufferSize(bufferSize),
-    mWaitTime(bufferSize / 4)
+    mWaitTime(bufferSize / 4),
+    mResizeRequired(true),
+    mDevice(Pa_GetDefaultOutputDevice())
 {
-    checkSamplingRate(samplingRate);
     checkBufferSize(bufferSize);
-
-    // resize the queue vector
-    resizeQueue();
-
-    // open the stream
-    openStream();
-
 }
 
 PlaybackQueue::~PlaybackQueue() {
@@ -82,17 +79,31 @@ void PlaybackQueue::setBufferSize(unsigned bufferSize) {
         throw std::runtime_error("cannot change buffer size while stream is active");
     }
 
-    flush();
     mBufferSize = bufferSize;
     mWaitTime = bufferSize / 4;
-    resizeQueue();
+    mResizeRequired = true;
 }
 
 
-void PlaybackQueue::setSamplingRate(float samplingRate) {
+void PlaybackQueue::setDevice(int deviceId) {
+    if (Pa_GetDeviceInfo(deviceId) == nullptr) {
+        throw std::invalid_argument("cannot set device: unknown id");
+    }
 
-    checkSamplingRate(samplingRate);
+    if (mStream != nullptr) {
+        if (Pa_IsStreamActive(mStream)) {
+            return; // cannot change device while stream is active
+        }
 
+        Pa_CloseStream(mStream);
+        mStream = nullptr;
+    }
+
+    mDevice = deviceId;
+}
+
+
+void PlaybackQueue::setSamplingRate(Samplerate samplerate) {
     if (mStream != nullptr) {
         if (Pa_IsStreamActive(mStream)) {
             return; // cannot change the samping rate while the stream is active
@@ -100,15 +111,61 @@ void PlaybackQueue::setSamplingRate(float samplingRate) {
         // close the existing stream, portaudio doesn't have a function for
         // changing the sampling rate, so we have to open a new stream
         Pa_CloseStream(mStream);
+        mStream = nullptr;
     }
 
-    flush();
-    mSamplingRate = samplingRate;
-    openStream();
-    resizeQueue();
+    mSamplerate = samplerate;
+    mResizeRequired = true;
 }
 
 void PlaybackQueue::start() {
+    if (mStream == nullptr) {
+        PaStreamParameters param;
+        param.channelCount = 2;
+        param.device = mDevice;
+        param.hostApiSpecificStreamInfo = nullptr;
+        param.sampleFormat = paFloat32;
+        auto info = Pa_GetDeviceInfo(mDevice);
+        param.suggestedLatency = info->defaultLowOutputLatency;
+
+
+        PaError err = Pa_OpenStream(
+            &mStream,                       // the stream pointer
+            NULL,                           // no input channels
+            &param,                         // stereo, 2 output channels
+            SAMPLERATE_TABLE[mSamplerate],  // use the set sampling rate
+            paFramesPerBufferUnspecified,   // use the best fpb for the host
+            paNoFlag,                       // stream flags: none
+            playbackCallback,               // callback function
+            this                            // pass this to the callback function
+        );
+
+        if (err != paNoError) {
+            throw PaException(err);
+        }
+    }
+
+    if (mResizeRequired) {
+        // determine the number of samples the queue requires
+        const size_t nsamples = static_cast<size_t>(std::round(SAMPLERATE_TABLE[mSamplerate] * (mBufferSize / 1000.0f)));
+
+        // find the nearest power of two that is >= nsamples
+        // there's a faster way to do this but performance is not a concern here.
+
+        size_t queueDataSize = 1;
+        while (queueDataSize < nsamples) {
+            queueDataSize <<= 1;
+        }
+
+        // resize the queue vector
+        mQueueData.resize(queueDataSize * 2);
+
+        // re-initialize ringbuffer with the new size
+        PaUtil_InitializeRingBuffer(&mQueue, sizeof(float) * 2, queueDataSize, mQueueData.data());
+
+        mResizeRequired = false;
+    }
+
     flush();
     PaError err = Pa_StartStream(mStream);
     if (err != paNoError) {
@@ -161,51 +218,6 @@ void PlaybackQueue::checkBufferSize(unsigned bufferSize) {
     if (bufferSize < MIN_BUFFER_SIZE || bufferSize > MAX_BUFFER_SIZE) {
         throw std::invalid_argument("buffer size is out of range");
     }
-}
-
-void PlaybackQueue::checkSamplingRate(float samplingRate) {
-    if (samplingRate <= 0.0f) {
-        throw std::invalid_argument("sampling rate must be positive");
-    }
-}
-
-void PlaybackQueue::openStream() {
-    PaError err = Pa_OpenDefaultStream(
-        &mStream,                       // the stream pointer
-        0,                              // no input channels
-        2,                              // stereo, 2 output channels
-        paFloat32,                      // 32-bit float samples
-        mSamplingRate,                  // use the set sampling rate
-        paFramesPerBufferUnspecified,   // use the best fpb for the host
-        playbackCallback,               // callback function
-        this                            // pass this to the callback function
-    );
-
-    if (err != paNoError) {
-        throw PaException(err);
-    }
-}
-
-void PlaybackQueue::resizeQueue() {
-    
-    // determine the number of samples the queue requires
-    const size_t nsamples = static_cast<size_t>(std::round(mSamplingRate * (mBufferSize / 1000.0f)));
-    
-    // find the nearest power of two that is >= nsamples
-    // there's a faster way to do this but performance is not a concern here.
-
-    size_t queueDataSize = 1;
-    while (queueDataSize < nsamples) {
-        queueDataSize <<= 1;
-    }
-
-    // resize the queue vector
-    mQueueData.resize(queueDataSize * 2);
-
-    // re-initialize ringbuffer with the new size
-    PaUtil_InitializeRingBuffer(&mQueue, sizeof(float) * 2, queueDataSize, mQueueData.data());
-    
-    
 }
 
 

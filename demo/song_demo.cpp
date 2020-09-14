@@ -15,7 +15,7 @@ using audio::PlaybackQueue;
 
 using namespace trackerboy;
 
-static constexpr float SAMPLING_RATE = 44100;
+static constexpr float SAMPLING_RATE = 48000;
 
 //#define READ_FILE
 
@@ -28,7 +28,7 @@ int main() {
     }
 
     Synth synth(SAMPLING_RATE);
-    PlaybackQueue pb(SAMPLING_RATE);
+    PlaybackQueue pb(audio::SR_48000);
 
     Module mod;
     #ifdef READ_FILE
