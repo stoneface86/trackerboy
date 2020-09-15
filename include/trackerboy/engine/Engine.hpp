@@ -5,11 +5,11 @@
 #include <optional>
 #include <tuple>
 
-#include "trackerboy/engine/Timer.hpp"
-#include "trackerboy/engine/PatternCursor.hpp"
+#include "trackerboy/engine/ChannelControl.hpp"
+#include "trackerboy/engine/MusicRuntime.hpp"
+#include "trackerboy/engine/RuntimeContext.hpp"
 #include "trackerboy/data/Song.hpp"
-#include "trackerboy/synth/Synth.hpp"
-#include "trackerboy/data/Table.hpp"
+
 
 namespace trackerboy {
 
@@ -18,47 +18,38 @@ class Engine {
 
 public:
 
-    Engine();
+    Engine(RuntimeContext rc);
 
     void reset();
 
     void play(Song &song, uint8_t orderNo, uint8_t patternRow = 0);
     
-    bool step(Synth &synth, InstrumentTable &itable, WaveTable &wtable);
+    //
+    // Lock the given channel. Channel is reloaded with music settings.
+    //
+    void lock(ChType ch);
+
+    //
+    // Unlock the given channel. Channel is cleared and will no longer be
+    // updated by the music runtime.
+    //
+    void unlock(ChType ch);
+
+    bool step();
 
 private:
 
-    template <int channel = 0>
-    bool setRows();
+    RuntimeContext mRc;
+    std::optional<MusicRuntime> mMusicContext;
+    ChannelControl mChCtrl;
 
-    enum class PatternCommand {
-        none,
-        next,
-        jump
-    };
+    // bit 0: CH1 lock status (0 = locked)
+    // bit 1: CH2 lock status
+    // bit 2: CH3 lock status
+    // bit 3: CH4 lock status
+    int mChflags;
 
-    struct Context {
-        Context(Song &song, uint8_t orderNo, uint8_t lastOrder);
-
-        Song &song;
-        uint8_t orderCounter;
-        // last order index for the song
-        uint8_t const lastOrder;
-
-        
-        bool halted;
-        PatternCommand command;
-        uint8_t commandParam;
-    };
-
-    
-    //friend std::optional<Context>;
-    std::optional<Context> mContext;
-
-    // Runtime components
-
-    Timer mTimer;
-    PatternCursor mCursor;
+    //sfx runtime
 
 };
 

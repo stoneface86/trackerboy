@@ -3,6 +3,7 @@ project("libtrackerboy")
 
 set(SRC_FILES
     "export/Wav.cpp"
+    "engine/ChannelControl.cpp"
     "engine/Engine.cpp"
     "engine/FrequencyControl.cpp"
     "engine/MusicRuntime.cpp"

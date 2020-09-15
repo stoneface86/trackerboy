@@ -4,7 +4,7 @@
 
 namespace trackerboy {
 
-MusicRuntime::MusicRuntime(RuntimeContext rc, Song &song, uint8_t orderNo, uint8_t patternRow) :
+MusicRuntime::MusicRuntime(RuntimeContext rc, ChannelControl &chCtrl, Song &song, uint8_t orderNo, uint8_t patternRow) :
     mRc(rc),
     mSong(song),
     mOrderCounter(orderNo),
@@ -17,7 +17,8 @@ MusicRuntime::MusicRuntime(RuntimeContext rc, Song &song, uint8_t orderNo, uint8
     mPanning(0xFF),
     mPanningMask(0x00),
     mNoteDelay(0),
-    mFlags(FLAGS_DEFAULT)
+    mFlags(FLAGS_DEFAULT),
+    mChCtrl(chCtrl)
 {
     mCursor.setPattern(song.getPattern(orderNo), patternRow);
     mTimer.setPeriod(song.speed());
@@ -107,6 +108,38 @@ bool MusicRuntime::setRows() {
 
 }
 
+void MusicRuntime::reload(ChType ch) {
+
+    switch (ch) {
+        case ChType::ch1:
+            reloadImpl<ChType::ch1>();
+            break;
+        case ChType::ch2:
+            reloadImpl<ChType::ch2>();
+            break;
+        case ChType::ch3:
+            reloadImpl<ChType::ch3>();
+            break;
+        case ChType::ch4:
+            reloadImpl<ChType::ch4>();
+            break;
+    }
+}
+
+template <ChType ch>
+void MusicRuntime::reloadImpl() {
+    constexpr int chint = static_cast<int>(ch);
+
+    if constexpr (ch == ChType::ch4) {
+
+    } else {
+        writeTimbre<ch>(mTimbre[chint]);
+        mRc.synth.setFrequency(ch, mFc[chint].frequency());
+    }
+
+    writeEnvelope<ch>(mEnvelope[chint]);
+}
+
 bool MusicRuntime::step() {
     if (mFlags & FLAGS_HALTED) {
         return true;
@@ -155,19 +188,19 @@ bool MusicRuntime::step() {
         // determine music panning
         uint8_t panning = mPanning & mPanningMask;
 
-        //uint8_t lockbits = mFlags & 0xF;
-        //if (lockbits != 0xF) {
-        //    // when one or more channels are unlocked:
-        //    // NR51 <- ((y & z) & w) | (x & ~w)
-        //    // where
-        //    //  w: channel lock bits
-        //    //  x: current value of NR51
-        //    //  y: mPanning
-        //    //  z: mPanningMask
-        //    lockbits |= lockbits << 4;
-        //    panning &= lockbits;
-        //    panning |= mRc.synth.readRegister(Gbs::REG_NR51) & ~lockbits;
-        //}
+        uint8_t lockbits = mChCtrl.lockbits();
+        if (lockbits) {
+            // when one or more channels are unlocked:
+            // NR51 <- ((y & z) & ~w) | (x & w)
+            // where
+            //  w: channel lock bits
+            //  x: current value of NR51
+            //  y: mPanning
+            //  z: mPanningMask
+            lockbits |= lockbits << 4;
+            panning &= ~lockbits;
+            panning |= mRc.synth.readRegister(Gbs::REG_NR51) & lockbits;
+        }
 
         mRc.synth.setOutputEnable(static_cast<Gbs::OutputFlags>(panning));
         mFlags &= ~FLAGS_PANNING;
@@ -204,6 +237,8 @@ void MusicRuntime::update() {
         (void)fc;
     }
 
+    bool const locked = mChCtrl.isLocked(ch);
+
     auto note = nc.step();
 
     if (nc.isPlaying()) {
@@ -217,7 +252,7 @@ void MusicRuntime::update() {
                 fc->apply();
             } else {
                 // CH4
-                if (noteVal <= NOTE_NOISE_LAST) {
+                if (locked && noteVal <= NOTE_NOISE_LAST) {
                     uint8_t noise = NOTE_NOISE_TABLE[noteVal];
                     if (mTimbre[chint]) {
                         // nonzero timbre, 7-bit step width
@@ -228,7 +263,7 @@ void MusicRuntime::update() {
 
             }
 
-            if (!!(mFlags & (FLAGS_AREN1 << chint))) {
+            if (locked && !!(mFlags & (FLAGS_AREN1 << chint))) {
                 mRc.synth.restart(ch);
             }
 
@@ -241,7 +276,10 @@ void MusicRuntime::update() {
         if constexpr (isFrequencyChannel) {
             fc->step();
             // write frequency
-            mRc.synth.setFrequency(ch, fc->frequency());
+
+            if (locked) {
+                mRc.synth.setFrequency(ch, fc->frequency());
+            }
         }
     } else if (mPanningMask & panningBits) {
         // no longer playing the note, reset bits in the panning mask
@@ -306,7 +344,8 @@ void MusicRuntime::processTrackEffect(Effect effect) {
             mNoteDelay = effect.param;
             break;
         case EffectType::lock:
-            break; // TODO
+            mChCtrl.lock(ch);
+            break;
         default:
             break; // should never happen
     }
@@ -359,14 +398,18 @@ void MusicRuntime::setEnvelope(uint8_t envelope) {
             mFlags |= FLAGS_AREN1 << chint;
         }
     }
-    writeEnvelope<ch>(envelope);
+    if (mChCtrl.isLocked(ch)) {
+        writeEnvelope<ch>(envelope);
+    }
 }
 
 template <ChType ch>
 void MusicRuntime::setTimbre(uint8_t timbre) {
     constexpr int chint = static_cast<int>(ch);
     mTimbre[chint] = timbre & 0x3;
-    writeTimbre<ch>(mTimbre[chint]);
+    if (mChCtrl.isLocked(ch)) {
+        writeTimbre<ch>(mTimbre[chint]);
+    }
 }
 
 template <ChType ch>

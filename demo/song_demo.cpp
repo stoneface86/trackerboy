@@ -1,7 +1,7 @@
 
 
 #include "trackerboy/export/Wav.hpp"
-#include "trackerboy/engine/MusicRuntime.hpp"
+#include "trackerboy/engine/Engine.hpp"
 #include "trackerboy/note.hpp"
 #include "trackerboy/data/Module.hpp"
 
@@ -346,8 +346,9 @@ int main() {
     }
     #endif
 
-   
-    MusicRuntime musicRun(rc, mod.songs()[0], 0, 0);
+
+    Engine engine(rc);
+    engine.play(mod.songs()[0], 0, 0);
     std::ofstream file("song_demo.wav", std::ios::binary | std::ios::out);
     Wav wav(file, 2, SAMPLING_RATE);
     wav.begin();
@@ -355,7 +356,7 @@ int main() {
 
 
     for (int i = 600; i != 0; --i) {
-        musicRun.step();
+        engine.step();
         size_t framesize = synth.run();
         //outputFrame(synth.buffer(), framesize, pb);
         pb.writeAll(synth.buffer(), framesize);

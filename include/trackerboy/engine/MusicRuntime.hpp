@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "trackerboy/data/Song.hpp"
+#include "trackerboy/engine/ChannelControl.hpp"
 #include "trackerboy/engine/FrequencyControl.hpp"
 #include "trackerboy/engine/NoteControl.hpp"
 #include "trackerboy/engine/PatternCursor.hpp"
@@ -30,14 +31,19 @@ public:
     // Constructs a runtime with the given context and prepares to play the given song
     // starting at a specific order and row.
     //
-    MusicRuntime(RuntimeContext rc, Song &song, uint8_t orderNo, uint8_t patternRow);
+    MusicRuntime(RuntimeContext rc, ChannelControl &chCtrl, Song &song, uint8_t orderNo, uint8_t patternRow);
 
     //
     // Step the runtime for a single frame. If the runtime was halted, true is returned.
     //
     bool step();
 
+    void reload(ChType ch);
+
 private:
+
+    template <ChType ch>
+    void reloadImpl();
 
     //
     // Read the current row pointed by mCursor and apply its data to the runtime,
@@ -139,6 +145,7 @@ private:
     int mFlags;
 
     // runtime components
+    ChannelControl &mChCtrl;
     NoteControl mNc[4];
     FrequencyControl mFc[3];
     Timer mTimer;
