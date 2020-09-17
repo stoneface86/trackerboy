@@ -3,25 +3,38 @@
 
 
 Renderer::Renderer(ModuleDocument &document, QObject *parent) :
-    mDocument(document),
-    mPb(audio::SR_44100),
-    mSynth(44100.0f)
+    mWorker(new RenderWorker(document)),
+    mThread(),
+    mRendering(false),
+    QObject(parent)
 {
+    mWorker->moveToThread(&mThread);
+    connect(&mThread, &QThread::finished, mWorker, &QObject::deleteLater);
+    connect(this, &Renderer::rendering, mWorker, &RenderWorker::render);
+    mThread.start();
+}
+
+Renderer::~Renderer() {
+    if (mWorker->isRendering()) {
+        mWorker->quitRender();
+    }
+    mThread.quit();
+    mThread.wait();
 }
 
 
 void Renderer::previewWaveform(trackerboy::Note note) {
-
+    mWorker->previewWaveform(note);
+    if (!mWorker->isRendering()) {
+        emit rendering();
+    }
 }
 
 void Renderer::previewInstrument(trackerboy::Note note) {
 
 }
 
-void Renderer::setPreviewNote(trackerboy::Note note) {
-
-}
-
 void Renderer::stopPreview() {
-
+    mWorker->stopPreview();
 }
+

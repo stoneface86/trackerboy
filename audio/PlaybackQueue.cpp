@@ -118,6 +118,11 @@ void PlaybackQueue::setSamplingRate(Samplerate samplerate) {
     mResizeRequired = true;
 }
 
+void PlaybackQueue::silence() {
+    std::fill(mQueueData.begin(), mQueueData.end(), 0.0f);
+    PaUtil_AdvanceRingBufferWriteIndex(&mQueue, mQueueData.size() / 2);
+}
+
 void PlaybackQueue::start() {
     if (mStream == nullptr) {
         PaStreamParameters param;

@@ -6,6 +6,7 @@
 #include <QStringListModel>
 
 #include "trackerboy/data/Module.hpp"
+#include "trackerboy/engine/RuntimeContext.hpp"
 
 #include "model/InstrumentListModel.hpp"
 #include "model/WaveListModel.hpp"
@@ -25,6 +26,10 @@ public:
 
     InstrumentListModel* instrumentListModel();
     WaveListModel* waveListModel();
+
+    trackerboy::InstrumentTable& instrumentTable();
+
+    trackerboy::WaveTable& waveTable();
 
     bool isModified() const;
 

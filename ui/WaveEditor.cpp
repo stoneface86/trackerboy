@@ -50,6 +50,10 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
     connect(mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
 }
 
+PianoWidget* WaveEditor::piano() {
+    return mPiano;
+}
+
 // when the user changes mWaveSelect or is set from the MainWindow
 void WaveEditor::selectionChanged(int index) {
     mWaveSelect->setCurrentIndex(index);

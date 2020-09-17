@@ -11,6 +11,7 @@
 #include "model/ModuleDocument.hpp"
 #include "ConfigDialog.hpp"
 #include "InstrumentEditor.hpp"
+#include "Renderer.hpp"
 #include "WaveEditor.hpp"
 
 class MainWindow : public QMainWindow, private Ui::MainWindow {
@@ -54,6 +55,8 @@ private:
     InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
     ConfigDialog *mConfigDialog;
+
+    Renderer *mRenderer;
 
     // file name of the currently open file or "Untitled" for a new file
     QString mFilename;

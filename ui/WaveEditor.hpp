@@ -19,6 +19,7 @@ class WaveEditor : public QWidget, private Ui::WaveEditor {
 public:
     explicit WaveEditor(WaveListModel &model, QWidget *parent = nullptr);
 
+    PianoWidget* piano();
 
 private slots:
     void onSampleChanged(QPoint sample);

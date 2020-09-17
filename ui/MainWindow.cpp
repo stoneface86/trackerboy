@@ -15,6 +15,7 @@ MainWindow::MainWindow() :
     mConfigDialog(nullptr),
     mInstrumentEditor(nullptr),
     mWaveEditor(nullptr),
+    mRenderer(new Renderer(*mDocument, this)),
     QMainWindow()
 {
     setupUi(this);
@@ -55,6 +56,10 @@ MainWindow::MainWindow() :
     connectAction(actionSaveAs, fileSaveAs);
     connectAction(actionQuit, close);
     connect(actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
+
+    auto wavePiano = mWaveEditor->piano();
+    connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
+    connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {

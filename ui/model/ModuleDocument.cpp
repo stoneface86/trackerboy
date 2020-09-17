@@ -44,6 +44,14 @@ WaveListModel* ModuleDocument::waveListModel() {
     return mWaveListModel;
 }
 
+trackerboy::InstrumentTable& ModuleDocument::instrumentTable() {
+    return mModule.instrumentTable();
+}
+
+trackerboy::WaveTable& ModuleDocument::waveTable() {
+    return mModule.waveTable();
+}
+
 trackerboy::FormatError ModuleDocument::open(QString filename) {
     trackerboy::FormatError error = trackerboy::FormatError::none;
     std::ifstream in(filename.toStdString(), std::ios::binary | std::ios::in);

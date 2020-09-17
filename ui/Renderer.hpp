@@ -2,13 +2,9 @@
 #pragma once
 
 #include <QObject>
+#include <QThread>
 
-#include "audio.hpp"
-
-#include "trackerboy/synth/Synth.hpp"
-#include "trackerboy/note.hpp"
-
-#include "model/ModuleDocument.hpp"
+#include "RenderWorker.hpp"
 
 
 //
@@ -16,14 +12,19 @@
 //
 class Renderer : public QObject {
 
-public:
-    Renderer(ModuleDocument &document, QObject *parent = nullptr);
+    Q_OBJECT
 
+public:
+
+    Renderer(ModuleDocument &document, QObject *parent = nullptr);
+    ~Renderer();
+
+    RenderWorker* worker();
+
+public slots:
     void previewWaveform(trackerboy::Note note);
 
     void previewInstrument(trackerboy::Note note);
-
-    void setPreviewNote(trackerboy::Note note);
 
     void stopPreview();
 
@@ -32,12 +33,14 @@ signals:
     void playing(); // emitted when music starts playing
     void stopped(); // emitted when music stops playing via halt effect or by user action
 
+    void rendering(); // emitted when the render work is started
 
 private:
 
-    ModuleDocument &mDocument;
-    audio::PlaybackQueue mPb;
-    trackerboy::Synth mSynth;
+    void render();
 
+    RenderWorker *mWorker;
+    QThread mThread;
 
+    bool mRendering;
 };

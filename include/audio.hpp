@@ -243,6 +243,8 @@ public:
     //
     void setSamplingRate(Samplerate samplerate);
 
+    void silence();
+
     //
     // Begin audio playback. Audio data written to the queue is then
     // played out to the speakers. Silence is played out whenever the
