@@ -95,6 +95,21 @@ uint8_t BaseTable::lookup(uint8_t order) const {
     return mItemOrder[order];
 }
 
+uint8_t BaseTable::nextId() const noexcept {
+    return mNextId;
+}
+
+int BaseTable::nextModelId() const noexcept {
+    int index = 0;
+    for (auto id : mItemOrder) {
+        if (mNextId < id) {
+            break;
+        }
+        ++index;
+    }
+    return index;
+}
+
 void BaseTable::remove(uint8_t id) {
     auto &ptr = (*mData)[id];
     if (!ptr) {

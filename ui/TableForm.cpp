@@ -97,6 +97,7 @@ void TableForm::modelCurrentChanged(int index) {
     if (index == -1) {
         mNameEdit->setEnabled(false);
         mNameEdit->setText("");
+        mEditor->setVisible(false);
     } else {
         mNameEdit->setEnabled(true);
         mNameEdit->setText(mModel->name());

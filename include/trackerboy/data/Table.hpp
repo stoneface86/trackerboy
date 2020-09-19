@@ -46,6 +46,10 @@ public:
 
     uint8_t lookup(uint8_t order) const;
 
+    uint8_t nextId() const noexcept;
+
+    int nextModelId() const noexcept;
+
     void remove(uint8_t id);
 
     FormatError serialize(std::ostream &stream) noexcept;

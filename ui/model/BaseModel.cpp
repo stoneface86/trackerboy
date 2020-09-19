@@ -2,6 +2,8 @@
 #include "model/BaseModel.hpp"
 
 
+
+
 BaseModel::BaseModel(ModuleDocument &document) :
     mDocument(document),
     mCurrentIndex(-1),
@@ -44,6 +46,10 @@ void BaseModel::select(int index) {
         emit currentIndexChanged(index);
 
         bool hasSelection = index != -1;
+        if (mActNew != nullptr) {
+            mActNew->setEnabled(canDuplicate());
+        }
+
         if (mActRemove != nullptr) {
             mActRemove->setEnabled(hasSelection && canRemove());
         }
@@ -81,4 +87,3 @@ void BaseModel::setActions(QAction *actNew, QAction *actRemove, QAction *actDupl
     mActDuplicate = actDuplicate;
     mActEdit = actEdit;
 }
-

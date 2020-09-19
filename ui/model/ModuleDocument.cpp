@@ -10,6 +10,7 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mMutex(),
     QObject(parent)
 {
+    clear();
 }
 
 void ModuleDocument::clear() {

@@ -1,7 +1,6 @@
 
 #include "model/BaseTableModel.hpp"
 
-
 BaseTableModel::BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table) :
     mBaseTable(table),
     //mEnabled(true),
@@ -30,19 +29,31 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
 }
 
 int BaseTableModel::dataAdd() {
-    int row = static_cast<int>(mBaseTable.size());
+    int row = mBaseTable.nextModelId();
+
     beginInsertRows(QModelIndex(), row, row);
     
     mDocument.lock();
-    mBaseTable.insertItem();
+    auto &item = mBaseTable.insertItem();
     mDocument.unlock();
 
     endInsertRows();
+
     return row;
 }
 
 int BaseTableModel::dataRemove() {
-    return 0;
+    uint8_t id = mBaseTable.lookup(mCurrentIndex);
+
+    int index = mCurrentIndex;
+    beginRemoveRows(QModelIndex(), index, index);
+
+    mDocument.lock();
+    mBaseTable.remove(id);
+    mDocument.unlock();
+
+    endRemoveRows();
+    return mBaseTable.size() == index ? index - 1 : index;
 }
 
 int BaseTableModel::dataDuplicate() {
