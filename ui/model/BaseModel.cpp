@@ -19,18 +19,22 @@ int BaseModel::currentIndex() const {
 
 void BaseModel::add() {
     select(dataAdd());
+    mDocument.setModified(true);
 }
 
 void BaseModel::remove() {
     select(dataRemove());
+    mDocument.setModified(true);
 }
 
 void BaseModel::duplicate() {
     select(dataDuplicate());
+    mDocument.setModified(true);
 }
 
 void BaseModel::rename(const QString &name) {
     dataRename(name);
+    mDocument.setModified(true);
     emit dataChanged(createIndex(mCurrentIndex, 0, nullptr), createIndex(mCurrentIndex, 0, nullptr), { Qt::DisplayRole });
 }
 

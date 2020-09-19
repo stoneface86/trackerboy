@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QObject>
+#include <QMutex>
 #include <QUndoStack>
 #include <QStringListModel>
 
@@ -44,6 +45,11 @@ public:
     // saves the document to the current filename
     bool save(QString filename);
 
+    void setModified(bool value);
+
+    void lock();
+    void unlock();
+
 signals:
     void modifiedChanged(bool value);
 
@@ -53,7 +59,7 @@ public slots:
 
 private:
 
-    void setModified(bool value);
+    
 
 
     
@@ -67,6 +73,8 @@ private:
     // the undo stack is for the current song, the stack is
     // cleared when changing songs
     QUndoStack *mUndoStack;
+
+    QMutex mMutex;
 
 
     // document properties

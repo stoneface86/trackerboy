@@ -7,6 +7,7 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mModified(false),
     mModule(),
     mUndoStack(new QUndoStack(this)),
+    mMutex(),
     QObject(parent)
 {
 }
@@ -77,7 +78,13 @@ void ModuleDocument::setModified(bool value) {
     }
 }
 
+void ModuleDocument::lock() {
+    mMutex.lock();
+}
 
+void ModuleDocument::unlock() {
+    mMutex.unlock();
+}
 
 
 

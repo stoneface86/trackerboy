@@ -32,7 +32,11 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
 int BaseTableModel::dataAdd() {
     int row = static_cast<int>(mBaseTable.size());
     beginInsertRows(QModelIndex(), row, row);
+    
+    mDocument.lock();
     mBaseTable.insertItem();
+    mDocument.unlock();
+
     endInsertRows();
     return row;
 }
