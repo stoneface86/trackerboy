@@ -62,8 +62,12 @@ void BaseModel::select(const QModelIndex &index) {
 void BaseModel::setEnabled(bool enabled) {
     if (enabled) {
         endResetModel();
+        if (rowCount() > 0) {
+            select(0);
+        }
     } else {
         beginResetModel();
+        select(-1);
     }
 }
 

@@ -42,11 +42,7 @@ trackerboy::FormatError ModuleDocument::open(QString filename) {
     trackerboy::FormatError error = trackerboy::FormatError::none;
     std::ifstream in(filename.toStdString(), std::ios::binary | std::ios::in);
     if (in.good()) {
-        /*mInstrumentListModel->setEnabled(false);
-        mWaveListModel->setEnabled(false);*/
         error = mModule.deserialize(in);
-        /*mInstrumentListModel->setEnabled(true);
-        mWaveListModel->setEnabled(true);*/
         if (error == trackerboy::FormatError::none) {
             setModified(false);
         }
@@ -61,9 +57,7 @@ bool ModuleDocument::save(QString filename) {
     bool success = false;
     std::ofstream out(filename.toStdString(), std::ios::binary | std::ios::out);
     if (out.good()) {
-        //mWaveListModel->setEnabled(false);
         success = mModule.serialize(out) == trackerboy::FormatError::none;
-        //mWaveListModel->setEnabled(true);
         if (success) {
             setModified(false);
             mUndoStack->setClean();

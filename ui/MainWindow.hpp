@@ -46,6 +46,8 @@ private:
 
     void setFilename(QString filename);
 
+    void setModelsEnabled(bool enabled);
+
     void writeSettings();
 
     QFileDialog *mModuleFileDialog;

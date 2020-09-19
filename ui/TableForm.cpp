@@ -96,6 +96,7 @@ void TableForm::init(BaseTableModel *model, QWidget *editor) {
 void TableForm::modelCurrentChanged(int index) {
     if (index == -1) {
         mNameEdit->setEnabled(false);
+        mNameEdit->setText("");
     } else {
         mNameEdit->setEnabled(true);
         mNameEdit->setText(mModel->name());

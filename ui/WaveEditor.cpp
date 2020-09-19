@@ -56,9 +56,11 @@ PianoWidget* WaveEditor::piano() {
 
 // when the user changes mWaveSelect or is set from the MainWindow
 void WaveEditor::selectionChanged(int index) {
-    mWaveSelect->setCurrentIndex(index);
-    updateWaveramText();
-    mNameEdit->setText(mModel.name());
+    if (index != -1) {
+        mWaveSelect->setCurrentIndex(index);
+        updateWaveramText();
+        mNameEdit->setText(mModel.name());
+    }
 }
 
 void WaveEditor::onSampleChanged(QPoint point) {

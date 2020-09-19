@@ -90,8 +90,13 @@ void MainWindow::updateWindowTitle() {
 
 void MainWindow::fileNew() {
     if (maybeSave()) {
-        setFilename("");
+        
+        setModelsEnabled(false);
         mDocument->clear();
+        setModelsEnabled(true);
+
+        setFilename("");
+
     }
 }
 
@@ -102,7 +107,15 @@ void MainWindow::fileOpen() {
         mModuleFileDialog->setWindowTitle("Open");
         if (mModuleFileDialog->exec() == QDialog::Accepted) {
             QString filename = mModuleFileDialog->selectedFiles().first();
+
+            // disable models
+            setModelsEnabled(false);
+
             auto error = mDocument->open(filename);
+
+            // renable models
+            setModelsEnabled(true);
+
             if (error == trackerboy::FormatError::none) {
                 setFilename(filename);
             }
@@ -183,6 +196,11 @@ void MainWindow::setFilename(QString filename) {
         mDocumentName = info.fileName();
     }
     updateWindowTitle();
+}
+
+void MainWindow::setModelsEnabled(bool enabled) {
+    mWaveModel->setEnabled(enabled);
+    mInstrumentModel->setEnabled(enabled);
 }
 
 void MainWindow::writeSettings() {

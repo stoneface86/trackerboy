@@ -30,7 +30,12 @@ WaveGraph::WaveGraph(QWidget *parent) :
 
 void WaveGraph::setModel(WaveListModel *model) {
     mModel = model;
-    connect(mModel, &WaveListModel::currentIndexChanged, this, [this](int index) { (void)index;  waveformUpdated(); });
+    connect(mModel, &WaveListModel::currentIndexChanged, this,
+        [this](int index) { 
+            if (index != -1) {
+                waveformUpdated();
+            }
+        });
     connect(mModel, QOverload<>::of(&WaveListModel::waveformChanged), this, &WaveGraph::waveformUpdated);
 }
 
