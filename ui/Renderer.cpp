@@ -31,7 +31,8 @@ void Renderer::previewWaveform(trackerboy::Note note) {
 }
 
 void Renderer::previewInstrument(trackerboy::Note note) {
-
+    (void)note;
+    // TODO
 }
 
 void Renderer::stopPreview() {

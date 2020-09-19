@@ -60,8 +60,6 @@ void RenderWorker::render() {
     mRendering = true;
     mMutex.unlock();
 
-    bool wait = false;
-
     mPb.silence();
     mPb.start();
 
@@ -72,7 +70,10 @@ void RenderWorker::render() {
             break;
         }
 
+        mDocument.lock(); // lock document so that changes do not occur during engine step
         bool halted = mEngine.step();
+        mDocument.unlock();
+
         // if the engine halted and we are not previewing, we will stop rendering after this frame
         bool stopAfterFrame = halted && mPreviewState == PreviewState::none;
 
@@ -84,8 +85,7 @@ void RenderWorker::render() {
         mPb.writeAll(mSynth.buffer(), framesize);
 
         if (stopAfterFrame) {
-            
-            wait = true;
+
             mMutex.lock();
             mMusicPlaying = false;
             mMutex.unlock();
@@ -95,7 +95,7 @@ void RenderWorker::render() {
     }
 
 
-    mPb.stop(wait);
+    mPb.stop(true);
 
     mMutex.lock();
     mRendering = false;
