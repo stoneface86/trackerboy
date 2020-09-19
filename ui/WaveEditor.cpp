@@ -41,7 +41,7 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
     // mWaveSelect can also be used to change the current waveform
     connect(mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), &mModel, QOverload<int>::of(&WaveListModel::select));
     connect(&mModel, &WaveListModel::currentIndexChanged, this, &WaveEditor::selectionChanged);
-    connect(mNameEdit, &QLineEdit::textEdited, this, &WaveEditor::nameEdited);
+    connect(mNameEdit, &QLineEdit::textEdited, &mModel, &WaveListModel::rename);
 
     // presets
     connect(mPresetSineButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sine); });
@@ -59,11 +59,6 @@ void WaveEditor::selectionChanged(int index) {
     mWaveSelect->setCurrentIndex(index);
     updateWaveramText();
     mNameEdit->setText(mModel.name());
-}
-
-void WaveEditor::nameEdited(const QString &text) {
-    // update the name change to the model
-    mModel.setName(text);
 }
 
 void WaveEditor::onSampleChanged(QPoint point) {

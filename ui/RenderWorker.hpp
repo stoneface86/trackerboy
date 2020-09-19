@@ -5,6 +5,8 @@
 #include <QMutex>
 
 #include "model/ModuleDocument.hpp"
+#include "model/InstrumentListModel.hpp"
+#include "model/WaveListModel.hpp"
 
 #include "audio.hpp"
 #include "trackerboy/engine/Engine.hpp"
@@ -17,7 +19,7 @@ class RenderWorker : public QObject {
     Q_OBJECT
 
 public:
-    RenderWorker(ModuleDocument &document);
+    RenderWorker(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel);
 
     void previewWaveform(trackerboy::Note note);
 
@@ -32,6 +34,8 @@ public slots:
 
 private:
     ModuleDocument &mDocument;
+    InstrumentListModel &mInstrumentModel;
+    WaveListModel &mWaveModel;
     audio::PlaybackQueue mPb;
     trackerboy::Synth mSynth;
     trackerboy::Engine mEngine;

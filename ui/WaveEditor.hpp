@@ -25,7 +25,6 @@ private slots:
     void onSampleChanged(QPoint sample);
     void onWaveramEdited(const QString &text);
     void selectionChanged(int index);
-    void nameEdited(const QString &text);
 
 private:
 

@@ -28,7 +28,7 @@ set(UI_SRC
     "PianoWidget.cpp"
     "Renderer.cpp"
     "RenderWorker.cpp"
-#    "RendererThread.cpp"
+    "TableForm.cpp"
     "WaveEditor.cpp"
     "WaveGraph.cpp"
 )

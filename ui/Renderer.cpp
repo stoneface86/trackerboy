@@ -2,8 +2,8 @@
 #include "Renderer.hpp"
 
 
-Renderer::Renderer(ModuleDocument &document, QObject *parent) :
-    mWorker(new RenderWorker(document)),
+Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, QObject *parent) :
+    mWorker(new RenderWorker(document, instrumentModel, waveModel)),
     mThread(),
     mRendering(false),
     QObject(parent)

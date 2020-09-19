@@ -13,16 +13,26 @@ public:
 
     QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
 
-    void addItem();
+    //void addItem();
 
     virtual QString name() override;
 
 protected:
-    BaseTableModel(trackerboy::BaseTable &table, QObject *parent = nullptr);
+    BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table);
+
+    virtual int dataAdd() override;
+
+    virtual int dataRemove() override;
+
+    virtual int dataDuplicate() override;
 
     virtual QVariant iconData(const QModelIndex &index) const = 0;
 
-    virtual void setNameInData(QString name) override;
+    virtual void dataRename(const QString &name) override;
+
+    virtual bool canDuplicate() override;
+
+    virtual bool canRemove() override;
 
     trackerboy::BaseTable &mBaseTable;
 

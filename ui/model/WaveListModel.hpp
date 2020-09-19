@@ -15,7 +15,7 @@ class WaveListModel : public BaseTableModel {
     Q_OBJECT
 
 public:
-    WaveListModel(trackerboy::WaveTable &table, QObject *parent = nullptr);
+    WaveListModel(ModuleDocument &document);
 
     // get the waveform associated with the model index
     trackerboy::Waveform* waveform(int modelIndex);

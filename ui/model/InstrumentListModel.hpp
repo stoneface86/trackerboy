@@ -10,7 +10,7 @@ class InstrumentListModel : public BaseTableModel {
     Q_OBJECT
 
 public:
-    InstrumentListModel(trackerboy::InstrumentTable &table, QObject *parent = nullptr);
+    InstrumentListModel(ModuleDocument &document);
 
     // get the waveform associated with the model index
     trackerboy::Instrument* instrument(int modelIndex) const;

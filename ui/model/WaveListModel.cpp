@@ -1,8 +1,8 @@
 
 #include "model/WaveListModel.hpp"
 
-WaveListModel::WaveListModel(trackerboy::WaveTable &table, QObject *parent) :
-    BaseTableModel(table, parent)
+WaveListModel::WaveListModel(ModuleDocument &document) :
+    BaseTableModel(document, document.waveTable())
 {
 }
 

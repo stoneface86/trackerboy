@@ -2,6 +2,9 @@
 #pragma once
 
 #include <QAbstractListModel>
+#include <QAction>
+
+#include "model/ModuleDocument.hpp"
 
 //
 // Base class for all models used in the UI. Each model is a list model and has a
@@ -23,9 +26,20 @@ public:
     virtual QString name() = 0;
 
     // set the name of the current index
-    void setName(QString name);
+    //void setName(QString name);
+
+    void setActions(QAction *actNew, QAction *actRemove, QAction *actDuplicate, QAction *actEdit);
 
 public slots:
+
+    // adds a new item, if there was no items prior then this one is selected
+    void add();
+    // removes the current selected item, the next available item is selected
+    void remove();
+
+    void duplicate();
+
+    void rename(const QString &name);
 
     void select(int index);
     void select(const QModelIndex &index);
@@ -34,12 +48,26 @@ signals:
     void currentIndexChanged(int index);
 
 protected:
-    BaseModel(QObject *parent = nullptr);
+    BaseModel(ModuleDocument &document);
 
-    virtual void setNameInData(QString name) = 0;
+    virtual void dataRename(const QString &name) = 0;
+
+    virtual int dataAdd() = 0;
+    virtual int dataRemove() = 0;
+    virtual int dataDuplicate() = 0;
+
+    virtual bool canDuplicate() = 0;
+    virtual bool canRemove() = 0;
+
+    ModuleDocument &mDocument;
 
     int mCurrentIndex;
     //bool mEnabled;
+
+    QAction *mActNew;
+    QAction *mActRemove;
+    QAction *mActDuplicate;
+    QAction *mActEdit;
 
 
 };

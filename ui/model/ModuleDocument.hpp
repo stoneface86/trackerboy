@@ -8,14 +8,23 @@
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/engine/RuntimeContext.hpp"
 
-#include "model/InstrumentListModel.hpp"
-#include "model/WaveListModel.hpp"
-
 
 //
 // Class encapsulates a trackerboy "document", or a module. Provides methods
 // for modifying module data, as well as file I/O. Models for data view widgets
 // are also provided.
+//
+// Regarding thread-safety:
+// There are two threads that access the document:
+//  * The GUI thread    (read/write)
+//  * The render thread (read-only)
+// When accessing the document, the document's mutex should be locked so that
+// the render thread does not read while the gui thread (ie the user) modifies
+// data. Only the gui thread modifies the document, so locking is not necessary
+// when the gui is reading.
+//
+// Any class that modifies the document's data outside of this class (ie Model classes)
+// should lock the document when making changes.
 //
 class ModuleDocument : public QObject {
 
@@ -23,9 +32,6 @@ class ModuleDocument : public QObject {
 
 public:
     ModuleDocument(QObject *parent = nullptr);
-
-    InstrumentListModel* instrumentListModel();
-    WaveListModel* waveListModel();
 
     trackerboy::InstrumentTable& instrumentTable();
 
@@ -43,8 +49,6 @@ signals:
 
 public slots:
     void clear();
-    void addInstrument();
-    void addWaveform();
 
 
 private:
@@ -58,9 +62,6 @@ private:
     
     trackerboy::Module mModule;
 
-    InstrumentListModel *mInstrumentListModel;
-    WaveListModel *mWaveListModel;
-    
     //ModuleModel *mModel;
 
     // the undo stack is for the current song, the stack is

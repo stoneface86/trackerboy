@@ -3,8 +3,10 @@
 
 #include <QMutexLocker>
 
-RenderWorker::RenderWorker(ModuleDocument &document) :
+RenderWorker::RenderWorker(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel) :
     mDocument(document),
+    mInstrumentModel(instrumentModel),
+    mWaveModel(waveModel),
     mPb(audio::SR_44100),
     mSynth(44100.0f),
     mEngine({mSynth, document.instrumentTable(), document.waveTable()}),
@@ -21,7 +23,7 @@ void RenderWorker::previewWaveform(trackerboy::Note note) {
 
     auto &gen3 = mSynth.hardware().gen3;
     if (mPreviewState == PreviewState::none) {
-        gen3.copyWave(*(mDocument.waveListModel()->currentWaveform()));
+        gen3.copyWave(*(mWaveModel.currentWaveform()));
         mSynth.setOutputEnable(trackerboy::ChType::ch3, trackerboy::Gbs::TERM_BOTH, true);
         mPreviewState = PreviewState::waveform;
         mPreviewChannel = trackerboy::ChType::ch3;

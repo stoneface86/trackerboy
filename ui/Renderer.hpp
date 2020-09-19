@@ -16,7 +16,7 @@ class Renderer : public QObject {
 
 public:
 
-    Renderer(ModuleDocument &document, QObject *parent = nullptr);
+    Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, QObject *parent = nullptr);
     ~Renderer();
 
     RenderWorker* worker();

@@ -11,11 +11,13 @@
 MainWindow::MainWindow() :
     mModuleFileDialog(new QFileDialog(this)),
     mDocument(new ModuleDocument(this)),
+    mInstrumentModel(new InstrumentListModel(*mDocument)),
+    mWaveModel(new WaveListModel(*mDocument)),
     mConfig(new Config(this)),
     mConfigDialog(nullptr),
     mInstrumentEditor(nullptr),
     mWaveEditor(nullptr),
-    mRenderer(new Renderer(*mDocument, this)),
+    mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, this)),
     QMainWindow()
 {
     setupUi(this);
@@ -25,11 +27,8 @@ MainWindow::MainWindow() :
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
 
-    mInstrumentListView->setModel(mDocument->instrumentListModel());
-    mWaveformListView->setModel(mDocument->waveListModel());
-
     mInstrumentEditor = new InstrumentEditor(this);
-    mWaveEditor = new WaveEditor(*mDocument->waveListModel(), this);
+    mWaveEditor = new WaveEditor(*mWaveModel, this);
 
     mModuleFileDialog->setNameFilter(tr("Trackerboy Module (*.tbm)"));
     mModuleFileDialog->setWindowModality(Qt::WindowModal);
@@ -40,26 +39,36 @@ MainWindow::MainWindow() :
     actionSave->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
     actionSaveAs->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
     
-    connect(actionNew_waveform, &QAction::triggered, mDocument, &ModuleDocument::addWaveform);
-    connect(actionNew_instrument, &QAction::triggered, mDocument, &ModuleDocument::addInstrument);
-    connect(mWaveformListView, &QAbstractItemView::clicked, mDocument->waveListModel(), QOverload<const QModelIndex&>::of(&WaveListModel::select));
-    connect(mWaveformListView, &QAbstractItemView::doubleClicked, this, &MainWindow::waveformDoubleClicked);
-
     connect(mDocument, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
     setFilename("");
 
     // Actions
     #define connectAction(action, slot) connect(action, &QAction::triggered, this, &MainWindow::slot)
+    // File
     connectAction(actionNew, fileNew);
     connectAction(actionOpen, fileOpen);
     connectAction(actionSave, fileSave);
     connectAction(actionSaveAs, fileSaveAs);
     connectAction(actionQuit, close);
     connect(actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
+    // Waveform
+    //connect(actionEdit_waveform, &QAction::triggered, mWaveEditor, &WaveEditor::show);
 
     auto wavePiano = mWaveEditor->piano();
     connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
     connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
+
+    mInstrumentTableForm->init(mInstrumentModel, mInstrumentEditor);
+    // add the context menu for instruments list view to our menubar
+    auto menu = mInstrumentTableForm->menu();
+    menu->setTitle("Instrument");
+    mMenubar->insertMenu(mMenuTracker->menuAction(), menu);
+
+    mWaveTableForm->init(mWaveModel, mWaveEditor);
+    // same thing but for waveforms
+    menu = mWaveTableForm->menu();
+    menu->setTitle("Waveform");
+    mMenubar->insertMenu(mMenuTracker->menuAction(), menu);
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
@@ -72,12 +81,6 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
 }
 
 // SLOTS ---------------------------------------------------------------------
-
-// open the wave editor with the selected index
-void MainWindow::waveformDoubleClicked(const QModelIndex &index) {
-    (void)index;
-    mWaveEditor->show();
-}
 
 void MainWindow::updateWindowTitle() {
     setWindowTitle(QString("%1[*] - Trackerboy").arg(mDocumentName));

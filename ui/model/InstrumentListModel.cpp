@@ -2,11 +2,11 @@
 
 #include "model/InstrumentListModel.hpp"
 
-InstrumentListModel::InstrumentListModel(trackerboy::InstrumentTable &table, QObject *parent) :
+InstrumentListModel::InstrumentListModel(ModuleDocument &document) :
     mPulseIcon(":/icons/instrument_icon_pulse.png"),
     mWaveIcon(":/icons/instrument_icon_wave.png"),
     mNoiseIcon(":/icons/instrument_icon_noise.png"),
-    BaseTableModel(table, parent)
+    BaseTableModel(document, document.instrumentTable())
 {
 }
 

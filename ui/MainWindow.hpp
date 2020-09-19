@@ -9,6 +9,8 @@
 #pragma warning(pop)
 
 #include "model/ModuleDocument.hpp"
+#include "model/InstrumentListModel.hpp"
+#include "model/WaveListModel.hpp"
 #include "ConfigDialog.hpp"
 #include "InstrumentEditor.hpp"
 #include "Renderer.hpp"
@@ -26,7 +28,6 @@ protected:
     void closeEvent(QCloseEvent *evt) override;
 
 private slots:
-    void waveformDoubleClicked(const QModelIndex &index);
     void updateWindowTitle();
 
     // actions
@@ -51,6 +52,9 @@ private:
 
     Config *mConfig;
     ModuleDocument *mDocument;
+    InstrumentListModel *mInstrumentModel;
+    WaveListModel *mWaveModel;
+    
 
     InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
