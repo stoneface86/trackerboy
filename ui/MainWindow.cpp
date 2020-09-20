@@ -58,13 +58,13 @@ MainWindow::MainWindow() :
     connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
     connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
 
-    mInstrumentTableForm->init(mInstrumentModel, mInstrumentEditor);
+    mInstrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I");
     // add the context menu for instruments list view to our menubar
     auto menu = mInstrumentTableForm->menu();
     menu->setTitle("Instrument");
     mMenubar->insertMenu(mMenuTracker->menuAction(), menu);
 
-    mWaveTableForm->init(mWaveModel, mWaveEditor);
+    mWaveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W");
     // same thing but for waveforms
     menu = mWaveTableForm->menu();
     menu->setTitle("Waveform");

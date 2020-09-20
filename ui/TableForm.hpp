@@ -21,7 +21,7 @@ public:
 
     QMenu* menu() const;
 
-    void init(BaseTableModel *model, QWidget *editor);
+    void init(BaseTableModel *model, QWidget *editor, QString editorShortcut);
 
 private slots:
     void viewCurrentChanged(const QModelIndex &current, const QModelIndex &prev);

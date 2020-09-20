@@ -67,7 +67,7 @@ QMenu* TableForm::menu() const {
     return mMenu;
 }
 
-void TableForm::init(BaseTableModel *model, QWidget *editor) {
+void TableForm::init(BaseTableModel *model, QWidget *editor, QString editorShortcut) {
     mModel = model;
     model->setActions(mActAdd, mActRemove, mActDuplicate, mActEdit);
     mListView->setModel(model);
@@ -91,6 +91,8 @@ void TableForm::init(BaseTableModel *model, QWidget *editor) {
             (void)index; 
             mEditor->show(); 
         });
+
+    mActEdit->setShortcut(QKeySequence(editorShortcut));
 }
 
 void TableForm::modelCurrentChanged(int index) {
