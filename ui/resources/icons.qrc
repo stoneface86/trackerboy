@@ -3,11 +3,6 @@
     <file>icons/instrument_icon_noise.png</file>
     <file>icons/instrument_icon_pulse.png</file>
     <file>icons/instrument_icon_wave.png</file>
-    <file>icons/tableAddItem.png</file>
-    <file>icons/tableDuplicateItem.png</file>
-    <file>icons/tableEditItem.png</file>
-    <file>icons/tableExport.png</file>
-    <file>icons/tableImport.png</file>
-    <file>icons/tableRemoveItem.png</file>
+    <file>icons/tableFormIcons.png</file>
 </qresource>
 </RCC>

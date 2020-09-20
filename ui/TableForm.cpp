@@ -4,6 +4,44 @@
 #include <QToolbar>
 #include <QVBoxLayout>
 
+#include <QPainter>
+
+constexpr int ICON_WIDTH = 16;
+constexpr int ICON_HEIGHT = 16;
+
+constexpr int ICON_ADD = 0;
+constexpr int ICON_REMOVE = 1;
+constexpr int ICON_DUPLICATE = 2;
+constexpr int ICON_IMPORT = 3;
+constexpr int ICON_EXPORT = 4;
+constexpr int ICON_EDIT = 5;
+
+QIcon fromTileset(QImage &tileset, int index) {
+    QImage result(QSize(ICON_WIDTH, ICON_HEIGHT), tileset.format());
+    
+    QIcon icon;
+
+    // normal icon
+    {
+        result.fill(Qt::transparent);
+        QPainter painter(&result);
+        painter.setCompositionMode(QPainter::CompositionMode::CompositionMode_SourceOver);
+        painter.drawImage(0, 0, tileset, index * ICON_WIDTH, 0, ICON_WIDTH, ICON_HEIGHT);
+    }
+    icon.addPixmap(QPixmap::fromImage(result), QIcon::Normal);
+
+    // disabled icon
+    {
+        result.fill(Qt::transparent);
+        QPainter painter(&result);
+        painter.setCompositionMode(QPainter::CompositionMode::CompositionMode_SourceOver);
+        painter.drawImage(0, 0, tileset, index * ICON_WIDTH, ICON_HEIGHT, ICON_WIDTH, ICON_HEIGHT);
+    }
+    icon.addPixmap(QPixmap::fromImage(result), QIcon::Disabled);
+
+    return icon;
+}
+
 
 TableForm::TableForm(QWidget *parent) :
     mMenu(new QMenu(this)),
@@ -14,31 +52,34 @@ TableForm::TableForm(QWidget *parent) :
     mNameEdit->setPlaceholderText("Name");
     mNameEdit->setEnabled(false);
 
+    QImage tileset(":/icons/tableFormIcons.png");
+
+
     mActAdd = mMenu->addAction(tr("Add"));
-    mActAdd->setIcon(QIcon(":/icons/tableAddItem.png"));
+    mActAdd->setIcon(fromTileset(tileset, ICON_ADD));
     mActRemove = mMenu->addAction(tr("Remove"));
-    mActRemove->setIcon(QIcon(":/icons/tableRemoveItem.png"));
+    mActRemove->setIcon(fromTileset(tileset, ICON_REMOVE));
     mActDuplicate = mMenu->addAction(tr("Duplicate"));
-    mActDuplicate->setIcon(QIcon(":/icons/tableDuplicateItem.png"));
+    mActDuplicate->setIcon(fromTileset(tileset, ICON_DUPLICATE));
     mMenu->addSeparator();
     mActImport = mMenu->addAction(tr("Import"));
-    mActImport->setIcon(QIcon(":/icons/tableImport.png"));
+    mActImport->setIcon(fromTileset(tileset, ICON_IMPORT));
     mActExport = mMenu->addAction(tr("Export"));
-    mActExport->setIcon(QIcon(":/icons/tableExport.png"));
+    mActExport->setIcon(fromTileset(tileset, ICON_EXPORT));
     mMenu->addSeparator();
     mActEdit = mMenu->addAction(tr("Edit"));
-    mActEdit->setIcon(QIcon(":/icons/tableEditItem.png"));
+    mActEdit->setIcon(fromTileset(tileset, ICON_EDIT));
 
     auto toolbar = new QToolBar();
     toolbar->addAction(mActAdd);
     toolbar->addAction(mActRemove);
     toolbar->addAction(mActDuplicate);
-    toolbar->addSeparator();
+    //toolbar->addSeparator();
     toolbar->addAction(mActImport);
     toolbar->addAction(mActExport);
-    toolbar->addSeparator();
+    //toolbar->addSeparator();
     toolbar->addAction(mActEdit);
-    toolbar->setIconSize(QSize(16, 16));
+    toolbar->setIconSize(QSize(ICON_WIDTH, ICON_HEIGHT));
 
 
     auto layout = new QVBoxLayout();
