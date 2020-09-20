@@ -35,6 +35,8 @@ public:
 
     Instrument();
 
+    Instrument(const Instrument &instrument); // copy constructor
+
     Data& data();
 
 protected:

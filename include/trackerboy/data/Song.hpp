@@ -30,6 +30,8 @@ public:
     static constexpr Speed DEFAULT_SPEED = 0x30;
 
     Song();
+    Song(const Song &song);
+
     ~Song();
 
     uint8_t rowsPerBeat();

@@ -34,6 +34,8 @@ public:
 
     FormatError deserialize(std::istream &stream) noexcept;
 
+    DataItem& duplicate(uint8_t id);
+
     Iterator end() const;
 
     DataItem* get(uint8_t id) const;
@@ -59,9 +61,12 @@ public:
 protected:
     BaseTable() noexcept;
 
+    void finishInsert(DataItem *item);
+
     void findNextId() noexcept;
 
     virtual DataItem* createItem() = 0;
+    virtual DataItem* copyItem(DataItem &item) = 0;
 
     // array of unique_ptr of DataItem
     // if the pointer is empty, then there is no item with id = index
@@ -105,6 +110,7 @@ public:
 protected:
 
     DataItem* createItem() override;
+    DataItem* copyItem(DataItem &item) override;
 
 };
 

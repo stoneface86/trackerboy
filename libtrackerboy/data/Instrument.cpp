@@ -12,6 +12,12 @@ Instrument::Instrument() :
 {
 }
 
+Instrument::Instrument(const Instrument &instrument) :
+    mData(instrument.mData),
+    DataItem(instrument)
+{
+}
+
 Instrument::Data& Instrument::data() {
     return mData;
 }

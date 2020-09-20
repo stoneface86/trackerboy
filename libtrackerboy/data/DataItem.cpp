@@ -11,6 +11,12 @@ DataItem::DataItem() :
 {
 }
 
+DataItem::DataItem(const DataItem &item) :
+    mId(item.mId),
+    mName(item.mName)
+{
+}
+
 DataItem::~DataItem() {
 
 }

@@ -31,10 +31,11 @@ public:
 
 protected:
     DataItem();
+    DataItem(const DataItem &item);
 
     virtual FormatError serializeData(std::ostream &stream) noexcept = 0;
     virtual FormatError deserializeData(std::istream &stream) noexcept = 0;
-    
+
     uint8_t mId;
     std::string mName;
 

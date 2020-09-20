@@ -75,6 +75,30 @@ FormatError BaseTable::deserialize(std::istream &stream) noexcept {
     return FormatError::none;
 }
 
+DataItem& BaseTable::duplicate(uint8_t id) {
+    if (size() == MAX_SIZE) {
+        throw std::runtime_error("cannot duplicate: table is full");
+    }
+    
+    auto *item = get(id);
+    if (item == nullptr) {
+        throw std::runtime_error("cannot duplicate item: item does not exist");
+    }
+
+    auto &ptr = (*mData)[mNextId];
+    if (ptr) {
+        throw std::runtime_error("cannot insert: item already exists");
+    }
+
+    auto copy = copyItem(*item);
+    copy->setId(mNextId);
+
+    finishInsert(copy);
+
+    return *copy;
+    
+}
+
 BaseTable::Iterator BaseTable::end() const {
     return mItemOrder.cend();
 }
@@ -179,14 +203,20 @@ DataItem& BaseTable::insertItem(uint8_t id, std::string name) {
     DataItem *item = createItem();
     item->setId(id);
     item->setName(name);
-    ptr.reset(item);
+    finishInsert(item);
+    
+
+    return *item;
+}
+
+void BaseTable::finishInsert(DataItem *item) {
+    uint8_t id = item->id();
+    (*mData)[id].reset(item);
     mItemOrder.insert(std::upper_bound(mItemOrder.begin(), mItemOrder.end(), id), id);
 
     if (mNextId == id) {
         findNextId();
     }
-
-    return *item;
 }
 
 
@@ -218,6 +248,11 @@ T& Table<T>::insert(uint8_t id, std::string name) {
 template <class T>
 DataItem* Table<T>::createItem() {
     return new T();
+}
+
+template <class T>
+DataItem* Table<T>::copyItem(DataItem &item) {
+    return new T(static_cast<T&>(item));
 }
 
 

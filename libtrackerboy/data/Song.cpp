@@ -23,6 +23,17 @@ Song::Song() :
     mOrder.push_back({ 0 });
 }
 
+Song::Song(const Song &song) :
+    mMaster(song.mMaster),
+    mOrder(song.mOrder),
+    mRowsPerBeat(song.mRowsPerBeat),
+    mTempo(song.mTempo),
+    mMode(song.mMode),
+    mSpeed(song.mSpeed),
+    DataItem(song)
+{
+}
+
 Song::~Song() {
 
 }

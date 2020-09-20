@@ -25,6 +25,8 @@ public:
 
     PatternMaster(uint16_t mRows);
 
+    PatternMaster(const PatternMaster &master);
+
     uint16_t rowSize();
 
     size_t tracks(ChType ch);

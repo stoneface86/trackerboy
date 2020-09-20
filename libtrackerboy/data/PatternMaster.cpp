@@ -9,6 +9,17 @@ PatternMaster::PatternMaster(uint16_t rows) :
 {
 }
 
+PatternMaster::PatternMaster(const PatternMaster &master) :
+    mRows(master.mRows),
+    mMap{
+        Data(master.mMap[0]),
+        Data(master.mMap[1]),
+        Data(master.mMap[2]),
+        Data(master.mMap[3])
+    }
+{
+}
+
 uint16_t PatternMaster::rowSize() {
     return mRows;
 }

@@ -34,7 +34,7 @@ int BaseTableModel::dataAdd() {
     beginInsertRows(QModelIndex(), row, row);
     
     mDocument.lock();
-    auto &item = mBaseTable.insertItem();
+    mBaseTable.insertItem();
     mDocument.unlock();
 
     endInsertRows();
@@ -43,7 +43,7 @@ int BaseTableModel::dataAdd() {
 }
 
 int BaseTableModel::dataRemove() {
-    uint8_t id = mBaseTable.lookup(mCurrentIndex);
+    uint8_t id = mBaseTable.lookup(static_cast<uint8_t>(mCurrentIndex));
 
     int index = mCurrentIndex;
     beginRemoveRows(QModelIndex(), index, index);
@@ -57,7 +57,18 @@ int BaseTableModel::dataRemove() {
 }
 
 int BaseTableModel::dataDuplicate() {
-    return 0;
+    int row = mBaseTable.nextModelId();
+
+    uint8_t index = static_cast<uint8_t>(mCurrentIndex);
+    beginInsertRows(QModelIndex(), row, row);
+
+    mDocument.lock();
+    mBaseTable.duplicate(mBaseTable.lookup(index));
+    mDocument.unlock();
+
+    endInsertRows();
+
+    return row;
 }
 
 bool BaseTableModel::canDuplicate() {

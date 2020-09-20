@@ -18,6 +18,8 @@ public:
 
     Waveform() noexcept;
 
+    Waveform(const Waveform &wave);
+
     Waveform(std::string &hexstring);
 
     uint8_t* data() noexcept;

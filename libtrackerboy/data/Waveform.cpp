@@ -18,6 +18,13 @@ Waveform::Waveform(std::string &hexstr) :
     fromString(hexstr);
 }
 
+Waveform::Waveform(const Waveform &wave) :
+    mData{ 0 },
+    DataItem(wave)
+{
+    std::copy(wave.mData.begin(), wave.mData.end(), mData.begin());
+}
+
 
 uint8_t* Waveform::data() noexcept {
     return mData.data();
