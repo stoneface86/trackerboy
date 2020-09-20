@@ -5,6 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.1.0] - 2020-09-20
+### Added
+ - The main UI has been started
+ - Wave editor dialog, user can edit waveforms and preview them using a piano control
+ - Configuration dialog, user can select an audio device, set buffer size and volume
+ - Instrument editor dialog
+ - DeviceManager and DeviceTable classes in the audio library
+ - demo_device_manager demo lists all available host api and output devices
+### Changed
+ - PlaybackQueue can use any portaudio device instead of the default one
+ - Reorganized library header folders
+ - MusicRuntime only updates "locked" channels
+ - Rewrote Engine class to use MusicRuntime class
+### Removed
+ - File class
+ - Old ui code (instedit)
+
+
 ## [0.0.6] - 2020-08-09
 ### Added
  - song_demo, demonstrates playback of a Song
