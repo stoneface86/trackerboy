@@ -29,6 +29,7 @@ set(UI_SRC
     "Renderer.cpp"
     "RenderWorker.cpp"
     "TableForm.cpp"
+    "Tileset.cpp"
     "WaveEditor.cpp"
     "WaveGraph.cpp"
 )
