@@ -10,6 +10,7 @@ Instrument::Instrument() :
     mData{ 0 },
     DataItem()
 {
+    mData.panning = 0x11;
 }
 
 Instrument::Instrument(const Instrument &instrument) :

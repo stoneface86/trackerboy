@@ -103,13 +103,7 @@
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
-   </widget>
-   <widget class="QMenu" name="mMenuView">
-    <property name="title">
-     <string>View</string>
-    </property>
-    <addaction name="actionOrders"/>
-    <addaction name="actionModule_properties"/>
+    <addaction name="actionAbout_Qt"/>
    </widget>
    <widget class="QMenu" name="mMenuOrder">
     <property name="title">
@@ -140,7 +134,6 @@
    <addaction name="mMenuModule"/>
    <addaction name="mMenuOrder"/>
    <addaction name="mMenuTracker"/>
-   <addaction name="mMenuView"/>
    <addaction name="mMenuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -412,7 +405,7 @@
     <number>4</number>
    </attribute>
    <widget class="TableForm" name="mInstrumentTableForm">
-    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <property name="leftMargin">
       <number>0</number>
      </property>
@@ -835,6 +828,11 @@
   <action name="actionConfiguration">
    <property name="text">
     <string>Configuration</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About Qt</string>
    </property>
   </action>
  </widget>

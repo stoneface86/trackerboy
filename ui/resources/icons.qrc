@@ -3,6 +3,7 @@
     <file>icons/instrument_icon_noise.png</file>
     <file>icons/instrument_icon_pulse.png</file>
     <file>icons/instrument_icon_wave.png</file>
+    <file>icons/instrumentIcons.png</file>
     <file>icons/tableFormIcons.png</file>
 </qresource>
 </RCC>

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>606</width>
-    <height>294</height>
+    <height>257</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout_3">
+    <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,1">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1,1">
        <item>
@@ -55,7 +55,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,1,1">
+      <layout class="QHBoxLayout" name="mGroupLayout" stretch="1,1,1">
        <item>
         <widget class="QGroupBox" name="mGroupGeneral">
          <property name="sizePolicy">
@@ -65,104 +65,94 @@
           </sizepolicy>
          </property>
          <property name="title">
-          <string>General settings</string>
+          <string>Settings</string>
          </property>
          <layout class="QFormLayout" name="formLayout_2">
           <item row="0" column="0">
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="mTimbreLabel">
             <property name="text">
-             <string>Timbre</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+             <string>Duty</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QSpinBox" name="mTimbreSpin">
-            <property name="maximum">
-             <number>3</number>
-            </property>
+           <widget class="QComboBox" name="mTimbreCombo">
+            <item>
+             <property name="text">
+              <string>12.5%</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>25%</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>50%</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>75%</string>
+             </property>
+            </item>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="1" column="0">
            <widget class="QLabel" name="label_3">
             <property name="text">
              <string>Panning</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="1">
-           <layout class="QHBoxLayout" name="horizontalLayout_10">
+          <item row="1" column="1">
+           <widget class="QComboBox" name="mPanningCombo">
+            <property name="currentIndex">
+             <number>2</number>
+            </property>
             <item>
-             <widget class="QComboBox" name="mPanningCombo">
-              <property name="currentIndex">
-               <number>2</number>
-              </property>
-              <item>
-               <property name="text">
-                <string>Left</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Right</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>Middle</string>
-               </property>
-              </item>
-             </widget>
+             <property name="text">
+              <string>Left</string>
+             </property>
             </item>
-           </layout>
+            <item>
+             <property name="text">
+              <string>Right</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Middle</string>
+             </property>
+            </item>
+           </widget>
           </item>
-          <item row="3" column="0">
+          <item row="2" column="0">
            <widget class="QLabel" name="label_4">
             <property name="text">
              <string>Delay</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
+          <item row="2" column="1">
            <widget class="QSpinBox" name="mDelaySpin">
             <property name="toolTip">
              <string>Number of frames to wait before triggering a note, 0 means trigger instantly</string>
             </property>
            </widget>
           </item>
-          <item row="4" column="0">
+          <item row="3" column="0">
            <widget class="QLabel" name="label_5">
             <property name="text">
              <string>Duration</string>
             </property>
            </widget>
           </item>
-          <item row="4" column="1">
+          <item row="3" column="1">
            <widget class="QSpinBox" name="mDurationSpin">
             <property name="toolTip">
              <string>Number of frames the note is active for, use 0 for infinite duration</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Envelope</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QSpinBox" name="mEnvelopeSpin">
-            <property name="maximum">
-             <number>255</number>
-            </property>
-            <property name="value">
-             <number>240</number>
-            </property>
-            <property name="displayIntegerBase">
-             <number>16</number>
             </property>
            </widget>
           </item>
@@ -256,64 +246,15 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="mGroupEnvelope">
+        <widget class="QGroupBox" name="mGroupWave">
          <property name="title">
-          <string>Envelope settings</string>
+          <string>Waveform</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_7">
-          <item>
-           <layout class="QFormLayout" name="formLayout">
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_26">
-              <property name="text">
-               <string>Initial volume</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QSpinBox" name="mEnvelopeInitVolumeSpin">
-              <property name="maximum">
-               <number>15</number>
-              </property>
-              <property name="value">
-               <number>15</number>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QCheckBox" name="mEnvelopeIncreasingCheckbox">
-              <property name="text">
-               <string>Increasing</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="label_27">
-              <property name="text">
-               <string>Period</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QSpinBox" name="mEnvelopePeriodSpin">
-              <property name="maximum">
-               <number>7</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
            <widget class="QComboBox" name="mWaveCombo">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -326,6 +267,19 @@
              <string>Edit</string>
             </property>
            </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>

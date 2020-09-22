@@ -27,8 +27,9 @@ MainWindow::MainWindow() :
 
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
 
-    mInstrumentEditor = new InstrumentEditor(this);
     mWaveEditor = new WaveEditor(*mWaveModel, this);
+    mInstrumentEditor = new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this);
+    
 
     mModuleFileDialog->setNameFilter(tr("Trackerboy Module (*.tbm)"));
     mModuleFileDialog->setWindowModality(Qt::WindowModal);
@@ -54,6 +55,8 @@ MainWindow::MainWindow() :
     // Waveform
     //connect(actionEdit_waveform, &QAction::triggered, mWaveEditor, &WaveEditor::show);
 
+    QApplication::connect(actionAbout_Qt, &QAction::triggered, &QApplication::aboutQt);
+
     auto wavePiano = mWaveEditor->piano();
     connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
     connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
@@ -69,6 +72,12 @@ MainWindow::MainWindow() :
     menu = mWaveTableForm->menu();
     menu->setTitle("Waveform");
     mMenubar->insertMenu(mMenuTracker->menuAction(), menu);
+
+    QMenu *viewMenu = createPopupMenu();
+    if (viewMenu != nullptr) {
+        viewMenu->setTitle("View");
+        mMenubar->insertMenu(mMenuHelp->menuAction(), viewMenu);
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {

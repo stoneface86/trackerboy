@@ -7,6 +7,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(UI_SRC
     "designer/ConfigDialog.ui"
+    "designer/EnvelopeForm.ui"
     "designer/MainWindow.ui"
     "designer/WaveEditor.ui"
     "designer/InstrumentEditor.ui"
@@ -20,6 +21,7 @@ set(UI_SRC
     "resources/keys.qrc"
     "Config.cpp"
     "ConfigDialog.cpp"
+    "EnvelopeForm.cpp"
     "InstrumentEditor.cpp"
     "main.cpp"
     "MainWidget.cpp"

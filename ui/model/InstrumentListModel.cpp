@@ -2,32 +2,92 @@
 
 #include "model/InstrumentListModel.hpp"
 
+#include "Tileset.hpp"
+
 InstrumentListModel::InstrumentListModel(ModuleDocument &document) :
-    mPulseIcon(":/icons/instrument_icon_pulse.png"),
-    mWaveIcon(":/icons/instrument_icon_wave.png"),
-    mNoiseIcon(":/icons/instrument_icon_noise.png"),
     BaseTableModel(document, document.instrumentTable())
 {
+    Tileset tileset(QImage(":/icons/instrumentIcons.png"), 16, 16);
+    for (int i = 0; i != 4; ++i) {
+        mIconArray[i].addPixmap(tileset.getTile(0, i), QIcon::Normal);
+    }
+
 }
 
 trackerboy::Instrument* InstrumentListModel::instrument(int modelIndex) const {
     return static_cast<trackerboy::InstrumentTable&>(mBaseTable)[mBaseTable.lookup(static_cast<uint8_t>(modelIndex))];
 }
 
+void InstrumentListModel::setChannel(trackerboy::ChType ch) {
+    auto inst = instrument(mCurrentIndex);
+
+    mDocument.lock();
+    inst->data().channel = static_cast<uint8_t>(ch);
+    mDocument.unlock();
+
+    dataChanged(createIndex(mCurrentIndex, 0, nullptr), createIndex(mCurrentIndex, 0, nullptr), { Qt::DecorationRole });
+}
+
+void InstrumentListModel::setPanning(uint8_t panning) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().panning = panning;
+    mDocument.unlock();
+}
+
+void InstrumentListModel::setDelay(uint8_t delay) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().delay = delay;
+    mDocument.unlock();
+}
+
+void InstrumentListModel::setDuration(uint8_t duration) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().duration = duration;
+    mDocument.unlock();
+}
+
+void InstrumentListModel::setTune(int8_t tune) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().tune = tune;
+    mDocument.unlock();
+}
+
+void InstrumentListModel::setEnvelope(uint8_t envelope) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().envelope = envelope;
+    mDocument.unlock();
+}
+
+void InstrumentListModel::setTimbre(uint8_t timbre) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().timbre = timbre;
+    mDocument.unlock();
+}
+
+void InstrumentListModel::setVibrato(uint8_t extent, uint8_t speed) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().vibrato = (speed << 4) | extent;
+    mDocument.unlock();
+}
+
+void InstrumentListModel::setVibratoDelay(uint8_t delay) {
+    auto inst = instrument(mCurrentIndex);
+    mDocument.lock();
+    inst->data().vibratoDelay = delay;
+    mDocument.unlock();
+}
+
+
 QVariant InstrumentListModel::iconData(const QModelIndex &index) const {
     auto inst = instrument(index.row());
-
-    trackerboy::ChType ch = static_cast<trackerboy::ChType>(inst->data().channel);
-    switch (ch) {
-        case trackerboy::ChType::ch1:
-        case trackerboy::ChType::ch2:
-            return QVariant(mPulseIcon);
-        case trackerboy::ChType::ch3:
-            return QVariant(mWaveIcon);
-        case trackerboy::ChType::ch4:
-            return QVariant(mNoiseIcon);
-    }
-    return QVariant();
+    return QVariant(mIconArray[inst->data().channel]);
 }
 
 

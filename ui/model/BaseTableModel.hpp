@@ -11,6 +11,9 @@ public:
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
+    // convert a table id to its model index
+    int idToModel(uint8_t id);
+
     QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
 
     //void addItem();
