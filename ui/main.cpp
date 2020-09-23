@@ -34,7 +34,18 @@ int main(int argc, char *argv[]) {
         MainWindow *win = new MainWindow();
         win->show();
 
-        code = app.exec();
+        try {
+            code = app.exec();
+        } catch (const std::exception &e) {
+            // TODO: attempt to save the current module
+            // TODO: display the type of error and extra diagnostic info
+            QMessageBox::critical(
+                win,
+                "Error",
+                "An error has occurred. The application will close now."
+            );
+            
+        }
 
         delete win;
     }
