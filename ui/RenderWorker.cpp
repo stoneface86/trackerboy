@@ -10,12 +10,28 @@ RenderWorker::RenderWorker(ModuleDocument &document, InstrumentListModel &instru
     mPb(audio::SR_44100),
     mSynth(44100.0f),
     mEngine({mSynth, document.instrumentTable(), document.waveTable()}),
+    mIr({ mSynth, document.instrumentTable(), document.waveTable() }),
     mPreviewState(PreviewState::none),
     mPreviewChannel(trackerboy::ChType::ch1),
     mRendering(false),
     mMusicPlaying(false),
     QObject()
 {
+}
+
+void RenderWorker::previewInstrument(trackerboy::Note note) {
+    QMutexLocker locker(&mMutex);
+
+    if (mPreviewState == PreviewState::instrument) {
+        mIr.playNote(note);
+    } else {
+        auto inst = mInstrumentModel.instrument(mInstrumentModel.currentIndex());
+        mIr.setInstrument(*inst);
+        mPreviewState = PreviewState::instrument;
+        mPreviewChannel = static_cast<trackerboy::ChType>(inst->data().channel);
+        mEngine.unlock(mPreviewChannel);
+        mIr.playNote(note);
+    }
 }
 
 void RenderWorker::previewWaveform(trackerboy::Note note) {
@@ -37,6 +53,7 @@ void RenderWorker::previewWaveform(trackerboy::Note note) {
 void RenderWorker::stopPreview() {
     QMutexLocker locker(&mMutex);
     if (mPreviewState != PreviewState::none) {
+        mSynth.setOutputEnable(mPreviewChannel, trackerboy::Gbs::TERM_BOTH, false);
         mEngine.lock(mPreviewChannel);
         mPreviewState = PreviewState::none;
     }
@@ -71,6 +88,10 @@ void RenderWorker::render() {
         }
 
         mDocument.lock(); // lock document so that changes do not occur during engine step
+        if (mPreviewState == PreviewState::instrument) {
+            mIr.step();
+        }
+
         bool halted = mEngine.step();
         mDocument.unlock();
 

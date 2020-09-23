@@ -10,6 +10,7 @@
 
 #include "audio.hpp"
 #include "trackerboy/engine/Engine.hpp"
+#include "trackerboy/engine/InstrumentRuntime.hpp"
 #include "trackerboy/synth/Synth.hpp"
 #include "trackerboy/note.hpp"
 
@@ -20,6 +21,8 @@ class RenderWorker : public QObject {
 
 public:
     RenderWorker(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel);
+
+    void previewInstrument(trackerboy::Note note);
 
     void previewWaveform(trackerboy::Note note);
 
@@ -39,6 +42,7 @@ private:
     audio::PlaybackQueue mPb;
     trackerboy::Synth mSynth;
     trackerboy::Engine mEngine;
+    trackerboy::InstrumentRuntime mIr;
 
     enum class PreviewState {
         none,

@@ -6,6 +6,7 @@ set(SRC_FILES
     "engine/ChannelControl.cpp"
     "engine/Engine.cpp"
     "engine/FrequencyControl.cpp"
+    "engine/InstrumentRuntime.cpp"
     "engine/MusicRuntime.cpp"
     "engine/NoteControl.cpp"
     "engine/PatternCursor.cpp"

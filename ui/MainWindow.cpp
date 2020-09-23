@@ -61,6 +61,11 @@ MainWindow::MainWindow() :
     connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
     connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
 
+    auto instPiano = mInstrumentEditor->piano();
+    connect(instPiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewInstrument);
+    connect(instPiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
+
+
     mInstrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I");
     // add the context menu for instruments list view to our menubar
     auto menu = mInstrumentTableForm->menu();

@@ -19,6 +19,8 @@ class InstrumentEditor : public QDialog, private Ui::InstrumentEditor {
 public:
     InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget &waveEditor, QWidget *parent = nullptr);
 
+    PianoWidget* piano();
+
 private slots:
     void onChannelSelect(int channel);
     void currentInstrumentChanged(int index);
