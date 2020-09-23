@@ -131,13 +131,15 @@ void MusicRuntime::reloadImpl() {
     constexpr int chint = static_cast<int>(ch);
 
     if constexpr (ch == ChType::ch4) {
-
+        // TODO: keep a copy of the NR43 register to restore here
     } else {
-        writeTimbre<ch>(mTimbre[chint]);
+        //writeTimbre<ch>(mTimbre[chint]);
+        ChannelControl::writeTimbre(ch, mRc, mTimbre[chint]);
         mRc.synth.setFrequency(ch, mFc[chint].frequency());
     }
 
-    writeEnvelope<ch>(mEnvelope[chint]);
+    //writeEnvelope<ch>(mEnvelope[chint]);
+    ChannelControl::writeEnvelope(ch, mRc, mEnvelope[chint]);
 }
 
 bool MusicRuntime::step() {
@@ -399,7 +401,7 @@ void MusicRuntime::setEnvelope(uint8_t envelope) {
         }
     }
     if (mChCtrl.isLocked(ch)) {
-        writeEnvelope<ch>(envelope);
+        ChannelControl::writeEnvelope(ch, mRc, envelope);
     }
 }
 
@@ -408,7 +410,7 @@ void MusicRuntime::setTimbre(uint8_t timbre) {
     constexpr int chint = static_cast<int>(ch);
     mTimbre[chint] = timbre & 0x3;
     if (mChCtrl.isLocked(ch)) {
-        writeTimbre<ch>(mTimbre[chint]);
+        ChannelControl::writeTimbre(ch, mRc, mTimbre[chint]);
     }
 }
 
@@ -418,64 +420,6 @@ void MusicRuntime::setPanning(uint8_t panning) {
     mPanning &= static_cast<uint8_t>(~(0x11 << chint));
     mPanning |= (panning & 0x11) << chint;
     mFlags |= FLAGS_PANNING;
-}
-
-template <ChType ch>
-void MusicRuntime::writeEnvelope(uint8_t envelope) {
-
-    if constexpr (ch == ChType::ch3) {
-
-        Waveform *waveform = mRc.waveTable[envelope];
-        if (waveform == nullptr) {
-            return; // do nothing if no waveform exists
-        }
-        // on real hardware we would have to disable the generator by
-        // writing 0x00 to NR30 to prevent corruption. The emulator does
-        // not corrupt wave ram on retrigger so we can skip this step.
-
-        // copy waveform to wave ram
-        mRc.synth.hardware().gen3.copyWave(*waveform);
-
-    } else {
-        static constexpr uint16_t NRx2[] = { Gbs::REG_NR12, Gbs::REG_NR22, 0, Gbs::REG_NR42 };
-        // write envelope
-        // [rNRx2] <- envelope
-        mRc.synth.writeRegister(NRx2[static_cast<int>(ch)], envelope);
-    }
-    // retrigger
-    mRc.synth.restart(ch);
-}
-
-template <ChType ch>
-void MusicRuntime::writeTimbre(uint8_t timbre) {
-    auto &hf = mRc.synth.hardware();
-
-    if constexpr (ch == ChType::ch1 || ch == ChType::ch2) {
-        PulseGen *gen;
-        if constexpr (ch == ChType::ch1) {
-            gen = &hf.gen1;
-        } else {
-            gen = &hf.gen2;
-        }
-
-        gen->setDuty(static_cast<Gbs::Duty>(timbre));
-    } else if constexpr (ch == ChType::ch3) {
-        if (timbre == 1) {
-            timbre = 3;
-        } else if (timbre == 3) {
-            timbre = 1;
-        }
-        hf.gen3.setVolume(static_cast<Gbs::WaveVolume>(timbre));
-
-    } else {
-        uint8_t nr43 = hf.gen4.readRegister();
-        if (timbre) {
-            nr43 |= 0x08;
-        } else {
-            nr43 &= ~0x08;
-        }
-        hf.gen4.writeRegister(nr43);
-    }
 }
 
 

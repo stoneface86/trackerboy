@@ -87,26 +87,6 @@ private:
     template <ChType ch>
     void setPanning(uint8_t panning);
 
-    //
-    // Write the given envelope to the channel's registers. For channels 1, 2 and 4 this
-    // value is written to the channel's envelope register (NRx2). For channel 3, the
-    // waveram is set to the waveform in the wave table with the envelope value being the index.
-    // The channel is then restarted.
-    //
-    template <ChType ch>
-    void writeEnvelope(uint8_t envelope);
-
-    //
-    // Write the given timbre to the channel's registers. A timbre ranges from 0-3 and its
-    // effect depends on the channel.
-    //
-    // CH1, CH2: the duty is set (0 = 12.5%, 1 = 25%, 2 = 50%, 3 = 75%)
-    // CH3:      the volume is set (0 = mute, 1 = 25%, 2 = 50%, 3 = 100%)
-    // CH4:      the step-width is set (0 = 15-bit, 1,2,3 = 7-bit)
-    //
-    template <ChType ch>
-    void writeTimbre(uint8_t timbre);
-
     static constexpr int FLAGS_HALTED = BIT(0);
     static constexpr int FLAGS_PANNING = BIT(1);
     static constexpr int FLAGS_AREN1 = BIT(4);

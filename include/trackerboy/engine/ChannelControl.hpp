@@ -5,6 +5,8 @@
 
 #include "trackerboy/ChType.hpp"
 
+#include "trackerboy/engine/RuntimeContext.hpp"
+
 namespace trackerboy {
 
 class ChannelControl {
@@ -20,6 +22,23 @@ public:
 
     void unlock(ChType ch) noexcept;
 
+    //
+    // Write the given envelope to the channel's registers. For channels 1, 2 and 4 this
+    // value is written to the channel's envelope register (NRx2). For channel 3, the
+    // waveram is set to the waveform in the wave table with the envelope value being the index.
+    // The channel is then restarted.
+    //
+    static void writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelope);
+
+    //
+    // Write the given timbre to the channel's registers. A timbre ranges from 0-3 and its
+    // effect depends on the channel.
+    //
+    // CH1, CH2: the duty is set (0 = 12.5%, 1 = 25%, 2 = 50%, 3 = 75%)
+    // CH3:      the volume is set (0 = mute, 1 = 25%, 2 = 50%, 3 = 100%)
+    // CH4:      the step-width is set (0 = 15-bit, 1,2,3 = 7-bit)
+    //
+    static void writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre);
 
 private:
 
