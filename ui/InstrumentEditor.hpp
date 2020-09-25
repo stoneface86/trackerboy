@@ -1,23 +1,30 @@
 
 #pragma once
 
+#include <memory>
+
 #include <QDialog>
+#include <QGroupBox>
+#include <QWidget>
 
 #include "model/InstrumentListModel.hpp"
 #include "model/WaveListModel.hpp"
 
 #include "EnvelopeForm.hpp"
 
-#pragma warning(push, 0)
-#include "designer/ui_InstrumentEditor.h"
-#pragma warning(pop)
+#include "PianoWidget.hpp"
 
-class InstrumentEditor : public QDialog, private Ui::InstrumentEditor {
+namespace Ui {
+class InstrumentEditor;
+}
+
+class InstrumentEditor : public QDialog {
 
     Q_OBJECT
 
 public:
     InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget &waveEditor, QWidget *parent = nullptr);
+    
 
     PianoWidget* piano();
 
@@ -26,6 +33,8 @@ private slots:
     void currentInstrumentChanged(int index);
 
 private:
+
+    std::unique_ptr<Ui::InstrumentEditor> mUi;
 
     InstrumentListModel &mInstrumentModel;
     WaveListModel &mWaveModel;

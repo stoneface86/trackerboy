@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <cmath>
 
+#pragma warning(push, 0)
+#include "designer/ui_ConfigDialog.h"
+#pragma warning(pop)
+
 static const char *SAMPLING_RATE_STR[] = {
     "11,025 Hz",
     "22,050 Hz",
@@ -16,32 +20,33 @@ static const char *SAMPLING_RATE_STR[] = {
 
 
 ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
+    mUi(new Ui::ConfigDialog()),
     mConfig(config),
     mDeviceManager(),
     mIgnoreSelections(false),
     QDialog(parent)
 {
-    setupUi(this);
+    mUi->setupUi(this);
 
     // populate the host combo with all available host apis
     // we only need to do this once
     auto &deviceTable = audio::DeviceTable::instance();
     auto &hosts = deviceTable.hosts();
     for (auto &host : hosts) {
-        mHostApiCombo->addItem(QString::fromLatin1(host.info->name));
+        mUi->mHostApiCombo->addItem(QString::fromLatin1(host.info->name));
     }
 
-    connect(mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
-    connect(mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
+    connect(mUi->mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
+    connect(mUi->mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
 
-    connect(mGainSlider1, &QSlider::valueChanged, this, [this](int value) { gainChanged(0, value); });
-    connect(mGainSlider2, &QSlider::valueChanged, this, [this](int value) { gainChanged(1, value); });
-    connect(mGainSlider3, &QSlider::valueChanged, this, [this](int value) { gainChanged(2, value); });
-    connect(mGainSlider4, &QSlider::valueChanged, this, [this](int value) { gainChanged(3, value); });
+    connect(mUi->mGainSlider1, &QSlider::valueChanged, this, [this](int value) { gainChanged(0, value); });
+    connect(mUi->mGainSlider2, &QSlider::valueChanged, this, [this](int value) { gainChanged(1, value); });
+    connect(mUi->mGainSlider3, &QSlider::valueChanged, this, [this](int value) { gainChanged(2, value); });
+    connect(mUi->mGainSlider4, &QSlider::valueChanged, this, [this](int value) { gainChanged(3, value); });
 
-    connect(mHostApiCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::hostApiSelected);
-    connect(mDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::deviceSelected);
-    connect(mSamplerateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::samplerateSelected);
+    connect(mUi->mHostApiCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::hostApiSelected);
+    connect(mUi->mDeviceCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::deviceSelected);
+    connect(mUi->mSamplerateCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ConfigDialog::samplerateSelected);
 
     // reset all controls to our Config's settings
     resetControls();
@@ -52,12 +57,12 @@ void ConfigDialog::accept() {
     // update all changes to the Config object
     mConfig.setDeviceId(mDeviceManager.portaudioDevice());
     mConfig.setSamplerate(mDeviceManager.samplerates()[mDeviceManager.currentSamplerate()]);
-    mConfig.setBuffersize(mBufferSizeSlider->value());
-    mConfig.setVolume(mVolumeSlider->value());
-    mConfig.setGain(trackerboy::ChType::ch1, mGainSlider1->value());
-    mConfig.setGain(trackerboy::ChType::ch2, mGainSlider2->value());
-    mConfig.setGain(trackerboy::ChType::ch3, mGainSlider3->value());
-    mConfig.setGain(trackerboy::ChType::ch4, mGainSlider4->value());
+    mConfig.setBuffersize(mUi->mBufferSizeSlider->value());
+    mConfig.setVolume(mUi->mVolumeSlider->value());
+    mConfig.setGain(trackerboy::ChType::ch1, mUi->mGainSlider1->value());
+    mConfig.setGain(trackerboy::ChType::ch2, mUi->mGainSlider2->value());
+    mConfig.setGain(trackerboy::ChType::ch3, mUi->mGainSlider3->value());
+    mConfig.setGain(trackerboy::ChType::ch4, mUi->mGainSlider4->value());
 
 
     QDialog::accept();
@@ -71,18 +76,18 @@ void ConfigDialog::reject() {
 }
 
 void ConfigDialog::showEvent(QShowEvent *evt) {
-    mTabWidget->setCurrentIndex(0);
+    mUi->mTabWidget->setCurrentIndex(0);
     QDialog::showEvent(evt);
 }
 
 void ConfigDialog::bufferSizeSliderChanged(int value) {
     QString text("%1 ms");
-    mBufferSizeLabel->setText(text.arg(QString::number(value)));
+    mUi->mBufferSizeLabel->setText(text.arg(QString::number(value)));
 }
 
 void ConfigDialog::volumeSliderChanged(int value) {
     QString text("%1%");
-    mVolumeLabel->setText(text.arg(QString::number(value)));
+    mUi->mVolumeLabel->setText(text.arg(QString::number(value)));
 }
 
 void ConfigDialog::hostApiSelected(int index) {
@@ -94,7 +99,7 @@ void ConfigDialog::hostApiSelected(int index) {
         fillDeviceCombo(index);
         mIgnoreSelections = false;
 
-        mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
+        mUi->mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
     }
 }
 
@@ -105,7 +110,7 @@ void ConfigDialog::deviceSelected(int index) {
         mIgnoreSelections = true;
         mDeviceManager.setCurrentDevice(index);
         fillSamplerateCombo();
-        mSamplerateCombo->setCurrentIndex(mDeviceManager.currentSamplerate());
+        mUi->mSamplerateCombo->setCurrentIndex(mDeviceManager.currentSamplerate());
         mIgnoreSelections = false;
     }
 }
@@ -120,16 +125,16 @@ void ConfigDialog::gainChanged(int channel, int value) {
     QLabel *gainLabel;
     switch (channel) {
         case 0:
-            gainLabel = mGainLabel1;
+            gainLabel = mUi->mGainLabel1;
             break;
         case 1:
-            gainLabel = mGainLabel2;
+            gainLabel = mUi->mGainLabel2;
             break;
         case 2:
-            gainLabel = mGainLabel3;
+            gainLabel = mUi->mGainLabel3;
             break;
         default:
-            gainLabel = mGainLabel4;
+            gainLabel = mUi->mGainLabel4;
             break;
     }
     QString text = QString("%1%2.%3 dB")
@@ -140,21 +145,21 @@ void ConfigDialog::gainChanged(int channel, int value) {
 }
 
 void ConfigDialog::fillDeviceCombo(int hostIndex) {
-    mDeviceCombo->clear();
+    mUi->mDeviceCombo->clear();
 
     auto &deviceTable = audio::DeviceTable::instance();
     auto devicesBegin = deviceTable.devicesBegin(hostIndex);
     auto devicesEnd = deviceTable.devicesEnd(hostIndex);
     for (auto iter = devicesBegin; iter != devicesEnd; ++iter) {
-        mDeviceCombo->addItem(QString::fromLatin1(iter->info->name));
+        mUi->mDeviceCombo->addItem(QString::fromLatin1(iter->info->name));
     }
 }
 
 void ConfigDialog::fillSamplerateCombo() {
-    mSamplerateCombo->clear();
+    mUi->mSamplerateCombo->clear();
     auto &samplerates = mDeviceManager.samplerates();
     for (auto rate : samplerates) {
-        mSamplerateCombo->addItem(QString::fromLatin1(SAMPLING_RATE_STR[rate]));
+        mUi->mSamplerateCombo->addItem(QString::fromLatin1(SAMPLING_RATE_STR[rate]));
     }
 }
 
@@ -164,10 +169,10 @@ void ConfigDialog::resetControls() {
     mDeviceManager.setPortaudioDevice(mConfig.deviceId());
 
     int host = mDeviceManager.currentHost();
-    mHostApiCombo->setCurrentIndex(host);
+    mUi->mHostApiCombo->setCurrentIndex(host);
     fillDeviceCombo(host);
 
-    mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
+    mUi->mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
 
     // reset samplerate
     fillSamplerateCombo();
@@ -181,16 +186,16 @@ void ConfigDialog::resetControls() {
     }
 
     mDeviceManager.setCurrentSamplerate(samplerateIndex);
-    mSamplerateCombo->setCurrentIndex(samplerateIndex);
+    mUi->mSamplerateCombo->setCurrentIndex(samplerateIndex);
 
     mIgnoreSelections = false;
 
-    mBufferSizeSlider->setValue(mConfig.buffersize());
-    mVolumeSlider->setValue(mConfig.volume());
-    mGainSlider1->setValue(mConfig.gain(trackerboy::ChType::ch1));
-    mGainSlider2->setValue(mConfig.gain(trackerboy::ChType::ch2));
-    mGainSlider3->setValue(mConfig.gain(trackerboy::ChType::ch3));
-    mGainSlider4->setValue(mConfig.gain(trackerboy::ChType::ch4));
+    mUi->mBufferSizeSlider->setValue(mConfig.buffersize());
+    mUi->mVolumeSlider->setValue(mConfig.volume());
+    mUi->mGainSlider1->setValue(mConfig.gain(trackerboy::ChType::ch1));
+    mUi->mGainSlider2->setValue(mConfig.gain(trackerboy::ChType::ch2));
+    mUi->mGainSlider3->setValue(mConfig.gain(trackerboy::ChType::ch3));
+    mUi->mGainSlider4->setValue(mConfig.gain(trackerboy::ChType::ch4));
 
 
 }

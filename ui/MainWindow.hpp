@@ -1,12 +1,12 @@
 
 #pragma once
 
+#include <memory>
+
 #include <QMainWindow>
 #include <QFileDialog>
 
-#pragma warning(push, 0)
-#include "designer/ui_MainWindow.h"
-#pragma warning(pop)
+
 
 #include "model/ModuleDocument.hpp"
 #include "model/InstrumentListModel.hpp"
@@ -16,7 +16,11 @@
 #include "Renderer.hpp"
 #include "WaveEditor.hpp"
 
-class MainWindow : public QMainWindow, private Ui::MainWindow {
+namespace Ui {
+class MainWindow;
+}
+
+class MainWindow : public QMainWindow {
 
     Q_OBJECT
 
@@ -49,6 +53,8 @@ private:
     void setModelsEnabled(bool enabled);
 
     void writeSettings();
+
+    std::unique_ptr<Ui::MainWindow> mUi;
 
     QFileDialog *mModuleFileDialog;
 

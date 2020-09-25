@@ -2,15 +2,17 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include <QWidget>
 
-#pragma warning(push, 0)
-#include "designer/ui_EnvelopeForm.h"
-#pragma warning(pop)
 
 
-class EnvelopeForm : public QWidget, private Ui::EnvelopeForm {
+namespace Ui {
+    class EnvelopeForm;
+}
+
+class EnvelopeForm : public QWidget {
 
     Q_OBJECT
 
@@ -28,6 +30,7 @@ private slots:
     void updateEnvelope(int value);
 
 private:
+    std::unique_ptr<Ui::EnvelopeForm> mUi;
     bool mIgnoreChanges;
     uint8_t mEnvelope;
 

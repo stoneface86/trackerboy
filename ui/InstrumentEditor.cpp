@@ -1,6 +1,10 @@
 
 #include "InstrumentEditor.hpp"
 
+#pragma warning(push, 0)
+#include "designer/ui_InstrumentEditor.h"
+#pragma warning(pop)
+
 #include "trackerboy/ChType.hpp"
 using trackerboy::ChType;
 
@@ -11,6 +15,7 @@ static const uint8_t PANNING_TABLE[3] = {
 };
 
 InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget &waveEditor, QWidget *parent) :
+    mUi(new Ui::InstrumentEditor()),
     mInstrumentModel(instModel),
     mWaveModel(waveModel),
     mWaveEditor(waveEditor),
@@ -18,7 +23,7 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
     mLastChannel(ChType::ch1),
     QDialog(parent)
 {
-    setupUi(this);
+    mUi->setupUi(this);
 
     mGroupEnvelope = new QGroupBox("Envelope", this);
 
@@ -28,36 +33,36 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
     layout->setMargin(0);
     mGroupEnvelope->setLayout(layout);
 
-    mGroupLayout->replaceWidget(mGroupWave, mGroupEnvelope);
-    mGroupWave->setVisible(false);
+    mUi->mGroupLayout->replaceWidget(mUi->mGroupWave, mGroupEnvelope);
+    mUi->mGroupWave->setVisible(false);
 
-    mInstrumentCombo->setModel(&instModel);
-    mWaveCombo->setModel(&waveModel);
+    mUi->mInstrumentCombo->setModel(&instModel);
+    mUi->mWaveCombo->setModel(&waveModel);
 
-    connect(mChannelCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InstrumentEditor::onChannelSelect);
-    connect(mInstrumentCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), &mInstrumentModel, QOverload<int>::of(&InstrumentListModel::select));
+    connect(mUi->mChannelCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InstrumentEditor::onChannelSelect);
+    connect(mUi->mInstrumentCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), &mInstrumentModel, QOverload<int>::of(&InstrumentListModel::select));
 
-    connect(mNameEdit, &QLineEdit::textEdited, &instModel, &InstrumentListModel::rename);
+    connect(mUi->mNameEdit, &QLineEdit::textEdited, &instModel, &InstrumentListModel::rename);
 
-    connect(mPanningCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+    connect(mUi->mPanningCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
             if (!mIgnoreChanged) {
                 mInstrumentModel.setPanning(PANNING_TABLE[index]);
             }
         });
 
-    connect(mDelaySpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+    connect(mUi->mDelaySpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
             if (!mIgnoreChanged) {
                 mInstrumentModel.setDelay(static_cast<uint8_t>(value));
             }
         });
 
-    connect(mDurationSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+    connect(mUi->mDurationSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
         if (!mIgnoreChanged) {
             mInstrumentModel.setDuration(static_cast<uint8_t>(value));
         }
         });
 
-    connect(mTuneSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+    connect(mUi->mTuneSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
         if (!mIgnoreChanged) {
             mInstrumentModel.setTune(static_cast<int8_t>(value));
         }
@@ -66,20 +71,20 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
     auto vibratoChanged = [this](int value) {
         (void)value;
         if (!mIgnoreChanged) {
-            mInstrumentModel.setVibrato(static_cast<uint8_t>(mVibratoExtentSpin->value()), static_cast<uint8_t>(mVibratoSpeedSpin->value()));
+            mInstrumentModel.setVibrato(static_cast<uint8_t>(mUi->mVibratoExtentSpin->value()), static_cast<uint8_t>(mUi->mVibratoSpeedSpin->value()));
         }
     };
-    connect(mVibratoExtentSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, vibratoChanged);
-    connect(mVibratoSpeedSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, vibratoChanged);
+    connect(mUi->mVibratoExtentSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, vibratoChanged);
+    connect(mUi->mVibratoSpeedSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, vibratoChanged);
 
 
-    connect(mVibratoDelaySpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
+    connect(mUi->mVibratoDelaySpin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value) {
         if (!mIgnoreChanged) {
             mInstrumentModel.setVibratoDelay(static_cast<uint8_t>(value));
         }
         });
   
-    connect(mTimbreCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int value) {
+    connect(mUi->mTimbreCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int value) {
         if (!mIgnoreChanged) {
             mInstrumentModel.setTimbre(static_cast<uint8_t>(value));
         }
@@ -91,10 +96,10 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
         }
         });
 
-    connect(mWaveCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
+    connect(mUi->mWaveCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
         bool valid = index != -1;
-        mWaveEditButton->setEnabled(valid);
-        if (!mIgnoreChanged && mWaveCombo->isVisible()) {
+        mUi->mWaveEditButton->setEnabled(valid);
+        if (!mIgnoreChanged && mUi->mWaveCombo->isVisible()) {
             if (valid) {
                 auto waveform = mWaveModel.waveform(index);
                 uint8_t id = waveform->id();
@@ -103,8 +108,8 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
         }
         });
 
-    connect(mWaveEditButton, &QPushButton::clicked, this, [this]() {
-        mWaveModel.select(mWaveCombo->currentIndex());
+    connect(mUi->mWaveEditButton, &QPushButton::clicked, this, [this]() {
+        mWaveModel.select(mUi->mWaveCombo->currentIndex());
         mWaveEditor.show();
         });
 
@@ -112,7 +117,7 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
 }
 
 PianoWidget* InstrumentEditor::piano() {
-    return mPiano;
+    return mUi->mPiano;
 }
 
 
@@ -122,7 +127,7 @@ void InstrumentEditor::onChannelSelect(int channel) {
     ChType ch = static_cast<ChType>(channel);
 
     // update timbre label and choices
-    int timbre = mTimbreCombo->currentIndex();
+    int timbre = mUi->mTimbreCombo->currentIndex();
     switch (ch) {
         case ChType::ch1:
             if (mLastChannel == ChType::ch2) {
@@ -133,54 +138,54 @@ void InstrumentEditor::onChannelSelect(int channel) {
             if (mLastChannel == ChType::ch1) {
                 break;
             }
-            mTimbreLabel->setText("Duty");
-            mTimbreCombo->clear();
-            mTimbreCombo->addItem("12.5%");
-            mTimbreCombo->addItem("25%");
-            mTimbreCombo->addItem("50%");
-            mTimbreCombo->addItem("75%");
+            mUi->mTimbreLabel->setText("Duty");
+            mUi->mTimbreCombo->clear();
+            mUi->mTimbreCombo->addItem("12.5%");
+            mUi->mTimbreCombo->addItem("25%");
+            mUi->mTimbreCombo->addItem("50%");
+            mUi->mTimbreCombo->addItem("75%");
             break;
         case ChType::ch3:
-            mTimbreLabel->setText("Volume");
-            mTimbreCombo->clear();
-            mTimbreCombo->addItem("100%");
-            mTimbreCombo->addItem("50%");
-            mTimbreCombo->addItem("25%");
-            mTimbreCombo->addItem("Mute");
+            mUi->mTimbreLabel->setText("Volume");
+            mUi->mTimbreCombo->clear();
+            mUi->mTimbreCombo->addItem("100%");
+            mUi->mTimbreCombo->addItem("50%");
+            mUi->mTimbreCombo->addItem("25%");
+            mUi->mTimbreCombo->addItem("Mute");
             break;
         case ChType::ch4:
-            mTimbreLabel->setText("Step width");
-            mTimbreCombo->clear();
-            mTimbreCombo->addItem("15-bit");
-            mTimbreCombo->addItem("7-bit");
+            mUi->mTimbreLabel->setText("Step width");
+            mUi->mTimbreCombo->clear();
+            mUi->mTimbreCombo->addItem("15-bit");
+            mUi->mTimbreCombo->addItem("7-bit");
             break;
     }
 
-    if (timbre >= mTimbreCombo->count()) {
-        timbre = mTimbreCombo->count() - 1;
+    if (timbre >= mUi->mTimbreCombo->count()) {
+        timbre = mUi->mTimbreCombo->count() - 1;
     }
-    mTimbreCombo->setCurrentIndex(timbre);
+    mUi->mTimbreCombo->setCurrentIndex(timbre);
 
     // disable controls based on the selected channel
     bool isFrequencyChannel = ch != ChType::ch4;
-    mGroupFrequency->setEnabled(isFrequencyChannel);
+    mUi->mGroupFrequency->setEnabled(isFrequencyChannel);
 
     if (ch == ChType::ch3) {
         // replace the envelope group box with the waveform one
-        mGroupLayout->replaceWidget(mGroupEnvelope, mGroupWave);
-        mWaveCombo->setCurrentIndex(mWaveModel.idToModel(mEnvelopeForm->envelope()));
+        mUi->mGroupLayout->replaceWidget(mGroupEnvelope, mUi->mGroupWave);
+        mUi->mWaveCombo->setCurrentIndex(mWaveModel.idToModel(mEnvelopeForm->envelope()));
         mGroupEnvelope->setVisible(false);
-        mGroupWave->setVisible(true);
+        mUi->mGroupWave->setVisible(true);
     } else if (mLastChannel == ChType::ch3) {
         // replace the waveform group box with the envelope one
-        mGroupLayout->replaceWidget(mGroupWave, mGroupEnvelope);
+        mUi->mGroupLayout->replaceWidget(mUi->mGroupWave, mGroupEnvelope);
         
-        int currentWave = mWaveCombo->currentIndex();
+        int currentWave = mUi->mWaveCombo->currentIndex();
         if (currentWave != -1) {
             mEnvelopeForm->setEnvelope(mWaveModel.waveform(currentWave)->id());
         }
         mGroupEnvelope->setVisible(true);
-        mGroupWave->setVisible(false);
+        mUi->mGroupWave->setVisible(false);
     }
 
     // update the current instrument's channel
@@ -191,13 +196,13 @@ void InstrumentEditor::onChannelSelect(int channel) {
 
 void InstrumentEditor::currentInstrumentChanged(int index) {
     if (index != -1) {
-        mInstrumentCombo->setCurrentIndex(index);
-        mNameEdit->setText(mInstrumentModel.name());
+        mUi->mInstrumentCombo->setCurrentIndex(index);
+        mUi->mNameEdit->setText(mInstrumentModel.name());
 
         auto inst = mInstrumentModel.instrument(index);
         auto &instData = inst->data();
 
-        mChannelCombo->setCurrentIndex(instData.channel);
+        mUi->mChannelCombo->setCurrentIndex(instData.channel);
 
         mIgnoreChanged = true;
 
@@ -208,20 +213,20 @@ void InstrumentEditor::currentInstrumentChanged(int index) {
             }
             ++panningIndex;
         }
-        mPanningCombo->setCurrentIndex(panningIndex);
+        mUi->mPanningCombo->setCurrentIndex(panningIndex);
 
-        mDelaySpin->setValue(instData.delay);
-        mDurationSpin->setValue(instData.duration);
-        mTuneSpin->setValue(instData.tune);
-        mVibratoExtentSpin->setValue(instData.vibrato & 0xF);
-        mVibratoSpeedSpin->setValue(instData.vibrato >> 4);
-        mVibratoDelaySpin->setValue(instData.vibratoDelay);
+        mUi->mDelaySpin->setValue(instData.delay);
+        mUi->mDurationSpin->setValue(instData.duration);
+        mUi->mTuneSpin->setValue(instData.tune);
+        mUi->mVibratoExtentSpin->setValue(instData.vibrato & 0xF);
+        mUi->mVibratoSpeedSpin->setValue(instData.vibrato >> 4);
+        mUi->mVibratoDelaySpin->setValue(instData.vibratoDelay);
 
-        mWaveCombo->setCurrentIndex(mWaveModel.idToModel(instData.envelope));
+        mUi->mWaveCombo->setCurrentIndex(mWaveModel.idToModel(instData.envelope));
         mEnvelopeForm->setEnvelope(instData.envelope);
         
 
-        mTimbreCombo->setCurrentIndex(instData.timbre);
+        mUi->mTimbreCombo->setCurrentIndex(instData.timbre);
 
         mIgnoreChanged = false;
     }

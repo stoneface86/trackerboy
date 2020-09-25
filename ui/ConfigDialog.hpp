@@ -1,18 +1,22 @@
 #pragma once
 
+#include <memory>
+
 #include <QDialog>
 #include <QSettings>
 #include <QShowEvent>
 
-#pragma warning(push, 0)
-#include "designer/ui_ConfigDialog.h"
-#pragma warning(pop)
+
 
 #include "audio.hpp"
 
 #include "Config.hpp"
 
-class ConfigDialog : public QDialog, private Ui::ConfigDialog {
+namespace Ui {
+class ConfigDialog;
+}
+
+class ConfigDialog : public QDialog {
 
     Q_OBJECT
 
@@ -42,6 +46,8 @@ private:
     void fillSamplerateCombo();
 
     void resetControls();
+
+    std::unique_ptr<Ui::ConfigDialog> mUi;
 
     Config &mConfig;
 

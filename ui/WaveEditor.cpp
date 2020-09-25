@@ -9,65 +9,70 @@
 
 #include "WaveEditor.hpp"
 
+#pragma warning(push, 0)
+#include "designer/ui_WaveEditor.h"
+#pragma warning(pop)
+
 
 WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
+    mUi(new Ui::WaveEditor()),
     mModel(model),
     mIgnoreNextUpdate(false),
-    QWidget(parent)
+    QDialog(parent)
 {
-    setupUi(this);
+    mUi->setupUi(this);
     setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
 
     //WaveListModel *model = new WaveListModel(mod.waveTable(), this);
-    mWaveSelect->setModel(&mModel);
-    mWaveGraph->setModel(&mModel);
+    mUi->mWaveSelect->setModel(&mModel);
+    mUi->mWaveGraph->setModel(&mModel);
 
     // use system monospace font for the waveram line edit
-    mWaveramEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+    mUi->mWaveramEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
     // coordinate label will get updated via WaveGraph signal
-    connect(mWaveGraph, &WaveGraph::coordsTextChanged, mCoordsLabel, &QLabel::setText);
+    connect(mUi->mWaveGraph, &WaveGraph::coordsTextChanged, mUi->mCoordsLabel, &QLabel::setText);
 
     // update waveram text when the current waveform changes
     connect(&mModel, QOverload<QPoint>::of(&WaveListModel::waveformChanged), this, &WaveEditor::onSampleChanged);
     connect(&mModel, QOverload<>::of(&WaveListModel::waveformChanged), this, &WaveEditor::updateWaveramText);
     
-    connect(mWaveramEdit, &QLineEdit::textEdited, this, &WaveEditor::onWaveramEdited);
+    connect(mUi->mWaveramEdit, &QLineEdit::textEdited, this, &WaveEditor::onWaveramEdited);
     // connect buttons to model functions
-    connect(mClearButton, &QPushButton::clicked, &mModel, &WaveListModel::clear);
-    connect(mInvertButton, &QPushButton::clicked, &mModel, &WaveListModel::invert);
-    connect(mRotateLeftButton, &QPushButton::clicked, &mModel, &WaveListModel::rotateLeft);
-    connect(mRotateRightButton, &QPushButton::clicked, &mModel, &WaveListModel::rotateRight);
+    connect(mUi->mClearButton, &QPushButton::clicked, &mModel, &WaveListModel::clear);
+    connect(mUi->mInvertButton, &QPushButton::clicked, &mModel, &WaveListModel::invert);
+    connect(mUi->mRotateLeftButton, &QPushButton::clicked, &mModel, &WaveListModel::rotateLeft);
+    connect(mUi->mRotateRightButton, &QPushButton::clicked, &mModel, &WaveListModel::rotateRight);
     // mWaveSelect can also be used to change the current waveform
-    connect(mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), &mModel, QOverload<int>::of(&WaveListModel::select));
+    connect(mUi->mWaveSelect, QOverload<int>::of(&QComboBox::currentIndexChanged), &mModel, QOverload<int>::of(&WaveListModel::select));
     connect(&mModel, &WaveListModel::currentIndexChanged, this, &WaveEditor::selectionChanged);
-    connect(mNameEdit, &QLineEdit::textEdited, &mModel, &WaveListModel::rename);
+    connect(mUi->mNameEdit, &QLineEdit::textEdited, &mModel, &WaveListModel::rename);
 
     // presets
-    connect(mPresetSineButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sine); });
-    connect(mPresetTriButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::triangle); });
-    connect(mPresetSquareButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::square); });
-    connect(mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
+    connect(mUi->mPresetSineButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sine); });
+    connect(mUi->mPresetTriButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::triangle); });
+    connect(mUi->mPresetSquareButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::square); });
+    connect(mUi->mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
 }
 
 PianoWidget* WaveEditor::piano() {
-    return mPiano;
+    return mUi->mPiano;
 }
 
 // when the user changes mWaveSelect or is set from the MainWindow
 void WaveEditor::selectionChanged(int index) {
     if (index != -1) {
-        mWaveSelect->setCurrentIndex(index);
+        mUi->mWaveSelect->setCurrentIndex(index);
         updateWaveramText();
-        mNameEdit->setText(mModel.name());
+        mUi->mNameEdit->setText(mModel.name());
     }
 }
 
 void WaveEditor::onSampleChanged(QPoint point) {
     // user changed a sample using the graph control, so update the wave ram line edit
-    auto text = mWaveramEdit->text();
+    auto text = mUi->mWaveramEdit->text();
     text.replace(point.x(), 1, QString::number(point.y(), 16).toUpper());
-    mWaveramEdit->setText(text);
+    mUi->mWaveramEdit->setText(text);
 }
 
 void WaveEditor::onWaveramEdited(const QString &text) {
@@ -85,8 +90,8 @@ void WaveEditor::updateWaveramText() {
         for (int i = 0; i != trackerboy::Gbs::WAVE_RAMSIZE; ++i) {
             ss << std::setw(2) << std::setfill('0') << static_cast<unsigned>(wavedata[i]);
         }
-        mWaveramEdit->setText(QString::fromStdString(ss.str()));
-        mWaveGraph->repaint();
+        mUi->mWaveramEdit->setText(QString::fromStdString(ss.str()));
+        mUi->mWaveGraph->repaint();
     } else {
         mIgnoreNextUpdate = false;
     }
@@ -98,11 +103,11 @@ void WaveEditor::setFromPreset(Preset preset) {
     uint8_t presetData[32];
     uint8_t waveData[32];
 
-    auto amplitude = mPresetAmpSpin->value();
+    auto amplitude = mUi->mPresetAmpSpin->value();
     switch (preset) {
         case Preset::square:
             {
-                uint8_t duty =  static_cast<uint8_t>(mPresetDutySpin->value() * (32.0 / 100.0));
+                uint8_t duty =  static_cast<uint8_t>(mUi->mPresetDutySpin->value() * (32.0 / 100.0));
                 std::fill_n(presetData, duty, amplitude);
                 std::fill_n(presetData + duty, 32 - duty, 0);
             }
@@ -149,8 +154,8 @@ void WaveEditor::setFromPreset(Preset preset) {
     }
 
     // get the phase and period settings
-    auto phase = mPresetPhaseSpin->value();
-    auto periods = mPresetPeriodSpin->value();
+    auto phase = mUi->mPresetPhaseSpin->value();
+    auto periods = mUi->mPresetPeriodSpin->value();
 
     // start at the phase offset
     int presetIndex = phase;

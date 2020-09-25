@@ -7,8 +7,13 @@
 #include <QSettings>
 #include <QScreen>
 
+#pragma warning(push, 0)
+#include "designer/ui_MainWindow.h"
+#pragma warning(pop)
+
 
 MainWindow::MainWindow() :
+    mUi(new Ui::MainWindow()),
     mModuleFileDialog(new QFileDialog(this)),
     mDocument(new ModuleDocument(this)),
     mInstrumentModel(new InstrumentListModel(*mDocument)),
@@ -20,7 +25,7 @@ MainWindow::MainWindow() :
     mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, this)),
     QMainWindow()
 {
-    setupUi(this);
+    mUi->setupUi(this);
     readSettings();
 
     mConfigDialog = new ConfigDialog(*mConfig, this);
@@ -35,27 +40,27 @@ MainWindow::MainWindow() :
     mModuleFileDialog->setWindowModality(Qt::WindowModal);
 
     auto __style = style();
-    actionNew->setIcon(__style->standardIcon(QStyle::SP_FileIcon));
-    actionOpen->setIcon(__style->standardIcon(QStyle::SP_DialogOpenButton));
-    actionSave->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
-    actionSaveAs->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
+    mUi->actionNew->setIcon(__style->standardIcon(QStyle::SP_FileIcon));
+    mUi->actionOpen->setIcon(__style->standardIcon(QStyle::SP_DialogOpenButton));
+    mUi->actionSave->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
+    mUi->actionSaveAs->setIcon(__style->standardIcon(QStyle::SP_DialogSaveButton));
     
     connect(mDocument, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
     setFilename("");
 
     // Actions
-    #define connectAction(action, slot) connect(action, &QAction::triggered, this, &MainWindow::slot)
+    #define connectAction(action, slot) connect(mUi->action, &QAction::triggered, this, &MainWindow::slot)
     // File
     connectAction(actionNew, fileNew);
     connectAction(actionOpen, fileOpen);
     connectAction(actionSave, fileSave);
     connectAction(actionSaveAs, fileSaveAs);
     connectAction(actionQuit, close);
-    connect(actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
+    connect(mUi->actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
     // Waveform
     //connect(actionEdit_waveform, &QAction::triggered, mWaveEditor, &WaveEditor::show);
 
-    QApplication::connect(actionAbout_Qt, &QAction::triggered, &QApplication::aboutQt);
+    QApplication::connect(mUi->actionAbout_Qt, &QAction::triggered, &QApplication::aboutQt);
 
     auto wavePiano = mWaveEditor->piano();
     connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
@@ -66,22 +71,22 @@ MainWindow::MainWindow() :
     connect(instPiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
 
 
-    mInstrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I");
+    mUi->mInstrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I");
     // add the context menu for instruments list view to our menubar
-    auto menu = mInstrumentTableForm->menu();
+    auto menu = mUi->mInstrumentTableForm->menu();
     menu->setTitle("Instrument");
-    mMenubar->insertMenu(mMenuTracker->menuAction(), menu);
+    mUi->mMenubar->insertMenu(mUi->mMenuTracker->menuAction(), menu);
 
-    mWaveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W");
+    mUi->mWaveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W");
     // same thing but for waveforms
-    menu = mWaveTableForm->menu();
+    menu = mUi->mWaveTableForm->menu();
     menu->setTitle("Waveform");
-    mMenubar->insertMenu(mMenuTracker->menuAction(), menu);
+    mUi->mMenubar->insertMenu(mUi->mMenuTracker->menuAction(), menu);
 
     QMenu *viewMenu = createPopupMenu();
     if (viewMenu != nullptr) {
         viewMenu->setTitle("View");
-        mMenubar->insertMenu(mMenuHelp->menuAction(), viewMenu);
+        mUi->mMenubar->insertMenu(mUi->mMenuHelp->menuAction(), viewMenu);
     }
 }
 

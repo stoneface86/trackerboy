@@ -2,17 +2,20 @@
 #pragma once
 
 #include <array>
+#include <memory>
 
-#include <QWidget>
+#include <QDialog>
 
 #include "model/ModuleDocument.hpp"
 #include "model/WaveListModel.hpp"
+#include "PianoWidget.hpp"
 
-#pragma warning(push, 0)
-#include "designer/ui_WaveEditor.h"
-#pragma warning(pop)
 
-class WaveEditor : public QWidget, private Ui::WaveEditor {
+namespace Ui {
+class WaveEditor;
+}
+
+class WaveEditor : public QDialog {
 
     Q_OBJECT
 
@@ -39,7 +42,8 @@ private:
 
     void setFromPreset(Preset preset);
 
-    //ModuleDocument *mDocument;
+    std::unique_ptr<Ui::WaveEditor> mUi;
+
     WaveListModel &mModel;
 
     bool mIgnoreNextUpdate;
