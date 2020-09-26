@@ -26,18 +26,19 @@ set(UI_SRC
     
     "resources/icons.qrc"
     "resources/keys.qrc"
+
+    "widgets/EnvelopeForm.cpp"
+    "widgets/MainWidget.cpp"
+    "widgets/OrderEditor.cpp"
+    "widgets/PianoWidget.cpp"
+    "widgets/TableForm.cpp"
+    "widgets/WaveGraph.cpp"
     
     "Config.cpp"
-    "EnvelopeForm.cpp"
     "main.cpp"
-    "MainWidget.cpp"
-    "OrderEditor.cpp"
-    "PianoWidget.cpp"
     "Renderer.cpp"
     "RenderWorker.cpp"
-    "TableForm.cpp"
     "Tileset.cpp"
-    "WaveGraph.cpp"
 )
 
 if (MSVC)

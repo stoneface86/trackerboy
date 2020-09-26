@@ -8,7 +8,7 @@
 
 #include "model/ModuleDocument.hpp"
 #include "model/WaveListModel.hpp"
-#include "PianoWidget.hpp"
+#include "widgets/PianoWidget.hpp"
 
 
 namespace Ui {

@@ -840,19 +840,19 @@
   <customwidget>
    <class>MainWidget</class>
    <extends>QWidget</extends>
-   <header>MainWidget.hpp</header>
+   <header>widgets/MainWidget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>OrderEditor</class>
    <extends>QFrame</extends>
-   <header>OrderEditor.hpp</header>
+   <header>widgets/OrderEditor.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>TableForm</class>
    <extends>QWidget</extends>
-   <header>TableForm.hpp</header>
+   <header>widgets/TableForm.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

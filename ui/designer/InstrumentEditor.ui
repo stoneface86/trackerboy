@@ -310,7 +310,7 @@
   <customwidget>
    <class>PianoWidget</class>
    <extends>QWidget</extends>
-   <header>PianoWidget.hpp</header>
+   <header>widgets/PianoWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

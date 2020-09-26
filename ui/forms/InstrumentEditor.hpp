@@ -1,18 +1,16 @@
 
 #pragma once
 
-#include <memory>
+#include "model/InstrumentListModel.hpp"
+#include "model/WaveListModel.hpp"
+#include "widgets/EnvelopeForm.hpp"
+#include "widgets/PianoWidget.hpp"
 
 #include <QDialog>
 #include <QGroupBox>
 #include <QWidget>
 
-#include "model/InstrumentListModel.hpp"
-#include "model/WaveListModel.hpp"
-
-#include "EnvelopeForm.hpp"
-
-#include "PianoWidget.hpp"
+#include <memory>
 
 namespace Ui {
 class InstrumentEditor;
