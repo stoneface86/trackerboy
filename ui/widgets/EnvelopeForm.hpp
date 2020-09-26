@@ -1,12 +1,9 @@
 
 #pragma once
 
-#include <cstdint>
-#include <memory>
-
 #include <QWidget>
 
-
+#include <cstdint>
 
 namespace Ui {
     class EnvelopeForm;
@@ -18,6 +15,7 @@ class EnvelopeForm : public QWidget {
 
 public:
     EnvelopeForm(QWidget *parent = nullptr);
+    ~EnvelopeForm();
 
     uint8_t envelope();
 
@@ -30,7 +28,7 @@ private slots:
     void updateEnvelope(int value);
 
 private:
-    std::unique_ptr<Ui::EnvelopeForm> mUi;
+    Ui::EnvelopeForm *mUi;
     bool mIgnoreChanges;
     uint8_t mEnvelope;
 

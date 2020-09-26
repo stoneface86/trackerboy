@@ -20,6 +20,10 @@ EnvelopeForm::EnvelopeForm(QWidget *parent) :
     connect(mUi->mPeriodSpin, QOverload<int>::of(&QSpinBox::valueChanged), this, &EnvelopeForm::updateEnvelope);
 }
 
+EnvelopeForm::~EnvelopeForm() {
+    delete mUi;
+}
+
 uint8_t EnvelopeForm::envelope() {
     return mEnvelope;
 }
