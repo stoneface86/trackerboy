@@ -10,8 +10,6 @@
 #include <QGroupBox>
 #include <QWidget>
 
-#include <memory>
-
 namespace Ui {
 class InstrumentEditor;
 }
@@ -22,7 +20,7 @@ class InstrumentEditor : public QDialog {
 
 public:
     InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget &waveEditor, QWidget *parent = nullptr);
-    
+    ~InstrumentEditor();
 
     PianoWidget* piano();
 
@@ -32,7 +30,7 @@ private slots:
 
 private:
 
-    std::unique_ptr<Ui::InstrumentEditor> mUi;
+    Ui::InstrumentEditor *mUi;
 
     InstrumentListModel &mInstrumentModel;
     WaveListModel &mWaveModel;

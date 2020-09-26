@@ -90,6 +90,10 @@ MainWindow::MainWindow() :
     }
 }
 
+MainWindow::~MainWindow() {
+    delete mUi;
+}
+
 void MainWindow::closeEvent(QCloseEvent *evt) {
     if (maybeSave()) {
         writeSettings();

@@ -1,15 +1,13 @@
 
 #pragma once
 
-#include <array>
-#include <memory>
-
-#include <QDialog>
-
 #include "model/ModuleDocument.hpp"
 #include "model/WaveListModel.hpp"
 #include "widgets/PianoWidget.hpp"
 
+#include <QDialog>
+
+#include <array>
 
 namespace Ui {
 class WaveEditor;
@@ -21,6 +19,7 @@ class WaveEditor : public QDialog {
 
 public:
     explicit WaveEditor(WaveListModel &model, QWidget *parent = nullptr);
+    ~WaveEditor();
 
     PianoWidget* piano();
 
@@ -42,7 +41,7 @@ private:
 
     void setFromPreset(Preset preset);
 
-    std::unique_ptr<Ui::WaveEditor> mUi;
+    Ui::WaveEditor *mUi;
 
     WaveListModel &mModel;
 

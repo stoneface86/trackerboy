@@ -2,7 +2,7 @@
 #include "TableForm.hpp"
 #include "Tileset.hpp"
 
-#include <QToolbar>
+#include <QToolBar>
 #include <QVBoxLayout>
 
 #include <QPainter>

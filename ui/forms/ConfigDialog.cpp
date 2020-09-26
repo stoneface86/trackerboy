@@ -53,6 +53,10 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
 
 }
 
+ConfigDialog::~ConfigDialog() {
+    delete mUi;
+}
+
 void ConfigDialog::accept() {
     // update all changes to the Config object
     mConfig.setDeviceId(mDeviceManager.portaudioDevice());

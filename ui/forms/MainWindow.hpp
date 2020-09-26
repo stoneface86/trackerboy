@@ -12,8 +12,6 @@
 #include <QMainWindow>
 #include <QFileDialog>
 
-#include <memory>
-
 
 
 namespace Ui {
@@ -26,6 +24,7 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow();
+    ~MainWindow();
 
 protected:
 
@@ -54,7 +53,7 @@ private:
 
     void writeSettings();
 
-    std::unique_ptr<Ui::MainWindow> mUi;
+    Ui::MainWindow *mUi;
 
     QFileDialog *mModuleFileDialog;
 

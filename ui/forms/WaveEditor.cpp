@@ -55,6 +55,10 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
     connect(mUi->mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
 }
 
+WaveEditor::~WaveEditor() {
+    delete mUi;
+}
+
 PianoWidget* WaveEditor::piano() {
     return mUi->mPiano;
 }

@@ -116,6 +116,10 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
     connect(&mInstrumentModel, &InstrumentListModel::currentIndexChanged, this, &InstrumentEditor::currentInstrumentChanged);
 }
 
+InstrumentEditor::~InstrumentEditor() {
+    delete mUi;
+}
+
 PianoWidget* InstrumentEditor::piano() {
     return mUi->mPiano;
 }

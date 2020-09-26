@@ -1,16 +1,12 @@
 #pragma once
 
-#include <memory>
+#include "Config.hpp"
+
+#include "audio.hpp"
 
 #include <QDialog>
 #include <QSettings>
 #include <QShowEvent>
-
-
-
-#include "audio.hpp"
-
-#include "Config.hpp"
 
 namespace Ui {
 class ConfigDialog;
@@ -22,6 +18,7 @@ class ConfigDialog : public QDialog {
 
 public:
     ConfigDialog(Config &config, QWidget *parent = nullptr);
+    ~ConfigDialog();
 
     void accept() override;
 
@@ -47,7 +44,7 @@ private:
 
     void resetControls();
 
-    std::unique_ptr<Ui::ConfigDialog> mUi;
+    Ui::ConfigDialog *mUi;
 
     Config &mConfig;
 
