@@ -89,7 +89,7 @@ void Mixer::addStep(float step, float time) noexcept {
 
     // add error
     size_t center = timeIndex + STEP_CENTER;
-    if (center > mBufsize) {
+    if (center >= mBufsize) {
         dest = mFuture + ((center - mBufsize) * 2);
     } else {
         dest = mBuf + (center * 2);
