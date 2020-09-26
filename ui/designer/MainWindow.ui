@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>809</height>
+    <height>837</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
    <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
   </property>
   <widget class="MainWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="mMenubar">
+  <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -32,7 +32,7 @@
      <height>21</height>
     </rect>
    </property>
-   <widget class="QMenu" name="mMenuFile">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
@@ -45,7 +45,7 @@
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
-   <widget class="QMenu" name="mMenuEdit">
+   <widget class="QMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
@@ -53,10 +53,10 @@
      <property name="title">
       <string>Transpose</string>
      </property>
-     <addaction name="actionIncrease_Note"/>
-     <addaction name="actionDecrease_Note"/>
-     <addaction name="actionIncrease_Octave"/>
-     <addaction name="actionDecrease_Octave"/>
+     <addaction name="actionIncreaseNote"/>
+     <addaction name="actionDecreaseNote"/>
+     <addaction name="actionIncreaseOctave"/>
+     <addaction name="actionDecreaseOctave"/>
     </widget>
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
@@ -72,7 +72,7 @@
     <addaction name="menuTranspose"/>
     <addaction name="actionReverse"/>
    </widget>
-   <widget class="QMenu" name="mMenuTracker">
+   <widget class="QMenu" name="menuTracker">
     <property name="title">
      <string>Tracker</string>
     </property>
@@ -80,69 +80,66 @@
      <property name="title">
       <string>Framerate</string>
      </property>
-     <addaction name="actionDMG_59_7_fps"/>
-     <addaction name="actionSGB_61_2_fps"/>
+     <addaction name="actionDMG"/>
+     <addaction name="actionSGB"/>
      <addaction name="actionCustom"/>
     </widget>
     <addaction name="actionPlay"/>
-    <addaction name="actionPlay_Order"/>
-    <addaction name="actionPlay_froms_tart"/>
-    <addaction name="actionPlay_from_cursor"/>
+    <addaction name="actionPlayOrder"/>
+    <addaction name="actionPlayFromStart"/>
+    <addaction name="actionPlayFromCursor"/>
     <addaction name="actionStop"/>
-    <addaction name="actionToggle_edit_mode"/>
+    <addaction name="actionToggleEditMode"/>
     <addaction name="separator"/>
-    <addaction name="actionToggle_channel_output"/>
-    <addaction name="actionSolo_channel"/>
+    <addaction name="actionToggleChannelOutput"/>
+    <addaction name="actionSoloChannel"/>
     <addaction name="separator"/>
-    <addaction name="actionKill_sound"/>
+    <addaction name="actionKillSound"/>
     <addaction name="separator"/>
     <addaction name="menuFramerate"/>
    </widget>
-   <widget class="QMenu" name="mMenuHelp">
+   <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
-    <addaction name="actionAbout_Qt"/>
+    <addaction name="actionAboutQt"/>
    </widget>
-   <widget class="QMenu" name="mMenuOrder">
+   <widget class="QMenu" name="menuOrder">
     <property name="title">
      <string>Order</string>
     </property>
-    <addaction name="actionInsert_order"/>
-    <addaction name="actionRemove_order"/>
-    <addaction name="actionDuplicate_order"/>
-    <addaction name="actionDuplicate_pattern"/>
+    <addaction name="actionInsertOrder"/>
+    <addaction name="actionRemoveOrder"/>
+    <addaction name="actionDuplicateOrder"/>
     <addaction name="separator"/>
-    <addaction name="actionMove_order_up"/>
-    <addaction name="actionMove_order_down"/>
+    <addaction name="actionMoveOrderUp"/>
+    <addaction name="actionMoveOrderDown"/>
    </widget>
-   <widget class="QMenu" name="mMenuModule">
+   <widget class="QMenu" name="menuModule">
     <property name="title">
      <string>Module</string>
     </property>
-    <addaction name="actionNew_song"/>
-    <addaction name="actionRemove_song"/>
+    <addaction name="actionNewSong"/>
+    <addaction name="actionRemoveSong"/>
     <addaction name="separator"/>
-    <addaction name="actionNext_song"/>
-    <addaction name="actionPrevious_song"/>
-    <addaction name="separator"/>
-    <addaction name="actionModule_properties_2"/>
+    <addaction name="actionNextSong"/>
+    <addaction name="actionPreviousSong"/>
    </widget>
-   <addaction name="mMenuFile"/>
-   <addaction name="mMenuEdit"/>
-   <addaction name="mMenuModule"/>
-   <addaction name="mMenuOrder"/>
-   <addaction name="mMenuTracker"/>
-   <addaction name="mMenuHelp"/>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuModule"/>
+   <addaction name="menuOrder"/>
+   <addaction name="menuTracker"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QDockWidget" name="mDockOrders">
+  <widget class="QDockWidget" name="dockOrders">
    <property name="allowedAreas">
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Orders</string>
+    <string>Order</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -238,7 +235,7 @@
    <addaction name="actionCopy"/>
    <addaction name="actionPaste"/>
   </widget>
-  <widget class="QDockWidget" name="mDockSongProperties">
+  <widget class="QDockWidget" name="dockSongProperties">
    <property name="windowTitle">
     <string>Song properties</string>
    </property>
@@ -338,7 +335,7 @@
      <item row="4" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Orders</string>
+        <string>Patterns</string>
        </property>
       </widget>
      </item>
@@ -397,14 +394,14 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="mDockInstruments">
+  <widget class="QDockWidget" name="dockInstruments">
    <property name="windowTitle">
     <string>Instruments</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>4</number>
    </attribute>
-   <widget class="TableForm" name="mInstrumentTableForm">
+   <widget class="TableForm" name="instrumentTableForm">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <property name="leftMargin">
       <number>0</number>
@@ -421,14 +418,14 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QDockWidget" name="mDockWaveforms">
+  <widget class="QDockWidget" name="dockWaveforms">
    <property name="windowTitle">
     <string>Waveforms</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>4</number>
    </attribute>
-   <widget class="TableForm" name="mWaveTableForm">
+   <widget class="TableForm" name="waveTableForm">
     <layout class="QGridLayout" name="gridLayout_3">
      <property name="leftMargin">
       <number>0</number>
@@ -445,7 +442,7 @@
     </layout>
    </widget>
   </widget>
-  <widget class="QToolBar" name="toolBar_2">
+  <widget class="QToolBar" name="toolbarOrder">
    <property name="windowTitle">
     <string>Order toolbar</string>
    </property>
@@ -455,13 +452,13 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionInsert_order"/>
-   <addaction name="actionRemove_order"/>
-   <addaction name="actionMove_order_up"/>
-   <addaction name="actionMove_order_down"/>
-   <addaction name="actionDuplicate_order"/>
+   <addaction name="actionInsertOrder"/>
+   <addaction name="actionRemoveOrder"/>
+   <addaction name="actionMoveOrderUp"/>
+   <addaction name="actionMoveOrderDown"/>
+   <addaction name="actionDuplicateOrder"/>
   </widget>
-  <widget class="QToolBar" name="toolBar_3">
+  <widget class="QToolBar" name="toolbarTracker">
    <property name="windowTitle">
     <string>Tracker toolbar</string>
    </property>
@@ -472,12 +469,61 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionPlay"/>
-   <addaction name="actionPlay_Order"/>
+   <addaction name="actionPlayOrder"/>
    <addaction name="actionStop"/>
-   <addaction name="actionToggle_edit_mode"/>
+   <addaction name="actionToggleEditMode"/>
    <addaction name="separator"/>
-   <addaction name="actionPrevious_song"/>
-   <addaction name="actionNext_song"/>
+   <addaction name="actionPreviousSong"/>
+   <addaction name="actionNextSong"/>
+  </widget>
+  <widget class="QDockWidget" name="dockModuleProperties">
+   <property name="windowTitle">
+    <string>Module properties</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_2">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QLineEdit" name="modPropTitleEdit">
+       <property name="maxLength">
+        <number>30</number>
+       </property>
+       <property name="placeholderText">
+        <string>title</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="modPropArtistEdit">
+       <property name="maxLength">
+        <number>30</number>
+       </property>
+       <property name="placeholderText">
+        <string>artist</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="modPropCopyrightEdit">
+       <property name="maxLength">
+        <number>30</number>
+       </property>
+       <property name="placeholderText">
+        <string>copyright</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPlainTextEdit" name="modPropCommentsEdit">
+       <property name="placeholderText">
+        <string>Comments</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <action name="actionNew">
    <property name="text">
@@ -579,22 +625,22 @@
     <string>Reverse</string>
    </property>
   </action>
-  <action name="actionIncrease_Note">
+  <action name="actionIncreaseNote">
    <property name="text">
     <string>Increase Note</string>
    </property>
   </action>
-  <action name="actionDecrease_Note">
+  <action name="actionDecreaseNote">
    <property name="text">
     <string>Decrease Note</string>
    </property>
   </action>
-  <action name="actionIncrease_Octave">
+  <action name="actionIncreaseOctave">
    <property name="text">
     <string>Increase Octave</string>
    </property>
   </action>
-  <action name="actionDecrease_Octave">
+  <action name="actionDecreaseOctave">
    <property name="text">
     <string>Decrease Octave</string>
    </property>
@@ -604,17 +650,17 @@
     <string>Play</string>
    </property>
   </action>
-  <action name="actionPlay_Order">
+  <action name="actionPlayOrder">
    <property name="text">
     <string>Play pattern</string>
    </property>
   </action>
-  <action name="actionPlay_froms_tart">
+  <action name="actionPlayFromStart">
    <property name="text">
     <string>Play from start</string>
    </property>
   </action>
-  <action name="actionPlay_from_cursor">
+  <action name="actionPlayFromCursor">
    <property name="text">
     <string>Play from cursor</string>
    </property>
@@ -624,27 +670,27 @@
     <string>Stop</string>
    </property>
   </action>
-  <action name="actionToggle_edit_mode">
+  <action name="actionToggleEditMode">
    <property name="text">
     <string>Toggle edit mode</string>
    </property>
   </action>
-  <action name="actionToggle_channel_output">
+  <action name="actionToggleChannelOutput">
    <property name="text">
     <string>Toggle channel output</string>
    </property>
   </action>
-  <action name="actionSolo_channel">
+  <action name="actionSoloChannel">
    <property name="text">
     <string>Solo channel</string>
    </property>
   </action>
-  <action name="actionKill_sound">
+  <action name="actionKillSound">
    <property name="text">
     <string>Kill sound</string>
    </property>
   </action>
-  <action name="actionDMG_59_7_fps">
+  <action name="actionDMG">
    <property name="checkable">
     <bool>true</bool>
    </property>
@@ -655,7 +701,7 @@
     <string>DMG (59.7 fps)</string>
    </property>
   </action>
-  <action name="actionSGB_61_2_fps">
+  <action name="actionSGB">
    <property name="text">
     <string>SGB (61.1 fps)</string>
    </property>
@@ -692,27 +738,27 @@
     <string>Module properties</string>
    </property>
   </action>
-  <action name="actionInsert_order">
+  <action name="actionInsertOrder">
    <property name="text">
     <string>Insert order</string>
    </property>
   </action>
-  <action name="actionRemove_order">
+  <action name="actionRemoveOrder">
    <property name="text">
     <string>Remove order</string>
    </property>
   </action>
-  <action name="actionMove_order_up">
+  <action name="actionMoveOrderUp">
    <property name="text">
     <string>Move order up</string>
    </property>
   </action>
-  <action name="actionMove_order_down">
+  <action name="actionMoveOrderDown">
    <property name="text">
     <string>Move order down</string>
    </property>
   </action>
-  <action name="actionDuplicate_order">
+  <action name="actionDuplicateOrder">
    <property name="text">
     <string>Duplicate order</string>
    </property>
@@ -800,22 +846,22 @@
     <string>Edit waveform</string>
    </property>
   </action>
-  <action name="actionNew_song">
+  <action name="actionNewSong">
    <property name="text">
     <string>New song</string>
    </property>
   </action>
-  <action name="actionRemove_song">
+  <action name="actionRemoveSong">
    <property name="text">
     <string>Remove song</string>
    </property>
   </action>
-  <action name="actionNext_song">
+  <action name="actionNextSong">
    <property name="text">
     <string>Next song</string>
    </property>
   </action>
-  <action name="actionPrevious_song">
+  <action name="actionPreviousSong">
    <property name="text">
     <string>Previous song</string>
    </property>
@@ -830,7 +876,7 @@
     <string>Configuration</string>
    </property>
   </action>
-  <action name="actionAbout_Qt">
+  <action name="actionAboutQt">
    <property name="text">
     <string>About Qt</string>
    </property>

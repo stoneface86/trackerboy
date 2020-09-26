@@ -5,5 +5,6 @@
     <file>icons/instrument_icon_wave.png</file>
     <file>icons/instrumentIcons.png</file>
     <file>icons/tableFormIcons.png</file>
+    <file>icons/toolbar.png</file>
 </qresource>
 </RCC>

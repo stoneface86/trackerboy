@@ -38,6 +38,7 @@ private slots:
     void fileOpen();
     bool fileSave();
     bool fileSaveAs();
+    void windowResetLayout();
 
 private:
 
