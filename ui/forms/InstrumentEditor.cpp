@@ -21,7 +21,7 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
     mWaveEditor(waveEditor),
     mIgnoreChanged(false),
     mLastChannel(ChType::ch1),
-    QDialog(parent)
+    QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint)
 {
     mUi->setupUi(this);
 

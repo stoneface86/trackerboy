@@ -18,10 +18,9 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
     mUi(new Ui::WaveEditor()),
     mModel(model),
     mIgnoreNextUpdate(false),
-    QDialog(parent)
+    QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint)
 {
     mUi->setupUi(this);
-    setWindowFlags(Qt::Dialog | Qt::MSWindowsFixedSizeDialogHint);
 
     //WaveListModel *model = new WaveListModel(mod.waveTable(), this);
     mUi->mWaveSelect->setModel(&mModel);
@@ -53,6 +52,8 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
     connect(mUi->mPresetTriButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::triangle); });
     connect(mUi->mPresetSquareButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::square); });
     connect(mUi->mPresetSawButton, &QPushButton::clicked, this, [this] { setFromPreset(Preset::sawtooth); });
+
+    setFixedSize(size());
 }
 
 WaveEditor::~WaveEditor() {

@@ -10,12 +10,6 @@
     <height>378</height>
    </rect>
   </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
   <property name="windowTitle">
    <string>Wave Editor</string>
   </property>
@@ -293,15 +287,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>WaveGraph</class>
-   <extends>QFrame</extends>
-   <header>widgets/WaveGraph.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>PianoWidget</class>
    <extends>QWidget</extends>
    <header>widgets/PianoWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WaveGraph</class>
+   <extends>QFrame</extends>
+   <header>widgets/WaveGraph.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
