@@ -36,9 +36,6 @@ private:
     WaveListModel &mWaveModel;
     QWidget &mWaveEditor;
 
-    QGroupBox *mGroupEnvelope = nullptr;
-    EnvelopeForm *mEnvelopeForm = nullptr;
-
     bool mIgnoreChanged;
     trackerboy::ChType mLastChannel;
 };

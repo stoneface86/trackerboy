@@ -10,6 +10,8 @@ Instrument::Instrument() :
     mData{ 0 },
     DataItem()
 {
+    // defaults
+    mData.envelope = 0xF0;
     mData.panning = 0x11;
 }
 

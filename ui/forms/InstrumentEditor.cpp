@@ -25,15 +25,7 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
 {
     mUi->setupUi(this);
 
-    mGroupEnvelope = new QGroupBox("Envelope", this);
-
-    QHBoxLayout *layout = new QHBoxLayout();
-    mEnvelopeForm = new EnvelopeForm();
-    layout->addWidget(mEnvelopeForm);
-    layout->setMargin(0);
-    mGroupEnvelope->setLayout(layout);
-
-    mUi->mGroupLayout->replaceWidget(mUi->mGroupWave, mGroupEnvelope);
+    // only the envelope or waveform group box can be visible at once
     mUi->mGroupWave->setVisible(false);
 
     mUi->mInstrumentCombo->setModel(&instModel);
@@ -90,7 +82,7 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
         }
         });
 
-    connect(mEnvelopeForm, &EnvelopeForm::envelopeChanged, this, [this](uint8_t envelope) {
+    connect(mUi->mEnvelopeForm, &EnvelopeForm::envelopeChanged, this, [this](uint8_t envelope) {
         if (!mIgnoreChanged) {
             mInstrumentModel.setEnvelope(envelope);
         }
@@ -114,6 +106,9 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
         });
 
     connect(&mInstrumentModel, &InstrumentListModel::currentIndexChanged, this, &InstrumentEditor::currentInstrumentChanged);
+
+    // prevent the user from resizing the window
+    setFixedSize(size());
 }
 
 InstrumentEditor::~InstrumentEditor() {
@@ -152,10 +147,10 @@ void InstrumentEditor::onChannelSelect(int channel) {
         case ChType::ch3:
             mUi->mTimbreLabel->setText("Volume");
             mUi->mTimbreCombo->clear();
-            mUi->mTimbreCombo->addItem("100%");
-            mUi->mTimbreCombo->addItem("50%");
-            mUi->mTimbreCombo->addItem("25%");
             mUi->mTimbreCombo->addItem("Mute");
+            mUi->mTimbreCombo->addItem("25%");
+            mUi->mTimbreCombo->addItem("50%");
+            mUi->mTimbreCombo->addItem("100%");
             break;
         case ChType::ch4:
             mUi->mTimbreLabel->setText("Step width");
@@ -171,25 +166,22 @@ void InstrumentEditor::onChannelSelect(int channel) {
     mUi->mTimbreCombo->setCurrentIndex(timbre);
 
     // disable controls based on the selected channel
-    bool isFrequencyChannel = ch != ChType::ch4;
-    mUi->mGroupFrequency->setEnabled(isFrequencyChannel);
 
-    if (ch == ChType::ch3) {
-        // replace the envelope group box with the waveform one
-        mUi->mGroupLayout->replaceWidget(mGroupEnvelope, mUi->mGroupWave);
-        mUi->mWaveCombo->setCurrentIndex(mWaveModel.idToModel(mEnvelopeForm->envelope()));
-        mGroupEnvelope->setVisible(false);
-        mUi->mGroupWave->setVisible(true);
+    // frequency effects do not work on CH4
+    mUi->mGroupFrequency->setEnabled(ch != ChType::ch4);
+
+    bool const isWaveChannel = ch == ChType::ch3;
+
+    mUi->mGroupEnvelope->setVisible(!isWaveChannel);
+    mUi->mGroupWave->setVisible(isWaveChannel);
+
+    if (isWaveChannel) {
+        mUi->mWaveCombo->setCurrentIndex(mWaveModel.idToModel(mUi->mEnvelopeForm->envelope()));
     } else if (mLastChannel == ChType::ch3) {
-        // replace the waveform group box with the envelope one
-        mUi->mGroupLayout->replaceWidget(mUi->mGroupWave, mGroupEnvelope);
-        
         int currentWave = mUi->mWaveCombo->currentIndex();
         if (currentWave != -1) {
-            mEnvelopeForm->setEnvelope(mWaveModel.waveform(currentWave)->id());
+            mUi->mEnvelopeForm->setEnvelope(mWaveModel.waveform(currentWave)->id());
         }
-        mGroupEnvelope->setVisible(true);
-        mUi->mGroupWave->setVisible(false);
     }
 
     // update the current instrument's channel
@@ -227,7 +219,7 @@ void InstrumentEditor::currentInstrumentChanged(int index) {
         mUi->mVibratoDelaySpin->setValue(instData.vibratoDelay);
 
         mUi->mWaveCombo->setCurrentIndex(mWaveModel.idToModel(instData.envelope));
-        mEnvelopeForm->setEnvelope(instData.envelope);
+        mUi->mEnvelopeForm->setEnvelope(instData.envelope);
         
 
         mUi->mTimbreCombo->setCurrentIndex(instData.timbre);

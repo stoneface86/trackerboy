@@ -55,7 +55,7 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="mGroupLayout" stretch="1,1,1">
+      <layout class="QHBoxLayout" name="mGroupLayout" stretch="0,0,0,0">
        <item>
         <widget class="QGroupBox" name="mGroupGeneral">
          <property name="sizePolicy">
@@ -246,6 +246,30 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="mGroupEnvelope">
+         <property name="title">
+          <string>Envelope</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="EnvelopeForm" name="mEnvelopeForm" native="true"/>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="mGroupWave">
          <property name="title">
           <string>Waveform</string>
@@ -311,6 +335,12 @@
    <class>PianoWidget</class>
    <extends>QWidget</extends>
    <header>widgets/PianoWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>EnvelopeForm</class>
+   <extends>QWidget</extends>
+   <header>widgets/EnvelopeForm.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
