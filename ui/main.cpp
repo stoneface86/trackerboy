@@ -5,8 +5,7 @@
 
 #include "audio.hpp"
 
-#include "MainWindow.hpp"
-#include "InstrumentEditor.hpp"
+#include "forms/MainWindow.hpp"
 
 int main(int argc, char *argv[]) {
 

@@ -1,20 +1,20 @@
 
 #pragma once
 
-#include <memory>
+#include "forms/ConfigDialog.hpp"
+#include "forms/InstrumentEditor.hpp"
+#include "forms/WaveEditor.hpp"
+#include "model/ModuleDocument.hpp"
+#include "model/InstrumentListModel.hpp"
+#include "model/WaveListModel.hpp"
+#include "Renderer.hpp"
 
 #include <QMainWindow>
 #include <QFileDialog>
 
+#include <memory>
 
 
-#include "model/ModuleDocument.hpp"
-#include "model/InstrumentListModel.hpp"
-#include "model/WaveListModel.hpp"
-#include "ConfigDialog.hpp"
-#include "InstrumentEditor.hpp"
-#include "Renderer.hpp"
-#include "WaveEditor.hpp"
 
 namespace Ui {
 class MainWindow;

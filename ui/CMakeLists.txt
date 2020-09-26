@@ -2,6 +2,7 @@ project(ui CXX)
 
 
 use_qt(Widgets Core)
+set(CMAKE_AUTOUIC_SEARCH_PATHS "designer")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -11,28 +12,31 @@ set(UI_SRC
     "designer/MainWindow.ui"
     "designer/WaveEditor.ui"
     "designer/InstrumentEditor.ui"
+
+    "forms/ConfigDialog.cpp"
+    "forms/InstrumentEditor.cpp"
+    "forms/MainWindow.cpp"
+    "forms/WaveEditor.cpp"
+    
     "model/BaseModel.cpp"
     "model/BaseTableModel.cpp"
     "model/ModuleDocument.cpp"
-    #"model/ModuleModel.cpp"
     "model/InstrumentListModel.cpp"
     "model/WaveListModel.cpp"
+    
     "resources/icons.qrc"
     "resources/keys.qrc"
+    
     "Config.cpp"
-    "ConfigDialog.cpp"
     "EnvelopeForm.cpp"
-    "InstrumentEditor.cpp"
     "main.cpp"
     "MainWidget.cpp"
-    "MainWindow.cpp"
     "OrderEditor.cpp"
     "PianoWidget.cpp"
     "Renderer.cpp"
     "RenderWorker.cpp"
     "TableForm.cpp"
     "Tileset.cpp"
-    "WaveEditor.cpp"
     "WaveGraph.cpp"
 )
 
