@@ -38,6 +38,8 @@ public:
 
     trackerboy::WaveTable& waveTable();
 
+    std::vector<trackerboy::Song> &songs();
+
     bool isModified() const;
 
     trackerboy::FormatError open(QString filename);

@@ -40,6 +40,10 @@ trackerboy::WaveTable& ModuleDocument::waveTable() {
     return mModule.waveTable();
 }
 
+std::vector<trackerboy::Song>& ModuleDocument::songs() {
+    return mModule.songs();
+}
+
 trackerboy::FormatError ModuleDocument::open(QString filename) {
     trackerboy::FormatError error = trackerboy::FormatError::none;
     std::ifstream in(filename.toStdString(), std::ios::binary | std::ios::in);

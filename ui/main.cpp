@@ -33,9 +33,14 @@ int main(int argc, char *argv[]) {
         MainWindow *win = new MainWindow();
         win->show();
 
+        #ifdef NDEBUG
         try {
+        #endif
             code = app.exec();
+        #ifdef NDEBUG
         } catch (const std::exception &e) {
+            (void)e;
+
             // TODO: attempt to save the current module
             // TODO: display the type of error and extra diagnostic info
             QMessageBox::critical(
@@ -45,6 +50,7 @@ int main(int argc, char *argv[]) {
             );
             
         }
+        #endif
 
         delete win;
     }

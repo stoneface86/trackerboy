@@ -52,11 +52,12 @@ protected:
 
     virtual void dataRename(const QString &name) = 0;
 
-    virtual int dataAdd() = 0;
-    virtual int dataRemove() = 0;
-    virtual int dataDuplicate() = 0;
+    virtual int nextIndex() = 0;
+    virtual void dataAdd() = 0;
+    virtual void dataRemove(int row) = 0;
+    virtual void dataDuplicate(int row) = 0;
 
-    virtual bool canDuplicate() = 0;
+    virtual bool canAdd() = 0;
     virtual bool canRemove() = 0;
 
     ModuleDocument &mDocument;

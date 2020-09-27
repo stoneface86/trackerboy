@@ -22,6 +22,7 @@ set(UI_SRC
     "model/BaseTableModel.cpp"
     "model/ModuleDocument.cpp"
     "model/InstrumentListModel.cpp"
+    "model/SongListModel.cpp"
     "model/WaveListModel.cpp"
     
     "resources/icons.qrc"

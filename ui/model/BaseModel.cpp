@@ -20,17 +20,68 @@ int BaseModel::currentIndex() const {
 }
 
 void BaseModel::add() {
-    select(dataAdd());
+    int row = nextIndex();
+    beginInsertRows(QModelIndex(), row, row);
+
+    mDocument.lock();
+    dataAdd();
+    mDocument.unlock();
+
+    endInsertRows();
+    // select the newly inserted row
+    select(row);
     mDocument.setModified(true);
 }
 
 void BaseModel::remove() {
-    select(dataRemove());
+    int row = mCurrentIndex;
+    
+    beginRemoveRows(QModelIndex(), row, row);
+
+    mDocument.lock();
+    dataRemove(row);
+    mDocument.unlock();
+
+    endRemoveRows();
+
+    // current index remains the same unless it is equivalent to the new row count
+
+    //    0: 00 Untitled 1
+    // -> 1: 01 Untitled 2
+    //    2: 02 Untitled 3
+    // remove
+    //    0: 00 Untitled 1
+    // -> 1: 02 Untitled 3
+    //
+    // mCurrentIndex is still 1
+
+    //    0: 00 Untitled 1
+    //    1: 01 Untitled 2
+    // -> 2: 02 Untitled 3
+    // remove
+    //    0: 00 Untitled 1
+    // -> 1: 01 Untitled 2
+    //
+    // mCurrentIndex was 2 and is now 1
+
+    select(rowCount() == row ? row - 1 : row);
     mDocument.setModified(true);
 }
 
 void BaseModel::duplicate() {
-    select(dataDuplicate());
+    int row = nextIndex();
+    int rowToDuplicate = mCurrentIndex;
+
+    beginInsertRows(QModelIndex(), row, row);
+
+    mDocument.lock();
+    dataDuplicate(rowToDuplicate);
+    mDocument.unlock();
+
+    endInsertRows();
+    // select the newly duplicated row
+    select(row);
+    
     mDocument.setModified(true);
 }
 
@@ -46,8 +97,10 @@ void BaseModel::select(int index) {
         emit currentIndexChanged(index);
 
         bool hasSelection = index != -1;
+
+
         if (mActNew != nullptr) {
-            mActNew->setEnabled(canDuplicate());
+            mActNew->setEnabled(canAdd());
         }
 
         if (mActRemove != nullptr) {
@@ -55,7 +108,7 @@ void BaseModel::select(int index) {
         }
 
         if (mActDuplicate != nullptr) {
-            mActDuplicate->setEnabled(hasSelection && canDuplicate());
+            mActDuplicate->setEnabled(hasSelection && canAdd());
         }
 
         if (mActEdit != nullptr) {

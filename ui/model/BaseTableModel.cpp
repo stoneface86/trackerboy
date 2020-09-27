@@ -44,55 +44,28 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
-int BaseTableModel::dataAdd() {
-    int row = mBaseTable.nextModelId();
-
-    beginInsertRows(QModelIndex(), row, row);
-    
-    mDocument.lock();
+void BaseTableModel::dataAdd() {
     mBaseTable.insertItem();
-    mDocument.unlock();
-
-    endInsertRows();
-
-    return row;
 }
 
-int BaseTableModel::dataRemove() {
-    uint8_t id = mBaseTable.lookup(static_cast<uint8_t>(mCurrentIndex));
-
-    int index = mCurrentIndex;
-    beginRemoveRows(QModelIndex(), index, index);
-
-    mDocument.lock();
-    mBaseTable.remove(id);
-    mDocument.unlock();
-
-    endRemoveRows();
-    return mBaseTable.size() == index ? index - 1 : index;
+void BaseTableModel::dataRemove(int row) {
+    mBaseTable.remove(mBaseTable.lookup(static_cast<uint8_t>(row)));
 }
 
-int BaseTableModel::dataDuplicate() {
-    int row = mBaseTable.nextModelId();
-
-    uint8_t index = static_cast<uint8_t>(mCurrentIndex);
-    beginInsertRows(QModelIndex(), row, row);
-
-    mDocument.lock();
-    mBaseTable.duplicate(mBaseTable.lookup(index));
-    mDocument.unlock();
-
-    endInsertRows();
-
-    return row;
+void BaseTableModel::dataDuplicate(int row) {
+    mBaseTable.duplicate(mBaseTable.lookup(static_cast<uint8_t>(row)));
 }
 
-bool BaseTableModel::canDuplicate() {
+bool BaseTableModel::canAdd() {
     return mBaseTable.size() < trackerboy::BaseTable::MAX_SIZE;
 }
 
 bool BaseTableModel::canRemove() {
     return mBaseTable.size() > 0;
+}
+
+int BaseTableModel::nextIndex() {
+    return mBaseTable.nextModelId();
 }
 
 QString BaseTableModel::name() {
