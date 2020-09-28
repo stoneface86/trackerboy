@@ -14,8 +14,8 @@
 #include "ui_MainWindow.h"
 #pragma warning(pop)
 
-constexpr int TOOLBAR_ICON_WIDTH = 24;
-constexpr int TOOLBAR_ICON_HEIGHT = 24;
+constexpr int TOOLBAR_ICON_WIDTH = 16;
+constexpr int TOOLBAR_ICON_HEIGHT = 16;
 
 MainWindow::MainWindow() :
     mUi(new Ui::MainWindow()),
@@ -333,6 +333,7 @@ void MainWindow::setupUi() {
     mSongCombo = new QComboBox();
     mSongCombo->setModel(mSongModel);
     mSongToolbar->addWidget(mSongCombo);
+    mSongToolbar->setIconSize(QSize(TOOLBAR_ICON_WIDTH, TOOLBAR_ICON_HEIGHT));
     addToolBar(Qt::ToolBarArea::TopToolBarArea, mSongToolbar);
 
     // toolbar icons
