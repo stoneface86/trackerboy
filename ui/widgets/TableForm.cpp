@@ -80,7 +80,7 @@ QMenu* TableForm::menu() const {
     return mMenu;
 }
 
-void TableForm::init(BaseTableModel *model, QWidget *editor, QString editorShortcut) {
+void TableForm::init(BaseTableModel *model, QWidget *editor, QString editorShortcut, QString typeName) {
     mModel = model;
     model->setActions(mActAdd, mActRemove, mActDuplicate, mActEdit);
     mListView->setModel(model);
@@ -106,6 +106,14 @@ void TableForm::init(BaseTableModel *model, QWidget *editor, QString editorShort
         });
 
     mActEdit->setShortcut(QKeySequence(editorShortcut));
+
+    // action statusbar texts
+    mActAdd->setStatusTip(QString("Adds a new %1").arg(typeName));
+    mActRemove->setStatusTip(QString("Removes the current %1").arg(typeName));
+    mActDuplicate->setStatusTip(QString("Adds a copy of the current %1").arg(typeName));
+    mActImport->setStatusTip(QString("Import %1 from a file").arg(typeName));
+    mActExport->setStatusTip(QString("Export %1 to a file").arg(typeName));
+    mActEdit->setStatusTip(QString("Edit the current %1").arg(typeName));
 }
 
 void TableForm::modelCurrentChanged(int index) {

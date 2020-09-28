@@ -628,6 +628,9 @@
    <property name="text">
     <string>New</string>
    </property>
+   <property name="toolTip">
+    <string>New</string>
+   </property>
    <property name="statusTip">
     <string>Create a new module</string>
    </property>
@@ -693,100 +696,160 @@
    <property name="text">
     <string>Cut</string>
    </property>
+   <property name="statusTip">
+    <string>Cut selected rows onto the clipboard</string>
+   </property>
   </action>
   <action name="actionCopy">
    <property name="text">
     <string>Copy</string>
+   </property>
+   <property name="statusTip">
+    <string>Copies the selected rows onto the clipboard</string>
    </property>
   </action>
   <action name="actionPaste">
    <property name="text">
     <string>Paste</string>
    </property>
+   <property name="statusTip">
+    <string>Pastes the clipboard's contents</string>
+   </property>
   </action>
   <action name="actionPasteMix">
    <property name="text">
     <string>Paste Mix</string>
+   </property>
+   <property name="statusTip">
+    <string>Paste the clipboard's contents while ignoring empty rows</string>
    </property>
   </action>
   <action name="actionDelete">
    <property name="text">
     <string>Delete</string>
    </property>
+   <property name="statusTip">
+    <string>Delete the selected rows</string>
+   </property>
   </action>
   <action name="actionSelectAll">
    <property name="text">
     <string>Select All</string>
+   </property>
+   <property name="statusTip">
+    <string>Selects all rows in the current pattern</string>
    </property>
   </action>
   <action name="actionReverse">
    <property name="text">
     <string>Reverse</string>
    </property>
+   <property name="statusTip">
+    <string>Reverses the order in the selection</string>
+   </property>
   </action>
   <action name="actionIncreaseNote">
    <property name="text">
     <string>Increase Note</string>
+   </property>
+   <property name="statusTip">
+    <string>Increases the current note by 1 step</string>
    </property>
   </action>
   <action name="actionDecreaseNote">
    <property name="text">
     <string>Decrease Note</string>
    </property>
+   <property name="statusTip">
+    <string>Decreases the current note by 1 step</string>
+   </property>
   </action>
   <action name="actionIncreaseOctave">
    <property name="text">
     <string>Increase Octave</string>
+   </property>
+   <property name="statusTip">
+    <string>Increases the current note by 12 steps</string>
    </property>
   </action>
   <action name="actionDecreaseOctave">
    <property name="text">
     <string>Decrease Octave</string>
    </property>
+   <property name="statusTip">
+    <string>Decreases the current note by 12 steps</string>
+   </property>
   </action>
   <action name="actionPlay">
    <property name="text">
     <string>Play</string>
+   </property>
+   <property name="statusTip">
+    <string>Play the song starting from the current pattern</string>
    </property>
   </action>
   <action name="actionPlayOrder">
    <property name="text">
     <string>Play pattern</string>
    </property>
+   <property name="statusTip">
+    <string>Play and loop the current pattern</string>
+   </property>
   </action>
   <action name="actionPlayFromStart">
    <property name="text">
     <string>Play from start</string>
+   </property>
+   <property name="statusTip">
+    <string>Play the song starting with the first pattern</string>
    </property>
   </action>
   <action name="actionPlayFromCursor">
    <property name="text">
     <string>Play from cursor</string>
    </property>
+   <property name="statusTip">
+    <string>Play the song starting at the current row</string>
+   </property>
   </action>
   <action name="actionStop">
    <property name="text">
     <string>Stop</string>
+   </property>
+   <property name="statusTip">
+    <string>Stop playing</string>
    </property>
   </action>
   <action name="actionToggleEditMode">
    <property name="text">
     <string>Toggle edit mode</string>
    </property>
+   <property name="statusTip">
+    <string>Toggles edit mode</string>
+   </property>
   </action>
   <action name="actionToggleChannelOutput">
    <property name="text">
     <string>Toggle channel output</string>
+   </property>
+   <property name="statusTip">
+    <string>Toggle sound output for the current channel</string>
    </property>
   </action>
   <action name="actionSoloChannel">
    <property name="text">
     <string>Solo channel</string>
    </property>
+   <property name="statusTip">
+    <string>Disable sound output for all channels except the current one</string>
+   </property>
   </action>
   <action name="actionKillSound">
    <property name="text">
     <string>Kill sound</string>
+   </property>
+   <property name="statusTip">
+    <string>Immediately mutes all channels</string>
    </property>
   </action>
   <action name="actionDMG">
@@ -799,20 +862,32 @@
    <property name="text">
     <string>DMG (59.7 fps)</string>
    </property>
+   <property name="statusTip">
+    <string>Sets the framerate to the Gameboy's vblank interrupt rate</string>
+   </property>
   </action>
   <action name="actionSGB">
    <property name="text">
     <string>SGB (61.1 fps)</string>
+   </property>
+   <property name="statusTip">
+    <string>Sets the framerate to the Super Gameboy's vblank interrupt rate</string>
    </property>
   </action>
   <action name="actionCustom">
    <property name="text">
     <string>Custom...</string>
    </property>
+   <property name="statusTip">
+    <string>Sets a custom framerate</string>
+   </property>
   </action>
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+   <property name="statusTip">
+    <string>About this program</string>
    </property>
   </action>
   <action name="actionOrders">
@@ -841,25 +916,40 @@
    <property name="text">
     <string>Insert order</string>
    </property>
+   <property name="statusTip">
+    <string>Inserts a new order</string>
+   </property>
   </action>
   <action name="actionRemoveOrder">
    <property name="text">
     <string>Remove order</string>
+   </property>
+   <property name="statusTip">
+    <string>Removes the selected order</string>
    </property>
   </action>
   <action name="actionMoveOrderUp">
    <property name="text">
     <string>Move order up</string>
    </property>
+   <property name="statusTip">
+    <string>Moves the current order up 1</string>
+   </property>
   </action>
   <action name="actionMoveOrderDown">
    <property name="text">
     <string>Move order down</string>
    </property>
+   <property name="statusTip">
+    <string>Moves the current order down 1</string>
+   </property>
   </action>
   <action name="actionDuplicateOrder">
    <property name="text">
     <string>Duplicate order</string>
+   </property>
+   <property name="statusTip">
+    <string>Inserts a copy of the selected order</string>
    </property>
   </action>
   <action name="actionDuplicate_pattern">
@@ -949,20 +1039,32 @@
    <property name="text">
     <string>New song</string>
    </property>
+   <property name="statusTip">
+    <string>Adds a new song to the song list</string>
+   </property>
   </action>
   <action name="actionRemoveSong">
    <property name="text">
     <string>Remove song</string>
+   </property>
+   <property name="statusTip">
+    <string>Removes the current song being edited</string>
    </property>
   </action>
   <action name="actionNextSong">
    <property name="text">
     <string>Next song</string>
    </property>
+   <property name="statusTip">
+    <string>Selects the next song in the list</string>
+   </property>
   </action>
   <action name="actionPreviousSong">
    <property name="text">
     <string>Previous song</string>
+   </property>
+   <property name="statusTip">
+    <string>Selects the previous song in the list</string>
    </property>
   </action>
   <action name="actionModule_properties_2">
@@ -974,9 +1076,15 @@
    <property name="text">
     <string>Configuration</string>
    </property>
+   <property name="statusTip">
+    <string>Change application settings</string>
+   </property>
   </action>
   <action name="actionAboutQt">
    <property name="text">
+    <string>About Qt</string>
+   </property>
+   <property name="statusTip">
     <string>About Qt</string>
    </property>
   </action>

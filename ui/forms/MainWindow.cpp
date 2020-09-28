@@ -361,10 +361,10 @@ void MainWindow::setupUi() {
     // DOCKS =================================================================
 
     // setup Instruments dock
-    mUi->instrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I");
+    mUi->instrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I", "instrument");
     
     // setup Waveforms dock
-    mUi->waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W");
+    mUi->waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W", "waveform");
 
     // setup Songs dock
     mUi->songsListView->setModel(mSongModel);
