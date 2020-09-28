@@ -10,7 +10,7 @@
 #include "WaveEditor.hpp"
 
 #pragma warning(push, 0)
-#include "designer/ui_WaveEditor.h"
+#include "ui_WaveEditor.h"
 #pragma warning(pop)
 
 

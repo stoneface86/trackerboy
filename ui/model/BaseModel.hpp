@@ -70,5 +70,9 @@ protected:
     QAction *mActDuplicate;
     QAction *mActEdit;
 
+private:
+
+    void updateActions();
+
 
 };

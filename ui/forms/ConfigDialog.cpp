@@ -7,7 +7,7 @@
 #include <cmath>
 
 #pragma warning(push, 0)
-#include "designer/ui_ConfigDialog.h"
+#include "ui_ConfigDialog.h"
 #pragma warning(pop)
 
 static const char *SAMPLING_RATE_STR[] = {

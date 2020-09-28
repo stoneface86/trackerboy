@@ -6,11 +6,14 @@
 #include "forms/WaveEditor.hpp"
 #include "model/ModuleDocument.hpp"
 #include "model/InstrumentListModel.hpp"
+#include "model/SongListModel.hpp"
 #include "model/WaveListModel.hpp"
 #include "Renderer.hpp"
 
 #include <QMainWindow>
 #include <QFileDialog>
+#include <QComboBox>
+#include <QToolBar>
 
 
 
@@ -38,6 +41,7 @@ private slots:
     void fileOpen();
     bool fileSave();
     bool fileSaveAs();
+    void moduleRemoveSong();
     void windowResetLayout();
 
 private:
@@ -50,7 +54,12 @@ private:
 
     void setFilename(QString filename);
 
+    // enable or disable all models
     void setModelsEnabled(bool enabled);
+    
+    void setupConnections();
+    
+    void setupUi();
 
     void writeSettings();
 
@@ -61,11 +70,11 @@ private:
     Config *mConfig;
     ModuleDocument *mDocument;
     InstrumentListModel *mInstrumentModel;
+    SongListModel *mSongModel;
     WaveListModel *mWaveModel;
     
-
-    InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
+    InstrumentEditor *mInstrumentEditor;
     ConfigDialog *mConfigDialog;
 
     Renderer *mRenderer;
@@ -73,5 +82,10 @@ private:
     // file name of the currently open file or "Untitled" for a new file
     QString mFilename;
     QString mDocumentName;
+
+    // qwidgets not set in the ui file
+
+    QToolBar *mSongToolbar = nullptr;
+    QComboBox *mSongCombo = nullptr;
 
 };

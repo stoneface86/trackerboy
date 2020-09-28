@@ -2,17 +2,14 @@ project(ui CXX)
 
 
 use_qt(Widgets Core)
-set(CMAKE_AUTOUIC_SEARCH_PATHS "designer")
+#set(CMAKE_AUTOUIC_SEARCH_PATHS "designer")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 set(UI_SRC
-    "designer/ConfigDialog.ui"
-    "designer/EnvelopeForm.ui"
-    "designer/MainWindow.ui"
-    "designer/WaveEditor.ui"
-    "designer/InstrumentEditor.ui"
-
     "forms/ConfigDialog.cpp"
     "forms/InstrumentEditor.cpp"
     "forms/MainWindow.cpp"
@@ -42,13 +39,21 @@ set(UI_SRC
     "Tileset.cpp"
 )
 
+qt5_wrap_ui(UI_DESIGNER
+    "designer/ConfigDialog.ui"
+    "designer/EnvelopeForm.ui"
+    "designer/MainWindow.ui"
+    "designer/WaveEditor.ui"
+    "designer/InstrumentEditor.ui"
+)
+
 if (MSVC)
     # prevent warnings from external libraries
     add_compile_options(/W4 /experimental:external /external:W0 /external:anglebrackets)
 endif ()
 
 
-add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC})
+add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC} ${UI_DESIGNER})
 target_link_libraries(trackerboy_ui
     trackerboy
     portaudio_static

@@ -2,7 +2,7 @@
 #include "InstrumentEditor.hpp"
 
 #pragma warning(push, 0)
-#include "designer/ui_InstrumentEditor.h"
+#include "ui_InstrumentEditor.h"
 #pragma warning(pop)
 
 #include "trackerboy/ChType.hpp"

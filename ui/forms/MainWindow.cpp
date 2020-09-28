@@ -11,104 +11,42 @@
 #include <array>
 
 #pragma warning(push, 0)
-#include "designer/ui_MainWindow.h"
+#include "ui_MainWindow.h"
 #pragma warning(pop)
 
 constexpr int TOOLBAR_ICON_WIDTH = 24;
 constexpr int TOOLBAR_ICON_HEIGHT = 24;
-
-constexpr int TOOLBAR_ICON_NEW = 0;
-constexpr int TOOLBAR_ICON_OPEN = 1;
-constexpr int TOOLBAR_ICON_SAVE = 2;
-
 
 MainWindow::MainWindow() :
     mUi(new Ui::MainWindow()),
     mModuleFileDialog(new QFileDialog(this)),
     mDocument(new ModuleDocument(this)),
     mInstrumentModel(new InstrumentListModel(*mDocument)),
+    mSongModel(new SongListModel(*mDocument)),
     mWaveModel(new WaveListModel(*mDocument)),
     mConfig(new Config(this)),
-    mConfigDialog(nullptr),
-    mInstrumentEditor(nullptr),
-    mWaveEditor(nullptr),
+    mConfigDialog(new ConfigDialog(*mConfig, this)),
+    mWaveEditor(new WaveEditor(*mWaveModel, this)),
+    mInstrumentEditor(new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this)),
     mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, this)),
     QMainWindow()
 {
+    // setup the designer ui
     mUi->setupUi(this);
+
+    // setup ui not specified in the ui file
+    setupUi();
+
+    // read in configuration, window geometry and window state
     readSettings();
 
-    mConfigDialog = new ConfigDialog(*mConfig, this);
+    setupConnections();
 
-    mWaveEditor = new WaveEditor(*mWaveModel, this);
-    mInstrumentEditor = new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this);
-    
-
-    mModuleFileDialog->setNameFilter(tr("Trackerboy Module (*.tbm)"));
-    mModuleFileDialog->setWindowModality(Qt::WindowModal);
-
-    Tileset tileset(QImage(":/icons/toolbar.png"), TOOLBAR_ICON_WIDTH, TOOLBAR_ICON_HEIGHT);
-    QList<QToolBar*> toolbars = { mUi->toolbarFile, mUi->toolbarOrder, mUi->toolbarTracker };
-    
-    for (int i = 0, iconIndex = 0; i != toolbars.size(); ++i) {
-        auto toolbar = toolbars.at(i);
-        auto actions = toolbar->actions();
-        for (int j = 0; j != actions.size(); ++j) {
-            auto action = actions.at(j);
-            if (action->isSeparator()) {
-                continue;
-            }
-            action->setIcon(tileset.getIcon(iconIndex));
-            ++iconIndex;
-        }
-    }
-    
-    connect(mDocument, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
+    // new documents have an empty string for a filename
     setFilename("");
-
-    // Actions
-    #define connectAction(action, slot) connect(mUi->action, &QAction::triggered, this, &MainWindow::slot)
-    // File
-    connectAction(actionNew, fileNew);
-    connectAction(actionOpen, fileOpen);
-    connectAction(actionSave, fileSave);
-    connectAction(actionSaveAs, fileSaveAs);
-    connectAction(actionQuit, close);
-    connect(mUi->actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
-    // Waveform
-    //connect(actionEdit_waveform, &QAction::triggered, mWaveEditor, &WaveEditor::show);
-
-    QApplication::connect(mUi->actionAboutQt, &QAction::triggered, &QApplication::aboutQt);
-
-    auto wavePiano = mWaveEditor->piano();
-    connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
-    connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
-
-    auto instPiano = mInstrumentEditor->piano();
-    connect(instPiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewInstrument);
-    connect(instPiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
-
-
-    mUi->instrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I");
-    // add the context menu for instruments list view to our menubar
-    auto menu = mUi->instrumentTableForm->menu();
-    menu->setTitle("Instrument");
-    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
-
-    mUi->waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W");
-    // same thing but for waveforms
-    menu = mUi->waveTableForm->menu();
-    menu->setTitle("Waveform");
-    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
-
-    QMenu *windowMenu = createPopupMenu();
-    if (windowMenu != nullptr) {
-        windowMenu->setTitle("Window");
-        windowMenu->addSeparator();
-        auto resetLayoutAction = windowMenu->addAction("Reset layout");
-        connect(resetLayoutAction, &QAction::triggered, this, &MainWindow::windowResetLayout);
-        mUi->menubar->insertMenu(mUi->menuHelp->menuAction(), windowMenu);
-    }
+    
+    // associate menu actions with the model
+    mSongModel->setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
 }
 
 MainWindow::~MainWindow() {
@@ -191,6 +129,19 @@ bool MainWindow::fileSaveAs() {
     return false;
 }
 
+void MainWindow::moduleRemoveSong() {
+
+    auto result = QMessageBox::question(this,
+        "Trackerboy",
+        "Do you want to remove this song? There is no undo for this action"
+    );
+
+    if (result == QMessageBox::Yes) {
+        mSongModel->remove();
+    }
+
+}
+
 void MainWindow::windowResetLayout() {
 
     // this slot will reset all docks and toolbars to the default layout
@@ -208,19 +159,21 @@ void MainWindow::windowResetLayout() {
     // toolbars
     // just add them in order to the top toolbar area
 
-    std::array<QToolBar*, 3> toolbarArray = {
+    std::array<QToolBar*, 4> toolbarArray = {
         mUi->toolbarFile,
         mUi->toolbarOrder,
-        mUi->toolbarTracker
+        mUi->toolbarTracker,
+        mSongToolbar
     };
 
     for (auto toolbar : toolbarArray) {
         addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar);
     }
 
-    std::array<QDockWidget*, 5> dockArray = {
+    std::array<QDockWidget*, 6> dockArray = {
         mUi->dockSongProperties,
         mUi->dockModuleProperties,
+        mUi->dockSongs,
         mUi->dockOrders,
         mUi->dockInstruments,
         mUi->dockWaveforms
@@ -235,9 +188,10 @@ void MainWindow::windowResetLayout() {
     // add everything back in the desired order
 
     // Note: a | means the docks are tabbed
-    // left area: (dockSongProperties | dockModuleProperties) dockOrders
+    // left area: (dockSongProperties | dockModuleProperties | dockSongs) dockOrders
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, mUi->dockSongProperties);
     tabifyDockWidget(mUi->dockSongProperties, mUi->dockModuleProperties);
+    tabifyDockWidget(mUi->dockModuleProperties, mUi->dockSongs);
     addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, mUi->dockOrders);
 
     // top area: dockInstruments dockWaveforms
@@ -256,6 +210,8 @@ void MainWindow::windowResetLayout() {
 
     resizeDocks({ mUi->dockSongProperties, mUi->dockOrders }, { mUi->dockSongProperties->minimumHeight(), mUi->dockOrders->maximumHeight() }, Qt::Vertical);
 }
+
+// PRIVATE METHODS -----------------------------------------------------------
 
 
 bool MainWindow::maybeSave() {
@@ -327,6 +283,112 @@ void MainWindow::setFilename(QString filename) {
 void MainWindow::setModelsEnabled(bool enabled) {
     mWaveModel->setEnabled(enabled);
     mInstrumentModel->setEnabled(enabled);
+    mSongModel->setEnabled(enabled);
+}
+
+void MainWindow::setupConnections() {
+    connect(mDocument, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
+
+    // Actions
+    #define connectAction(action, slot) connect(mUi->action, &QAction::triggered, this, &MainWindow::slot)
+    // File
+    connectAction(actionNew, fileNew);
+    connectAction(actionOpen, fileOpen);
+    connectAction(actionSave, fileSave);
+    connectAction(actionSaveAs, fileSaveAs);
+    connectAction(actionQuit, close);
+    connectAction(actionRemoveSong, moduleRemoveSong);
+    connect(mUi->actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
+    connect(mUi->actionNewSong, &QAction::triggered, mSongModel, &SongListModel::add);
+
+    QApplication::connect(mUi->actionAboutQt, &QAction::triggered, &QApplication::aboutQt);
+
+    // connect piano signals to renderer preview slots
+
+    auto wavePiano = mWaveEditor->piano();
+    connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
+    connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
+
+    auto instPiano = mInstrumentEditor->piano();
+    connect(instPiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewInstrument);
+    connect(instPiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
+
+    // song combobox in mSongToolbar
+    
+
+    connect(mSongCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), mSongModel, QOverload<int>::of(&SongListModel::select));
+    connect(mSongModel, &SongListModel::currentIndexChanged, mSongCombo, &QComboBox::setCurrentIndex);
+    
+
+}
+
+void MainWindow::setupUi() {
+
+    // TOOLBARS ==============================================================
+
+    // song toolbar
+    mSongToolbar = new QToolBar("Songs toolbar");
+    mSongToolbar->addAction(mUi->actionPreviousSong);
+    mSongToolbar->addAction(mUi->actionNextSong);
+    mSongCombo = new QComboBox();
+    mSongCombo->setModel(mSongModel);
+    mSongToolbar->addWidget(mSongCombo);
+    addToolBar(Qt::ToolBarArea::TopToolBarArea, mSongToolbar);
+
+    // toolbar icons
+    Tileset tileset(QImage(":/icons/toolbar.png"), TOOLBAR_ICON_WIDTH, TOOLBAR_ICON_HEIGHT);
+    QList<QToolBar*> toolbars = { mUi->toolbarFile, mUi->toolbarOrder, mUi->toolbarTracker, mSongToolbar};
+
+    for (int i = 0, iconIndex = 0; i != toolbars.size(); ++i) {
+        auto toolbar = toolbars.at(i);
+        auto actions = toolbar->actions();
+        for (int j = 0; j != actions.size(); ++j) {
+            auto action = actions.at(j);
+            if (action->isSeparator() || action->isWidgetType()) {
+                continue;
+            }
+            action->setIcon(tileset.getIcon(iconIndex));
+            ++iconIndex;
+        }
+    }
+
+    // DIALOGS ===============================================================
+
+    mModuleFileDialog->setNameFilter(tr("Trackerboy Module (*.tbm)"));
+    mModuleFileDialog->setWindowModality(Qt::WindowModal);
+
+    // DOCKS =================================================================
+
+    // setup Instruments dock
+    mUi->instrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I");
+    
+    // setup Waveforms dock
+    mUi->waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W");
+
+    // setup Songs dock
+    mUi->songsListView->setModel(mSongModel);
+
+    // MENUS =================================================================
+
+    // add the context menu for instruments list view to our menubar
+    auto menu = mUi->instrumentTableForm->menu();
+    menu->setTitle("Instrument");
+    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
+    // same thing but for waveforms
+    menu = mUi->waveTableForm->menu();
+    menu->setTitle("Waveform");
+    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
+
+    // add the popup menu to menubar
+    QMenu *windowMenu = createPopupMenu();
+    if (windowMenu != nullptr) {
+        // TODO: override createPopupMenu() with this code
+        windowMenu->setTitle("Window");
+        windowMenu->addSeparator();
+        auto resetLayoutAction = windowMenu->addAction("Reset layout");
+        connect(resetLayoutAction, &QAction::triggered, this, &MainWindow::windowResetLayout);
+        mUi->menubar->insertMenu(mUi->menuHelp->menuAction(), windowMenu);
+    }
 }
 
 void MainWindow::writeSettings() {

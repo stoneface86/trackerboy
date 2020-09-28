@@ -20,6 +20,7 @@ Song::Song() :
     mSpeed(DEFAULT_SPEED),
     DataItem()
 {
+    mName = "New song";
     mOrder.push_back({ 0 });
 }
 

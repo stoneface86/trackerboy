@@ -2,7 +2,7 @@
 #include "EnvelopeForm.hpp"
 
 #pragma warning(push, 0)
-#include "designer/ui_EnvelopeForm.h"
+#include "ui_EnvelopeForm.h"
 #pragma warning(pop)
 
 

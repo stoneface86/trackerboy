@@ -95,25 +95,7 @@ void BaseModel::select(int index) {
     if (mCurrentIndex != index) {
         mCurrentIndex = index;
         emit currentIndexChanged(index);
-
-        bool hasSelection = index != -1;
-
-
-        if (mActNew != nullptr) {
-            mActNew->setEnabled(canAdd());
-        }
-
-        if (mActRemove != nullptr) {
-            mActRemove->setEnabled(hasSelection && canRemove());
-        }
-
-        if (mActDuplicate != nullptr) {
-            mActDuplicate->setEnabled(hasSelection && canAdd());
-        }
-
-        if (mActEdit != nullptr) {
-            mActEdit->setEnabled(hasSelection);
-        }
+        updateActions();
     }
     
 }
@@ -139,4 +121,24 @@ void BaseModel::setActions(QAction *actNew, QAction *actRemove, QAction *actDupl
     mActRemove = actRemove;
     mActDuplicate = actDuplicate;
     mActEdit = actEdit;
+    updateActions();
+}
+
+void BaseModel::updateActions() {
+    bool hasSelection = mCurrentIndex != -1;
+    if (mActNew != nullptr) {
+        mActNew->setEnabled(canAdd());
+    }
+
+    if (mActRemove != nullptr) {
+        mActRemove->setEnabled(hasSelection && canRemove());
+    }
+
+    if (mActDuplicate != nullptr) {
+        mActDuplicate->setEnabled(hasSelection && canAdd());
+    }
+
+    if (mActEdit != nullptr) {
+        mActEdit->setEnabled(hasSelection);
+    }
 }
