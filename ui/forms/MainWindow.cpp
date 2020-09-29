@@ -39,6 +39,7 @@ MainWindow::MainWindow() :
 
     // read in configuration, window geometry and window state
     readSettings();
+    mConfigDialog->resetControls();
 
     setupConnections();
 

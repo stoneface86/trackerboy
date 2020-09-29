@@ -24,6 +24,8 @@ public:
 
     void reject() override;
 
+    void resetControls();
+
 protected:
 
     void showEvent(QShowEvent *evt) override;
@@ -42,7 +44,7 @@ private:
     void fillDeviceCombo(int hostIndex);
     void fillSamplerateCombo();
 
-    void resetControls();
+    
 
     Ui::ConfigDialog *mUi;
 
