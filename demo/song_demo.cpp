@@ -19,6 +19,12 @@ static constexpr float SAMPLING_RATE = 48000;
 
 //#define READ_FILE
 
+void printFrame(Frame &frame) {
+
+    std::cout << frame.time << ": " << static_cast<int>(frame.row) << " / " << static_cast<int>(frame.order) << std::endl;
+}
+
+
 
 int main() {
 
@@ -354,9 +360,10 @@ int main() {
     wav.begin();
     pb.start();
 
-
     for (int i = 600; i != 0; --i) {
-        engine.step();
+        Frame frame;
+        engine.step(frame);
+        printFrame(frame);
         size_t framesize = synth.run();
         //outputFrame(synth.buffer(), framesize, pb);
         pb.writeAll(synth.buffer(), framesize);

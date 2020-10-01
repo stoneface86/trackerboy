@@ -26,30 +26,20 @@
 
 #include "trackerboy/Speed.hpp"
 
+#include <cstdint>
+
 namespace trackerboy {
 
-class Timer {
+//
+// Informational struct for a rendered frame.
+//
+struct Frame {
 
-public:
-
-    static constexpr Speed DEFAULT_PERIOD = 8;
-
-    Timer() noexcept;
-
-    bool active() const noexcept;
-
-    Speed period() const noexcept;
-
-    void reset() noexcept;
-
-    void setPeriod(Speed period) noexcept;
-
-    bool step() noexcept;
-
-private:
-
-    Speed mPeriod;
-    Speed mCounter;
+    bool halted;        // halt status
+    uint32_t time;      // time index
+    Speed speed;        // the current engine speed
+    uint8_t order;      // current order index
+    uint8_t row;        // current row index
 
 };
 

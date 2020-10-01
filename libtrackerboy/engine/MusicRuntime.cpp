@@ -8,6 +8,7 @@ MusicRuntime::MusicRuntime(RuntimeContext rc, ChannelControl &chCtrl, Song &song
     mRc(rc),
     mSong(song),
     mOrderCounter(orderNo),
+    mRowCounter(patternRow),
     mLastOrder(static_cast<uint8_t>(song.orders().size() - 1)),
     mRowsPerTrack(song.patterns().rowSize()),
     mCommand(PatternCommand::none),
@@ -22,6 +23,18 @@ MusicRuntime::MusicRuntime(RuntimeContext rc, ChannelControl &chCtrl, Song &song
 {
     mCursor.setPattern(song.getPattern(orderNo), patternRow);
     mTimer.setPeriod(song.speed());
+}
+
+Speed MusicRuntime::speed() const noexcept {
+    return mTimer.period();
+}
+
+uint8_t MusicRuntime::currentOrder() const noexcept {
+    return mOrderCounter;
+}
+
+uint8_t MusicRuntime::currentRow() const noexcept {
+    return mRowCounter;
 }
 
 template <ChType ch>
@@ -159,10 +172,12 @@ bool MusicRuntime::step() {
                     // loop back to the first pattern
                     mOrderCounter = 0;
                 }
+                mRowCounter = mCommandParam;
                 mCursor.setPattern(mSong.getPattern(mOrderCounter), mCommandParam);
                 mCommand = PatternCommand::none;
                 break;
             case PatternCommand::jump:
+                mRowCounter = 0;
                 mCursor.setPattern(mSong.getPattern(mCommandParam));
                 mCommand = PatternCommand::none;
                 break;
@@ -212,6 +227,7 @@ bool MusicRuntime::step() {
     if (mTimer.step()) {
         // timer overflowed, advance pattern iterator to the next row
         // this also means that this step is the last one for the current row
+        ++mRowCounter;
         if (mCursor.next()) {
             // end of pattern
             if (mCommand == PatternCommand::none) {

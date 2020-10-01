@@ -33,6 +33,10 @@ bool Timer::active() const noexcept {
     return mCounter < UNIT_SPEED;
 }
 
+Speed Timer::period() const noexcept {
+    return mPeriod;
+}
+
 void Timer::reset() noexcept {
     mCounter = 0;
 }

@@ -92,11 +92,12 @@ void RenderWorker::render() {
             mIr.step();
         }
 
-        bool halted = mEngine.step();
+        trackerboy::Frame frame;
+        mEngine.step(frame);
         mDocument.unlock();
 
         // if the engine halted and we are not previewing, we will stop rendering after this frame
-        bool stopAfterFrame = halted && mPreviewState == PreviewState::none;
+        bool stopAfterFrame = frame.halted && mPreviewState == PreviewState::none;
 
         // synthesize the frame
         size_t framesize = mSynth.run();
@@ -104,6 +105,11 @@ void RenderWorker::render() {
 
         // write the frame to the queue, will block if the queue is full
         mPb.writeAll(mSynth.buffer(), framesize);
+
+        // now add this frame to the history, so that the UI can update visualizers
+        //Frame frame;
+        //frame.setSamples(mSynth.buffer(), framesize);
+        //mFrameHistory.enqueue(frame)
 
         if (stopAfterFrame) {
 

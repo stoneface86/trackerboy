@@ -8,15 +8,14 @@ namespace trackerboy {
 Engine::Engine(RuntimeContext rc) :
     mRc(rc),
     mMusicContext(std::nullopt),
-    mChflags(0)
+    mTime(0)
 {
 }
 
 void Engine::reset() {
     mMusicContext.reset();
-    mChflags = 0;
+    mTime = 0;
 }
-
 
 void Engine::play(Song &song, uint8_t orderNo, uint8_t patternRow) {
     
@@ -42,18 +41,29 @@ void Engine::unlock(ChType ch) {
     mChCtrl.unlock(ch);
 }
 
-bool Engine::step() {
+void Engine::step(Frame &frame) {
 
     bool halted = false;
 
     if (mMusicContext) {
         auto &ctx = mMusicContext.value();
-        halted = ctx.step();
+        frame.halted = ctx.step();
+        frame.order = ctx.currentOrder();
+        frame.row = ctx.currentRow();
+        frame.speed = ctx.speed();
+    } else {
+        frame.halted = true;
+        frame.order = 0;
+        frame.row = 0;
+        frame.speed = 0;
     }
+
+    frame.time = mTime;
 
     // TODO: sound effects 
 
-    return halted;
+    // increment timestamp for next frame
+    ++mTime;
 }
 
 

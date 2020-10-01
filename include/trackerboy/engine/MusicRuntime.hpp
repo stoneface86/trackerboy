@@ -55,6 +55,12 @@ public:
     //
     MusicRuntime(RuntimeContext rc, ChannelControl &chCtrl, Song &song, uint8_t orderNo, uint8_t patternRow);
 
+    Speed speed() const noexcept;
+
+    uint8_t currentOrder() const noexcept;
+
+    uint8_t currentRow() const noexcept;
+
     //
     // Step the runtime for a single frame. If the runtime was halted, true is returned.
     //
@@ -130,6 +136,7 @@ private:
     Song &mSong;
 
     uint8_t mOrderCounter;
+    uint8_t mRowCounter;
     // last order index for the song
     uint8_t const mLastOrder;
     uint16_t const mRowsPerTrack;

@@ -26,6 +26,7 @@
 
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/engine/ChannelControl.hpp"
+#include "trackerboy/engine/Frame.hpp"
 #include "trackerboy/engine/MusicRuntime.hpp"
 #include "trackerboy/engine/RuntimeContext.hpp"
 
@@ -43,7 +44,16 @@ public:
 
     void reset();
 
+    //
+    // begin playing music from a starting order and row
+    //
     void play(Song &song, uint8_t orderNo, uint8_t patternRow = 0);
+
+    //
+    // play and loop a single pattern
+    //
+    // TODO
+    //void playPattern(Song &song, uint8_t orderNo);
     
     //
     // Lock the given channel. Channel is reloaded with music settings.
@@ -56,7 +66,11 @@ public:
     //
     void unlock(ChType ch);
 
-    bool step();
+    //
+    // Step the engine for 1 frame. Details about the frame are written to
+    // the given Frame structure.
+    //
+    void step(Frame &frame);
 
 private:
 
@@ -64,13 +78,10 @@ private:
     std::optional<MusicRuntime> mMusicContext;
     ChannelControl mChCtrl;
 
-    // bit 0: CH1 lock status (0 = locked)
-    // bit 1: CH2 lock status
-    // bit 2: CH3 lock status
-    // bit 3: CH4 lock status
-    int mChflags;
+    //TODO: sfx runtime
 
-    //sfx runtime
+    // frames elapsed since last reset
+    uint32_t mTime;
 
 };
 
