@@ -243,9 +243,18 @@ public:
     bool canWrite(size_t nsamples);
 
     //
-    // Empty the playback queue
+    // Closes the portaudio stream. The stream must be stopped before
+    // calling this method.
     //
-    void flush();
+    void close();
+
+    //
+    // Opens an output stream using the set device. Samples written to the
+    // queue will be played as soon as the queue is completely filled. The
+    // stream will stop playing when the queue is emptied or when stop() is
+    // called.
+    //
+    void open();
 
     //
     // Change the minimum buffer size of the playback queue. The given size, in
@@ -255,26 +264,10 @@ public:
     void setBufferSize(unsigned bufferSize);
 
     //
-    // Set the output device to use. The stream must be stopped before calling this
-    // method.
+    // Set the output device and samplerate. In order for changes to take effect
+    // you must close the current stream and open a new one.
     //
-    void setDevice(int deviceId);
-
-    //
-    // Change the sampling rate for the playback output. The stream must
-    // be stopped before calling this method, as a new one will have to be
-    // opened. The queue is also flushed.
-    //
-    void setSamplingRate(Samplerate samplerate);
-
-    void silence();
-
-    //
-    // Begin audio playback. Audio data written to the queue is then
-    // played out to the speakers. Silence is played out whenever the
-    // queue is empty.
-    //
-    void start();
+    void setDevice(int deviceId, Samplerate samplerate);
 
     //
     // Force stop of the playback stream. If wait is true, then this method
@@ -284,8 +277,9 @@ public:
     void stop(bool wait);
 
     //
-    // Write the given sample buffer to the playback queue. The stream is then
-    // started if the stream was stopped (queue was empty or stop() was called).
+    // Write the given sample buffer to the playback queue. If this write will
+    // completely fill the buffer and the stream is inactive, then the stream
+    // will be started.
     //
     size_t write(float buf[], size_t nsamples);
 
@@ -304,9 +298,10 @@ private:
 
     Samplerate mSamplerate;
     unsigned mBufferSize; // size in milleseconds of the buffer
-    unsigned mWaitTime; // time in milleseconds to sleep when buffer is full
     bool mResizeRequired;
     int mDevice; // device id to use
+
+    unsigned mWaitTime;
 
     friend PaStreamCallback playbackCallback;
 

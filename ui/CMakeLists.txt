@@ -35,7 +35,6 @@ set(UI_SRC
     "Config.cpp"
     "main.cpp"
     "Renderer.cpp"
-    "RenderWorker.cpp"
     "Tileset.cpp"
 )
 

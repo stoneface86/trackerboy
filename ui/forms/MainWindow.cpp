@@ -48,6 +48,8 @@ MainWindow::MainWindow() :
     
     // associate menu actions with the model
     mSongModel->setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
+
+    mRenderer->start();
 }
 
 MainWindow::~MainWindow() {
@@ -319,7 +321,7 @@ void MainWindow::setupConnections() {
 
     connect(mSongCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), mSongModel, QOverload<int>::of(&SongListModel::select));
     connect(mSongModel, &SongListModel::currentIndexChanged, mSongCombo, &QComboBox::setCurrentIndex);
-    
+
 
 }
 

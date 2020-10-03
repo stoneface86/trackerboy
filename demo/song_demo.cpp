@@ -358,7 +358,8 @@ int main() {
     std::ofstream file("song_demo.wav", std::ios::binary | std::ios::out);
     Wav wav(file, 2, SAMPLING_RATE);
     wav.begin();
-    pb.start();
+
+    pb.open();
 
     for (int i = 600; i != 0; --i) {
         Frame frame;
@@ -371,6 +372,8 @@ int main() {
     }
 
     pb.stop(true);
+
+    pb.close();
 
     wav.finish();
     file.close();

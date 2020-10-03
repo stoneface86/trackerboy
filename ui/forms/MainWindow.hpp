@@ -16,7 +16,6 @@
 #include <QToolBar>
 
 
-
 namespace Ui {
 class MainWindow;
 }
