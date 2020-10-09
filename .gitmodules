@@ -1,3 +1,6 @@
 [submodule "portaudio"]
 	path = portaudio
 	url = https://git.assembla.com/portaudio.git
+[submodule "StereoBlipBuffer"]
+	path = StereoBlipBuffer
+	url = https://github.com/stoneface86/StereoBlipBuffer

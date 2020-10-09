@@ -99,6 +99,9 @@ endif()
 include(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 
+# StereoBlipBuffer
+add_subdirectory(StereoBlipBuffer)
+
 # ============================================================================
 # Sub-projects
 # ============================================================================
