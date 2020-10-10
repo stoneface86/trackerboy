@@ -30,6 +30,7 @@
 #include "trackerboy/ChType.hpp"
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace trackerboy {
