@@ -11,7 +11,7 @@ Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentMode
     mInstrumentModel(instrumentModel),
     mWaveModel(waveModel),
     mPb(audio::SR_44100),
-    mSynth(44100.0f),
+    mSynth(44100),
     mEngine({ mSynth, document.instrumentTable(), document.waveTable() }),
     mIr({ mSynth, document.instrumentTable(), document.waveTable() }),
     mPreviewState(PreviewState::none),

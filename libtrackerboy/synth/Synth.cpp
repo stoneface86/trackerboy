@@ -2,41 +2,63 @@
 #include "trackerboy/synth/Synth.hpp"
 #include "trackerboy/gbs.hpp"
 
+#include "Blip_Buffer.h"
+
 #include <algorithm>
 #include <climits>
 #include <cmath>
 
-namespace {
-
-// largest delta = 60 (0xF * 4), so the maximum volume is 15/16 (-0.56 dB)
-constexpr float GAIN = 1.0f / 64.0f; 
-
-}
-
 
 namespace trackerboy {
 
+// PIMPL idiom - this way we can keep Blip_Buffer out of the public API
+struct Synth::Internal {
 
-Synth::Synth(float samplingRate, float framerate) noexcept :
-    mSamplingRate(samplingRate),
+    // blip_buffer
+    blargg::Blip_Buffer bbuf;
+    // CH1 + CH2
+    blargg::Blip_Synth<blargg::blip_good_quality, 30> bsynth1;
+    // CH3 + CH4 (lower quality since these channels have a lot of transitions)
+    blargg::Blip_Synth<blargg::blip_med_quality, 30> bsynth2;
+
+
+    Internal() :
+        bbuf(),
+        bsynth1(),
+        bsynth2()
+
+    {
+        bsynth1.output(&bbuf);
+        bsynth2.output(&bbuf);
+    }
+
+    Internal(const Internal &ref) = delete;
+    Internal& operator=(const Internal &ref) = delete;
+
+};
+
+
+Synth::Synth(unsigned samplingRate, float framerate) noexcept :
+    mInternal(new Internal()),
+    mSamplerate(samplingRate),
     mFramerate(framerate),
     mHf(),
-    mMixer(samplingRate),
     mSequencer(mHf),
-    mCyclesPerSample(Gbs::CLOCK_SPEED / samplingRate),
     mCyclesPerFrame(Gbs::CLOCK_SPEED / framerate),
     mCycleOffset(0.0f),
-    mSampleOffset(0.0f),
     mFrameBuf(),
     mOutputStat(Gbs::OUT_ALL),
     mChPrev{0},
     mFillPos(0),
     mLastFrameSize(0)
 {
-    resizeFrameBuf();
+    setupBuffers();
 }
 
-float* Synth::buffer() noexcept {
+// required for std::unique_ptr<Internal>
+Synth::~Synth() = default;
+
+int16_t* Synth::buffer() noexcept {
     return mFrameBuf.data();
 }
 
@@ -44,8 +66,10 @@ HardwareFile& Synth::hardware() noexcept {
     return mHf;
 }
 
-void Synth::fill(float buf[], size_t nsamples) noexcept {
-    float *dest = buf;
+// This method is only used by demo and should be removed at some point
+// everywhere else uses the frame buffer
+void Synth::fill(int16_t buf[], size_t nsamples) noexcept {
+    int16_t *dest = buf;
 
     while (nsamples) {
         if (mFillPos == mLastFrameSize) {
@@ -64,20 +88,16 @@ void Synth::fill(float buf[], size_t nsamples) noexcept {
 }
 
 size_t Synth::run() noexcept {
+    auto intern = mInternal.get();
+    auto &bbuf = intern->bbuf;
+    auto &bsynth1 = intern->bsynth1;
+    auto &bsynth2 = intern->bsynth2;
+
+
     // determine number of cycles to run
     float cycles = mCyclesPerFrame + mCycleOffset;
     float wholeCycles;
     mCycleOffset = modff(cycles, &wholeCycles);
-
-    // determine number of samples needed
-    float oldOffset = mSampleOffset;
-    float samples = (mCyclesPerFrame / mCyclesPerSample) + mSampleOffset;
-    float wholeSamples;
-    mSampleOffset = modff(samples, &wholeSamples);
-    size_t nsamples = static_cast<size_t>(wholeSamples);
-
-    // setup the buffer
-    mMixer.beginFrame(mFrameBuf.data(), nsamples);
 
     uint32_t remaining = static_cast<uint32_t>(wholeCycles);
     uint32_t cycletime = 0;
@@ -90,27 +110,28 @@ size_t Synth::run() noexcept {
         // keep track of the smallest fence
         // a fence is the minimum number of cycles until state changes
         // ie generator output changing, envelope volume decreasing, etc
+        // it's named fence as an analogy to memory fences/barriers
         uint32_t fence = std::min(remaining, mSequencer.fence());
         updateOutput<ChType::ch1>(leftdelta, rightdelta, fence);
         updateOutput<ChType::ch2>(leftdelta, rightdelta, fence);
+
+        // don't bother calling offset with delta = 0
+        if (leftdelta) {
+            bsynth1.offset_inline(cycletime, leftdelta, blargg::blip_term_left);
+            leftdelta = 0;
+        }
+        if (rightdelta) {
+            bsynth1.offset_inline(cycletime, rightdelta, blargg::blip_term_right);
+            rightdelta = 0;
+        }
+
         updateOutput<ChType::ch3>(leftdelta, rightdelta, fence);
         updateOutput<ChType::ch4>(leftdelta, rightdelta, fence);
+        if (leftdelta)
+            bsynth2.offset_inline(cycletime, leftdelta, blargg::blip_term_left);
+        if (rightdelta)
+            bsynth2.offset_inline(cycletime, rightdelta, blargg::blip_term_right);
 
-        if (leftdelta || rightdelta) {
-            // convert time in cycles to time in samples
-            float sampletime = (cycletime / mCyclesPerSample) + oldOffset;
-            if (leftdelta == rightdelta) {
-                // since both deltas are the same, we can add the step to both terminals
-                mMixer.addStep<Mixer::Pan::both>(leftdelta * GAIN, sampletime);
-            } else {
-                if (leftdelta) {
-                    mMixer.addStep<Mixer::Pan::left>(leftdelta * GAIN, sampletime);
-                }
-                if (rightdelta) {
-                    mMixer.addStep<Mixer::Pan::right>(rightdelta * GAIN, sampletime);
-                }
-            }
-        }
 
         // run all components to the smallest fence
         mSequencer.step(fence);
@@ -124,9 +145,12 @@ size_t Synth::run() noexcept {
         cycletime += fence;
     }
 
-    // we are done adding steps, end the frame
-    mMixer.endFrame();
-    return nsamples;
+    // end the frame and copy samples to the synth's frame buffer
+    bbuf.end_frame(cycletime);
+    auto samples = bbuf.samples_avail();
+    bbuf.read_samples(mFrameBuf.data(), samples);
+    
+    return samples;
 
 }
 
@@ -202,13 +226,11 @@ uint8_t Synth::readRegister(uint16_t addr) const noexcept {
 
 void Synth::reset() noexcept {
     mCycleOffset = 0.0f;
-    mSampleOffset = 0.0f;
     std::fill_n(mChPrev, 8, static_cast<uint8_t>(0));
     mFillPos = 0;
     mLastFrameSize = 0;
     // reset hardware components
     mSequencer.reset();
-    mMixer.reset();
     mHf.env1.reset();
     mHf.env2.reset();
     mHf.env4.reset();
@@ -217,6 +239,8 @@ void Synth::reset() noexcept {
     mHf.gen2.reset();
     mHf.gen3.reset();
     mHf.gen4.reset();
+
+    mInternal->bbuf.clear();
 }
 
 
@@ -243,9 +267,6 @@ void Synth::restart(ChType ch) noexcept {
 
 void Synth::setFramerate(float framerate) {
     mFramerate = framerate;
-    mCyclesPerFrame = Gbs::CLOCK_SPEED / framerate;
-    resizeFrameBuf();
-    reset();
 }
 
 void Synth::setFrequency(ChType ch, uint16_t freq) {
@@ -264,11 +285,28 @@ void Synth::setFrequency(ChType ch, uint16_t freq) {
     }
 }
 
-void Synth::setSamplingRate(float samplingRate) {
-    mSamplingRate = samplingRate;
-    mCyclesPerSample = Gbs::CLOCK_SPEED / samplingRate;
-    mMixer.setSamplingRate(samplingRate);
-    resizeFrameBuf();
+void Synth::setSamplingRate(unsigned samplingRate) {
+    mSamplerate = samplingRate;
+}
+
+void Synth::setupBuffers() {
+    mCyclesPerFrame = Gbs::CLOCK_SPEED / mFramerate;
+    unsigned blipbufsize = static_cast<unsigned>(ceilf(1000.0f / mFramerate));
+    mFrameBuf.resize((static_cast<size_t>(mSamplerate / mFramerate) + 1) * 2);
+
+    auto &bbuf = mInternal->bbuf;
+    auto &bsynth1 = mInternal->bsynth1;
+    auto &bsynth2 = mInternal->bsynth2;
+    
+    bbuf.set_sample_rate(mSamplerate, blipbufsize);
+    bbuf.clock_rate(Gbs::CLOCK_SPEED);
+    bbuf.bass_freq(16);
+
+    blargg::blip_eq_t eq(-8.0);
+    bsynth1.treble_eq(eq);
+    bsynth1.volume(0.5);
+    bsynth2.treble_eq(eq);
+    bsynth2.volume(0.5);
     reset();
 }
 
@@ -373,12 +411,11 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
     }
 }
 
-void Synth::resizeFrameBuf() {
-    mFrameBuf.resize((static_cast<size_t>(mSamplingRate / mFramerate) + 1) * 2);
-}
-
 template <ChType ch>
 void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) noexcept {
+    
+    // get our generator
+    // hopefully the compiler removes dead code, if constexpr might be needed instead
     Generator *gen = nullptr;
     uint8_t mask = 0xF;
     switch (ch) {
@@ -402,29 +439,31 @@ void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence)
 
     uint8_t output = gen->output();
     if constexpr (ch != ChType::ch3) {
+        // generator output for all channels except 3 is a mask, 0 for off, 0xFF for on
+        // AND it with the envelope value to get the current volume
         output &= mask;
     }
     
-
+    // get the previous volumes
     constexpr size_t chint = static_cast<size_t>(ch);
     uint8_t &prevL = mChPrev[chint];
     uint8_t &prevR = mChPrev[chint + 4];
 
+    // convert output stat (NR51) to a mask
     uint8_t maskL = ~((mOutputStat >> chint) & 1) + 1;
     uint8_t maskR = ~((mOutputStat >> (chint + 4)) & 1) + 1;
 
     uint8_t outputL = output & maskL;
     uint8_t outputR = output & maskR;
-    int8_t deltaL = static_cast<int8_t>(outputL) - static_cast<int8_t>(prevL);
-    int8_t deltaR = static_cast<int8_t>(outputR) - static_cast<int8_t>(prevR);
+    // calculate and accumulate deltas
+    leftdelta += static_cast<int8_t>(outputL) - static_cast<int8_t>(prevL);
+    rightdelta += static_cast<int8_t>(outputR) - static_cast<int8_t>(prevR);
 
-    leftdelta += deltaL;
-    rightdelta += deltaR;
-
-
-
+    // save the previous values for next time
     prevL = outputL;
     prevR = outputR;
+
+    // update the fence (the smallest one will be stepped to)
     fence = std::min(fence, gen->fence());
 }
 

@@ -85,7 +85,7 @@ static int synthCallback(
 ) {
     (void)inputBuffer; // not used
     // non-interleaved, outputBuffer is an array of float buffers
-    float *buf = static_cast<float*>(outputBuffer);
+    int16_t *buf = static_cast<int16_t*>(outputBuffer);
     auto data = (CbData*)userData;
 
     // synthesize
@@ -158,7 +158,7 @@ int main(int argc, const char *argv[]) {
             &stream,
             0,                              // no input channels
             2,                              // stereo output (2 output channels)
-            paFloat32,                      // 32-bit float samples
+            paInt16,                        // 16-bit integer samples
             SAMPLING_RATE,                  // 44.1 KHz sampling rate
             paFramesPerBufferUnspecified,   // frames per buffer (can also use PaFramesPerBufferUnspecified)
             synthCallback,                  // callback function

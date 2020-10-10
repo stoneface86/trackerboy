@@ -359,6 +359,8 @@ int main() {
     Wav wav(file, 2, SAMPLING_RATE);
     wav.begin();
 
+    std::vector<float> floatBuf;
+
     pb.open();
 
     for (int i = 600; i != 0; --i) {
@@ -367,8 +369,13 @@ int main() {
         printFrame(frame);
         size_t framesize = synth.run();
         //outputFrame(synth.buffer(), framesize, pb);
-        pb.writeAll(synth.buffer(), framesize);
-        wav.write(synth.buffer(), framesize);
+        int16_t *buffer = synth.buffer();
+        pb.writeAll(buffer, framesize);
+        floatBuf.resize(framesize * 2);
+        for (size_t i = 0; i != framesize * 2; ++i) {
+            floatBuf[i] = static_cast<float>(buffer[i]) / 32768.0f;
+        }
+        wav.write(floatBuf.data(), framesize);
     }
 
     pb.stop(true);

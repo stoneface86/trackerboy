@@ -37,7 +37,7 @@ DeviceTable::DeviceTable() :
             outputParam.device = deviceId;
             outputParam.hostApiSpecificStreamInfo = NULL;
             outputParam.suggestedLatency = info->defaultLowOutputLatency;
-            outputParam.sampleFormat = paFloat32;
+            outputParam.sampleFormat = paInt16;
 
             int samplerateFlags = 0;
             for (int rate = 0; rate != SR_COUNT; ++rate) {

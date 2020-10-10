@@ -25,10 +25,11 @@
 #pragma once
 
 #include "trackerboy/synth/HardwareFile.hpp"
-#include "trackerboy/synth/Mixer.hpp"
+//#include "trackerboy/synth/Mixer.hpp"
 #include "trackerboy/synth/Sequencer.hpp"
 #include "trackerboy/ChType.hpp"
 
+#include <cstdint>
 #include <vector>
 
 namespace trackerboy {
@@ -37,13 +38,15 @@ class Synth {
     
 public:
 
-    Synth(float samplingRate, float framerate = Gbs::FRAMERATE_GB) noexcept;
+    Synth(unsigned samplingRate, float framerate = Gbs::FRAMERATE_GB) noexcept;
+    ~Synth();
 
-    float* buffer() noexcept;
+
+    int16_t* buffer() noexcept;
 
     HardwareFile& hardware() noexcept;
 
-    void fill(float buf[], size_t nsamples) noexcept;
+    void fill(int16_t buf[], size_t nsamples) noexcept;
 
     //
     // Reset the synthesizer by reseting all hardware components to defaults.
@@ -61,36 +64,35 @@ public:
     // the synth's frame buffer. The number of samples generated is returned
     //
     size_t run() noexcept;
-
     
     void setFramerate(float framerate);
 
-    // util method
+    // util method TODO: move this to ChannelControl
     void setFrequency(ChType ch, uint16_t freq);
 
     void setOutputEnable(Gbs::OutputFlags flags) noexcept;
     void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled) noexcept;
 
-    void setSamplingRate(float samplingRate);
+    void setSamplingRate(unsigned samplingRate);
+
+    void setupBuffers();
 
     void writeRegister(uint16_t addr, uint8_t value) noexcept;
 
 private:
 
+    // PIMPL idiom
+    struct Internal;
+    std::unique_ptr<Internal> mInternal;
+
     // output sampling rate
-    float mSamplingRate;
+    unsigned mSamplerate;
     // interrupt rate of the gameboy VBlank interrupt
     float mFramerate;
 
     // Hardware components
     HardwareFile mHf;
-
-    Mixer mMixer;
     Sequencer mSequencer;
-
-    // number of cycles needed to execute to produce 1 sample
-    // equal to the gameboy clock speed divided by the sampling rate
-    float mCyclesPerSample;
 
     // number of cycles executed in 1 frame
     // equal to the gameboy clock speed divided by the framerate
@@ -99,11 +101,8 @@ private:
     // fraction offset of cycles when determining frame length
     float mCycleOffset;
 
-    // fractional offset of samples
-    float mSampleOffset;
-
     // buffer of generated samples from the last run()
-    std::vector<float> mFrameBuf;
+    std::vector<int16_t> mFrameBuf;
 
     // channel panning settings
     // bits 7-4: Right panning enable for channels 1,2,3,4 (bit 4 = 1, ...)
@@ -117,7 +116,7 @@ private:
     size_t mFillPos;
     size_t mLastFrameSize;
 
-    void resizeFrameBuf();
+    //void resizeFrameBuf();
 
     template <ChType ch>
     void updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) noexcept;

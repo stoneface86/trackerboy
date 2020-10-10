@@ -18,12 +18,12 @@ int playbackCallback(
     void *userData
 ) {
     (void)input;
-    float *out = static_cast<float*>(output);
+    int16_t *out = static_cast<int16_t*>(output);
     PlaybackQueue *pb = static_cast<PlaybackQueue*>(userData);
 
     auto nread = PaUtil_ReadRingBuffer(&pb->mQueue, out, frameCount);
     if (nread != frameCount) {
-        std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, 0.0f);
+        std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, static_cast<int16_t>(0));
     }
     
     return PaUtil_GetRingBufferReadAvailable(&pb->mQueue) ? paContinue : paComplete;
@@ -75,7 +75,7 @@ void PlaybackQueue::open() {
         param.channelCount = 2;
         param.device = mDevice;
         param.hostApiSpecificStreamInfo = nullptr;
-        param.sampleFormat = paFloat32;
+        param.sampleFormat = paInt16;
         auto info = Pa_GetDeviceInfo(mDevice);
         if (info == nullptr) {
             throw std::runtime_error("cannot open stream: unknown device id");
@@ -120,7 +120,7 @@ void PlaybackQueue::open() {
         mQueueData.resize(queueDataSize * 2);
 
         // re-initialize ringbuffer with the new size
-        PaUtil_InitializeRingBuffer(&mQueue, sizeof(float) * 2, queueDataSize, mQueueData.data());
+        PaUtil_InitializeRingBuffer(&mQueue, sizeof(int16_t) * 2, queueDataSize, mQueueData.data());
 
         mResizeRequired = false;
     }
@@ -179,7 +179,7 @@ void PlaybackQueue::stop(bool wait) {
 
 }
 
-size_t PlaybackQueue::write(float buf[], size_t nsamples) {
+size_t PlaybackQueue::write(int16_t buf[], size_t nsamples) {
 
     size_t navail = PaUtil_GetRingBufferWriteAvailable(&mQueue);
     size_t samplesToWrite = nsamples > navail ? navail : nsamples;
@@ -196,8 +196,8 @@ size_t PlaybackQueue::write(float buf[], size_t nsamples) {
     return samplesToWrite;
 }
 
-void PlaybackQueue::writeAll(float buf[], size_t nsamples) {
-    float *fp = buf;
+void PlaybackQueue::writeAll(int16_t buf[], size_t nsamples) {
+    auto fp = buf;
     size_t toWrite = nsamples;
     size_t nwritten = 0;
     for (;;) {

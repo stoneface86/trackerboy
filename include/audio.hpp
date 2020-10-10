@@ -281,20 +281,20 @@ public:
     // completely fill the buffer and the stream is inactive, then the stream
     // will be started.
     //
-    size_t write(float buf[], size_t nsamples);
+    size_t write(int16_t buf[], size_t nsamples);
 
     //
     // Write the entire sample buffer to the playback queue. This method will
     // block until the entire buffer is written to the queue.
     //
-    void writeAll(float buf[], size_t nsamples);
+    void writeAll(int16_t buf[], size_t nsamples);
 
 private:
 
     PaStream *mStream;
     PaUtilRingBuffer mQueue;
 
-    std::vector<float> mQueueData;
+    std::vector<int16_t> mQueueData;
 
     Samplerate mSamplerate;
     unsigned mBufferSize; // size in milleseconds of the buffer
