@@ -15,6 +15,8 @@ project (
     LANGUAGES C CXX
 )
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
+
 option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
 option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
 option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
@@ -45,22 +47,6 @@ if (PORTAUDIO_REQUIRED)
     add_library(portaudio_ringbuffer STATIC EXCLUDE_FROM_ALL "portaudio/src/common/pa_ringbuffer.c")
     target_include_directories(portaudio_ringbuffer PUBLIC "portaudio/src/common")
 endif ()
-
-# qt is required for the ui project
-macro(use_qt)
-    set(CMAKE_AUTOMOC ON)
-    #set(CMAKE_AUTOUIC ON)
-    set(CMAKE_AUTORCC ON)
-    find_package(Qt5 COMPONENTS ${ARGV} REQUIRED)
-    if (WIN32)
-        set(GUI_TYPE WIN32)
-    elseif (APPLE)
-        set(GUI_TYPE MACOSX_BUNDLE)
-    else ()
-        set(GUI_TYPE "")
-    endif ()
-
-endmacro (use_qt)
 
 if (TRACKERBOY_ENABLE_TESTS)
     enable_testing()

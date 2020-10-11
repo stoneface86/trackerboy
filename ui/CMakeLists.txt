@@ -1,8 +1,15 @@
 project(ui CXX)
 
-
-use_qt(Widgets Core)
-#set(CMAKE_AUTOUIC_SEARCH_PATHS "designer")
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+find_package(Qt5 COMPONENTS Widgets Core REQUIRED)
+if (WIN32)
+    set(GUI_TYPE WIN32)
+elseif (APPLE)
+    set(GUI_TYPE MACOSX_BUNDLE)
+else ()
+    set(GUI_TYPE "")
+endif ()
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
