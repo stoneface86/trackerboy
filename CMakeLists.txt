@@ -46,6 +46,8 @@ if (PORTAUDIO_REQUIRED)
     # PaUtilRingBuffer isn't included in the library, so add it here separately
     add_library(portaudio_ringbuffer STATIC EXCLUDE_FROM_ALL "portaudio/src/common/pa_ringbuffer.c")
     target_include_directories(portaudio_ringbuffer PUBLIC "portaudio/src/common")
+
+    find_package(Soundio REQUIRED)
 endif ()
 
 if (TRACKERBOY_ENABLE_TESTS)
