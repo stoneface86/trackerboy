@@ -17,5 +17,5 @@ target_link_libraries(${DEMO} trackerboy portaudio_static)
 add_executable(demo_song "song_demo.cpp")
 target_link_libraries(demo_song trackerboy portaudio_static audio)
 
-add_executable(demo_device_manager "device_manager.cpp")
-target_link_libraries(demo_device_manager portaudio_static audio)
+add_executable(demo_device_table "device_table.cpp")
+target_link_libraries(demo_device_table audio)

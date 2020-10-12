@@ -4,13 +4,7 @@
 
 namespace audio {
 
-const double SAMPLERATE_TABLE[] = {
-    11025.0,
-    22050.0,
-    44100.0,
-    48000.0,
-    96000.0
-};
+
 
 DeviceManager::DeviceManager() :
     mTable(DeviceTable::instance()),

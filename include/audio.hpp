@@ -31,12 +31,11 @@
 
 #pragma once
 
+#include <soundio/soundio.h>
+
 #include <stdexcept>
 #include <memory>
 #include <vector>
-
-#include "portaudio.h"
-#include "pa_ringbuffer.h"
 
 #ifdef _MSC_VER
 // disable warnings about unscoped enums
@@ -60,24 +59,12 @@ enum Samplerate {
     SR_COUNT
 };
 
-extern double const SAMPLERATE_TABLE[SR_COUNT];
-
-//
-// Exception class for a portaudio error. The portaudio error code
-// that caused this exception can be accessed via the getError() method
-//
-class PaException : public std::runtime_error {
-    PaError err;
-public:
-    PaException(PaError err);
-
-    PaError getError();
-};
+extern unsigned const SAMPLERATE_TABLE[SR_COUNT];
 
 //
 // Container class for all available devices on the system exposed to us
-// via portaudio. Only output devices that support one or more of our
-// supported sample rates are stored here.
+// from a given libsoundio backend. Only output devices that support one or
+// more of our supported sample rates are stored here.
 //
 // It is possible that the table is empty (the host list is empty), if
 // this occurs the application should not start as there won't be any
@@ -86,29 +73,20 @@ public:
 class DeviceTable {
 
 public:
-    struct Host {
-        int const hostId;                   // Portaudio host api index
-        int const deviceOffset;             // starting offset in device vector
-        int const deviceCount;              // count of devices this api has
-        int const deviceDefault;            // index of the default device
-        PaHostApiInfo const * const info;   // info structure
-    };
 
     struct Device {
-        int const deviceId;                 // Portaudio device index
+        int const deviceId;                 // soundio device index
         int const samplerates;              // bitfield of supported samplerates
-        PaDeviceInfo const * const info;    // info structure
     };
 
-    using HostVec = std::vector<Host>;
     using DeviceVec = std::vector<Device>;
-    using HostIterator = HostVec::const_iterator;
     using DeviceIterator = DeviceVec::const_iterator;
 
+    DeviceTable();
+
+    // no copying
     DeviceTable(DeviceTable const&) = delete;
     void operator=(DeviceTable const&) = delete;
-
-    static DeviceTable& instance();
 
     //
     // Returns true if there are no available devices, false otherwise.
@@ -116,202 +94,134 @@ public:
     bool isEmpty() const noexcept;
 
     //
-    // Get the vector of available host apis
+    // Get the index of the default device. If there are no devices available,
+    // or if the default device is not supported then 0 is returned.
     //
-    HostVec const& hosts() const noexcept;
-
-    HostIterator hostsBegin() const noexcept;
-    HostIterator hostsEnd() const noexcept;
+    int defaultDevice() const noexcept;
 
     //
     // Device iterators for the given host api index
     //
-    DeviceIterator devicesBegin(int host) const noexcept;
-    DeviceIterator devicesEnd(int host) const noexcept;
+    DeviceIterator begin() const noexcept;
+    DeviceIterator end() const noexcept;
+
+    //
+    // Rescans all available devices and updates the table.
+    //
+    void rescan(struct SoundIo *soundio);
 
 
 private:
-    DeviceTable();
-
-    HostVec mHostList;
     DeviceVec mDeviceList;
+    int mDefaultDeviceIndex;
 
 
 };
 
+////
+//// Class for an audio playback queue. Samples to be played out are stored in
+//// the queue by calling write or writeAll. The samples will be played out
+//// to the default device when the stream is started.
+////
+//class PlaybackQueue {
+
+//public:
+
+//    // maximum buffer size of 500 milleseconds
+//    static constexpr unsigned MAX_BUFFER_SIZE = 500;
+//    static constexpr unsigned MIN_BUFFER_SIZE = 1;
+//    static constexpr unsigned DEFAULT_BUFFER_SIZE = 40;
 
 
-//
-// Container class keeping track of a user selected host api, device and samplerate
-//
-class DeviceManager {
+//    PlaybackQueue(Samplerate samplerate, unsigned bufferSize = DEFAULT_BUFFER_SIZE);
+//    ~PlaybackQueue();
 
-public:
+//    //
+//    // Size of the playback buffer, by number of samples.
+//    //
+//    size_t bufferSampleSize();
 
-    DeviceManager();
+//    //
+//    // Minimum size of the playback queue, in milleseconds.
+//    //
+//    unsigned bufferSize();
 
-    //
-    // The current host api in use.
-    //
-    int currentHost() const noexcept;
+//    //
+//    // Check if a write can be made to the queue for the given number
+//    // of samples.
+//    //
+//    bool canWrite(size_t nsamples);
 
-    //
-    // The current device in use.
-    //
-    int currentDevice() const noexcept;
+//    //
+//    // Closes the portaudio stream. The stream must be stopped before
+//    // calling this method.
+//    //
+//    void close();
 
-    int currentSamplerate() const noexcept;
+//    //
+//    // Opens an output stream using the set device. Samples written to the
+//    // queue will be played as soon as the queue is completely filled. The
+//    // stream will stop playing when the queue is emptied or when stop() is
+//    // called.
+//    //
+//    void open();
 
-    //
-    // Portaudio device id of the current device
-    //
-    int portaudioDevice() const noexcept;
+//    //
+//    // Change the minimum buffer size of the playback queue. The given size, in
+//    // milleseconds, should be in the range of MIN_BUFFER_SIZE and
+//    // MAX_BUFFER_SIZE
+//    //
+//    void setBufferSize(unsigned bufferSize);
 
-    //
-    // Return a vector of available sample rates for the current device
-    //
-    std::vector<Samplerate> const& samplerates() const noexcept;
+//    //
+//    // Set the output device and samplerate. In order for changes to take effect
+//    // you must close the current stream and open a new one.
+//    //
+//    void setDevice(int deviceId, Samplerate samplerate);
 
-    //
-    // Set the Host Api to use. The default device for the api will be selected.
-    //
-    void setCurrentApi(int index);
-    
-    //
-    // Set the current device index. This index is relative to the current host api.
-    //
-    void setCurrentDevice(int index);
+//    //
+//    // Force stop of the playback stream. If wait is true, then this method
+//    // will block until all samples in the playback queue are played out.
+//    // Otherwise, the stream terminates immediately. The queue is also flushed.
+//    //
+//    void stop(bool wait);
 
-    //
-    // Set the current device and api from the PaDeviceIndex
-    //
-    void setPortaudioDevice(int deviceIndex);
+//    //
+//    // Write the given sample buffer to the playback queue. If this write will
+//    // completely fill the buffer and the stream is inactive, then the stream
+//    // will be started.
+//    //
+//    size_t write(int16_t buf[], size_t nsamples);
 
-    void setCurrentSamplerate(int samplerateIndex);
+//    //
+//    // Write the entire sample buffer to the playback queue. This method will
+//    // block until the entire buffer is written to the queue.
+//    //
+//    void writeAll(int16_t buf[], size_t nsamples);
 
+//private:
 
+//    PaStream *mStream;
+//    PaUtilRingBuffer mQueue;
 
+//    std::vector<int16_t> mQueueData;
 
-private:
+//    Samplerate mSamplerate;
+//    unsigned mBufferSize; // size in milleseconds of the buffer
+//    bool mResizeRequired;
+//    int mDevice; // device id to use
 
-    DeviceTable &mTable;
+//    unsigned mWaitTime;
 
-    int mCurrentApi;
-    int mCurrentDevice;
-    int mSamplerateIndex;
-    Samplerate mCurrentSamplerate;
+//    friend PaStreamCallback playbackCallback;
 
-    // list of available sample rates for the current device
-    std::vector<Samplerate> mSamplerates;
+//    //
+//    // Check if the given bufferSize is valid, throw invalid_argument otherwise
+//    // A valid buffer size is withing the range of MIN_BUFFER_SIZE and MAX_BUFFER_SIZE, inclusive
+//    //
+//    void checkBufferSize(unsigned bufferSize);
 
-    DeviceTable::HostIterator mCurrentApiIter;
-    DeviceTable::DeviceIterator mCurrentDeviceIter;
-};
-
-//
-// Class for an audio playback queue. Samples to be played out are stored in
-// the queue by calling write or writeAll. The samples will be played out
-// to the default device when the stream is started.
-//
-class PlaybackQueue {
-
-public:
-
-    // maximum buffer size of 500 milleseconds
-    static constexpr unsigned MAX_BUFFER_SIZE = 500;
-    static constexpr unsigned MIN_BUFFER_SIZE = 1;
-    static constexpr unsigned DEFAULT_BUFFER_SIZE = 40;
-
-
-    PlaybackQueue(Samplerate samplerate, unsigned bufferSize = DEFAULT_BUFFER_SIZE);
-    ~PlaybackQueue();
-
-    //
-    // Size of the playback buffer, by number of samples.
-    //
-    size_t bufferSampleSize();
-
-    //
-    // Minimum size of the playback queue, in milleseconds.
-    //
-    unsigned bufferSize();
-
-    //
-    // Check if a write can be made to the queue for the given number
-    // of samples.
-    //
-    bool canWrite(size_t nsamples);
-
-    //
-    // Closes the portaudio stream. The stream must be stopped before
-    // calling this method.
-    //
-    void close();
-
-    //
-    // Opens an output stream using the set device. Samples written to the
-    // queue will be played as soon as the queue is completely filled. The
-    // stream will stop playing when the queue is emptied or when stop() is
-    // called.
-    //
-    void open();
-
-    //
-    // Change the minimum buffer size of the playback queue. The given size, in
-    // milleseconds, should be in the range of MIN_BUFFER_SIZE and
-    // MAX_BUFFER_SIZE
-    //
-    void setBufferSize(unsigned bufferSize);
-
-    //
-    // Set the output device and samplerate. In order for changes to take effect
-    // you must close the current stream and open a new one.
-    //
-    void setDevice(int deviceId, Samplerate samplerate);
-
-    //
-    // Force stop of the playback stream. If wait is true, then this method
-    // will block until all samples in the playback queue are played out.
-    // Otherwise, the stream terminates immediately. The queue is also flushed.
-    //
-    void stop(bool wait);
-
-    //
-    // Write the given sample buffer to the playback queue. If this write will
-    // completely fill the buffer and the stream is inactive, then the stream
-    // will be started.
-    //
-    size_t write(int16_t buf[], size_t nsamples);
-
-    //
-    // Write the entire sample buffer to the playback queue. This method will
-    // block until the entire buffer is written to the queue.
-    //
-    void writeAll(int16_t buf[], size_t nsamples);
-
-private:
-
-    PaStream *mStream;
-    PaUtilRingBuffer mQueue;
-
-    std::vector<int16_t> mQueueData;
-
-    Samplerate mSamplerate;
-    unsigned mBufferSize; // size in milleseconds of the buffer
-    bool mResizeRequired;
-    int mDevice; // device id to use
-
-    unsigned mWaitTime;
-
-    friend PaStreamCallback playbackCallback;
-
-    //
-    // Check if the given bufferSize is valid, throw invalid_argument otherwise
-    // A valid buffer size is withing the range of MIN_BUFFER_SIZE and MAX_BUFFER_SIZE, inclusive
-    //
-    void checkBufferSize(unsigned bufferSize);
-
-};
+//};
 
 
 

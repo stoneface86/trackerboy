@@ -48,6 +48,7 @@ if (PORTAUDIO_REQUIRED)
     target_include_directories(portaudio_ringbuffer PUBLIC "portaudio/src/common")
 
     find_package(Soundio REQUIRED)
+    include_directories(${Soundio_INCLUDE_DIR})
 endif ()
 
 if (TRACKERBOY_ENABLE_TESTS)
