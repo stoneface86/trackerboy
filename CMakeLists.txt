@@ -27,9 +27,9 @@ include_directories(
 )
 
 if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
-    set(PORTAUDIO_REQUIRED TRUE)
+    set(SOUNDIO_REQUIRED TRUE)
 else ()
-    set(PORTAUDIO_REQUIRED FALSE)
+    set(SOUNDIO_REQUIRED FALSE)
 endif ()
 
 # ============================================================================
@@ -41,12 +41,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # portaudio is required for the demo and ui projects
-if (PORTAUDIO_REQUIRED)
-    add_subdirectory(portaudio EXCLUDE_FROM_ALL)
-    # PaUtilRingBuffer isn't included in the library, so add it here separately
-    add_library(portaudio_ringbuffer STATIC EXCLUDE_FROM_ALL "portaudio/src/common/pa_ringbuffer.c")
-    target_include_directories(portaudio_ringbuffer PUBLIC "portaudio/src/common")
-
+if (SOUNDIO_REQUIRED)
     find_package(Soundio REQUIRED)
     include_directories(${Soundio_INCLUDE_DIR})
 endif ()
@@ -100,7 +95,10 @@ add_subdirectory(StereoBlipBuffer)
 #
 add_subdirectory(libtrackerboy)
 
-if (PORTAUDIO_REQUIRED)
+#
+# Utility library for libsoundio
+#
+if (SOUNDIO_REQUIRED)
     add_subdirectory(audio)
 endif()
 

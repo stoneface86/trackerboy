@@ -1,20 +1,22 @@
 # Building
 
-Use the main CMakeLists.txt to build the library. The ui and demo programs are optional,
-and can be enabled/disabled by setting their respective options.
+Use the main CMakeLists.txt to build the library. The ui and demo programs are
+optional, and can be enabled/disabled by setting their respective options.
 
 Requirements:
  * C/C++ compiler with the C++17 standard or later
  * CMake
- * Portaudio
+ * [Libsoundio](https://github.com/andrewrk/libsoundio)
+ * [StereoBlipBuffer](https://github.com/stoneface86/StereoBlipBuffer)
  * Qt5
 
-Portaudio is included in the repo as a git submodule, to use add `--recursive` when cloning
-this repo or do a `git submodule update --init` before running CMake.
+StereoBlipBuffer is included in the repo as a git submodule, to use add
+`--recursive` when cloning this repo or do a `git submodule update --init`
+before running CMake.
 
-In order to build the main ui, you will need to install Qt5 on your development machine.
-Windows users may need to specify the install location manually when configuring. (cmake variable
-Qt5_DIR).
+In order to build the main ui, you will need to install Qt5 on your development
+machine. Windows users may need to specify the install location manually when
+configuring. (cmake variable Qt5_DIR).
 
 ## General instructions
 
@@ -29,9 +31,10 @@ cmake ..
 cmake --build . --config Debug
 ```
 
-For unit tests, just run ctest in the build directory to run all tests. Individual tests are
-usally named after their respective class (ie DataItem, Module, etc) or filename.
-```
+For unit tests, just run ctest in the build directory to run all tests.
+Individual tests are usually named after their respective class (ie DataItem,
+Module, etc) or filename.
+```sh
 ctest
 ```
 
@@ -52,16 +55,13 @@ Here is a list of compilers that successfully build the project:
  * MSVC v19.27
  * MSVC v19.26
  * GCC 7.5.0
+ * GCC 10.2.0
 
-If you have issues compiling the project using a compiler not listed here, please submit an
-issue.
+If you have issues compiling the project using a compiler not listed here,
+please submit an issue.
 
 ## Building on Windows
 
-Use the general instructions for building on windows, except you will need to install the DirectX SDK
-for Portaudio. If Portaudio cannot find the SDK, set the `DXSDK_ROOT_DIR` variable to where you installed
-it. Then make sure the `PA_USE_DS` variable is enabled. If you skip this step, you will not be able
-to use the DirectX API for sound output in the ui.
-
-If CMake cannot find your Qt5 installation, you must set it via the `Qt5_DIR` variable. This variable should
-be the path to where you installed Qt (ie C:\Qt\5.15.0\msvc2019_64).
+If CMake cannot find your Qt5 installation, you must set it via the `Qt5_DIR`
+variable. This variable should be the path to where you installed Qt
+(ie C:\Qt\5.15.0\msvc2019_64).
