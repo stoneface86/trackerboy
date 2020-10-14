@@ -9,45 +9,101 @@
 
 namespace audio {
 
-int playbackCallback(
-    const void *input,
-    void *output,
-    unsigned long frameCount,
-    const PaStreamCallbackTimeInfo *timeInfo,
-    PaStreamCallbackFlags statusFlags,
-    void *userData
-) {
-    (void)input;
-    int16_t *out = static_cast<int16_t*>(output);
-    PlaybackQueue *pb = static_cast<PlaybackQueue*>(userData);
+void PlaybackQueue::playbackCallback(struct SoundIoOutStream *stream, int framesMin, int framesMax) {
 
-    auto nread = PaUtil_ReadRingBuffer(&pb->mQueue, out, frameCount);
-    if (nread != frameCount) {
-        std::fill_n(out + (static_cast<size_t>(nread) * 2), (frameCount - nread) * 2, static_cast<int16_t>(0));
-    }
-    
-    return PaUtil_GetRingBufferReadAvailable(&pb->mQueue) ? paContinue : paComplete;
-    
+    (void)framesMin;
+
+    PlaybackQueue *queue = static_cast<PlaybackQueue*>(stream->userdata);
+    auto ringbuffer = queue->mRingbuffer;
+    struct SoundIoChannelArea *areas;
+
+    int framesLeft = framesMax;
+    do {
+        // how many samples can we read from the ringbuffer?
+        int samplesRemaining = soundio_ring_buffer_fill_count(ringbuffer) / (2 * sizeof(int16_t));
+        if (samplesRemaining == 0) {
+            // no more samples, stop
+            // this will underrun if we haven't written to framesMin yet
+            break;
+        }
+
+        // try to write everything in the ringbuffer
+        int framesToWrite = std::min(samplesRemaining, framesLeft);
+        int err = soundio_outstream_begin_write(stream, &areas, &framesToWrite);
+        if (err) {
+            return;
+        }
+
+        int16_t *readPtr = reinterpret_cast<int16_t*>(soundio_ring_buffer_read_ptr(ringbuffer));
+
+        // Note: samples in the ringbuffer are interleaved
+
+        // Layout is ALWAYS stereo
+        auto leftPtr = areas[0].ptr;
+        auto leftStep = areas[0].step;
+        auto rightPtr = areas[1].ptr;
+        auto rightStep = areas[1].step;
+
+        for (int i = 0; i != framesToWrite; ++i) {
+            *reinterpret_cast<int16_t*>(leftPtr) = *readPtr++;
+            *reinterpret_cast<int16_t*>(rightPtr) = *readPtr++;
+            leftPtr += leftStep;
+            rightPtr += rightStep;
+        }
+
+        soundio_ring_buffer_advance_read_ptr(ringbuffer, framesToWrite * 2 * sizeof(int16_t));
+
+        err = soundio_outstream_end_write(stream);
+        if (err) {
+            return; // handle these better
+        }
+        framesLeft -= framesToWrite;
+
+    } while (framesLeft);
+
+
+
 }
 
+void PlaybackQueue::underflowCallback(struct SoundIoOutStream *stream) {
+    // just increment the underflow counter
+    // this counter can be displayed to the user for diagnostic purposes
+
+    PlaybackQueue *queue = static_cast<PlaybackQueue*>(stream->userdata);
+    if (!queue->mStopping.load()) {
+        queue->mUnderflowCounter++;
+    }
+}
+
+
 PlaybackQueue::PlaybackQueue(Samplerate samplerate, unsigned bufferSize) :
+    mDevice(nullptr),
     mStream(nullptr),
+    mRingbuffer(nullptr),
     mSamplerate(samplerate),
     mBufferSize(bufferSize),
     mResizeRequired(true),
-    mDevice(Pa_GetDefaultOutputDevice()),
-    mWaitTime(0)
+    mWaitTime(0),
+    mStopping(false),
+    mUnderflowCounter(0),
+    mState(State::stopped)
 {
     checkBufferSize(bufferSize);
 }
 
 PlaybackQueue::~PlaybackQueue() {
-    //close();
+    close();
+    if (mDevice != nullptr) {
+        soundio_device_unref(mDevice);
+    }
+
+    if (mRingbuffer != nullptr) {
+        soundio_ring_buffer_destroy(mRingbuffer);
+    }
 }
 
 size_t PlaybackQueue::bufferSampleSize() {
-    // divide by two since 1 sample is two shorts
-    return (mQueueData.size() / 2);
+    return soundio_ring_buffer_capacity(mRingbuffer) / (sizeof(int16_t) * 2);
 }
 
 unsigned PlaybackQueue::bufferSize() {
@@ -56,77 +112,58 @@ unsigned PlaybackQueue::bufferSize() {
 
 
 bool PlaybackQueue::canWrite(size_t nsamples) {
-    return  PaUtil_GetRingBufferWriteAvailable(&mQueue) >= nsamples;
+    //return  PaUtil_GetRingBufferWriteAvailable(&mQueue) >= nsamples;
+    return static_cast<size_t>(soundio_ring_buffer_free_count(mRingbuffer)) >= nsamples;
 }
 
 void PlaybackQueue::close() {
     if (mStream != nullptr) {
-        if (Pa_IsStreamActive(mStream) == 1) {
-            stop(false);
-        }
-        Pa_CloseStream(mStream);
+        soundio_outstream_destroy(mStream);
         mStream = nullptr;
     }
 }
 
 void PlaybackQueue::open() {
+    if (mDevice == nullptr) {
+        throw std::runtime_error("cannot open stream without a device set");
+    }
+
     if (mStream == nullptr) {
-        PaStreamParameters param;
-        param.channelCount = 2;
-        param.device = mDevice;
-        param.hostApiSpecificStreamInfo = nullptr;
-        param.sampleFormat = paInt16;
-        auto info = Pa_GetDeviceInfo(mDevice);
-        if (info == nullptr) {
-            throw std::runtime_error("cannot open stream: unknown device id");
-        }
-        param.suggestedLatency = info->defaultLowOutputLatency;
 
-        float samplerate = SAMPLERATE_TABLE[mSamplerate];
-
-        PaError err = Pa_OpenStream(
-            &mStream,                       // the stream pointer
-            NULL,                           // no input channels
-            &param,                         // stereo, 2 output channels
-            samplerate,                     // use the set sampling rate
-            paFramesPerBufferUnspecified,   // use the best fpb for the host
-            paNoFlag,                       // stream flags: none
-            playbackCallback,               // callback function
-            this                            // pass this to the callback function
-        );
-
-        if (err != paNoError) {
-            throw PaException(err);
-        }
+        openStream();
 
         // time to wait when writeAll or stop blocks
         mWaitTime = mBufferSize / 4;
-    }
 
-    if (mResizeRequired) {
-        // determine the number of samples the queue requires
-        const size_t nsamples = static_cast<size_t>(std::round(SAMPLERATE_TABLE[mSamplerate] * (mBufferSize / 1000.0f)));
 
-        // find the nearest power of two that is >= nsamples
-        // there's a faster way to do this but performance is not a concern here.
+        if (mResizeRequired) {
+            // determine the number of samples the queue requires
+            const size_t nsamples = static_cast<size_t>(
+                std::round(SAMPLERATE_TABLE[mSamplerate] * (mBufferSize * 0.001f))
+            );
 
-        size_t queueDataSize = 1;
-        while (queueDataSize < nsamples) {
-            queueDataSize <<= 1;
+            // no method for resizing ringbuffers so just destroy and re-create
+
+            // the ringbuffer is null only on first open, we can't create it in the constructor
+            // since it requires a SoundIo handle (but it doesn't actually need it for anything)
+            if (mRingbuffer != nullptr) {
+                soundio_ring_buffer_destroy(mRingbuffer);
+            }
+
+            mRingbuffer = soundio_ring_buffer_create(mDevice->soundio, nsamples * 2 * sizeof(int16_t));
+            if (mRingbuffer == nullptr) {
+                throw std::runtime_error("out of memory");
+            }
+
+            mResizeRequired = false;
         }
-        assert(((queueDataSize - 1) & queueDataSize) == 0);
-
-        // resize the queue vector
-        mQueueData.resize(queueDataSize * 2);
-
-        // re-initialize ringbuffer with the new size
-        PaUtil_InitializeRingBuffer(&mQueue, sizeof(int16_t) * 2, queueDataSize, mQueueData.data());
-
-        mResizeRequired = false;
     }
 }
 
 void PlaybackQueue::setBufferSize(unsigned bufferSize) {
+    if (mStream != nullptr) {
+        throw std::runtime_error("cannot change buffersize while stream is open");
+    }
 
     checkBufferSize(bufferSize);
 
@@ -134,12 +171,27 @@ void PlaybackQueue::setBufferSize(unsigned bufferSize) {
     mResizeRequired = true;
 }
 
-void PlaybackQueue::setDevice(int deviceId, Samplerate samplerate) {
-    if (Pa_GetDeviceInfo(deviceId) == nullptr) {
-        throw std::invalid_argument("cannot set device: unknown id");
+void PlaybackQueue::setDevice(struct SoundIoDevice *device, Samplerate samplerate) {
+    // do not change settings while the stream is open
+    if (mStream != nullptr) {
+        throw std::runtime_error("cannot change device while stream is open");
     }
+
+    if (device == nullptr) {
+        throw std::invalid_argument("device was null");
+    }
+
     // user must close and reopen stream for changes to take effect
-    mDevice = deviceId;
+
+    if (device != mDevice) {
+        if (mDevice != nullptr) {
+            soundio_device_unref(mDevice);
+        }
+
+        mDevice = device;
+        soundio_device_ref(device);
+    }
+
     if (samplerate != mSamplerate) {
         mSamplerate = samplerate;
         // if the samplerate changes then we will need to resize the buffer
@@ -147,52 +199,74 @@ void PlaybackQueue::setDevice(int deviceId, Samplerate samplerate) {
     }
 }
 
-void PlaybackQueue::stop(bool wait) {
-    // wait until all samples have been played out
-    if (wait) {
-        if (Pa_IsStreamActive(mStream) == 0) {
-            // stream was never started, start it just to play out the queue
-            auto error = Pa_StartStream(mStream);
-        }
-        const size_t queueSize = mQueueData.size() / 2;
-
-        while (Pa_IsStreamActive(mStream) == 1) {
-            // just sleep until the stream ends
-            auto remaining = queueSize - PaUtil_GetRingBufferWriteAvailable(&mQueue);
-            std::this_thread::sleep_for(std::chrono::milliseconds(
-                static_cast<unsigned>(remaining * 1000 / SAMPLERATE_TABLE[mSamplerate])
-            ));
-        }
-        Pa_StopStream(mStream);
-        PaUtil_FlushRingBuffer(&mQueue);
-    } else {
-
-        // force stop and flush buffer
-        if (Pa_IsStreamActive(mStream)) {
-            PaError err = Pa_StopStream(mStream);
-            if (err != paNoError) {
-                throw PaException(err);
-            }
-            PaUtil_FlushRingBuffer(&mQueue);
-        }
+void PlaybackQueue::start() {
+    if (mStream == nullptr) {
+        throw std::runtime_error("cannot start stream, stream is closed");
     }
 
+    int err = 0;
+    if (mState == State::stopped) {
+        err = soundio_outstream_start(mStream);
+    } else if (mState == State::paused) {
+        // unpause
+        err = soundio_outstream_pause(mStream, false);
+    }
+    if (err) {
+        throw SoundIoError(err);
+    }
+    mState = State::running;
+}
+
+void PlaybackQueue::stop(bool wait) {
+    if (mStream == nullptr) {
+        throw std::runtime_error("cannot stop stream, stream is closed");
+    }
+
+
+    if (wait) {
+        // start the stream if it's never been started
+        start();
+
+        // stop counting underflows
+        mStopping = true;
+        // sleep so everything plays out
+        std::this_thread::sleep_for(std::chrono::duration<double>(mStream->software_latency));
+    }
+
+    int err = soundio_outstream_pause(mStream, true);
+    if (err) {
+        if (err == SoundIoErrorIncompatibleBackend || err == SoundIoErrorIncompatibleDevice) {
+            // backend or device does not support pausing
+            // destroy and reopen the stream
+            soundio_outstream_destroy(mStream);
+            openStream();
+            mState = State::stopped;
+        } else {
+            // stream is faulty
+            throw SoundIoError(err);
+        }
+    } else {
+        mState = State::paused;
+    }
+    soundio_ring_buffer_clear(mRingbuffer);
+    mStopping = false;
 }
 
 size_t PlaybackQueue::write(int16_t buf[], size_t nsamples) {
-
-    size_t navail = PaUtil_GetRingBufferWriteAvailable(&mQueue);
-    size_t samplesToWrite = nsamples > navail ? navail : nsamples;
-    PaUtil_WriteRingBuffer(&mQueue, buf, samplesToWrite);
+    // samples available in the ringbuffer
+    size_t navail = soundio_ring_buffer_free_count(mRingbuffer) / (sizeof(int16_t) * 2);
+    size_t samplesToWrite = std::min(nsamples, navail);
+    // get the write pointer
+    auto writePtr = reinterpret_cast<int16_t*>(soundio_ring_buffer_write_ptr(mRingbuffer));
+    // do the write
+    std::copy_n(buf, samplesToWrite * 2, writePtr);
+    soundio_ring_buffer_advance_write_ptr(mRingbuffer, samplesToWrite * sizeof(int16_t) * 2);
     if (nsamples >= navail) {
         // queue is full, start the stream
-        if (!Pa_IsStreamActive(mStream)) {
-            PaError error = Pa_StartStream(mStream);
-            if (error != paNoError) {
-                throw PaException(error);
-            }
-        }
+        start();
+
     }
+
     return samplesToWrite;
 }
 
@@ -208,13 +282,18 @@ void PlaybackQueue::writeAll(int16_t buf[], size_t nsamples) {
         toWrite -= nwritten;
 
         // sleep until space is available
-        std::this_thread::sleep_for(std::chrono::milliseconds(
-            mWaitTime
-            //static_cast<unsigned>(toWrite * mSleepFactor)
-        ));
+        std::this_thread::sleep_for(std::chrono::milliseconds(mWaitTime));
         
         fp += nwritten * 2;
     }
+}
+
+unsigned PlaybackQueue::underflows() const noexcept {
+    return mUnderflowCounter.load();
+}
+
+void PlaybackQueue::resetUnderflows() noexcept {
+    mUnderflowCounter = 0;
 }
 
 // private methods
@@ -222,6 +301,25 @@ void PlaybackQueue::writeAll(int16_t buf[], size_t nsamples) {
 void PlaybackQueue::checkBufferSize(unsigned bufferSize) {
     if (bufferSize < MIN_BUFFER_SIZE || bufferSize > MAX_BUFFER_SIZE) {
         throw std::invalid_argument("buffer size is out of range");
+    }
+}
+
+void PlaybackQueue::openStream() {
+    mStream = soundio_outstream_create(mDevice);
+    if (mStream == nullptr) {
+        throw std::runtime_error("out of memory");
+    }
+    mStream->write_callback = playbackCallback;
+    mStream->underflow_callback = underflowCallback;
+    mStream->name = "trackerboy";
+    mStream->software_latency = 0.001 * mBufferSize;
+    mStream->sample_rate = SAMPLERATE_TABLE[mSamplerate];
+    mStream->format = SoundIoFormatS16NE;
+    mStream->userdata = this;
+
+    int err = soundio_outstream_open(mStream);
+    if (err) {
+        throw SoundIoError(err);
     }
 }
 

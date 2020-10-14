@@ -31,8 +31,10 @@
 
 #pragma once
 
-#include <soundio/soundio.h>
+#include "soundio/soundio.h"
 
+#include <atomic>
+#include <cstdlib>
 #include <stdexcept>
 #include <memory>
 #include <vector>
@@ -43,6 +45,7 @@
 #endif
 
 namespace audio {
+
 
 //
 // Enum of sample rates for audio output. Since devices only support a limited
@@ -60,6 +63,15 @@ enum Samplerate {
 };
 
 extern unsigned const SAMPLERATE_TABLE[SR_COUNT];
+
+
+class SoundIoError : public std::runtime_error {
+    int mError;
+public:
+    SoundIoError(int error) noexcept;
+
+    int error() const noexcept;
+};
 
 //
 // Container class for all available devices on the system exposed to us
@@ -118,110 +130,144 @@ private:
 
 };
 
-////
-//// Class for an audio playback queue. Samples to be played out are stored in
-//// the queue by calling write or writeAll. The samples will be played out
-//// to the default device when the stream is started.
-////
-//class PlaybackQueue {
+//
+// Class for an audio playback queue. Samples to be played out are stored in
+// the queue by calling write or writeAll. The samples will be played out
+// to the default device when the stream is started.
+//
+class PlaybackQueue {
 
-//public:
+public:
 
-//    // maximum buffer size of 500 milleseconds
-//    static constexpr unsigned MAX_BUFFER_SIZE = 500;
-//    static constexpr unsigned MIN_BUFFER_SIZE = 1;
-//    static constexpr unsigned DEFAULT_BUFFER_SIZE = 40;
+    // maximum buffer size of 500 milleseconds
+    static constexpr unsigned MAX_BUFFER_SIZE = 500;
+    static constexpr unsigned MIN_BUFFER_SIZE = 1;
+    static constexpr unsigned DEFAULT_BUFFER_SIZE = 40;
 
 
-//    PlaybackQueue(Samplerate samplerate, unsigned bufferSize = DEFAULT_BUFFER_SIZE);
-//    ~PlaybackQueue();
+    PlaybackQueue(Samplerate samplerate, unsigned bufferSize = DEFAULT_BUFFER_SIZE);
+    ~PlaybackQueue();
 
-//    //
-//    // Size of the playback buffer, by number of samples.
-//    //
-//    size_t bufferSampleSize();
+    //
+    // Size of the playback buffer, by number of samples.
+    //
+    size_t bufferSampleSize();
 
-//    //
-//    // Minimum size of the playback queue, in milleseconds.
-//    //
-//    unsigned bufferSize();
+    //
+    // Minimum size of the playback queue, in milleseconds.
+    //
+    unsigned bufferSize();
 
-//    //
-//    // Check if a write can be made to the queue for the given number
-//    // of samples.
-//    //
-//    bool canWrite(size_t nsamples);
+    //
+    // Check if a write can be made to the queue for the given number
+    // of samples.
+    //
+    bool canWrite(size_t nsamples);
 
-//    //
-//    // Closes the portaudio stream. The stream must be stopped before
-//    // calling this method.
-//    //
-//    void close();
+    //
+    // Closes the portaudio stream. The stream must be stopped before
+    // calling this method.
+    //
+    void close();
 
-//    //
-//    // Opens an output stream using the set device. Samples written to the
-//    // queue will be played as soon as the queue is completely filled. The
-//    // stream will stop playing when the queue is emptied or when stop() is
-//    // called.
-//    //
-//    void open();
+    //
+    // Opens an output stream using the set device. Samples written to the
+    // queue will be played as soon as the queue is completely filled. The
+    // stream will stop playing when the queue is emptied or when stop() is
+    // called.
+    //
+    void open();
 
-//    //
-//    // Change the minimum buffer size of the playback queue. The given size, in
-//    // milleseconds, should be in the range of MIN_BUFFER_SIZE and
-//    // MAX_BUFFER_SIZE
-//    //
-//    void setBufferSize(unsigned bufferSize);
+    //
+    // Change the minimum buffer size of the playback queue. The given size, in
+    // milleseconds, should be in the range of MIN_BUFFER_SIZE and
+    // MAX_BUFFER_SIZE
+    //
+    void setBufferSize(unsigned bufferSize);
 
-//    //
-//    // Set the output device and samplerate. In order for changes to take effect
-//    // you must close the current stream and open a new one.
-//    //
-//    void setDevice(int deviceId, Samplerate samplerate);
+    //
+    // Set the output device and samplerate. In order for changes to take effect
+    // you must close the current stream and open a new one.
+    //
+    void setDevice(struct SoundIoDevice *device, Samplerate samplerate);
 
-//    //
-//    // Force stop of the playback stream. If wait is true, then this method
-//    // will block until all samples in the playback queue are played out.
-//    // Otherwise, the stream terminates immediately. The queue is also flushed.
-//    //
-//    void stop(bool wait);
+    //
+    // Starts the playback stream. Stream will underrun if there is not enough
+    // samples in the queue.
+    //
+    void start();
 
-//    //
-//    // Write the given sample buffer to the playback queue. If this write will
-//    // completely fill the buffer and the stream is inactive, then the stream
-//    // will be started.
-//    //
-//    size_t write(int16_t buf[], size_t nsamples);
+    //
+    // Force stop of the playback stream. If wait is true, then this method
+    // will block until all samples in the playback queue are played out.
+    // Otherwise, the stream terminates immediately. The queue is also flushed.
+    //
+    void stop(bool wait);
 
-//    //
-//    // Write the entire sample buffer to the playback queue. This method will
-//    // block until the entire buffer is written to the queue.
-//    //
-//    void writeAll(int16_t buf[], size_t nsamples);
+    //
+    // Write the given sample buffer to the playback queue. If this write will
+    // completely fill the buffer and the stream is inactive, then the stream
+    // will be started.
+    //
+    size_t write(int16_t buf[], size_t nsamples);
 
-//private:
+    //
+    // Write the entire sample buffer to the playback queue. This method will
+    // block until the entire buffer is written to the queue.
+    //
+    void writeAll(int16_t buf[], size_t nsamples);
 
-//    PaStream *mStream;
-//    PaUtilRingBuffer mQueue;
+    //
+    // Get the total count of buffer underruns since last reset.
+    //
+    unsigned underflows() const noexcept;
 
-//    std::vector<int16_t> mQueueData;
+    //
+    // Set the underflow counter to 0.
+    //
+    void resetUnderflows() noexcept;
 
-//    Samplerate mSamplerate;
-//    unsigned mBufferSize; // size in milleseconds of the buffer
-//    bool mResizeRequired;
-//    int mDevice; // device id to use
+private:
 
-//    unsigned mWaitTime;
+    enum class State {
+        stopped,
+        running,
+        paused
+    };
 
-//    friend PaStreamCallback playbackCallback;
+    static void playbackCallback(struct SoundIoOutStream *stream, int framesMin, int framesMax);
+    static void underflowCallback(struct SoundIoOutStream *stream);
 
-//    //
-//    // Check if the given bufferSize is valid, throw invalid_argument otherwise
-//    // A valid buffer size is withing the range of MIN_BUFFER_SIZE and MAX_BUFFER_SIZE, inclusive
-//    //
-//    void checkBufferSize(unsigned bufferSize);
+    struct SoundIoDevice *mDevice;
 
-//};
+    // the output stream
+    struct SoundIoOutStream *mStream;
+
+    // sample data to play out
+    struct SoundIoRingBuffer *mRingbuffer;
+
+    Samplerate mSamplerate;
+    unsigned mBufferSize; // size in milleseconds of the buffer
+    bool mResizeRequired;
+
+    unsigned mWaitTime;
+
+    std::atomic_bool mStopping;
+    std::atomic_uint mUnderflowCounter;
+    State mState;
+
+
+
+
+    //
+    // Check if the given bufferSize is valid, throw invalid_argument otherwise
+    // A valid buffer size is withing the range of MIN_BUFFER_SIZE and MAX_BUFFER_SIZE, inclusive
+    //
+    void checkBufferSize(unsigned bufferSize);
+
+    void openStream();
+
+};
 
 
 

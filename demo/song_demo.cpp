@@ -1,5 +1,4 @@
 
-
 #include "trackerboy/export/Wav.hpp"
 #include "trackerboy/engine/Engine.hpp"
 #include "trackerboy/note.hpp"
@@ -12,43 +11,59 @@
 #include <iomanip>
 
 using audio::PlaybackQueue;
-
 using namespace trackerboy;
 
-static constexpr float SAMPLING_RATE = 48000;
+constexpr audio::Samplerate SAMPLERATE = audio::SR_48000;
+constexpr unsigned SAMPLERATE_INT = 48000;
 
-//#define READ_FILE
+constexpr int FAIL_SOUNDIO = 1;
+constexpr int FAIL_NO_DEVICES = 2;
 
 void printFrame(Frame &frame) {
 
-    std::cout << frame.time << ": " << static_cast<int>(frame.row) << " / " << static_cast<int>(frame.order) << std::endl;
+    std::cout << frame.time
+              << ": "
+              << static_cast<int>(frame.row)
+              << " / "
+              << static_cast<int>(frame.order)
+              << std::endl;
 }
 
 
 
 int main() {
 
-    PaError err = Pa_Initialize();
-    if (err != paNoError) {
-        return 1;
+    struct SoundIo *soundio = soundio_create();
+    if (soundio == nullptr) {
+        return FAIL_SOUNDIO;
     }
 
-    Synth synth(SAMPLING_RATE);
-    PlaybackQueue pb(audio::SR_48000);
+    int err = soundio_connect(soundio);
+    if (err) {
+        std::cerr << soundio_strerror(err);
+        return FAIL_SOUNDIO;
+    }
+
+    audio::DeviceTable deviceTable;
+    deviceTable.rescan(soundio);
+
+    if (deviceTable.isEmpty()) {
+        return FAIL_NO_DEVICES;
+    }
+
+
+    Synth synth(SAMPLERATE_INT);
+    PlaybackQueue pb(SAMPLERATE);
+
+    struct SoundIoDevice *device = soundio_get_output_device(soundio, deviceTable.defaultDevice());
+    pb.setDevice(device, SAMPLERATE);
+    soundio_device_unref(device);
 
     Module mod;
-    #ifdef READ_FILE
-    {
-        std::ifstream modfile("song_demo.tbm", std::ios::binary | std::ios::in);
-        mod.deserialize(modfile);
-    }
-    #endif
 
     InstrumentTable &itable = mod.instrumentTable();
     WaveTable &wtable = mod.waveTable();
     RuntimeContext rc(synth, itable, wtable);
-
-    #ifndef READ_FILE
     
 
     {
@@ -350,13 +365,12 @@ int main() {
         //file.saveModule(modfile, mod);
         modfile.close();
     }
-    #endif
 
 
     Engine engine(rc);
     engine.play(mod.songs()[0], 0, 0);
     std::ofstream file("song_demo.wav", std::ios::binary | std::ios::out);
-    Wav wav(file, 2, SAMPLING_RATE);
+    Wav wav(file, 2, SAMPLERATE_INT);
     wav.begin();
 
     std::vector<float> floatBuf;
@@ -368,7 +382,6 @@ int main() {
         engine.step(frame);
         printFrame(frame);
         size_t framesize = synth.run();
-        //outputFrame(synth.buffer(), framesize, pb);
         int16_t *buffer = synth.buffer();
         pb.writeAll(buffer, framesize);
         floatBuf.resize(framesize * 2);
@@ -382,10 +395,12 @@ int main() {
 
     pb.close();
 
+    std::cout << "underflows: " << pb.underflows() << std::endl;
+
     wav.finish();
     file.close();
 
-    Pa_Terminate();
+    soundio_destroy(soundio);
     return 0;
 
 }
