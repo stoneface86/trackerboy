@@ -41,16 +41,10 @@ private slots:
     
 private:
 
-    void fillDeviceCombo(int hostIndex);
-    void fillSamplerateCombo();
-
     
 
     Ui::ConfigDialog *mUi;
 
     Config &mConfig;
-
-    audio::DeviceManager mDeviceManager;
-    bool mIgnoreSelections;
 
 };

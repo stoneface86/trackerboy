@@ -22,7 +22,8 @@ Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentMode
     mIdling(true),
     QThread(parent)
 {
-    mPb.open();
+
+    //mPb.open();
 }
 
 Renderer::~Renderer() {
@@ -37,7 +38,7 @@ Renderer::~Renderer() {
 
     wait();
 
-    mPb.close();
+    //mPb.close();
 }
 
 void Renderer::play() {
@@ -170,7 +171,7 @@ void Renderer::run() {
             // write the frame to the queue, will block if the queue is full
             try {
                 mPb.writeAll(mSynth.buffer(), framesize);
-            } catch (audio::PaException paexcept) {
+            } catch (audio::SoundIoError err) {
                 // if we get here then we could not open a stream for the configured device
                 // just stop everything
 

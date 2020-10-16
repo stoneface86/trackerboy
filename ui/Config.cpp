@@ -84,7 +84,7 @@ void Config::setGain(trackerboy::ChType ch, int gain) {
 
 void Config::readSettings(QSettings &settings) {
     settings.beginGroup("config");
-    mDeviceId = settings.value("deviceId", Pa_GetDefaultOutputDevice()).toInt();
+    //mDeviceId = settings.value("deviceId", Pa_GetDefaultOutputDevice()).toInt();
     mSamplerate = settings.value("samplerate", DEFAULT_SAMPLERATE).toInt();
     mBuffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
     mVolume = settings.value("volume", DEFAULT_VOLUME).toUInt();

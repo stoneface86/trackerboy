@@ -49,7 +49,7 @@ MainWindow::MainWindow() :
     // associate menu actions with the model
     mSongModel->setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
 
-    mRenderer->start();
+    //mRenderer->start();
 }
 
 MainWindow::~MainWindow() {

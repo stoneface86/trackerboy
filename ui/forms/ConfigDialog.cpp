@@ -10,31 +10,13 @@
 #include "ui_ConfigDialog.h"
 #pragma warning(pop)
 
-static const char *SAMPLING_RATE_STR[] = {
-    "11,025 Hz",
-    "22,050 Hz",
-    "44,100 Hz",
-    "48,000 Hz",
-    "96,000 Hz"
-};
-
 
 ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
+    QDialog(parent),
     mUi(new Ui::ConfigDialog()),
-    mConfig(config),
-    mDeviceManager(),
-    mIgnoreSelections(false),
-    QDialog(parent)
+    mConfig(config)
 {
     mUi->setupUi(this);
-
-    // populate the host combo with all available host apis
-    // we only need to do this once
-    auto &deviceTable = audio::DeviceTable::instance();
-    auto &hosts = deviceTable.hosts();
-    for (auto &host : hosts) {
-        mUi->mHostApiCombo->addItem(QString::fromLatin1(host.info->name));
-    }
 
     connect(mUi->mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
     connect(mUi->mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
@@ -59,8 +41,8 @@ ConfigDialog::~ConfigDialog() {
 
 void ConfigDialog::accept() {
     // update all changes to the Config object
-    mConfig.setDeviceId(mDeviceManager.portaudioDevice());
-    mConfig.setSamplerate(mDeviceManager.samplerates()[mDeviceManager.currentSamplerate()]);
+    //mConfig.setDeviceId(mDeviceManager.portaudioDevice());
+    //mConfig.setSamplerate(mDeviceManager.samplerates()[mDeviceManager.currentSamplerate()]);
     mConfig.setBuffersize(mUi->mBufferSizeSlider->value());
     mConfig.setVolume(mUi->mVolumeSlider->value());
     mConfig.setGain(trackerboy::ChType::ch1, mUi->mGainSlider1->value());
@@ -95,34 +77,13 @@ void ConfigDialog::volumeSliderChanged(int value) {
 }
 
 void ConfigDialog::hostApiSelected(int index) {
-    if (!mIgnoreSelections) {
-        mDeviceManager.setCurrentApi(index);
-
-        // populate the device combo box with devices for this host
-        mIgnoreSelections = true;
-        fillDeviceCombo(index);
-        mIgnoreSelections = false;
-
-        mUi->mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
-    }
 }
 
 void ConfigDialog::deviceSelected(int index) {
     
-    // ignore this signal when items are being added to the combobox
-    if (!mIgnoreSelections) {
-        mIgnoreSelections = true;
-        mDeviceManager.setCurrentDevice(index);
-        fillSamplerateCombo();
-        mUi->mSamplerateCombo->setCurrentIndex(mDeviceManager.currentSamplerate());
-        mIgnoreSelections = false;
-    }
 }
 
 void ConfigDialog::samplerateSelected(int index) {
-    if (!mIgnoreSelections) {
-        mDeviceManager.setCurrentSamplerate(index);
-    }
 }
 
 void ConfigDialog::gainChanged(int channel, int value) {
@@ -148,51 +109,8 @@ void ConfigDialog::gainChanged(int channel, int value) {
     gainLabel->setText(text);
 }
 
-void ConfigDialog::fillDeviceCombo(int hostIndex) {
-    mUi->mDeviceCombo->clear();
-
-    auto &deviceTable = audio::DeviceTable::instance();
-    auto devicesBegin = deviceTable.devicesBegin(hostIndex);
-    auto devicesEnd = deviceTable.devicesEnd(hostIndex);
-    for (auto iter = devicesBegin; iter != devicesEnd; ++iter) {
-        mUi->mDeviceCombo->addItem(QString::fromLatin1(iter->info->name));
-    }
-}
-
-void ConfigDialog::fillSamplerateCombo() {
-    mUi->mSamplerateCombo->clear();
-    auto &samplerates = mDeviceManager.samplerates();
-    for (auto rate : samplerates) {
-        mUi->mSamplerateCombo->addItem(QString::fromLatin1(SAMPLING_RATE_STR[rate]));
-    }
-}
-
 
 void ConfigDialog::resetControls() {
-    mIgnoreSelections = true;
-    mDeviceManager.setPortaudioDevice(mConfig.deviceId());
-
-    int host = mDeviceManager.currentHost();
-    mUi->mHostApiCombo->setCurrentIndex(host);
-    fillDeviceCombo(host);
-
-    mUi->mDeviceCombo->setCurrentIndex(mDeviceManager.currentDevice());
-
-    // reset samplerate
-    fillSamplerateCombo();
-    int samplerate = mConfig.samplerate();
-    int samplerateIndex = 0;
-    for (auto rate : mDeviceManager.samplerates()) {
-        if (rate >= samplerate) {
-            break;
-        }
-        ++samplerateIndex;
-    }
-
-    mDeviceManager.setCurrentSamplerate(samplerateIndex);
-    mUi->mSamplerateCombo->setCurrentIndex(samplerateIndex);
-
-    mIgnoreSelections = false;
 
     mUi->mBufferSizeSlider->setValue(mConfig.buffersize());
     mUi->mVolumeSlider->setValue(mConfig.volume());
