@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "audio.hpp"
+
 #include <QObject>
 #include <QSettings>
 
@@ -15,7 +17,7 @@ class Config : public QObject {
     Q_OBJECT
 
 public:
-    Config(QObject *parent = nullptr);
+    Config(audio::BackendTable &backendTable, QObject *parent = nullptr);
 
     //
     // Read the configuration settings from the given QSettings. Should be
@@ -29,10 +31,9 @@ public:
     //
     void writeSettings(QSettings &settings);
 
-    //
-    // Get the portaudio device id to use for sound playback.
-    //
-    int deviceId() const noexcept;
+    int backendIndex() const noexcept;
+
+    int deviceIndex() const noexcept;
 
     //
     // The sampling rate to use, the rate is a value in the audio::Samplerate enum
@@ -45,10 +46,9 @@ public:
 
     int gain(trackerboy::ChType ch) const noexcept;
 
+    void setDevice(int backend, int device);
 
-    void setDeviceId(int device);
-
-    void setSamplerate(int samplerate);
+    void setSamplerate(unsigned samplerate);
 
     void setBuffersize(unsigned buffersize);
 
@@ -66,10 +66,15 @@ signals:
     void gainChanged(int channel, int value);
 
 private:
+    audio::BackendTable &mBackendTable;
 
     // device settings
-    int mDeviceId;          // PortAudio device id for output
-    int mSamplerate;      // Samplerate to use (see audio::Samplerate enum)
+    int mBackendIndex;
+    int mDeviceIndex;
+    struct SoundIo *mSoundio;
+    struct SoundIoDevice *mDevice;
+    unsigned mSamplerate;
+
     unsigned mBuffersize;   // Buffer size of playback queue in milleseconds
     unsigned mVolume;       // Master volume of playback queue output, 0-100
 

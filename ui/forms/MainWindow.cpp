@@ -17,19 +17,20 @@
 constexpr int TOOLBAR_ICON_WIDTH = 16;
 constexpr int TOOLBAR_ICON_HEIGHT = 16;
 
-MainWindow::MainWindow() :
+MainWindow::MainWindow(audio::BackendTable &backendTable) :
+    QMainWindow(),
     mUi(new Ui::MainWindow()),
+    mBackendTable(backendTable),
     mModuleFileDialog(new QFileDialog(this)),
+    mConfig(new Config(backendTable, this)),
     mDocument(new ModuleDocument(this)),
     mInstrumentModel(new InstrumentListModel(*mDocument)),
     mSongModel(new SongListModel(*mDocument)),
     mWaveModel(new WaveListModel(*mDocument)),
-    mConfig(new Config(this)),
-    mConfigDialog(new ConfigDialog(*mConfig, this)),
     mWaveEditor(new WaveEditor(*mWaveModel, this)),
     mInstrumentEditor(new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this)),
-    mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, this)),
-    QMainWindow()
+    mConfigDialog(new ConfigDialog(backendTable, *mConfig, this)),
+    mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, this))
 {
     // setup the designer ui
     mUi->setupUi(this);

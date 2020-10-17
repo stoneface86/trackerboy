@@ -10,6 +10,8 @@
 #include "model/WaveListModel.hpp"
 #include "Renderer.hpp"
 
+#include "audio.hpp"
+
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QComboBox>
@@ -25,7 +27,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow();
+    explicit MainWindow(audio::BackendTable &backendTable);
     ~MainWindow();
 
 protected:
@@ -63,6 +65,8 @@ private:
     void writeSettings();
 
     Ui::MainWindow *mUi;
+
+    audio::BackendTable &mBackendTable;
 
     QFileDialog *mModuleFileDialog;
 

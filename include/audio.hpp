@@ -37,6 +37,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #ifdef _MSC_VER
@@ -113,6 +114,8 @@ public:
     //
     int defaultDevice() const noexcept;
 
+    int defaultDeviceIndex() const noexcept;
+
     //
     // Device iterators for the given host api index
     //
@@ -127,6 +130,7 @@ public:
 
 private:
     DeviceVec mDeviceList;
+    int mDefaultDevice;
     int mDefaultDeviceIndex;
 
 
@@ -150,22 +154,31 @@ public:
         Backend();
     };
 
+    // Location type is just a pair type with the backend index first
+    // followed by device index
+    using Location = std::pair<int, int>;
+
     BackendTable();
     ~BackendTable();
 
     Backend& operator[](int index);
 
     //
+    // Get a soundio handle to the device at the given location
+    //
+    struct SoundIoDevice* getDevice(Location location) noexcept;
+
+    //
     // Lookup the device in the given backend with the id. If the device
     // cannot be found, the default one is returned.
     //
-    struct SoundIoDevice* getDevice(SoundIoBackend backendType, const char *id) noexcept;
+    Location getDeviceLocation(SoundIoBackend backendType, const char *id) noexcept;
 
     //
     // Lookup the default device. The first connected backend with at least one
     // device is used.
     //
-    struct SoundIoDevice* getDefaultDevice() noexcept;
+    Location getDefaultDeviceLocation() noexcept;
 
     //
     // Test if the given backend is connected.

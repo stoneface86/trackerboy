@@ -15,7 +15,11 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("stoneface86");
     QCoreApplication::setApplicationName("Trackerboy");
 
-    MainWindow *win = new MainWindow();
+    // the backend table lives here, so that its destruction is guaranteed to
+    // occur after MainWindow
+    audio::BackendTable backendTable;
+
+    MainWindow *win = new MainWindow(backendTable);
     win->show();
 
     #ifdef NDEBUG

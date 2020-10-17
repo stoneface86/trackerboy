@@ -17,7 +17,7 @@ class ConfigDialog : public QDialog {
     Q_OBJECT
 
 public:
-    ConfigDialog(Config &config, QWidget *parent = nullptr);
+    ConfigDialog(audio::BackendTable &backendTable, Config &config, QWidget *parent = nullptr);
     ~ConfigDialog();
 
     void accept() override;
@@ -33,18 +33,15 @@ protected:
 private slots:
     void bufferSizeSliderChanged(int value);
     void volumeSliderChanged(int value);
-    void hostApiSelected(int index);
-    void deviceSelected(int index);
-    void samplerateSelected(int index);
+    void backendActivated(int index);
 
     void gainChanged(int channel, int value);
     
 private:
-
-    
-
     Ui::ConfigDialog *mUi;
+    audio::BackendTable &mBackendTable;
 
     Config &mConfig;
+    int mLastBackendIndex;
 
 };

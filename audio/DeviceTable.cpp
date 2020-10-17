@@ -28,6 +28,10 @@ bool DeviceTable::isEmpty() const noexcept {
 }
 
 int DeviceTable::defaultDevice() const noexcept {
+    return mDefaultDevice;
+}
+
+int DeviceTable::defaultDeviceIndex() const noexcept {
     return mDefaultDeviceIndex;
 }
 
@@ -46,7 +50,8 @@ void DeviceTable::rescan(struct SoundIo *soundio) {
 
     int count = soundio_output_device_count(soundio);
     int defaultIndex = soundio_default_output_device_index(soundio);
-    mDefaultDeviceIndex = 0; // reset default
+    mDefaultDevice = 0; // reset default
+    mDefaultDeviceIndex = 0;
 
     for (int i = 0; i < count; ++i) {
         auto device = soundio_get_output_device(soundio, i);
@@ -66,7 +71,8 @@ void DeviceTable::rescan(struct SoundIo *soundio) {
             if (samplerateFlags) {
                 mDeviceList.push_back({ i, samplerateFlags });
                 if (i == defaultIndex) {
-                    mDefaultDeviceIndex = i;
+                    mDefaultDevice = i;
+                    mDefaultDeviceIndex = mDeviceList.size() - 1;
                 }
             }
 

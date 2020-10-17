@@ -36,12 +36,12 @@
           <item row="0" column="0">
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>Host API</string>
+             <string>Backend</string>
             </property>
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QComboBox" name="mHostApiCombo"/>
+           <widget class="QComboBox" name="mBackendCombo"/>
           </item>
           <item row="1" column="0">
            <widget class="QLabel" name="label_2">
@@ -51,7 +51,17 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QComboBox" name="mDeviceCombo"/>
+           <widget class="QComboBox" name="mDeviceCombo">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="sizeAdjustPolicy">
+             <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -380,7 +390,7 @@
  </widget>
  <tabstops>
   <tabstop>mTabWidget</tabstop>
-  <tabstop>mHostApiCombo</tabstop>
+  <tabstop>mBackendCombo</tabstop>
   <tabstop>mDeviceCombo</tabstop>
   <tabstop>mSamplerateCombo</tabstop>
   <tabstop>mBufferSizeSlider</tabstop>
