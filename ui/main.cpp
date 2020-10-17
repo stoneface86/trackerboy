@@ -1,7 +1,6 @@
 
 #include <QApplication>
 #include <QMessageBox>
-#include "portaudio.h"
 
 #include "audio.hpp"
 

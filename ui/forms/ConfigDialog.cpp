@@ -29,6 +29,8 @@ ConfigDialog::ConfigDialog(audio::BackendTable &backendTable, Config &config, QW
     for (unsigned i = 0; i < backendCount; ++i) {
         backendCombo->addItem(QString::fromLatin1(mBackendTable.name(i)));
     }
+    // set the index to -1 so the first call to resetControls populates the device combobox
+    backendCombo->setCurrentIndex(-1);
 
     connect(mUi->mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
     connect(mUi->mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);

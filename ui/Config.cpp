@@ -1,7 +1,6 @@
 
 #include "Config.hpp"
 
-#include "portaudio.h"
 #include "audio.hpp"
 
 namespace {
