@@ -22,14 +22,14 @@ MainWindow::MainWindow(audio::BackendTable &backendTable) :
     mUi(new Ui::MainWindow()),
     mBackendTable(backendTable),
     mModuleFileDialog(new QFileDialog(this)),
-    mConfig(new Config(backendTable, this)),
+    mConfig(backendTable),
     mDocument(new ModuleDocument(this)),
     mInstrumentModel(new InstrumentListModel(*mDocument)),
     mSongModel(new SongListModel(*mDocument)),
     mWaveModel(new WaveListModel(*mDocument)),
     mWaveEditor(new WaveEditor(*mWaveModel, this)),
     mInstrumentEditor(new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this)),
-    mConfigDialog(new ConfigDialog(backendTable, *mConfig, this)),
+    mConfigDialog(new ConfigDialog(backendTable, mConfig, this)),
     mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, this))
 {
     // setup the designer ui
@@ -50,7 +50,8 @@ MainWindow::MainWindow(audio::BackendTable &backendTable) :
     // associate menu actions with the model
     mSongModel->setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
 
-    //mRenderer->start();
+    mRenderer->setDevice(mConfig.device(), mConfig.samplerate());
+    mRenderer->start();
 }
 
 MainWindow::~MainWindow() {
@@ -270,7 +271,7 @@ void MainWindow::readSettings() {
         restoreState(windowState);
     }
     
-    mConfig->readSettings(settings);
+    mConfig.readSettings(settings);
 }
 
 void MainWindow::setFilename(QString filename) {
@@ -400,5 +401,5 @@ void MainWindow::writeSettings() {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
-    mConfig->writeSettings(settings);
+    mConfig.writeSettings(settings);
 }

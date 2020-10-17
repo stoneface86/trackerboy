@@ -3,7 +3,6 @@
 
 #include "audio.hpp"
 
-#include <QObject>
 #include <QSettings>
 
 #include "trackerboy/ChType.hpp"
@@ -12,12 +11,10 @@
 // Class containing application settings. Settings are modified via the ConfigDialog
 // Signals are emitted when a setting changes.
 //
-class Config : public QObject {
-
-    Q_OBJECT
+class Config {
 
 public:
-    Config(audio::BackendTable &backendTable, QObject *parent = nullptr);
+    Config(audio::BackendTable &backendTable);
 
     //
     // Read the configuration settings from the given QSettings. Should be
@@ -35,10 +32,12 @@ public:
 
     int deviceIndex() const noexcept;
 
+    struct SoundIoDevice* device() const noexcept;
+
     //
     // The sampling rate to use, the rate is a value in the audio::Samplerate enum
     //
-    int samplerate() const noexcept;
+    audio::Samplerate samplerate() const noexcept;
 
     unsigned buffersize() const noexcept;
 
@@ -48,7 +47,7 @@ public:
 
     void setDevice(int backend, int device);
 
-    void setSamplerate(unsigned samplerate);
+    void setSamplerate(audio::Samplerate samplerate);
 
     void setBuffersize(unsigned buffersize);
 
@@ -56,14 +55,6 @@ public:
 
     void setGain(trackerboy::ChType ch, int gain);
 
-
-
-signals:
-    void deviceChanged(int deviceId);
-    void samplerateChanged(int samplerate);
-    void buffersizeChanged(unsigned buffersize);
-    void volumeChanged(unsigned volume);
-    void gainChanged(int channel, int value);
 
 private:
     audio::BackendTable &mBackendTable;
@@ -73,7 +64,7 @@ private:
     int mDeviceIndex;
     struct SoundIo *mSoundio;
     struct SoundIoDevice *mDevice;
-    unsigned mSamplerate;
+    audio::Samplerate mSamplerate;
 
     unsigned mBuffersize;   // Buffer size of playback queue in milleseconds
     unsigned mVolume;       // Master volume of playback queue output, 0-100

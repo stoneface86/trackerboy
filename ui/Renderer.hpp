@@ -30,6 +30,8 @@ public:
     Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, QObject *parent = nullptr);
     ~Renderer();
 
+    void setDevice(struct SoundIoDevice *device, audio::Samplerate samplerate);
+
 public slots:
     void play();
     void playPattern();

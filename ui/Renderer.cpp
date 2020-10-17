@@ -41,6 +41,17 @@ Renderer::~Renderer() {
     //mPb.close();
 }
 
+void Renderer::setDevice(struct SoundIoDevice *device, audio::Samplerate samplerate) {
+    QMutexLocker locker(&mMutex);
+
+    // this is just a hack to get things working for now
+    // we will need to cancel any work being done, and then wait until the thread is idle
+
+    mPb.close();
+    mPb.setDevice(device, samplerate);
+    mPb.open();
+}
+
 void Renderer::play() {
 
 }

@@ -70,7 +70,7 @@ private:
 
     QFileDialog *mModuleFileDialog;
 
-    Config *mConfig;
+    Config mConfig;
     ModuleDocument *mDocument;
     InstrumentListModel *mInstrumentModel;
     SongListModel *mSongModel;

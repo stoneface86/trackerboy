@@ -14,18 +14,16 @@ constexpr int DEFAULT_GAIN = 0;
 }
 
 
-Config::Config(audio::BackendTable &backendTable, QObject *parent) :
-    //mDeviceConfig(),
+Config::Config(audio::BackendTable &backendTable) :
     mBackendTable(backendTable),
     mBackendIndex(-1),
     mDeviceIndex(-1),
     mSoundio(nullptr),
     mDevice(nullptr),
-    mSamplerate(0),
+    mSamplerate(audio::SR_44100),
     mBuffersize(0),
     mVolume(0),
-    mGains{0},
-    QObject(parent)
+    mGains{0}
 {
 }
 
@@ -37,7 +35,11 @@ int Config::deviceIndex() const noexcept {
     return mDeviceIndex;
 }
 
-int Config::samplerate() const noexcept {
+struct SoundIoDevice* Config::device() const noexcept {
+    return mDevice;
+}
+
+audio::Samplerate Config::samplerate() const noexcept {
     return mSamplerate;
 }
 
@@ -70,28 +72,24 @@ void Config::setDevice(int backend, int device) {
     if (getDevice) {
         soundio_device_unref(mDevice);
         mDevice = mBackendTable.getDevice(audio::BackendTable::Location(backend, device));
-        //emit deviceChanged();
     }
 }
 
-void Config::setSamplerate(unsigned samplerate) {
+void Config::setSamplerate(audio::Samplerate samplerate) {
     if (mSamplerate != samplerate) {
         mSamplerate = samplerate;
-        emit samplerateChanged(samplerate);
     }
 }
 
 void Config::setBuffersize(unsigned buffersize) {
     if (mBuffersize != buffersize) {
         mBuffersize = buffersize;
-        emit buffersizeChanged(buffersize);
     }
 }
 
 void Config::setVolume(unsigned volume) {
     if (mVolume != volume) {
         mVolume = volume;
-        emit volumeChanged(volume);
     }
 }
 
@@ -99,7 +97,6 @@ void Config::setGain(trackerboy::ChType ch, int gain) {
     auto &gainVar = mGains[static_cast<int>(ch)];
     if (gainVar != gain) {
         gainVar = gain;
-        emit gainChanged(static_cast<int>(ch), gain);
     }
 }
 
@@ -125,7 +122,7 @@ void Config::readSettings(QSettings &settings) {
     mDevice = mBackendTable.getDevice(location);
     mSoundio = mBackendTable[mBackendIndex].soundio;
 
-    mSamplerate = settings.value("samplerate", DEFAULT_SAMPLERATE).toInt();
+    mSamplerate = static_cast<audio::Samplerate>(settings.value("samplerate", DEFAULT_SAMPLERATE).toInt());
     mBuffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
     mVolume = settings.value("volume", DEFAULT_VOLUME).toUInt();
     for (int i = 0; i != 4; ++i) {
