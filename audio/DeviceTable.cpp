@@ -18,6 +18,10 @@ DeviceTable::DeviceTable() :
 {
 }
 
+DeviceTable::Device& DeviceTable::operator[](unsigned int index) {
+    return mDeviceList[index];
+}
+
 
 bool DeviceTable::isEmpty() const noexcept {
     return mDeviceList.size() == 0;

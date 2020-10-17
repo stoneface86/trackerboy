@@ -100,6 +100,8 @@ public:
     DeviceTable(DeviceTable const&) = delete;
     void operator=(DeviceTable const&) = delete;
 
+    Device& operator[](unsigned index);
+
     //
     // Returns true if there are no available devices, false otherwise.
     //
@@ -127,6 +129,85 @@ private:
     DeviceVec mDeviceList;
     int mDefaultDeviceIndex;
 
+
+};
+
+//
+// Container class for all available soundio backends. The table contains a
+// SoundIo handle and DeviceTable for each backend. Backends can be accessed
+// via index from 0 to size().
+//
+class BackendTable {
+
+
+public:
+
+    struct Backend {
+        struct SoundIo * soundio;
+        SoundIoBackend backendType;
+        DeviceTable table;
+
+        Backend();
+    };
+
+    BackendTable();
+    ~BackendTable();
+
+    Backend& operator[](int index);
+
+    //
+    // Lookup the device in the given backend with the id. If the device
+    // cannot be found, the default one is returned.
+    //
+    struct SoundIoDevice* getDevice(SoundIoBackend backendType, const char *id) noexcept;
+
+    //
+    // Lookup the default device. The first connected backend with at least one
+    // device is used.
+    //
+    struct SoundIoDevice* getDefaultDevice() noexcept;
+
+    //
+    // Test if the given backend is connected.
+    //
+    bool isConnected(int index) const noexcept;
+
+    //
+    // Get the name of the backend
+    //
+    const char* name(int index) const noexcept;
+
+    //
+    // Retry connecting to the given backend. 0 is returned on success and the
+    // backend's device table is rescanned. On failure, the SoundIoError is
+    // returned.
+    //
+    int reconnect(int index) noexcept;
+
+    //
+    // Convenience method. Rescans the backend's DeviceTable
+    //
+    void rescan(int index) noexcept;
+
+    //
+    // Returns the count of available backends.
+    //
+    unsigned size() const noexcept;
+
+    //
+    // Map a SoundIoBackend to an index from 0 <= index < soundio_backend_count
+    //
+    int toIndex(SoundIoBackend backend) const noexcept;
+
+
+
+
+
+
+private:
+
+    std::unique_ptr<Backend[]> mBackends;
+    unsigned mBackendCount;
 
 };
 

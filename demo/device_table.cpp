@@ -9,8 +9,7 @@ void printDevices(struct SoundIo *soundio, audio::DeviceTable &deviceTable) {
     if (deviceTable.isEmpty()) {
         std::cout << "No available devices :(" << std::endl;
     } else {
-        std::cout << "Backend: " << soundio_backend_name(soundio->current_backend);
-        std::cout << " | Default device: " << deviceTable.defaultDevice() << std::endl;
+        std::cout << "Default device: " << deviceTable.defaultDevice() << std::endl;
 
         auto devBegin = deviceTable.begin();
         auto devEnd = deviceTable.end();
@@ -42,35 +41,27 @@ void printDevices(struct SoundIo *soundio, audio::DeviceTable &deviceTable) {
 
 int main(void) {
 
-    auto soundio = soundio_create();
-    if (soundio == nullptr) {
-        std::cerr << "out of memory" << std::endl;
-    }
+    audio::BackendTable backendTable;
 
-    int backendCount = soundio_backend_count(soundio);
+    unsigned const backendCount = backendTable.size();
+
     std::cout << "Backends:";
-    for (int i = 0; i != backendCount; ++i) {
-        std::cout << " " << soundio_backend_name(soundio_get_backend(soundio, i));
+    for (unsigned i = 0; i != backendCount; ++i) {
+        std::cout << " " << backendTable.name(i);
     }
     std::cout << std::endl << std::endl;
 
-    audio::DeviceTable deviceTable;
-    int err;
-    for (int i = 0; i != backendCount; ++i) {
-        auto backend = soundio_get_backend(soundio, i);
-        err = soundio_connect_backend(soundio, backend);
-        if (err) {
-            std::cerr << "Couldn't connect to backend " << soundio_backend_name(backend);
-            std::cerr << ": " << soundio_strerror(err) << std::endl << std::endl;
-            continue;
-        }
-        deviceTable.rescan(soundio);
-        printDevices(soundio, deviceTable);
 
-        soundio_disconnect(soundio);
+    for (unsigned i = 0; i != backendCount; ++i) {
+        std::cout << backendTable.name(i) << " | ";
+        if (backendTable.isConnected(i)) {
+            auto &backend = backendTable[i];
+            printDevices(backend.soundio, backend.table);
+        } else {
+            std::cout << "Disconnected" << std::endl;
+        }
+        std::cout << std::endl;
     }
 
-
-    soundio_destroy(soundio);
     return 0;
 }

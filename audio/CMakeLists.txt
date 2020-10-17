@@ -2,6 +2,7 @@ project(audio CXX C)
 
 
 set(AUDIO_SRC
+    "BackendTable.cpp"
     "DeviceTable.cpp"
     "PlaybackQueue.cpp"
     "SoundIoError.cpp"
