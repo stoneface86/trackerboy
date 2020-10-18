@@ -62,7 +62,9 @@ Synth::Synth(unsigned samplingRate, float framerate) noexcept :
     mFrameBuf(),
     mOutputStat(Gbs::OUT_ALL),
     mChPrev{0},
-    mLastFrameSize(0)
+    mLastFrameSize(0),
+    mFence(0),
+    mCycletime(0)
 {
     setupBuffers();
 }
@@ -79,75 +81,89 @@ HardwareFile& Synth::hardware() noexcept {
 }
 
 size_t Synth::run() noexcept {
-    auto intern = mInternal.get();
-    auto &bbuf = intern->bbuf;
-    auto &bsynth1 = intern->bsynth1;
-    auto &bsynth2 = intern->bsynth2;
 
-
-    // determine number of cycles to run
+    // determine number of cycles to run for the next frame
     float cycles = mCyclesPerFrame + mCycleOffset;
     float wholeCycles;
     mCycleOffset = modff(cycles, &wholeCycles);
 
-    uint32_t remaining = static_cast<uint32_t>(wholeCycles);
-    uint32_t cycletime = 0;
-    while (remaining) {
-        // delta is the amount of change from the previous output
-        // 0 indicates no change, or no transition
-        int8_t leftdelta = 0;
-        int8_t rightdelta = 0;
-
-        // keep track of the smallest fence
-        // a fence is the minimum number of cycles until state changes
-        // ie generator output changing, envelope volume decreasing, etc
-        // it's named fence as an analogy to memory fences/barriers
-        uint32_t fence = std::min(remaining, mSequencer.fence());
-        updateOutput<ChType::ch1>(leftdelta, rightdelta, fence);
-        updateOutput<ChType::ch2>(leftdelta, rightdelta, fence);
-
-        // don't bother calling offset with delta = 0
-        if (leftdelta) {
-            bsynth1.offset_inline(cycletime, leftdelta, blargg::blip_term_left);
-            leftdelta = 0;
-        }
-        if (rightdelta) {
-            bsynth1.offset_inline(cycletime, rightdelta, blargg::blip_term_right);
-            rightdelta = 0;
-        }
-
-        updateOutput<ChType::ch3>(leftdelta, rightdelta, fence);
-        updateOutput<ChType::ch4>(leftdelta, rightdelta, fence);
-        if (leftdelta)
-            bsynth2.offset_inline(cycletime, leftdelta, blargg::blip_term_left);
-        if (rightdelta)
-            bsynth2.offset_inline(cycletime, rightdelta, blargg::blip_term_right);
-
-
-        // run all components to the smallest fence
-        mSequencer.step(fence);
-        mHf.gen1.step(fence);
-        mHf.gen2.step(fence);
-        mHf.gen3.step(fence);
-        mHf.gen4.step(fence);
-
-        // update cycle counters
-        remaining -= fence;
-        cycletime += fence;
-    }
+    // step to the end of the frame
+    step(static_cast<uint32_t>(wholeCycles) - mCycletime);
 
     // end the frame and copy samples to the synth's frame buffer
-    bbuf.end_frame(cycletime);
+    auto &bbuf = mInternal->bbuf;
+    bbuf.end_frame(mCycletime);
     auto samples = bbuf.samples_avail();
     bbuf.read_samples(mFrameBuf.data(), samples);
     
+    // reset time offset
+    mCycletime = 0;
+
     mLastFrameSize = samples;
     return samples;
 
 }
 
-uint8_t Synth::readRegister(uint16_t addr) const noexcept {
-    
+void Synth::step(uint32_t cycles) noexcept {
+
+    auto &bsynth1 = mInternal->bsynth1;
+    auto &bsynth2 = mInternal->bsynth2;
+
+    while (cycles) {
+        if (mFence == 0) {
+            // we are at the fence, add the transition
+
+            // delta is the amount of change from the previous output
+            // 0 indicates no change, or no transition
+            int8_t leftdelta = 0;
+            int8_t rightdelta = 0;
+
+            // keep track of the smallest fence
+            // a fence is the minimum number of cycles until state changes
+            // ie generator output changing, envelope volume decreasing, etc
+            // it's named fence as an analogy to memory fences/barriers
+            mFence = std::min(cycles, mSequencer.fence());
+            updateOutput<ChType::ch1>(leftdelta, rightdelta, mFence);
+            updateOutput<ChType::ch2>(leftdelta, rightdelta, mFence);
+
+            // don't bother calling offset with delta = 0
+            if (leftdelta) {
+                bsynth1.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
+                leftdelta = 0;
+            }
+            if (rightdelta) {
+                bsynth1.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
+                rightdelta = 0;
+            }
+
+            updateOutput<ChType::ch3>(leftdelta, rightdelta, mFence);
+            updateOutput<ChType::ch4>(leftdelta, rightdelta, mFence);
+            if (leftdelta)
+                bsynth2.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
+            if (rightdelta)
+                bsynth2.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
+
+        }
+
+        uint32_t cyclesToStep = std::min(cycles, mFence);
+        // run all components to the smallest fence
+        mSequencer.step(cyclesToStep);
+        mHf.gen1.step(cyclesToStep);
+        mHf.gen2.step(cyclesToStep);
+        mHf.gen3.step(cyclesToStep);
+        mHf.gen4.step(cyclesToStep);
+
+        // update cycle counters
+        cycles -= cyclesToStep;
+        mFence -= cyclesToStep;
+        mCycletime += cyclesToStep;
+    }
+
+}
+
+uint8_t Synth::readRegister(uint16_t addr) noexcept {
+    step(CYCLES_PER_READ);
+
     /*
     Read masks
 
@@ -325,7 +341,7 @@ void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) noexcep
 void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
 
     // run the synth for a few cycles, changes occurring at the end
-    // step(CYCLES_PER_WRITE);
+    step(CYCLES_PER_WRITE);
 
 
 

@@ -55,7 +55,7 @@ public:
     //
     void reset() noexcept;
     
-    uint8_t readRegister(uint16_t addr) const noexcept;
+    uint8_t readRegister(uint16_t addr) noexcept;
 
     // reinitialize channel
     // this is equivalent to writing bit 7 in NRx4 registers
@@ -82,7 +82,7 @@ public:
 
     void setupBuffers();
 
-    //void step(uint32_t cycles);
+    void step(uint32_t cycles) noexcept;
 
     void writeRegister(uint16_t addr, uint8_t value) noexcept;
 
@@ -120,6 +120,11 @@ private:
     int8_t mChPrev[8];
 
     size_t mLastFrameSize;
+
+    // cycles til the next fence
+    uint32_t mFence;
+    // current time offset in cycles
+    uint32_t mCycletime;
 
     //void resizeFrameBuf();
 
