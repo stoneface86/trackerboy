@@ -19,7 +19,7 @@ static constexpr uint32_t DUTY_MASK = 0x7EE18180;
 static constexpr uint32_t DEFAULT_PERIOD = (2048 - trackerboy::Gbs::DEFAULT_FREQUENCY) * PULSE_MULTIPLIER;
 static constexpr uint8_t DEFAULT_OUTPUT = (DUTY_MASK >> (trackerboy::Gbs::DEFAULT_DUTY << 3)) & 1;
 
-#define setOutput() mOutput = (~((DUTY_MASK >> ((mDuty << 3) + mDutyCounter)) & 1) + 1) 
+#define setOutput() mOutput = ((DUTY_MASK >> ((mDuty << 3) + mDutyCounter)) & 1)
 
 }
 

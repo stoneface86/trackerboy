@@ -9,6 +9,16 @@
 #include <cmath>
 
 
+// number of volume units for each blip synth that are unused
+//constexpr int HEADROOM = 4;
+constexpr double HEADROOM = 0.7079457844; // -3 dB
+
+// simulate cycle delays when reading/writing registers
+// ldh a, [n16]
+constexpr uint32_t CYCLES_PER_READ = 3;
+// ldh [n16], a
+constexpr uint32_t CYCLES_PER_WRITE = 3;
+
 namespace trackerboy {
 
 // PIMPL idiom - this way we can keep Blip_Buffer out of the public API
@@ -16,10 +26,13 @@ struct Synth::Internal {
 
     // blip_buffer
     blargg::Blip_Buffer bbuf;
+    // each channel oscillates between -15 to 15 (or -F to F), silent at 0
+    // thus a channel's range is 30 volume units (15 - (-15) = 30)
+
     // CH1 + CH2
-    blargg::Blip_Synth<blargg::blip_good_quality, 30> bsynth1;
+    blargg::Blip_Synth<blargg::blip_good_quality, 60> bsynth1;
     // CH3 + CH4 (lower quality since these channels have a lot of transitions)
-    blargg::Blip_Synth<blargg::blip_med_quality, 30> bsynth2;
+    blargg::Blip_Synth<blargg::blip_med_quality, 60> bsynth2;
 
 
     Internal() :
@@ -49,7 +62,6 @@ Synth::Synth(unsigned samplingRate, float framerate) noexcept :
     mFrameBuf(),
     mOutputStat(Gbs::OUT_ALL),
     mChPrev{0},
-    mFillPos(0),
     mLastFrameSize(0)
 {
     setupBuffers();
@@ -64,27 +76,6 @@ int16_t* Synth::buffer() noexcept {
 
 HardwareFile& Synth::hardware() noexcept {
     return mHf;
-}
-
-// This method is only used by demo and should be removed at some point
-// everywhere else uses the frame buffer
-void Synth::fill(int16_t buf[], size_t nsamples) noexcept {
-    int16_t *dest = buf;
-
-    while (nsamples) {
-        if (mFillPos == mLastFrameSize) {
-            mLastFrameSize = run();
-            mFillPos = 0;
-        }
-
-        size_t samples = std::min(mLastFrameSize - mFillPos, nsamples);
-        size_t amount = samples * 2; // stereo, so 2 values per sample
-        std::copy_n(mFrameBuf.begin() + (mFillPos * 2), amount, dest);
-        dest += amount;
-
-        nsamples -= samples;
-        mFillPos += samples;
-    }
 }
 
 size_t Synth::run() noexcept {
@@ -150,6 +141,7 @@ size_t Synth::run() noexcept {
     auto samples = bbuf.samples_avail();
     bbuf.read_samples(mFrameBuf.data(), samples);
     
+    mLastFrameSize = samples;
     return samples;
 
 }
@@ -226,8 +218,7 @@ uint8_t Synth::readRegister(uint16_t addr) const noexcept {
 
 void Synth::reset() noexcept {
     mCycleOffset = 0.0f;
-    std::fill_n(mChPrev, 8, static_cast<uint8_t>(0));
-    mFillPos = 0;
+    std::fill_n(mChPrev, 8, static_cast<int8_t>(0));
     mLastFrameSize = 0;
     // reset hardware components
     mSequencer.reset();
@@ -300,13 +291,13 @@ void Synth::setupBuffers() {
     
     bbuf.set_sample_rate(mSamplerate, blipbufsize);
     bbuf.clock_rate(Gbs::CLOCK_SPEED);
-    bbuf.bass_freq(16);
+    bbuf.bass_freq(20);
 
-    blargg::blip_eq_t eq(-8.0);
+    blargg::blip_eq_t eq(-24.0, 12000, mSamplerate);
     bsynth1.treble_eq(eq);
-    bsynth1.volume(0.5);
+    bsynth1.volume(0.5 * HEADROOM);
     bsynth2.treble_eq(eq);
-    bsynth2.volume(0.5);
+    bsynth2.volume(0.5 * HEADROOM);
     reset();
 }
 
@@ -332,6 +323,11 @@ void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) noexcep
 }
 
 void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
+
+    // run the synth for a few cycles, changes occurring at the end
+    // step(CYCLES_PER_WRITE);
+
+
 
     #define writeDuty(gen) gen.setDuty(static_cast<Gbs::Duty>(value >> 6))
     #define writeFreqLSB(gen) gen.setFrequency((gen.frequency() & 0xF0) | value)
@@ -413,58 +409,58 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
 
 template <ChType ch>
 void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) noexcept {
-    
-    // get our generator
-    // hopefully the compiler removes dead code, if constexpr might be needed instead
-    Generator *gen = nullptr;
-    uint8_t mask = 0xF;
-    switch (ch) {
-        case ChType::ch1:
-            gen = &mHf.gen1;
-            mask = mHf.env1.value();
-            break;
-        case ChType::ch2:
-            gen = &mHf.gen2;
-            mask = mHf.env2.value();
-            break;
-        case ChType::ch3:
-            gen = &mHf.gen3;
-            break;
-        case ChType::ch4:
-            gen = &mHf.gen4;
-            mask = mHf.env4.value();
-            break;
 
+    int8_t output;
+    int8_t envelope;
+    uint32_t thisFence;
+    if constexpr (ch == ChType::ch1) {
+        output = mHf.gen1.output();
+        envelope = mHf.env1.value();
+        thisFence = mHf.gen1.fence();
+    } else if constexpr (ch == ChType::ch2) {
+        output = mHf.gen2.output();
+        envelope = mHf.env2.value();
+        thisFence = mHf.gen2.fence();
+    } else if constexpr (ch == ChType::ch3) {
+        output = mHf.gen3.output();
+        thisFence = mHf.gen3.fence();
+    } else {
+        output = mHf.gen4.output();
+        envelope = mHf.env4.value();
+        thisFence = mHf.gen4.fence();
     }
 
-    uint8_t output = gen->output();
+    //uint8_t output = gen->output();
     if constexpr (ch != ChType::ch3) {
-        // generator output for all channels except 3 is a mask, 0 for off, 0xFF for on
-        // AND it with the envelope value to get the current volume
-        output &= mask;
+        // if generator output is 1, output envelope volume otherwise negative volume
+        output = (output) ? envelope : -envelope;
+    } else {
+        //  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
+        // -F -D -B -9 -7 -5 -3 -1 +1 +3 +5 +7 +9 +B +D +F
+        output = 2 * output - 15;
     }
     
     // get the previous volumes
     constexpr size_t chint = static_cast<size_t>(ch);
-    uint8_t &prevL = mChPrev[chint];
-    uint8_t &prevR = mChPrev[chint + 4];
+    int8_t &prevL = mChPrev[chint];
+    int8_t &prevR = mChPrev[chint + 4];
 
     // convert output stat (NR51) to a mask
     uint8_t maskL = ~((mOutputStat >> chint) & 1) + 1;
     uint8_t maskR = ~((mOutputStat >> (chint + 4)) & 1) + 1;
 
-    uint8_t outputL = output & maskL;
-    uint8_t outputR = output & maskR;
+    int8_t outputL = output & maskL;
+    int8_t outputR = output & maskR;
     // calculate and accumulate deltas
-    leftdelta += static_cast<int8_t>(outputL) - static_cast<int8_t>(prevL);
-    rightdelta += static_cast<int8_t>(outputR) - static_cast<int8_t>(prevR);
+    leftdelta += outputL - prevL;
+    rightdelta += outputR - prevR;
 
     // save the previous values for next time
     prevL = outputL;
     prevR = outputR;
 
     // update the fence (the smallest one will be stepped to)
-    fence = std::min(fence, gen->fence());
+    fence = std::min(fence, thisFence);
 }
 
 }

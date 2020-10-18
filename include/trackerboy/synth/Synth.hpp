@@ -43,11 +43,12 @@ public:
     ~Synth();
 
 
+    //
+    // Get the frame buffer
+    //
     int16_t* buffer() noexcept;
 
     HardwareFile& hardware() noexcept;
-
-    void fill(int16_t buf[], size_t nsamples) noexcept;
 
     //
     // Reset the synthesizer by reseting all hardware components to defaults.
@@ -66,6 +67,9 @@ public:
     //
     size_t run() noexcept;
     
+    //
+    // Set the interval for 1 frame, default is DMG vblank or 59.7 Hz
+    //
     void setFramerate(float framerate);
 
     // util method TODO: move this to ChannelControl
@@ -77,6 +81,8 @@ public:
     void setSamplingRate(unsigned samplingRate);
 
     void setupBuffers();
+
+    //void step(uint32_t cycles);
 
     void writeRegister(uint16_t addr, uint8_t value) noexcept;
 
@@ -111,10 +117,8 @@ private:
     uint8_t mOutputStat;
 
     // previous output from last run for each channel terminals
-    uint8_t mChPrev[8];
+    int8_t mChPrev[8];
 
-    // used by fill()
-    size_t mFillPos;
     size_t mLastFrameSize;
 
     //void resizeFrameBuf();

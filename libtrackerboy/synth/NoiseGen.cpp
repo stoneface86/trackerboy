@@ -64,8 +64,8 @@ void NoiseGen::step(uint32_t cycles) noexcept {
     // using de morgan's laws
     // ~((~mLfsr) & 0x1) + 1 -> (mLfsr | (~1)) + 1
     // so we get 0xFF when bit 0 is 0, and 0x00 when bit 0 is 1
-
-    mOutput = static_cast<uint8_t>(mLfsr | static_cast<uint8_t>(~1)) + 1;
+    //mOutput = static_cast<uint8_t>(mLfsr | static_cast<uint8_t>(~1)) + 1;
+    mOutput = (~mLfsr) & 1;
 }
 
 uint8_t NoiseGen::readRegister() const noexcept {
