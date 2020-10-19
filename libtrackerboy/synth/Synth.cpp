@@ -63,7 +63,6 @@ Synth::Synth(unsigned samplingRate, float framerate) noexcept :
     mOutputStat(Gbs::OUT_ALL),
     mChPrev{0},
     mLastFrameSize(0),
-    mFence(0),
     mCycletime(0)
 {
     setupBuffers();
@@ -74,10 +73,6 @@ Synth::~Synth() = default;
 
 int16_t* Synth::buffer() noexcept {
     return mFrameBuf.data();
-}
-
-HardwareFile& Synth::hardware() noexcept {
-    return mHf;
 }
 
 size_t Synth::run() noexcept {
@@ -110,42 +105,40 @@ void Synth::step(uint32_t cycles) noexcept {
     auto &bsynth2 = mInternal->bsynth2;
 
     while (cycles) {
-        if (mFence == 0) {
-            // we are at the fence, add the transition
 
-            // delta is the amount of change from the previous output
-            // 0 indicates no change, or no transition
-            int8_t leftdelta = 0;
-            int8_t rightdelta = 0;
+        // delta is the amount of change from the previous output
+        // 0 indicates no change, or no transition
+        int8_t leftdelta = 0;
+        int8_t rightdelta = 0;
 
-            // keep track of the smallest fence
-            // a fence is the minimum number of cycles until state changes
-            // ie generator output changing, envelope volume decreasing, etc
-            // it's named fence as an analogy to memory fences/barriers
-            mFence = std::min(cycles, mSequencer.fence());
-            updateOutput<ChType::ch1>(leftdelta, rightdelta, mFence);
-            updateOutput<ChType::ch2>(leftdelta, rightdelta, mFence);
+        // keep track of the smallest fence
+        // a fence is the minimum number of cycles until state changes
+        // ie generator output changing, envelope volume decreasing, etc
+        // it's named fence as an analogy to memory fences/barriers
+        uint32_t fence = std::min(cycles, mSequencer.fence());
+        updateOutput<ChType::ch1>(leftdelta, rightdelta, fence);
+        updateOutput<ChType::ch2>(leftdelta, rightdelta, fence);
 
-            // don't bother calling offset with delta = 0
-            if (leftdelta) {
-                bsynth1.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
-                leftdelta = 0;
-            }
-            if (rightdelta) {
-                bsynth1.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
-                rightdelta = 0;
-            }
-
-            updateOutput<ChType::ch3>(leftdelta, rightdelta, mFence);
-            updateOutput<ChType::ch4>(leftdelta, rightdelta, mFence);
-            if (leftdelta)
-                bsynth2.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
-            if (rightdelta)
-                bsynth2.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
-
+        // don't bother calling offset with delta = 0
+        if (leftdelta) {
+            bsynth1.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
+            leftdelta = 0;
+        }
+        if (rightdelta) {
+            bsynth1.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
+            rightdelta = 0;
         }
 
-        uint32_t cyclesToStep = std::min(cycles, mFence);
+        updateOutput<ChType::ch3>(leftdelta, rightdelta, fence);
+        updateOutput<ChType::ch4>(leftdelta, rightdelta, fence);
+        if (leftdelta)
+            bsynth2.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
+        if (rightdelta)
+            bsynth2.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
+
+
+
+        uint32_t cyclesToStep = std::min(cycles, fence);
         // run all components to the smallest fence
         mSequencer.step(cyclesToStep);
         mHf.gen1.step(cyclesToStep);
@@ -155,7 +148,6 @@ void Synth::step(uint32_t cycles) noexcept {
 
         // update cycle counters
         cycles -= cyclesToStep;
-        mFence -= cyclesToStep;
         mCycletime += cyclesToStep;
     }
 
@@ -234,6 +226,7 @@ uint8_t Synth::readRegister(uint16_t addr) noexcept {
 
 void Synth::reset() noexcept {
     mCycleOffset = 0.0f;
+    mCycletime = 0;
     std::fill_n(mChPrev, 8, static_cast<int8_t>(0));
     mLastFrameSize = 0;
     // reset hardware components
@@ -250,46 +243,8 @@ void Synth::reset() noexcept {
     mInternal->bbuf.clear();
 }
 
-
-void Synth::restart(ChType ch) noexcept {
-    switch (ch) {
-        case ChType::ch1:
-            mHf.env1.restart();
-            mHf.sweep1.restart();
-            mHf.gen1.restart();
-            break;
-        case ChType::ch2:
-            mHf.env2.restart();
-            mHf.gen2.restart();
-            break;
-        case ChType::ch3:
-            mHf.gen3.restart();
-            break;
-        case ChType::ch4:
-            mHf.env4.restart();
-            mHf.gen4.restart();
-            break;
-    }
-}
-
 void Synth::setFramerate(float framerate) {
     mFramerate = framerate;
-}
-
-void Synth::setFrequency(ChType ch, uint16_t freq) {
-    switch (ch) {
-        case ChType::ch1:
-            mHf.gen1.setFrequency(freq);
-            break;
-        case ChType::ch2:
-            mHf.gen2.setFrequency(freq);
-            break;
-        case ChType::ch3:
-            mHf.gen3.setFrequency(freq);
-            break;
-        case ChType::ch4:
-            break;
-    }
 }
 
 void Synth::setSamplingRate(unsigned samplingRate) {
@@ -317,10 +272,6 @@ void Synth::setupBuffers() {
     reset();
 }
 
-void Synth::setOutputEnable(Gbs::OutputFlags flags) noexcept {
-    mOutputStat = flags;
-}
-
 void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) noexcept {
     uint8_t flag = 0;
     if (term & Gbs::TERM_LEFT) {
@@ -331,11 +282,35 @@ void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) noexcep
         flag |= 16 << static_cast<uint8_t>(ch);
     }
 
+    uint8_t outputstat = readRegister(Gbs::REG_NR51);
     if (enabled) {
-        mOutputStat |= flag;
+        outputstat |= flag;
     } else {
-        mOutputStat &= ~flag;
+        outputstat &= ~flag;
     }
+
+    writeRegister(Gbs::REG_NR51, outputstat);
+}
+
+void Synth::setWaveram(Waveform &waveform) {
+    // turn CH3 DAC off
+    writeRegister(Gbs::REG_NR30, 0);
+
+    // write the waveform
+    mHf.gen3.copyWave(waveform);
+
+    // simulate writing the waveform via:
+    // ; hl points to the waveform to copy
+    // WAVE_POS = 0
+    // REPT 16
+    //     ld   a, [hl+]                ; 2 cycles
+    //     ldh  [$FF30 + WAVE_POS], a   ; 3 cycles
+    // WAVE_POS = WAVE_POS + 1
+    // ENDR                             ; 5 * 16 = 80 cycles
+    step(80);
+
+    // turn DAC back on
+    writeRegister(Gbs::REG_NR30, 0x80);
 }
 
 void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
@@ -343,12 +318,10 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
     // run the synth for a few cycles, changes occurring at the end
     step(CYCLES_PER_WRITE);
 
-
-
     #define writeDuty(gen) gen.setDuty(static_cast<Gbs::Duty>(value >> 6))
-    #define writeFreqLSB(gen) gen.setFrequency((gen.frequency() & 0xF0) | value)
-    #define writeFreqMSB(gen) gen.setFrequency((gen.frequency() & 0x0F) | (value << 8))
-    #define trigger(ch) if (value & 0x80) restart(ch)
+    #define writeFreqLSB(gen) gen.setFrequency((gen.frequency() & 0xFF00) | value)
+    #define writeFreqMSB(gen) gen.setFrequency((gen.frequency() & 0x00FF) | (value << 8))
+    #define onTrigger() if (!!(value & 0x80))
 
     switch (addr) {
         case Gbs::REG_NR10:
@@ -366,7 +339,11 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
             break;
         case Gbs::REG_NR14:
             writeFreqMSB(mHf.gen1);
-            trigger(ChType::ch1);
+            onTrigger() {
+                mHf.env1.restart();
+                mHf.sweep1.restart();
+                mHf.gen1.restart();
+            }
             break;
         case Gbs::REG_NR21:
             writeDuty(mHf.gen2);
@@ -379,7 +356,10 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
             break;
         case Gbs::REG_NR24:
             writeFreqMSB(mHf.gen2);
-            trigger(ChType::ch2);
+            onTrigger() {
+                mHf.env2.restart();
+                mHf.gen2.restart();
+            }
             break;
         case Gbs::REG_NR30:
             // TODO: implement functionality in WaveGen
@@ -395,7 +375,9 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
             break;
         case Gbs::REG_NR34:
             writeFreqMSB(mHf.gen3);
-            trigger(ChType::ch3);
+            onTrigger() {
+                mHf.gen3.restart();
+            }
             break;
         case Gbs::REG_NR41:
             // no length counter do nothing
@@ -407,7 +389,10 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
             mHf.gen4.writeRegister(value);
             break;
         case Gbs::REG_NR44:
-            trigger(ChType::ch4);
+            onTrigger() {
+                mHf.env4.restart();
+                mHf.gen4.restart();
+            }
             break;
         case Gbs::REG_NR50:
             // not implemented, do nothing

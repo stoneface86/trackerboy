@@ -125,6 +125,9 @@ enum Reg : uint16_t {
     REG_NR52        = 0xFF26, // P--- 4321 | Power control, channel len. stat
 };
 
+// each channel has 5 registers
+static constexpr int REGS_PER_CHANNEL = 5;
+
 
 // constants
 static constexpr uint8_t MAX_ENV_STEPS          = 0xF;

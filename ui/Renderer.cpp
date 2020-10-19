@@ -7,20 +7,21 @@
 
 
 Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, QObject *parent) :
+    QThread(parent),
     mDocument(document),
     mInstrumentModel(instrumentModel),
     mWaveModel(waveModel),
     mPb(audio::SR_44100),
     mSynth(44100),
-    mEngine({ mSynth, document.instrumentTable(), document.waveTable() }),
-    mIr({ mSynth, document.instrumentTable(), document.waveTable() }),
+    mRc(mSynth, document.instrumentTable(), document.waveTable()),
+    mEngine(mRc),
+    mIr(mRc),
     mPreviewState(PreviewState::none),
     mPreviewChannel(trackerboy::ChType::ch1),
     //mRendering(false),
     mMusicPlaying(false),
     mRunning(true),
-    mIdling(true),
-    QThread(parent)
+    mIdling(true)
 {
 
     //mPb.open();
@@ -71,22 +72,25 @@ void Renderer::playFromCursor() {
 void Renderer::previewWaveform(trackerboy::Note note) {
     QMutexLocker locker(&mMutex);
 
-    auto &gen3 = mSynth.hardware().gen3;
     switch (mPreviewState) {
         case PreviewState::instrument:
             resetPreview();
             [[fallthrough]];
         case PreviewState::none:
-            gen3.copyWave(*(mWaveModel.currentWaveform()));
-            mSynth.setOutputEnable(trackerboy::ChType::ch3, trackerboy::Gbs::TERM_BOTH, true);
             mPreviewState = PreviewState::waveform;
             mPreviewChannel = trackerboy::ChType::ch3;
             mEngine.unlock(trackerboy::ChType::ch3);
+            mSynth.setOutputEnable(trackerboy::ChType::ch3, trackerboy::Gbs::TERM_BOTH, true);
+            mSynth.setWaveram(*(mWaveModel.currentWaveform()));
 
             stopIdling();
             [[fallthrough]];
         case PreviewState::waveform:
-            gen3.setFrequency(static_cast<int>(trackerboy::NOTE_FREQ_TABLE[note]));
+            trackerboy::ChannelControl::writeFrequency(
+                        trackerboy::ChType::ch3,
+                        mRc,
+                        trackerboy::NOTE_FREQ_TABLE[note]
+                        );
             break;
     }
     

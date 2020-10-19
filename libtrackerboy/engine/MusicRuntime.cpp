@@ -143,16 +143,15 @@ template <ChType ch>
 void MusicRuntime::reloadImpl() {
     constexpr int chint = static_cast<int>(ch);
 
+    ChannelControl::writeEnvelope(ch, mRc, mEnvelope[chint]);
     if constexpr (ch == ChType::ch4) {
         // TODO: keep a copy of the NR43 register to restore here
     } else {
         //writeTimbre<ch>(mTimbre[chint]);
         ChannelControl::writeTimbre(ch, mRc, mTimbre[chint]);
-        mRc.synth.setFrequency(ch, mFc[chint].frequency());
+        ChannelControl::writeFrequency(ch, mRc, mFc[chint].frequency());
     }
 
-    //writeEnvelope<ch>(mEnvelope[chint]);
-    ChannelControl::writeEnvelope(ch, mRc, mEnvelope[chint]);
 }
 
 bool MusicRuntime::step() {
@@ -219,7 +218,8 @@ bool MusicRuntime::step() {
             panning |= mRc.synth.readRegister(Gbs::REG_NR51) & lockbits;
         }
 
-        mRc.synth.setOutputEnable(static_cast<Gbs::OutputFlags>(panning));
+        //mRc.synth.setOutputEnable(static_cast<Gbs::OutputFlags>(panning));
+        mRc.synth.writeRegister(Gbs::REG_NR51, panning);
         mFlags &= ~FLAGS_PANNING;
     }
 
@@ -261,9 +261,16 @@ void MusicRuntime::update() {
 
     if (nc.isPlaying()) {
 
+        uint16_t retrigger = 0;
+
         if (note) {
 
             uint8_t noteVal = note.value();
+
+            if (locked && !!(mFlags & (FLAGS_AREN1 << chint))) {
+                retrigger = 0x8000;
+                //mRc.synth.restart(ch);
+            }
 
             if constexpr (isFrequencyChannel) {
                 fc->setNote(noteVal);
@@ -277,13 +284,12 @@ void MusicRuntime::update() {
                         noise |= 0x08;
                     }
                     mRc.synth.writeRegister(Gbs::REG_NR43, noise);
+                    mRc.synth.writeRegister(Gbs::REG_NR44, retrigger >> 8);
                 }
 
             }
 
-            if (locked && !!(mFlags & (FLAGS_AREN1 << chint))) {
-                mRc.synth.restart(ch);
-            }
+
 
             mPanningMask |= panningBits;
             mFlags |= FLAGS_PANNING;
@@ -296,7 +302,7 @@ void MusicRuntime::update() {
             // write frequency
 
             if (locked) {
-                mRc.synth.setFrequency(ch, fc->frequency());
+                ChannelControl::writeFrequency(ch, mRc, retrigger | fc->frequency());
             }
         }
     } else if (mPanningMask & panningBits) {
@@ -353,7 +359,7 @@ void MusicRuntime::processTrackEffect(Effect effect) {
         case EffectType::setSweep:
             // this effect only modifies CH1's sweep register and can be used on any channel
             mRc.synth.writeRegister(Gbs::REG_NR10, effect.param);
-            mRc.synth.restart(ChType::ch1);
+            mRc.synth.writeRegister(Gbs::REG_NR14, 0x80 | (mFc[0].frequency() >> 8));
             break;
         case EffectType::delayedCut:
             mNc[chint].noteCut(effect.param);
@@ -417,7 +423,13 @@ void MusicRuntime::setEnvelope(uint8_t envelope) {
         }
     }
     if (mChCtrl.isLocked(ch)) {
-        ChannelControl::writeEnvelope(ch, mRc, envelope);
+        uint8_t freqMsb;
+        if constexpr (ch == ChType::ch4) {
+            freqMsb = 0;
+        } else {
+            freqMsb = mFc[chint].frequency() >> 8;
+        }
+        ChannelControl::writeEnvelope(ch, mRc, envelope, freqMsb);
     }
 }
 

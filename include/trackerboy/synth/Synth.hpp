@@ -48,18 +48,12 @@ public:
     //
     int16_t* buffer() noexcept;
 
-    HardwareFile& hardware() noexcept;
-
     //
     // Reset the synthesizer by reseting all hardware components to defaults.
     //
     void reset() noexcept;
     
     uint8_t readRegister(uint16_t addr) noexcept;
-
-    // reinitialize channel
-    // this is equivalent to writing bit 7 in NRx4 registers
-    void restart(ChType ch) noexcept;
 
     //
     // Run the synth for 1 frame. Synthesized output is stored in
@@ -72,15 +66,13 @@ public:
     //
     void setFramerate(float framerate);
 
-    // util method TODO: move this to ChannelControl
-    void setFrequency(ChType ch, uint16_t freq);
-
-    void setOutputEnable(Gbs::OutputFlags flags) noexcept;
     void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled) noexcept;
 
     void setSamplingRate(unsigned samplingRate);
 
     void setupBuffers();
+
+    void setWaveram(Waveform &waveform);
 
     void step(uint32_t cycles) noexcept;
 
@@ -119,10 +111,9 @@ private:
     // previous output from last run for each channel terminals
     int8_t mChPrev[8];
 
+    // size in samples of the last frame
     size_t mLastFrameSize;
 
-    // cycles til the next fence
-    uint32_t mFence;
     // current time offset in cycles
     uint32_t mCycletime;
 

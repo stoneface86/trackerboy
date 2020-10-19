@@ -65,6 +65,7 @@ private:
     WaveListModel &mWaveModel;
     audio::PlaybackQueue mPb;
     trackerboy::Synth mSynth;
+    trackerboy::RuntimeContext mRc;
     trackerboy::Engine mEngine;
     trackerboy::InstrumentRuntime mIr;
 

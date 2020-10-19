@@ -25,7 +25,7 @@ void ChannelControl::unlock(ChType ch) noexcept {
     mLocks |= (1 << static_cast<int>(ch));
 }
 
-void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelope) {
+void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelope, uint8_t freqMsb) {
     if (ch == ChType::ch3) {
 
         Waveform *waveform = rc.waveTable[envelope];
@@ -37,51 +37,60 @@ void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelo
         // not corrupt wave ram on retrigger so we can skip this step.
 
         // copy waveform to wave ram
-        rc.synth.hardware().gen3.copyWave(*waveform);
+        rc.synth.setWaveram(*waveform);
 
     } else {
-        static constexpr uint16_t NRx2[] = { Gbs::REG_NR12, Gbs::REG_NR22, 0, Gbs::REG_NR42 };
         // write envelope
         // [rNRx2] <- envelope
-        rc.synth.writeRegister(NRx2[static_cast<int>(ch)], envelope);
+        rc.synth.writeRegister(Gbs::REG_NR12 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), envelope);
     }
     // retrigger
-    rc.synth.restart(ch);
+    rc.synth.writeRegister(Gbs::REG_NR14 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), 0x80 | freqMsb);
+}
+
+void ChannelControl::writeFrequency(ChType ch, RuntimeContext &rc, uint16_t frequency) {
+    uint16_t lsbReg = Gbs::REG_NR13 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL);
+    rc.synth.writeRegister(lsbReg++, frequency & 0xFF);
+    rc.synth.writeRegister(lsbReg, frequency >> 8);
+
 }
 
 void ChannelControl::writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre) {
-    auto &hf = rc.synth.hardware();
-
+    uint16_t reg;
     switch (ch) {
         case ChType::ch1:
+            reg = Gbs::REG_NR11;
+            goto pulse;
         case ChType::ch2:
-            PulseGen *gen;
-            if (ch == ChType::ch1) {
-                gen = &hf.gen1;
-            } else {
-                gen = &hf.gen2;
-            }
-
-            gen->setDuty(static_cast<Gbs::Duty>(timbre));
+            reg = Gbs::REG_NR21;
+        pulse:
+            timbre <<= 6;
             break;
         case ChType::ch3:
+            reg = Gbs::REG_NR32;
+            // 0   1   2   3   : timbre
+            // 0% 25% 50% 100% : volume
+            // 0   3   2   1   : NR32
             if (timbre == 1) {
                 timbre = 3;
             } else if (timbre == 3) {
                 timbre = 1;
             }
-            hf.gen3.setVolume(static_cast<Gbs::WaveVolume>(timbre));
+            timbre <<= 5;
             break;
         case ChType::ch4:
-            uint8_t nr43 = hf.gen4.readRegister();
+            reg = Gbs::REG_NR43;
+            uint8_t nr43 = rc.synth.readRegister(reg);
             if (timbre) {
                 nr43 |= 0x08;
             } else {
                 nr43 &= ~0x08;
             }
-            hf.gen4.writeRegister(nr43);
+            timbre = nr43;
             break;
     }
+
+    rc.synth.writeRegister(reg, timbre);
 }
 
 

@@ -50,7 +50,9 @@ public:
     // waveram is set to the waveform in the wave table with the envelope value being the index.
     // The channel is then restarted.
     //
-    static void writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelope);
+    static void writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelope, uint8_t freqMsb = 0x0);
+
+    static void writeFrequency(ChType ch, RuntimeContext &rc, uint16_t frequency);
 
     //
     // Write the given timbre to the channel's registers. A timbre ranges from 0-3 and its

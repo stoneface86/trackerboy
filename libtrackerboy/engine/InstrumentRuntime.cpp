@@ -30,7 +30,10 @@ void InstrumentRuntime::setInstrument(Instrument &inst) {
     mFc.setTune(mInstrument.tune + 0x80);
     ChannelControl::writeEnvelope(mCh, mRc, mInstrument.envelope);
     ChannelControl::writeTimbre(mCh, mRc, mInstrument.timbre);
-    mRc.synth.setOutputEnable(mCh, Gbs::TERM_BOTH, false);
+    uint8_t panning = mRc.synth.readRegister(Gbs::REG_NR51);
+    panning &= ~(0x11 << static_cast<int>(mCh));
+    mRc.synth.writeRegister(Gbs::REG_NR51, panning);
+    //mRc.synth.setOutputEnable(mCh, Gbs::TERM_BOTH, false);
     if (mCh == ChType::ch3) {
         mAutoRetrigger = false;
     } else {
@@ -55,9 +58,15 @@ void InstrumentRuntime::step() {
     auto note = mNc.step();
     if (mNc.isPlaying()) {
 
+        uint16_t retrigger = 0;
+
         if (note) {
 
             uint8_t noteVal = note.value();
+
+            if (mAutoRetrigger) {
+                retrigger = 0x8000;
+            }
 
             if (mCh != ChType::ch4) {
                 mFc.setNote(noteVal);
@@ -70,30 +79,31 @@ void InstrumentRuntime::step() {
                         // nonzero timbre, 7-bit step width
                         noise |= 0x08;
                     }
-                    mRc.synth.writeRegister(Gbs::REG_NR43, noise);
+                    ChannelControl::writeFrequency(ChType::ch4, mRc, retrigger | noise);
                 }
 
             }
 
-            if (mAutoRetrigger) {
-                mRc.synth.restart(mCh);
-            }
+
 
             // output on
-            mRc.synth.setOutputEnable(mCh, Gbs::TERM_LEFT, !!(mInstrument.panning & 0x10));
-            mRc.synth.setOutputEnable(mCh, Gbs::TERM_RIGHT, !!(mInstrument.panning & 0x01));
+            uint8_t panning = mRc.synth.readRegister(Gbs::REG_NR51);
+            panning |= mInstrument.panning << static_cast<int>(mCh);
+            mRc.synth.writeRegister(Gbs::REG_NR51, panning);
         }
 
 
         if (mCh != ChType::ch4) {
             mFc.step();
             // write frequency
-            mRc.synth.setFrequency(mCh, mFc.frequency());
+            ChannelControl::writeFrequency(mCh, mRc, retrigger | mFc.frequency());
             
         }
     } else {
         // output off
-        mRc.synth.setOutputEnable(mCh, Gbs::TERM_BOTH, false);
+        uint8_t panning = mRc.synth.readRegister(Gbs::REG_NR51);
+        panning &= ~(0x11 << static_cast<int>(mCh));
+        mRc.synth.writeRegister(Gbs::REG_NR51, panning);
     }
 }
 
