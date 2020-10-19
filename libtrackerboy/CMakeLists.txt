@@ -34,12 +34,15 @@ set(SRC_FILES
 
     "fileformat.cpp"
     "note.cpp"
+
     "version.cpp"
 )
 
 # give version information to version.cpp via preproccessor macros
 set_source_files_properties("version.cpp" PROPERTIES COMPILE_DEFINITIONS "VERSION_MAJOR=${trackerboy_VERSION_MAJOR};VERSION_MINOR=${trackerboy_VERSION_MINOR};VERSION_PATCH=${trackerboy_VERSION_PATCH}")
 add_library("trackerboy" STATIC ${SRC_FILES})
+
+target_include_directories(trackerboy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 if (MSVC)
 set(WARNFLAGS /W4)

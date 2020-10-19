@@ -24,10 +24,9 @@
 
 #pragma once
 
-#include "trackerboy/synth/HardwareFile.hpp"
-//#include "trackerboy/synth/Mixer.hpp"
-#include "trackerboy/synth/Sequencer.hpp"
+#include "trackerboy/data/Waveform.hpp"
 #include "trackerboy/ChType.hpp"
+#include "trackerboy/gbs.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -89,9 +88,7 @@ private:
     // interrupt rate of the gameboy VBlank interrupt
     float mFramerate;
 
-    // Hardware components
-    HardwareFile mHf;
-    Sequencer mSequencer;
+
 
     // number of cycles executed in 1 frame
     // equal to the gameboy clock speed divided by the framerate

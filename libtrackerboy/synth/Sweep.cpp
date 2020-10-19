@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/Sweep.hpp"
+#include "synth/Sweep.hpp"
 
 
 namespace trackerboy {

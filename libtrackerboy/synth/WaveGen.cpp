@@ -1,7 +1,7 @@
 
 #include <algorithm>
 
-#include "trackerboy/synth/WaveGen.hpp"
+#include "synth/WaveGen.hpp"
 
 
 namespace {

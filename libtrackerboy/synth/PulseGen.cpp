@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/PulseGen.hpp"
+#include "synth/PulseGen.hpp"
 
 namespace {
 

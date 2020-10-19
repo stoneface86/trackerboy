@@ -2,6 +2,9 @@
 #include "trackerboy/synth/Synth.hpp"
 #include "trackerboy/gbs.hpp"
 
+#include "synth/Sequencer.hpp"
+#include "synth/HardwareFile.hpp"
+
 #include "Blip_Buffer.h"
 
 #include <algorithm>
@@ -34,11 +37,17 @@ struct Synth::Internal {
     // CH3 + CH4 (lower quality since these channels have a lot of transitions)
     blargg::Blip_Synth<blargg::blip_med_quality, 60> bsynth2;
 
+    // Hardware components
+    HardwareFile hf;
+    Sequencer sequencer;
+
 
     Internal() :
         bbuf(),
         bsynth1(),
-        bsynth2()
+        bsynth2(),
+        hf(),
+        sequencer(hf)
 
     {
         bsynth1.output(&bbuf);
@@ -55,8 +64,6 @@ Synth::Synth(unsigned samplingRate, float framerate) noexcept :
     mInternal(new Internal()),
     mSamplerate(samplingRate),
     mFramerate(framerate),
-    mHf(),
-    mSequencer(mHf),
     mCyclesPerFrame(Gbs::CLOCK_SPEED / framerate),
     mCycleOffset(0.0f),
     mFrameBuf(),
@@ -103,6 +110,8 @@ void Synth::step(uint32_t cycles) noexcept {
 
     auto &bsynth1 = mInternal->bsynth1;
     auto &bsynth2 = mInternal->bsynth2;
+    auto &sequencer = mInternal->sequencer;
+    auto &hf = mInternal->hf;
 
     while (cycles) {
 
@@ -115,7 +124,7 @@ void Synth::step(uint32_t cycles) noexcept {
         // a fence is the minimum number of cycles until state changes
         // ie generator output changing, envelope volume decreasing, etc
         // it's named fence as an analogy to memory fences/barriers
-        uint32_t fence = std::min(cycles, mSequencer.fence());
+        uint32_t fence = std::min(cycles, sequencer.fence());
         updateOutput<ChType::ch1>(leftdelta, rightdelta, fence);
         updateOutput<ChType::ch2>(leftdelta, rightdelta, fence);
 
@@ -140,11 +149,11 @@ void Synth::step(uint32_t cycles) noexcept {
 
         uint32_t cyclesToStep = std::min(cycles, fence);
         // run all components to the smallest fence
-        mSequencer.step(cyclesToStep);
-        mHf.gen1.step(cyclesToStep);
-        mHf.gen2.step(cyclesToStep);
-        mHf.gen3.step(cyclesToStep);
-        mHf.gen4.step(cyclesToStep);
+        sequencer.step(cyclesToStep);
+        hf.gen1.step(cyclesToStep);
+        hf.gen2.step(cyclesToStep);
+        hf.gen3.step(cyclesToStep);
+        hf.gen4.step(cyclesToStep);
 
         // update cycle counters
         cycles -= cyclesToStep;
@@ -172,21 +181,23 @@ uint8_t Synth::readRegister(uint16_t addr) noexcept {
 
     #define readDuty(gen) (0x3F | (gen.duty() << 6))
 
+    auto &hf = mInternal->hf;
+
     switch (addr) {
         case Gbs::REG_NR10:
-            return mHf.sweep1.readRegister();
+            return hf.sweep1.readRegister();
         case Gbs::REG_NR11:
-            return readDuty(mHf.gen1);
+            return readDuty(hf.gen1);
         case Gbs::REG_NR12:
-            return mHf.env1.readRegister();
+            return hf.env1.readRegister();
         case Gbs::REG_NR13:
             return 0xFF;
         case Gbs::REG_NR14:
             return 0xBF;
         case Gbs::REG_NR21:
-            return readDuty(mHf.gen2);
+            return readDuty(hf.gen2);
         case Gbs::REG_NR22:
-            return mHf.env2.readRegister();
+            return hf.env2.readRegister();
         case Gbs::REG_NR23:
             return 0xFF;
         case Gbs::REG_NR24:
@@ -197,7 +208,7 @@ uint8_t Synth::readRegister(uint16_t addr) noexcept {
         case Gbs::REG_NR31:
             return 0xFF;
         case Gbs::REG_NR32:
-            return 0x9F | (mHf.gen3.volume());
+            return 0x9F | (hf.gen3.volume());
         case Gbs::REG_NR33:
             return 0xFF;
         case Gbs::REG_NR34:
@@ -205,9 +216,9 @@ uint8_t Synth::readRegister(uint16_t addr) noexcept {
         case Gbs::REG_NR41:
             return 0xBF;
         case Gbs::REG_NR42:
-            return mHf.env4.readRegister();
+            return hf.env4.readRegister();
         case Gbs::REG_NR43:
-            return mHf.gen4.readRegister();
+            return hf.gen4.readRegister();
         case Gbs::REG_NR44:
             return 0xBF;
         case Gbs::REG_NR50:
@@ -230,15 +241,16 @@ void Synth::reset() noexcept {
     std::fill_n(mChPrev, 8, static_cast<int8_t>(0));
     mLastFrameSize = 0;
     // reset hardware components
-    mSequencer.reset();
-    mHf.env1.reset();
-    mHf.env2.reset();
-    mHf.env4.reset();
-    mHf.sweep1.reset();
-    mHf.gen1.reset();
-    mHf.gen2.reset();
-    mHf.gen3.reset();
-    mHf.gen4.reset();
+    mInternal->sequencer.reset();
+    auto &hf = mInternal->hf;
+    hf.env1.reset();
+    hf.env2.reset();
+    hf.env4.reset();
+    hf.sweep1.reset();
+    hf.gen1.reset();
+    hf.gen2.reset();
+    hf.gen3.reset();
+    hf.gen4.reset();
 
     mInternal->bbuf.clear();
 }
@@ -297,7 +309,7 @@ void Synth::setWaveram(Waveform &waveform) {
     writeRegister(Gbs::REG_NR30, 0);
 
     // write the waveform
-    mHf.gen3.copyWave(waveform);
+    mInternal->hf.gen3.copyWave(waveform);
 
     // simulate writing the waveform via:
     // ; hl points to the waveform to copy
@@ -323,42 +335,43 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
     #define writeFreqMSB(gen) gen.setFrequency((gen.frequency() & 0x00FF) | (value << 8))
     #define onTrigger() if (!!(value & 0x80))
 
+    auto &hf = mInternal->hf;
     switch (addr) {
         case Gbs::REG_NR10:
-            mHf.sweep1.writeRegister(value);
+            hf.sweep1.writeRegister(value);
             break;
         case Gbs::REG_NR11:
-            writeDuty(mHf.gen1);
+            writeDuty(hf.gen1);
             // length counters aren't implemented so ignore the other 6 bits
             break;
         case Gbs::REG_NR12:
-            mHf.env1.writeRegister(value);
+            hf.env1.writeRegister(value);
             break;
         case Gbs::REG_NR13:
-            writeFreqLSB(mHf.gen1);
+            writeFreqLSB(hf.gen1);
             break;
         case Gbs::REG_NR14:
-            writeFreqMSB(mHf.gen1);
+            writeFreqMSB(hf.gen1);
             onTrigger() {
-                mHf.env1.restart();
-                mHf.sweep1.restart();
-                mHf.gen1.restart();
+                hf.env1.restart();
+                hf.sweep1.restart();
+                hf.gen1.restart();
             }
             break;
         case Gbs::REG_NR21:
-            writeDuty(mHf.gen2);
+            writeDuty(hf.gen2);
             break;
         case Gbs::REG_NR22:
-            mHf.env2.writeRegister(value);
+            hf.env2.writeRegister(value);
             break;
         case Gbs::REG_NR23:
-            writeFreqLSB(mHf.gen2);
+            writeFreqLSB(hf.gen2);
             break;
         case Gbs::REG_NR24:
-            writeFreqMSB(mHf.gen2);
+            writeFreqMSB(hf.gen2);
             onTrigger() {
-                mHf.env2.restart();
-                mHf.gen2.restart();
+                hf.env2.restart();
+                hf.gen2.restart();
             }
             break;
         case Gbs::REG_NR30:
@@ -368,30 +381,30 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
             // no length counter so do nothing
             break;
         case Gbs::REG_NR32:
-            mHf.gen3.setVolume(static_cast<Gbs::WaveVolume>((value >> 5) & 0x3));
+            hf.gen3.setVolume(static_cast<Gbs::WaveVolume>((value >> 5) & 0x3));
             break;
         case Gbs::REG_NR33:
-            writeFreqLSB(mHf.gen3);
+            writeFreqLSB(hf.gen3);
             break;
         case Gbs::REG_NR34:
-            writeFreqMSB(mHf.gen3);
+            writeFreqMSB(hf.gen3);
             onTrigger() {
-                mHf.gen3.restart();
+                hf.gen3.restart();
             }
             break;
         case Gbs::REG_NR41:
             // no length counter do nothing
             break;
         case Gbs::REG_NR42:
-            mHf.env4.writeRegister(value);
+            hf.env4.writeRegister(value);
             break;
         case Gbs::REG_NR43:
-            mHf.gen4.writeRegister(value);
+            hf.gen4.writeRegister(value);
             break;
         case Gbs::REG_NR44:
             onTrigger() {
-                mHf.env4.restart();
-                mHf.gen4.restart();
+                hf.env4.restart();
+                hf.gen4.restart();
             }
             break;
         case Gbs::REG_NR50:
@@ -414,21 +427,23 @@ void Synth::updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence)
     int8_t output;
     int8_t envelope;
     uint32_t thisFence;
+    auto &hf = mInternal->hf;
+
     if constexpr (ch == ChType::ch1) {
-        output = mHf.gen1.output();
-        envelope = mHf.env1.value();
-        thisFence = mHf.gen1.fence();
+        output = hf.gen1.output();
+        envelope = hf.env1.value();
+        thisFence = hf.gen1.fence();
     } else if constexpr (ch == ChType::ch2) {
-        output = mHf.gen2.output();
-        envelope = mHf.env2.value();
-        thisFence = mHf.gen2.fence();
+        output = hf.gen2.output();
+        envelope = hf.env2.value();
+        thisFence = hf.gen2.fence();
     } else if constexpr (ch == ChType::ch3) {
-        output = mHf.gen3.output();
-        thisFence = mHf.gen3.fence();
+        output = hf.gen3.output();
+        thisFence = hf.gen3.fence();
     } else {
-        output = mHf.gen4.output();
-        envelope = mHf.env4.value();
-        thisFence = mHf.gen4.fence();
+        output = hf.gen4.output();
+        envelope = hf.env4.value();
+        thisFence = hf.gen4.fence();
     }
 
     //uint8_t output = gen->output();

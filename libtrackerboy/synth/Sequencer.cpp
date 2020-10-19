@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/Sequencer.hpp"
+#include "synth/Sequencer.hpp"
 
 #include <cassert>
 

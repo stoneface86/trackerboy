@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "trackerboy/synth/Generator.hpp"
+#include "synth/Generator.hpp"
 #include "trackerboy/gbs.hpp"
 
 #include <cstdint>

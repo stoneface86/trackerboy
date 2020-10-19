@@ -24,51 +24,54 @@
 
 #pragma once
 
-#include "trackerboy/synth/PulseGen.hpp"
+#include "synth/Generator.hpp"
 #include "trackerboy/gbs.hpp"
-
-#include <cstdint>
-
 
 namespace trackerboy {
 
-
-class Sweep {
+class NoiseGen : public Generator {
 
 public:
 
-    Sweep(PulseGen &gen) noexcept;
+    NoiseGen() noexcept;
 
-    uint8_t readRegister() const noexcept;
+    void reset() noexcept override;
 
-    void reset() noexcept;
+    //
+    // channel retrigger. LFSR is re-initialized, counters are reset
+    // and the period is reloaded from the set register
+    //
+    void restart() noexcept override;
 
-    void restart() noexcept;
+    //
+    // Step the generator for the given number of cycles, returning the
+    // current output.
+    //
+    void step(uint32_t cycles) noexcept;
 
+    //
+    // Write the given value to this generator's register, NR43
+    //
     void writeRegister(uint8_t reg) noexcept;
 
-    void trigger() noexcept;
+    //
+    // Returns the contents of this generator's register
+    //
+    uint8_t readRegister() const noexcept;
 
 private:
 
-    PulseGen &mGen;
-
-    Gbs::SweepMode mSweepMode;
-    uint8_t mSweepTime;
-    uint8_t mSweepShift;
-
-    uint8_t mSweepCounter;
-
-    // Sweep register, NR10
-    // Bits 0-2: Shift amount
-    // Bit    3: Sweep mode (1 = subtraction)
-    // Bits 4-6: Period
+    // NR43 register contents
     uint8_t mRegister;
 
-    // shadow register, CH1's frequency gets copied here on reset (initalization)
-    int16_t mShadow;
+    // width of the LFSR (15-bit or 7-bit)
+    Gbs::NoiseSteps mStepSelection;
+    // lfsr: linear feedback shift register
+    uint16_t mLfsr;
+
 
 };
+
 
 
 }

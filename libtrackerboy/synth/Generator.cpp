@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/Generator.hpp"
+#include "synth/Generator.hpp"
 
 
 namespace trackerboy {

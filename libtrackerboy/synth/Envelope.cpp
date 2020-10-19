@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/Envelope.hpp"
+#include "synth/Envelope.hpp"
 
 
 namespace trackerboy {

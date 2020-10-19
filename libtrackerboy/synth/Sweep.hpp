@@ -24,40 +24,51 @@
 
 #pragma once
 
-#include "trackerboy/synth/Envelope.hpp"
-#include "trackerboy/synth/NoiseGen.hpp"
-#include "trackerboy/synth/PulseGen.hpp"
-#include "trackerboy/synth/Sweep.hpp"
-#include "trackerboy/synth/WaveGen.hpp"
+#include "synth/PulseGen.hpp"
+#include "trackerboy/gbs.hpp"
+
+#include <cstdint>
+
 
 namespace trackerboy {
 
-//
-// POD struct for the individual hardware components of the synthesizer.
-// A number in the field name indicates the channel it belongs to.
-//
-struct HardwareFile {
 
-    Envelope env1, env2, env4;
-    Sweep sweep1;
-    PulseGen gen1, gen2;
-    WaveGen gen3;
-    NoiseGen gen4;
+class Sweep {
 
-    HardwareFile() noexcept :
-        env1(),
-        env2(),
-        env4(),
-        sweep1(gen1),
-        gen1(),
-        gen2(),
-        gen3(),
-        gen4()
-    {
-    }
+public:
+
+    Sweep(PulseGen &gen) noexcept;
+
+    uint8_t readRegister() const noexcept;
+
+    void reset() noexcept;
+
+    void restart() noexcept;
+
+    void writeRegister(uint8_t reg) noexcept;
+
+    void trigger() noexcept;
+
+private:
+
+    PulseGen &mGen;
+
+    Gbs::SweepMode mSweepMode;
+    uint8_t mSweepTime;
+    uint8_t mSweepShift;
+
+    uint8_t mSweepCounter;
+
+    // Sweep register, NR10
+    // Bits 0-2: Shift amount
+    // Bit    3: Sweep mode (1 = subtraction)
+    // Bits 4-6: Period
+    uint8_t mRegister;
+
+    // shadow register, CH1's frequency gets copied here on reset (initalization)
+    int16_t mShadow;
 
 };
-
 
 
 }

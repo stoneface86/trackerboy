@@ -24,41 +24,50 @@
 
 #pragma once
 
-#include "trackerboy/data/Waveform.hpp"
-#include "trackerboy/synth/Generator.hpp"
+#include "synth/HardwareFile.hpp"
 
 namespace trackerboy {
 
-class WaveGen : public Generator {
+
+class Sequencer {
 
 public:
 
-    WaveGen() noexcept;
+    Sequencer(HardwareFile &hf) noexcept;
 
-    void copyWave(Waveform &wave) noexcept;
+    // time in cycles til the next trigger
+    inline uint32_t fence() const noexcept { 
+        return mFence;
+    }
 
-    uint16_t frequency() const noexcept;
-
-    void reset() noexcept override;
-
-    void restart() noexcept override;
-
-    void setFrequency(uint16_t frequency) noexcept;
-
-    void setVolume(Gbs::WaveVolume volume) noexcept;
+    void reset() noexcept;
 
     void step(uint32_t cycles) noexcept;
 
-    Gbs::WaveVolume volume() const noexcept;
-
 private:
 
-    uint16_t mFrequency;
-    Gbs::WaveVolume mVolume;
-    uint8_t mWaveIndex;
-    uint8_t mWaveram[Gbs::WAVE_RAMSIZE];
+    enum class TriggerType {
+        sweep,
+        env
+    };
+
+    struct Trigger {
+        uint32_t nextIndex;     // next index in the sequence
+        uint32_t nextFence;     // next wall to stop short
+        TriggerType type;       // trigger to do
+    };
+
+    static Trigger const TRIGGER_SEQUENCE[];
+
+    HardwareFile &mHf;
+    uint32_t mFence;
+    uint32_t mTriggerIndex;
+
+
 
 
 };
+
+
 
 }

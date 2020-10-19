@@ -24,51 +24,37 @@
 
 #pragma once
 
-#include "trackerboy/synth/Generator.hpp"
-#include "trackerboy/gbs.hpp"
+#include "synth/Envelope.hpp"
+#include "synth/NoiseGen.hpp"
+#include "synth/PulseGen.hpp"
+#include "synth/Sweep.hpp"
+#include "synth/WaveGen.hpp"
 
 namespace trackerboy {
 
-class NoiseGen : public Generator {
+//
+// POD struct for the individual hardware components of the synthesizer.
+// A number in the field name indicates the channel it belongs to.
+//
+struct HardwareFile {
 
-public:
+    Envelope env1, env2, env4;
+    Sweep sweep1;
+    PulseGen gen1, gen2;
+    WaveGen gen3;
+    NoiseGen gen4;
 
-    NoiseGen() noexcept;
-
-    void reset() noexcept override;
-
-    //
-    // channel retrigger. LFSR is re-initialized, counters are reset
-    // and the period is reloaded from the set register
-    //
-    void restart() noexcept override;
-
-    //
-    // Step the generator for the given number of cycles, returning the
-    // current output.
-    //
-    void step(uint32_t cycles) noexcept;
-
-    //
-    // Write the given value to this generator's register, NR43
-    //
-    void writeRegister(uint8_t reg) noexcept;
-
-    //
-    // Returns the contents of this generator's register
-    //
-    uint8_t readRegister() const noexcept;
-
-private:
-
-    // NR43 register contents
-    uint8_t mRegister;
-
-    // width of the LFSR (15-bit or 7-bit)
-    Gbs::NoiseSteps mStepSelection;
-    // lfsr: linear feedback shift register
-    uint16_t mLfsr;
-
+    HardwareFile() noexcept :
+        env1(),
+        env2(),
+        env4(),
+        sweep1(gen1),
+        gen1(),
+        gen2(),
+        gen3(),
+        gen4()
+    {
+    }
 
 };
 

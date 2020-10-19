@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/NoiseGen.hpp"
+#include "synth/NoiseGen.hpp"
 
 constexpr uint16_t LFSR_INIT = 0x7FFF;
 #define calcCounterMax(drf, scf) (DRF_TABLE[drf] << (scf+1))
