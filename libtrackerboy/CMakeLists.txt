@@ -3,6 +3,7 @@ project("libtrackerboy")
 
 set(SRC_FILES
     "export/Wav.cpp"
+
     "engine/ChannelControl.cpp"
     "engine/Engine.cpp"
     "engine/FrequencyControl.cpp"
@@ -12,6 +13,7 @@ set(SRC_FILES
     "engine/PatternCursor.cpp"
     "engine/RuntimeContext.cpp"
     "engine/Timer.cpp"
+
     "data/DataItem.cpp"
     "data/Instrument.cpp"
     "data/Module.cpp"
@@ -20,15 +22,16 @@ set(SRC_FILES
     "data/Table.cpp"
     "data/Track.cpp"
     "data/Waveform.cpp"
+
     "synth/Envelope.cpp"
     "synth/Generator.cpp"
-    "synth/Mixer.cpp"
     "synth/NoiseGen.cpp"
     "synth/PulseGen.cpp"
     "synth/Sequencer.cpp"
     "synth/Sweep.cpp"
     "synth/Synth.cpp"
     "synth/WaveGen.cpp"
+
     "fileformat.cpp"
     "note.cpp"
     "version.cpp"
@@ -66,8 +69,10 @@ if (TRACKERBOY_ENABLE_TESTS)
         "data/test_Instrument.cpp"
         "data/test_Module.cpp"
         "data/test_PatternMaster.cpp"
+
         "engine/test_NoteControl.cpp"
         "engine/test_Timer.cpp"
+
         "test_fileformat.cpp"
         "test_Table.cpp"
     )
