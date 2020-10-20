@@ -29,8 +29,7 @@ Config::Config(audio::BackendTable &backendTable) :
     mBassFrequency(0),
     mTreble(0),
     mTrebleFrequency(0),
-    mConfigSound(false),
-    mGains{0}
+    mConfigSound(false)
 {
 }
 
@@ -68,10 +67,6 @@ int Config::treble() const noexcept {
 
 unsigned Config::trebleFrequency() const noexcept {
     return mTrebleFrequency;
-}
-
-int Config::gain(trackerboy::ChType ch) const noexcept {
-    return mGains[static_cast<int>(ch)];
 }
 
 void Config::setDevice(int backend, int device) {
@@ -137,13 +132,6 @@ void Config::setTrebleFrequency(unsigned int freq) {
     }
 }
 
-void Config::setGain(trackerboy::ChType ch, int gain) {
-    auto &gainVar = mGains[static_cast<int>(ch)];
-    if (gainVar != gain) {
-        gainVar = gain;
-    }
-}
-
 
 void Config::readSettings(QSettings &settings) {
     settings.beginGroup("config");
@@ -172,9 +160,6 @@ void Config::readSettings(QSettings &settings) {
     mBassFrequency = settings.value("bassFrequency", DEFAULT_BASS_FREQUENCY).toUInt();
     mTreble = settings.value("treble", DEFAULT_TREBLE).toInt();
     mTrebleFrequency = settings.value("trebleFrequency", DEFAULT_TREBLE_FREQUENCY).toUInt();
-    for (int i = 0; i != 4; ++i) {
-        mGains[i] = settings.value(QString("gain%1").arg(i + 1), DEFAULT_GAIN).toInt();
-    }
 }
 
 
@@ -189,7 +174,4 @@ void Config::writeSettings(QSettings &settings) {
     settings.setValue("bassFrequency", mBassFrequency);
     settings.setValue("treble", mTreble);
     settings.setValue("trebleFrequency", mTrebleFrequency);
-    for (int i = 0; i != 4; ++i) {
-        settings.setValue(QString("gain%1").arg(i + 1), mGains[i]);
-    }
 }

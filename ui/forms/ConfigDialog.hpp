@@ -37,8 +37,6 @@ private slots:
     void bassSliderChanged(int value);
     void trebleAmountSliderChanged(int value);
     void trebleCutoffSliderChanged(int value);
-
-    void gainChanged(int channel, int value);
     
 private:
     Ui::ConfigDialog *mUi;

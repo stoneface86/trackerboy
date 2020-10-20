@@ -38,11 +38,6 @@ ConfigDialog::ConfigDialog(audio::BackendTable &backendTable, Config &config, QW
     connect(mUi->mTrebleSlider, &QSlider::valueChanged, this, &ConfigDialog::trebleAmountSliderChanged);
     connect(mUi->mTrebleCutoffSlider, &QSlider::valueChanged, this, &ConfigDialog::trebleCutoffSliderChanged);
 
-    connect(mUi->mGainSlider1, &QSlider::valueChanged, this, [this](int value) { gainChanged(0, value); });
-    connect(mUi->mGainSlider2, &QSlider::valueChanged, this, [this](int value) { gainChanged(1, value); });
-    connect(mUi->mGainSlider3, &QSlider::valueChanged, this, [this](int value) { gainChanged(2, value); });
-    connect(mUi->mGainSlider4, &QSlider::valueChanged, this, [this](int value) { gainChanged(3, value); });
-
     connect(mUi->mBackendCombo, QOverload<int>::of(&QComboBox::activated), this, &ConfigDialog::backendActivated);
 }
 
@@ -60,10 +55,6 @@ void ConfigDialog::accept() {
     mConfig.setBassFrequency(mUi->mBassSlider->value());
     mConfig.setTreble(mUi->mTrebleSlider->value());
     mConfig.setTrebleFrequency(mUi->mTrebleCutoffSlider->value());
-    mConfig.setGain(trackerboy::ChType::ch1, mUi->mGainSlider1->value());
-    mConfig.setGain(trackerboy::ChType::ch2, mUi->mGainSlider2->value());
-    mConfig.setGain(trackerboy::ChType::ch3, mUi->mGainSlider3->value());
-    mConfig.setGain(trackerboy::ChType::ch4, mUi->mGainSlider4->value());
 
 
     QDialog::accept();
@@ -159,30 +150,6 @@ void ConfigDialog::backendActivated(int index) {
 }
 
 
-void ConfigDialog::gainChanged(int channel, int value) {
-    QLabel *gainLabel;
-    switch (channel) {
-        case 0:
-            gainLabel = mUi->mGainLabel1;
-            break;
-        case 1:
-            gainLabel = mUi->mGainLabel2;
-            break;
-        case 2:
-            gainLabel = mUi->mGainLabel3;
-            break;
-        default:
-            gainLabel = mUi->mGainLabel4;
-            break;
-    }
-    QString text = QString("%1%2.%3 dB")
-                    .arg(value < 0 ? '-' : '+')
-                    .arg(value / 10)
-                    .arg(abs(value) % 10);
-    gainLabel->setText(text);
-}
-
-
 void ConfigDialog::resetControls() {
 
     // Sound tab
@@ -215,14 +182,6 @@ void ConfigDialog::resetControls() {
     mUi->mBassSlider->setValue(mConfig.bassFrequency());
     mUi->mTrebleSlider->setValue(mConfig.treble());
     mUi->mTrebleCutoffSlider->setValue(mConfig.trebleFrequency());
-
-    // Mixer tab
-    mUi->mGainSlider1->setValue(mConfig.gain(trackerboy::ChType::ch1));
-    mUi->mGainSlider2->setValue(mConfig.gain(trackerboy::ChType::ch2));
-    mUi->mGainSlider3->setValue(mConfig.gain(trackerboy::ChType::ch3));
-    mUi->mGainSlider4->setValue(mConfig.gain(trackerboy::ChType::ch4));
-
-
 }
 
 

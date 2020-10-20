@@ -53,9 +53,6 @@ public:
 
     unsigned trebleFrequency() const noexcept;
 
-
-    int gain(trackerboy::ChType ch) const noexcept;
-
     void setDevice(int backend, int device);
 
     void setSamplerate(audio::Samplerate samplerate);
@@ -69,8 +66,6 @@ public:
     void setTreble(int treble);
 
     void setTrebleFrequency(unsigned freq);
-
-    void setGain(trackerboy::ChType ch, int gain);
 
 
 private:
@@ -91,9 +86,6 @@ private:
     unsigned mTrebleFrequency;  // Treble cutoff frequency
 
     bool mConfigSound;
-
-    // mixer settings
-    int mGains[4];     // Channel gain settings, in units of centibels (-120 cB to 120 cB or -12.0 dB to 12.0 dB)
 
 };
 
