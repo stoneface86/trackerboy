@@ -34,6 +34,9 @@ ConfigDialog::ConfigDialog(audio::BackendTable &backendTable, Config &config, QW
 
     connect(mUi->mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
     connect(mUi->mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
+    connect(mUi->mBassSlider, &QSlider::valueChanged, this, &ConfigDialog::bassSliderChanged);
+    connect(mUi->mTrebleSlider, &QSlider::valueChanged, this, &ConfigDialog::trebleAmountSliderChanged);
+    connect(mUi->mTrebleCutoffSlider, &QSlider::valueChanged, this, &ConfigDialog::trebleCutoffSliderChanged);
 
     connect(mUi->mGainSlider1, &QSlider::valueChanged, this, [this](int value) { gainChanged(0, value); });
     connect(mUi->mGainSlider2, &QSlider::valueChanged, this, [this](int value) { gainChanged(1, value); });
@@ -50,9 +53,13 @@ ConfigDialog::~ConfigDialog() {
 void ConfigDialog::accept() {
     // update all changes to the Config object
     mConfig.setDevice(mUi->mBackendCombo->currentIndex(), mUi->mDeviceCombo->currentIndex());
+    mConfig.setSamplerate(static_cast<audio::Samplerate>(mUi->mSamplerateCombo->currentIndex()));
 
     mConfig.setBuffersize(mUi->mBufferSizeSlider->value());
     mConfig.setVolume(mUi->mVolumeSlider->value());
+    mConfig.setBassFrequency(mUi->mBassSlider->value());
+    mConfig.setTreble(mUi->mTrebleSlider->value());
+    mConfig.setTrebleFrequency(mUi->mTrebleCutoffSlider->value());
     mConfig.setGain(trackerboy::ChType::ch1, mUi->mGainSlider1->value());
     mConfig.setGain(trackerboy::ChType::ch2, mUi->mGainSlider2->value());
     mConfig.setGain(trackerboy::ChType::ch3, mUi->mGainSlider3->value());
@@ -82,6 +89,21 @@ void ConfigDialog::bufferSizeSliderChanged(int value) {
 void ConfigDialog::volumeSliderChanged(int value) {
     QString text("%1%");
     mUi->mVolumeLabel->setText(text.arg(QString::number(value)));
+}
+
+void ConfigDialog::bassSliderChanged(int value) {
+    QString text("%1 Hz");
+    mUi->mBassLabel->setText(text.arg(QString::number(value)));
+}
+
+void ConfigDialog::trebleAmountSliderChanged(int value) {
+    QString text("%1 dB");
+    mUi->mTrebleLabel->setText(text.arg(QString::number(value)));
+}
+
+void ConfigDialog::trebleCutoffSliderChanged(int value) {
+    QString text("%1 Hz");
+    mUi->mTrebleCutoffLabel->setText(text.arg(QString::number(value)));
 }
 
 void ConfigDialog::backendActivated(int index) {
@@ -186,8 +208,13 @@ void ConfigDialog::resetControls() {
     }
     deviceCombo->setCurrentIndex(mConfig.deviceIndex());
 
+    mUi->mSamplerateCombo->setCurrentIndex(mConfig.samplerate());
+
     mUi->mBufferSizeSlider->setValue(mConfig.buffersize());
     mUi->mVolumeSlider->setValue(mConfig.volume());
+    mUi->mBassSlider->setValue(mConfig.bassFrequency());
+    mUi->mTrebleSlider->setValue(mConfig.treble());
+    mUi->mTrebleCutoffSlider->setValue(mConfig.trebleFrequency());
 
     // Mixer tab
     mUi->mGainSlider1->setValue(mConfig.gain(trackerboy::ChType::ch1));

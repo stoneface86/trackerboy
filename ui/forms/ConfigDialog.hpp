@@ -34,6 +34,9 @@ private slots:
     void bufferSizeSliderChanged(int value);
     void volumeSliderChanged(int value);
     void backendActivated(int index);
+    void bassSliderChanged(int value);
+    void trebleAmountSliderChanged(int value);
+    void trebleCutoffSliderChanged(int value);
 
     void gainChanged(int channel, int value);
     

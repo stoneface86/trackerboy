@@ -28,6 +28,10 @@ public:
     //
     void writeSettings(QSettings &settings);
 
+    //
+    // "Sound" settings
+    //
+
     int backendIndex() const noexcept;
 
     int deviceIndex() const noexcept;
@@ -43,6 +47,13 @@ public:
 
     unsigned volume() const noexcept;
 
+    unsigned bassFrequency() const noexcept;
+
+    int treble() const noexcept;
+
+    unsigned trebleFrequency() const noexcept;
+
+
     int gain(trackerboy::ChType ch) const noexcept;
 
     void setDevice(int backend, int device);
@@ -52,6 +63,12 @@ public:
     void setBuffersize(unsigned buffersize);
 
     void setVolume(unsigned volume);
+
+    void setBassFrequency(unsigned freq);
+
+    void setTreble(int treble);
+
+    void setTrebleFrequency(unsigned freq);
 
     void setGain(trackerboy::ChType ch, int gain);
 
@@ -68,6 +85,12 @@ private:
 
     unsigned mBuffersize;   // Buffer size of playback queue in milleseconds
     unsigned mVolume;       // Master volume of playback queue output, 0-100
+
+    unsigned mBassFrequency;    // Bass cutoff frequency
+    int mTreble;                // Treble amount, in dB
+    unsigned mTrebleFrequency;  // Treble cutoff frequency
+
+    bool mConfigSound;
 
     // mixer settings
     int mGains[4];     // Channel gain settings, in units of centibels (-120 cB to 120 cB or -12.0 dB to 12.0 dB)
