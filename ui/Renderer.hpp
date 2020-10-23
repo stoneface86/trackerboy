@@ -4,6 +4,7 @@
 #include "model/ModuleDocument.hpp"
 #include "model/InstrumentListModel.hpp"
 #include "model/WaveListModel.hpp"
+#include "Config.hpp"
 
 #include "audio.hpp"
 #include "trackerboy/engine/Engine.hpp"
@@ -27,10 +28,12 @@ class Renderer : public QThread {
 
 public:
 
-    Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, QObject *parent = nullptr);
+    Renderer(ModuleDocument &document,
+             InstrumentListModel &instrumentModel,
+             WaveListModel &waveModel,
+             Config &config,
+             QObject *parent = nullptr);
     ~Renderer();
-
-    void setDevice(struct SoundIoDevice *device, audio::Samplerate samplerate);
 
 public slots:
     void play();
@@ -46,12 +49,17 @@ public slots:
 
     void stopMusic();
 
+    void stop();
+
 protected:
     void run() override;
 
 signals:
     void playing(); // emitted when music starts playing
     void stopped(); // emitted when music stops playing via halt effect or by user action
+
+private slots:
+    void onSoundChange();
 
 private:
     void resetPreview();
@@ -63,6 +71,7 @@ private:
     ModuleDocument &mDocument;
     InstrumentListModel &mInstrumentModel;
     WaveListModel &mWaveModel;
+    Config &mConfig;
     audio::PlaybackQueue mPb;
     trackerboy::Synth mSynth;
     trackerboy::RuntimeContext mRc;

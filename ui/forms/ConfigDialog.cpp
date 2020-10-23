@@ -2,6 +2,7 @@
 #include "ConfigDialog.hpp"
 
 #include <QMessageBox>
+#include <QPushButton>
 
 #include <algorithm>
 #include <cmath>
@@ -16,9 +17,13 @@ ConfigDialog::ConfigDialog(audio::BackendTable &backendTable, Config &config, QW
     mUi(new Ui::ConfigDialog()),
     mBackendTable(backendTable),
     mConfig(config),
-    mLastBackendIndex(-1)
+    mLastBackendIndex(-1),
+    mDirtyFlags(0)
 {
     mUi->setupUi(this);
+    auto applyButton = mUi->buttonBox->button(QDialogButtonBox::Apply);
+    applyButton->setEnabled(false);
+    connect(applyButton, &QPushButton::clicked, this, &ConfigDialog::apply);
 
     // populate the backends combobox with all available backends
     // we only need to do this once
@@ -46,17 +51,7 @@ ConfigDialog::~ConfigDialog() {
 }
 
 void ConfigDialog::accept() {
-    // update all changes to the Config object
-    mConfig.setDevice(mUi->mBackendCombo->currentIndex(), mUi->mDeviceCombo->currentIndex());
-    mConfig.setSamplerate(static_cast<audio::Samplerate>(mUi->mSamplerateCombo->currentIndex()));
-
-    mConfig.setBuffersize(mUi->mBufferSizeSlider->value());
-    mConfig.setVolume(mUi->mVolumeSlider->value());
-    mConfig.setBassFrequency(mUi->mBassSlider->value());
-    mConfig.setTreble(mUi->mTrebleSlider->value());
-    mConfig.setTrebleFrequency(mUi->mTrebleCutoffSlider->value());
-
-
+    apply();
     QDialog::accept();
 }
 
@@ -67,6 +62,25 @@ void ConfigDialog::reject() {
     QDialog::reject();
 }
 
+void ConfigDialog::apply() {
+    // update all changes to the Config object
+
+    if (!!(mDirtyFlags & DIRTY_FLAG_SOUND)) {
+        auto &soundConfig = mConfig.mSound;
+        mConfig.setDevice(mUi->mBackendCombo->currentIndex(), mUi->mDeviceCombo->currentIndex());
+        soundConfig.samplerate = static_cast<audio::Samplerate>(mUi->mSamplerateCombo->currentIndex());
+        soundConfig.buffersize = mUi->mBufferSizeSlider->value();
+        soundConfig.volume = mUi->mVolumeSlider->value();
+        soundConfig.bassFrequency = mUi->mBassSlider->value();
+        soundConfig.treble = mUi->mTrebleSlider->value();
+        soundConfig.trebleFrequency = mUi->mTrebleCutoffSlider->value();
+
+        mConfig.applySound();
+    }
+
+    clean();
+}
+
 void ConfigDialog::showEvent(QShowEvent *evt) {
     mUi->mTabWidget->setCurrentIndex(0);
     QDialog::showEvent(evt);
@@ -75,26 +89,31 @@ void ConfigDialog::showEvent(QShowEvent *evt) {
 void ConfigDialog::bufferSizeSliderChanged(int value) {
     QString text("%1 ms");
     mUi->mBufferSizeLabel->setText(text.arg(QString::number(value)));
+    setDirty(DIRTY_FLAG_SOUND);
 }
 
 void ConfigDialog::volumeSliderChanged(int value) {
     QString text("%1%");
     mUi->mVolumeLabel->setText(text.arg(QString::number(value)));
+    setDirty(DIRTY_FLAG_SOUND);
 }
 
 void ConfigDialog::bassSliderChanged(int value) {
     QString text("%1 Hz");
     mUi->mBassLabel->setText(text.arg(QString::number(value)));
+    setDirty(DIRTY_FLAG_SOUND);
 }
 
 void ConfigDialog::trebleAmountSliderChanged(int value) {
     QString text("%1 dB");
     mUi->mTrebleLabel->setText(text.arg(QString::number(value)));
+    setDirty(DIRTY_FLAG_SOUND);
 }
 
 void ConfigDialog::trebleCutoffSliderChanged(int value) {
     QString text("%1 Hz");
     mUi->mTrebleCutoffLabel->setText(text.arg(QString::number(value)));
+    setDirty(DIRTY_FLAG_SOUND);
 }
 
 void ConfigDialog::backendActivated(int index) {
@@ -146,6 +165,8 @@ void ConfigDialog::backendActivated(int index) {
         deviceCombo->setCurrentIndex(deviceIndex);
 
         mLastBackendIndex = index;
+
+        setDirty(DIRTY_FLAG_SOUND);
     }
 }
 
@@ -154,10 +175,12 @@ void ConfigDialog::resetControls() {
 
     // Sound tab
 
+    auto &soundConfig = mConfig.mSound;
+
     auto backendCombo = mUi->mBackendCombo;
     auto deviceCombo = mUi->mDeviceCombo;
 
-    int backendIndex = mConfig.backendIndex();
+    int backendIndex = soundConfig.backendIndex;
     if (backendCombo->currentIndex() != backendIndex) {
         // backend index does not match config, reset it
         backendCombo->setCurrentIndex(backendIndex);
@@ -173,16 +196,29 @@ void ConfigDialog::resetControls() {
             soundio_device_unref(soundioDev);
         }
     }
-    deviceCombo->setCurrentIndex(mConfig.deviceIndex());
+    deviceCombo->setCurrentIndex(soundConfig.deviceIndex);
 
-    mUi->mSamplerateCombo->setCurrentIndex(mConfig.samplerate());
+    mUi->mSamplerateCombo->setCurrentIndex(soundConfig.samplerate);
 
-    mUi->mBufferSizeSlider->setValue(mConfig.buffersize());
-    mUi->mVolumeSlider->setValue(mConfig.volume());
-    mUi->mBassSlider->setValue(mConfig.bassFrequency());
-    mUi->mTrebleSlider->setValue(mConfig.treble());
-    mUi->mTrebleCutoffSlider->setValue(mConfig.trebleFrequency());
+    mUi->mBufferSizeSlider->setValue(soundConfig.buffersize);
+    mUi->mVolumeSlider->setValue(soundConfig.volume);
+    mUi->mBassSlider->setValue(soundConfig.bassFrequency);
+    mUi->mTrebleSlider->setValue(soundConfig.treble);
+    mUi->mTrebleCutoffSlider->setValue(soundConfig.trebleFrequency);
+
+    clean();
 }
 
+void ConfigDialog::setDirty(int flag) {
+    if (!mDirtyFlags) {
+        mUi->buttonBox->button(QDialogButtonBox::Apply)->setEnabled(true);
+    }
+    mDirtyFlags |= flag;
+}
+
+void ConfigDialog::clean() {
+    mDirtyFlags = 0;
+    mUi->buttonBox->button(QDialogButtonBox::Apply)->setEnabled(false);
+}
 
 

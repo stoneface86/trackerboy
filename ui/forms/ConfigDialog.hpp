@@ -31,18 +31,28 @@ protected:
     void showEvent(QShowEvent *evt) override;
 
 private slots:
+    void apply();
+
     void bufferSizeSliderChanged(int value);
     void volumeSliderChanged(int value);
     void backendActivated(int index);
     void bassSliderChanged(int value);
     void trebleAmountSliderChanged(int value);
     void trebleCutoffSliderChanged(int value);
+
+
     
 private:
+    static constexpr int DIRTY_FLAG_SOUND = 0x1;
+    void setDirty(int flag);
+
+    void clean();
+
     Ui::ConfigDialog *mUi;
     audio::BackendTable &mBackendTable;
 
     Config &mConfig;
     int mLastBackendIndex;
+    int mDirtyFlags;
 
 };

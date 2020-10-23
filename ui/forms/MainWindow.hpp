@@ -16,6 +16,7 @@
 #include <QFileDialog>
 #include <QComboBox>
 #include <QToolBar>
+#include <QLabel>
 
 
 namespace Ui {
@@ -45,6 +46,9 @@ private slots:
     void moduleRemoveSong();
     void windowResetLayout();
 
+    // config changes
+    void onSoundChange();
+
 private:
 
     // To be called before loading a new document. Prompts user to save if the
@@ -70,7 +74,7 @@ private:
 
     QFileDialog *mModuleFileDialog;
 
-    Config mConfig;
+    Config *mConfig;
     ModuleDocument *mDocument;
     InstrumentListModel *mInstrumentModel;
     SongListModel *mSongModel;
@@ -90,5 +94,8 @@ private:
 
     QToolBar *mSongToolbar = nullptr;
     QComboBox *mSongCombo = nullptr;
+
+    // statusbar widgets
+    QLabel *mSamplerateLabel = nullptr;
 
 };

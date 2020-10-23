@@ -3,6 +3,7 @@
 
 #include "audio.hpp"
 
+#include <QObject>
 #include <QSettings>
 
 #include "trackerboy/ChType.hpp"
@@ -11,9 +12,32 @@
 // Class containing application settings. Settings are modified via the ConfigDialog
 // Signals are emitted when a setting changes.
 //
-class Config {
+class Config : public QObject {
+
+    Q_OBJECT
+
+    friend class ConfigDialog;
 
 public:
+
+    struct Sound {
+        // device settings
+        int backendIndex;
+        int deviceIndex;
+        struct SoundIo *soundio;
+        struct SoundIoDevice *device;
+        audio::Samplerate samplerate;
+
+        unsigned buffersize;   // Buffer size of playback queue in milleseconds
+        unsigned volume;       // Master volume of playback queue output, 0-100
+
+        unsigned bassFrequency;    // Bass cutoff frequency
+        int treble;                // Treble amount, in dB
+        unsigned trebleFrequency;  // Treble cutoff frequency
+
+
+    };
+
     Config(audio::BackendTable &backendTable);
 
     //
@@ -28,64 +52,21 @@ public:
     //
     void writeSettings(QSettings &settings);
 
-    //
-    // "Sound" settings
-    //
+    Sound const& sound();
 
-    int backendIndex() const noexcept;
-
-    int deviceIndex() const noexcept;
-
-    struct SoundIoDevice* device() const noexcept;
-
-    //
-    // The sampling rate to use, the rate is a value in the audio::Samplerate enum
-    //
-    audio::Samplerate samplerate() const noexcept;
-
-    unsigned buffersize() const noexcept;
-
-    unsigned volume() const noexcept;
-
-    unsigned bassFrequency() const noexcept;
-
-    int treble() const noexcept;
-
-    unsigned trebleFrequency() const noexcept;
-
-    void setDevice(int backend, int device);
-
-    void setSamplerate(audio::Samplerate samplerate);
-
-    void setBuffersize(unsigned buffersize);
-
-    void setVolume(unsigned volume);
-
-    void setBassFrequency(unsigned freq);
-
-    void setTreble(int treble);
-
-    void setTrebleFrequency(unsigned freq);
+signals:
+    void soundConfigChanged();
 
 
 private:
     audio::BackendTable &mBackendTable;
 
-    // device settings
-    int mBackendIndex;
-    int mDeviceIndex;
-    struct SoundIo *mSoundio;
-    struct SoundIoDevice *mDevice;
-    audio::Samplerate mSamplerate;
+    Sound mSound;
 
-    unsigned mBuffersize;   // Buffer size of playback queue in milleseconds
-    unsigned mVolume;       // Master volume of playback queue output, 0-100
+    // just emits soundConfigChanged
+    void applySound();
 
-    unsigned mBassFrequency;    // Bass cutoff frequency
-    int mTreble;                // Treble amount, in dB
-    unsigned mTrebleFrequency;  // Treble cutoff frequency
-
-    bool mConfigSound;
+    void setDevice(int backendIndex, int deviceIndex);
 
 };
 

@@ -8,7 +8,6 @@ namespace {
 constexpr int DEFAULT_SAMPLERATE = audio::SR_44100;
 constexpr unsigned DEFAULT_BUFFERSIZE = 40;
 constexpr unsigned DEFAULT_VOLUME = 100;
-constexpr int DEFAULT_GAIN = 0;
 constexpr unsigned DEFAULT_BASS_FREQUENCY = 20;
 constexpr int DEFAULT_TREBLE = -8;
 constexpr unsigned DEFAULT_TREBLE_FREQUENCY = 12000;
@@ -18,120 +17,33 @@ constexpr unsigned DEFAULT_TREBLE_FREQUENCY = 12000;
 
 
 Config::Config(audio::BackendTable &backendTable) :
-    mBackendTable(backendTable),
-    mBackendIndex(-1),
-    mDeviceIndex(-1),
-    mSoundio(nullptr),
-    mDevice(nullptr),
-    mSamplerate(audio::SR_44100),
-    mBuffersize(0),
-    mVolume(0),
-    mBassFrequency(0),
-    mTreble(0),
-    mTrebleFrequency(0),
-    mConfigSound(false)
+    mBackendTable(backendTable)
 {
 }
 
-int Config::backendIndex() const noexcept {
-    return mBackendIndex;
-}
-
-int Config::deviceIndex() const noexcept {
-    return mDeviceIndex;
-}
-
-struct SoundIoDevice* Config::device() const noexcept {
-    return mDevice;
-}
-
-audio::Samplerate Config::samplerate() const noexcept {
-    return mSamplerate;
-}
-
-unsigned Config::buffersize() const noexcept {
-    return mBuffersize;
-}
-
-unsigned Config::volume() const noexcept {
-    return mVolume;
-}
-
-unsigned Config::bassFrequency() const noexcept {
-    return mBassFrequency;
-}
-
-int Config::treble() const noexcept {
-    return mTreble;
-}
-
-unsigned Config::trebleFrequency() const noexcept {
-    return mTrebleFrequency;
+Config::Sound const& Config::sound() {
+    return mSound;
 }
 
 void Config::setDevice(int backend, int device) {
     bool getDevice = false;
 
-    if (backend != mBackendIndex) {
-        mBackendIndex = backend;
-        mSoundio = mBackendTable[backend].soundio;
+    if (backend != mSound.backendIndex) {
+        mSound.backendIndex = backend;
+        mSound.soundio = mBackendTable[backend].soundio;
         getDevice = true;
     }
 
-    if (device != mDeviceIndex) {
-        mDeviceIndex = device;
+    if (device != mSound.deviceIndex) {
+        mSound.deviceIndex = device;
         getDevice = true;
     }
 
     if (getDevice) {
-        soundio_device_unref(mDevice);
-        mDevice = mBackendTable.getDevice(audio::BackendTable::Location(backend, device));
-        mConfigSound = true;
+        soundio_device_unref(mSound.device);
+        mSound.device = mBackendTable.getDevice(audio::BackendTable::Location(backend, device));
     }
 }
-
-void Config::setSamplerate(audio::Samplerate samplerate) {
-    if (mSamplerate != samplerate) {
-        mSamplerate = samplerate;
-        mConfigSound = true;
-    }
-}
-
-void Config::setBuffersize(unsigned buffersize) {
-    if (mBuffersize != buffersize) {
-        mBuffersize = buffersize;
-        mConfigSound = true;
-    }
-}
-
-void Config::setVolume(unsigned volume) {
-    if (mVolume != volume) {
-        mVolume = volume;
-        mConfigSound = true;
-    }
-}
-
-void Config::setBassFrequency(unsigned int freq) {
-    if (mBassFrequency != freq) {
-        mBassFrequency = freq;
-        mConfigSound = true;
-    }
-}
-
-void Config::setTreble(int treble) {
-    if (mTreble != treble) {
-        mTreble = treble;
-        mConfigSound = true;
-    }
-}
-
-void Config::setTrebleFrequency(unsigned int freq) {
-    if (mTrebleFrequency != freq) {
-        mTrebleFrequency = freq;
-        mConfigSound = true;
-    }
-}
-
 
 void Config::readSettings(QSettings &settings) {
     settings.beginGroup("config");
@@ -149,29 +61,35 @@ void Config::readSettings(QSettings &settings) {
 
         location = mBackendTable.getDeviceLocation(static_cast<SoundIoBackend>(backend), id.data());
     }
-    mBackendIndex = location.first;
-    mDeviceIndex = location.second;
-    mDevice = mBackendTable.getDevice(location);
-    mSoundio = mBackendTable[mBackendIndex].soundio;
+    mSound.backendIndex = location.first;
+    mSound.deviceIndex = location.second;
+    mSound.device = mBackendTable.getDevice(location);
+    mSound.soundio = mBackendTable[mSound.backendIndex].soundio;
 
-    mSamplerate = static_cast<audio::Samplerate>(settings.value("samplerate", DEFAULT_SAMPLERATE).toInt());
-    mBuffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
-    mVolume = settings.value("volume", DEFAULT_VOLUME).toUInt();
-    mBassFrequency = settings.value("bassFrequency", DEFAULT_BASS_FREQUENCY).toUInt();
-    mTreble = settings.value("treble", DEFAULT_TREBLE).toInt();
-    mTrebleFrequency = settings.value("trebleFrequency", DEFAULT_TREBLE_FREQUENCY).toUInt();
+    mSound.samplerate = static_cast<audio::Samplerate>(settings.value("samplerate", DEFAULT_SAMPLERATE).toInt());
+    mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
+    mSound.volume = settings.value("volume", DEFAULT_VOLUME).toUInt();
+    mSound.bassFrequency = settings.value("bassFrequency", DEFAULT_BASS_FREQUENCY).toUInt();
+    mSound.treble = settings.value("treble", DEFAULT_TREBLE).toInt();
+    mSound.trebleFrequency = settings.value("trebleFrequency", DEFAULT_TREBLE_FREQUENCY).toUInt();
+
+    applySound();
 }
 
 
 void Config::writeSettings(QSettings &settings) {
     settings.beginGroup("config");
-    settings.setValue("deviceBackend", static_cast<int>(mSoundio->current_backend));
-    QByteArray id(mDevice->id);
+    settings.setValue("deviceBackend", static_cast<int>(mSound.soundio->current_backend));
+    QByteArray id(mSound.device->id);
     settings.setValue("deviceId", id);
-    settings.setValue("samplerate", mSamplerate);
-    settings.setValue("buffersize", mBuffersize);
-    settings.setValue("volume", mVolume);
-    settings.setValue("bassFrequency", mBassFrequency);
-    settings.setValue("treble", mTreble);
-    settings.setValue("trebleFrequency", mTrebleFrequency);
+    settings.setValue("samplerate", mSound.samplerate);
+    settings.setValue("buffersize", mSound.buffersize);
+    settings.setValue("volume", mSound.volume);
+    settings.setValue("bassFrequency", mSound.bassFrequency);
+    settings.setValue("treble", mSound.treble);
+    settings.setValue("trebleFrequency", mSound.trebleFrequency);
+}
+
+void Config::applySound() {
+    emit soundConfigChanged();
 }

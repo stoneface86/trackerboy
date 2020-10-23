@@ -22,15 +22,15 @@ MainWindow::MainWindow(audio::BackendTable &backendTable) :
     mUi(new Ui::MainWindow()),
     mBackendTable(backendTable),
     mModuleFileDialog(new QFileDialog(this)),
-    mConfig(backendTable),
+    mConfig(new Config(backendTable)),
     mDocument(new ModuleDocument(this)),
     mInstrumentModel(new InstrumentListModel(*mDocument)),
     mSongModel(new SongListModel(*mDocument)),
     mWaveModel(new WaveListModel(*mDocument)),
     mWaveEditor(new WaveEditor(*mWaveModel, this)),
     mInstrumentEditor(new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this)),
-    mConfigDialog(new ConfigDialog(backendTable, mConfig, this)),
-    mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, this))
+    mConfigDialog(new ConfigDialog(backendTable, *mConfig, this)),
+    mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, *mConfig, this))
 {
     // setup the designer ui
     mUi->setupUi(this);
@@ -38,11 +38,13 @@ MainWindow::MainWindow(audio::BackendTable &backendTable) :
     // setup ui not specified in the ui file
     setupUi();
 
+    setupConnections();
+
     // read in configuration, window geometry and window state
     readSettings();
     mConfigDialog->resetControls();
 
-    setupConnections();
+
 
     // new documents have an empty string for a filename
     setFilename("");
@@ -50,8 +52,8 @@ MainWindow::MainWindow(audio::BackendTable &backendTable) :
     // associate menu actions with the model
     mSongModel->setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
 
-    mRenderer->setDevice(mConfig.device(), mConfig.samplerate());
-    mRenderer->start();
+    //mRenderer->setDevice(mConfig.device(), mConfig.samplerate());
+    //mRenderer->start();
 }
 
 MainWindow::~MainWindow() {
@@ -216,6 +218,12 @@ void MainWindow::windowResetLayout() {
     resizeDocks({ mUi->dockSongProperties, mUi->dockOrders }, { mUi->dockSongProperties->minimumHeight(), mUi->dockOrders->maximumHeight() }, Qt::Vertical);
 }
 
+void MainWindow::onSoundChange() {
+    auto &sound = mConfig->sound();
+    auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
+    mSamplerateLabel->setText(QString("%1 Hz").arg(rate));
+}
+
 // PRIVATE METHODS -----------------------------------------------------------
 
 
@@ -271,7 +279,7 @@ void MainWindow::readSettings() {
         restoreState(windowState);
     }
     
-    mConfig.readSettings(settings);
+    mConfig->readSettings(settings);
 }
 
 void MainWindow::setFilename(QString filename) {
@@ -324,6 +332,8 @@ void MainWindow::setupConnections() {
     connect(mSongCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), mSongModel, QOverload<int>::of(&SongListModel::select));
     connect(mSongModel, &SongListModel::currentIndexChanged, mSongCombo, &QComboBox::setCurrentIndex);
 
+
+    connect(mConfig, &Config::soundConfigChanged, this, &MainWindow::onSoundChange);
 
 }
 
@@ -395,11 +405,15 @@ void MainWindow::setupUi() {
         connect(resetLayoutAction, &QAction::triggered, this, &MainWindow::windowResetLayout);
         mUi->menubar->insertMenu(mUi->menuHelp->menuAction(), windowMenu);
     }
+
+    // STATUSBAR ==============================================================
+    mSamplerateLabel = new QLabel();
+    mUi->statusbar->addPermanentWidget(mSamplerateLabel);
 }
 
 void MainWindow::writeSettings() {
     QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
-    mConfig.writeSettings(settings);
+    mConfig->writeSettings(settings);
 }

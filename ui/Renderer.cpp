@@ -6,11 +6,12 @@
 #include <chrono>
 
 
-Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, QObject *parent) :
+Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, Config &config, QObject *parent) :
     QThread(parent),
     mDocument(document),
     mInstrumentModel(instrumentModel),
     mWaveModel(waveModel),
+    mConfig(config),
     mPb(audio::SR_44100),
     mSynth(44100),
     mRc(mSynth, document.instrumentTable(), document.waveTable()),
@@ -23,12 +24,11 @@ Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentMode
     mRunning(true),
     mIdling(true)
 {
-
+    connect(&mConfig, &Config::soundConfigChanged, this, &Renderer::onSoundChange);
     //mPb.open();
 }
 
 Renderer::~Renderer() {
-
     mMutex.lock();
     mRunning = false;
     mMutex.unlock();
@@ -40,17 +40,6 @@ Renderer::~Renderer() {
     wait();
 
     //mPb.close();
-}
-
-void Renderer::setDevice(struct SoundIoDevice *device, audio::Samplerate samplerate) {
-    QMutexLocker locker(&mMutex);
-
-    // this is just a hack to get things working for now
-    // we will need to cancel any work being done, and then wait until the thread is idle
-
-    mPb.close();
-    mPb.setDevice(device, samplerate);
-    mPb.open();
 }
 
 void Renderer::play() {
@@ -136,9 +125,15 @@ void Renderer::stopMusic() {
 
 }
 
+void Renderer::stop() {
+
+}
+
 
 void Renderer::run() {
-    bool running = true;
+    mMutex.lock();
+    mRunning = true;
+    mMutex.unlock();
 
     for (;;) {
 
@@ -153,7 +148,7 @@ void Renderer::run() {
 
         // check if we are still running
         mMutex.lock();
-        running = mRunning;
+        bool running = mRunning;
         mMutex.unlock();
         if (!running) {
             // no longer running, the thread will stop executing
@@ -232,5 +227,39 @@ bool Renderer::hasNoWork() {
     return mPreviewState == PreviewState::none && !mMusicPlaying;
 }
 
+
+void Renderer::onSoundChange() {
+
+    if (isRunning()) {
+        // stop the thread
+        mMutex.lock();
+        mRunning = false;
+        mMutex.unlock();
+
+        stopIdling();
+
+        wait();
+    }
+
+    auto &sound = mConfig.sound();
+
+    // whatever is queued will be lost
+    //mPb.stop(false);
+    mPb.close();
+
+    mPb.setDevice(sound.device, sound.samplerate);
+    mPb.open();
+
+    mSynth.setSamplingRate(audio::SAMPLERATE_TABLE[sound.samplerate]);
+    //mSynth.setBass(sound.bassFrequency);
+    //mSynth.setTreble(sound.treble, sound.trebleFrequency);
+
+    //double gain = pow(2.0, sound.volume / 6.0);
+    //mSynth.setVolume(gain);
+
+    mSynth.setupBuffers();
+
+    start();
+}
 
 
