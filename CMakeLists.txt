@@ -44,6 +44,30 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (SOUNDIO_REQUIRED)
     find_package(Soundio REQUIRED)
     include_directories(${Soundio_INCLUDE_DIR})
+
+
+    add_library(miniaudio STATIC "miniaudio/extras/miniaudio_split/miniaudio.c")
+    target_compile_definitions(miniaudio PRIVATE
+        MA_NO_DECODING
+        MA_NO_ENCODING
+        MA_NO_GENERATION
+    )
+    target_include_directories(miniaudio PUBLIC "miniaudio/extras/miniaudio_split")
+    # miniaudio dependencies
+    # windows: none
+    # mac: none
+    # linux: pthreads, libm, libdl
+    # bsd: pthreads, libm
+    if (UNIX AND NOT APPLE)
+        set(THREADS_PREFER_PTHREAD_FLAG ON)
+        find_package(Threads REQUIRED)
+        find_library(LIB_M m)
+        if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            find_library(LIB_DL dl)
+            target_link_libraries(miniaudio PRIVATE ${LIB_DL})
+        endif ()
+        target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
+    endif ()
 endif ()
 
 if (TRACKERBOY_ENABLE_TESTS)
