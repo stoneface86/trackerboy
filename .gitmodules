@@ -1,9 +1,6 @@
 [submodule "StereoBlipBuffer"]
 	path = StereoBlipBuffer
 	url = https://github.com/stoneface86/StereoBlipBuffer
-[submodule "rtaudio"]
-	path = rtaudio
-	url = https://github.com/thestk/rtaudio.git
 [submodule "miniaudio"]
 	path = miniaudio
 	url = https://github.com/mackron/miniaudio.git
