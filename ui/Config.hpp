@@ -22,12 +22,10 @@ public:
 
     struct Sound {
         // device settings
-        int backendIndex;
-        int deviceIndex;
-        struct SoundIo *soundio;
-        struct SoundIoDevice *device;
-        audio::Samplerate samplerate;
+        //int backendIndex;
+        //int deviceIndex;
 
+        unsigned samplerate;
         unsigned buffersize;   // Buffer size of playback queue in milleseconds
         unsigned volume;       // Master volume of playback queue output, 0-100
 
@@ -38,7 +36,7 @@ public:
 
     };
 
-    Config(audio::BackendTable &backendTable);
+    Config();
 
     //
     // Read the configuration settings from the given QSettings. Should be
@@ -59,14 +57,13 @@ signals:
 
 
 private:
-    audio::BackendTable &mBackendTable;
 
     Sound mSound;
 
     // just emits soundConfigChanged
     void applySound();
 
-    void setDevice(int backendIndex, int deviceIndex);
+    //void setDevice(int backendIndex, int deviceIndex);
 
 };
 

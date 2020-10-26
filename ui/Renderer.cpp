@@ -4,6 +4,7 @@
 #include <QTime>
 
 #include <chrono>
+#include <thread>
 
 
 Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, Config &config, QObject *parent) :
@@ -12,7 +13,7 @@ Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentMode
     mInstrumentModel(instrumentModel),
     mWaveModel(waveModel),
     mConfig(config),
-    mPb(audio::SR_44100),
+    mPb(),
     mSynth(44100),
     mRc(mSynth, document.instrumentTable(), document.waveTable()),
     mEngine(mRc),
@@ -155,7 +156,10 @@ void Renderer::run() {
             break;
         }
         
+        //auto nextFrame = std::chrono::steady_clock::now();
         for (;;) {
+
+            //nextFrame += std::chrono::microseconds((int)(1000000 / 59.7));
 
             if (hasNoWork()) {
                 break;
@@ -178,18 +182,20 @@ void Renderer::run() {
             size_t framesize = mSynth.run();
             mMutex.unlock();
 
-            // write the frame to the queue, will block if the queue is full
-            try {
-                mPb.writeAll(mSynth.buffer(), framesize);
-            } catch (audio::SoundIoError err) {
-                // if we get here then we could not open a stream for the configured device
-                // just stop everything
+            mPb.enqueue(mSynth.buffer(), framesize);
 
-                // TODO: have some kind of error reporting mechanism here (maybe an error signal)
-                mMusicPlaying = false;
-                mPreviewState = PreviewState::none;
-                break;
-            }
+            // write the frame to the queue, will block if the queue is full
+            //try {
+            //    mPb.writeAll(mSynth.buffer(), framesize);
+            //} catch (audio::SoundIoError err) {
+            //    // if we get here then we could not open a stream for the configured device
+            //    // just stop everything
+
+            //    // TODO: have some kind of error reporting mechanism here (maybe an error signal)
+            //    mMusicPlaying = false;
+            //    mPreviewState = PreviewState::none;
+            //    break;
+            //}
 
             if (stopAfterFrame) {
 
@@ -198,6 +204,8 @@ void Renderer::run() {
                 mMutex.unlock();
                 break;
             }
+
+            //std::this_thread::sleep_until(nextFrame);
         }
 
         mPb.stop(true);
@@ -245,12 +253,12 @@ void Renderer::onSoundChange() {
 
     // whatever is queued will be lost
     //mPb.stop(false);
-    mPb.close();
+    /*mPb.close();
 
     mPb.setDevice(sound.device, sound.samplerate);
     mPb.open();
 
-    mSynth.setSamplingRate(audio::SAMPLERATE_TABLE[sound.samplerate]);
+    mSynth.setSamplingRate(audio::SAMPLERATE_TABLE[sound.samplerate]);*/
     //mSynth.setBass(sound.bassFrequency);
     //mSynth.setTreble(sound.treble, sound.trebleFrequency);
 
@@ -259,7 +267,9 @@ void Renderer::onSoundChange() {
 
     mSynth.setupBuffers();
 
-    start();
+    mPb.open();
+    //mPb.setLatency(50);
+    start(QThread::Priority::TimeCriticalPriority);
 }
 
 

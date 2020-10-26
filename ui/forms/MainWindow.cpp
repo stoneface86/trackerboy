@@ -17,19 +17,18 @@
 constexpr int TOOLBAR_ICON_WIDTH = 16;
 constexpr int TOOLBAR_ICON_HEIGHT = 16;
 
-MainWindow::MainWindow(audio::BackendTable &backendTable) :
+MainWindow::MainWindow() :
     QMainWindow(),
     mUi(new Ui::MainWindow()),
-    mBackendTable(backendTable),
     mModuleFileDialog(new QFileDialog(this)),
-    mConfig(new Config(backendTable)),
+    mConfig(new Config()),
     mDocument(new ModuleDocument(this)),
     mInstrumentModel(new InstrumentListModel(*mDocument)),
     mSongModel(new SongListModel(*mDocument)),
     mWaveModel(new WaveListModel(*mDocument)),
     mWaveEditor(new WaveEditor(*mWaveModel, this)),
     mInstrumentEditor(new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this)),
-    mConfigDialog(new ConfigDialog(backendTable, *mConfig, this)),
+    mConfigDialog(new ConfigDialog(*mConfig, this)),
     mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, *mConfig, this))
 {
     // setup the designer ui
@@ -220,8 +219,8 @@ void MainWindow::windowResetLayout() {
 
 void MainWindow::onSoundChange() {
     auto &sound = mConfig->sound();
-    auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
-    mSamplerateLabel->setText(QString("%1 Hz").arg(rate));
+    //auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
+    mSamplerateLabel->setText(QString("%1 Hz").arg(sound.samplerate));
 }
 
 // PRIVATE METHODS -----------------------------------------------------------

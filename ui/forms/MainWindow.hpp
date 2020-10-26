@@ -28,7 +28,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(audio::BackendTable &backendTable);
+    explicit MainWindow();
     ~MainWindow();
 
 protected:
@@ -69,8 +69,6 @@ private:
     void writeSettings();
 
     Ui::MainWindow *mUi;
-
-    audio::BackendTable &mBackendTable;
 
     QFileDialog *mModuleFileDialog;
 

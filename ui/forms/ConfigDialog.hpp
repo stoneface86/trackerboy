@@ -17,7 +17,7 @@ class ConfigDialog : public QDialog {
     Q_OBJECT
 
 public:
-    ConfigDialog(audio::BackendTable &backendTable, Config &config, QWidget *parent = nullptr);
+    ConfigDialog(Config &config, QWidget *parent = nullptr);
     ~ConfigDialog();
 
     void accept() override;
@@ -49,7 +49,6 @@ private:
     void clean();
 
     Ui::ConfigDialog *mUi;
-    audio::BackendTable &mBackendTable;
 
     Config &mConfig;
     int mLastBackendIndex;

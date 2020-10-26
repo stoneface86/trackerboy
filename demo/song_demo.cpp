@@ -9,11 +9,13 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
+#include <chrono>
+#include <thread>
 
 using audio::PlaybackQueue;
 using namespace trackerboy;
 
-constexpr audio::Samplerate SAMPLERATE = audio::SR_48000;
+//constexpr audio::Samplerate SAMPLERATE = audio::SR_48000;
 constexpr unsigned SAMPLERATE_INT = 48000;
 
 constexpr int FAIL_SOUNDIO = 1;
@@ -33,7 +35,7 @@ void printFrame(Frame &frame) {
 
 int main() {
 
-    struct SoundIo *soundio = soundio_create();
+    /*struct SoundIo *soundio = soundio_create();
     if (soundio == nullptr) {
         return FAIL_SOUNDIO;
     }
@@ -49,15 +51,15 @@ int main() {
 
     if (deviceTable.isEmpty()) {
         return FAIL_NO_DEVICES;
-    }
+    }*/
 
 
     Synth synth(SAMPLERATE_INT);
-    PlaybackQueue pb(SAMPLERATE);
+    std::unique_ptr<PlaybackQueue> pb(new PlaybackQueue());
 
-    struct SoundIoDevice *device = soundio_get_output_device(soundio, deviceTable.defaultDevice());
+    /*struct SoundIoDevice *device = soundio_get_output_device(soundio, deviceTable.defaultDevice());
     pb.setDevice(device, SAMPLERATE);
-    soundio_device_unref(device);
+    soundio_device_unref(device);*/
 
     Module mod;
 
@@ -181,7 +183,6 @@ int main() {
         tr.setNote(0x3E, NOTE_F + OCTAVE_6);
 
     }
-
 
 
     {
@@ -375,7 +376,7 @@ int main() {
 
     std::vector<float> floatBuf;
 
-    pb.open();
+    pb->open();
 
     for (int i = 600; i != 0; --i) {
         Frame frame;
@@ -383,7 +384,7 @@ int main() {
         printFrame(frame);
         size_t framesize = synth.run();
         int16_t *buffer = synth.buffer();
-        pb.writeAll(buffer, framesize);
+        pb->enqueue(buffer, framesize);
         floatBuf.resize(framesize * 2);
         for (size_t i = 0; i != framesize * 2; ++i) {
             floatBuf[i] = static_cast<float>(buffer[i]) / 32768.0f;
@@ -391,16 +392,16 @@ int main() {
         wav.write(floatBuf.data(), framesize);
     }
 
-    pb.stop(true);
+    pb->stop(true);
 
-    pb.close();
+    pb->close();
 
-    std::cout << "underflows: " << pb.underflows() << std::endl;
+    std::cout << "underruns: " << pb->underruns() << std::endl;
 
     wav.finish();
     file.close();
 
-    soundio_destroy(soundio);
+    //soundio_destroy(soundio);
     return 0;
 
 }

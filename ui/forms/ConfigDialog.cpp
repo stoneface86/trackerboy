@@ -12,10 +12,9 @@
 #pragma warning(pop)
 
 
-ConfigDialog::ConfigDialog(audio::BackendTable &backendTable, Config &config, QWidget *parent) :
+ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     QDialog(parent),
     mUi(new Ui::ConfigDialog()),
-    mBackendTable(backendTable),
     mConfig(config),
     mLastBackendIndex(-1),
     mDirtyFlags(0)
@@ -25,17 +24,20 @@ ConfigDialog::ConfigDialog(audio::BackendTable &backendTable, Config &config, QW
     applyButton->setEnabled(false);
     connect(applyButton, &QPushButton::clicked, this, &ConfigDialog::apply);
 
-    // populate the backends combobox with all available backends
-    // we only need to do this once
-    //auto &deviceConfig = mConfig.deviceConfig();
-    //auto soundio = deviceConfig.soundio();
-    auto backendCombo = mUi->mBackendCombo;
-    unsigned backendCount = mBackendTable.size();
-    for (unsigned i = 0; i < backendCount; ++i) {
-        backendCombo->addItem(QString::fromLatin1(mBackendTable.name(i)));
-    }
-    // set the index to -1 so the first call to resetControls populates the device combobox
-    backendCombo->setCurrentIndex(-1);
+    //// populate the backends combobox with all available backends
+    //// we only need to do this once
+    ////auto &deviceConfig = mConfig.deviceConfig();
+    ////auto soundio = deviceConfig.soundio();
+    //auto backendCombo = mUi->mBackendCombo;
+    //unsigned backendCount = mBackendTable.size();
+    //for (unsigned i = 0; i < backendCount; ++i) {
+    //    backendCombo->addItem(QString::fromLatin1(mBackendTable.name(i)));
+    //}
+    //// set the index to -1 so the first call to resetControls populates the device combobox
+    //backendCombo->setCurrentIndex(-1);
+
+    mUi->mBackendCombo->setEnabled(false);
+    mUi->mDeviceCombo->setEnabled(false);
 
     connect(mUi->mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
     connect(mUi->mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
@@ -67,8 +69,8 @@ void ConfigDialog::apply() {
 
     if (!!(mDirtyFlags & DIRTY_FLAG_SOUND)) {
         auto &soundConfig = mConfig.mSound;
-        mConfig.setDevice(mUi->mBackendCombo->currentIndex(), mUi->mDeviceCombo->currentIndex());
-        soundConfig.samplerate = static_cast<audio::Samplerate>(mUi->mSamplerateCombo->currentIndex());
+        //mConfig.setDevice(mUi->mBackendCombo->currentIndex(), mUi->mDeviceCombo->currentIndex());
+        //soundConfig.samplerate = static_cast<audio::Samplerate>(mUi->mSamplerateCombo->currentIndex());
         soundConfig.buffersize = mUi->mBufferSizeSlider->value();
         soundConfig.volume = mUi->mVolumeSlider->value();
         soundConfig.bassFrequency = mUi->mBassSlider->value();
@@ -117,7 +119,7 @@ void ConfigDialog::trebleCutoffSliderChanged(int value) {
 }
 
 void ConfigDialog::backendActivated(int index) {
-    if (index != mLastBackendIndex) {
+    /*if (index != mLastBackendIndex) {
 
 
         int err = 0;
@@ -167,7 +169,7 @@ void ConfigDialog::backendActivated(int index) {
         mLastBackendIndex = index;
 
         setDirty(DIRTY_FLAG_SOUND);
-    }
+    }*/
 }
 
 
@@ -177,28 +179,28 @@ void ConfigDialog::resetControls() {
 
     auto &soundConfig = mConfig.mSound;
 
-    auto backendCombo = mUi->mBackendCombo;
-    auto deviceCombo = mUi->mDeviceCombo;
+    //auto backendCombo = mUi->mBackendCombo;
+    //auto deviceCombo = mUi->mDeviceCombo;
 
-    int backendIndex = soundConfig.backendIndex;
-    if (backendCombo->currentIndex() != backendIndex) {
-        // backend index does not match config, reset it
-        backendCombo->setCurrentIndex(backendIndex);
-        mLastBackendIndex = backendIndex;
-        deviceCombo->clear();
-        auto &backend = mBackendTable[backendIndex];
-        auto &deviceTable = backend.table;
-        auto soundio = backend.soundio;
-        for (auto device : deviceTable) {
-            auto soundioDev = soundio_get_output_device(soundio, device.deviceId);
-            QString name = QString::fromLatin1(soundioDev->name);
-            deviceCombo->addItem(name);
-            soundio_device_unref(soundioDev);
-        }
-    }
-    deviceCombo->setCurrentIndex(soundConfig.deviceIndex);
+    //int backendIndex = soundConfig.backendIndex;
+    //if (backendCombo->currentIndex() != backendIndex) {
+    //    // backend index does not match config, reset it
+    //    backendCombo->setCurrentIndex(backendIndex);
+    //    mLastBackendIndex = backendIndex;
+    //    deviceCombo->clear();
+    //    auto &backend = mBackendTable[backendIndex];
+    //    auto &deviceTable = backend.table;
+    //    auto soundio = backend.soundio;
+    //    for (auto device : deviceTable) {
+    //        auto soundioDev = soundio_get_output_device(soundio, device.deviceId);
+    //        QString name = QString::fromLatin1(soundioDev->name);
+    //        deviceCombo->addItem(name);
+    //        soundio_device_unref(soundioDev);
+    //    }
+    //}
+    //deviceCombo->setCurrentIndex(soundConfig.deviceIndex);
 
-    mUi->mSamplerateCombo->setCurrentIndex(soundConfig.samplerate);
+    //mUi->mSamplerateCombo->setCurrentIndex(soundConfig.samplerate);
 
     mUi->mBufferSizeSlider->setValue(soundConfig.buffersize);
     mUi->mVolumeSlider->setValue(soundConfig.volume);

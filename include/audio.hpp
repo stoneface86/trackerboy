@@ -31,12 +31,13 @@
 
 #pragma once
 
-#include "soundio/soundio.h"
+#include "miniaudio.h"
 
 #include <atomic>
 #include <cstdlib>
 #include <stdexcept>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -48,32 +49,57 @@
 namespace audio {
 
 
-//
-// Enum of sample rates for audio output. Since devices only support a limited
-// range or specific rates we will limit the user to this selection. Output is
-// bandlimited so using a higher sampling rate to avoid aliasing is unnecessary.
-//
-enum Samplerate {
-    SR_11025,           // Bit 0, 11,025 Hz
-    SR_22050,           // Bit 1, 22,050 Hz
-    SR_44100,           // Bit 2, 44,100 Hz
-    SR_48000,           // Bit 3, 48,000 Hz
-    SR_96000,           // Bit 4, 96,000 Hz
+class PlaybackQueue {
 
-    SR_COUNT
-};
-
-extern unsigned const SAMPLERATE_TABLE[SR_COUNT];
-
-
-class SoundIoError : public std::runtime_error {
-    int mError;
 public:
-    SoundIoError(int error) noexcept;
 
-    int error() const noexcept;
+    static constexpr unsigned DEFAULT_BUFFERSIZE = 40;
+    static constexpr unsigned DEFAULT_SAMPLERATE = 48000;
+
+    PlaybackQueue();
+    ~PlaybackQueue();
+
+    void open();
+
+    void close();
+
+    void setSamplerate(unsigned rate);
+
+    void setBufferSize(unsigned buffersize);
+
+    void start();
+
+    void stop(bool wait = false);
+
+    void enqueue(int16_t buf[], size_t nsamples);
+
+    unsigned underruns() const noexcept;
+
+    void resetUnderruns() noexcept;
+
+private:
+    static void playbackCallback(ma_device *device, void *out, const void *in, ma_uint32 frames);
+
+    std::optional<ma_device> mDevice;
+    std::optional<ma_pcm_rb> mRingbuffer;
+
+    ma_event mReadEvent;
+    ma_event mStopEvent;
+
+    unsigned mSamplerate;
+    unsigned mBufferSize; // size in milleseconds of the buffer
+    bool mResizeRequired;
+    bool mRunning;
+
+    std::atomic_flag mQueueFull;
+
+    std::atomic_uint mUnderruns;
+    std::atomic_bool mStopping;
+
 };
 
+
+#if 0
 //
 // Container class for all available devices on the system exposed to us
 // from a given libsoundio backend. Only output devices that support one or
@@ -125,7 +151,7 @@ public:
     //
     // Rescans all available devices and updates the table.
     //
-    void rescan(struct SoundIo *soundio);
+    //void rescan(struct SoundIo *soundio);
 
 
 private:
@@ -147,8 +173,6 @@ class BackendTable {
 public:
 
     struct Backend {
-        struct SoundIo * soundio;
-        SoundIoBackend backendType;
         DeviceTable table;
 
         Backend();
@@ -172,7 +196,7 @@ public:
     // Lookup the device in the given backend with the id. If the device
     // cannot be found, the default one is returned.
     //
-    Location getDeviceLocation(SoundIoBackend backendType, const char *id) noexcept;
+    //Location getDeviceLocation(SoundIoBackend backendType, const char *id) noexcept;
 
     //
     // Lookup the default device. The first connected backend with at least one
@@ -210,7 +234,7 @@ public:
     //
     // Map a SoundIoBackend to an index from 0 <= index < soundio_backend_count
     //
-    int toIndex(SoundIoBackend backend) const noexcept;
+    //int toIndex(SoundIoBackend backend) const noexcept;
 
 
 
@@ -362,6 +386,7 @@ private:
     void openStream();
 
 };
+#endif
 
 
 

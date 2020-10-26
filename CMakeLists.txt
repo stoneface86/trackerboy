@@ -7,8 +7,6 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOverrides.cmake")
-
 project (
     trackerboy 
     VERSION "0.1.0"
@@ -27,9 +25,9 @@ include_directories(
 )
 
 if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
-    set(SOUNDIO_REQUIRED TRUE)
+    set(SOUND_REQUIRED TRUE)
 else ()
-    set(SOUNDIO_REQUIRED FALSE)
+    set(SOUND_REQUIRED FALSE)
 endif ()
 
 # ============================================================================
@@ -40,12 +38,8 @@ endif ()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# portaudio is required for the demo and ui projects
-if (SOUNDIO_REQUIRED)
-    find_package(Soundio REQUIRED)
-    include_directories(${Soundio_INCLUDE_DIR})
-
-
+# sound related dependencies for demo and ui projects
+if (SOUND_REQUIRED)
     add_library(miniaudio STATIC "miniaudio/extras/miniaudio_split/miniaudio.c")
     target_compile_definitions(miniaudio PRIVATE
         MA_NO_DECODING
@@ -122,7 +116,7 @@ add_subdirectory(libtrackerboy)
 #
 # Utility library for libsoundio
 #
-if (SOUNDIO_REQUIRED)
+if (SOUND_REQUIRED)
     add_subdirectory(audio)
 endif()
 

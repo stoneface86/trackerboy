@@ -16,9 +16,9 @@ int main(int argc, char *argv[]) {
 
     // the backend table lives here, so that its destruction is guaranteed to
     // occur after MainWindow
-    audio::BackendTable backendTable;
+    //audio::BackendTable backendTable;
 
-    MainWindow *win = new MainWindow(backendTable);
+    MainWindow *win = new MainWindow();
     win->show();
 
     #ifdef NDEBUG
