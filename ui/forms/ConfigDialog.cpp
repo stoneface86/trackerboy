@@ -37,8 +37,11 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     //// set the index to -1 so the first call to resetControls populates the device combobox
     //backendCombo->setCurrentIndex(-1);
 
-    mUi->mBackendCombo->setEnabled(false);
-    mUi->mDeviceCombo->setEnabled(false);
+    // populate samplerate combo
+    auto samplerateCombo = mUi->mSamplerateCombo;
+    for (int i = 0; i != N_SAMPLERATES; ++i) {
+        samplerateCombo->addItem(QString("%1 Hz").arg(SAMPLERATE_TABLE[i]));
+    }
 
     connect(mUi->mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
     connect(mUi->mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
@@ -47,6 +50,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     connect(mUi->mTrebleCutoffSlider, &QSlider::valueChanged, this, &ConfigDialog::trebleCutoffSliderChanged);
 
     connect(mUi->mBackendCombo, QOverload<int>::of(&QComboBox::activated), this, &ConfigDialog::backendActivated);
+    connect(mUi->mSamplerateCombo, QOverload<int>::of(&QComboBox::activated), this, &ConfigDialog::samplerateActivated);
 }
 
 ConfigDialog::~ConfigDialog() {
@@ -97,8 +101,12 @@ void ConfigDialog::bufferSizeSliderChanged(int value) {
 }
 
 void ConfigDialog::volumeSliderChanged(int value) {
-    QString text("%1%");
+    QString text("%1 dB");
     mUi->mVolumeLabel->setText(text.arg(QString::number(value)));
+    setDirty(DIRTY_FLAG_SOUND);
+}
+
+void ConfigDialog::samplerateActivated(int index) {
     setDirty(DIRTY_FLAG_SOUND);
 }
 

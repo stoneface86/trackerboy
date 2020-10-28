@@ -28,7 +28,7 @@ public:
         unsigned samplerate;
         unsigned samplerateIndex;
         unsigned buffersize;   // Buffer size of playback queue in milleseconds
-        unsigned volume;       // Master volume of playback queue output, 0-100
+        int volume;       // Synth volume level, in dB (-100 to 0)
 
         unsigned bassFrequency;    // Bass cutoff frequency
         int treble;                // Treble amount, in dB
