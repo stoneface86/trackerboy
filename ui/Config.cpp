@@ -1,11 +1,12 @@
 
 #include "Config.hpp"
+#include "samplerates.hpp"
 
 #include "audio.hpp"
 
 namespace {
 
-constexpr int DEFAULT_SAMPLERATE = 44100;
+constexpr int DEFAULT_SAMPLERATE_INDEX = 2; // 44100 Hz
 constexpr unsigned DEFAULT_BUFFERSIZE = 40;
 constexpr unsigned DEFAULT_VOLUME = 100;
 constexpr unsigned DEFAULT_BASS_FREQUENCY = 20;
@@ -65,7 +66,8 @@ void Config::readSettings(QSettings &settings) {
     //mSound.device = mBackendTable.getDevice(location);
     //mSound.soundio = mBackendTable[mSound.backendIndex].soundio;
 
-    mSound.samplerate = settings.value("samplerate", DEFAULT_SAMPLERATE).toUInt();
+    mSound.samplerateIndex = settings.value("samplerateIndex", DEFAULT_SAMPLERATE_INDEX).toUInt();
+    mSound.samplerate = SAMPLERATE_TABLE[mSound.samplerateIndex];
     mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
     mSound.volume = settings.value("volume", DEFAULT_VOLUME).toUInt();
     mSound.bassFrequency = settings.value("bassFrequency", DEFAULT_BASS_FREQUENCY).toUInt();
@@ -81,7 +83,7 @@ void Config::writeSettings(QSettings &settings) {
     //settings.setValue("deviceBackend", static_cast<int>(mSound.soundio->current_backend));
     //QByteArray id(mSound.device->id);
     //settings.setValue("deviceId", id);
-    settings.setValue("samplerate", mSound.samplerate);
+    settings.setValue("samplerateIndex", mSound.samplerateIndex);
     settings.setValue("buffersize", mSound.buffersize);
     settings.setValue("volume", mSound.volume);
     settings.setValue("bassFrequency", mSound.bassFrequency);

@@ -5,6 +5,7 @@
 #include "model/InstrumentListModel.hpp"
 #include "model/WaveListModel.hpp"
 #include "Config.hpp"
+#include "RendererThread.hpp"
 
 #include "audio.hpp"
 #include "trackerboy/engine/Engine.hpp"
@@ -22,7 +23,7 @@
 //
 // Renderer class handles pattern playback and instrument/waveform previews
 //
-class Renderer : public QThread {
+class Renderer : public QObject {
 
     Q_OBJECT
 
@@ -51,9 +52,6 @@ public slots:
 
     void stop();
 
-protected:
-    void run() override;
-
 signals:
     void playing(); // emitted when music starts playing
     void stopped(); // emitted when music stops playing via halt effect or by user action
@@ -62,38 +60,19 @@ private slots:
     void onSoundChange();
 
 private:
-    void resetPreview();
 
-    void stopIdling();
-
-    bool hasNoWork();
-
-    ModuleDocument &mDocument;
-    InstrumentListModel &mInstrumentModel;
-    WaveListModel &mWaveModel;
+    QWaitCondition mAudioStopCondition;
+    RendererThread mRendererThread;
     Config &mConfig;
-    audio::PlaybackQueue mPb;
-    trackerboy::Synth mSynth;
-    trackerboy::RuntimeContext mRc;
-    trackerboy::Engine mEngine;
-    trackerboy::InstrumentRuntime mIr;
-
-    enum class PreviewState {
-        none,
-        waveform,
-        instrument
-    };
-
-    PreviewState mPreviewState;
-    trackerboy::ChType mPreviewChannel;
-
-    //bool mRendering;
-    bool mMusicPlaying;
-    bool mRunning;
-    bool mIdling;
-
+    
     QMutex mMutex;
-    QMutex mIdlingMutex;
-    QWaitCondition mIdlingCond;
+    bool mRunning;
+    bool mStopBackground;
+
+    
+    QThread *mBackgroundThread; // thread to stop callback thread when signaled
+
+    void handleBackground();
+    static void backgroundThreadRun(Renderer *renderer);
 
 };

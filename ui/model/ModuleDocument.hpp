@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "Spinlock.hpp"
+
 #include <QObject>
 #include <QMutex>
 #include <QUndoStack>
@@ -50,6 +52,7 @@ public:
     void setModified(bool value);
 
     void lock();
+    bool trylock();
     void unlock();
 
 signals:
@@ -61,11 +64,6 @@ public slots:
 
 private:
 
-    
-
-
-    
-
     bool mModified;
     
     trackerboy::Module mModule;
@@ -76,7 +74,8 @@ private:
     // cleared when changing songs
     QUndoStack *mUndoStack;
 
-    QMutex mMutex;
+    //QMutex mMutex;
+    Spinlock mSpinlock;
 
 
     // document properties

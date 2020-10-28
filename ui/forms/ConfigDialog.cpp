@@ -1,5 +1,6 @@
 
 #include "ConfigDialog.hpp"
+#include "samplerates.hpp"
 
 #include <QMessageBox>
 #include <QPushButton>
@@ -70,7 +71,8 @@ void ConfigDialog::apply() {
     if (!!(mDirtyFlags & DIRTY_FLAG_SOUND)) {
         auto &soundConfig = mConfig.mSound;
         //mConfig.setDevice(mUi->mBackendCombo->currentIndex(), mUi->mDeviceCombo->currentIndex());
-        //soundConfig.samplerate = static_cast<audio::Samplerate>(mUi->mSamplerateCombo->currentIndex());
+        soundConfig.samplerateIndex = mUi->mSamplerateCombo->currentIndex();
+        soundConfig.samplerate = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
         soundConfig.buffersize = mUi->mBufferSizeSlider->value();
         soundConfig.volume = mUi->mVolumeSlider->value();
         soundConfig.bassFrequency = mUi->mBassSlider->value();
@@ -200,7 +202,7 @@ void ConfigDialog::resetControls() {
     //}
     //deviceCombo->setCurrentIndex(soundConfig.deviceIndex);
 
-    //mUi->mSamplerateCombo->setCurrentIndex(soundConfig.samplerate);
+    mUi->mSamplerateCombo->setCurrentIndex(soundConfig.samplerateIndex);
 
     mUi->mBufferSizeSlider->setValue(soundConfig.buffersize);
     mUi->mVolumeSlider->setValue(soundConfig.volume);

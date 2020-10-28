@@ -19,3 +19,6 @@ target_link_libraries(demo_song trackerboy audio)
 
 add_executable(demo_device_table "device_table.cpp")
 target_link_libraries(demo_device_table audio)
+
+add_executable(demo_synth "synth_demo.cpp")
+target_link_libraries(demo_synth trackerboy audio)

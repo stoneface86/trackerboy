@@ -26,6 +26,7 @@ public:
         //int deviceIndex;
 
         unsigned samplerate;
+        unsigned samplerateIndex;
         unsigned buffersize;   // Buffer size of playback queue in milleseconds
         unsigned volume;       // Master volume of playback queue output, 0-100
 
