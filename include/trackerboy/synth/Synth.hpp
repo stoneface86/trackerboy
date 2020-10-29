@@ -60,6 +60,10 @@ public:
     //
     size_t run() noexcept;
     
+    void setBass(unsigned frequency) noexcept;
+
+    void setTreble(int treble, unsigned frequency) noexcept;
+
     //
     // Set the interval for 1 frame, default is DMG vblank or 59.7 Hz
     //
@@ -68,6 +72,8 @@ public:
     void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled) noexcept;
 
     void setSamplingRate(unsigned samplingRate);
+
+    void setVolume(int percent);
 
     void setupBuffers();
 
@@ -113,6 +119,13 @@ private:
 
     // current time offset in cycles
     uint32_t mCycletime;
+
+    // equalizer settings
+    unsigned mBassFrequency;;
+    int mTreble;
+    unsigned mTrebleFrequency;
+
+    int mVolume;
 
     //void resizeFrameBuf();
 

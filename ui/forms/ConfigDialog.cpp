@@ -101,7 +101,7 @@ void ConfigDialog::bufferSizeSliderChanged(int value) {
 }
 
 void ConfigDialog::volumeSliderChanged(int value) {
-    QString text("%1 dB");
+    QString text("%1%");
     mUi->mVolumeLabel->setText(text.arg(QString::number(value)));
     setDirty(DIRTY_FLAG_SOUND);
 }

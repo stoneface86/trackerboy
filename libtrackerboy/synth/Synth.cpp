@@ -22,6 +22,13 @@ constexpr uint32_t CYCLES_PER_READ = 3;
 // ldh [n16], a
 constexpr uint32_t CYCLES_PER_WRITE = 3;
 
+// equalizer
+constexpr unsigned DEFAULT_BASS = 20;
+constexpr int DEFAULT_TREBLE = -8;
+constexpr unsigned DEFAULT_TREBLE_FREQ = 12000;
+
+constexpr int DEFAULT_VOLUME = -3;
+
 namespace trackerboy {
 
 // PIMPL idiom - this way we can keep Blip_Buffer out of the public API
@@ -70,7 +77,11 @@ Synth::Synth(unsigned samplingRate, float framerate) noexcept :
     mOutputStat(Gbs::OUT_ALL),
     mChPrev{0},
     mLastFrameSize(0),
-    mCycletime(0)
+    mCycletime(0),
+    mBassFrequency(DEFAULT_BASS),
+    mTreble(DEFAULT_TREBLE),
+    mTrebleFrequency(DEFAULT_TREBLE_FREQ),
+    mVolume(DEFAULT_VOLUME)
 {
     setupBuffers();
 }
@@ -255,12 +266,25 @@ void Synth::reset() noexcept {
     mInternal->bbuf.clear();
 }
 
+void Synth::setBass(unsigned frequency) noexcept {
+    mBassFrequency = frequency;
+}
+
+void Synth::setTreble(int treble, unsigned frequency) noexcept {
+    mTreble = treble;
+    mTrebleFrequency = frequency;
+}
+
 void Synth::setFramerate(float framerate) {
     mFramerate = framerate;
 }
 
 void Synth::setSamplingRate(unsigned samplingRate) {
     mSamplerate = samplingRate;
+}
+
+void Synth::setVolume(int db) {
+    mVolume = db;
 }
 
 void Synth::setupBuffers() {
@@ -274,13 +298,15 @@ void Synth::setupBuffers() {
     
     bbuf.set_sample_rate(mSamplerate, blipbufsize);
     bbuf.clock_rate(Gbs::CLOCK_SPEED);
-    bbuf.bass_freq(20);
+    bbuf.bass_freq(mBassFrequency);
 
-    blargg::blip_eq_t eq(-24.0, 12000, mSamplerate);
+    blargg::blip_eq_t eq(mTreble, mTrebleFrequency, mSamplerate);
     bsynth1.treble_eq(eq);
-    bsynth1.volume(0.5 * HEADROOM);
+    // linear volume scaling
+    double gain = 0.5 * (mVolume / 100.0);
+    bsynth1.volume(gain);
     bsynth2.treble_eq(eq);
-    bsynth2.volume(0.5 * HEADROOM);
+    bsynth2.volume(gain);
     reset();
 }
 
