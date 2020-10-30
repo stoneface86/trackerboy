@@ -49,6 +49,11 @@ private slots:
     // config changes
     void onSoundChange();
 
+    // statusbar
+    void statusSetInstrument(int index);
+    void statusSetWaveform(int index);
+    void statusSetOctave(int octave);
+
 private:
 
     // To be called before loading a new document. Prompts user to save if the
@@ -94,6 +99,14 @@ private:
     QComboBox *mSongCombo = nullptr;
 
     // statusbar widgets
+    QLabel *mStatusInstrument = nullptr;
+    QLabel *mStatusWaveform = nullptr;
+    QLabel *mStatusOctave = nullptr;
+    QLabel *mStatusFramerate = nullptr;
+    QLabel *mStatusSpeed = nullptr;
+    QLabel *mStatusTempo = nullptr;
+    QLabel *mStatusElapsed = nullptr;
+    QLabel *mStatusPos = nullptr;
     QLabel *mSamplerateLabel = nullptr;
 
 };

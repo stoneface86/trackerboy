@@ -223,6 +223,20 @@ void MainWindow::onSoundChange() {
     mSamplerateLabel->setText(QString("%1 Hz").arg(sound.samplerate));
 }
 
+void MainWindow::statusSetInstrument(int index) {
+    int id = mInstrumentModel->instrument(index)->id();
+    mStatusInstrument->setText(QString("Instrument: %1").arg(id, 2, 16, QChar('0')));
+}
+
+void MainWindow::statusSetWaveform(int index) {
+    int id = mWaveModel->waveform(index)->id();
+    mStatusWaveform->setText(QString("Waveform: %1").arg(id, 2, 16, QChar('0')));
+}
+
+void MainWindow::statusSetOctave(int octave) {
+    mStatusOctave->setText(QString("Octave: %1").arg(octave));
+}
+
 // PRIVATE METHODS -----------------------------------------------------------
 
 
@@ -334,6 +348,12 @@ void MainWindow::setupConnections() {
 
     connect(mConfig, &Config::soundConfigChanged, this, &MainWindow::onSoundChange);
 
+    // statusbar
+
+    connect(mInstrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
+    connect(mWaveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
+
+
 }
 
 void MainWindow::setupUi() {
@@ -406,8 +426,17 @@ void MainWindow::setupUi() {
     }
 
     // STATUSBAR ==============================================================
-    mSamplerateLabel = new QLabel();
-    mUi->statusbar->addPermanentWidget(mSamplerateLabel);
+    #define addLabelToStatusbar(var, text) var = new QLabel(text); mUi->statusbar->addPermanentWidget(var)
+    
+    addLabelToStatusbar(mStatusInstrument, "Instrument: 00");
+    addLabelToStatusbar(mStatusWaveform, "Waveform: 00");
+    addLabelToStatusbar(mStatusOctave, "Octave: 3");
+    addLabelToStatusbar(mStatusFramerate, "59.7 FPS");
+    addLabelToStatusbar(mStatusSpeed, "6.0 FPR");
+    addLabelToStatusbar(mStatusTempo, "150 BPM");
+    addLabelToStatusbar(mStatusElapsed, "00:00:00");
+    addLabelToStatusbar(mStatusPos, "00 / 00");
+    addLabelToStatusbar(mSamplerateLabel, "");
 }
 
 void MainWindow::writeSettings() {
