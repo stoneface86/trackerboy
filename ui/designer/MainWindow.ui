@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1200</width>
-    <height>837</height>
+    <height>832</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -145,74 +145,21 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
-    <layout class="QGridLayout" name="gridLayout_2">
+    <layout class="QGridLayout" name="gridLayout">
      <property name="leftMargin">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="topMargin">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="rightMargin">
-      <number>4</number>
+      <number>0</number>
      </property>
      <property name="bottomMargin">
-      <number>4</number>
+      <number>0</number>
      </property>
      <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="1">
-        <widget class="QPushButton" name="pushButton_2">
-         <property name="maximumSize">
-          <size>
-           <width>32</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>-</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="pushButton">
-         <property name="maximumSize">
-          <size>
-           <width>32</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>+</string>
-         </property>
-         <property name="flat">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QCheckBox" name="checkBox">
-         <property name="text">
-          <string>Change all</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="1" column="0" colspan="4">
-        <widget class="OrderEditor" name="widget"/>
-       </item>
-      </layout>
+      <widget class="OrderWidget" name="widget" native="true"/>
      </item>
     </layout>
    </widget>
@@ -249,153 +196,21 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
-    <layout class="QFormLayout" name="formLayout_3">
+    <layout class="QGridLayout" name="gridLayout_5">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
      <item row="0" column="0">
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Rows/Beat</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QSpinBox" name="spinBox">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>128</number>
-       </property>
-       <property name="value">
-        <number>4</number>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Mode</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <widget class="QRadioButton" name="mTempoRadioBtn">
-         <property name="text">
-          <string>Tempo</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="mSpeedRadioBtn">
-         <property name="text">
-          <string>Speed</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="horizontalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Tempo</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QSpinBox" name="mTempoSpin">
-       <property name="minimum">
-        <number>32</number>
-       </property>
-       <property name="maximum">
-        <number>3600</number>
-       </property>
-       <property name="value">
-        <number>150</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_3">
-       <property name="text">
-        <string>Speed</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>Patterns</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QSpinBox" name="spinBox_3">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>256</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QDoubleSpinBox" name="mSpeedSpin">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="decimals">
-        <number>3</number>
-       </property>
-       <property name="minimum">
-        <double>1.000000000000000</double>
-       </property>
-       <property name="maximum">
-        <double>30.875000000000000</double>
-       </property>
-       <property name="singleStep">
-        <double>0.125000000000000</double>
-       </property>
-       <property name="value">
-        <double>6.000000000000000</double>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0">
-      <widget class="QLabel" name="label_5">
-       <property name="text">
-        <string>Rows</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QSpinBox" name="mRowsSpin">
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>256</number>
-       </property>
-       <property name="value">
-        <number>64</number>
-       </property>
-      </widget>
+      <widget class="SongPropertiesWidget" name="songProperties" native="true"/>
      </item>
     </layout>
    </widget>
@@ -499,43 +314,21 @@
     <number>1</number>
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLineEdit" name="modPropTitleEdit">
-       <property name="maxLength">
-        <number>30</number>
-       </property>
-       <property name="placeholderText">
-        <string>title</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="modPropArtistEdit">
-       <property name="maxLength">
-        <number>30</number>
-       </property>
-       <property name="placeholderText">
-        <string>artist</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="modPropCopyrightEdit">
-       <property name="maxLength">
-        <number>30</number>
-       </property>
-       <property name="placeholderText">
-        <string>copyright</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPlainTextEdit" name="modPropCommentsEdit">
-       <property name="placeholderText">
-        <string>Comments</string>
-       </property>
-      </widget>
+    <layout class="QGridLayout" name="gridLayout_6">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="ModulePropertiesWidget" name="moduleProperties" native="true"/>
      </item>
     </layout>
    </widget>
@@ -549,77 +342,20 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QGridLayout" name="gridLayout_4">
-     <item row="0" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <widget class="QPushButton" name="songsAddButton">
-         <property name="text">
-          <string>Add</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="songsRemoveButton">
-         <property name="text">
-          <string>Remove</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="songsMoveUpButton">
-         <property name="text">
-          <string>Move up</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="songsMoveDownButton">
-         <property name="text">
-          <string>Move down</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-      </layout>
-     </item>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
      <item row="0" column="0">
-      <widget class="QListView" name="songsListView">
-       <property name="dragEnabled">
-        <bool>false</bool>
-       </property>
-       <property name="dragDropMode">
-        <enum>QAbstractItemView::NoDragDrop</enum>
-       </property>
-       <property name="defaultDropAction">
-        <enum>Qt::CopyAction</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Title</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="songsNameEdit"/>
-       </item>
-      </layout>
+      <widget class="SongWidget" name="songs" native="true"/>
      </item>
     </layout>
    </widget>
@@ -1097,51 +833,36 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>OrderEditor</class>
-   <extends>QFrame</extends>
-   <header>widgets/OrderEditor.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>TableForm</class>
    <extends>QWidget</extends>
    <header>widgets/TableForm.hpp</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>SongPropertiesWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/SongPropertiesWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ModulePropertiesWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/ModulePropertiesWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>SongWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/SongWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>OrderWidget</class>
+   <extends>QWidget</extends>
+   <header>widgets/OrderWidget.hpp</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>mTempoRadioBtn</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>mTempoSpin</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>95</x>
-     <y>111</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>200</x>
-     <y>138</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>mSpeedRadioBtn</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>mSpeedSpin</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>155</x>
-     <y>111</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>200</x>
-     <y>164</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

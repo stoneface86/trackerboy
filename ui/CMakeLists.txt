@@ -34,8 +34,12 @@ set(UI_SRC
 
     "widgets/EnvelopeForm.cpp"
     "widgets/MainWidget.cpp"
+    "widgets/ModulePropertiesWidget.cpp"
     "widgets/OrderEditor.cpp"
+    "widgets/OrderWidget.cpp"
     "widgets/PianoWidget.cpp"
+    "widgets/SongPropertiesWidget.cpp"
+    "widgets/SongWidget.cpp"
     "widgets/TableForm.cpp"
     "widgets/WaveGraph.cpp"
     
@@ -51,6 +55,10 @@ qt5_wrap_ui(UI_DESIGNER
     "designer/ConfigDialog.ui"
     "designer/EnvelopeForm.ui"
     "designer/MainWindow.ui"
+    "designer/ModulePropertiesWidget.ui"
+    "designer/OrderWidget.ui"
+    "designer/SongPropertiesWidget.ui"
+    "designer/SongWidget.ui"
     "designer/WaveEditor.ui"
     "designer/InstrumentEditor.ui"
 )

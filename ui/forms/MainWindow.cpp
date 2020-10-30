@@ -224,12 +224,12 @@ void MainWindow::onSoundChange() {
 }
 
 void MainWindow::statusSetInstrument(int index) {
-    int id = mInstrumentModel->instrument(index)->id();
+    int id = (index == -1) ? 0 : mInstrumentModel->instrument(index)->id();
     mStatusInstrument->setText(QString("Instrument: %1").arg(id, 2, 16, QChar('0')));
 }
 
 void MainWindow::statusSetWaveform(int index) {
-    int id = mWaveModel->waveform(index)->id();
+    int id = (index == -1) ? 0 : mWaveModel->waveform(index)->id();
     mStatusWaveform->setText(QString("Waveform: %1").arg(id, 2, 16, QChar('0')));
 }
 
@@ -401,7 +401,7 @@ void MainWindow::setupUi() {
     mUi->waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W", "waveform");
 
     // setup Songs dock
-    mUi->songsListView->setModel(mSongModel);
+    mUi->songs->init(mSongModel);
 
     // MENUS =================================================================
 

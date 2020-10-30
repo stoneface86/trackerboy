@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ModulePropertiesWidget</class>
+ <widget class="QWidget" name="ModulePropertiesWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLineEdit" name="titleEdit">
+     <property name="maxLength">
+      <number>30</number>
+     </property>
+     <property name="placeholderText">
+      <string>title</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="artistEdit">
+     <property name="maxLength">
+      <number>30</number>
+     </property>
+     <property name="placeholderText">
+      <string>artist</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="copyrightEdit">
+     <property name="maxLength">
+      <number>30</number>
+     </property>
+     <property name="placeholderText">
+      <string>copyright</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPlainTextEdit" name="commentsEdit">
+     <property name="placeholderText">
+      <string>Comments</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>titleEdit</tabstop>
+  <tabstop>artistEdit</tabstop>
+  <tabstop>copyrightEdit</tabstop>
+  <tabstop>commentsEdit</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
