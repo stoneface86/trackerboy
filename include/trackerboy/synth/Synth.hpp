@@ -59,10 +59,6 @@ public:
     // the synth's frame buffer. The number of samples generated is returned
     //
     size_t run() noexcept;
-    
-    void setBass(unsigned frequency) noexcept;
-
-    void setTreble(int treble, unsigned frequency) noexcept;
 
     //
     // Set the interval for 1 frame, default is DMG vblank or 59.7 Hz
@@ -125,7 +121,9 @@ private:
     int mTreble;
     unsigned mTrebleFrequency;
 
-    int mVolume;
+    unsigned mVolumeStep; // Q16.16
+
+    bool mResizeRequired;
 
     //void resizeFrameBuf();
 

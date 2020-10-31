@@ -5,16 +5,18 @@
 #include "synth/Sequencer.hpp"
 #include "synth/HardwareFile.hpp"
 
-#include "Blip_Buffer.h"
+//#include "Blip_Buffer.h"
+#include "blip_buf.h"
 
 #include <algorithm>
 #include <climits>
 #include <cmath>
 
 
-// number of volume units for each blip synth that are unused
-//constexpr int HEADROOM = 4;
-constexpr double HEADROOM = 0.7079457844; // -3 dB
+// max possible volume, prevents clipping on the overshoots of a bandlimited step
+// no clipping should occur when all channels are at max volume
+// TODO: ensure that no clipping occurs with all channels at max volume, and synth volume = 100
+constexpr double HEADROOM = 0.8408964153; // -1.5 dB
 
 // simulate cycle delays when reading/writing registers
 // ldh a, [n16]
@@ -22,45 +24,42 @@ constexpr uint32_t CYCLES_PER_READ = 3;
 // ldh [n16], a
 constexpr uint32_t CYCLES_PER_WRITE = 3;
 
-// equalizer
-constexpr unsigned DEFAULT_BASS = 20;
-constexpr int DEFAULT_TREBLE = -8;
-constexpr unsigned DEFAULT_TREBLE_FREQ = 12000;
-
-constexpr int DEFAULT_VOLUME = -3;
+// default volume is 100% or HEADROOM (-1.5 dB)
+// 75% = (.75 * .75) * HEADROOM = 0.473 (-6.48 dB)
+// 50% = (.5 * .5) * HEADROOM = 0.210 (-13.5 dB)
+// 25% = (.25 * .25) * HEADROOM = 0.052 (-25.5 dB)
+constexpr int DEFAULT_VOLUME = 100;
 
 namespace trackerboy {
 
 // PIMPL idiom - this way we can keep Blip_Buffer out of the public API
 struct Synth::Internal {
 
-    // blip_buffer
-    blargg::Blip_Buffer bbuf;
     // each channel oscillates between -15 to 15 (or -F to F), silent at 0
-    // thus a channel's range is 30 volume units (15 - (-15) = 30)
+    // thus the maximum volume (all channels at max volume) is 60 units
 
-    // CH1 + CH2
-    blargg::Blip_Synth<blargg::blip_good_quality, 60> bsynth1;
-    // CH3 + CH4 (lower quality since these channels have a lot of transitions)
-    blargg::Blip_Synth<blargg::blip_med_quality, 60> bsynth2;
+    
+    // blip_buf
+    blip_buffer_t *bbuf[2];
 
     // Hardware components
     HardwareFile hf;
     Sequencer sequencer;
 
-
     Internal() :
-        bbuf(),
-        bsynth1(),
-        bsynth2(),
+        bbuf{ nullptr },
         hf(),
         sequencer(hf)
 
     {
-        bsynth1.output(&bbuf);
-        bsynth2.output(&bbuf);
     }
 
+    ~Internal() {
+        blip_delete(bbuf[0]);
+        blip_delete(bbuf[1]);
+    }
+
+    // no copying
     Internal(const Internal &ref) = delete;
     Internal& operator=(const Internal &ref) = delete;
 
@@ -71,19 +70,18 @@ Synth::Synth(unsigned samplingRate, float framerate) noexcept :
     mInternal(new Internal()),
     mSamplerate(samplingRate),
     mFramerate(framerate),
-    mCyclesPerFrame(Gbs::CLOCK_SPEED / framerate),
+    mCyclesPerFrame(0.0f),
     mCycleOffset(0.0f),
     mFrameBuf(),
-    mOutputStat(Gbs::OUT_ALL),
+    mOutputStat(0),
     mChPrev{0},
     mLastFrameSize(0),
     mCycletime(0),
-    mBassFrequency(DEFAULT_BASS),
-    mTreble(DEFAULT_TREBLE),
-    mTrebleFrequency(DEFAULT_TREBLE_FREQ),
-    mVolume(DEFAULT_VOLUME)
+    mVolumeStep(0),
+    mResizeRequired(true)
 {
     setupBuffers();
+    setVolume(DEFAULT_VOLUME);
 }
 
 // required for std::unique_ptr<Internal>
@@ -104,10 +102,15 @@ size_t Synth::run() noexcept {
     step(static_cast<uint32_t>(wholeCycles) - mCycletime);
 
     // end the frame and copy samples to the synth's frame buffer
-    auto &bbuf = mInternal->bbuf;
-    bbuf.end_frame(mCycletime);
-    auto samples = bbuf.samples_avail();
-    bbuf.read_samples(mFrameBuf.data(), samples);
+    auto framedata = mFrameBuf.data();
+    auto bbufL = mInternal->bbuf[0];
+    auto bbufR = mInternal->bbuf[1];
+
+    blip_end_frame(bbufL, mCycletime);
+    auto samples = blip_samples_avail(bbufL);
+    blip_read_samples(bbufL, framedata, samples, 1);
+    blip_end_frame(bbufR, mCycletime);
+    blip_read_samples(bbufR, framedata + 1, samples, 1);
     
     // reset time offset
     mCycletime = 0;
@@ -119,8 +122,9 @@ size_t Synth::run() noexcept {
 
 void Synth::step(uint32_t cycles) noexcept {
 
-    auto &bsynth1 = mInternal->bsynth1;
-    auto &bsynth2 = mInternal->bsynth2;
+    auto bbufL = mInternal->bbuf[0];
+    auto bbufR = mInternal->bbuf[1];
+
     auto &sequencer = mInternal->sequencer;
     auto &hf = mInternal->hf;
 
@@ -138,25 +142,16 @@ void Synth::step(uint32_t cycles) noexcept {
         uint32_t fence = std::min(cycles, sequencer.fence());
         updateOutput<ChType::ch1>(leftdelta, rightdelta, fence);
         updateOutput<ChType::ch2>(leftdelta, rightdelta, fence);
-
-        // don't bother calling offset with delta = 0
-        if (leftdelta) {
-            bsynth1.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
-            leftdelta = 0;
-        }
-        if (rightdelta) {
-            bsynth1.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
-            rightdelta = 0;
-        }
-
         updateOutput<ChType::ch3>(leftdelta, rightdelta, fence);
         updateOutput<ChType::ch4>(leftdelta, rightdelta, fence);
-        if (leftdelta)
-            bsynth2.offset_inline(mCycletime, leftdelta, blargg::blip_term_left);
-        if (rightdelta)
-            bsynth2.offset_inline(mCycletime, rightdelta, blargg::blip_term_right);
-
-
+        
+        // add deltas to the blip bufs if nonzero
+        if (leftdelta) {
+            blip_add_delta(bbufL, mCycletime, leftdelta * mVolumeStep);
+        }
+        if (rightdelta) {
+            blip_add_delta(bbufR, mCycletime, rightdelta * mVolumeStep);
+        }
 
         uint32_t cyclesToStep = std::min(cycles, fence);
         // run all components to the smallest fence
@@ -263,51 +258,48 @@ void Synth::reset() noexcept {
     hf.gen3.reset();
     hf.gen4.reset();
 
-    mInternal->bbuf.clear();
-}
-
-void Synth::setBass(unsigned frequency) noexcept {
-    mBassFrequency = frequency;
-}
-
-void Synth::setTreble(int treble, unsigned frequency) noexcept {
-    mTreble = treble;
-    mTrebleFrequency = frequency;
+    blip_clear(mInternal->bbuf[0]);
+    blip_clear(mInternal->bbuf[1]);
 }
 
 void Synth::setFramerate(float framerate) {
-    mFramerate = framerate;
+    if (mFramerate != framerate) {
+        mFramerate = framerate;
+        mResizeRequired = true;
+    }
 }
 
 void Synth::setSamplingRate(unsigned samplingRate) {
-    mSamplerate = samplingRate;
+    if (mSamplerate != samplingRate) {
+        mSamplerate = samplingRate;
+        mResizeRequired = true;
+    }
 }
 
-void Synth::setVolume(int db) {
-    mVolume = db;
+void Synth::setVolume(int percent) {
+    double limit = INT16_MAX * HEADROOM * (pow(percent / 100.0, 2));
+    mVolumeStep = static_cast<unsigned>(limit / 60.0);
 }
 
 void Synth::setupBuffers() {
-    mCyclesPerFrame = Gbs::CLOCK_SPEED / mFramerate;
-    unsigned blipbufsize = static_cast<unsigned>(ceilf(1000.0f / mFramerate));
-    mFrameBuf.resize((static_cast<size_t>(mSamplerate / mFramerate) + 1) * 2);
+    if (mResizeRequired) {
+        mCyclesPerFrame = Gbs::CLOCK_SPEED / mFramerate;
+        size_t samplesPerFrame = static_cast<size_t>(mSamplerate / mFramerate) + 1;
+        mFrameBuf.resize(samplesPerFrame * 2);
 
-    auto &bbuf = mInternal->bbuf;
-    auto &bsynth1 = mInternal->bsynth1;
-    auto &bsynth2 = mInternal->bsynth2;
+        for (int i = 0; i != 2; ++i) {
+            auto &bbuf = mInternal->bbuf[i];
+            if (bbuf != nullptr) {
+                blip_delete(bbuf);
+            }
+            bbuf = blip_new(samplesPerFrame);
+            blip_set_rates(bbuf, Gbs::CLOCK_SPEED, mSamplerate);
+        }
+        reset();
+        mResizeRequired = false;
+    }
+
     
-    bbuf.set_sample_rate(mSamplerate, blipbufsize);
-    bbuf.clock_rate(Gbs::CLOCK_SPEED);
-    bbuf.bass_freq(mBassFrequency);
-
-    blargg::blip_eq_t eq(mTreble, mTrebleFrequency, mSamplerate);
-    bsynth1.treble_eq(eq);
-    // linear volume scaling
-    double gain = 0.5 * (mVolume / 100.0);
-    bsynth1.volume(gain);
-    bsynth2.treble_eq(eq);
-    bsynth2.volume(gain);
-    reset();
 }
 
 void Synth::setOutputEnable(ChType ch, Gbs::Terminal term, bool enabled) noexcept {

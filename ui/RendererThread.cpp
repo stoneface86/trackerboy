@@ -52,8 +52,6 @@ void RendererThread::applyConfig(Config::Sound const &soundConfig) {
     assert(err == MA_SUCCESS);
 
     mSynth.setSamplingRate(soundConfig.samplerate);
-    mSynth.setBass(soundConfig.bassFrequency);
-    mSynth.setTreble(soundConfig.treble, soundConfig.trebleFrequency);
     mSynth.setVolume(soundConfig.volume);
     mSynth.setupBuffers();
 }
