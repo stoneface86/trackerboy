@@ -101,9 +101,6 @@ endif()
 include(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 
-# StereoBlipBuffer
-add_subdirectory(StereoBlipBuffer)
-
 add_subdirectory(external/blip_buf-1.1.0)
 
 # ============================================================================
