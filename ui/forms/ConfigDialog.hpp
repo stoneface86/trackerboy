@@ -37,9 +37,6 @@ private slots:
     void volumeSliderChanged(int value);
     void backendActivated(int index);
     void samplerateActivated(int index);
-    void bassSliderChanged(int value);
-    void trebleAmountSliderChanged(int value);
-    void trebleCutoffSliderChanged(int value);
 
 
     

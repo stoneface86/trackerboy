@@ -45,9 +45,6 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
 
     connect(mUi->mBufferSizeSlider, &QSlider::valueChanged, this, &ConfigDialog::bufferSizeSliderChanged);
     connect(mUi->mVolumeSlider, &QSlider::valueChanged, this, &ConfigDialog::volumeSliderChanged);
-    connect(mUi->mBassSlider, &QSlider::valueChanged, this, &ConfigDialog::bassSliderChanged);
-    connect(mUi->mTrebleSlider, &QSlider::valueChanged, this, &ConfigDialog::trebleAmountSliderChanged);
-    connect(mUi->mTrebleCutoffSlider, &QSlider::valueChanged, this, &ConfigDialog::trebleCutoffSliderChanged);
 
     connect(mUi->mBackendCombo, QOverload<int>::of(&QComboBox::activated), this, &ConfigDialog::backendActivated);
     connect(mUi->mSamplerateCombo, QOverload<int>::of(&QComboBox::activated), this, &ConfigDialog::samplerateActivated);
@@ -79,9 +76,6 @@ void ConfigDialog::apply() {
         soundConfig.samplerate = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
         soundConfig.buffersize = mUi->mBufferSizeSlider->value();
         soundConfig.volume = mUi->mVolumeSlider->value();
-        soundConfig.bassFrequency = mUi->mBassSlider->value();
-        soundConfig.treble = mUi->mTrebleSlider->value();
-        soundConfig.trebleFrequency = mUi->mTrebleCutoffSlider->value();
 
         mConfig.applySound();
     }
@@ -107,24 +101,6 @@ void ConfigDialog::volumeSliderChanged(int value) {
 }
 
 void ConfigDialog::samplerateActivated(int index) {
-    setDirty(DIRTY_FLAG_SOUND);
-}
-
-void ConfigDialog::bassSliderChanged(int value) {
-    QString text("%1 Hz");
-    mUi->mBassLabel->setText(text.arg(QString::number(value)));
-    setDirty(DIRTY_FLAG_SOUND);
-}
-
-void ConfigDialog::trebleAmountSliderChanged(int value) {
-    QString text("%1 dB");
-    mUi->mTrebleLabel->setText(text.arg(QString::number(value)));
-    setDirty(DIRTY_FLAG_SOUND);
-}
-
-void ConfigDialog::trebleCutoffSliderChanged(int value) {
-    QString text("%1 Hz");
-    mUi->mTrebleCutoffLabel->setText(text.arg(QString::number(value)));
     setDirty(DIRTY_FLAG_SOUND);
 }
 
@@ -214,9 +190,6 @@ void ConfigDialog::resetControls() {
 
     mUi->mBufferSizeSlider->setValue(soundConfig.buffersize);
     mUi->mVolumeSlider->setValue(soundConfig.volume);
-    mUi->mBassSlider->setValue(soundConfig.bassFrequency);
-    mUi->mTrebleSlider->setValue(soundConfig.treble);
-    mUi->mTrebleCutoffSlider->setValue(soundConfig.trebleFrequency);
 
     clean();
 }

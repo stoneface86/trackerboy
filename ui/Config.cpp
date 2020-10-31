@@ -9,9 +9,6 @@ namespace {
 constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
 constexpr unsigned DEFAULT_BUFFERSIZE = 40;
 constexpr unsigned DEFAULT_VOLUME = -3;
-constexpr unsigned DEFAULT_BASS_FREQUENCY = 20;
-constexpr int DEFAULT_TREBLE = -8;
-constexpr unsigned DEFAULT_TREBLE_FREQUENCY = 12000;
 
 
 }
@@ -70,9 +67,6 @@ void Config::readSettings(QSettings &settings) {
     mSound.samplerate = SAMPLERATE_TABLE[mSound.samplerateIndex];
     mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
     mSound.volume = settings.value("volume", DEFAULT_VOLUME).toInt();
-    mSound.bassFrequency = settings.value("bassFrequency", DEFAULT_BASS_FREQUENCY).toUInt();
-    mSound.treble = settings.value("treble", DEFAULT_TREBLE).toInt();
-    mSound.trebleFrequency = settings.value("trebleFrequency", DEFAULT_TREBLE_FREQUENCY).toUInt();
 
     applySound();
 }
@@ -86,9 +80,6 @@ void Config::writeSettings(QSettings &settings) {
     settings.setValue("samplerateIndex", mSound.samplerateIndex);
     settings.setValue("buffersize", mSound.buffersize);
     settings.setValue("volume", mSound.volume);
-    settings.setValue("bassFrequency", mSound.bassFrequency);
-    settings.setValue("treble", mSound.treble);
-    settings.setValue("trebleFrequency", mSound.trebleFrequency);
 }
 
 void Config::applySound() {
