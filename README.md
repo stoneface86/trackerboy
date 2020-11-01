@@ -27,13 +27,13 @@ The library is (almost) finished and the UI is being worked on now.
 Here is a general list of what needs to be completed:
  * Sound effect support in the library (SfxRuntime, Sfx, SfxTable classes)
  * More unit tests for the library
- * Instrument editor
- * Wave editor
+ * ~~Instrument editor~~
+ * ~~Wave editor~~
  * Pattern editor / Tracker grid
  * Visualizers: Oscilloscopes and volume meters (master and one for each channel)
  * Export to .asm (pattern compilation)
  * Export to .gbs
- * Audio filters for equalization or treble/bass filtering
+ * ~~Audio filters for equalization or treble/bass filtering~~
  * MIDI support
  * Import from famitracker (tool to convert .ftm -> .tbm)
 

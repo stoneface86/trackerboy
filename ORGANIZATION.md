@@ -2,14 +2,14 @@
 
 Individual components of this repo is organized into projects.
 Each project has a CMakeLists.txt, private header files and source files, and
-a folder for unit test code, `test`. 
+unit test code. 
 
 Directories
- * `audio/`: audio project, mostly utility code for portaudio as well as filters
  * `demo/`: Source code for the demo project, Contains programs demonstrating the use of the library (portaudio is required)
+ * `external/`: required dependencies/libraries
  * `include/`: public header files for trackerboy and other libraries go here
  * `libtrackerboy/`: Source code for the trackerboy library project
- * `portaudio/`: Git submodule for portaudio repository, used by `demo` and `ui`
+ * `misc/`: miscellaneous stuff
  * `ui/`: Source code for the ui project. Contains the main user interface for trackerboy
 
 

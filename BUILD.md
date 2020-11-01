@@ -6,13 +6,14 @@ optional, and can be enabled/disabled by setting their respective options.
 Requirements:
  * C/C++ compiler with the C++17 standard or later
  * CMake
- * [Libsoundio](https://github.com/andrewrk/libsoundio)
- * [StereoBlipBuffer](https://github.com/stoneface86/StereoBlipBuffer)
+ * [Miniaudio](https://github.com/mackron/miniaudio)
+ * blip_buf
  * Qt5
 
-StereoBlipBuffer is included in the repo as a git submodule, to use add
+Miniaudio is included in the repo as a git submodule, to use add
 `--recursive` when cloning this repo or do a `git submodule update --init`
-before running CMake.
+before running CMake. A copy of blip_buf is located in the external folder and
+is built automatically when building libtrackerboy.
 
 In order to build the main ui, you will need to install Qt5 on your development
 machine. Windows users may need to specify the install location manually when
