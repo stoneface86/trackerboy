@@ -40,8 +40,7 @@ public:
 
     // max possible volume, prevents clipping on the overshoots of a bandlimited step
     // no clipping should occur when all channels are at max volume
-    // TODO: ensure that no clipping occurs with all channels at max volume, and synth volume = 100
-    static constexpr double HEADROOM = 0.8408964153; // -1.5 dB
+    static constexpr double HEADROOM = 0.7071067812; // -3.0 dB
 
     Synth(unsigned samplingRate, float framerate = Gbs::FRAMERATE_GB) noexcept;
     ~Synth();
@@ -121,12 +120,7 @@ private:
     // current time offset in cycles
     uint32_t mCycletime;
 
-    // equalizer settings
-    unsigned mBassFrequency;;
-    int mTreble;
-    unsigned mTrebleFrequency;
-
-    unsigned mVolumeStep; // Q16.16
+    unsigned mVolumeStep;
 
     bool mResizeRequired;
 

@@ -114,7 +114,7 @@
             <item>
              <widget class="QLabel" name="mVolumeLabel">
               <property name="text">
-               <string>100% (-1.50 dB)</string>
+               <string>100% (-3.00 dB)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>

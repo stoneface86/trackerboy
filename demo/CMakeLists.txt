@@ -22,3 +22,6 @@ set(DEMO_SRC
 
 add_executable(demo_synth "synth_demo.cpp")
 target_link_libraries(demo_synth trackerboy miniaudio)
+
+add_executable(demo_volume "volume_demo.cpp")
+target_link_libraries(demo_volume trackerboy miniaudio)

@@ -21,15 +21,15 @@ constexpr uint32_t CYCLES_PER_READ = 3;
 // ldh [n16], a
 constexpr uint32_t CYCLES_PER_WRITE = 3;
 
-// default volume is 100% or HEADROOM (-1.5 dB)
-// 75% = (.75 * .75) * HEADROOM = 0.473 (-6.48 dB)
-// 50% = (.5 * .5) * HEADROOM = 0.210 (-13.5 dB)
-// 25% = (.25 * .25) * HEADROOM = 0.052 (-25.5 dB)
+// default volume is 100% or HEADROOM (-3.0 dB)
+// 75% = (.75 * .75) * HEADROOM = 0.398 (-7.98 dB)
+// 50% = (.5 * .5) * HEADROOM = 0.177 (-15.0 dB)
+// 25% = (.25 * .25) * HEADROOM = 0.044 (-27.0 dB)
 constexpr int DEFAULT_VOLUME = 100;
 
 namespace trackerboy {
 
-// PIMPL idiom - this way we can keep Blip_Buffer out of the public API
+// PIMPL idiom - this way we can keep blip_buf out of the public API
 struct Synth::Internal {
 
     // each channel oscillates between -15 to 15 (or -F to F), silent at 0
@@ -347,7 +347,7 @@ void Synth::writeRegister(uint16_t addr, uint8_t value) noexcept {
 
     #define writeDuty(gen) gen.setDuty(static_cast<Gbs::Duty>(value >> 6))
     #define writeFreqLSB(gen) gen.setFrequency((gen.frequency() & 0xFF00) | value)
-    #define writeFreqMSB(gen) gen.setFrequency((gen.frequency() & 0x00FF) | (value << 8))
+    #define writeFreqMSB(gen) gen.setFrequency((gen.frequency() & 0x00FF) | ((value & 0x7) << 8))
     #define onTrigger() if (!!(value & 0x80))
 
     auto &hf = mInternal->hf;

@@ -41,11 +41,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # sound related dependencies for demo and ui projects
 if (SOUND_REQUIRED)
     add_library(miniaudio STATIC "external/miniaudio/extras/miniaudio_split/miniaudio.c")
-    target_compile_definitions(miniaudio PRIVATE
-        MA_NO_DECODING
-        MA_NO_ENCODING
-        MA_NO_GENERATION
-    )
+    #target_compile_definitions(miniaudio PRIVATE
+    #    MA_NO_DECODING
+    #    MA_NO_GENERATION
+    #)
     target_include_directories(miniaudio PUBLIC "external/miniaudio/extras/miniaudio_split")
     # miniaudio dependencies
     # windows: none
