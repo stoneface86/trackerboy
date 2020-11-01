@@ -2,8 +2,6 @@
 #include "Config.hpp"
 #include "samplerates.hpp"
 
-#include "audio.hpp"
-
 namespace {
 
 constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz

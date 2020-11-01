@@ -2,8 +2,6 @@
 #include <QApplication>
 #include <QMessageBox>
 
-#include "audio.hpp"
-
 #include "forms/MainWindow.hpp"
 
 int main(int argc, char *argv[]) {

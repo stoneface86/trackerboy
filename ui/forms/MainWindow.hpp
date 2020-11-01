@@ -10,8 +10,6 @@
 #include "model/WaveListModel.hpp"
 #include "Renderer.hpp"
 
-#include "audio.hpp"
-
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QComboBox>

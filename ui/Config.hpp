@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "audio.hpp"
+#include "miniaudio.h"
 
 #include <QObject>
 #include <QSettings>

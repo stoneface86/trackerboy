@@ -2,8 +2,6 @@
 
 #include "Config.hpp"
 
-#include "audio.hpp"
-
 #include <QDialog>
 #include <QSettings>
 #include <QShowEvent>
