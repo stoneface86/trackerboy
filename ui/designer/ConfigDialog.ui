@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>325</height>
+    <width>375</width>
+    <height>421</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,38 +26,17 @@
       <attribute name="title">
        <string>Sound</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0">
+      <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,0,0,0">
        <item>
-        <widget class="QGroupBox" name="groupBox">
+        <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
           <string>Device</string>
          </property>
-         <layout class="QFormLayout" name="formLayout">
+         <layout class="QGridLayout" name="gridLayout_4">
           <item row="0" column="0">
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>Backend</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QComboBox" name="mBackendCombo">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>Device</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
            <widget class="QComboBox" name="mDeviceCombo">
             <property name="enabled">
-             <bool>false</bool>
+             <bool>true</bool>
             </property>
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -74,94 +53,141 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_2">
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="1">
+          <widget class="QGroupBox" name="groupBox_4">
+           <property name="title">
+            <string>Buffer size</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <widget class="QSlider" name="buffersizeSlider">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>10</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="buffersizeLabel">
+              <property name="text">
+               <string>0 Frames</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="groupBox">
+           <property name="title">
+            <string>Volume</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="QSlider" name="mVolumeSlider">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="mVolumeLabel">
+              <property name="text">
+               <string>100% (-1.50 dB)</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="groupBox_5">
+           <property name="title">
+            <string>Sample rate</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_2" columnstretch="0">
+            <item row="0" column="0">
+             <widget class="QComboBox" name="mSamplerateCombo">
+              <property name="currentIndex">
+               <number>-1</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QGroupBox" name="groupBox_6">
+           <property name="title">
+            <string>Latency</string>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="0" column="0">
+             <widget class="QCheckBox" name="lowLatencyCheckbox">
+              <property name="text">
+               <string>Low latency playback</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox_3">
          <property name="title">
-          <string>Playback settings</string>
+          <string>Quality</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,0,0" columnminimumwidth="0,0,64">
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_4">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <widget class="QRadioButton" name="lowQualityRadio">
             <property name="text">
-             <string>Buffer size</string>
+             <string>Low (low quality transitions on all channels)</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label_15">
+          <item>
+           <widget class="QRadioButton" name="medQualityRadio">
             <property name="text">
-             <string>Volume</string>
+             <string>Medium (high quality on CH1, CH2, low quality on CH3, CH4)</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_3">
+          <item>
+           <widget class="QRadioButton" name="highQualityRadio">
             <property name="text">
-             <string>Sampling rate</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QSlider" name="mBufferSizeSlider">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>500</number>
-            </property>
-            <property name="value">
-             <number>40</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="tickPosition">
-             <enum>QSlider::TicksBelow</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLabel" name="mBufferSizeLabel">
-            <property name="text">
-             <string>40 ms</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="2">
-           <widget class="QLabel" name="mVolumeLabel">
-            <property name="text">
-             <string>100%</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QSlider" name="mVolumeSlider">
-            <property name="minimum">
-             <number>0</number>
-            </property>
-            <property name="maximum">
-             <number>100</number>
-            </property>
-            <property name="value">
-             <number>100</number>
-            </property>
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1" colspan="2">
-           <widget class="QComboBox" name="mSamplerateCombo">
-            <property name="currentIndex">
-             <number>-1</number>
+             <string>High (high quality transitions on all channels)</string>
             </property>
            </widget>
           </item>
@@ -199,9 +225,6 @@
  </widget>
  <tabstops>
   <tabstop>mTabWidget</tabstop>
-  <tabstop>mBackendCombo</tabstop>
-  <tabstop>mDeviceCombo</tabstop>
-  <tabstop>mSamplerateCombo</tabstop>
  </tabstops>
  <resources/>
  <connections>

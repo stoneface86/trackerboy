@@ -13,10 +13,7 @@
 #include <cmath>
 
 
-// max possible volume, prevents clipping on the overshoots of a bandlimited step
-// no clipping should occur when all channels are at max volume
-// TODO: ensure that no clipping occurs with all channels at max volume, and synth volume = 100
-constexpr double HEADROOM = 0.8408964153; // -1.5 dB
+
 
 // simulate cycle delays when reading/writing registers
 // ldh a, [n16]

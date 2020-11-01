@@ -35,7 +35,6 @@ private slots:
 
     void bufferSizeSliderChanged(int value);
     void volumeSliderChanged(int value);
-    void backendActivated(int index);
     void samplerateActivated(int index);
 
 
@@ -49,7 +48,6 @@ private:
     Ui::ConfigDialog *mUi;
 
     Config &mConfig;
-    int mLastBackendIndex;
     int mDirtyFlags;
 
 };

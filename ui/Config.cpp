@@ -16,6 +16,13 @@ constexpr unsigned DEFAULT_VOLUME = -3;
 
 Config::Config()
 {
+    auto err = ma_context_init(nullptr, 0, nullptr, &mContext);
+    assert(err == MA_SUCCESS);
+    mSound.context = &mContext;
+}
+
+Config::~Config() {
+    ma_context_uninit(&mContext);
 }
 
 Config::Sound const& Config::sound() {
@@ -44,29 +51,31 @@ Config::Sound const& Config::sound() {
 
 void Config::readSettings(QSettings &settings) {
     settings.beginGroup("config");
-    // device config
-    //int backend = settings.value("deviceBackend", SoundIoBackendNone).toInt();
-    //QByteArray id = settings.value("deviceId").toByteArray();
-    //audio::BackendTable::Location location;
-    //if (backend == SoundIoBackendNone) {
-    //    // first time launching the application or user reset configuration
-    //    // get the default device
-    //    location = mBackendTable.getDefaultDeviceLocation();
-    //} else {
-    //    // set the device from the id in the configuration, falling back to default
-    //    // TODO: display a messagebox if we couldn't find the device (possibly disconnected)
+    getDevices();
+    setDevice(0);
 
-    //    location = mBackendTable.getDeviceLocation(static_cast<SoundIoBackend>(backend), id.data());
-    //}
-    //mSound.backendIndex = location.first;
-    //mSound.deviceIndex = location.second;
-    //mSound.device = mBackendTable.getDevice(location);
-    //mSound.soundio = mBackendTable[mSound.backendIndex].soundio;
+    QByteArray id = settings.value("deviceId").toByteArray();
+    if (id.size() == sizeof(ma_device_id)) {
+        // search all devices for the id in the config
+        for (unsigned i = 0; i != mDeviceCount; ++i) {
+            if (memcmp(id.data(), &mDeviceList[i].id, sizeof(ma_device_id)) == 0) {
+                // found it, index is offset by 1 (0 is the default device)
+                setDevice(i + 1);
+                break;
+            }
+        }
 
-    mSound.samplerateIndex = settings.value("samplerateIndex", DEFAULT_SAMPLERATE_INDEX).toUInt();
-    mSound.samplerate = SAMPLERATE_TABLE[mSound.samplerateIndex];
+        // if we don't find the device we will go back to the default device
+        // TODO: let the user know via messagebox if this occurs
+    }
+
+    
+
+
+    setSamplerate(settings.value("samplerateIndex", DEFAULT_SAMPLERATE_INDEX).toUInt());
     mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
     mSound.volume = settings.value("volume", DEFAULT_VOLUME).toInt();
+    mSound.lowLatency = settings.value("lowLatency", true).toBool();
 
     applySound();
 }
@@ -74,14 +83,40 @@ void Config::readSettings(QSettings &settings) {
 
 void Config::writeSettings(QSettings &settings) {
     settings.beginGroup("config");
-    //settings.setValue("deviceBackend", static_cast<int>(mSound.soundio->current_backend));
-    //QByteArray id(mSound.device->id);
-    //settings.setValue("deviceId", id);
+
+    QByteArray barray;
+    if (mSound.deviceIndex != 0) {
+        ma_device_id *id = &mDeviceList[mSound.deviceIndex - 1].id;
+        barray = QByteArray(reinterpret_cast<char*>(id), sizeof(ma_device_id));
+    }
+    settings.setValue("deviceId", barray);
+
     settings.setValue("samplerateIndex", mSound.samplerateIndex);
     settings.setValue("buffersize", mSound.buffersize);
     settings.setValue("volume", mSound.volume);
+    settings.setValue("lowLatency", mSound.lowLatency);
 }
 
 void Config::applySound() {
     emit soundConfigChanged();
+}
+
+void Config::getDevices() {
+    auto err = ma_context_get_devices(&mContext, &mDeviceList, &mDeviceCount, nullptr, nullptr);
+    assert(err == MA_SUCCESS);
+}
+
+
+void Config::setDevice(int index) {
+    mSound.deviceIndex = index;
+    if (index == 0) {
+        mSound.device = nullptr;
+    } else {
+        mSound.device = &mDeviceList[index - 1].id;
+    }
+}
+
+void Config::setSamplerate(int index) {
+    mSound.samplerate = SAMPLERATE_TABLE[index];
+    mSound.samplerateIndex = index;
 }

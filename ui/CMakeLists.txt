@@ -72,7 +72,7 @@ endif ()
 add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC} ${UI_DESIGNER})
 target_link_libraries(trackerboy_ui
     trackerboy
-    audio
+    miniaudio
     Qt5::Widgets
     Qt5::Core
 )

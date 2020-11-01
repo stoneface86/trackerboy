@@ -113,13 +113,6 @@ add_subdirectory(external/blip_buf-1.1.0)
 add_subdirectory(libtrackerboy)
 
 #
-# Utility library for libsoundio
-#
-if (SOUND_REQUIRED)
-    add_subdirectory(audio)
-endif()
-
-#
 # Main program (optional)
 #
 if (TRACKERBOY_ENABLE_UI)

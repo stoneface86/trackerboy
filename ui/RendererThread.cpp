@@ -41,14 +41,18 @@ void RendererThread::applyConfig(Config::Sound const &soundConfig) {
     close();
 
     auto config = ma_device_config_init(ma_device_type_playback);
+    if (soundConfig.device != nullptr) {
+        config.playback.pDeviceID = soundConfig.device;
+    }
     config.playback.format = ma_format_s16;
     config.playback.channels = 2;
+    config.performanceProfile = soundConfig.lowLatency ? ma_performance_profile_low_latency : ma_performance_profile_conservative;
     config.sampleRate = soundConfig.samplerate;
     config.dataCallback = audioCallback;
     config.pUserData = this;
 
     mDevice.emplace();
-    auto err = ma_device_init(nullptr, &config, &mDevice.value());
+    auto err = ma_device_init(soundConfig.context, &config, &mDevice.value());
     assert(err == MA_SUCCESS);
 
     mSynth.setSamplingRate(soundConfig.samplerate);
@@ -59,6 +63,7 @@ void RendererThread::applyConfig(Config::Sound const &soundConfig) {
 void RendererThread::close() {
     if (mDevice) {
         ma_device_uninit(&mDevice.value());
+        mDevice.reset();
     }
 }
 
