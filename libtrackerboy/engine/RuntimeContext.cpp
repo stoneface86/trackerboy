@@ -4,8 +4,8 @@
 namespace trackerboy {
 
 
-RuntimeContext::RuntimeContext(Synth &synth, InstrumentTable &instTable, WaveTable &waveTable) :
-    synth(synth),
+RuntimeContext::RuntimeContext(gbapu::Apu &apu, InstrumentTable &instTable, WaveTable &waveTable) :
+    apu(apu),
     instTable(instTable),
     waveTable(waveTable)
 {

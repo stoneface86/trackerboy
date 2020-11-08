@@ -30,9 +30,9 @@ void InstrumentRuntime::setInstrument(Instrument &inst) {
     mFc.setTune(mInstrument.tune + 0x80);
     ChannelControl::writeEnvelope(mCh, mRc, mInstrument.envelope);
     ChannelControl::writeTimbre(mCh, mRc, mInstrument.timbre);
-    uint8_t panning = mRc.synth.readRegister(Gbs::REG_NR51);
+    uint8_t panning = mRc.apu.readRegister(gbapu::Apu::REG_NR51);
     panning &= ~(0x11 << static_cast<int>(mCh));
-    mRc.synth.writeRegister(Gbs::REG_NR51, panning);
+    mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
     //mRc.synth.setOutputEnable(mCh, Gbs::TERM_BOTH, false);
     if (mCh == ChType::ch3) {
         mAutoRetrigger = false;
@@ -87,9 +87,9 @@ void InstrumentRuntime::step() {
 
 
             // output on
-            uint8_t panning = mRc.synth.readRegister(Gbs::REG_NR51);
+            uint8_t panning = mRc.apu.readRegister(gbapu::Apu::REG_NR51);
             panning |= mInstrument.panning << static_cast<int>(mCh);
-            mRc.synth.writeRegister(Gbs::REG_NR51, panning);
+            mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
         }
 
 
@@ -101,9 +101,9 @@ void InstrumentRuntime::step() {
         }
     } else {
         // output off
-        uint8_t panning = mRc.synth.readRegister(Gbs::REG_NR51);
+        uint8_t panning = mRc.apu.readRegister(gbapu::Apu::REG_NR51);
         panning &= ~(0x11 << static_cast<int>(mCh));
-        mRc.synth.writeRegister(Gbs::REG_NR51, panning);
+        mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
     }
 }
 

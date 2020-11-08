@@ -59,7 +59,7 @@ target_compile_options(
 
 target_link_libraries(trackerboy PUBLIC trackerboyCoverage)
 
-target_link_libraries(trackerboy PRIVATE blip_buf)
+target_link_libraries(trackerboy PUBLIC gbapu)
 
 if (IS_BIG_ENDIAN)
     target_compile_definitions(trackerboy PRIVATE -DTRACKERBOY_BIG_ENDIAN)

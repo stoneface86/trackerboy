@@ -100,7 +100,9 @@ endif()
 include(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 
-add_subdirectory(external/blip_buf-1.1.0)
+#add_subdirectory(external/blip_buf-1.1.0)
+
+add_subdirectory(external/gbapu)
 
 # ============================================================================
 # Sub-projects

@@ -97,9 +97,13 @@ void audioCallback(ma_device *device, void *out, const void *in, ma_uint32 frame
 int main() {
 
     AudioContext ctx(48000);
-    ctx.synth.writeRegister(Gbs::REG_NR51, 0x11);
-    ctx.synth.writeRegister(Gbs::REG_NR12, 0xF0);
-    ctx.synth.writeRegister(Gbs::REG_NR14, 0x80);
+
+    auto &apu = ctx.synth.apu();
+    apu.writeRegister(gbapu::Apu::REG_NR52, 0x80);
+    apu.writeRegister(gbapu::Apu::REG_NR50, 0x77);
+    apu.writeRegister(gbapu::Apu::REG_NR51, 0x11);
+    apu.writeRegister(gbapu::Apu::REG_NR12, 0xF0);
+    apu.writeRegister(gbapu::Apu::REG_NR14, 0x80);
 
     auto deviceConfig = ma_device_config_init(ma_device_type_playback);
     deviceConfig.playback.format = ma_format_s16;
@@ -146,8 +150,9 @@ int main() {
 
             // set the frequency
             ctx.spinlock.lock();
-            ctx.synth.writeRegister(Gbs::REG_NR13, freq & 0xFF);
-            ctx.synth.writeRegister(Gbs::REG_NR14, (freq >> 8) & 0x7);
+            auto &apu = ctx.synth.apu();
+            apu.writeRegister(gbapu::Apu::REG_NR13, freq & 0xFF);
+            apu.writeRegister(gbapu::Apu::REG_NR14, (freq >> 8) & 0x7);
             ctx.spinlock.unlock();
         }
 

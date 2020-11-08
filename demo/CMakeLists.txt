@@ -14,8 +14,8 @@ set(DEMO_SRC
 #target_include_directories(${DEMO} PUBLIC ${INC_DIR})
 #target_link_libraries(${DEMO} trackerboy ${Soundio_LIBRARY})
 
-#add_executable(demo_song "song_demo.cpp")
-#target_link_libraries(demo_song trackerboy audio)
+add_executable(demo_song "song_demo.cpp")
+target_link_libraries(demo_song trackerboy)
 
 #add_executable(demo_device_table "device_table.cpp")
 #target_link_libraries(demo_device_table audio)

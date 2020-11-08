@@ -25,19 +25,20 @@
 #pragma once
 
 #include "trackerboy/data/Table.hpp"
-#include "trackerboy/synth/Synth.hpp"
+
+#include "gbapu.hpp"
 
 namespace trackerboy {
 
 //
-// The RuntimeContext struct is a utility struct that contains references for a Synth
-// and data tables.
+// The RuntimeContext struct is a utility struct that contains references for
+// the APU and data tables.
 //
 struct RuntimeContext {
 
-    RuntimeContext(Synth &synth, InstrumentTable &instTable, WaveTable &waveTable);
+    RuntimeContext(gbapu::Apu &apu, InstrumentTable &instTable, WaveTable &waveTable);
 
-    Synth &synth;
+    gbapu::Apu &apu;
     InstrumentTable &instTable;
     WaveTable &waveTable;
 

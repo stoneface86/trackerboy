@@ -24,9 +24,9 @@
 
 #pragma once
 
-#include "trackerboy/data/Waveform.hpp"
-#include "trackerboy/ChType.hpp"
 #include "trackerboy/gbs.hpp"
+
+#include "gbapu.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -43,7 +43,9 @@ public:
     static constexpr double HEADROOM = 0.7071067812; // -3.0 dB
 
     Synth(unsigned samplingRate, float framerate = Gbs::FRAMERATE_GB) noexcept;
-    ~Synth();
+    ~Synth() = default;
+
+    gbapu::Apu& apu() noexcept;
 
 
     //
@@ -55,8 +57,6 @@ public:
     // Reset the synthesizer by reseting all hardware components to defaults.
     //
     void reset() noexcept;
-    
-    uint8_t readRegister(uint16_t addr) noexcept;
 
     //
     // Run the synth for 1 frame. Synthesized output is stored in
@@ -69,65 +69,36 @@ public:
     //
     void setFramerate(float framerate);
 
-    void setOutputEnable(ChType ch, Gbs::Terminal terminal, bool enabled) noexcept;
-
     void setSamplingRate(unsigned samplingRate);
 
     void setVolume(int percent);
 
     void setupBuffers();
 
-    void setWaveram(Waveform &waveform);
-
-    void step(uint32_t cycles) noexcept;
-
-    void writeRegister(uint16_t addr, uint8_t value) noexcept;
-
 private:
 
-    // PIMPL idiom
-    struct Internal;
-    std::unique_ptr<Internal> mInternal;
-
+    gbapu::Buffer mBuffer;
+    gbapu::Apu mApu;
+    
     // output sampling rate
     unsigned mSamplerate;
     // interrupt rate of the gameboy VBlank interrupt
     float mFramerate;
 
-
-
     // number of cycles executed in 1 frame
     // equal to the gameboy clock speed divided by the framerate
     float mCyclesPerFrame;
 
-    // fraction offset of cycles when determining frame length
+    // fraction offset of cycles leftover from the last run()
     float mCycleOffset;
 
     // buffer of generated samples from the last run()
     std::vector<int16_t> mFrameBuf;
 
-    // channel panning settings
-    // bits 7-4: Right panning enable for channels 1,2,3,4 (bit 4 = 1, ...)
-    // bits 3-0: Left panning enable for channels 1,2,3,4 (bit 0 = 1, ...)
-    uint8_t mOutputStat;
-
-    // previous output from last run for each channel terminals
-    int8_t mChPrev[8];
-
     // size in samples of the last frame
     size_t mLastFrameSize;
 
-    // current time offset in cycles
-    uint32_t mCycletime;
-
-    unsigned mVolumeStep;
-
     bool mResizeRequired;
-
-    //void resizeFrameBuf();
-
-    template <ChType ch>
-    void updateOutput(int8_t &leftdelta, int8_t &rightdelta, uint32_t &fence) noexcept;
 
 };
 

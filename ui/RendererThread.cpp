@@ -1,6 +1,8 @@
 
 #include "RendererThread.hpp"
 
+#include "trackerboy/engine/ChannelControl.hpp"
+
 #include <cstdint>
 
 // TODO: the callback thread should buffer more than 1 frame. Gaps may occur if
@@ -20,7 +22,7 @@ RendererThread::RendererThread(ModuleDocument &document,
     mInstrumentModel(instrumentModel),
     mWaveModel(waveModel),
     mSynth(44100),
-    mRc(mSynth, document.instrumentTable(), document.waveTable()),
+    mRc(mSynth.apu(), document.instrumentTable(), document.waveTable()),
     mEngine(mRc),
     mIr(mRc),
     mPreviewState(PreviewState::none),
@@ -140,8 +142,10 @@ void RendererThread::handleCallback(int16_t *out, size_t frames) {
                             mPreviewState = PreviewState::waveform;
                             mPreviewChannel = trackerboy::ChType::ch3;
                             mEngine.unlock(trackerboy::ChType::ch3);
-                            mSynth.setOutputEnable(trackerboy::ChType::ch3, trackerboy::Gbs::TERM_BOTH, true);
-                            mSynth.setWaveram(*(mWaveModel.currentWaveform()));
+                            //mSynth.setOutputEnable(trackerboy::ChType::ch3, trackerboy::Gbs::TERM_BOTH, true);
+                            //mSynth.setWaveram(*(mWaveModel.currentWaveform()));
+                            
+                            //trackerboy::ChannelControl::writeEnvelope()
 
                             [[fallthrough]];
                         case PreviewState::waveform:
@@ -190,7 +194,7 @@ void RendererThread::handleCallback(int16_t *out, size_t frames) {
                 case Command::stop:
                     mStopCounter = STOP_FRAMES;
                     // sound off
-                    mSynth.writeRegister(trackerboy::Gbs::REG_NR51, 0x00);
+                    mRc.apu.writeRegister(gbapu::Apu::REG_NR51, 0x00);
                     break;
             }
 
@@ -239,7 +243,7 @@ void RendererThread::handleCallback(int16_t *out, size_t frames) {
 }
 
 void RendererThread::resetPreview() {
-    mSynth.setOutputEnable(mPreviewChannel, trackerboy::Gbs::TERM_BOTH, false);
+    //mSynth.setOutputEnable(mPreviewChannel, trackerboy::Gbs::TERM_BOTH, false);
     mEngine.lock(mPreviewChannel);
     mPreviewState = PreviewState::none;
 }

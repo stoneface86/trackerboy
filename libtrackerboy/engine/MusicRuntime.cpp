@@ -215,11 +215,10 @@ bool MusicRuntime::step() {
             //  z: mPanningMask
             lockbits |= lockbits << 4;
             panning &= ~lockbits;
-            panning |= mRc.synth.readRegister(Gbs::REG_NR51) & lockbits;
+            panning |= mRc.apu.readRegister(gbapu::Apu::REG_NR51) & lockbits;
         }
 
-        //mRc.synth.setOutputEnable(static_cast<Gbs::OutputFlags>(panning));
-        mRc.synth.writeRegister(Gbs::REG_NR51, panning);
+        mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
         mFlags &= ~FLAGS_PANNING;
     }
 
@@ -269,7 +268,6 @@ void MusicRuntime::update() {
 
             if (locked && !!(mFlags & (FLAGS_AREN1 << chint))) {
                 retrigger = 0x8000;
-                //mRc.synth.restart(ch);
             }
 
             if constexpr (isFrequencyChannel) {
@@ -283,8 +281,8 @@ void MusicRuntime::update() {
                         // nonzero timbre, 7-bit step width
                         noise |= 0x08;
                     }
-                    mRc.synth.writeRegister(Gbs::REG_NR43, noise);
-                    mRc.synth.writeRegister(Gbs::REG_NR44, retrigger >> 8);
+                    mRc.apu.writeRegister(gbapu::Apu::REG_NR43, noise);
+                    mRc.apu.writeRegister(gbapu::Apu::REG_NR44, retrigger >> 8);
                 }
 
             }
@@ -358,8 +356,8 @@ void MusicRuntime::processTrackEffect(Effect effect) {
             break;
         case EffectType::setSweep:
             // this effect only modifies CH1's sweep register and can be used on any channel
-            mRc.synth.writeRegister(Gbs::REG_NR10, effect.param);
-            mRc.synth.writeRegister(Gbs::REG_NR14, 0x80 | (mFc[0].frequency() >> 8));
+            mRc.apu.writeRegister(gbapu::Apu::REG_NR10, effect.param);
+            mRc.apu.writeRegister(gbapu::Apu::REG_NR14, 0x80 | (mFc[0].frequency() >> 8));
             break;
         case EffectType::delayedCut:
             mNc[chint].noteCut(effect.param);

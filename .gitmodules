@@ -1,3 +1,6 @@
 [submodule "miniaudio"]
 	path = external/miniaudio
 	url = https://github.com/mackron/miniaudio.git
+[submodule "external/gbapu"]
+	path = external/gbapu
+	url = https://github.com/stoneface86/gbapu

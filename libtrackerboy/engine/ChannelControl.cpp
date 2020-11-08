@@ -32,26 +32,32 @@ void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelo
         if (waveform == nullptr) {
             return; // do nothing if no waveform exists
         }
-        // on real hardware we would have to disable the generator by
-        // writing 0x00 to NR30 to prevent corruption. The emulator does
-        // not corrupt wave ram on retrigger so we can skip this step.
 
-        // copy waveform to wave ram
-        rc.synth.setWaveram(*waveform);
+        // DAC OFF
+        rc.apu.writeRegister(gbapu::Apu::REG_NR30, 0x00);
+
+        // copy wave
+        auto data = waveform->data();
+        for (int i = 0; i != 16; ++i) {
+            rc.apu.writeRegister(gbapu::Apu::REG_WAVERAM + i, data[i]);
+        }
+
+        // DAC ON
+        rc.apu.writeRegister(gbapu::Apu::REG_NR30, 0x80);
 
     } else {
         // write envelope
         // [rNRx2] <- envelope
-        rc.synth.writeRegister(Gbs::REG_NR12 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), envelope);
+        rc.apu.writeRegister(gbapu::Apu::REG_NR12 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), envelope);
     }
     // retrigger
-    rc.synth.writeRegister(Gbs::REG_NR14 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), 0x80 | freqMsb);
+    rc.apu.writeRegister(gbapu::Apu::REG_NR14 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), 0x80 | freqMsb);
 }
 
 void ChannelControl::writeFrequency(ChType ch, RuntimeContext &rc, uint16_t frequency) {
-    uint16_t lsbReg = Gbs::REG_NR13 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL);
-    rc.synth.writeRegister(lsbReg++, frequency & 0xFF);
-    rc.synth.writeRegister(lsbReg, frequency >> 8);
+    uint16_t lsbReg = gbapu::Apu::REG_NR13 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL);
+    rc.apu.writeRegister(lsbReg++, frequency & 0xFF);
+    rc.apu.writeRegister(lsbReg, frequency >> 8);
 
 }
 
@@ -59,15 +65,15 @@ void ChannelControl::writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre) 
     uint16_t reg;
     switch (ch) {
         case ChType::ch1:
-            reg = Gbs::REG_NR11;
+            reg = gbapu::Apu::REG_NR11;
             goto pulse;
         case ChType::ch2:
-            reg = Gbs::REG_NR21;
+            reg = gbapu::Apu::REG_NR21;
         pulse:
             timbre <<= 6;
             break;
         case ChType::ch3:
-            reg = Gbs::REG_NR32;
+            reg = gbapu::Apu::REG_NR32;
             // 0   1   2   3   : timbre
             // 0% 25% 50% 100% : volume
             // 0   3   2   1   : NR32
@@ -79,8 +85,8 @@ void ChannelControl::writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre) 
             timbre <<= 5;
             break;
         case ChType::ch4:
-            reg = Gbs::REG_NR43;
-            uint8_t nr43 = rc.synth.readRegister(reg);
+            reg = gbapu::Apu::REG_NR43;
+            uint8_t nr43 = rc.apu.readRegister(reg);
             if (timbre) {
                 nr43 |= 0x08;
             } else {
@@ -90,7 +96,7 @@ void ChannelControl::writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre) 
             break;
     }
 
-    rc.synth.writeRegister(reg, timbre);
+    rc.apu.writeRegister(reg, timbre);
 }
 
 

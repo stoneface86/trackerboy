@@ -3,8 +3,7 @@
 #include "trackerboy/engine/Engine.hpp"
 #include "trackerboy/note.hpp"
 #include "trackerboy/data/Module.hpp"
-
-#include "audio.hpp"
+#include "trackerboy/synth/Synth.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -12,7 +11,6 @@
 #include <chrono>
 #include <thread>
 
-using audio::PlaybackQueue;
 using namespace trackerboy;
 
 //constexpr audio::Samplerate SAMPLERATE = audio::SR_48000;
@@ -55,7 +53,7 @@ int main() {
 
 
     Synth synth(SAMPLERATE_INT);
-    std::unique_ptr<PlaybackQueue> pb(new PlaybackQueue());
+    //std::unique_ptr<PlaybackQueue> pb(new PlaybackQueue());
 
     /*struct SoundIoDevice *device = soundio_get_output_device(soundio, deviceTable.defaultDevice());
     pb.setDevice(device, SAMPLERATE);
@@ -65,7 +63,7 @@ int main() {
 
     InstrumentTable &itable = mod.instrumentTable();
     WaveTable &wtable = mod.waveTable();
-    RuntimeContext rc(synth, itable, wtable);
+    RuntimeContext rc(synth.apu(), itable, wtable);
     
 
     {
@@ -376,15 +374,11 @@ int main() {
 
     std::vector<float> floatBuf;
 
-    pb->open();
-
     for (int i = 600; i != 0; --i) {
         Frame frame;
         engine.step(frame);
-        printFrame(frame);
         size_t framesize = synth.run();
         int16_t *buffer = synth.buffer();
-        pb->enqueue(buffer, framesize);
         floatBuf.resize(framesize * 2);
         for (size_t i = 0; i != framesize * 2; ++i) {
             floatBuf[i] = static_cast<float>(buffer[i]) / 32768.0f;
@@ -392,16 +386,9 @@ int main() {
         wav.write(floatBuf.data(), framesize);
     }
 
-    pb->stop(true);
-
-    pb->close();
-
-    std::cout << "underruns: " << pb->underruns() << std::endl;
-
     wav.finish();
     file.close();
 
-    //soundio_destroy(soundio);
     return 0;
 
 }
