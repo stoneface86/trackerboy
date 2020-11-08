@@ -1,5 +1,5 @@
 
-#include "trackerboy/synth/Synth.hpp"
+#include "trackerboy/Synth.hpp"
 
 #include <cmath>
 

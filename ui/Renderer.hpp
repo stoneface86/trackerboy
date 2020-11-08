@@ -7,9 +7,6 @@
 #include "Config.hpp"
 #include "RendererThread.hpp"
 
-#include "trackerboy/engine/Engine.hpp"
-#include "trackerboy/engine/InstrumentRuntime.hpp"
-#include "trackerboy/synth/Synth.hpp"
 #include "trackerboy/note.hpp"
 
 #include "miniaudio.h"

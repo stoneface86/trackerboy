@@ -1,7 +1,7 @@
 
 #include "miniaudio.h"
 
-#include "trackerboy/synth/Synth.hpp"
+#include "trackerboy/Synth.hpp"
 
 #include <algorithm>
 #include <atomic>

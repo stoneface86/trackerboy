@@ -2,8 +2,6 @@
 #include "ConfigDialog.hpp"
 #include "samplerates.hpp"
 
-#include "trackerboy/synth/Synth.hpp"
-
 #include <QMessageBox>
 #include <QPushButton>
 
@@ -95,7 +93,7 @@ void ConfigDialog::volumeSliderChanged(int value) {
     QString text("%1% (%2 dB)");
     double db = value / 100.0;
     db *= db;
-    db = 6.0 * log2(trackerboy::Synth::HEADROOM * db);
+    db = 6.0 * log2(db);
     mUi->mVolumeLabel->setText(text.arg(
         QString::number(value),
         QString::number(db, 'f', 2)

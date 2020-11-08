@@ -8,7 +8,7 @@
 
 #include "trackerboy/engine/Engine.hpp"
 #include "trackerboy/engine/InstrumentRuntime.hpp"
-#include "trackerboy/synth/Synth.hpp"
+#include "trackerboy/Synth.hpp"
 
 #include "miniaudio.h"
 

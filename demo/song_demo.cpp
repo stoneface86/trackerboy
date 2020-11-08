@@ -3,7 +3,7 @@
 #include "trackerboy/engine/Engine.hpp"
 #include "trackerboy/note.hpp"
 #include "trackerboy/data/Module.hpp"
-#include "trackerboy/synth/Synth.hpp"
+#include "trackerboy/Synth.hpp"
 
 #include <fstream>
 #include <iostream>

@@ -23,18 +23,9 @@ set(SRC_FILES
     "data/Track.cpp"
     "data/Waveform.cpp"
 
-    "synth/Envelope.cpp"
-    "synth/Generator.cpp"
-    "synth/NoiseGen.cpp"
-    "synth/PulseGen.cpp"
-    "synth/Sequencer.cpp"
-    "synth/Sweep.cpp"
-    "synth/Synth.cpp"
-    "synth/WaveGen.cpp"
-
     "fileformat.cpp"
     "note.cpp"
-
+    "Synth.cpp"
     "version.cpp"
 )
 
