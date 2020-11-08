@@ -5,6 +5,7 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets Core REQUIRED)
 if (WIN32)
     set(GUI_TYPE WIN32)
+    set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
 elseif (APPLE)
     set(GUI_TYPE MACOSX_BUNDLE)
 else ()
@@ -69,7 +70,7 @@ if (MSVC)
 endif ()
 
 
-add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC} ${UI_DESIGNER})
+add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC} ${UI_DESIGNER} ${WINDOWS_APPICON_RC})
 target_link_libraries(trackerboy_ui
     trackerboy
     miniaudio

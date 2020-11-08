@@ -51,6 +51,15 @@ MainWindow::MainWindow() :
     // associate menu actions with the model
     mSongModel->setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
 
+    QIcon appIcon;
+    appIcon.addFile(":/icons/app/appicon-16.png");
+    appIcon.addFile(":/icons/app/appicon-24.png");
+    appIcon.addFile(":/icons/app/appicon-32.png");
+    appIcon.addFile(":/icons/app/appicon-48.png");
+    appIcon.addFile(":/icons/app/appicon-256.png");
+    setWindowIcon(appIcon);
+
+
     //mRenderer->setDevice(mConfig.device(), mConfig.samplerate());
     //mRenderer->start();
 }

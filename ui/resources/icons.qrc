@@ -6,5 +6,10 @@
     <file>icons/instrumentIcons.png</file>
     <file>icons/tableFormIcons.png</file>
     <file>icons/toolbar.png</file>
+    <file>icons/app/appicon-16.png</file>
+    <file>icons/app/appicon-24.png</file>
+    <file>icons/app/appicon-32.png</file>
+    <file>icons/app/appicon-48.png</file>
+    <file>icons/app/appicon-256.png</file>
 </qresource>
 </RCC>
