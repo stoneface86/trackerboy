@@ -835,31 +835,31 @@
   <customwidget>
    <class>TableForm</class>
    <extends>QWidget</extends>
-   <header>widgets/TableForm.hpp</header>
+   <header>widgets/docks/TableForm.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>SongPropertiesWidget</class>
    <extends>QWidget</extends>
-   <header>widgets/SongPropertiesWidget.hpp</header>
+   <header>widgets/docks/SongPropertiesWidget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>ModulePropertiesWidget</class>
    <extends>QWidget</extends>
-   <header>widgets/ModulePropertiesWidget.hpp</header>
+   <header>widgets/docks/ModulePropertiesWidget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>SongWidget</class>
    <extends>QWidget</extends>
-   <header>widgets/SongWidget.hpp</header>
+   <header>widgets/docks/SongWidget.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>OrderWidget</class>
    <extends>QWidget</extends>
-   <header>widgets/OrderWidget.hpp</header>
+   <header>widgets/docks/OrderWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

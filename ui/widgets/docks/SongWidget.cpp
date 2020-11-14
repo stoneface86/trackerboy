@@ -1,5 +1,5 @@
 
-#include "widgets/SongWidget.hpp"
+#include "widgets/docks/SongWidget.hpp"
 
 #pragma warning(push, 0)
 #include "ui_SongWidget.h"

@@ -1,5 +1,5 @@
 
-#include "TableForm.hpp"
+#include "widgets/docks/TableForm.hpp"
 #include "Tileset.hpp"
 
 #include <QToolBar>

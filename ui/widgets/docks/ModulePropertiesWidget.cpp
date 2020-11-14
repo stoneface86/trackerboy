@@ -1,5 +1,5 @@
 
-#include "widgets/ModulePropertiesWidget.hpp"
+#include "widgets/docks/ModulePropertiesWidget.hpp"
 
 #pragma warning(push, 0)
 #include "ui_ModulePropertiesWidget.h"

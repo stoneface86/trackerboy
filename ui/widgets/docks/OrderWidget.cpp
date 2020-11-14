@@ -1,4 +1,4 @@
-#include "widgets/OrderWidget.hpp"
+#include "widgets/docks/OrderWidget.hpp"
 
 #pragma warning(push, 0)
 #include "ui_OrderWidget.h"
