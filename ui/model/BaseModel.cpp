@@ -94,6 +94,7 @@ void BaseModel::rename(const QString &name) {
 void BaseModel::select(int index) {
     if (mCurrentIndex != index) {
         mCurrentIndex = index;
+        dataSelected(index);
         emit currentIndexChanged(index);
         updateActions();
     }
@@ -114,6 +115,10 @@ void BaseModel::setEnabled(bool enabled) {
         beginResetModel();
         select(-1);
     }
+}
+
+void BaseModel::dataSelected(int index) {
+    (void)index; // do nothing
 }
 
 void BaseModel::setActions(QAction *actNew, QAction *actRemove, QAction *actDuplicate, QAction *actEdit) {

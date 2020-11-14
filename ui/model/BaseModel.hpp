@@ -60,6 +60,9 @@ protected:
     virtual bool canAdd() = 0;
     virtual bool canRemove() = 0;
 
+    // optional
+    virtual void dataSelected(int index);
+
     ModuleDocument &mDocument;
 
     int mCurrentIndex;

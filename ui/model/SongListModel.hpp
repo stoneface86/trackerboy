@@ -2,6 +2,7 @@
 #pragma once
 
 #include "model/BaseModel.hpp"
+#include "model/OrderModel.hpp"
 
 #include "trackerboy/data/Song.hpp"
 
@@ -18,6 +19,8 @@ public:
 
     virtual QString name() override;
 
+    OrderModel* orderModel() const;
+
 protected:
     virtual bool canAdd() override;
 
@@ -33,7 +36,11 @@ protected:
 
     virtual int nextIndex() override;
 
+    virtual void dataSelected(int index) override;
+
 private:
+    OrderModel *mOrderModel;
+
     std::vector<trackerboy::Song> &mSongVector;
 
 

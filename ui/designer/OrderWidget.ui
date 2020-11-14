@@ -13,11 +13,11 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="addButton">
+      <widget class="QPushButton" name="incrementButton">
        <property name="maximumSize">
         <size>
          <width>32</width>
@@ -33,7 +33,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="removeButton">
+      <widget class="QPushButton" name="decrementButton">
        <property name="maximumSize">
         <size>
          <width>32</width>
@@ -59,27 +59,58 @@
       </spacer>
      </item>
      <item>
-      <widget class="QCheckBox" name="changeAllCheckbox">
+      <widget class="QLineEdit" name="setLineEdit">
+       <property name="inputMask">
+        <string>HH</string>
+       </property>
        <property name="text">
-        <string>Change all</string>
+        <string>00</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setButton">
+       <property name="text">
+        <string>Set</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item>
-    <widget class="OrderEditor" name="widget"/>
+    <widget class="QTableView" name="tableView">
+     <property name="alternatingRowColors">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="text">
+        <string>Insert</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_3">
+       <property name="text">
+        <string>Remove</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_4">
+       <property name="text">
+        <string>Duplicate</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>OrderEditor</class>
-   <extends>QFrame</extends>
-   <header>widgets/OrderEditor.hpp</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

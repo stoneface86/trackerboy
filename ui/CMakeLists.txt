@@ -27,6 +27,7 @@ set(UI_SRC
     "model/BaseTableModel.cpp"
     "model/ModuleDocument.cpp"
     "model/InstrumentListModel.cpp"
+    "model/OrderModel.cpp"
     "model/SongListModel.cpp"
     "model/WaveListModel.cpp"
     
@@ -36,7 +37,6 @@ set(UI_SRC
     "widgets/EnvelopeForm.cpp"
     "widgets/MainWidget.cpp"
     "widgets/ModulePropertiesWidget.cpp"
-    "widgets/OrderEditor.cpp"
     "widgets/OrderWidget.cpp"
     "widgets/PianoWidget.cpp"
     "widgets/SongPropertiesWidget.cpp"

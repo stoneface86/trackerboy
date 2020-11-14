@@ -2,9 +2,11 @@
 #include "model/SongListModel.hpp"
 
 SongListModel::SongListModel(ModuleDocument &document) :
+    mOrderModel(new OrderModel(document, this)),
     mSongVector(document.songs()),
     BaseModel(document)
 {
+    select(0); // we always have 1 song so the select the first one
 }
 
 int SongListModel::rowCount(const QModelIndex &parent) const {
@@ -25,6 +27,10 @@ QVariant SongListModel::data(const QModelIndex &index, int role) const {
 
 QString SongListModel::name() {
     return QString::fromStdString(mSongVector[mCurrentIndex].name());
+}
+
+OrderModel* SongListModel::orderModel() const {
+    return mOrderModel;
 }
 
 bool SongListModel::canAdd() {
@@ -56,4 +62,8 @@ void SongListModel::dataRename(const QString &name) {
 int SongListModel::nextIndex() {
     // songs always get added/duplicated to the end of the list
     return mSongVector.size();
+}
+
+void SongListModel::dataSelected(int index) {
+    mOrderModel->setOrder(index == -1 ? nullptr : &mSongVector[index].orders());
 }

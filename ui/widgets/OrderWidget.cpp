@@ -4,13 +4,60 @@
 #include "ui_OrderWidget.h"
 #pragma warning(pop)
 
+#include <QFontDatabase>
+#include <QtDebug>
+
 OrderWidget::OrderWidget(QWidget *parent) :
     QWidget(parent),
-    mUi(new Ui::OrderWidget())
+    mUi(new Ui::OrderWidget()),
+    mModel(nullptr)
 {
     mUi->setupUi(this);
+    auto headerView = mUi->tableView->horizontalHeader();
+    headerView->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
+
+    // todo: use the same font as the PatternGrid
+    mUi->tableView->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+
+    connect(mUi->incrementButton, &QPushButton::released, this, &OrderWidget::increment);
+    connect(mUi->decrementButton, &QPushButton::released, this, &OrderWidget::decrement);
+    connect(mUi->setButton, &QPushButton::released, this, &OrderWidget::set);
+
+    
 }
 
 OrderWidget::~OrderWidget() {
     delete mUi;
 }
+
+void OrderWidget::setModel(OrderModel *model) {
+    mModel = model;
+    mUi->tableView->setModel(model);
+    connect(mUi->tableView->selectionModel(), &QItemSelectionModel::currentChanged, this, &OrderWidget::currentChanged);
+}
+
+void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
+    // TODO: set PatternGrid's cursor to this track
+ 
+}
+
+void OrderWidget::increment() {
+    mModel->incrementSelection(mUi->tableView->selectionModel()->selection());
+}
+
+void OrderWidget::decrement() {
+    mModel->decrementSelection(mUi->tableView->selectionModel()->selection());
+}
+
+void OrderWidget::set() {
+    bool ok;
+    unsigned id = mUi->setLineEdit->text().toUInt(&ok, 16);
+
+    if (ok) {
+        mModel->setSelection(
+            mUi->tableView->selectionModel()->selection(),
+            id
+            );
+    }
+}
+

@@ -34,6 +34,8 @@ MainWindow::MainWindow() :
     // setup the designer ui
     mUi->setupUi(this);
 
+    mUi->orderWidget->setModel(mSongModel->orderModel());
+
     // setup ui not specified in the ui file
     setupUi();
 
