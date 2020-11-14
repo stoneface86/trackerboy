@@ -36,11 +36,7 @@ struct Order {
 
     // same as Pattern, except with IDs instead of iterators
 
-    uint8_t track1Id;
-    uint8_t track2Id;
-    uint8_t track3Id;
-    uint8_t track4Id;
-
+    uint8_t tracks[4];
 
 };
 

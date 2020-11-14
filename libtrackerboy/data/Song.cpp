@@ -70,10 +70,10 @@ Pattern Song::getPattern(uint8_t orderNo) {
 
     Order &order = mOrder[orderNo];
     return mMaster.getPattern(
-        order.track1Id,
-        order.track2Id,
-        order.track3Id,
-        order.track4Id
+        order.tracks[0],
+        order.tracks[1],
+        order.tracks[2],
+        order.tracks[3]
     );
 }
 
