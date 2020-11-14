@@ -77,4 +77,5 @@ target_link_libraries(trackerboy_ui
     Qt5::Widgets
     Qt5::Core
 )
+set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
