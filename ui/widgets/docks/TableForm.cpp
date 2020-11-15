@@ -18,7 +18,9 @@ constexpr int ICON_EXPORT = 4;
 constexpr int ICON_EDIT = 5;
 
 
-TableForm::TableForm(QWidget *parent) :
+TableForm::TableForm(BaseTableModel &model, QWidget *editor, QString editorShortcut, QString typeName, QWidget *parent) :
+    mModel(model),
+    mEditor(editor),
     mMenu(new QMenu(this)),
     mListView(new QListView()),
     mNameEdit(new QLineEdit()),
@@ -31,18 +33,24 @@ TableForm::TableForm(QWidget *parent) :
 
     mActAdd = mMenu->addAction(tr("Add"));
     mActAdd->setIcon(tileset.getIcon(ICON_ADD));
+    mActAdd->setStatusTip(QString("Adds a new %1").arg(typeName));
     mActRemove = mMenu->addAction(tr("Remove"));
     mActRemove->setIcon(tileset.getIcon(ICON_REMOVE));
+    mActRemove->setStatusTip(QString("Removes the current %1").arg(typeName));
     mActDuplicate = mMenu->addAction(tr("Duplicate"));
     mActDuplicate->setIcon(tileset.getIcon(ICON_DUPLICATE));
+    mActDuplicate->setStatusTip(QString("Adds a copy of the current %1").arg(typeName));
     mMenu->addSeparator();
     mActImport = mMenu->addAction(tr("Import"));
     mActImport->setIcon(tileset.getIcon(ICON_IMPORT));
+    mActImport->setStatusTip(QString("Import %1 from a file").arg(typeName));
     mActExport = mMenu->addAction(tr("Export"));
     mActExport->setIcon(tileset.getIcon(ICON_EXPORT));
+    mActExport->setStatusTip(QString("Export %1 to a file").arg(typeName));
     mMenu->addSeparator();
     mActEdit = mMenu->addAction(tr("Edit"));
     mActEdit->setIcon(tileset.getIcon(ICON_EDIT));
+    mActEdit->setStatusTip(QString("Edit the current %1").arg(typeName));
 
     auto toolbar = new QToolBar();
     toolbar->addAction(mActAdd);
@@ -73,47 +81,37 @@ TableForm::TableForm(QWidget *parent) :
     mListView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(mListView, &QListView::customContextMenuRequested, this, &TableForm::viewContextMenu);
 
-
-}
-
-QMenu* TableForm::menu() const {
-    return mMenu;
-}
-
-void TableForm::init(BaseTableModel *model, QWidget *editor, QString editorShortcut, QString typeName) {
-    mModel = model;
-    model->setActions(mActAdd, mActRemove, mActDuplicate, mActEdit);
-    mListView->setModel(model);
+    mModel.setActions(mActAdd, mActRemove, mActDuplicate, mActEdit);
+    mListView->setModel(&mModel);
     auto selectModel = mListView->selectionModel();
     connect(selectModel, &QItemSelectionModel::currentChanged, this, &TableForm::viewCurrentChanged);
-    connect(model, &BaseTableModel::currentIndexChanged, this, &TableForm::modelCurrentChanged);
-    connect(mNameEdit, &QLineEdit::textEdited, model, &BaseTableModel::rename);
+    connect(&mModel, &BaseTableModel::currentIndexChanged, this, &TableForm::modelCurrentChanged);
+    connect(mNameEdit, &QLineEdit::textEdited, &mModel, &BaseTableModel::rename);
 
     // actions
-    connect(mActAdd, &QAction::triggered, model, &BaseTableModel::add);
-    connect(mActRemove, &QAction::triggered, model, &BaseTableModel::remove);
-    connect(mActDuplicate, &QAction::triggered, model, &BaseTableModel::duplicate);
+    connect(mActAdd, &QAction::triggered, &mModel, &BaseTableModel::add);
+    connect(mActRemove, &QAction::triggered, &mModel, &BaseTableModel::remove);
+    connect(mActDuplicate, &QAction::triggered, &mModel, &BaseTableModel::duplicate);
 
     // TODO: connect import action
     // TODO: connect export action
 
     mEditor = editor;
     connect(mActEdit, &QAction::triggered, editor, &QWidget::show);
-    connect(mListView, &QListView::doubleClicked, this, 
-        [this](const QModelIndex &index) { 
-            (void)index; 
-            mEditor->show(); 
+    connect(mListView, &QListView::doubleClicked, this,
+        [this](const QModelIndex &index) {
+            (void)index;
+            mEditor->show();
         });
 
     mActEdit->setShortcut(QKeySequence(editorShortcut));
 
-    // action statusbar texts
-    mActAdd->setStatusTip(QString("Adds a new %1").arg(typeName));
-    mActRemove->setStatusTip(QString("Removes the current %1").arg(typeName));
-    mActDuplicate->setStatusTip(QString("Adds a copy of the current %1").arg(typeName));
-    mActImport->setStatusTip(QString("Import %1 from a file").arg(typeName));
-    mActExport->setStatusTip(QString("Export %1 to a file").arg(typeName));
-    mActEdit->setStatusTip(QString("Edit the current %1").arg(typeName));
+    
+
+}
+
+QMenu* TableForm::menu() const {
+    return mMenu;
 }
 
 void TableForm::modelCurrentChanged(int index) {
@@ -123,14 +121,14 @@ void TableForm::modelCurrentChanged(int index) {
         mEditor->setVisible(false);
     } else {
         mNameEdit->setEnabled(true);
-        mNameEdit->setText(mModel->name());
+        mNameEdit->setText(mModel.name());
     }
-    mListView->setCurrentIndex(mModel->index(index));
+    mListView->setCurrentIndex(mModel.index(index));
 }
 
 void TableForm::viewCurrentChanged(const QModelIndex &current, const QModelIndex &prev) {
     (void)prev; // we don't care about the previous index
-    mModel->select(current);
+    mModel.select(current);
 }
 
 void TableForm::viewContextMenu(const QPoint &pos) {

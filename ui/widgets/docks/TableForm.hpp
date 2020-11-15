@@ -17,11 +17,9 @@
 class TableForm : public QWidget {
 
 public:
-    TableForm(QWidget *parent = nullptr);
+    TableForm(BaseTableModel &model, QWidget *editor, QString editorShortcut, QString typeName, QWidget *parent = nullptr);
 
     QMenu* menu() const;
-
-    void init(BaseTableModel *model, QWidget *editor, QString editorShortcut, QString typeName);
 
 private slots:
     void viewCurrentChanged(const QModelIndex &current, const QModelIndex &prev);
@@ -31,13 +29,13 @@ private slots:
     void modelCurrentChanged(int index);
 
 private:
-    BaseTableModel *mModel = nullptr;
+    BaseTableModel &mModel;
     QMenu *mMenu;
-    QWidget *mEditor = nullptr;
+    QWidget *mEditor;
 
     // widgets
-    QListView *mListView = nullptr;
-    QLineEdit *mNameEdit = nullptr;
+    QListView *mListView;
+    QLineEdit *mNameEdit;
 
     // actions
     QAction *mActAdd = nullptr;

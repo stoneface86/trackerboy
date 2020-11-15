@@ -411,17 +411,27 @@ void MainWindow::setupUi() {
     // setup Instruments dock
     mDockInstruments = new QDockWidget(tr("Instruments"), this);
     mDockInstruments->setObjectName("mDockInstruments");
-    TableForm *instrumentTableForm = new TableForm(mDockInstruments);
+    TableForm *instrumentTableForm = new TableForm(
+        *mInstrumentModel,
+        mInstrumentEditor,
+        "Ctrl-I",
+        "instrument",
+        mDockInstruments
+    );
     mDockInstruments->setWidget(instrumentTableForm);
-    instrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I", "instrument");
     
 
     // setup Waveforms dock
     mDockWaveforms = new QDockWidget(tr("Waveforms"), this);
     mDockWaveforms->setObjectName("mDockWaveforms");
-    TableForm *waveTableForm = new TableForm(mDockWaveforms);
+    TableForm *waveTableForm = new TableForm(
+        *mWaveModel,
+        mWaveEditor,
+        "Ctrl-W",
+        "waveform",
+        mDockWaveforms
+    );
     mDockWaveforms->setWidget(waveTableForm);
-    waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W", "waveform");
 
     // setup Songs dock
     mDockSongs = new QDockWidget(tr("Songs"), this);
