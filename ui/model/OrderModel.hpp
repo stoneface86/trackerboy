@@ -4,6 +4,7 @@
 #include "trackerboy/data/Order.hpp"
 
 #include "model/ModuleDocument.hpp"
+#include "misc/OrderActions.hpp"
 
 #include <QAbstractTableModel>
 #include <QItemSelection>
@@ -20,6 +21,8 @@ public:
     virtual ~OrderModel() = default;
     
     void setOrder(std::vector<trackerboy::Order> *order);
+
+    void setActions(OrderActions actions);
 
     void incrementSelection(QItemSelection const &selection);
 
@@ -42,6 +45,23 @@ public:
 
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
+    bool insertRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
+
+    bool removeRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
+
+
+public slots:
+    void insert();
+
+    void remove();
+
+    //void duplicate();
+
+    //void moveUp();
+
+    //void moveDown();
+
+
 private:
     enum class ModifyMode {
         incdec,
@@ -54,5 +74,10 @@ private:
     ModuleDocument &mDocument;
 
     std::vector<trackerboy::Order> *mOrder;
+
+    OrderActions mActions;
+
+    int mCurrentRow;
+    int mCurrentTrack;
     
 };

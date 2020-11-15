@@ -34,8 +34,6 @@ MainWindow::MainWindow() :
     // setup the designer ui
     mUi->setupUi(this);
 
-    mUi->orderWidget->setModel(mSongModel->orderModel());
-
     // setup ui not specified in the ui file
     setupUi();
 
@@ -413,6 +411,18 @@ void MainWindow::setupUi() {
 
     // setup Songs dock
     mUi->songs->init(mSongModel);
+
+    // setup Orders dock
+    OrderActions orderActions = {
+        mUi->actionInsertOrder,
+        mUi->actionRemoveOrder,
+        mUi->actionDuplicateOrder,
+        mUi->actionMoveOrderUp,
+        mUi->actionMoveOrderDown
+    };
+    auto orderModel = mSongModel->orderModel();
+    orderModel->setActions(orderActions);
+    mUi->orderWidget->init(mSongModel->orderModel(), mUi->menuOrder);
 
     // MENUS =================================================================
 

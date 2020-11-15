@@ -657,6 +657,9 @@
    </property>
   </action>
   <action name="actionRemoveOrder">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Remove order</string>
    </property>
@@ -665,6 +668,9 @@
    </property>
   </action>
   <action name="actionMoveOrderUp">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Move order up</string>
    </property>
@@ -673,6 +679,9 @@
    </property>
   </action>
   <action name="actionMoveOrderDown">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Move order down</string>
    </property>

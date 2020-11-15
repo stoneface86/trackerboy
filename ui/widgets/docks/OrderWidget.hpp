@@ -1,7 +1,9 @@
 #pragma once
 
 #include "model/OrderModel.hpp"
+#include "misc/OrderActions.hpp"
 
+#include <QMenu>
 #include <QWidget>
 
 namespace Ui {
@@ -16,7 +18,7 @@ public:
     explicit OrderWidget(QWidget *parent = nullptr);
     virtual ~OrderWidget();
 
-    void setModel(OrderModel *model);
+    void init(OrderModel *model, QMenu *menu);
 
 private slots:
 
@@ -26,9 +28,12 @@ private slots:
     void decrement();
     void set();
 
+    void tableViewContextMenu(QPoint pos);
+
 private:
 
     Ui::OrderWidget *mUi;
 
     OrderModel *mModel;
+    QMenu *mContextMenu;
 };
