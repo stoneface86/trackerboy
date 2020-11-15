@@ -134,36 +134,6 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QDockWidget" name="dockOrders">
-   <property name="allowedAreas">
-    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
-   </property>
-   <property name="windowTitle">
-    <string>Order</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
-    <layout class="QGridLayout" name="gridLayout">
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item row="0" column="0">
-      <widget class="OrderWidget" name="orderWidget" native="true"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
   <widget class="QToolBar" name="toolbarFile">
    <property name="windowTitle">
     <string>File toolbar</string>
@@ -187,81 +157,6 @@
    <addaction name="actionCut"/>
    <addaction name="actionCopy"/>
    <addaction name="actionPaste"/>
-  </widget>
-  <widget class="QDockWidget" name="dockSongProperties">
-   <property name="windowTitle">
-    <string>Song properties</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_4">
-    <layout class="QGridLayout" name="gridLayout_5">
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item row="0" column="0">
-      <widget class="SongPropertiesWidget" name="songProperties" native="true"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockInstruments">
-   <property name="windowTitle">
-    <string>Instruments</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>4</number>
-   </attribute>
-   <widget class="TableForm" name="instrumentTableForm">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWaveforms">
-   <property name="windowTitle">
-    <string>Waveforms</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>4</number>
-   </attribute>
-   <widget class="TableForm" name="waveTableForm">
-    <layout class="QGridLayout" name="gridLayout_3">
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-    </layout>
-   </widget>
   </widget>
   <widget class="QToolBar" name="toolbarOrder">
    <property name="windowTitle">
@@ -305,60 +200,6 @@
    <addaction name="actionPlayOrder"/>
    <addaction name="actionStop"/>
    <addaction name="actionToggleEditMode"/>
-  </widget>
-  <widget class="QDockWidget" name="dockModuleProperties">
-   <property name="windowTitle">
-    <string>Module properties</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2">
-    <layout class="QGridLayout" name="gridLayout_6">
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item row="0" column="0">
-      <widget class="ModulePropertiesWidget" name="moduleProperties" native="true"/>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockSongs">
-   <property name="windowTitle">
-    <string>Songs</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_3">
-    <layout class="QGridLayout" name="gridLayout_4">
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item row="0" column="0">
-      <widget class="SongWidget" name="songs" native="true"/>
-     </item>
-    </layout>
-   </widget>
   </widget>
   <action name="actionNew">
    <property name="text">
@@ -839,36 +680,6 @@
    <class>MainWidget</class>
    <extends>QWidget</extends>
    <header>widgets/MainWidget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>TableForm</class>
-   <extends>QWidget</extends>
-   <header>widgets/docks/TableForm.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>SongPropertiesWidget</class>
-   <extends>QWidget</extends>
-   <header>widgets/docks/SongPropertiesWidget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>ModulePropertiesWidget</class>
-   <extends>QWidget</extends>
-   <header>widgets/docks/ModulePropertiesWidget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>SongWidget</class>
-   <extends>QWidget</extends>
-   <header>widgets/docks/SongWidget.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>OrderWidget</class>
-   <extends>QWidget</extends>
-   <header>widgets/docks/OrderWidget.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

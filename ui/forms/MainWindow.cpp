@@ -1,6 +1,11 @@
 
 #include "MainWindow.hpp"
 #include "Tileset.hpp"
+#include "widgets/docks/ModulePropertiesWidget.hpp"
+#include "widgets/docks/OrderWidget.hpp"
+#include "widgets/docks/SongPropertiesWidget.hpp"
+#include "widgets/docks/SongWidget.hpp"
+#include "widgets/docks/TableForm.hpp"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -186,12 +191,12 @@ void MainWindow::windowResetLayout() {
     }
 
     std::array<QDockWidget*, 6> dockArray = {
-        mUi->dockSongProperties,
-        mUi->dockModuleProperties,
-        mUi->dockSongs,
-        mUi->dockOrders,
-        mUi->dockInstruments,
-        mUi->dockWaveforms
+        mDockSongProperties,
+        mDockModuleProperties,
+        mDockSongs,
+        mDockOrders,
+        mDockInstruments,
+        mDockWaveforms
     };
 
     // remove everything
@@ -204,14 +209,14 @@ void MainWindow::windowResetLayout() {
 
     // Note: a | means the docks are tabbed
     // left area: (dockSongProperties | dockModuleProperties | dockSongs) dockOrders
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, mUi->dockSongProperties);
-    tabifyDockWidget(mUi->dockSongProperties, mUi->dockModuleProperties);
-    tabifyDockWidget(mUi->dockModuleProperties, mUi->dockSongs);
-    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, mUi->dockOrders);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, mDockSongProperties);
+    tabifyDockWidget(mDockSongProperties, mDockModuleProperties);
+    tabifyDockWidget(mDockModuleProperties, mDockSongs);
+    addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, mDockOrders);
 
     // top area: dockInstruments dockWaveforms
-    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, mUi->dockInstruments);
-    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, mUi->dockWaveforms);
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, mDockInstruments);
+    addDockWidget(Qt::DockWidgetArea::TopDockWidgetArea, mDockWaveforms);
     
     // set visible
     for (auto dock : dockArray) {
@@ -221,9 +226,9 @@ void MainWindow::windowResetLayout() {
     // resize
     
     int topwidth = (width()) / 2;
-    resizeDocks({ mUi->dockInstruments, mUi->dockWaveforms }, { topwidth, topwidth }, Qt::Horizontal);
+    resizeDocks({ mDockInstruments, mDockWaveforms }, { topwidth, topwidth }, Qt::Horizontal);
 
-    resizeDocks({ mUi->dockSongProperties, mUi->dockOrders }, { mUi->dockSongProperties->minimumHeight(), mUi->dockOrders->maximumHeight() }, Qt::Vertical);
+    resizeDocks({ mDockSongProperties, mDockOrders }, { mDockSongProperties->minimumHeight(), mDockOrders->maximumHeight() }, Qt::Vertical);
 }
 
 void MainWindow::onSoundChange() {
@@ -404,15 +409,44 @@ void MainWindow::setupUi() {
     // DOCKS =================================================================
 
     // setup Instruments dock
-    mUi->instrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I", "instrument");
+    mDockInstruments = new QDockWidget(tr("Instruments"), this);
+    mDockInstruments->setObjectName("mDockInstruments");
+    TableForm *instrumentTableForm = new TableForm(mDockInstruments);
+    mDockInstruments->setWidget(instrumentTableForm);
+    instrumentTableForm->init(mInstrumentModel, mInstrumentEditor, "Ctrl+I", "instrument");
     
+
     // setup Waveforms dock
-    mUi->waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W", "waveform");
+    mDockWaveforms = new QDockWidget(tr("Waveforms"), this);
+    mDockWaveforms->setObjectName("mDockWaveforms");
+    TableForm *waveTableForm = new TableForm(mDockWaveforms);
+    mDockWaveforms->setWidget(waveTableForm);
+    waveTableForm->init(mWaveModel, mWaveEditor, "Ctrl+W", "waveform");
 
     // setup Songs dock
-    mUi->songs->init(mSongModel);
+    mDockSongs = new QDockWidget(tr("Songs"), this);
+    mDockSongs->setObjectName("mDockSongs");
+    auto songWidget = new SongWidget(mDockSongs);
+    mDockSongs->setWidget(songWidget);
+    songWidget->init(mSongModel);
+
+    // module properties dock
+    mDockModuleProperties = new QDockWidget(tr("Module properties"), this);
+    mDockModuleProperties->setObjectName("mDockModuleProperties");
+    auto modulePropertiesWidget = new ModulePropertiesWidget(mDockModuleProperties);
+    mDockModuleProperties->setWidget(modulePropertiesWidget);
+
+    // song properties dock
+    mDockSongProperties = new QDockWidget(tr("Song properties"), this);
+    mDockSongProperties->setObjectName("mDockSongProperties");
+    auto songPropertiesWidget = new SongPropertiesWidget(mDockSongProperties);
+    mDockSongProperties->setWidget(songPropertiesWidget);
 
     // setup Orders dock
+    mDockOrders = new QDockWidget(tr("Orders"), this);
+    mDockOrders->setObjectName("mDockOrders");
+    auto orderWidget = new OrderWidget(mDockOrders);
+    
     OrderActions orderActions = {
         mUi->actionInsertOrder,
         mUi->actionRemoveOrder,
@@ -422,16 +456,27 @@ void MainWindow::setupUi() {
     };
     auto orderModel = mSongModel->orderModel();
     orderModel->setActions(orderActions);
-    mUi->orderWidget->init(mSongModel->orderModel(), mUi->menuOrder);
+    orderWidget->init(mSongModel->orderModel(), mUi->menuOrder);
+    mDockOrders->setWidget(orderWidget);
+
+    addDockWidget(Qt::TopDockWidgetArea, mDockInstruments);
+    addDockWidget(Qt::TopDockWidgetArea, mDockWaveforms);
+    addDockWidget(Qt::LeftDockWidgetArea, mDockSongProperties);
+    addDockWidget(Qt::LeftDockWidgetArea, mDockModuleProperties);
+    addDockWidget(Qt::LeftDockWidgetArea, mDockSongs);
+    addDockWidget(Qt::LeftDockWidgetArea, mDockOrders);
+
+
+
 
     // MENUS =================================================================
 
     // add the context menu for instruments list view to our menubar
-    auto menu = mUi->instrumentTableForm->menu();
+    auto menu = instrumentTableForm->menu();
     menu->setTitle("Instrument");
     mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
     // same thing but for waveforms
-    menu = mUi->waveTableForm->menu();
+    menu = waveTableForm->menu();
     menu->setTitle("Waveform");
     mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
 

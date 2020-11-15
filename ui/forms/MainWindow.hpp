@@ -10,11 +10,12 @@
 #include "model/WaveListModel.hpp"
 #include "Renderer.hpp"
 
-#include <QMainWindow>
-#include <QFileDialog>
 #include <QComboBox>
-#include <QToolBar>
+#include <QDockWidget>
+#include <QFileDialog>
 #include <QLabel>
+#include <QMainWindow>
+#include <QToolBar>
 
 
 namespace Ui {
@@ -95,6 +96,15 @@ private:
 
     QToolBar *mSongToolbar = nullptr;
     QComboBox *mSongCombo = nullptr;
+
+    // dock widgets
+    QDockWidget *mDockInstruments = nullptr;
+    QDockWidget *mDockWaveforms = nullptr;
+    QDockWidget *mDockSongs = nullptr;
+    QDockWidget *mDockSongProperties = nullptr;
+    QDockWidget *mDockModuleProperties = nullptr;
+    QDockWidget *mDockOrders = nullptr;
+
 
     // statusbar widgets
     QLabel *mStatusInstrument = nullptr;
