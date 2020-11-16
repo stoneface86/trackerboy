@@ -339,7 +339,16 @@ void MainWindow::setupConnections() {
     connectAction(actionQuit, close);
     connectAction(actionRemoveSong, moduleRemoveSong);
     connect(mUi->actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
+    // Module
     connect(mUi->actionNewSong, &QAction::triggered, mSongModel, &SongListModel::add);
+    // Order
+    auto orderModel = mSongModel->orderModel();
+    connect(mUi->actionInsertOrder, &QAction::triggered, orderModel, &OrderModel::insert);
+    connect(mUi->actionRemoveOrder, &QAction::triggered, orderModel, &OrderModel::remove);
+    connect(mUi->actionDuplicateOrder, &QAction::triggered, orderModel, &OrderModel::duplicate);
+    connect(mUi->actionMoveOrderUp, &QAction::triggered, orderModel, &OrderModel::moveUp);
+    connect(mUi->actionMoveOrderDown, &QAction::triggered, orderModel, &OrderModel::moveDown);
+
 
     QApplication::connect(mUi->actionAboutQt, &QAction::triggered, &QApplication::aboutQt);
 

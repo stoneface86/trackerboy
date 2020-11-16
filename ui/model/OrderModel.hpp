@@ -18,18 +18,19 @@ class OrderModel : public QAbstractTableModel {
 
 public:
     explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
-    virtual ~OrderModel() = default;
+    ~OrderModel() = default;
     
-    void setOrder(std::vector<trackerboy::Order> *order);
-
-    void setActions(OrderActions actions);
-
     void incrementSelection(QItemSelection const &selection);
 
     void decrementSelection(QItemSelection const &selection);
+    
+    void select(int row, int track);
+    
+    void setActions(OrderActions actions);
+    
+    void setOrder(std::vector<trackerboy::Order> *order);
 
     void setSelection(QItemSelection const &selection, uint8_t id);
-
 
     // model implementation
 
@@ -49,17 +50,21 @@ public:
 
     bool removeRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
 
+signals:
+    void patternChanged(int pattern);
+
+    void trackChanged(int track);
 
 public slots:
     void insert();
 
     void remove();
 
-    //void duplicate();
+    void duplicate();
 
-    //void moveUp();
+    void moveUp();
 
-    //void moveDown();
+    void moveDown();
 
 
 private:
@@ -69,7 +74,9 @@ private:
     };
 
     template <ModifyMode mode>
-    void modifySelection(int option, QItemSelection const &selection);
+    void modifySelection(uint8_t option, QItemSelection const &selection);
+
+    void _insert(trackerboy::Order order);
 
     ModuleDocument &mDocument;
 
