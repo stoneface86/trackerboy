@@ -64,6 +64,13 @@ public:
     //
     static void writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre);
 
+    //
+    // Writes panning settings for a channel.
+    //
+    static void writePanning(ChType ch, RuntimeContext &rc, uint8_t panning);
+
+    static void writeWaveram(RuntimeContext &rc, Waveform &waveform);
+
 private:
 
     //

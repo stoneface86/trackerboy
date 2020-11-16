@@ -33,17 +33,8 @@ void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelo
             return; // do nothing if no waveform exists
         }
 
-        // DAC OFF
-        rc.apu.writeRegister(gbapu::Apu::REG_NR30, 0x00);
+        writeWaveram(rc, *waveform);
 
-        // copy wave
-        auto data = waveform->data();
-        for (int i = 0; i != 16; ++i) {
-            rc.apu.writeRegister(gbapu::Apu::REG_WAVERAM + i, data[i]);
-        }
-
-        // DAC ON
-        rc.apu.writeRegister(gbapu::Apu::REG_NR30, 0x80);
 
     } else {
         // write envelope
@@ -99,6 +90,26 @@ void ChannelControl::writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre) 
     rc.apu.writeRegister(reg, timbre);
 }
 
+void ChannelControl::writePanning(ChType ch, RuntimeContext &rc, uint8_t panning) {
+    uint8_t mask = 0x11 << static_cast<int>(ch);
+    uint8_t nr51 = rc.apu.readRegister(gbapu::Apu::REG_NR51);
+    nr51 = (nr51 & (~mask)) | (panning << static_cast<int>(ch));
+    rc.apu.writeRegister(gbapu::Apu::REG_NR51, nr51);
+}
+
+void ChannelControl::writeWaveram(RuntimeContext &rc, Waveform &waveform) {
+    // DAC OFF
+    rc.apu.writeRegister(gbapu::Apu::REG_NR30, 0x00);
+
+    // copy wave
+    auto data = waveform.data();
+    for (int i = 0; i != 16; ++i) {
+        rc.apu.writeRegister(gbapu::Apu::REG_WAVERAM + i, data[i]);
+    }
+
+    // DAC ON
+    rc.apu.writeRegister(gbapu::Apu::REG_NR30, 0x80);
+}
 
 
 }

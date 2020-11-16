@@ -9,6 +9,45 @@
 // locking the spinlock fails when rendering the frame. More frames gives us
 // more chances at the cost of latency.
 
+// Details
+//
+// Rendering is done in a separate thread, known as the audio callback thread. The
+// RendererThread class manages this callback. There are three types of renders,
+// waveform preview, instrument preview and music playback. The preview renders
+// are for testing a waveform or instrument and can be rendered alongside music.
+//
+// Since renderering is done exclusively in the callback thread, we need a way
+// to communicate the work it needs to do from the GUI thread. This is done
+// via an atomic variable, mCommand. We use atomics because we cannot use
+// normal synchronization primitives as their use is not time-bounded. The
+// callback function is called in real-time and must be time-bounded,
+// otherwise gaps in audio playback may occur.
+//
+// mCommand is a 16-bit word that contains a command identifier in the upper byte
+// and the argument in lower byte. See RendererThread::Command for a list of possible
+// commands. The GUI thread can schedule a command via the RendererThread::command
+// method. This command will be executed the next time the callback thread needs
+// to synthesize a frame. 
+//
+// When the callback thread has work to do, it synthesizes a number of frames. The
+// amount of frames it buffers can be configured in the settings (default is 1).
+// The buffer is consumed as needed by the callback thread, which then plays it out
+// to the speakers. When this buffer has enough room for a frame, it is synthesized
+// if the callback thread can safely access the document.
+//
+// Synchronization
+//
+// Both the GUI thread and the callback thread have access to the document, or, the module.
+// Both of these threads can read the document, but only the GUI thread can modify it.
+// In order to ensure thread safety, mutual exclusion will be used in the form of a
+// Spinlock. Reminder that a regular mutex cannot be used because a mutex is not time-bounded.
+//
+// When the GUI thread needs to modify the document, it will lock the spinlock and unlock it
+// when finished. When the callback thread needs to read the document it will attempt to lock
+// the document (trylock). If the callback thread fails to lock it and the buffer is exhausted
+// before it can try again, there will be a gap in the audio playback. Keep in mind this only
+// happens if the user is editing while there is rendering going on. A larger buffer will
+// prevent this from occurring at the cost of higher latency.
 
 
 RendererThread::RendererThread(ModuleDocument &document,
@@ -18,6 +57,7 @@ RendererThread::RendererThread(ModuleDocument &document,
 ) :
     mStopCondition(stopCondition),
     mRunning(false),
+    mCommand(0),
     mDocument(document),
     mInstrumentModel(instrumentModel),
     mWaveModel(waveModel),
@@ -142,13 +182,19 @@ void RendererThread::handleCallback(int16_t *out, size_t frames) {
                             mPreviewState = PreviewState::waveform;
                             mPreviewChannel = trackerboy::ChType::ch3;
                             mEngine.unlock(trackerboy::ChType::ch3);
-                            //mSynth.setOutputEnable(trackerboy::ChType::ch3, trackerboy::Gbs::TERM_BOTH, true);
-                            //mSynth.setWaveram(*(mWaveModel.currentWaveform()));
-                            
-                            //trackerboy::ChannelControl::writeEnvelope()
+                            trackerboy::ChannelControl::writePanning(trackerboy::ChType::ch3, mRc, 0x11);
+                            trackerboy::ChannelControl::writeWaveram(mRc, *(mWaveModel.currentWaveform()));
+                            // volume = 100%
+                            mRc.apu.writeRegister(gbapu::Apu::REG_NR32, 0x20);
+                            // retrigger
+                            mRc.apu.writeRegister(gbapu::Apu::REG_NR34, 0x80);
 
                             [[fallthrough]];
                         case PreviewState::waveform:
+                            if (arg > trackerboy::NOTE_LAST) {
+                                // should never happen, but clamp just in case
+                                arg = trackerboy::NOTE_LAST;
+                            }
                             trackerboy::ChannelControl::writeFrequency(
                                 trackerboy::ChType::ch3,
                                 mRc,
@@ -243,7 +289,7 @@ void RendererThread::handleCallback(int16_t *out, size_t frames) {
 }
 
 void RendererThread::resetPreview() {
-    //mSynth.setOutputEnable(mPreviewChannel, trackerboy::Gbs::TERM_BOTH, false);
+    trackerboy::ChannelControl::writePanning(mPreviewChannel, mRc, 0);
     mEngine.lock(mPreviewChannel);
     mPreviewState = PreviewState::none;
 }
