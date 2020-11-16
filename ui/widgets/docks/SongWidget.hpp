@@ -14,14 +14,12 @@ class SongWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SongWidget(QWidget *parent = nullptr);
-    virtual ~SongWidget();
-
-    void init(SongListModel *model);
+    explicit SongWidget(SongListModel &model, QWidget *parent = nullptr);
+    ~SongWidget();
 
 
 private:
     Ui::SongWidget *mUi;
 
-    SongListModel *mModel;
+    SongListModel &mModel;
 };

@@ -5,19 +5,15 @@
 #include "ui_SongWidget.h"
 #pragma warning(pop)
 
-SongWidget::SongWidget(QWidget *parent) :
+SongWidget::SongWidget(SongListModel &model, QWidget *parent) :
     QWidget(parent),
     mUi(new Ui::SongWidget()),
-    mModel(nullptr)
+    mModel(model)
 {
     mUi->setupUi(this);
+    mUi->listView->setModel(&model);
 }
 
 SongWidget::~SongWidget() {
     delete mUi;
-}
-
-void SongWidget::init(SongListModel *model) {
-    mModel = model;
-    mUi->listView->setModel(model);
 }

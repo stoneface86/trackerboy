@@ -18,6 +18,7 @@ class TableForm : public QWidget {
 
 public:
     TableForm(BaseTableModel &model, QWidget *editor, QString editorShortcut, QString typeName, QWidget *parent = nullptr);
+    ~TableForm() = default;
 
     QMenu* menu() const;
 

@@ -376,6 +376,7 @@ void MainWindow::setupUi() {
 
     // song toolbar
     mSongToolbar = new QToolBar("Songs toolbar");
+    mSongToolbar->setObjectName("mSongToolbar");
     mSongToolbar->addAction(mUi->actionPreviousSong);
     mSongToolbar->addAction(mUi->actionNextSong);
     mSongCombo = new QComboBox();
@@ -436,9 +437,8 @@ void MainWindow::setupUi() {
     // setup Songs dock
     mDockSongs = new QDockWidget(tr("Songs"), this);
     mDockSongs->setObjectName("mDockSongs");
-    auto songWidget = new SongWidget(mDockSongs);
+    auto songWidget = new SongWidget(*mSongModel, mDockSongs);
     mDockSongs->setWidget(songWidget);
-    songWidget->init(mSongModel);
 
     // module properties dock
     mDockModuleProperties = new QDockWidget(tr("Module properties"), this);
@@ -453,9 +453,7 @@ void MainWindow::setupUi() {
     mDockSongProperties->setWidget(songPropertiesWidget);
 
     // setup Orders dock
-    mDockOrders = new QDockWidget(tr("Orders"), this);
-    mDockOrders->setObjectName("mDockOrders");
-    auto orderWidget = new OrderWidget(mDockOrders);
+    
     
     OrderActions orderActions = {
         mUi->actionInsertOrder,
@@ -466,7 +464,9 @@ void MainWindow::setupUi() {
     };
     auto orderModel = mSongModel->orderModel();
     orderModel->setActions(orderActions);
-    orderWidget->init(mSongModel->orderModel(), mUi->menuOrder);
+    mDockOrders = new QDockWidget(tr("Orders"), this);
+    mDockOrders->setObjectName("mDockOrders");
+    auto orderWidget = new OrderWidget(*orderModel, mUi->menuOrder, mDockOrders);
     mDockOrders->setWidget(orderWidget);
 
     addDockWidget(Qt::TopDockWidgetArea, mDockInstruments);

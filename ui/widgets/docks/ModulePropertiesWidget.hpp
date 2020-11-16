@@ -13,7 +13,7 @@ class ModulePropertiesWidget : public QWidget {
 
 public:
     explicit ModulePropertiesWidget(QWidget *parent = nullptr);
-    virtual ~ModulePropertiesWidget();
+    ~ModulePropertiesWidget();
 
 
 private:

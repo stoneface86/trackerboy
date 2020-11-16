@@ -7,13 +7,24 @@
 #include <QFontDatabase>
 #include <QtDebug>
 
-OrderWidget::OrderWidget(QWidget *parent) :
+OrderWidget::OrderWidget(OrderModel &model, QMenu *menu, QWidget *parent) :
     QWidget(parent),
     mUi(new Ui::OrderWidget()),
-    mModel(nullptr),
-    mContextMenu(nullptr)
+    mModel(model),
+    mContextMenu(new QMenu(this))
 {
     mUi->setupUi(this);
+
+    mUi->tableView->setModel(&model);
+    connect(mUi->tableView->selectionModel(), &QItemSelectionModel::currentChanged, this, &OrderWidget::currentChanged);
+    mUi->tableView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+    connect(mUi->tableView, &QTableView::customContextMenuRequested, this, &OrderWidget::tableViewContextMenu);
+    /*mUi->insertButton->setAction(actions.insert);
+    mUi->removeButton->setAction(actions.remove);
+    mUi->duplicateButton->setAction(actions.duplicate);
+    mUi->moveUpButton->setAction(actions.moveUp);
+    mUi->moveDownButton->setAction(actions.moveDown);*/
+
     auto headerView = mUi->tableView->horizontalHeader();
     headerView->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 
@@ -31,25 +42,14 @@ OrderWidget::OrderWidget(QWidget *parent) :
     connect(mUi->decrementButton, &QPushButton::released, this, &OrderWidget::decrement);
     connect(mUi->setButton, &QPushButton::released, this, &OrderWidget::set);
 
+    for (auto action : menu->actions()) {
+        mContextMenu->addAction(action);
+    }
+
 }
 
 OrderWidget::~OrderWidget() {
     delete mUi;
-}
-
-void OrderWidget::init(OrderModel *model, QMenu *menu) {
-    mModel = model;
-    mContextMenu = menu;
-    mUi->tableView->setModel(model);
-    connect(mUi->tableView->selectionModel(), &QItemSelectionModel::currentChanged, this, &OrderWidget::currentChanged);
-    mUi->tableView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-    connect(mUi->tableView, &QTableView::customContextMenuRequested, this, &OrderWidget::tableViewContextMenu);
-    /*mUi->insertButton->setAction(actions.insert);
-    mUi->removeButton->setAction(actions.remove);
-    mUi->duplicateButton->setAction(actions.duplicate);
-    mUi->moveUpButton->setAction(actions.moveUp);
-    mUi->moveDownButton->setAction(actions.moveDown);*/
-
 }
 
 void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
@@ -58,11 +58,11 @@ void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &
 }
 
 void OrderWidget::increment() {
-    mModel->incrementSelection(mUi->tableView->selectionModel()->selection());
+    mModel.incrementSelection(mUi->tableView->selectionModel()->selection());
 }
 
 void OrderWidget::decrement() {
-    mModel->decrementSelection(mUi->tableView->selectionModel()->selection());
+    mModel.decrementSelection(mUi->tableView->selectionModel()->selection());
 }
 
 void OrderWidget::set() {
@@ -70,7 +70,7 @@ void OrderWidget::set() {
     unsigned id = mUi->setLineEdit->text().toUInt(&ok, 16);
 
     if (ok) {
-        mModel->setSelection(
+        mModel.setSelection(
             mUi->tableView->selectionModel()->selection(),
             id
             );

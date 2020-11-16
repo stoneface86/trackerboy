@@ -13,7 +13,7 @@ class SongPropertiesWidget : public QWidget {
 
 public:
     explicit SongPropertiesWidget(QWidget *parent = nullptr);
-    virtual ~SongPropertiesWidget();
+    ~SongPropertiesWidget();
 
 
 private:

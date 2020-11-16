@@ -15,10 +15,8 @@ class OrderWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit OrderWidget(QWidget *parent = nullptr);
-    virtual ~OrderWidget();
-
-    void init(OrderModel *model, QMenu *menu);
+    OrderWidget(OrderModel &model, QMenu *menu, QWidget *parent = nullptr);
+    ~OrderWidget();
 
 private slots:
 
@@ -34,6 +32,6 @@ private:
 
     Ui::OrderWidget *mUi;
 
-    OrderModel *mModel;
+    OrderModel &mModel;
     QMenu *mContextMenu;
 };
