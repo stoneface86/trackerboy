@@ -8,6 +8,7 @@
 #include <QString>
 
 #include <array>
+#include <cstdint>
 #include <tuple>
 #include <vector>
 
@@ -103,11 +104,6 @@ protected:
 
 private:
 
-    enum class SeekDirection {
-        left,
-        right
-    };
-
     //
     // Called when appearance settings have changed, recalculates metrics and redraws
     // all rows.
@@ -134,17 +130,12 @@ private:
     //
     void scroll(int rows);
 
-    //
-    // Gets the column index of the next selectable cell starting from
-    // the given column and direction.
-    //
-    unsigned seekNextCell(unsigned start, SeekDirection dir);
+    enum ColumnType {
+        COLUMN_NOTE,
 
-    enum Column {
-        // selectable columns
-        COLUMN_NOTE1,
+        // high is the upper nibble (bits 4-7)
+        // low is the lower nibble (bits 0-3)
         
-
         COLUMN_INSTRUMENT_HIGH,
         COLUMN_INSTRUMENT_LOW,
 
@@ -158,31 +149,20 @@ private:
 
         COLUMN_EFFECT3_TYPE,
         COLUMN_EFFECT3_ARG_HIGH,
-        COLUMN_EFFECT3_ARG_LOW,
+        COLUMN_EFFECT3_ARG_LOW
 
-        COLUMN_NOTE2,
-        COLUMN_NOTE3,
-
-        // not selectable
-        COLUMN_NONE,
-        COLUMN_LINE,
-        
-        COLUMN_SKIP = COLUMN_NOTE2,     // columns at or above this enum should be skipped when seeking
-        COLUMN_NO_SELECT = COLUMN_NONE  // columns at or above this enum are not selectable
     };
 
-    
-
-    struct Cell {
-        unsigned track; // track id
-        Column column; // column id
+    struct Column {
+        uint8_t track;
+        ColumnType type;
+        uint8_t location;
     };
 
     OrderModel &mModel;
 
     // display image, rows get painted here when needed as opposed to every
     // paintEvent
-    //QImage mDisplay;
     QPixmap mDisplay;
 
     std::array<QColor, COLOR_COUNT> mColorTable;
@@ -192,8 +172,13 @@ private:
 
     // cell lookup vector
     // given a character index, we can determine which track and column the cell
-    // belongs to
-    std::vector<Cell> mCells;
+    // belongs to, only needed for converting mouse coordinates to cell coordinates
+    std::vector<uint8_t> mCellLayout;
+
+    // column layout, maps a column index -> Column
+    std::vector<Column> mColumns;
+
+    
     
     // if true all rows will be redrawn on next paint event
     bool mRepaintImage;
@@ -210,7 +195,10 @@ private:
 
     bool mSelecting;
 
+    // translation x coordinate for centering the grid
     int mDisplayXpos;
+
+    // variables here are dependent on appearance settings
 
     // metrics
     unsigned mRowHeight; // height of a row in pixels, including padding
@@ -219,7 +207,6 @@ private:
     unsigned mCharWidth; // width of a character
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
-
 
 
 };

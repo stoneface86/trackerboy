@@ -9,12 +9,25 @@
 
 #include <algorithm>
 
-// row numbers start at column 1
-constexpr int COL_INDEX_ROW_NO = 1;
-// track1 starts at column 5
-constexpr int COL_INDEX_TRACK1 = 5;
+// Optimization
+// if drawing performance is an issue, implement partial redraws. Ie if only the
+// cursor changes we just need to redraw where the cursor was and where it will be.
+// Currently, the entire widget is redrawn on repaint, with the row text being cached
+// in a QPixmap (mDisplay).
 
+// A cell is a single character on the grid, columns are 1 or more cells. A
+// cell with a space is used as spacing, and the adjacent column is selected if
+// the user clicks on it.
+//
+// The first 4 cells of the grid are reserved for the row numbers, and are not selectable
 
+// Track layout (. = space)
+// 1 effect:  .NNN.II.EEE.          (12 chars)
+// 2 effects: .NNN.II.EEE.EEE.      (16 chars)
+// 3 effects: .NNN.II.EEE.EEE.EEE.  (20 chars)
+//
+// The minimum width of the grid is 4 + 12 * 4 = 52 chars
+// the maximum width is 4 + 20 * 4 = 84 chars
 
 PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     QWidget(parent),
@@ -22,7 +35,7 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     mEffectsVisible{ 1 },
     mRepaintImage(true),
     mCursorRow(0),
-    mCursorCol(COL_INDEX_TRACK1),
+    mCursorCol(0),
     mCursorPattern(0),
     mPatterns(1),
     mPatternSize(64),
@@ -46,56 +59,74 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     mColorTable[COLOR_FG_HIGHLIGHT]     = QColor(224, 248, 208);
     mColorTable[COLOR_LINE]             = QColor(64, 64, 64);
 
-    // initialize Cell vector
-    
-    // typical column setup
-    //
-    // .RR.|.NNN.II.EEE.|.NNN.II.EEE.|.NNN.II.EEE.|.NNN.II.EEE.|
-    // RR: row number
-    // NNN: note
-    // II: Instrument id
-    // EEE: effect type + argument
-    // | : line
-    //
-    // A track is 13, 17 or 21 chars long
-    // so the maximum number of chars on one line is
-    // 5 + (21 * 4) = 89
-
-    // row numbers
-    mCells.push_back({ 0, COLUMN_LINE });
-    mCells.push_back({ 0, COLUMN_NONE });
-    mCells.push_back({ 0, COLUMN_NONE });
-    mCells.push_back({ 0, COLUMN_NONE });
-    mCells.push_back({ 0, COLUMN_LINE });
     mLineCells[0] = 0;
     mLineCells[1] = 4;
 
+    // initialize layout
+    uint8_t colIndex = 0;
+    uint8_t colPos = 5;
+    for (uint8_t i = 0; i != 4; ++i) {
+      
+        // '.' is a space
+        // .C-5.00.V01.
+        // 000011233455 - cell layout
+        //  0   12 345  - columns
 
-    for (unsigned i = 0; i != 4; ++i) {
 
-        //mCells.push_back({ i, COLUMN_NONE }); // spacer
+        // setup columns
+        mColumns.push_back({ i, COLUMN_NOTE, colPos });
+        colPos += 4;
 
-        mCells.push_back({ i, COLUMN_NOTE1 }); // note column, 1 cell 3 chars
-        mCells.push_back({ i, COLUMN_NOTE2 }); 
-        mCells.push_back({ i, COLUMN_NOTE3 }); 
+        mColumns.push_back({ i, COLUMN_INSTRUMENT_HIGH, colPos });
+        colPos += 1;
 
-        mCells.push_back({ i, COLUMN_NONE }); // spacer
+        mColumns.push_back({ i, COLUMN_INSTRUMENT_LOW, colPos });
+        colPos += 2;
 
-        mCells.push_back({ i, COLUMN_INSTRUMENT_HIGH });
-        mCells.push_back({ i, COLUMN_INSTRUMENT_LOW });
+        mColumns.push_back({ i, COLUMN_EFFECT1_TYPE, colPos });
+        colPos += 1;
 
-        mCells.push_back({ i, COLUMN_NONE }); // spacer
+        mColumns.push_back({ i, COLUMN_EFFECT1_ARG_HIGH, colPos });
+        colPos += 1;
 
-        mCells.push_back({ i, COLUMN_EFFECT1_TYPE });
-        mCells.push_back({ i, COLUMN_EFFECT1_ARG_HIGH });
-        mCells.push_back({ i, COLUMN_EFFECT1_ARG_LOW });
+        mColumns.push_back({ i, COLUMN_EFFECT1_ARG_LOW, colPos });
+        colPos += 3;
 
-        mCells.push_back({ i, COLUMN_NONE }); // spacer
+        // setup cell layout
 
-        mCells.push_back({ i, COLUMN_LINE });
-        mLineCells[static_cast<size_t>(i) + 2] = static_cast<unsigned>(mCells.size()) - 1;
+        
+        mCellLayout.push_back(colIndex); // the line cell before the note column
+        mCellLayout.push_back(colIndex); // the next three cells are the note column
+        mCellLayout.push_back(colIndex);
+        mCellLayout.push_back(colIndex);
+        ++colIndex;
+
+        
+        mCellLayout.push_back(colIndex); // space in between note and instrument high
+        mCellLayout.push_back(colIndex); // instrument high
+        ++colIndex;
+
+        
+        mCellLayout.push_back(colIndex); // instrument low
+        ++colIndex;
+
+        
+        mCellLayout.push_back(colIndex); // space in between instrument low and effect1 type
+        mCellLayout.push_back(colIndex); // effect1 type
+        ++colIndex;
+
+        
+        mCellLayout.push_back(colIndex); // effect1 arg high
+        ++colIndex;
+
+        mCellLayout.push_back(colIndex); // effect1 arg low
+        mCellLayout.push_back(colIndex); // space after effect1 arg low
+        ++colIndex;
+
+        mLineCells[static_cast<size_t>(i) + 2] = static_cast<unsigned>(mCellLayout.size() + 4);
 
     }
+    // the layout changes whenever the user hides/shows extra effect columns
 
 
     QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
@@ -114,12 +145,18 @@ int PatternGrid::row() const {
 // ================================================================= SLOTS ===
 
 void PatternGrid::cursorLeft() {
-    mCursorCol = seekNextCell(mCursorCol, SeekDirection::left);
+    if (mCursorCol == 0) {
+        mCursorCol = mColumns.size() - 1;
+    } else {
+        --mCursorCol;
+    }
     repaint();
 }
 
 void PatternGrid::cursorRight() {
-    mCursorCol = seekNextCell(mCursorCol, SeekDirection::right);
+    if (++mCursorCol == mColumns.size()) {
+        mCursorCol = 0;
+    }
     repaint();
 }
 
@@ -161,8 +198,8 @@ void PatternGrid::setCursorTrack(int track) {
     }
 
     unsigned index = 0;
-    for (auto cell : mCells) {
-        if (cell.column == COLUMN_NOTE1 && cell.track == track) {
+    for (auto col : mColumns) {
+        if (col.type == COLUMN_NOTE && col.track == track) {
             mCursorCol = index;
             break;
         }
@@ -217,15 +254,15 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // TODO
 
     // cursor
-    auto &cell = mCells[mCursorCol];
+    auto &column = mColumns[mCursorCol];
     {
         // the cursor has a 1 pixel border around the width and height of a character
         // this way the cursor outline is not drawn under the character
 
 
         // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-        int cursorWidth = (cell.column == COLUMN_NOTE1 ? 3 : 1) * mCharWidth + 2;
-        int cursorPos = mCursorCol * mCharWidth - 1;
+        int cursorWidth = (column.type == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
+        int cursorPos = column.location * mCharWidth - 1;
         QColor cursorColor = mColorTable[COLOR_CURSOR];
         
         painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
@@ -364,17 +401,18 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
         // translate
         mx -= mDisplayXpos;
+        int rowno = 4 * mCharWidth;
+        mx -= rowno;
 
-        if (mx >= 0 && mx < mDisplay.width()) {
+        if (mx >= 0 && mx < mDisplay.width() - rowno) {
 
             unsigned row, column;
             getCursorFromMouse(mx, my, row, column);
 
-            if (mCells[column].column < COLUMN_NONE) {
-                setCursorRow(row);
-                mCursorCol = column;
-                repaint();
-            }
+            setCursorRow(row);
+            mCursorCol = column;
+            // redraw cursor
+            repaint();
         }
     }
 }
@@ -417,8 +455,8 @@ void PatternGrid::appearanceChanged() {
     mRepaintImage = true;
 
     // resize image
-    mDisplay = QPixmap(mCells.size() * mCharWidth, mVisibleRows * mRowHeight);
-    //mDisplay = QImage(mCells.size() * mCharWidth, mVisibleRows * mRowHeight, QImage::Format_ARGB32_Premultiplied);
+    // add 4 to the layout since row numbers are not included
+    mDisplay = QPixmap((mCellLayout.size() + 4) * mCharWidth, mVisibleRows * mRowHeight);
 
 }
 
@@ -466,35 +504,9 @@ void PatternGrid::scroll(int rows) {
     repaint();
 }
 
-
-
-unsigned PatternGrid::seekNextCell(unsigned start, SeekDirection direction) {
-    
-    unsigned index = start;
-    for (;;) {
-        if (direction == SeekDirection::right) {
-            if (++index == mCells.size()) {
-                index = 0;
-            }
-        } else {
-            if (index-- == 0) {
-                index = mCells.size() - 1;
-            }
-        }
-
-        auto column = mCells[index].column;
-        
-        if (column < COLUMN_SKIP) {
-            break;
-        }
-    }
-
-    return index;
-}
-
 void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
     
-    outCol = x / mCharWidth;
+    outCol = mCellLayout[x / mCharWidth];
     outRow = mCursorRow + (y / mRowHeight - (mVisibleRows / 2));    
 
 }
