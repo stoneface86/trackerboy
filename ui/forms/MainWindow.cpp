@@ -6,6 +6,7 @@
 #include "widgets/docks/SongPropertiesWidget.hpp"
 #include "widgets/docks/SongWidget.hpp"
 #include "widgets/docks/TableForm.hpp"
+#include "widgets/grid/PatternGridPane.hpp"
 
 #include <QFileInfo>
 #include <QFileDialog>
@@ -380,6 +381,11 @@ void MainWindow::setupConnections() {
 }
 
 void MainWindow::setupUi() {
+
+    // Main widget
+
+    auto pgrid = new PatternGridPane(*mSongModel->orderModel());
+    setCentralWidget(pgrid);
 
     // TOOLBARS ==============================================================
 

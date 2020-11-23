@@ -39,8 +39,9 @@ set(UI_SRC
     "widgets/docks/SongPropertiesWidget.cpp"
     "widgets/docks/SongWidget.cpp"
     "widgets/docks/TableForm.cpp"
+    "widgets/grid/PatternGrid.cpp"
+    "widgets/grid/PatternGridPane.cpp"
     "widgets/EnvelopeForm.cpp"
-    "widgets/MainWidget.cpp"
     "widgets/PianoWidget.cpp"
     "widgets/WaveGraph.cpp"
     
@@ -78,4 +79,3 @@ target_link_libraries(trackerboy_ui
     Qt5::Core
 )
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
-
