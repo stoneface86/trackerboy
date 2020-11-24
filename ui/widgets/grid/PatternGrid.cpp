@@ -150,14 +150,14 @@ void PatternGrid::cursorLeft() {
     } else {
         --mCursorCol;
     }
-    repaint();
+    update();
 }
 
 void PatternGrid::cursorRight() {
     if (++mCursorCol == mColumns.size()) {
         mCursorCol = 0;
     }
-    repaint();
+    update();
 }
 
 void PatternGrid::cursorUp() {
@@ -179,14 +179,14 @@ void PatternGrid::setCursorRow(int row) {
         mCursorPattern -= patterns;
         mCursorPattern %= mModel.rowCount();
         mRepaintImage = true;
-        repaint();
+        update();
     } else if (row >= mPatternSize) {
         int patterns = row / mPatternSize;
         mCursorRow = row % mPatternSize;
         mCursorPattern += patterns;
         mCursorPattern %= mModel.rowCount();
         mRepaintImage = true;
-        repaint();
+        update();
     } else {
         scroll(row - mCursorRow);
     }
@@ -205,7 +205,7 @@ void PatternGrid::setCursorTrack(int track) {
         }
         ++index;
     }
-    repaint();
+    update();
 }
 
 // ================================================================ EVENTS ===
@@ -412,7 +412,7 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
             setCursorRow(row);
             mCursorCol = column;
             // redraw cursor
-            repaint();
+            update();
         }
     }
 }
@@ -501,7 +501,7 @@ void PatternGrid::scroll(int rows) {
         paintRows(painter, rowStart, rowEnd);
         painter.end();
     }
-    repaint();
+    update();
 }
 
 void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
