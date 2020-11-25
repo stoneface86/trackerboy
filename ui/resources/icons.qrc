@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
+    <file>icons/gridHeaderFont.bmp</file>
     <file>icons/instrument_icon_noise.png</file>
     <file>icons/instrument_icon_pulse.png</file>
     <file>icons/instrument_icon_wave.png</file>

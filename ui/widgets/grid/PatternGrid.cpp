@@ -29,6 +29,8 @@
 // The minimum width of the grid is 4 + 12 * 4 = 52 chars
 // the maximum width is 4 + 20 * 4 = 84 chars
 
+namespace grid {
+
 PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
@@ -52,12 +54,12 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
 
 
     // default colors
-    mColorTable[COLOR_BG]               = QColor(8, 24, 32);
-    mColorTable[COLOR_BG_ROW]           = QColor(20, 20, 80, 128);
-    mColorTable[COLOR_CURSOR]           = QColor(192, 192, 192, 128); 
-    mColorTable[COLOR_FG]               = QColor(136, 192, 112);
-    mColorTable[COLOR_FG_HIGHLIGHT]     = QColor(224, 248, 208);
-    mColorTable[COLOR_LINE]             = QColor(64, 64, 64);
+    mColorTable[COLOR_BG] = QColor(8, 24, 32);
+    mColorTable[COLOR_BG_ROW] = QColor(20, 20, 80, 128);
+    mColorTable[COLOR_CURSOR] = QColor(192, 192, 192, 128);
+    mColorTable[COLOR_FG] = QColor(136, 192, 112);
+    mColorTable[COLOR_FG_HIGHLIGHT] = QColor(224, 248, 208);
+    mColorTable[COLOR_LINE] = QColor(64, 64, 64);
 
     mLineCells[0] = 0;
     mLineCells[1] = 4;
@@ -66,7 +68,7 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     uint8_t colIndex = 0;
     uint8_t colPos = 5;
     for (uint8_t i = 0; i != 4; ++i) {
-      
+
         // '.' is a space
         // .C-5.00.V01.
         // 000011233455 - cell layout
@@ -94,28 +96,28 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
 
         // setup cell layout
 
-        
+
         mCellLayout.push_back(colIndex); // the line cell before the note column
         mCellLayout.push_back(colIndex); // the next three cells are the note column
         mCellLayout.push_back(colIndex);
         mCellLayout.push_back(colIndex);
         ++colIndex;
 
-        
+
         mCellLayout.push_back(colIndex); // space in between note and instrument high
         mCellLayout.push_back(colIndex); // instrument high
         ++colIndex;
 
-        
+
         mCellLayout.push_back(colIndex); // instrument low
         ++colIndex;
 
-        
+
         mCellLayout.push_back(colIndex); // space in between instrument low and effect1 type
         mCellLayout.push_back(colIndex); // effect1 type
         ++colIndex;
 
-        
+
         mCellLayout.push_back(colIndex); // effect1 arg high
         ++colIndex;
 
@@ -229,7 +231,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     unsigned const center = mVisibleRows / 2 * mRowHeight;
 
     QPainter painter(this);
-    
+
 
     // background
 
@@ -264,15 +266,15 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         int cursorWidth = (column.type == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
         int cursorPos = column.location * mCharWidth - 1;
         QColor cursorColor = mColorTable[COLOR_CURSOR];
-        
+
         painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
         painter.setPen(cursorColor);
         painter.drawRect(cursorPos, center, cursorWidth - 1, mRowHeight - 1);
     }
-    
+
     // text
     painter.drawPixmap(0, 0, mDisplay);
-    
+
 
     // lines
     painter.setPen(mColorTable[COLOR_LINE]);
@@ -329,7 +331,7 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
                 newDisplay.fill(Qt::transparent);
                 QPainter painter(&newDisplay);
                 painter.setFont(font());
-                
+
 
                 paintRows(painter, 0, oldStart);
                 painter.drawPixmap(0, oldStart * mRowHeight, mDisplay);
@@ -341,7 +343,7 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
                 mDisplay = newDisplay;
             }
             mVisibleRows = newVisible;
-            
+
         }
     }
 
@@ -445,7 +447,7 @@ void PatternGrid::appearanceChanged() {
 
     // determine character width and height
     QFontMetrics metrics(font(), &mDisplay);
- 
+
     mRowHeight = metrics.height() + 2;
     mCharWidth = metrics.averageCharWidth();
 
@@ -505,9 +507,9 @@ void PatternGrid::scroll(int rows) {
 }
 
 void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
-    
+
     outCol = mCellLayout[x / mCharWidth];
-    outRow = mCursorRow + (y / mRowHeight - (mVisibleRows / 2));    
+    outRow = mCursorRow + (y / mRowHeight - (mVisibleRows / 2));
 
 }
 
@@ -531,7 +533,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     int rowAdjusted = mCursorRow - (mVisibleRows / 2) + rowStart;
 
     for (int row = rowStart; row < rowEnd; ++row) {
-        
+
         if (rowAdjusted >= 0 && rowAdjusted < mPatternSize) {
             painter.drawText(mCharWidth, ypos, mCharWidth * 50, mRowHeight, Qt::AlignVCenter, QString("%1  ... .. ...  ... .. ...  ... .. ...  ... .. ...").arg(rowAdjusted, 2, 16, QLatin1Char('0')).toUpper());
 
@@ -539,4 +541,6 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
         rowAdjusted++;
         ypos += mRowHeight;
     }
+}
+
 }

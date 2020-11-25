@@ -3,6 +3,8 @@
 
 #include "model/OrderModel.hpp"
 
+#include "widgets/grid/PatternGridHeader.hpp"
+
 #include <QWidget>
 #include <QPaintEvent>
 #include <QString>
@@ -11,6 +13,8 @@
 #include <cstdint>
 #include <tuple>
 #include <vector>
+
+namespace grid {
 
 class PatternGrid : public QWidget {
 
@@ -72,6 +76,9 @@ signals:
 
     // emitted when the user changes the current row via keyboard, scroll wheel or mouse
     void cursorRowChanged(int row);
+
+    // emitted when the header needs to be redrawn
+    void updateHeader();
 
 public slots:
 
@@ -135,7 +142,7 @@ private:
 
         // high is the upper nibble (bits 4-7)
         // low is the lower nibble (bits 0-3)
-        
+
         COLUMN_INSTRUMENT_HIGH,
         COLUMN_INSTRUMENT_LOW,
 
@@ -178,8 +185,8 @@ private:
     // column layout, maps a column index -> Column
     std::vector<Column> mColumns;
 
-    
-    
+
+
     // if true all rows will be redrawn on next paint event
     bool mRepaintImage;
 
@@ -210,3 +217,5 @@ private:
 
 
 };
+
+}
