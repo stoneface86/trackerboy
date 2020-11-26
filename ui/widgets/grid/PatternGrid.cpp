@@ -1,4 +1,5 @@
 
+#include "widgets/grid/ColorIndex.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 
 
@@ -41,14 +42,12 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     mCursorPattern(0),
     mPatterns(1),
     mPatternSize(64),
-    mPageStep(4),
-    mWheel(0),
     mDisplayXpos(0),
     mRowHeight(0),
     mCharWidth(0),
     mVisibleRows(0)
 {
-    setFocusPolicy(Qt::StrongFocus);
+    
 
     connect(&model, &OrderModel::trackChanged, this, &PatternGrid::setCursorTrack);
 
@@ -146,33 +145,35 @@ int PatternGrid::row() const {
 
 // ================================================================= SLOTS ===
 
-void PatternGrid::cursorLeft() {
-    if (mCursorCol == 0) {
-        mCursorCol = mColumns.size() - 1;
-    } else {
-        --mCursorCol;
+void PatternGrid::moveCursorRow(int amount) {
+    setCursorRow(mCursorRow + amount);
+}
+
+void PatternGrid::moveCursorColumn(int amount) {
+    setCursorColumn(mCursorCol + amount);
+}
+
+void PatternGrid::setCursorColumn(int column) {
+    if (mCursorCol == column) {
+        return;
     }
-    update();
-}
 
-void PatternGrid::cursorRight() {
-    if (++mCursorCol == mColumns.size()) {
-        mCursorCol = 0;
+    int cols = static_cast<int>(mColumns.size());
+    if (column < 0) {
+        column = cols - (-column % cols);
+    } else if (column >= cols) {
+        column = column % cols;
     }
+
+    mCursorCol = column;
     update();
-}
-
-void PatternGrid::cursorUp() {
-    setCursorRow(mCursorRow - 1);
-    emit cursorRowChanged(mCursorRow);
-}
-
-void PatternGrid::cursorDown() {
-    setCursorRow(mCursorRow + 1);
-    emit cursorRowChanged(mCursorRow);
+    emit cursorColumnChanged(mCursorCol);
 }
 
 void PatternGrid::setCursorRow(int row) {
+    if (mCursorRow == row) {
+        return;
+    }
 
     if (row < 0) {
         row = -row;
@@ -192,6 +193,7 @@ void PatternGrid::setCursorRow(int row) {
     } else {
         scroll(row - mCursorRow);
     }
+    emit cursorRowChanged(mCursorRow);
 }
 
 void PatternGrid::setCursorTrack(int track) {
@@ -199,10 +201,13 @@ void PatternGrid::setCursorTrack(int track) {
         return;
     }
 
-    unsigned index = 0;
+    int index = 0;
     for (auto col : mColumns) {
         if (col.type == COLUMN_NOTE && col.track == track) {
-            mCursorCol = index;
+            if (mCursorCol != index) {
+                mCursorCol = index;
+                emit cursorColumnChanged(index);
+            }
             break;
         }
         ++index;
@@ -355,41 +360,12 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
     }
 }
 
-void PatternGrid::keyPressEvent(QKeyEvent *evt) {
-    switch (evt->key()) {
-        case Qt::Key_Left:
-            cursorLeft();
-            break;
-        case Qt::Key_Right:
-            cursorRight();
-            break;
-        case Qt::Key_Up:
-            cursorUp();
-            break;
-        case Qt::Key_Down:
-            cursorDown();
-            break;
-        case Qt::Key_PageDown:
-            setCursorRow(mCursorRow + mPageStep);
-            emit cursorRowChanged(mCursorRow);
-            break;
-        case Qt::Key_PageUp:
-            setCursorRow(mCursorRow - mPageStep);
-            emit cursorRowChanged(mCursorRow);
-            break;
-        default:
-            QWidget::keyPressEvent(evt);
-            break;
-    }
-}
-
 void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
-
+    (void)evt;
 }
 
 void PatternGrid::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
-        //setFocus();
 
         mSelecting = true;
 
@@ -412,33 +388,11 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
             getCursorFromMouse(mx, my, row, column);
 
             setCursorRow(row);
-            mCursorCol = column;
+            setCursorColumn(column);
             // redraw cursor
-            update();
+            //update();
         }
     }
-}
-
-void PatternGrid::wheelEvent(QWheelEvent *evt) {
-
-    mWheel += evt->angleDelta().y();
-    int amount = 0;
-    // 120 / 8 = 15 degrees
-    if (mWheel >= 120) {
-        mWheel -= 120;
-        amount = -mPageStep;
-    } else if (mWheel <= -120) {
-        mWheel += 120;
-        amount = mPageStep;
-    }
-
-    if (amount) {
-        setCursorRow(mCursorRow + amount);
-        emit cursorRowChanged(mCursorRow);
-    }
-
-    evt->accept();
-
 }
 
 // ======================================================= PRIVATE METHODS ===
@@ -468,7 +422,7 @@ void PatternGrid::scroll(int rows) {
         return;
     }
 
-    int distance = abs(rows);
+    unsigned distance = abs(rows);
     mCursorRow += rows;
 
     if (distance >= mVisibleRows) {

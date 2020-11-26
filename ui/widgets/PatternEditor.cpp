@@ -13,15 +13,19 @@ PatternEditor::PatternEditor(OrderModel &model, QWidget *parent) :
     mGrid(new PatternGrid(model, this)),
     mGridHeader(new PatternGridHeader(this)),
     mHScroll(new QScrollBar(Qt::Horizontal, this)),
-    mVScroll(new QScrollBar(Qt::Vertical, this))
+    mVScroll(new QScrollBar(Qt::Vertical, this)),
+    mWheel(0),
+    mPageStep(4)
 {
+    setFocusPolicy(Qt::StrongFocus);
+
     mHScroll->setMinimum(0);
-    //mHScroll->setMaximum(mGrid->cells());
+    mHScroll->setMaximum(23);
     mHScroll->setPageStep(1);
 
     mVScroll->setMinimum(0);
     mVScroll->setMaximum(63);
-    mVScroll->setPageStep(1);
+    mVScroll->setPageStep(mPageStep);
 
     QGridLayout *layout = new QGridLayout();
     layout->setMargin(0);
@@ -32,36 +36,84 @@ PatternEditor::PatternEditor(OrderModel &model, QWidget *parent) :
     layout->addWidget(mHScroll, 2, 0);
     setLayout(layout);
 
-    //connect(mVScroll, &QScrollBar::valueChanged, mGrid, &PatternGrid::setCursorRow);
     connect(mGrid, &PatternGrid::cursorRowChanged, mVScroll, &QScrollBar::setValue);
+    connect(mVScroll, &QScrollBar::valueChanged, mGrid, &PatternGrid::setCursorRow);
     connect(mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
 
-    //connect(mGrid, &PatternGrid::pageSizeChanged, mVScroll, &QScrollBar::setMaximum);
-    //connect(mGrid, &PatternGrid::cursorRowChanged, mVScroll, &QScrollBar::setValue);
+    connect(mGrid, &PatternGrid::cursorColumnChanged, mHScroll, &QScrollBar::setValue);
+    connect(mHScroll, &QScrollBar::valueChanged, mGrid, &PatternGrid::setCursorColumn);
+    connect(mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
-    //connect(mGrid, &PatternGrid::cellCountChanged, mHScroll, &QScrollBar::setMaximum);
-    //connect(mGrid, &PatternGrid::cursorColumnChanged, mVScroll, &QScrollBar::setValue);
 
+}
+
+void PatternEditor::keyPressEvent(QKeyEvent *evt) {
+    switch (evt->key()) {
+        case Qt::Key_Left:
+            mGrid->moveCursorColumn(-1);
+            break;
+        case Qt::Key_Right:
+            mGrid->moveCursorColumn(1);
+            break;
+        case Qt::Key_Up:
+            mGrid->moveCursorRow(-1);
+            break;
+        case Qt::Key_Down:
+            mGrid->moveCursorRow(1);
+            break;
+        case Qt::Key_PageDown:
+            mGrid->moveCursorRow(mPageStep);
+            break;
+        case Qt::Key_PageUp:
+            mGrid->moveCursorRow(-mPageStep);
+            break;
+        default:
+            QWidget::keyPressEvent(evt);
+            break;
+    }
+}
+
+void PatternEditor::wheelEvent(QWheelEvent *evt) {
+    mWheel += evt->angleDelta().y();
+    int amount = 0;
+    // 120 / 8 = 15 degrees
+    if (mWheel >= 120) {
+        mWheel -= 120;
+        amount = -mPageStep;
+    } else if (mWheel <= -120) {
+        mWheel += 120;
+        amount = mPageStep;
+    }
+
+    if (amount) {
+        mGrid->moveCursorRow(amount);
+    }
+
+    evt->accept();
+}
+
+void PatternEditor::hscrollAction(int action) {
+    switch (action) {
+        case QAbstractSlider::SliderSingleStepAdd:
+            mGrid->moveCursorColumn(1);
+            break;
+        case QAbstractSlider::SliderSingleStepSub:
+            mGrid->moveCursorColumn(-1);
+            break;
+        default:
+            break;
+    }
 }
 
 void PatternEditor::vscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-        case QAbstractSlider::SliderPageStepAdd:
-            mGrid->cursorDown();
+            mGrid->moveCursorRow(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-        case QAbstractSlider::SliderPageStepSub:
-            mGrid->cursorUp();
-            break;
-        case QAbstractSlider::SliderToMinimum:
-        case QAbstractSlider::SliderToMaximum:
-        case QAbstractSlider::SliderMove:
-            mGrid->setCursorRow(mVScroll->sliderPosition());
+            mGrid->moveCursorRow(-1);
             break;
         default:
             break;
-
-
     }
 }

@@ -20,8 +20,15 @@ public:
     explicit PatternEditor(OrderModel &model, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
+protected:
+
+    void keyPressEvent(QKeyEvent *evt) override;
+
+    void wheelEvent(QWheelEvent *evt) override;
+
 private slots:
 
+    void hscrollAction(int action);
     void vscrollAction(int action);
 
 private:
@@ -31,6 +38,7 @@ private:
     QScrollBar *mHScroll;
     QScrollBar *mVScroll;
 
-    
+    int mWheel;
+    int mPageStep;
 
 };

@@ -4,6 +4,7 @@
 #include "model/OrderModel.hpp"
 
 #include "widgets/grid/PatternGridHeader.hpp"
+#include "widgets/grid/ColorIndex.hpp"
 
 #include <QWidget>
 #include <QPaintEvent>
@@ -21,34 +22,6 @@ class PatternGrid : public QWidget {
     Q_OBJECT
 
 public:
-
-    // background colors
-    static constexpr int COLOR_BG = 0;
-    static constexpr int COLOR_BG_HIGHLIGHT = 1;
-    static constexpr int COLOR_BG_ROW = 2;
-
-    // foreground colors (text)
-
-    // notes / row number
-    static constexpr int COLOR_FG = 3;
-    // highlighted row
-    static constexpr int COLOR_FG_HIGHLIGHT = 4;
-    // instrument column
-    static constexpr int COLOR_FG_INSTRUMENT = 5;
-    // effect column
-    static constexpr int COLOR_FG_EFFECT_TYPE = 6;
-    // effect argument columns
-    static constexpr int COLOR_FG_EFFECT_ARG = 7;
-
-    // selection rectangle
-    static constexpr int COLOR_SELECTION = 8;
-    // cursor rectangle
-    static constexpr int COLOR_CURSOR = 9;
-    // lines between tracks
-    static constexpr int COLOR_LINE = 10;
-
-
-    static constexpr int COLOR_COUNT = 11;
 
     explicit PatternGrid(OrderModel &model, QWidget *parent = nullptr);
     ~PatternGrid() = default;
@@ -77,18 +50,14 @@ signals:
     // emitted when the user changes the current row via keyboard, scroll wheel or mouse
     void cursorRowChanged(int row);
 
-    // emitted when the header needs to be redrawn
-    void updateHeader();
-
 public slots:
 
     void setCursorTrack(int track);
+    void setCursorColumn(int column);
     void setCursorRow(int row);
 
-    void cursorLeft();
-    void cursorRight();
-    void cursorUp();
-    void cursorDown();
+    void moveCursorRow(int amount);
+    void moveCursorColumn(int amount);
 
 
 protected:
@@ -99,15 +68,9 @@ protected:
 
     virtual void mouseReleaseEvent(QMouseEvent *evt) override;
 
-    virtual void keyPressEvent(QKeyEvent *evt) override;
-
     virtual void paintEvent(QPaintEvent *evt) override;
 
     virtual void resizeEvent(QResizeEvent *evt) override;
-
-    void wheelEvent(QWheelEvent *evt) override;
-
-    //virtual void timerEvent(QTimerEvent *evt) override;
 
 private:
 
@@ -190,15 +153,12 @@ private:
     // if true all rows will be redrawn on next paint event
     bool mRepaintImage;
 
-    unsigned mCursorRow;
-    unsigned mCursorCol;
-    unsigned mCursorPattern;    // the current pattern
+    int mCursorRow;
+    int mCursorCol;
+    int mCursorPattern;    // the current pattern
 
-    unsigned mPatterns;
-    unsigned mPatternSize;
-
-    unsigned mPageStep;
-    int mWheel;
+    int mPatterns;
+    int mPatternSize;
 
     bool mSelecting;
 
