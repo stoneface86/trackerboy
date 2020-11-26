@@ -1,17 +1,11 @@
 
 #include "widgets/PatternEditor.hpp"
 
-#include "widgets/grid/PatternGrid.hpp"
-#include "widgets/grid/PatternGridHeader.hpp"
-
-using namespace grid;
-
 #include <QGridLayout>
 
 PatternEditor::PatternEditor(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mGrid(new PatternGrid(model, this)),
-    mGridHeader(new PatternGridHeader(this)),
     mHScroll(new QScrollBar(Qt::Horizontal, this)),
     mVScroll(new QScrollBar(Qt::Vertical, this)),
     mWheel(0),
@@ -30,10 +24,9 @@ PatternEditor::PatternEditor(OrderModel &model, QWidget *parent) :
     QGridLayout *layout = new QGridLayout();
     layout->setMargin(0);
     layout->setSpacing(0);
-    layout->addWidget(mGridHeader, 0, 0);
-    layout->addWidget(mGrid, 1, 0);
-    layout->addWidget(mVScroll, 0, 1, 2, 1);
-    layout->addWidget(mHScroll, 2, 0);
+    layout->addWidget(mGrid, 0, 0);
+    layout->addWidget(mVScroll, 0, 1);
+    layout->addWidget(mHScroll, 1, 0);
     setLayout(layout);
 
     connect(mGrid, &PatternGrid::cursorRowChanged, mVScroll, &QScrollBar::setValue);

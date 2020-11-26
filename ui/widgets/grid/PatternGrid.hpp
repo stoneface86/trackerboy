@@ -3,19 +3,17 @@
 
 #include "model/OrderModel.hpp"
 
-#include "widgets/grid/PatternGridHeader.hpp"
-#include "widgets/grid/ColorIndex.hpp"
+#include "widgets/grid/PatternColors.hpp"
 
 #include <QWidget>
 #include <QPaintEvent>
 #include <QString>
+#include <QBitmap>
 
 #include <array>
 #include <cstdint>
 #include <tuple>
 #include <vector>
-
-namespace grid {
 
 class PatternGrid : public QWidget {
 
@@ -100,6 +98,12 @@ private:
     //
     void scroll(int rows);
 
+    void updateGrid();
+
+    void updateHeader();
+
+    void updateAll();
+
     enum ColumnType {
         COLUMN_NOTE,
 
@@ -129,16 +133,26 @@ private:
         uint8_t location;
     };
 
+    enum class PaintChoice {
+        both,           // repaint the header and grid
+        header,         // just the header
+        grid            // just the grid
+    };
+
     OrderModel &mModel;
 
     // display image, rows get painted here when needed as opposed to every
     // paintEvent
     QPixmap mDisplay;
 
+    QBitmap mHeaderFont;
+    QPixmap mHeaderPixmap;
+
+
     std::array<QColor, COLOR_COUNT> mColorTable;
 
     std::array<unsigned, 4> mEffectsVisible; // number of effects visible for each track
-    std::array<unsigned, 6> mLineCells;
+    std::array<int, 5> mLines;
 
     // cell lookup vector
     // given a character index, we can determine which track and column the cell
@@ -152,6 +166,8 @@ private:
 
     // if true all rows will be redrawn on next paint event
     bool mRepaintImage;
+
+    PaintChoice mPaintChoice;
 
     int mCursorRow;
     int mCursorCol;
@@ -178,4 +194,3 @@ private:
 
 };
 
-}

@@ -1,7 +1,5 @@
 
-#include "widgets/grid/ColorIndex.hpp"
 #include "widgets/grid/PatternGrid.hpp"
-
 
 #include <QFontDatabase>
 #include <QPainter>
@@ -30,13 +28,15 @@
 // The minimum width of the grid is 4 + 12 * 4 = 52 chars
 // the maximum width is 4 + 20 * 4 = 84 chars
 
-namespace grid {
+constexpr int HEADER_HEIGHT = 32;
 
 PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
-    mEffectsVisible{ 1 },
+    mHeaderFont(":/icons/gridHeaderFont.bmp"),
+    mEffectsVisible{ 1, 1, 1, 1 },
     mRepaintImage(true),
+    mPaintChoice(PaintChoice::both),
     mCursorRow(0),
     mCursorCol(0),
     mCursorPattern(0),
@@ -60,8 +60,10 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     mColorTable[COLOR_FG_HIGHLIGHT] = QColor(224, 248, 208);
     mColorTable[COLOR_LINE] = QColor(64, 64, 64);
 
-    mLineCells[0] = 0;
-    mLineCells[1] = 4;
+    mColorTable[COLOR_HEADER_BG] = mColorTable[COLOR_FG_HIGHLIGHT];
+    mColorTable[COLOR_HEADER_FG] = mColorTable[COLOR_BG];
+    mColorTable[COLOR_HEADER_HIGHLIGHT] = mColorTable[COLOR_FG];
+    mColorTable[COLOR_HEADER_DISABLED] = QColor(52, 104, 86);
 
     // initialize layout
     uint8_t colIndex = 0;
@@ -124,7 +126,7 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
         mCellLayout.push_back(colIndex); // space after effect1 arg low
         ++colIndex;
 
-        mLineCells[static_cast<size_t>(i) + 2] = static_cast<unsigned>(mCellLayout.size() + 4);
+        //mLineCells[static_cast<size_t>(i) + 2] = static_cast<unsigned>(mCellLayout.size() + 4);
 
     }
     // the layout changes whenever the user hides/shows extra effect columns
@@ -166,7 +168,7 @@ void PatternGrid::setCursorColumn(int column) {
     }
 
     mCursorCol = column;
-    update();
+    updateGrid();
     emit cursorColumnChanged(mCursorCol);
 }
 
@@ -182,14 +184,14 @@ void PatternGrid::setCursorRow(int row) {
         mCursorPattern -= patterns;
         mCursorPattern %= mModel.rowCount();
         mRepaintImage = true;
-        update();
+        updateGrid();
     } else if (row >= mPatternSize) {
         int patterns = row / mPatternSize;
         mCursorRow = row % mPatternSize;
         mCursorPattern += patterns;
         mCursorPattern %= mModel.rowCount();
         mRepaintImage = true;
-        update();
+        updateGrid();
     } else {
         scroll(row - mCursorRow);
     }
@@ -212,7 +214,7 @@ void PatternGrid::setCursorTrack(int track) {
         }
         ++index;
     }
-    update();
+    updateGrid();
 }
 
 // ================================================================ EVENTS ===
@@ -220,73 +222,120 @@ void PatternGrid::setCursorTrack(int track) {
 void PatternGrid::paintEvent(QPaintEvent *evt) {
     (void)evt;
 
-    if (mRepaintImage) {
-        mDisplay.fill(Qt::transparent);
-
-        QPainter painter(&mDisplay);
-        painter.setFont(font());
-
-        paintRows(painter, 0, mVisibleRows);
-
-        mRepaintImage = false;
-    }
-
-    auto const h = height();
-    auto const w = width();
-    unsigned const center = mVisibleRows / 2 * mRowHeight;
-
     QPainter painter(this);
 
+    if (mPaintChoice != PaintChoice::grid) {
+        // if choice is both or header
 
-    // background
+        // background
+        painter.fillRect(0, 0, width(), HEADER_HEIGHT, mColorTable[COLOR_HEADER_BG]);
 
-    painter.fillRect(0, 0, w, h, mColorTable[COLOR_BG]);
+        // disabled tracks
+        // TODO
 
-    // highlights
-    // TODO
-
-    // cursor row
-    painter.setPen(mColorTable[COLOR_BG_ROW]);
-    painter.drawLine(0, center, w, center);
-    painter.fillRect(0, center, w, mRowHeight, mColorTable[COLOR_BG_ROW]);
-    painter.drawLine(0, center + mRowHeight - 1, w, center + mRowHeight - 1);
+        // highlight
 
 
-    // the grid is centered so translate everything else by the x offset
-    if (mDisplayXpos > 0) {
+
+        painter.setPen(mColorTable[COLOR_HEADER_FG]);
+        painter.drawLine(0, HEADER_HEIGHT - 2, width(), HEADER_HEIGHT - 2);
+
         painter.translate(QPoint(mDisplayXpos, 0));
+
+        // lines + text
+        //painter.translate(mMetrics.xoffset, 0);
+        painter.drawPixmap(0, 0, mHeaderPixmap);
+
+        // draw buttons
+
+
+        // draw volume meters
+
+        // lines
+        
+        painter.setPen(mColorTable[COLOR_LINE]);
+        for (auto pos : mLines) {
+            painter.drawLine(pos, 0, pos, HEADER_HEIGHT);
+        }
+
+        painter.resetTransform();
+
     }
 
-    // selection
-    // TODO
+    if (mPaintChoice != PaintChoice::header) {
+        // if choice is both or grid
 
-    // cursor
-    auto &column = mColumns[mCursorCol];
-    {
-        // the cursor has a 1 pixel border around the width and height of a character
-        // this way the cursor outline is not drawn under the character
+        if (mRepaintImage) {
+            mDisplay.fill(Qt::transparent);
+
+            QPainter displayPainter(&mDisplay);
+            displayPainter.setFont(font());
+
+            paintRows(displayPainter, 0, mVisibleRows);
+
+            mRepaintImage = false;
+        }
+
+        auto const h = height();
+        auto const w = width();
+        unsigned const center = mVisibleRows / 2 * mRowHeight;
+
+        
+        painter.translate(QPoint(0, HEADER_HEIGHT));
+
+        // background
+
+        painter.fillRect(0, 0, w, h, mColorTable[COLOR_BG]);
+
+        // highlights
+        // TODO
+
+        // cursor row
+        painter.setPen(mColorTable[COLOR_BG_ROW]);
+        painter.drawLine(0, center, w, center);
+        painter.fillRect(0, center, w, mRowHeight, mColorTable[COLOR_BG_ROW]);
+        painter.drawLine(0, center + mRowHeight - 1, w, center + mRowHeight - 1);
 
 
-        // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-        int cursorWidth = (column.type == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
-        int cursorPos = column.location * mCharWidth - 1;
-        QColor cursorColor = mColorTable[COLOR_CURSOR];
+        // the grid is centered so translate everything else by the x offset
+        if (mDisplayXpos > 0) {
+            painter.translate(QPoint(mDisplayXpos, 0));
+        }
 
-        painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
-        painter.setPen(cursorColor);
-        painter.drawRect(cursorPos, center, cursorWidth - 1, mRowHeight - 1);
+        // selection
+        // TODO
+
+        // cursor
+        auto &column = mColumns[mCursorCol];
+        {
+            // the cursor has a 1 pixel border around the width and height of a character
+            // this way the cursor outline is not drawn under the character
+
+
+            // the width of the cursor is always 1 character unless it is over a note column, then it is 3
+            int cursorWidth = (column.type == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
+            int cursorPos = column.location * mCharWidth - 1;
+            QColor cursorColor = mColorTable[COLOR_CURSOR];
+
+            painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
+            painter.setPen(cursorColor);
+            painter.drawRect(cursorPos, center, cursorWidth - 1, mRowHeight - 1);
+        }
+
+        // text
+        painter.drawPixmap(0, 0, mDisplay);
+
+
+        // lines
+        painter.setPen(mColorTable[COLOR_LINE]);
+        painter.drawLine(0, 0, 0, h);
+        for (auto pos : mLines) {
+            painter.drawLine(pos, 0, pos, h);
+        }
     }
 
-    // text
-    painter.drawPixmap(0, 0, mDisplay);
-
-
-    // lines
-    painter.setPen(mColorTable[COLOR_LINE]);
-    for (auto lineCell : mLineCells) {
-        unsigned pos = lineCell * mCharWidth;
-        painter.drawLine(pos, 0, pos, h);
-    }
+    // paint everything by default for next time
+    mPaintChoice = PaintChoice::both;
 }
 
 void PatternGrid::resizeEvent(QResizeEvent *evt) {
@@ -379,6 +428,7 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
         // translate
         mx -= mDisplayXpos;
+        my -= HEADER_HEIGHT;
         int rowno = 4 * mCharWidth;
         mx -= rowno;
 
@@ -413,6 +463,15 @@ void PatternGrid::appearanceChanged() {
     // resize image
     // add 4 to the layout since row numbers are not included
     mDisplay = QPixmap((mCellLayout.size() + 4) * mCharWidth, mVisibleRows * mRowHeight);
+
+    // calculate line positions
+    int pos = mCharWidth * 4;
+    mLines[0] = pos;
+    int index = 1;
+    for (auto effectsVisible : mEffectsVisible) {
+        pos += mCharWidth * (8 + (4 * effectsVisible));
+        mLines[index++] = pos;
+    }
 
 }
 
@@ -457,7 +516,7 @@ void PatternGrid::scroll(int rows) {
         paintRows(painter, rowStart, rowEnd);
         painter.end();
     }
-    update();
+    updateGrid();
 }
 
 void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
@@ -468,7 +527,10 @@ void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &o
 }
 
 unsigned PatternGrid::getVisibleRows() {
-    auto h = height();
+    auto h = height() - HEADER_HEIGHT;
+    if (h < 0) {
+        return 1;
+    }
     unsigned rowsVisible = h / mRowHeight;
     if (h % mRowHeight) {
         ++rowsVisible;
@@ -497,4 +559,17 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     }
 }
 
+void PatternGrid::updateHeader() {
+    mPaintChoice = PaintChoice::header;
+    update(QRect(0, 0, width(), HEADER_HEIGHT));
+}
+
+void PatternGrid::updateGrid() {
+    mPaintChoice = PaintChoice::grid;
+    update(QRect(0, HEADER_HEIGHT, width(), height() - HEADER_HEIGHT));
+}
+
+void PatternGrid::updateAll() {
+    mPaintChoice = PaintChoice::both;
+    update();
 }

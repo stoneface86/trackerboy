@@ -3,14 +3,11 @@
 
 #include "model/OrderModel.hpp"
 
+#include "widgets/grid/PatternGrid.hpp"
+
 #include <QScrollBar>
 #include <QWidget>
 
-// forward declare these classes
-namespace grid {
-class PatternGrid;
-class PatternGridHeader;
-}
 
 class PatternEditor : public QWidget {
 
@@ -33,8 +30,7 @@ private slots:
 
 private:
 
-    grid::PatternGrid *mGrid;
-    grid::PatternGridHeader *mGridHeader;
+    PatternGrid *mGrid;
     QScrollBar *mHScroll;
     QScrollBar *mVScroll;
 

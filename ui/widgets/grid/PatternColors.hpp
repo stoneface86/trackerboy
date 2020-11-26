@@ -1,11 +1,11 @@
 
 #pragma once
 
+#include <array>
+#include <QColor>
 
-namespace grid {
 
-
-enum ColorIndex {
+enum PatternColors {
 
     // background colors
     COLOR_BG,
@@ -38,10 +38,16 @@ enum ColorIndex {
     // lines between tracks
     COLOR_LINE,
 
+    COLOR_HEADER_BG,
+    COLOR_HEADER_FG,
+    COLOR_HEADER_HIGHLIGHT,
+    COLOR_HEADER_DISABLED,
+
     // total colors
     COLOR_COUNT
 
 
 };
 
-}
+using ColorTable = std::array<QColor, COLOR_COUNT>;
+
