@@ -28,11 +28,6 @@ public:
 
     //void apply(); // applies current settings
 
-    //
-    // Sets the number of visible effect columns for the given track (1-3)
-    //
-    void setEffectColumns(unsigned track, unsigned columns);
-
     int row() const;
 
 signals:
@@ -60,17 +55,24 @@ public slots:
 
 protected:
 
-    virtual void mouseMoveEvent(QMouseEvent *evt) override;
+    void leaveEvent(QEvent *evt) override;
 
-    virtual void mousePressEvent(QMouseEvent *evt) override;
+    void mouseMoveEvent(QMouseEvent *evt) override;
 
-    virtual void mouseReleaseEvent(QMouseEvent *evt) override;
+    void mousePressEvent(QMouseEvent *evt) override;
 
-    virtual void paintEvent(QPaintEvent *evt) override;
+    void mouseReleaseEvent(QMouseEvent *evt) override;
 
-    virtual void resizeEvent(QResizeEvent *evt) override;
+    void paintEvent(QPaintEvent *evt) override;
+
+    void resizeEvent(QResizeEvent *evt) override;
 
 private:
+
+    //
+    // Hover state when the mouse is not over any track header
+    //
+    static constexpr int HOVER_NONE = -1;
 
     //
     // Called when appearance settings have changed, recalculates metrics and redraws
@@ -83,6 +85,14 @@ private:
     //
     unsigned getVisibleRows();
 
+    //
+    // Calculates the x position of the given column
+    //
+    int columnLocation(int column);
+
+    //
+    // Converts translated mouse coordinates on the grid to a row and column coordinate
+    //
     void getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol);
 
     //
@@ -93,15 +103,32 @@ private:
     void paintRows(QPainter &painter, int rowStart, int rowEnd);
 
     //
+    // Utility method paints lines between tracks using the given painter
+    // The pen is not set, do so before calling this method.
+    //
+    void paintLines(QPainter &painter, int height);
+
+    //
     // Scrolls displayed rows and paints new ones. If rows >= mVisibleRows then
     // no scrolling will occur and the entire display will be repainted
     //
     void scroll(int rows);
 
+    void setTrackHover(int track);
+
+    //
+    // Schedules a repaint for just the grid portion of the widget
+    //
     void updateGrid();
 
+    //
+    // Schedules a repaint for just the header portion of the widget
+    //
     void updateHeader();
 
+    //
+    // Schedules a full repaint for the widget.
+    //
     void updateAll();
 
     enum ColumnType {
@@ -127,17 +154,29 @@ private:
 
     };
 
-    struct Column {
-        uint8_t track;
-        ColumnType type;
-        uint8_t location;
-    };
-
     enum class PaintChoice {
         both,           // repaint the header and grid
         header,         // just the header
         grid            // just the grid
     };
+
+    static constexpr int ROWNO_CELLS = 4; // 4 cells for row numbers
+
+    static constexpr int TRACK_CELLS = 20;
+    static constexpr int TRACK_COLUMNS = 12;
+
+    // total columns on the grid (excludes rowno)
+    static constexpr int COLUMNS = TRACK_COLUMNS * 4;
+
+    static constexpr int HEADER_HEIGHT = 32;
+    static constexpr int HEADER_FONT_WIDTH = 7;
+    static constexpr int HEADER_FONT_HEIGHT = 11;
+
+    // converts a column index -> cell index
+    static uint8_t TRACK_CELL_MAP[TRACK_CELLS];
+    // converts a cell index -> column index
+    static uint8_t TRACK_COLUMN_MAP[TRACK_COLUMNS];
+
 
     OrderModel &mModel;
 
@@ -145,28 +184,17 @@ private:
     // paintEvent
     QPixmap mDisplay;
 
+    // 1bpp font 7x11, used for the Header
     QBitmap mHeaderFont;
+    // header drawing is cached here, similar to the grid, to speed up painting
     QPixmap mHeaderPixmap;
 
-
-    std::array<QColor, COLOR_COUNT> mColorTable;
-
-    std::array<unsigned, 4> mEffectsVisible; // number of effects visible for each track
-    std::array<int, 5> mLines;
-
-    // cell lookup vector
-    // given a character index, we can determine which track and column the cell
-    // belongs to, only needed for converting mouse coordinates to cell coordinates
-    std::vector<uint8_t> mCellLayout;
-
-    // column layout, maps a column index -> Column
-    std::vector<Column> mColumns;
-
-
+    ColorTable mColorTable;
 
     // if true all rows will be redrawn on next paint event
     bool mRepaintImage;
 
+    // determines what to paint (optimization)
     PaintChoice mPaintChoice;
 
     int mCursorRow;
@@ -181,7 +209,13 @@ private:
     // translation x coordinate for centering the grid
     int mDisplayXpos;
 
+    // header stuff
+    int mTrackHover;
+    int mTrackFlags;
+
+
     // variables here are dependent on appearance settings
+    // treat them as constants, only appearanceChanged() can modify them
 
     // metrics
     unsigned mRowHeight; // height of a row in pixels, including padding
@@ -190,6 +224,12 @@ private:
     unsigned mCharWidth; // width of a character
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
+
+    // width, in pixels, of a track
+    int mTrackWidth; // = TRACK_CELLS * mCharWidth
+
+    // width, in pixels of the row number column
+    int mRownoWidth; // = 4 * mCharWidth
 
 
 };

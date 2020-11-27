@@ -4,17 +4,18 @@
 #include <QGridLayout>
 
 PatternEditor::PatternEditor(OrderModel &model, QWidget *parent) :
-    QWidget(parent),
+    QFrame(parent),
     mGrid(new PatternGrid(model, this)),
     mHScroll(new QScrollBar(Qt::Horizontal, this)),
     mVScroll(new QScrollBar(Qt::Vertical, this)),
     mWheel(0),
     mPageStep(4)
 {
+    setFrameStyle(QFrame::StyledPanel);
     setFocusPolicy(Qt::StrongFocus);
 
     mHScroll->setMinimum(0);
-    mHScroll->setMaximum(23);
+    mHScroll->setMaximum(47);
     mHScroll->setPageStep(1);
 
     mVScroll->setMinimum(0);

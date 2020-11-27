@@ -20,21 +20,64 @@
 //
 // The first 4 cells of the grid are reserved for the row numbers, and are not selectable
 
-// Track layout (. = space)
-// 1 effect:  .NNN.II.EEE.          (12 chars)
-// 2 effects: .NNN.II.EEE.EEE.      (16 chars)
-// 3 effects: .NNN.II.EEE.EEE.EEE.  (20 chars)
-//
-// The minimum width of the grid is 4 + 12 * 4 = 52 chars
-// the maximum width is 4 + 20 * 4 = 84 chars
+// New Track layout (always 3 effects)
+// .NNN.II.111222333. = 18 chars
+// NNN - note column (3 cells)
+// II - instrument columns (2 columns, 2 cells)
+// 111 - effect 1 columns (3 columns, 3 cells)
+// 222 - effect 2 columns (3 columns, 3 cells)
+// 333 - effect 3 columns (3 columns, 3 cells)
 
-constexpr int HEADER_HEIGHT = 32;
+// converts a column index -> cell index
+uint8_t PatternGrid::TRACK_COLUMN_MAP[] = {
+    // .NNN.II.111222333.
+    //  0   12 3456789AB
+    1,  // COLUMN_NOTE
+    5,  // COLUMN_INSTRUMENT_HIGH
+    6,  // COLUMN_INSTRUMENT_LOW
+    8,  // COLUMN_EFFECT1_TYPE
+    9,  // COLUMN_EFFECT1_ARG_HIGH
+    10, // COLUMN_EFFECT1_ARG_LOW
+    12, // COLUMN_EFFECT2_TYPE
+    13, // COLUMN_EFFECT2_ARG_HIGH
+    14, // COLUMN_EFFECT2_ARG_LOW
+    16, // COLUMN_EFFECT3_TYPE
+    17, // COLUMN_EFFECT3_ARG_HIGH
+    18  // COLUMN_EFFECT3_ARG_LOW
+
+};
+
+// converts a cell index -> column index
+uint8_t PatternGrid::TRACK_CELL_MAP[] = {
+    COLUMN_NOTE,    // spacing
+    COLUMN_NOTE,
+    COLUMN_NOTE,
+    COLUMN_NOTE,
+    
+    COLUMN_INSTRUMENT_HIGH, // spacing
+    COLUMN_INSTRUMENT_HIGH,
+    COLUMN_INSTRUMENT_LOW,
+
+    COLUMN_EFFECT1_TYPE, // spacing
+    COLUMN_EFFECT1_TYPE,
+    COLUMN_EFFECT1_ARG_HIGH,
+    COLUMN_EFFECT1_ARG_LOW,
+    COLUMN_EFFECT2_TYPE, // spacing
+    COLUMN_EFFECT2_TYPE,
+    COLUMN_EFFECT2_ARG_HIGH,
+    COLUMN_EFFECT2_ARG_LOW,
+    COLUMN_EFFECT3_TYPE, // spacing
+    COLUMN_EFFECT3_TYPE,
+    COLUMN_EFFECT3_ARG_HIGH,
+    COLUMN_EFFECT3_ARG_LOW,
+    COLUMN_EFFECT3_ARG_LOW, // spacing
+};
+
 
 PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
     mHeaderFont(":/icons/gridHeaderFont.bmp"),
-    mEffectsVisible{ 1, 1, 1, 1 },
     mRepaintImage(true),
     mPaintChoice(PaintChoice::both),
     mCursorRow(0),
@@ -43,14 +86,19 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     mPatterns(1),
     mPatternSize(64),
     mDisplayXpos(0),
+    mTrackHover(-1),
+    mTrackFlags(0),
     mRowHeight(0),
     mCharWidth(0),
-    mVisibleRows(0)
+    mVisibleRows(0),
+    mTrackWidth(0),
+    mRownoWidth(0)
 {
     
 
     connect(&model, &OrderModel::trackChanged, this, &PatternGrid::setCursorTrack);
 
+    setMouseTracking(true);
 
     // default colors
     mColorTable[COLOR_BG] = QColor(8, 24, 32);
@@ -64,73 +112,6 @@ PatternGrid::PatternGrid(OrderModel &model, QWidget *parent) :
     mColorTable[COLOR_HEADER_FG] = mColorTable[COLOR_BG];
     mColorTable[COLOR_HEADER_HIGHLIGHT] = mColorTable[COLOR_FG];
     mColorTable[COLOR_HEADER_DISABLED] = QColor(52, 104, 86);
-
-    // initialize layout
-    uint8_t colIndex = 0;
-    uint8_t colPos = 5;
-    for (uint8_t i = 0; i != 4; ++i) {
-
-        // '.' is a space
-        // .C-5.00.V01.
-        // 000011233455 - cell layout
-        //  0   12 345  - columns
-
-
-        // setup columns
-        mColumns.push_back({ i, COLUMN_NOTE, colPos });
-        colPos += 4;
-
-        mColumns.push_back({ i, COLUMN_INSTRUMENT_HIGH, colPos });
-        colPos += 1;
-
-        mColumns.push_back({ i, COLUMN_INSTRUMENT_LOW, colPos });
-        colPos += 2;
-
-        mColumns.push_back({ i, COLUMN_EFFECT1_TYPE, colPos });
-        colPos += 1;
-
-        mColumns.push_back({ i, COLUMN_EFFECT1_ARG_HIGH, colPos });
-        colPos += 1;
-
-        mColumns.push_back({ i, COLUMN_EFFECT1_ARG_LOW, colPos });
-        colPos += 3;
-
-        // setup cell layout
-
-
-        mCellLayout.push_back(colIndex); // the line cell before the note column
-        mCellLayout.push_back(colIndex); // the next three cells are the note column
-        mCellLayout.push_back(colIndex);
-        mCellLayout.push_back(colIndex);
-        ++colIndex;
-
-
-        mCellLayout.push_back(colIndex); // space in between note and instrument high
-        mCellLayout.push_back(colIndex); // instrument high
-        ++colIndex;
-
-
-        mCellLayout.push_back(colIndex); // instrument low
-        ++colIndex;
-
-
-        mCellLayout.push_back(colIndex); // space in between instrument low and effect1 type
-        mCellLayout.push_back(colIndex); // effect1 type
-        ++colIndex;
-
-
-        mCellLayout.push_back(colIndex); // effect1 arg high
-        ++colIndex;
-
-        mCellLayout.push_back(colIndex); // effect1 arg low
-        mCellLayout.push_back(colIndex); // space after effect1 arg low
-        ++colIndex;
-
-        //mLineCells[static_cast<size_t>(i) + 2] = static_cast<unsigned>(mCellLayout.size() + 4);
-
-    }
-    // the layout changes whenever the user hides/shows extra effect columns
-
 
     QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     font.setPixelSize(12);
@@ -160,7 +141,7 @@ void PatternGrid::setCursorColumn(int column) {
         return;
     }
 
-    int cols = static_cast<int>(mColumns.size());
+    int cols = COLUMNS;
     if (column < 0) {
         column = cols - (-column % cols);
     } else if (column >= cols) {
@@ -202,25 +183,13 @@ void PatternGrid::setCursorTrack(int track) {
     if (track < 0 || track > 3) {
         return;
     }
-
-    int index = 0;
-    for (auto col : mColumns) {
-        if (col.type == COLUMN_NOTE && col.track == track) {
-            if (mCursorCol != index) {
-                mCursorCol = index;
-                emit cursorColumnChanged(index);
-            }
-            break;
-        }
-        ++index;
-    }
-    updateGrid();
+    setCursorColumn(track * TRACK_COLUMNS);
 }
 
 // ================================================================ EVENTS ===
 
 void PatternGrid::paintEvent(QPaintEvent *evt) {
-    (void)evt;
+    Q_UNUSED(evt);
 
     QPainter painter(this);
 
@@ -230,33 +199,44 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         // background
         painter.fillRect(0, 0, width(), HEADER_HEIGHT, mColorTable[COLOR_HEADER_BG]);
 
+        
         // disabled tracks
         // TODO
-
-        // highlight
-
+        {
+            QColor disabledColor = mColorTable[COLOR_HEADER_DISABLED];
+            int xpos = mDisplayXpos + mRownoWidth;
+            for (int i = 0; i != 4; ++i) {
+                if (!!(mTrackFlags & (1 << i))) {
+                    painter.fillRect(xpos, 0, mTrackWidth, HEADER_HEIGHT, disabledColor);
+                }
+                xpos += mTrackWidth;
+            }
+        }
+        
 
 
         painter.setPen(mColorTable[COLOR_HEADER_FG]);
         painter.drawLine(0, HEADER_HEIGHT - 2, width(), HEADER_HEIGHT - 2);
 
-        painter.translate(QPoint(mDisplayXpos, 0));
+        painter.translate(QPoint(mDisplayXpos + mRownoWidth, 0));
+
+        
+
+        // highlight
+        if (mTrackHover != -1) {
+            painter.setPen(mColorTable[COLOR_HEADER_HIGHLIGHT]);
+            int trackBegin = mTrackWidth * mTrackHover;
+            int trackEnd = trackBegin + mTrackWidth;
+            painter.drawLine(trackBegin, HEADER_HEIGHT - 3, trackEnd, HEADER_HEIGHT - 3);
+            painter.drawLine(trackBegin, HEADER_HEIGHT - 1, trackEnd, HEADER_HEIGHT - 1);
+
+        }
 
         // lines + text
-        //painter.translate(mMetrics.xoffset, 0);
         painter.drawPixmap(0, 0, mHeaderPixmap);
-
-        // draw buttons
-
 
         // draw volume meters
 
-        // lines
-        
-        painter.setPen(mColorTable[COLOR_LINE]);
-        for (auto pos : mLines) {
-            painter.drawLine(pos, 0, pos, HEADER_HEIGHT);
-        }
 
         painter.resetTransform();
 
@@ -306,21 +286,19 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         // TODO
 
         // cursor
-        auto &column = mColumns[mCursorCol];
-        {
-            // the cursor has a 1 pixel border around the width and height of a character
-            // this way the cursor outline is not drawn under the character
+
+        // the cursor has a 1 pixel border around the width and height of a character
+        // this way the cursor outline is not drawn under the character
 
 
-            // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-            int cursorWidth = (column.type == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
-            int cursorPos = column.location * mCharWidth - 1;
-            QColor cursorColor = mColorTable[COLOR_CURSOR];
+        // the width of the cursor is always 1 character unless it is over a note column, then it is 3
+        int cursorWidth = ((mCursorCol % TRACK_COLUMNS) == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
+        int cursorPos = columnLocation(mCursorCol) - 1;
+        QColor cursorColor = mColorTable[COLOR_CURSOR];
 
-            painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
-            painter.setPen(cursorColor);
-            painter.drawRect(cursorPos, center, cursorWidth - 1, mRowHeight - 1);
-        }
+        painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
+        painter.setPen(cursorColor);
+        painter.drawRect(cursorPos, center, cursorWidth - 1, mRowHeight - 1);
 
         // text
         painter.drawPixmap(0, 0, mDisplay);
@@ -329,9 +307,12 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         // lines
         painter.setPen(mColorTable[COLOR_LINE]);
         painter.drawLine(0, 0, 0, h);
-        for (auto pos : mLines) {
-            painter.drawLine(pos, 0, pos, h);
+        int xpos = mRownoWidth;
+        for (int i = 0; i != 5; ++i) {
+            painter.drawLine(xpos, 0, xpos, h);
+            xpos += mTrackWidth;
         }
+        
     }
 
     // paint everything by default for next time
@@ -409,8 +390,32 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
     }
 }
 
+void PatternGrid::leaveEvent(QEvent *evt) {
+    Q_UNUSED(evt);
+
+    setTrackHover(HOVER_NONE);
+}
+
 void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
-    (void)evt;
+
+    int mx = evt->x();
+    int my = evt->y();
+
+    if (my < HEADER_HEIGHT) {
+        // translate the x coordinate so that 0 = track 1
+        int translated = mx - mDisplayXpos - mRownoWidth;
+        int hover = HOVER_NONE;
+
+        if (translated > 0 && translated < mTrackWidth * 4) {
+            hover = translated / mTrackWidth;
+        }
+        setTrackHover(hover);
+        
+    } else {
+        setTrackHover(HOVER_NONE);
+    }
+
+
 }
 
 void PatternGrid::mousePressEvent(QMouseEvent *evt) {
@@ -424,23 +429,32 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
 void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
     if (evt->button() == Qt::LeftButton) {
-        int mx = evt->x(), my = evt->y();
 
-        // translate
-        mx -= mDisplayXpos;
-        my -= HEADER_HEIGHT;
-        int rowno = 4 * mCharWidth;
-        mx -= rowno;
+        if (mTrackHover == HOVER_NONE) {
 
-        if (mx >= 0 && mx < mDisplay.width() - rowno) {
+            int mx = evt->x(), my = evt->y();
 
-            unsigned row, column;
-            getCursorFromMouse(mx, my, row, column);
+            // translate
+            mx -= mDisplayXpos;
+            my -= HEADER_HEIGHT;
+            int rowno = 4 * mCharWidth;
+            mx -= rowno;
 
-            setCursorRow(row);
-            setCursorColumn(column);
-            // redraw cursor
-            //update();
+            if (mx >= 0 && mx < mDisplay.width() - rowno) {
+
+                unsigned row, column;
+                getCursorFromMouse(mx, my, row, column);
+
+                setCursorRow(row);
+                setCursorColumn(column);
+                // redraw cursor
+                //update();
+            }
+        } else {
+            // user clicked on a track header either to mute or unmute the channel
+            mTrackFlags ^= 1 << mTrackHover;
+            updateHeader();
+
         }
     }
 }
@@ -457,20 +471,40 @@ void PatternGrid::appearanceChanged() {
 
     mVisibleRows = getVisibleRows();
 
+    mTrackWidth = TRACK_CELLS * mCharWidth;
+    mRownoWidth = ROWNO_CELLS * mCharWidth;
+
     // repaint rows on next repaint
     mRepaintImage = true;
 
     // resize image
-    // add 4 to the layout since row numbers are not included
-    mDisplay = QPixmap((mCellLayout.size() + 4) * mCharWidth, mVisibleRows * mRowHeight);
+    mDisplay = QPixmap((mTrackWidth * 4) + mRownoWidth, mVisibleRows * mRowHeight);
 
-    // calculate line positions
-    int pos = mCharWidth * 4;
-    mLines[0] = pos;
-    int index = 1;
-    for (auto effectsVisible : mEffectsVisible) {
-        pos += mCharWidth * (8 + (4 * effectsVisible));
-        mLines[index++] = pos;
+    // draw the header
+    mHeaderPixmap = QPixmap(mTrackWidth * 4 + 1, HEADER_HEIGHT);
+    mHeaderPixmap.fill(Qt::transparent);
+    QPainter painter(&mHeaderPixmap);
+    painter.setPen(mColorTable[COLOR_HEADER_FG]);
+    int x = 2;
+    for (int i = 0; i != 4; ++i) {
+        // draw "CH"
+        painter.drawPixmap(x, 4, mHeaderFont, 0, 0, HEADER_FONT_WIDTH * 2, HEADER_FONT_HEIGHT);
+
+        // draw line for volume meter
+        //painter.drawLine(x, 22, x + mTrackWidth - 4, 22);
+
+        //x += HEADER_FONT_WIDTH * 2;
+        // draw number
+        painter.drawPixmap(x + (HEADER_FONT_WIDTH * 2), 4, mHeaderFont, HEADER_FONT_WIDTH * (2 + i), 0, HEADER_FONT_WIDTH, HEADER_FONT_HEIGHT);
+        x += mTrackWidth;
+    }
+
+    // draw lines
+    painter.setPen(mColorTable[COLOR_LINE]);
+    x = 0;
+    for (int i = 0; i != 5; ++i) {
+        painter.drawLine(x, 0, x, HEADER_HEIGHT);
+        x += mTrackWidth;
     }
 
 }
@@ -519,9 +553,17 @@ void PatternGrid::scroll(int rows) {
     updateGrid();
 }
 
-void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
+int PatternGrid::columnLocation(int column) {
+    int track = column / TRACK_COLUMNS;
+    int coltype = column % TRACK_COLUMNS;
+    return track * mTrackWidth + TRACK_COLUMN_MAP[coltype] * mCharWidth + mRownoWidth;
+}
 
-    outCol = mCellLayout[x / mCharWidth];
+void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
+    int cell = x / mCharWidth;
+    int track = cell / TRACK_CELLS;
+    cell = cell % TRACK_CELLS;
+    outCol = (track * TRACK_COLUMNS) + TRACK_CELL_MAP[cell];
     outRow = mCursorRow + (y / mRowHeight - (mVisibleRows / 2));
 
 }
@@ -551,11 +593,18 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     for (int row = rowStart; row < rowEnd; ++row) {
 
         if (rowAdjusted >= 0 && rowAdjusted < mPatternSize) {
-            painter.drawText(mCharWidth, ypos, mCharWidth * 50, mRowHeight, Qt::AlignVCenter, QString("%1  ... .. ...  ... .. ...  ... .. ...  ... .. ...").arg(rowAdjusted, 2, 16, QLatin1Char('0')).toUpper());
+            painter.drawText(mCharWidth, ypos, mTrackWidth * 4 + mRownoWidth, mRowHeight, Qt::AlignVCenter, QString("%1  ... .. ... ... ...  ... .. ... ... ...  ... .. ... ... ...  ... .. ... ... ...").arg(rowAdjusted, 2, 16, QLatin1Char('0')).toUpper());
 
         }
         rowAdjusted++;
         ypos += mRowHeight;
+    }
+}
+
+void PatternGrid::setTrackHover(int hover) {
+    if (mTrackHover != hover) {
+        mTrackHover = hover;
+        updateHeader();
     }
 }
 

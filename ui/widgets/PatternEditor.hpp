@@ -5,11 +5,11 @@
 
 #include "widgets/grid/PatternGrid.hpp"
 
+#include <QFrame>
 #include <QScrollBar>
-#include <QWidget>
 
 
-class PatternEditor : public QWidget {
+class PatternEditor : public QFrame {
 
     Q_OBJECT
 
