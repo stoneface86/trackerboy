@@ -38,12 +38,12 @@ uint8_t PatternGrid::TRACK_COLUMN_MAP[] = {
     8,  // COLUMN_EFFECT1_TYPE
     9,  // COLUMN_EFFECT1_ARG_HIGH
     10, // COLUMN_EFFECT1_ARG_LOW
-    12, // COLUMN_EFFECT2_TYPE
-    13, // COLUMN_EFFECT2_ARG_HIGH
-    14, // COLUMN_EFFECT2_ARG_LOW
-    16, // COLUMN_EFFECT3_TYPE
-    17, // COLUMN_EFFECT3_ARG_HIGH
-    18  // COLUMN_EFFECT3_ARG_LOW
+    11, // COLUMN_EFFECT2_TYPE
+    12, // COLUMN_EFFECT2_ARG_HIGH
+    13, // COLUMN_EFFECT2_ARG_LOW
+    14, // COLUMN_EFFECT3_TYPE
+    15, // COLUMN_EFFECT3_ARG_HIGH
+    16  // COLUMN_EFFECT3_ARG_LOW
 
 };
 
@@ -62,11 +62,11 @@ uint8_t PatternGrid::TRACK_CELL_MAP[] = {
     COLUMN_EFFECT1_TYPE,
     COLUMN_EFFECT1_ARG_HIGH,
     COLUMN_EFFECT1_ARG_LOW,
-    COLUMN_EFFECT2_TYPE, // spacing
+    //COLUMN_EFFECT2_TYPE, // spacing
     COLUMN_EFFECT2_TYPE,
     COLUMN_EFFECT2_ARG_HIGH,
     COLUMN_EFFECT2_ARG_LOW,
-    COLUMN_EFFECT3_TYPE, // spacing
+    //COLUMN_EFFECT3_TYPE, // spacing
     COLUMN_EFFECT3_TYPE,
     COLUMN_EFFECT3_ARG_HIGH,
     COLUMN_EFFECT3_ARG_LOW,
@@ -227,7 +227,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
             painter.setPen(mColorTable[COLOR_HEADER_HIGHLIGHT]);
             int trackBegin = mTrackWidth * mTrackHover;
             int trackEnd = trackBegin + mTrackWidth;
-            painter.drawLine(trackBegin, HEADER_HEIGHT - 3, trackEnd, HEADER_HEIGHT - 3);
+            //painter.drawLine(trackBegin, HEADER_HEIGHT - 3, trackEnd, HEADER_HEIGHT - 3);
             painter.drawLine(trackBegin, HEADER_HEIGHT - 1, trackEnd, HEADER_HEIGHT - 1);
 
         }
@@ -593,7 +593,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     for (int row = rowStart; row < rowEnd; ++row) {
 
         if (rowAdjusted >= 0 && rowAdjusted < mPatternSize) {
-            painter.drawText(mCharWidth, ypos, mTrackWidth * 4 + mRownoWidth, mRowHeight, Qt::AlignVCenter, QString("%1  ... .. ... ... ...  ... .. ... ... ...  ... .. ... ... ...  ... .. ... ... ...").arg(rowAdjusted, 2, 16, QLatin1Char('0')).toUpper());
+            painter.drawText(mCharWidth, ypos, mTrackWidth * 4 + mRownoWidth, mRowHeight, Qt::AlignVCenter, QString("%1  ... .. .........  ... .. .........  ... .. .........  ... .. .........").arg(rowAdjusted, 2, 16, QLatin1Char('0')).toUpper());
 
         }
         rowAdjusted++;

@@ -162,7 +162,7 @@ private:
 
     static constexpr int ROWNO_CELLS = 4; // 4 cells for row numbers
 
-    static constexpr int TRACK_CELLS = 20;
+    static constexpr int TRACK_CELLS = 18;
     static constexpr int TRACK_COLUMNS = 12;
 
     // total columns on the grid (excludes rowno)
