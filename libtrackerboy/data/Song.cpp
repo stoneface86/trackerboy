@@ -77,6 +77,10 @@ Pattern Song::getPattern(uint8_t orderNo) {
     );
 }
 
+TrackRow Song::getRow(ChType ch, uint8_t order, uint16_t row) {
+    return mMaster.getTrack(ch, mOrder[order].tracks[static_cast<int>(ch)])[row];
+}
+
 void Song::setRowsPerBeat(uint8_t rowsPerBeat) {
     if (rowsPerBeat == 0) {
         throw std::invalid_argument("Cannot have 0 rows per beat");

@@ -27,6 +27,10 @@ Track::Track(uint16_t rows) :
 {
 }
 
+TrackRow& Track::operator[](uint16_t row) {
+    return mData[row];
+}
+
 Track::Data::iterator Track::begin() {
     return mData.begin();
 }

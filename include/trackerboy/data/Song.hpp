@@ -70,6 +70,8 @@ public:
 
     Pattern getPattern(uint8_t orderNo);
 
+    TrackRow getRow(ChType ch, uint8_t order, uint16_t row);
+
     void setRowsPerBeat(uint8_t rowsPerBeat);
 
     void setTempo(uint16_t tempo);

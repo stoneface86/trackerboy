@@ -41,6 +41,8 @@ public:
 
     Track(uint16_t rows);
 
+    TrackRow& operator[](uint16_t row);
+
     Data::iterator begin();
 
     void clear(uint16_t rowStart, uint16_t rowEnd);

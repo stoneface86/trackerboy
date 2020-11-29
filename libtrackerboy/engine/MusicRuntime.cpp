@@ -21,7 +21,6 @@ MusicRuntime::MusicRuntime(RuntimeContext rc, ChannelControl &chCtrl, Song &song
     mFlags(FLAGS_DEFAULT),
     mChCtrl(chCtrl)
 {
-    mCursor.setPattern(song.getPattern(orderNo), patternRow);
     mTimer.setPeriod(song.speed());
 }
 
@@ -51,7 +50,8 @@ bool MusicRuntime::setRows() {
 
     mNoteDelay = 0; // default note delay is no delay
 
-    TrackRow &row = mCursor.get<ch>();
+    TrackRow row = mSong.getRow(ch, mOrderCounter, mRowCounter);
+    //TrackRow &row = mCursor.get<ch>();
 
     for (size_t i = 0; i != TrackRow::MAX_EFFECTS; ++i) {
         if (!!(row.flags & (TrackRow::COLUMN_EFFECT1 << i))) {
@@ -172,12 +172,12 @@ bool MusicRuntime::step() {
                     mOrderCounter = 0;
                 }
                 mRowCounter = mCommandParam;
-                mCursor.setPattern(mSong.getPattern(mOrderCounter), mCommandParam);
                 mCommand = PatternCommand::none;
                 break;
             case PatternCommand::jump:
                 mRowCounter = 0;
-                mCursor.setPattern(mSong.getPattern(mCommandParam));
+                // if the parameter goes past the last one, use the last one
+                mOrderCounter = std::min(mCommandParam, mLastOrder);
                 mCommand = PatternCommand::none;
                 break;
         }
@@ -226,8 +226,8 @@ bool MusicRuntime::step() {
     if (mTimer.step()) {
         // timer overflowed, advance pattern iterator to the next row
         // this also means that this step is the last one for the current row
-        ++mRowCounter;
-        if (mCursor.next()) {
+        if (++mRowCounter == mRowsPerTrack) {
+        //if (mCursor.next()) {
             // end of pattern
             if (mCommand == PatternCommand::none) {
                 // load the next pattern if no command was set

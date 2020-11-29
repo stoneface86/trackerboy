@@ -43,8 +43,6 @@ void Engine::unlock(ChType ch) {
 
 void Engine::step(Frame &frame) {
 
-    bool halted = false;
-
     if (mMusicContext) {
         auto &ctx = mMusicContext.value();
         frame.halted = ctx.step();

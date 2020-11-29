@@ -158,7 +158,7 @@ private:
     NoteControl mNc[4];
     FrequencyControl mFc[3];
     Timer mTimer;
-    PatternCursor mCursor;
+    //PatternCursor mCursor;
 
     
 };
