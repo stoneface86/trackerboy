@@ -33,6 +33,10 @@ OrderModel* SongListModel::orderModel() const {
     return mOrderModel;
 }
 
+trackerboy::Song* SongListModel::currentSong() {
+    return &mSongVector[mCurrentIndex];
+}
+
 bool SongListModel::canAdd() {
     return mSongVector.size() < 256;
 }

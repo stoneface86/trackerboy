@@ -13,6 +13,8 @@ class SongListModel : public BaseModel {
 public:
     SongListModel(ModuleDocument &document);
 
+    trackerboy::Song* currentSong();
+
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
@@ -20,6 +22,7 @@ public:
     virtual QString name() override;
 
     OrderModel* orderModel() const;
+
 
 protected:
     virtual bool canAdd() override;

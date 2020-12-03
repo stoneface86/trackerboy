@@ -3,7 +3,7 @@
 
 #include <QGridLayout>
 
-PatternEditor::PatternEditor(OrderModel &model, QWidget *parent) :
+PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     QFrame(parent),
     mGrid(new PatternGrid(model, this)),
     mHScroll(new QScrollBar(Qt::Horizontal, this)),

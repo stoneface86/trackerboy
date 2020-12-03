@@ -384,7 +384,7 @@ void MainWindow::setupUi() {
 
     // Main widget
 
-    auto pgrid = new PatternEditor(*mSongModel->orderModel());
+    auto pgrid = new PatternEditor(*mSongModel);
     setCentralWidget(pgrid);
 
     // TOOLBARS ==============================================================

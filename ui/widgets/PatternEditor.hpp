@@ -14,7 +14,7 @@ class PatternEditor : public QFrame {
     Q_OBJECT
 
 public:
-    explicit PatternEditor(OrderModel &model, QWidget *parent = nullptr);
+    explicit PatternEditor(SongListModel &model, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
 protected:
