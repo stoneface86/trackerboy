@@ -24,41 +24,12 @@
 
 #pragma once
 
-#include "trackerboy/data/Track.hpp"
-#include "trackerboy/data/PatternRow.hpp"
+#include "trackerboy/data/TrackRow.hpp"
+
+#include <array>
 
 namespace trackerboy {
 
-//
-// Utility class for accessing pattern data
-//
-class Pattern {
-
-public:
-
-    Pattern(Track &track1, Track &track2, Track &track3, Track &track4);
-
-    //
-    // Gets the row data at the given row index.
-    //
-    PatternRow operator[](uint16_t row);
-
-    //
-    // Returns the count of rows that will be stepped by the MusicRuntime. Track::rowCount
-    // will be returned if there are no pattern skip effects in any of the track data
-    //
-    unsigned totalRows();
-
-private:
-    Track &mTrack1;
-    Track &mTrack2;
-    Track &mTrack3;
-    Track &mTrack4;
-
-    // cache the calculated row count
-    unsigned mRowCount;
-};
-
-
+using PatternRow = std::array<TrackRow, 4>;
 
 }
