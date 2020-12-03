@@ -7,6 +7,10 @@
 
 cmake_minimum_required(VERSION 3.8)
 
+# removes default /W3 flag for MSVC 
+# https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
+set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOverrides.cmake")
+
 project (
     trackerboy 
     VERSION "0.1.0"
