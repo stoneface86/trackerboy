@@ -185,10 +185,11 @@ FormatError Song::deserializeData(std::istream &stream) noexcept {
     mSpeed = songHeader.speed;
     
     size_t orderCount = static_cast<size_t>(songHeader.orderCount) + 1;
+    mOrder.resize(orderCount);
     for (size_t i = 0; i != orderCount; ++i) {
         Order ord;
         checkedRead(stream, &ord, sizeof(ord));
-        mOrder.push_back(ord);
+        mOrder[i] = ord;
     }
 
     mMaster.setRowSize(static_cast<uint16_t>(songHeader.rowsPerTrack) + 1);
