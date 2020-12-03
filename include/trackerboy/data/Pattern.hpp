@@ -50,10 +50,10 @@ public:
     unsigned totalRows();
 
 private:
-    Track &mTrack1;
-    Track &mTrack2;
-    Track &mTrack3;
-    Track &mTrack4;
+    Track *mTrack1;
+    Track *mTrack2;
+    Track *mTrack3;
+    Track *mTrack4;
 
     // cache the calculated row count
     unsigned mRowCount;

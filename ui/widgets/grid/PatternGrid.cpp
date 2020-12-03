@@ -179,6 +179,7 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
     auto orderModel = mModel.orderModel();
     connect(orderModel, &OrderModel::trackChanged, this, &PatternGrid::setCursorTrack);
     connect(orderModel, &OrderModel::patternChanged, this, &PatternGrid::setCursorPattern);
+    connect(&model, &SongListModel::currentIndexChanged, this, &PatternGrid::onSongChanged);
 
     setMouseTracking(true);
 
@@ -197,7 +198,7 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
     mColorTable[COLOR_HEADER_HIGHLIGHT] = mColorTable[COLOR_FG];
     mColorTable[COLOR_HEADER_DISABLED] = QColor(52, 104, 86);
 
-    QFont font = QFont("Consolas"); //QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
     font.setPixelSize(12);
     setFont(font);
 
@@ -245,18 +246,18 @@ void PatternGrid::setCursorRow(int row) {
     auto song = mModel.currentSong();
 
     if (row < 0) {
-        
+        // go to the previous pattern or wrap around to the last one
         setCursorPattern(mCursorPattern == 0 ? song->orders().size() - 1 : mCursorPattern - 1);
-        int currCount = mPatternCurr.value().totalRows();
+        int currCount = mPatternCurr.totalRows();
         mCursorRow = std::max(0, currCount + row);
 
         mRepaintImage = true;
         updateGrid();
-    } else if (row >= mPatternCurr.value().totalRows()) {
+    } else if (row >= mPatternCurr.totalRows()) {
         // go to the next pattern or wrap around to the first one
         int nextPattern = mCursorPattern + 1;
         setCursorPattern(nextPattern == song->orders().size() ? 0 : nextPattern);
-        int currCount = mPatternCurr.value().totalRows();
+        int currCount = mPatternCurr.totalRows();
         mCursorRow = std::min(currCount - 1, row - currCount);
 
         mRepaintImage = true;
@@ -272,27 +273,9 @@ void PatternGrid::setCursorPattern(int pattern) {
         return;
     }
 
-    auto song = mModel.currentSong();
+    setPatterns(pattern);
 
-    // get the previous pattern for preview
-    if (pattern > 0) {
-        mPatternPrev.emplace(song->getPattern(pattern - 1));
-    } else {
-        mPatternPrev.reset();
-    }
-
-    // update the current pattern
-    mPatternCurr.emplace(song->getPattern(pattern));
-
-    // get the next pattern for preview
-    int nextPattern = pattern + 1;
-    if (nextPattern < song->orders().size()) {
-        mPatternNext.emplace(song->getPattern(nextPattern));
-    } else {
-        mPatternNext.reset();
-    }
-
-    mCursorRow = std::min(mCursorRow, (int)mPatternCurr.value().totalRows());
+    mCursorRow = std::min(mCursorRow, static_cast<int>(mPatternCurr.totalRows()));
     mCursorPattern = pattern;
     // full repaint
     mRepaintImage = true;
@@ -576,6 +559,29 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
 // ======================================================= PRIVATE METHODS ===
 
+void PatternGrid::onSongChanged(int index) {
+    // -1 only occurs when the model is being reset
+    if (index != -1) {
+        if (mCursorRow != 0) {
+            mCursorRow = 0;
+            emit cursorRowChanged(0);
+        }
+
+        if (mCursorCol != 0) {
+            mCursorCol = 0;
+            emit cursorColumnChanged(0);
+        }
+        
+        setPatterns(0);
+        mCursorPattern = 0;
+
+        mRepaintImage = true;
+        updateGrid();
+
+
+    }
+}
+
 void PatternGrid::appearanceChanged() {
 
     // determine character width and height
@@ -758,8 +764,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     }
 
     // at this point rowAdjusted is >= 0
-    auto &patternCurr = mPatternCurr.value();
-    int const patternSize = patternCurr.totalRows();
+    int const patternSize = mPatternCurr.totalRows();
 
     if (rowAdjusted < patternSize) {
         int rowsToPaint = std::min(remainder, patternSize - rowAdjusted);
@@ -767,7 +772,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 
         painter.setOpacity(1.0);
         for (; rowsToPaint--; ) {
-            paintRow(painter, patternCurr[rowAdjusted], rowAdjusted, ypos);
+            paintRow(painter, mPatternCurr[rowAdjusted], rowAdjusted, ypos);
             rowAdjusted++;
             ypos += mRowHeight;
         }
@@ -927,6 +932,28 @@ void PatternGrid::setTrackHover(int hover) {
     if (mTrackHover != hover) {
         mTrackHover = hover;
         updateHeader();
+    }
+}
+
+void PatternGrid::setPatterns(int pattern) {
+    auto song = mModel.currentSong();
+
+    // get the previous pattern for preview
+    if (pattern > 0) {
+        mPatternPrev.emplace(song->getPattern(pattern - 1));
+    } else {
+        mPatternPrev.reset();
+    }
+
+    // update the current pattern
+    mPatternCurr = song->getPattern(pattern);
+
+    // get the next pattern for preview
+    int nextPattern = pattern + 1;
+    if (nextPattern < song->orders().size()) {
+        mPatternNext.emplace(song->getPattern(nextPattern));
+    } else {
+        mPatternNext.reset();
     }
 }
 

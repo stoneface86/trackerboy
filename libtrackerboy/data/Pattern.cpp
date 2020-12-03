@@ -6,25 +6,25 @@ namespace trackerboy {
 
 
 Pattern::Pattern(Track &track1, Track &track2, Track &track3, Track &track4) :
-    mTrack1(track1),
-    mTrack2(track2),
-    mTrack3(track3),
-    mTrack4(track4),
+    mTrack1(&track1),
+    mTrack2(&track2),
+    mTrack3(&track3),
+    mTrack4(&track4),
     mRowCount(0)
 {
 }
 
 PatternRow Pattern::operator[](uint16_t row) {
     return {
-        mTrack1[row], mTrack2[row], mTrack3[row], mTrack4[row]
+        (*mTrack1)[row], (*mTrack2)[row], (*mTrack3)[row], (*mTrack4)[row]
     };
 }
 
 unsigned Pattern::totalRows() {
     if (mRowCount == 0) {
 
-        std::array iters = { mTrack1.begin(), mTrack2.begin(), mTrack3.begin(), mTrack4.begin() };
-        auto end = mTrack1.end();
+        std::array iters = { mTrack1->begin(), mTrack2->begin(), mTrack3->begin(), mTrack4->begin() };
+        auto end = mTrack1->end();
 
         do {
             ++mRowCount;

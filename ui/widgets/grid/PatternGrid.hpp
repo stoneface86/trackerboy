@@ -68,6 +68,10 @@ protected:
 
     void resizeEvent(QResizeEvent *evt) override;
 
+private slots:
+
+    void onSongChanged(int index);
+
 private:
 
     enum ColumnType {
@@ -145,6 +149,11 @@ private:
     void setTrackHover(int track);
 
     //
+    // Get pattern data for the given pattern index
+    //
+    void setPatterns(int pattern);
+
+    //
     // Schedules a repaint for just the grid portion of the widget
     //
     void updateGrid();
@@ -201,7 +210,7 @@ private:
     int mCursorPattern;    // the current pattern
 
     std::optional<trackerboy::Pattern> mPatternPrev;
-    std::optional<trackerboy::Pattern> mPatternCurr;
+    trackerboy::Pattern mPatternCurr;
     std::optional<trackerboy::Pattern> mPatternNext;
 
 
