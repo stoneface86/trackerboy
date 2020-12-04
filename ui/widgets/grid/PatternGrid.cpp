@@ -169,6 +169,8 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
     mDisplayXpos(0),
     mTrackHover(-1),
     mTrackFlags(0),
+    mSettingDisplayFlats(false),
+    mSettingShowPreviews(true),
     mRowHeight(0),
     mCharWidth(0),
     mVisibleRows(0),
@@ -198,7 +200,7 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
     mColorTable[COLOR_HEADER_HIGHLIGHT] = mColorTable[COLOR_FG];
     mColorTable[COLOR_HEADER_DISABLED] = QColor(52, 104, 86);
 
-    QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    QFont font = QFont("Cascadia Mono");
     font.setPixelSize(12);
     setFont(font);
 
@@ -587,8 +589,20 @@ void PatternGrid::appearanceChanged() {
     // determine character width and height
     QFontMetrics metrics(font(), &mDisplay);
 
-    mRowHeight = metrics.height() + 2;
-    mCharWidth = metrics.averageCharWidth();
+    // hexadecimal, 0-9, A-F
+    // notes A to G, b, #, 2-8
+    // effects: BCDFTEVIHSGL012345PQR
+    static const char PAINTABLE_CHARS[] = "ABCDEFGHTVIHSLPQR0123456789? -#b";
+    constexpr int PAINTABLE_CHARS_COUNT = sizeof(PAINTABLE_CHARS) - 1;
+
+    // get the bounding rect for the string of all paintable characters
+    // tightBoundingRect is used to remove the spacing between lines
+    auto rect = metrics.tightBoundingRect(PAINTABLE_CHARS);
+    // row height is the maximum height with 2 pixels padding for the cursor outline
+    mRowHeight = rect.height() + 2;
+
+    // get the average character width
+    mCharWidth = metrics.size(Qt::TextSingleLine, PAINTABLE_CHARS).width() / PAINTABLE_CHARS_COUNT;
 
     mVisibleRows = getVisibleRows();
 
@@ -801,9 +815,12 @@ void PatternGrid::paintRow(QPainter &painter, trackerboy::PatternRow rowdata, in
     QPen fgpen(mColorTable[
         (rowno % mModel.currentSong()->rowsPerBeat()) == 0 ? COLOR_FG_HIGHLIGHT : COLOR_FG
     ]);
+
+    // text centering
+    ypos++;
     
     painter.setPen(fgpen);
-    painter.drawText(mCharWidth, ypos, mCharWidth * 2, mRowHeight, Qt::AlignVCenter, QString("%1").arg(rowno, 2, 16, QLatin1Char('0')).toUpper());
+    painter.drawText(mCharWidth, ypos, mCharWidth * 2, mRowHeight, Qt::AlignBottom, QString("%1").arg(rowno, 2, 16, QLatin1Char('0')).toUpper());
     int xpos = (TRACK_COLUMN_MAP[COLUMN_NOTE] + ROWNO_CELLS) * mCharWidth;
     for (int track = 0; track != 4; ++track) {
         auto &trackdata = rowdata[track];
@@ -907,13 +924,15 @@ void PatternGrid::paintNote(QPainter &painter, uint8_t note, int xpos, int ypos)
         int key = note % 12;
         octave += 2;
 
-        painter.drawText(xpos, ypos, 3 * mCharWidth, mRowHeight, Qt::AlignVCenter,
-            QString("%1%2").arg(NOTE_STR_SHARP[key]).arg(octave));
+        auto notetable = (mSettingDisplayFlats) ? NOTE_STR_FLAT : NOTE_STR_SHARP;
+
+        painter.drawText(xpos, ypos, 3 * mCharWidth, mRowHeight, Qt::AlignBottom,
+            QString("%1%2").arg(notetable[key]).arg(octave));
     }
 }
 
 void PatternGrid::paintCell(QPainter &painter, char cell, int xpos, int ypos) {
-    painter.drawText(xpos, ypos, mCharWidth, mRowHeight, Qt::AlignVCenter, QString(cell));
+    painter.drawText(xpos, ypos, mCharWidth, mRowHeight, Qt::AlignBottom, QString(cell));
 }
 
 void PatternGrid::eraseCells(QPainter &painter, int cells, int xpos, int ypos) {
@@ -938,23 +957,27 @@ void PatternGrid::setTrackHover(int hover) {
 void PatternGrid::setPatterns(int pattern) {
     auto song = mModel.currentSong();
 
-    // get the previous pattern for preview
-    if (pattern > 0) {
-        mPatternPrev.emplace(song->getPattern(pattern - 1));
-    } else {
-        mPatternPrev.reset();
+    
+    if (mSettingShowPreviews) {
+        // get the previous pattern for preview
+        if (pattern > 0) {
+            mPatternPrev.emplace(song->getPattern(pattern - 1));
+        } else {
+            mPatternPrev.reset();
+        }
+        // get the next pattern for preview
+        int nextPattern = pattern + 1;
+        if (nextPattern < song->orders().size()) {
+            mPatternNext.emplace(song->getPattern(nextPattern));
+        } else {
+            mPatternNext.reset();
+        }
     }
 
     // update the current pattern
     mPatternCurr = song->getPattern(pattern);
 
-    // get the next pattern for preview
-    int nextPattern = pattern + 1;
-    if (nextPattern < song->orders().size()) {
-        mPatternNext.emplace(song->getPattern(nextPattern));
-    } else {
-        mPatternNext.reset();
-    }
+    
 }
 
 void PatternGrid::updateHeader() {

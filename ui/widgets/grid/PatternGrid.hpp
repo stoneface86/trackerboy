@@ -30,6 +30,14 @@ public:
 
     int row() const;
 
+    void forceRedraw();
+
+    // show pattern data for the previous and next patterns
+    void setPreviewEnable(bool previews);
+
+    // if true then flats will be shown instead of sharps
+    void setShowFlats(bool showFlats);
+
 signals:
 
     // emitted when the user changes the current pattern
@@ -222,6 +230,11 @@ private:
     // header stuff
     int mTrackHover;
     int mTrackFlags;
+
+    // settings
+
+    bool mSettingDisplayFlats;
+    bool mSettingShowPreviews;
 
 
     // variables here are dependent on appearance settings

@@ -1,5 +1,6 @@
 
 #include <QApplication>
+#include <QFontDatabase>
 #include <QMessageBox>
 
 #include "forms/MainWindow.hpp"
@@ -11,6 +12,9 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     QCoreApplication::setOrganizationName("stoneface86");
     QCoreApplication::setApplicationName("Trackerboy");
+
+    // add the default font for the pattern editor
+    QFontDatabase::addApplicationFont(":/CascadiaMono.ttf");
 
     // the backend table lives here, so that its destruction is guaranteed to
     // occur after MainWindow

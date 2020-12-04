@@ -31,6 +31,7 @@ set(UI_SRC
     "model/SongListModel.cpp"
     "model/WaveListModel.cpp"
     
+    "resources/fonts.qrc"
     "resources/icons.qrc"
     "resources/keys.qrc"
 
