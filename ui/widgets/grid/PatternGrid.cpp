@@ -252,6 +252,7 @@ void PatternGrid::setCursorRow(int row) {
         setCursorPattern(mCursorPattern == 0 ? song->orders().size() - 1 : mCursorPattern - 1);
         int currCount = mPatternCurr.totalRows();
         mCursorRow = std::max(0, currCount + row);
+        mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
 
         mRepaintImage = true;
         updateGrid();
@@ -261,12 +262,14 @@ void PatternGrid::setCursorRow(int row) {
         setCursorPattern(nextPattern == song->orders().size() ? 0 : nextPattern);
         int currCount = mPatternCurr.totalRows();
         mCursorRow = std::min(currCount - 1, row - currCount);
+        mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
 
         mRepaintImage = true;
         updateGrid();
     } else {
         scroll(row - mCursorRow);
     }
+
     emit cursorRowChanged(mCursorRow);
 }
 
@@ -304,9 +307,8 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // background
     painter.fillRect(0, 0, width(), HEADER_HEIGHT, mColorTable[COLOR_HEADER_BG]);
 
-        
+
     // disabled tracks
-    // TODO
     {
         QColor disabledColor = mColorTable[COLOR_HEADER_DISABLED];
         int xpos = mDisplayXpos + mRownoWidth;
@@ -317,7 +319,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
             xpos += mTrackWidth;
         }
     }
-        
+
 
 
     painter.setPen(mColorTable[COLOR_HEADER_FG]);
@@ -325,7 +327,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
     painter.translate(QPoint(mDisplayXpos + mRownoWidth, 0));
 
-        
+
 
     // highlight
     if (mTrackHover != -1) {
@@ -364,7 +366,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     auto const w = width();
     unsigned const center = mVisibleRows / 2 * mRowHeight;
 
-        
+
     painter.translate(QPoint(0, HEADER_HEIGHT));
 
     // background
@@ -386,6 +388,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         painter.translate(QPoint(mDisplayXpos, 0));
     }
 
+
     // selection
     // TODO
 
@@ -405,8 +408,30 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     painter.drawRect(cursorPos, center, cursorWidth - 1, mRowHeight - 1);
 
     // text
-    painter.drawPixmap(0, 0, mDisplay);
 
+    // previews are drawn at 50% opacity
+    {
+        int heightPrev = std::max(0, mPatternRect.top());
+        int heightCurr = mDisplay.height() - heightPrev;
+
+        int yNext = mPatternRect.bottom();
+
+        painter.setOpacity(0.5);
+        if (heightPrev) {
+            // previous pattern
+            painter.drawPixmap(0, 0, mDisplay, 0, 0, -1, heightPrev);
+        }
+
+        if (yNext < mDisplay.height()) {
+            // next pattern
+            int heightNext = mDisplay.height() - yNext;
+            painter.drawPixmap(0, yNext, mDisplay, 0, yNext, -1, heightNext);
+            heightCurr -= heightNext;
+        }
+        
+        painter.setOpacity(1.0);
+        painter.drawPixmap(0, heightPrev, mDisplay, 0, heightPrev, -1, heightCurr);
+    }
 
     // lines
     painter.setPen(mColorTable[COLOR_LINE]);
@@ -416,24 +441,30 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         painter.drawLine(xpos, 0, xpos, h);
         xpos += mTrackWidth;
     }
+
+    #ifndef NDEBUG
+    painter.setPen(Qt::green);
+    painter.drawRect(mPatternRect);
+    #endif
         
 }
 
 void PatternGrid::resizeEvent(QResizeEvent *evt) {
-
     auto oldSize = evt->oldSize();
     auto newSize = evt->size();
 
     if (newSize.height() != oldSize.height()) {
-        auto newVisible = getVisibleRows();
-        if (newVisible != mVisibleRows) {
+        auto oldVisible = mVisibleRows;
+        mVisibleRows = getVisibleRows();
+
+        if (mVisibleRows != oldVisible) {
             // the number of rows visible onscreen has changed
 
-            unsigned centerRow = mVisibleRows / 2;
-            unsigned newCenter = newVisible / 2;
-            if (newVisible < mVisibleRows) {
+            unsigned centerOld = oldVisible / 2;
+            unsigned centerNew = mVisibleRows / 2;
+            if (mVisibleRows < oldVisible) {
                 // less rows visible, crop the old image
-                mDisplay = mDisplay.copy(0, (centerRow - newCenter) * mRowHeight, mDisplay.width(), newVisible * mRowHeight);
+                mDisplay = mDisplay.copy(0, (centerOld - centerNew) * mRowHeight, mDisplay.width(), mVisibleRows * mRowHeight);
             } else {
                 // more rows to display, enlarge and paint new rows
 
@@ -460,24 +491,23 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
                 // draw new rows 0-3
                 // draw new rows 6-9
 
-                unsigned oldStart = (newCenter - centerRow);
+                unsigned oldStart = (centerNew - centerOld);
 
-                QPixmap newDisplay(mDisplay.width(), newVisible * mRowHeight);
+                QPixmap newDisplay(mDisplay.width(), mVisibleRows * mRowHeight);
                 newDisplay.fill(Qt::transparent);
                 QPainter painter(&newDisplay);
                 painter.setFont(font());
 
-
                 paintRows(painter, 0, oldStart);
                 painter.drawPixmap(0, oldStart * mRowHeight, mDisplay);
-                paintRows(painter, oldStart + mVisibleRows, newVisible);
+                paintRows(painter, oldStart + oldVisible, mVisibleRows);
 
 
                 painter.end();
 
                 mDisplay = newDisplay;
             }
-            mVisibleRows = newVisible;
+            setPatternRect();
 
         }
     }
@@ -488,6 +518,8 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
         displayRect.moveCenter(rect().center());
         mDisplayXpos = displayRect.left();
     }
+
+    
 }
 
 void PatternGrid::leaveEvent(QEvent *evt) {
@@ -537,12 +569,11 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
             // translate
             mx -= mDisplayXpos;
             my -= HEADER_HEIGHT;
-            int rowno = 4 * mCharWidth;
-            mx -= rowno;
+            
 
-            if (mx >= 0 && mx < mDisplay.width() - rowno) {
-
+            if (mPatternRect.contains(mx, my)) {
                 unsigned row, column;
+                mx -= mRownoWidth;
                 getCursorFromMouse(mx, my, row, column);
 
                 setCursorRow(row);
@@ -574,9 +605,14 @@ void PatternGrid::onSongChanged(int index) {
             emit cursorColumnChanged(0);
         }
         
+        // select the first pattern
         setPatterns(0);
         mCursorPattern = 0;
 
+        // update the rectangle
+        setPatternRect();
+
+        // redraw everything
         mRepaintImage = true;
         updateGrid();
 
@@ -608,6 +644,9 @@ void PatternGrid::appearanceChanged() {
 
     mTrackWidth = TRACK_CELLS * mCharWidth;
     mRownoWidth = ROWNO_CELLS * mCharWidth;
+
+    setPatternRect();
+
 
     // repaint rows on next repaint
     mRepaintImage = true;
@@ -650,6 +689,7 @@ void PatternGrid::scroll(int rows) {
         return;
     }
 
+    mPatternRect.translate(0, -rows * mRowHeight);
     unsigned distance = abs(rows);
     mCursorRow += rows;
 
@@ -715,15 +755,15 @@ unsigned PatternGrid::getVisibleRows() {
 
 void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 
+    int remainder = rowEnd - rowStart;
+    if (remainder <= 0) {
+        return;
+    }
+
     unsigned ypos = rowStart * mRowHeight;
 
     painter.setFont(font());
     painter.setPen(mColorTable[COLOR_FG]);
-
-    // adjust the range of rows relative to the cursor
-    // r < 0: the row from the previous pattern will be display
-
-    int remainder = rowEnd - rowStart;
 
     //
     // adjusted row index, r
@@ -732,8 +772,6 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     // r >= patternSize     : we paint from the next pattern
     //
     int rowAdjusted = mCursorRow - (mVisibleRows / 2) + rowStart;
-
-    
 
     if (rowAdjusted < 0) {
         // paint the previous pattern
@@ -756,7 +794,6 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 
             int rowsToPaint = std::min(remainder, -rowAdjusted);
             remainder -= rowsToPaint;
-            painter.setOpacity(0.5);
 
             for (; rowsToPaint--; ) {
                 paintRow(painter, pattern[prevRow], prevRow, ypos);
@@ -784,7 +821,6 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
         int rowsToPaint = std::min(remainder, patternSize - rowAdjusted);
         remainder -= rowsToPaint;
 
-        painter.setOpacity(1.0);
         for (; rowsToPaint--; ) {
             paintRow(painter, mPatternCurr[rowAdjusted], rowAdjusted, ypos);
             rowAdjusted++;
@@ -801,7 +837,6 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 
         int nextRow = rowAdjusted - patternSize;
         int rowsToPaint = std::min(remainder, static_cast<int>(pattern.totalRows()) - nextRow);
-        painter.setOpacity(0.5);
         for (; rowsToPaint--; ) {
             paintRow(painter, pattern[nextRow], nextRow, ypos);
             ++nextRow;
@@ -815,10 +850,10 @@ void PatternGrid::paintRow(QPainter &painter, trackerboy::PatternRow rowdata, in
     QPen fgpen(mColorTable[
         (rowno % mModel.currentSong()->rowsPerBeat()) == 0 ? COLOR_FG_HIGHLIGHT : COLOR_FG
     ]);
-
+    
     // text centering
     ypos++;
-    
+
     painter.setPen(fgpen);
     painter.drawText(mCharWidth, ypos, mCharWidth * 2, mRowHeight, Qt::AlignBottom, QString("%1").arg(rowno, 2, 16, QLatin1Char('0')).toUpper());
     int xpos = (TRACK_COLUMN_MAP[COLUMN_NOTE] + ROWNO_CELLS) * mCharWidth;
@@ -978,6 +1013,13 @@ void PatternGrid::setPatterns(int pattern) {
     mPatternCurr = song->getPattern(pattern);
 
     
+}
+
+void PatternGrid::setPatternRect() {
+    mPatternRect.setX(mRownoWidth);
+    mPatternRect.setY(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
+    mPatternRect.setWidth(mTrackWidth * 4);
+    mPatternRect.setHeight(mRowHeight * mPatternCurr.totalRows());
 }
 
 void PatternGrid::updateHeader() {

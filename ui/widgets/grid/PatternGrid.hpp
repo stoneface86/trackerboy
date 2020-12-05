@@ -10,6 +10,8 @@
 #include <QPaintEvent>
 #include <QString>
 #include <QBitmap>
+#include <QRect>
+#include <QSize>
 
 #include <cstdint>
 #include <optional>
@@ -161,6 +163,8 @@ private:
     //
     void setPatterns(int pattern);
 
+    void setPatternRect();
+
     //
     // Schedules a repaint for just the grid portion of the widget
     //
@@ -221,6 +225,8 @@ private:
     trackerboy::Pattern mPatternCurr;
     std::optional<trackerboy::Pattern> mPatternNext;
 
+    // rectangle of the current rendered pattern
+    QRect mPatternRect;
 
     bool mSelecting;
 
