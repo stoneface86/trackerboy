@@ -69,5 +69,8 @@ int SongListModel::nextIndex() {
 }
 
 void SongListModel::dataSelected(int index) {
-    mOrderModel->setOrder(index == -1 ? nullptr : &mSongVector[index].orders());
+    // index is only -1 when the model is being reset
+    if (index != -1) {
+        mOrderModel->setOrder(&mSongVector[index].orders());
+    }
 }

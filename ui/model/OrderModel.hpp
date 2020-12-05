@@ -20,16 +20,32 @@ public:
     explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
     ~OrderModel() = default;
     
+    //
+    // All track ids in the given selection are incremented by 1
+    //
     void incrementSelection(QItemSelection const &selection);
 
+    //
+    // All track ids in the given selection are decremented by 1
+    //
     void decrementSelection(QItemSelection const &selection);
     
     void select(int row, int track);
     
+    //
+    // Set the OrderActions struct, the model will enable/disable actions
+    // based on the underlying data
+    //
     void setActions(OrderActions actions);
     
+    //
+    // Change the model's order data. Should only be called by SongListModel.
+    //
     void setOrder(std::vector<trackerboy::Order> *order);
 
+    //
+    // All items in the given selection are set to the given track id
+    //
     void setSelection(QItemSelection const &selection, uint8_t id);
 
     // model implementation
@@ -51,9 +67,17 @@ public:
     bool removeRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
 
 signals:
-    void patternChanged(int pattern);
+    // the selected pattern has changed
+    void currentPatternChanged(int pattern);
 
-    void trackChanged(int track);
+    // the selected track/channel has changed
+    void currentTrackChanged(int track);
+
+    // same as the above signals but as a QModelIndex
+    void currentIndexChanged(const QModelIndex &index);
+
+    
+    void patternsChanged();
 
 public slots:
     void insert();
@@ -66,6 +90,9 @@ public slots:
 
     void moveDown();
 
+    void selectPattern(int pattern);
+
+    void selectTrack(int track);
 
 private:
     enum class ModifyMode {

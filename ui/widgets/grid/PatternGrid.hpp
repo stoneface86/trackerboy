@@ -42,12 +42,6 @@ public:
 
 signals:
 
-    // emitted when the user changes the current pattern
-    void cursorPatternChanged(int patternNo);
-
-    // emitted when the user selects a different track via keyboard or mouse
-    void cursorTrackChanged(int track);
-
     void cursorColumnChanged(int column);
 
     // emitted when the user changes the current row via keyboard, scroll wheel or mouse

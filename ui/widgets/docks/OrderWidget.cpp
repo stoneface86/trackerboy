@@ -16,10 +16,17 @@ OrderWidget::OrderWidget(OrderModel &model, QMenu *menu, QWidget *parent) :
     mUi->setupUi(this);
 
     mUi->tableView->setModel(&model);
-    connect(mUi->tableView->selectionModel(), &QItemSelectionModel::currentChanged, this, &OrderWidget::currentChanged);
+
+    auto selectionModel = mUi->tableView->selectionModel();
+    connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderWidget::currentChanged);
+    connect(&model, &OrderModel::currentIndexChanged, this,
+        [this](const QModelIndex &index) {
+            mUi->tableView->selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+        });
+    
     mUi->tableView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(mUi->tableView, &QTableView::customContextMenuRequested, this, &OrderWidget::tableViewContextMenu);
-
+    
     auto headerView = mUi->tableView->horizontalHeader();
     headerView->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 
@@ -49,7 +56,6 @@ OrderWidget::~OrderWidget() {
 
 void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
     Q_UNUSED(prev);
-    // TODO: set PatternGrid's cursor to this track
     mModel.select(current.row(), current.column());
  
 }

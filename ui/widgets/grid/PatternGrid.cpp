@@ -10,6 +10,24 @@
 
 #include <algorithm>
 
+// The TODO list
+//
+// 1. (Low priority) When the widget's width is too small to fit everything, we will need to translate
+//    everything so that the current track being edited is visible. (Currently just gets clipped)
+// 2. Selection
+//    a. User should be able to select cells via the mouse
+//    b. User can drag this selection to a new track (move)
+// 3. Edit actions
+//    a. Cut/Copy/Paste/Paste Mix
+//    b. Transpose
+// 4. Keyboard controls
+//    a. Note key presses - edits the note column, also previews the instrument via the renderer
+//    b. Shift + Arrow keys - selects cells relative to cursor
+//    c. Alt+Left/Alt+Right - move cursor column to previous/next track
+//    d. Ctrl+Left/Ctrl+Right - selects previous/next pattern
+//    e. Ctrl+Up/Ctrl+Down - selects previous/next instrument
+// 5. Editing - editing a cell requires a redraw of the cell (erase the cell and then draw the new one)
+
 // Optimization
 // if drawing performance is an issue, implement partial redraws. Ie if only the
 // cursor changes we just need to redraw where the cursor was and where it will be.
@@ -179,9 +197,14 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
 {
     
     auto orderModel = mModel.orderModel();
-    connect(orderModel, &OrderModel::trackChanged, this, &PatternGrid::setCursorTrack);
-    connect(orderModel, &OrderModel::patternChanged, this, &PatternGrid::setCursorPattern);
+    connect(orderModel, &OrderModel::currentTrackChanged, this, &PatternGrid::setCursorTrack);
+    connect(orderModel, &OrderModel::currentPatternChanged, this, &PatternGrid::setCursorPattern);
     connect(&model, &SongListModel::currentIndexChanged, this, &PatternGrid::onSongChanged);
+    connect(orderModel, &OrderModel::patternsChanged, this, [this]() {
+        setPatterns(mCursorPattern);
+        mRepaintImage = true;
+        update();
+        });
 
     setMouseTracking(true);
 
@@ -235,6 +258,12 @@ void PatternGrid::setCursorColumn(int column) {
         column = column % cols;
     }
 
+    int track = mCursorCol / TRACK_COLUMNS;
+    int newtrack = column / TRACK_COLUMNS;
+    if (track != newtrack) {
+        mModel.orderModel()->selectTrack(newtrack);
+    }
+
     mCursorCol = column;
     updateGrid();
     emit cursorColumnChanged(mCursorCol);
@@ -282,10 +311,14 @@ void PatternGrid::setCursorPattern(int pattern) {
 
     mCursorRow = std::min(mCursorRow, static_cast<int>(mPatternCurr.totalRows()));
     mCursorPattern = pattern;
+
+    // update selected pattern in the model
+    mModel.orderModel()->selectPattern(pattern);
+
     // full repaint
     mRepaintImage = true;
     updateGrid();
-    emit cursorPatternChanged(pattern);
+    //emit cursorPatternChanged(pattern);
 }
 
 void PatternGrid::setCursorTrack(int track) {

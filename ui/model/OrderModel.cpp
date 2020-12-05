@@ -15,28 +15,59 @@ OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
 
 void OrderModel::incrementSelection(QItemSelection const &selection) {
     modifySelection<ModifyMode::incdec>(1, selection);
+    emit patternsChanged();
 }
 
 void OrderModel::decrementSelection(QItemSelection const &selection) {
     modifySelection<ModifyMode::incdec>(0, selection);
+    emit patternsChanged();
 }
 
 void OrderModel::select(int row, int track) {
-    
-    if (mCurrentRow != row) {
-        mCurrentRow = row;
-        emit patternChanged(row);
-    }
-    if (mCurrentTrack != track) {
-        mCurrentTrack = track;
-        emit trackChanged(track);
-    }
+    selectPattern(row);
+    selectTrack(track);   
+}
 
+void OrderModel::selectPattern(int pattern) {
+    if (mCurrentRow != pattern) {
+        auto oldpattern = mCurrentRow;
+        mCurrentRow = pattern;
+        emit dataChanged(
+            createIndex(oldpattern, 0, nullptr),
+            createIndex(oldpattern, 3, nullptr),
+            { Qt::BackgroundRole });
+        emit dataChanged(
+            createIndex(pattern, 0, nullptr),
+            createIndex(pattern, 3, nullptr),
+            { Qt::BackgroundRole });
+        emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+        emit currentPatternChanged(pattern);
+    }
+    
     if (mActions.moveUp) {
         mActions.moveUp->setEnabled(mCurrentRow != 0);
     }
     if (mActions.moveDown) {
         mActions.moveDown->setEnabled(mCurrentRow != rowCount() - 1);
+    }
+}
+
+void OrderModel::selectTrack(int track) {
+    if (mCurrentTrack != track) {
+        auto oldtrack = mCurrentTrack;
+        mCurrentTrack = track;
+
+        emit dataChanged(
+            createIndex(mCurrentRow, oldtrack, nullptr),
+            createIndex(mCurrentRow, oldtrack, nullptr),
+            { Qt::BackgroundRole });
+        emit dataChanged(
+            createIndex(mCurrentRow, track, nullptr),
+            createIndex(mCurrentRow, track, nullptr),
+            { Qt::BackgroundRole });
+
+        emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+        emit currentTrackChanged(track);
     }
 }
 
@@ -53,6 +84,7 @@ void OrderModel::setOrder(std::vector<trackerboy::Order> *order) {
 
 void OrderModel::setSelection(QItemSelection const &selection, uint8_t id) {
     modifySelection<ModifyMode::set>(id, selection);
+    emit patternsChanged();
 }
 
 // model implementation
@@ -70,6 +102,16 @@ QVariant OrderModel::data(const QModelIndex &index, int role) const {
             return QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper();
         } else if (role == Qt::TextAlignmentRole) {
             return Qt::AlignCenter;
+        } else if (role == Qt::BackgroundRole) {
+            if (index.row() == mCurrentRow) {
+
+                // TODO: use the same colors as PatternGrid
+                if (index.column() == mCurrentTrack) {
+                    return QColor(Qt::blue);
+                } else {
+                    return QColor(Qt::gray);
+                }
+            }
         }
     }
 
@@ -110,6 +152,7 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
             auto &row = (*mOrder)[index.row()];
             row.tracks[index.column()] = static_cast<uint8_t>(id);
             mDocument.unlock();
+            emit patternsChanged();
             return true;
         }
     }
