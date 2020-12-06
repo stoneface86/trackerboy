@@ -17,7 +17,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     QDialog(parent),
     mUi(new Ui::ConfigDialog()),
     mConfig(config),
-    mDirtyFlags(0)
+    mDirty(CategoryNone)
 {
     mUi->setupUi(this);
     auto applyButton = mUi->buttonBox->button(QDialogButtonBox::Apply);
@@ -61,17 +61,16 @@ void ConfigDialog::reject() {
 void ConfigDialog::apply() {
     // update all changes to the Config object
 
-    if (!!(mDirtyFlags & DIRTY_FLAG_SOUND)) {
+    if (mDirty.testFlag(CategorySound)) {
         auto &soundConfig = mConfig.mSound;
         mConfig.setDevice(mUi->mDeviceCombo->currentIndex());
         mConfig.setSamplerate(mUi->mSamplerateCombo->currentIndex());
         soundConfig.buffersize = mUi->buffersizeSlider->value();
         soundConfig.volume = mUi->mVolumeSlider->value();
         soundConfig.lowLatency = mUi->lowLatencyCheckbox->isChecked();
-
-        mConfig.applySound();
     }
 
+    emit applied(mDirty);
     clean();
 }
 
@@ -83,7 +82,7 @@ void ConfigDialog::showEvent(QShowEvent *evt) {
 void ConfigDialog::bufferSizeSliderChanged(int value) {
     QString text("%1 frames");
     mUi->buffersizeLabel->setText(text.arg(QString::number(value)));
-    setDirty(DIRTY_FLAG_SOUND);
+    setDirty(CategorySound);
 }
 
 void ConfigDialog::volumeSliderChanged(int value) {
@@ -95,11 +94,12 @@ void ConfigDialog::volumeSliderChanged(int value) {
         QString::number(value),
         QString::number(db, 'f', 2)
         ));
-    setDirty(DIRTY_FLAG_SOUND);
+    setDirty(CategorySound);
 }
 
 void ConfigDialog::samplerateActivated(int index) {
-    setDirty(DIRTY_FLAG_SOUND);
+    Q_UNUSED(index);
+    setDirty(CategorySound);
 }
 
 
@@ -118,15 +118,15 @@ void ConfigDialog::resetControls() {
     clean();
 }
 
-void ConfigDialog::setDirty(int flag) {
-    if (!mDirtyFlags) {
+void ConfigDialog::setDirty(Category category) {
+    if (!mDirty) {
         mUi->buttonBox->button(QDialogButtonBox::Apply)->setEnabled(true);
     }
-    mDirtyFlags |= flag;
+    mDirty |= category;
 }
 
 void ConfigDialog::clean() {
-    mDirtyFlags = 0;
+    mDirty = CategoryNone;
     mUi->buttonBox->button(QDialogButtonBox::Apply)->setEnabled(false);
 }
 

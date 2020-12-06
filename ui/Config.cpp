@@ -2,18 +2,20 @@
 #include "Config.hpp"
 #include "samplerates.hpp"
 
+#include <QSettings>
+
+
 namespace {
 
 constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
 constexpr unsigned DEFAULT_BUFFERSIZE = 40;
-constexpr unsigned DEFAULT_VOLUME = -3;
+constexpr unsigned DEFAULT_VOLUME = 100;
 
 
 }
 
 
-Config::Config(Miniaudio &miniaudio, QObject *parent) :
-    QObject(parent),
+Config::Config(Miniaudio &miniaudio) :
     mMiniaudio(miniaudio)
 {
 }
@@ -47,8 +49,6 @@ void Config::readSettings() {
     mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
     mSound.volume = settings.value("volume", DEFAULT_VOLUME).toInt();
     mSound.lowLatency = settings.value("lowLatency", true).toBool();
-
-    applySound();
 }
 
 
@@ -68,11 +68,6 @@ void Config::writeSettings() {
     settings.setValue("volume", mSound.volume);
     settings.setValue("lowLatency", mSound.lowLatency);
 }
-
-void Config::applySound() {
-    emit soundConfigChanged();
-}
-
 
 void Config::setDevice(int index) {
     mSound.deviceIndex = index;

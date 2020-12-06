@@ -42,7 +42,7 @@ private slots:
     void windowResetLayout();
 
     // config changes
-    void onSoundChange();
+    void onConfigApplied(ConfigDialog::Categories categories);
 
     // statusbar
     void statusSetInstrument(int index);

@@ -44,7 +44,8 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     readSettings();
     mApp.config.readSettings();
     mConfigDialog->resetControls();
-
+    // apply the read in configuration
+    onConfigApplied(ConfigDialog::CategoryAll);
 
 
     // new documents have an empty string for a filename
@@ -228,10 +229,15 @@ void MainWindow::windowResetLayout() {
     resizeDocks({ mDockSongProperties, mDockOrders }, { mDockSongProperties->minimumHeight(), mDockOrders->maximumHeight() }, Qt::Vertical);
 }
 
-void MainWindow::onSoundChange() {
-    auto &sound = mApp.config.sound();
-    //auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
-    mSamplerateLabel->setText(QString("%1 Hz").arg(sound.samplerate));
+void MainWindow::onConfigApplied(ConfigDialog::Categories categories) {
+    if (categories.testFlag(ConfigDialog::CategorySound)) {
+        auto &sound = mApp.config.sound();
+        //auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
+        mSamplerateLabel->setText(QString("%1 Hz").arg(sound.samplerate));
+
+        mApp.renderer.setConfig(sound);
+    }
+
 }
 
 void MainWindow::statusSetInstrument(int index) {
@@ -363,15 +369,15 @@ void MainWindow::setupConnections() {
     connect(mSongCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), &mApp.songModel, QOverload<int>::of(&SongListModel::select));
     connect(&mApp.songModel, &SongListModel::currentIndexChanged, mSongCombo, &QComboBox::setCurrentIndex);
 
-
-    connect(&mApp.config, &Config::soundConfigChanged, this, &MainWindow::onSoundChange);
+    // configuration applied
+    connect(mConfigDialog, &ConfigDialog::applied, this, &MainWindow::onConfigApplied);
 
     // statusbar
 
     connect(&mApp.instrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
     connect(&mApp.waveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
 
-
+    
 }
 
 void MainWindow::setupUi() {

@@ -7,16 +7,15 @@
 #include <thread>
 
 
-Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, Config &config, QObject *parent) :
+Renderer::Renderer(ModuleDocument &document, InstrumentListModel &instrumentModel, WaveListModel &waveModel, QObject *parent) :
+    QObject(parent),
     mAudioStopCondition(),
     mRendererThread(document, instrumentModel, waveModel, mAudioStopCondition),
-    mConfig(config),
     mMutex(),
     mRunning(true),
     mStopBackground(false),
     mBackgroundThread(nullptr)
 {
-    connect(&mConfig, &Config::soundConfigChanged, this, &Renderer::onSoundChange);
     mBackgroundThread = QThread::create(&Renderer::backgroundThreadRun, this);
     connect(mBackgroundThread, &QThread::finished, mBackgroundThread, &QThread::deleteLater);
     mBackgroundThread->start();
@@ -66,15 +65,14 @@ void Renderer::stop() {
     mRendererThread.command(RendererThread::Command::stop);
 }
 
-void Renderer::onSoundChange() {
+void Renderer::setConfig(Config::Sound const &config) {
 
 
-    auto &sound = mConfig.sound();
 
     // whatever is queued will be lost
     mRendererThread.stop();
     
-    mRendererThread.applyConfig(sound);
+    mRendererThread.applyConfig(config);
 
     //mSynth.setSamplingRate(audio::SAMPLERATE_TABLE[sound.samplerate]);*/
     ////mSynth.setBass(sound.bassFrequency);

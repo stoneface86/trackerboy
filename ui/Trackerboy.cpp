@@ -9,6 +9,6 @@ Trackerboy::Trackerboy() :
     instrumentModel(document),
     songModel(document),
     waveModel(document),
-    renderer(document, instrumentModel, waveModel, config)
+    renderer(document, instrumentModel, waveModel)
 {
 }

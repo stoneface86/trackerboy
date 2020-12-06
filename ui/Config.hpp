@@ -3,19 +3,13 @@
 
 #include "Miniaudio.hpp"
 
-#include <QObject>
-#include <QSettings>
-
-#include "trackerboy/ChType.hpp"
-
 //
 // Class containing application settings. Settings are modified via the ConfigDialog
 // Signals are emitted when a setting changes.
 //
-class Config : public QObject {
+class Config {
 
-    Q_OBJECT
-
+    // only ConfigDialog can modify settings
     friend class ConfigDialog;
 
 public:
@@ -34,7 +28,7 @@ public:
         bool lowLatency;            // low latency playback enable
     };
 
-    Config(Miniaudio &miniaudio, QObject *parent = nullptr);
+    Config(Miniaudio &miniaudio);
     ~Config() = default;
 
     //
@@ -51,9 +45,6 @@ public:
 
     Sound const& sound();
 
-signals:
-    void soundConfigChanged();
-
 
 private:
 
@@ -65,9 +56,6 @@ private:
     Miniaudio &mMiniaudio;
 
     Sound mSound;
-
-    // just emits soundConfigChanged
-    void applySound();
 
     //void setDevice(int backendIndex, int deviceIndex);
 

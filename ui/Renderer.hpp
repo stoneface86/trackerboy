@@ -30,9 +30,10 @@ public:
     Renderer(ModuleDocument &document,
              InstrumentListModel &instrumentModel,
              WaveListModel &waveModel,
-             Config &config,
              QObject *parent = nullptr);
     ~Renderer();
+
+    void setConfig(Config::Sound const &config);
 
 public slots:
     void play();
@@ -54,14 +55,10 @@ signals:
     void playing(); // emitted when music starts playing
     void stopped(); // emitted when music stops playing via halt effect or by user action
 
-private slots:
-    void onSoundChange();
-
 private:
 
     QWaitCondition mAudioStopCondition;
     RendererThread mRendererThread;
-    Config &mConfig;
     
     QMutex mMutex;
     bool mRunning;
