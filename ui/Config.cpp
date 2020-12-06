@@ -12,63 +12,36 @@ constexpr unsigned DEFAULT_VOLUME = -3;
 }
 
 
-Config::Config()
+Config::Config(Miniaudio &miniaudio, QObject *parent) :
+    QObject(parent),
+    mMiniaudio(miniaudio)
 {
-    auto err = ma_context_init(nullptr, 0, nullptr, &mContext);
-    assert(err == MA_SUCCESS);
-    mSound.context = &mContext;
-}
-
-Config::~Config() {
-    ma_context_uninit(&mContext);
 }
 
 Config::Sound const& Config::sound() {
     return mSound;
 }
 
-//void Config::setDevice(int backend, int device) {
-//    bool getDevice = false;
-//
-//    if (backend != mSound.backendIndex) {
-//        mSound.backendIndex = backend;
-//        mSound.soundio = mBackendTable[backend].soundio;
-//        getDevice = true;
-//    }
-//
-//    if (device != mSound.deviceIndex) {
-//        mSound.deviceIndex = device;
-//        getDevice = true;
-//    }
-//
-//    if (getDevice) {
-//        soundio_device_unref(mSound.device);
-//        mSound.device = mBackendTable.getDevice(audio::BackendTable::Location(backend, device));
-//    }
-//}
+void Config::readSettings() {
+    QSettings settings;
 
-void Config::readSettings(QSettings &settings) {
+
     settings.beginGroup("config");
-    getDevices();
-    setDevice(0);
-
+    
     QByteArray id = settings.value("deviceId").toByteArray();
     if (id.size() == sizeof(ma_device_id)) {
-        // search all devices for the id in the config
-        for (unsigned i = 0; i != mDeviceCount; ++i) {
-            if (memcmp(id.data(), &mDeviceList[i].id, sizeof(ma_device_id)) == 0) {
-                // found it, index is offset by 1 (0 is the default device)
-                setDevice(i + 1);
-                break;
-            }
-        }
+
+        int index = mMiniaudio.lookupDevice(reinterpret_cast<ma_device_id*>(id.data()));
+        setDevice(index + 1);
 
         // if we don't find the device we will go back to the default device
         // TODO: let the user know via messagebox if this occurs
+    } else {
+        setDevice(0);
     }
 
     
-
+    mSound.context = mMiniaudio.context();
 
     setSamplerate(settings.value("samplerateIndex", DEFAULT_SAMPLERATE_INDEX).toUInt());
     mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
@@ -79,12 +52,13 @@ void Config::readSettings(QSettings &settings) {
 }
 
 
-void Config::writeSettings(QSettings &settings) {
+void Config::writeSettings() {
+    QSettings settings;
     settings.beginGroup("config");
 
     QByteArray barray;
     if (mSound.deviceIndex != 0) {
-        ma_device_id *id = &mDeviceList[mSound.deviceIndex - 1].id;
+        ma_device_id *id = mMiniaudio.deviceId(mSound.deviceIndex - 1);
         barray = QByteArray(reinterpret_cast<char*>(id), sizeof(ma_device_id));
     }
     settings.setValue("deviceId", barray);
@@ -99,18 +73,13 @@ void Config::applySound() {
     emit soundConfigChanged();
 }
 
-void Config::getDevices() {
-    auto err = ma_context_get_devices(&mContext, &mDeviceList, &mDeviceCount, nullptr, nullptr);
-    assert(err == MA_SUCCESS);
-}
-
 
 void Config::setDevice(int index) {
     mSound.deviceIndex = index;
     if (index == 0) {
         mSound.device = nullptr;
     } else {
-        mSound.device = &mDeviceList[index - 1].id;
+        mSound.device = mMiniaudio.deviceId(index - 1);
     }
 }
 

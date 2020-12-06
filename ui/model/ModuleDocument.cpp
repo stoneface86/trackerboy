@@ -4,11 +4,11 @@
 #include <QFileInfo>
 
 ModuleDocument::ModuleDocument(QObject *parent) :
+    QObject(parent),
     mModified(false),
     mModule(),
     mUndoStack(new QUndoStack(this)),
-    mSpinlock(),
-    QObject(parent)
+    mSpinlock()
 {
     clear();
 }

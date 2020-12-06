@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "miniaudio.h"
+#include "Miniaudio.hpp"
 
 #include <QObject>
 #include <QSettings>
@@ -34,21 +34,20 @@ public:
         bool lowLatency;            // low latency playback enable
     };
 
-    Config();
-
-    virtual ~Config();
+    Config(Miniaudio &miniaudio, QObject *parent = nullptr);
+    ~Config() = default;
 
     //
     // Read the configuration settings from the given QSettings. Should be
     // called once on application start up
     //
-    void readSettings(QSettings &settings);
+    void readSettings();
 
     //
     // Write the current configuration settings to the given QSettings. Called
     // when MainWindow closes.
     //
-    void writeSettings(QSettings &settings);
+    void writeSettings();
 
     Sound const& sound();
 
@@ -58,19 +57,14 @@ signals:
 
 private:
 
-    // re-enumerate devices for the context
-    void getDevices();
-
     void setDevice(int index);
 
     // an index of 0 is the device default
     void setSamplerate(int index);
 
-    Sound mSound;
+    Miniaudio &mMiniaudio;
 
-    ma_context mContext;
-    ma_device_info *mDeviceList;
-    ma_uint32 mDeviceCount;
+    Sound mSound;
 
     // just emits soundConfigChanged
     void applySound();

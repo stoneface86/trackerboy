@@ -23,19 +23,14 @@
 constexpr int TOOLBAR_ICON_WIDTH = 16;
 constexpr int TOOLBAR_ICON_HEIGHT = 16;
 
-MainWindow::MainWindow() :
+MainWindow::MainWindow(Trackerboy &trackerboy) :
     QMainWindow(),
     mUi(new Ui::MainWindow()),
     mModuleFileDialog(new QFileDialog(this)),
-    mConfig(new Config()),
-    mDocument(new ModuleDocument(this)),
-    mInstrumentModel(new InstrumentListModel(*mDocument)),
-    mSongModel(new SongListModel(*mDocument)),
-    mWaveModel(new WaveListModel(*mDocument)),
-    mWaveEditor(new WaveEditor(*mWaveModel, this)),
-    mInstrumentEditor(new InstrumentEditor(*mInstrumentModel, *mWaveModel, *mWaveEditor, this)),
-    mConfigDialog(new ConfigDialog(*mConfig, this)),
-    mRenderer(new Renderer(*mDocument, *mInstrumentModel, *mWaveModel, *mConfig, this))
+    mApp(trackerboy),
+    mWaveEditor(new WaveEditor(mApp.waveModel, this)),
+    mInstrumentEditor(new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, *mWaveEditor, this)),
+    mConfigDialog(new ConfigDialog(mApp.config, this))
 {
     // setup the designer ui
     mUi->setupUi(this);
@@ -47,6 +42,7 @@ MainWindow::MainWindow() :
 
     // read in configuration, window geometry and window state
     readSettings();
+    mApp.config.readSettings();
     mConfigDialog->resetControls();
 
 
@@ -55,7 +51,7 @@ MainWindow::MainWindow() :
     setFilename("");
     
     // associate menu actions with the model
-    mSongModel->setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
+    mApp.songModel.setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
 
     QIcon appIcon;
     appIcon.addFile(":/icons/app/appicon-16.png");
@@ -64,7 +60,6 @@ MainWindow::MainWindow() :
     appIcon.addFile(":/icons/app/appicon-48.png");
     appIcon.addFile(":/icons/app/appicon-256.png");
     setWindowIcon(appIcon);
-
 
     //mRenderer->setDevice(mConfig.device(), mConfig.samplerate());
     //mRenderer->start();
@@ -77,6 +72,7 @@ MainWindow::~MainWindow() {
 void MainWindow::closeEvent(QCloseEvent *evt) {
     if (maybeSave()) {
         writeSettings();
+        mApp.config.writeSettings();
         evt->accept();
     } else {
         evt->ignore();
@@ -95,7 +91,7 @@ void MainWindow::fileNew() {
     if (maybeSave()) {
         
         setModelsEnabled(false);
-        mDocument->clear();
+        mApp.document.clear();
         setModelsEnabled(true);
 
         setFilename("");
@@ -114,7 +110,7 @@ void MainWindow::fileOpen() {
             // disable models
             setModelsEnabled(false);
 
-            auto error = mDocument->open(filename);
+            auto error = mApp.document.open(filename);
 
             // renable models
             setModelsEnabled(true);
@@ -130,7 +126,7 @@ bool MainWindow::fileSave() {
     if (mFilename.isEmpty()) {
         return fileSaveAs();
     } else {
-        return mDocument->save(mFilename);
+        return mApp.document.save(mFilename);
     }
 }
 
@@ -142,7 +138,7 @@ bool MainWindow::fileSaveAs() {
         return false;
     }
     QString filename = mModuleFileDialog->selectedFiles().first();
-    if (mDocument->save(filename)) {
+    if (mApp.document.save(filename)) {
         setFilename(filename);
         return true;
     }
@@ -158,7 +154,7 @@ void MainWindow::moduleRemoveSong() {
     );
 
     if (result == QMessageBox::Yes) {
-        mSongModel->remove();
+        mApp.songModel.remove();
     }
 
 }
@@ -233,18 +229,18 @@ void MainWindow::windowResetLayout() {
 }
 
 void MainWindow::onSoundChange() {
-    auto &sound = mConfig->sound();
+    auto &sound = mApp.config.sound();
     //auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
     mSamplerateLabel->setText(QString("%1 Hz").arg(sound.samplerate));
 }
 
 void MainWindow::statusSetInstrument(int index) {
-    int id = (index == -1) ? 0 : mInstrumentModel->instrument(index)->id();
+    int id = (index == -1) ? 0 : mApp.instrumentModel.instrument(index)->id();
     mStatusInstrument->setText(QString("Instrument: %1").arg(id, 2, 16, QChar('0')));
 }
 
 void MainWindow::statusSetWaveform(int index) {
-    int id = (index == -1) ? 0 : mWaveModel->waveform(index)->id();
+    int id = (index == -1) ? 0 : mApp.waveModel.waveform(index)->id();
     mStatusWaveform->setText(QString("Waveform: %1").arg(id, 2, 16, QChar('0')));
 }
 
@@ -256,7 +252,7 @@ void MainWindow::statusSetOctave(int octave) {
 
 
 bool MainWindow::maybeSave() {
-    if (!mDocument->isModified()) {
+    if (!mApp.document.isModified()) {
         return true;
     }
 
@@ -280,7 +276,7 @@ bool MainWindow::maybeSave() {
 }
 
 void MainWindow::readSettings() {
-    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    QSettings settings;
     const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
     
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -306,8 +302,6 @@ void MainWindow::readSettings() {
     } else {
         restoreState(windowState);
     }
-    
-    mConfig->readSettings(settings);
 }
 
 void MainWindow::setFilename(QString filename) {
@@ -322,13 +316,13 @@ void MainWindow::setFilename(QString filename) {
 }
 
 void MainWindow::setModelsEnabled(bool enabled) {
-    mWaveModel->setEnabled(enabled);
-    mInstrumentModel->setEnabled(enabled);
-    mSongModel->setEnabled(enabled);
+    mApp.instrumentModel.setEnabled(enabled);
+    mApp.songModel.setEnabled(enabled);
+    mApp.waveModel.setEnabled(enabled);
 }
 
 void MainWindow::setupConnections() {
-    connect(mDocument, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
+    connect(&mApp.document, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
 
     // Actions
     #define connectAction(action, slot) connect(mUi->action, &QAction::triggered, this, &MainWindow::slot)
@@ -341,9 +335,9 @@ void MainWindow::setupConnections() {
     connectAction(actionRemoveSong, moduleRemoveSong);
     connect(mUi->actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
     // Module
-    connect(mUi->actionNewSong, &QAction::triggered, mSongModel, &SongListModel::add);
+    connect(mUi->actionNewSong, &QAction::triggered, &mApp.songModel, &SongListModel::add);
     // Order
-    auto orderModel = mSongModel->orderModel();
+    auto orderModel = mApp.songModel.orderModel();
     connect(mUi->actionInsertOrder, &QAction::triggered, orderModel, &OrderModel::insert);
     connect(mUi->actionRemoveOrder, &QAction::triggered, orderModel, &OrderModel::remove);
     connect(mUi->actionDuplicateOrder, &QAction::triggered, orderModel, &OrderModel::duplicate);
@@ -356,26 +350,26 @@ void MainWindow::setupConnections() {
     // connect piano signals to renderer preview slots
 
     auto wavePiano = mWaveEditor->piano();
-    connect(wavePiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform);
-    connect(wavePiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
+    connect(wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
+    connect(wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
 
     auto instPiano = mInstrumentEditor->piano();
-    connect(instPiano, &PianoWidget::keyDown, mRenderer, &Renderer::previewInstrument);
-    connect(instPiano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview);
+    connect(instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
+    connect(instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
 
     // song combobox in mSongToolbar
     
 
-    connect(mSongCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), mSongModel, QOverload<int>::of(&SongListModel::select));
-    connect(mSongModel, &SongListModel::currentIndexChanged, mSongCombo, &QComboBox::setCurrentIndex);
+    connect(mSongCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), &mApp.songModel, QOverload<int>::of(&SongListModel::select));
+    connect(&mApp.songModel, &SongListModel::currentIndexChanged, mSongCombo, &QComboBox::setCurrentIndex);
 
 
-    connect(mConfig, &Config::soundConfigChanged, this, &MainWindow::onSoundChange);
+    connect(&mApp.config, &Config::soundConfigChanged, this, &MainWindow::onSoundChange);
 
     // statusbar
 
-    connect(mInstrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
-    connect(mWaveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
+    connect(&mApp.instrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
+    connect(&mApp.waveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
 
 
 }
@@ -384,7 +378,7 @@ void MainWindow::setupUi() {
 
     // Main widget
 
-    auto pgrid = new PatternEditor(*mSongModel);
+    auto pgrid = new PatternEditor(mApp.songModel);
     setCentralWidget(pgrid);
 
     // TOOLBARS ==============================================================
@@ -395,7 +389,7 @@ void MainWindow::setupUi() {
     mSongToolbar->addAction(mUi->actionPreviousSong);
     mSongToolbar->addAction(mUi->actionNextSong);
     mSongCombo = new QComboBox();
-    mSongCombo->setModel(mSongModel);
+    mSongCombo->setModel(&mApp.songModel);
     mSongToolbar->addWidget(mSongCombo);
     mSongToolbar->setIconSize(QSize(TOOLBAR_ICON_WIDTH, TOOLBAR_ICON_HEIGHT));
     addToolBar(Qt::ToolBarArea::TopToolBarArea, mSongToolbar);
@@ -428,7 +422,7 @@ void MainWindow::setupUi() {
     mDockInstruments = new QDockWidget(tr("Instruments"), this);
     mDockInstruments->setObjectName("mDockInstruments");
     TableForm *instrumentTableForm = new TableForm(
-        *mInstrumentModel,
+        mApp.instrumentModel,
         mInstrumentEditor,
         "Ctrl-I",
         "instrument",
@@ -441,7 +435,7 @@ void MainWindow::setupUi() {
     mDockWaveforms = new QDockWidget(tr("Waveforms"), this);
     mDockWaveforms->setObjectName("mDockWaveforms");
     TableForm *waveTableForm = new TableForm(
-        *mWaveModel,
+        mApp.waveModel,
         mWaveEditor,
         "Ctrl-W",
         "waveform",
@@ -452,7 +446,7 @@ void MainWindow::setupUi() {
     // setup Songs dock
     mDockSongs = new QDockWidget(tr("Songs"), this);
     mDockSongs->setObjectName("mDockSongs");
-    auto songWidget = new SongWidget(*mSongModel, mDockSongs);
+    auto songWidget = new SongWidget(mApp.songModel, mDockSongs);
     mDockSongs->setWidget(songWidget);
 
     // module properties dock
@@ -477,7 +471,7 @@ void MainWindow::setupUi() {
         mUi->actionMoveOrderUp,
         mUi->actionMoveOrderDown
     };
-    auto orderModel = mSongModel->orderModel();
+    auto orderModel = mApp.songModel.orderModel();
     orderModel->setActions(orderActions);
     mDockOrders = new QDockWidget(tr("Orders"), this);
     mDockOrders->setObjectName("mDockOrders");
@@ -531,8 +525,7 @@ void MainWindow::setupUi() {
 }
 
 void MainWindow::writeSettings() {
-    QSettings settings(QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    QSettings settings;
     settings.setValue("geometry", saveGeometry());
     settings.setValue("windowState", saveState());
-    mConfig->writeSettings(settings);
 }

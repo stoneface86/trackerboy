@@ -2,9 +2,9 @@
 #include "model/SongListModel.hpp"
 
 SongListModel::SongListModel(ModuleDocument &document) :
+    BaseModel(document),
     mOrderModel(new OrderModel(document, this)),
-    mSongVector(document.songs()),
-    BaseModel(document)
+    mSongVector(document.songs())
 {
     select(0); // we always have 1 song so the select the first one
 }

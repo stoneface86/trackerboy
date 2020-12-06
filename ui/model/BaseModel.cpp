@@ -5,13 +5,13 @@
 
 
 BaseModel::BaseModel(ModuleDocument &document) :
+    QAbstractListModel(),
     mDocument(document),
     mCurrentIndex(-1),
     mActNew(nullptr),
     mActRemove(nullptr),
     mActDuplicate(nullptr),
-    mActEdit(nullptr),
-    QAbstractListModel(&document)
+    mActEdit(nullptr)
 {
 }
 

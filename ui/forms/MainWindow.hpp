@@ -4,11 +4,7 @@
 #include "forms/ConfigDialog.hpp"
 #include "forms/InstrumentEditor.hpp"
 #include "forms/WaveEditor.hpp"
-#include "model/ModuleDocument.hpp"
-#include "model/InstrumentListModel.hpp"
-#include "model/SongListModel.hpp"
-#include "model/WaveListModel.hpp"
-#include "Renderer.hpp"
+#include "Trackerboy.hpp"
 
 #include <QComboBox>
 #include <QDockWidget>
@@ -27,7 +23,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow();
+    explicit MainWindow(Trackerboy &trackerboy);
     ~MainWindow();
 
 protected:
@@ -76,17 +72,11 @@ private:
 
     QFileDialog *mModuleFileDialog;
 
-    Config *mConfig;
-    ModuleDocument *mDocument;
-    InstrumentListModel *mInstrumentModel;
-    SongListModel *mSongModel;
-    WaveListModel *mWaveModel;
+    Trackerboy &mApp;
     
     WaveEditor *mWaveEditor;
     InstrumentEditor *mInstrumentEditor;
     ConfigDialog *mConfigDialog;
-
-    Renderer *mRenderer;
 
     // file name of the currently open file or "Untitled" for a new file
     QString mFilename;

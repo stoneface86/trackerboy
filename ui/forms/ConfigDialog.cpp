@@ -25,12 +25,9 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     connect(applyButton, &QPushButton::clicked, this, &ConfigDialog::apply);
 
     // populate device combo
-    config.getDevices();
     auto deviceCombo = mUi->mDeviceCombo;
     deviceCombo->addItem("Default device");
-    for (unsigned i = 0; i != config.mDeviceCount; ++i) {
-        deviceCombo->addItem(QString::fromLatin1(config.mDeviceList[i].name));
-    }
+    deviceCombo->addItems(config.mMiniaudio.deviceNames());
 
     // populate samplerate combo
     auto samplerateCombo = mUi->mSamplerateCombo;

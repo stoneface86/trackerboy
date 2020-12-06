@@ -48,10 +48,12 @@ set(UI_SRC
     
     "Config.cpp"
     "main.cpp"
+    "Miniaudio.cpp"
     "Renderer.cpp"
     "RendererThread.cpp"
     "samplerates.cpp"
     "Tileset.cpp"
+    "Trackerboy.cpp"
 )
 
 qt5_wrap_ui(UI_DESIGNER
