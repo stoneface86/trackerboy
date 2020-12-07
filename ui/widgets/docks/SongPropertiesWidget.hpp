@@ -1,22 +1,38 @@
 
 #pragma once
 
-#include <QWidget>
+#include "model/SongListModel.hpp"
 
-namespace Ui {
-class SongPropertiesWidget;
-}
+#include <QWidget>
+#include <QSpinBox>
+#include <QRadioButton>
 
 class SongPropertiesWidget : public QWidget {
 
     Q_OBJECT
 
 public:
-    explicit SongPropertiesWidget(QWidget *parent = nullptr);
+    explicit SongPropertiesWidget(SongListModel &model, QWidget *parent = nullptr);
     ~SongPropertiesWidget();
 
 
+private slots:
+    void onSongChanged(int index);
+
 private:
-    Ui::SongPropertiesWidget *mUi;
+
+    SongListModel &mModel;
+
+
+    QSpinBox *mRowsPerBeatSpin;
+    QSpinBox *mRowsPerMeasureSpin;
+    QRadioButton *mTempoRadio;
+    QRadioButton *mSpeedRadio;
+
+    QSpinBox *mTempoSpin;
+    QDoubleSpinBox *mSpeedSpin;
+    QSpinBox *mPatternSpin;
+    QSpinBox *mRowsPerPatternSpin;
+
 
 };

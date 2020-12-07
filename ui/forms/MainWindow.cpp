@@ -464,7 +464,7 @@ void MainWindow::setupUi() {
     // song properties dock
     mDockSongProperties = new QDockWidget(tr("Song properties"), this);
     mDockSongProperties->setObjectName("mDockSongProperties");
-    auto songPropertiesWidget = new SongPropertiesWidget(mDockSongProperties);
+    auto songPropertiesWidget = new SongPropertiesWidget(mApp.songModel, mDockSongProperties);
     mDockSongProperties->setWidget(songPropertiesWidget);
 
     // setup Orders dock
