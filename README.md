@@ -19,8 +19,11 @@ WIP! This project is currently in the development phase (major version 0).
 
 ## Status
 
+### Pattern Editor Demo
+![Pattern Editor Demo](/.github/pattern_editor_demo.gif)
+
 ### Wave Editor Demo
-![Wave Editor Demo](/misc/wave_editor_demo.gif)
+![Wave Editor Demo](/.github/wave_editor_demo.gif)
 
 The library is (almost) finished and the UI is being worked on now.
 
@@ -29,11 +32,10 @@ Here is a general list of what needs to be completed:
  * More unit tests for the library
  * ~~Instrument editor~~
  * ~~Wave editor~~
- * Pattern editor / Tracker grid
+ * Pattern editor / Tracker grid (In progress)
  * Visualizers: Oscilloscopes and volume meters (master and one for each channel)
  * Export to .asm (pattern compilation)
  * Export to .gbs
- * ~~Audio filters for equalization or treble/bass filtering~~
  * MIDI support
  * Import from famitracker (tool to convert .ftm -> .tbm)
 
