@@ -46,6 +46,7 @@ public:
     };
 
     static constexpr uint8_t DEFAULT_RPB = 4;
+    static constexpr uint8_t DEFAULT_RPM = 16;
     static constexpr uint16_t DEFAULT_TEMPO = 150;
     static constexpr Mode DEFAULT_MODE = Mode::speedFromTempo;
     // Tempo = 150, RPB = 4  => 6.0 frames per row
@@ -56,17 +57,22 @@ public:
 
     ~Song();
 
-    uint8_t rowsPerBeat();
+    uint8_t rowsPerBeat() const noexcept;
 
-    Mode mode();
+    uint8_t rowsPerMeasure() const noexcept;
 
-    uint16_t tempo();
+    Mode mode() const noexcept;
 
-    Speed speed();
+    uint16_t tempo() const noexcept;
 
-    std::vector<Order>& orders();
+    Speed speed() const noexcept;
 
-    PatternMaster& patterns();
+    // speed, in floating-point
+    float speedF() const noexcept;
+
+    std::vector<Order>& orders() noexcept;
+
+    PatternMaster& patterns() noexcept;
 
     Pattern getPattern(uint8_t orderNo);
 
@@ -74,11 +80,15 @@ public:
 
     void setRowsPerBeat(uint8_t rowsPerBeat);
 
+    void setRowsPerMeasure(uint8_t rowsPerMeasure);
+
     void setTempo(uint16_t tempo);
 
     void setMode(Mode mode);
 
     void setSpeed(Speed speed);
+
+    void setSpeedF(float speed);
 
     // apply the current mode to tempo/speed
     void apply(float framerate = Gbs::FRAMERATE_GB);
@@ -98,6 +108,7 @@ private:
     std::vector<Order> mOrder;
 
     uint8_t mRowsPerBeat;
+    uint8_t mRowsPerMeasure;
     uint16_t mTempo;
     Mode mMode;
 

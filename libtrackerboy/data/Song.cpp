@@ -15,6 +15,7 @@ Song::Song() :
     mMaster(64),
     mOrder(),
     mRowsPerBeat(DEFAULT_RPB),
+    mRowsPerMeasure(DEFAULT_RPM),
     mTempo(DEFAULT_TEMPO),
     mMode(DEFAULT_MODE),
     mSpeed(DEFAULT_SPEED),
@@ -39,27 +40,35 @@ Song::~Song() {
 
 }
 
-uint8_t Song::rowsPerBeat() {
+uint8_t Song::rowsPerBeat() const noexcept {
     return mRowsPerBeat;
 }
 
-uint16_t Song::tempo() {
+uint8_t Song::rowsPerMeasure() const noexcept {
+    return mRowsPerMeasure;
+}
+
+uint16_t Song::tempo() const noexcept {
     return mTempo;
 }
 
-Speed Song::speed() {
+Speed Song::speed() const noexcept {
     return mSpeed;
 }
 
-Song::Mode Song::mode() {
+float Song::speedF() const noexcept {
+    return mSpeed * 0.125f;
+}
+
+Song::Mode Song::mode() const noexcept {
     return mMode;
 }
 
-std::vector<Order>& Song::orders() {
+std::vector<Order>& Song::orders() noexcept {
     return mOrder;
 }
 
-PatternMaster& Song::patterns() {
+PatternMaster& Song::patterns() noexcept {
     return mMaster;
 }
 
@@ -88,6 +97,14 @@ void Song::setRowsPerBeat(uint8_t rowsPerBeat) {
     mRowsPerBeat = rowsPerBeat;
 }
 
+void Song::setRowsPerMeasure(uint8_t rowsPerMeasure) {
+    if (rowsPerMeasure < mRowsPerBeat) {
+        throw std::invalid_argument("Rows per measure must be >= rows per beat");
+    }
+
+    mRowsPerMeasure = rowsPerMeasure;
+}
+
 void Song::setTempo(uint16_t tempo) {
     mTempo = tempo;
 }
@@ -97,6 +114,11 @@ void Song::setSpeed(Speed speed) {
         throw std::invalid_argument("speed out of range");
     }
     mSpeed = speed;
+}
+
+void Song::setSpeedF(float speed) {
+    Speed fixed = static_cast<uint8_t>(std::roundf(speed * 8.0f) / 8);
+    setSpeed(fixed);
 }
 
 void Song::setMode(Mode mode) {
@@ -140,6 +162,7 @@ namespace {
 struct SongFormat {
     uint16_t tempo;
     uint8_t rowsPerBeat;
+    uint8_t rowsPerMeasure;
     uint8_t speed;
     uint8_t mode;
     uint8_t orderCount;         // 1-256
@@ -182,6 +205,10 @@ FormatError Song::deserializeData(std::istream &stream) noexcept {
 
     mTempo = songHeader.tempo;
     mRowsPerBeat = songHeader.rowsPerBeat;
+    mRowsPerMeasure = songHeader.rowsPerMeasure;
+    if (mRowsPerMeasure < mRowsPerBeat) {
+        mRowsPerMeasure = mRowsPerBeat;
+    }
     mSpeed = songHeader.speed;
     
     size_t orderCount = static_cast<size_t>(songHeader.orderCount) + 1;
@@ -219,6 +246,7 @@ FormatError Song::serializeData(std::ostream &stream) noexcept {
     SongFormat songHeader;
     songHeader.tempo = correctEndian(mTempo);
     songHeader.rowsPerBeat = mRowsPerBeat;
+    songHeader.rowsPerMeasure = mRowsPerMeasure;
     songHeader.speed = mSpeed;
     songHeader.mode = static_cast<uint8_t>(mMode);
 
