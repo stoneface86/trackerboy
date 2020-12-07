@@ -51,11 +51,12 @@ void SongListModel::setRowsPerMeasure(int rowsPerMeasure) {
     }
 }
 
-void SongListModel::setSpeed(double speed) {
+void SongListModel::setSpeed(int speed) {
     auto &curr = mSongVector[mCurrentIndex];
-    if (speed != curr.speedF()) {
+    auto _speed = static_cast<trackerboy::Speed>(speed);
+    if (_speed != curr.speed()) {
         auto editCtx = mDocument.beginEdit();
-        curr.setSpeedF(speed);
+        curr.setSpeed(_speed);
     }
 }
 

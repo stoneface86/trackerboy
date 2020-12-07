@@ -2,33 +2,39 @@
 #include "widgets/docks/SongPropertiesWidget.hpp"
 
 #include <QFormLayout>
+#include <QGridLayout>
+
+#include <algorithm>
 
 SongPropertiesWidget::SongPropertiesWidget(SongListModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
     mRowsPerBeatSpin(new QSpinBox()),
     mRowsPerMeasureSpin(new QSpinBox()),
-    mSpeedSpin(new QDoubleSpinBox()),
-    mTempoEdit(new QLineEdit()),
+    mSpeedSpin(new QSpinBox()),
+    mTempoSpin(new QSpinBox()),
+    mTempoCalcButton(new QPushButton(tr("Calculate speed"))),
+    mTempoActualEdit(new QLineEdit()),
     mPatternSpin(new QSpinBox()),
-    mRowsPerPatternSpin(new QSpinBox()),
-    mIgnoreSpeedChanges(false)
+    mRowsPerPatternSpin(new QSpinBox())
 {
     setObjectName("SongPropertiesWidget");
 
     // layout
 
     auto layout = new QFormLayout();
-    layout->addRow(tr("Rows/Beat"), mRowsPerBeatSpin);
-    layout->addRow(tr("Rows/measure"), mRowsPerMeasureSpin);
+    layout->addRow(tr("Rows per beat"), mRowsPerBeatSpin);
+    layout->addRow(tr("Rows per measure"), mRowsPerMeasureSpin);
 
-    auto speedLayout = new QBoxLayout(QBoxLayout::LeftToRight);
-    speedLayout->addWidget(mSpeedSpin, 1);
-    speedLayout->addWidget(mTempoEdit, 1);
-    layout->addRow(tr("Speed (Frames/row)"), speedLayout);
+    auto speedLayout = new QGridLayout();
+    speedLayout->addWidget(mSpeedSpin, 0, 0);
+    speedLayout->addWidget(mTempoActualEdit, 0, 1);
+    speedLayout->addWidget(mTempoSpin, 1, 0);
+    speedLayout->addWidget(mTempoCalcButton, 1, 1);
+    speedLayout->setColumnStretch(0, 1);
+    speedLayout->setColumnStretch(1, 1);
+    layout->addRow(tr("Speed"), speedLayout);
     
-    
-    //layout->addRow(tr("Tempo"), mTempoEdit);
     layout->addRow(tr("Patterns"), mPatternSpin);
     layout->addRow(tr("Rows"), mRowsPerPatternSpin);
 
@@ -38,31 +44,26 @@ SongPropertiesWidget::SongPropertiesWidget(SongListModel &model, QWidget *parent
 
     mRowsPerBeatSpin->setRange(1, 255);
     mRowsPerMeasureSpin->setRange(1, 255);
-    mSpeedSpin->setDecimals(3);
-    mSpeedSpin->setSingleStep(0.125);
-    mSpeedSpin->setRange(trackerboy::SPEED_MIN * 0.125, trackerboy::SPEED_MAX * 0.125);
-    mTempoEdit->setReadOnly(true);
+    mSpeedSpin->setRange(trackerboy::SPEED_MIN, trackerboy::SPEED_MAX);
+    mSpeedSpin->setDisplayIntegerBase(16);
+    mSpeedSpin->setPrefix("0x");
+    mTempoSpin->setRange(1, 10000);
+    mTempoSpin->setValue(150);
+    mTempoSpin->setSuffix(" BPM");
+    mTempoActualEdit->setReadOnly(true);
 
     onSongChanged(mModel.currentIndex());
-    calculateTempo();
+    calculateActualTempo();
 
     // connections
     connect(&mModel, &SongListModel::currentIndexChanged, this, &SongPropertiesWidget::onSongChanged);
     connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SongListModel::setRowsPerBeat);
     connect(mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SongListModel::setRowsPerMeasure);
-    connect(mSpeedSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SongPropertiesWidget::onSpeedChanged);
+    connect(mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SongListModel::setSpeed);
     connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), mRowsPerMeasureSpin, &QSpinBox::setMinimum);
-    connect(mSpeedSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, 
-        [this](double value) {
-            Q_UNUSED(value);
-            calculateTempo();
-        });
-    connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this,
-        [this](int value) {
-            Q_UNUSED(value);
-            calculateTempo();
-        });
-    
+    connect(mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SongPropertiesWidget::calculateActualTempo);
+    connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SongPropertiesWidget::calculateActualTempo);
+    connect(mTempoCalcButton, &QPushButton::clicked, this, &SongPropertiesWidget::calculateTempo);
 }
 
 SongPropertiesWidget::~SongPropertiesWidget() {
@@ -76,7 +77,7 @@ void SongPropertiesWidget::onSongChanged(int index) {
 
         mRowsPerBeatSpin->setValue(song->rowsPerBeat());
         mRowsPerMeasureSpin->setValue(song->rowsPerMeasure());
-        mSpeedSpin->setValue(song->speedF());
+        mSpeedSpin->setValue(song->speed());
         mPatternSpin->setValue(song->orders().size());
         mRowsPerPatternSpin->setValue(song->patterns().rowSize());
 
@@ -84,20 +85,18 @@ void SongPropertiesWidget::onSongChanged(int index) {
     }
 }
 
-void SongPropertiesWidget::onSpeedChanged(double speed) {
-    if (!mIgnoreSpeedChanges) {
-        mIgnoreSpeedChanges = true;
-
-        mModel.setSpeed(speed);
-        mSpeedSpin->setValue(mModel.currentSong()->speedF());
-
-        mIgnoreSpeedChanges = false;
-    }
-
+void SongPropertiesWidget::calculateTempo() {
+    // TODO: get the framerate set in the module
+    float speed = (trackerboy::Gbs::FRAMERATE_GB * 60.0f) / (mTempoSpin->value() * mRowsPerBeatSpin->value());
+    // convert to fixed point
+    int speedFixed = std::clamp(static_cast<int>(std::roundf(speed * 16.0f)), (int)trackerboy::SPEED_MIN, (int)trackerboy::SPEED_MAX);
+    mSpeedSpin->setValue(speedFixed);
 
 }
 
-void SongPropertiesWidget::calculateTempo() {
+void SongPropertiesWidget::calculateActualTempo(int value) {
+    Q_UNUSED(value);
+
     auto tempo = mModel.currentSong()->tempo();
-    mTempoEdit->setText(QString("%1 BPM").arg(tempo, 0, 'f', 2));
+    mTempoActualEdit->setText(QString("%1 BPM").arg(tempo, 0, 'f', 2));
 }

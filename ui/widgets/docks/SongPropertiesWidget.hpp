@@ -6,6 +6,7 @@
 #include <QWidget>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QPushButton>
 #include <QRadioButton>
 
 class SongPropertiesWidget : public QWidget {
@@ -19,23 +20,23 @@ public:
 
 private slots:
     void onSongChanged(int index);
-    void onSpeedChanged(double speed);
-
+    void calculateTempo();
+    void calculateActualTempo(int value = 0);
 
 private:
-
-    void calculateTempo();
+    
 
     SongListModel &mModel;
 
 
     QSpinBox *mRowsPerBeatSpin;
     QSpinBox *mRowsPerMeasureSpin;
-    QDoubleSpinBox *mSpeedSpin;
-    QLineEdit *mTempoEdit;
+    QSpinBox *mSpeedSpin;
+    QSpinBox *mTempoSpin;
+    QPushButton *mTempoCalcButton;
+    QLineEdit *mTempoActualEdit;
     QSpinBox *mPatternSpin;
     QSpinBox *mRowsPerPatternSpin;
 
-    bool mIgnoreSpeedChanges;
 
 };

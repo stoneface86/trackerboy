@@ -57,9 +57,6 @@ public:
 
     Speed speed() const noexcept;
 
-    // speed, in floating-point
-    float speedF() const noexcept;
-
     std::vector<Order>& orders() noexcept;
 
     PatternMaster& patterns() noexcept;
@@ -73,8 +70,6 @@ public:
     void setRowsPerMeasure(uint8_t rowsPerMeasure);
 
     void setSpeed(Speed speed);
-
-    void setSpeedF(float speed);
 
     float tempo(float framerate = Gbs::FRAMERATE_GB) const noexcept;
 

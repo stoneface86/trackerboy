@@ -51,10 +51,6 @@ Speed Song::speed() const noexcept {
     return mSpeed;
 }
 
-float Song::speedF() const noexcept {
-    return mSpeed * 0.125f;
-}
-
 
 std::vector<Order>& Song::orders() noexcept {
     return mOrder;
@@ -104,15 +100,9 @@ void Song::setSpeed(Speed speed) {
     mSpeed = speed;
 }
 
-void Song::setSpeedF(float speed) {
-    Speed fixed = static_cast<uint8_t>(std::roundf(speed * 8.0f));
-    setSpeed(fixed);
-}
-
-
 float Song::tempo(float framerate) const noexcept {
-    float speed = static_cast<float>(mSpeed >> 3);
-    speed += static_cast<float>(mSpeed & 0x7) / 8.0f;
+    float speed = static_cast<float>(mSpeed >> 4);
+    speed += static_cast<float>(mSpeed & 0xF) / 16.0f;
     return (60.0f * framerate) / (mRowsPerBeat * speed);
 }
 
