@@ -3,6 +3,22 @@
 
 #include <QFileInfo>
 
+ModuleDocument::EditContext::EditContext(ModuleDocument &document, bool markModified) :
+    mDocument(document),
+    mMarkModified(markModified)
+{
+    mDocument.lock();
+}
+
+ModuleDocument::EditContext::~EditContext() {
+    mDocument.unlock();
+    if (mMarkModified) {
+        mDocument.setModified(true);
+    }
+}
+
+
+
 ModuleDocument::ModuleDocument(QObject *parent) :
     QObject(parent),
     mModified(false),
@@ -42,6 +58,10 @@ trackerboy::WaveTable& ModuleDocument::waveTable() {
 
 std::vector<trackerboy::Song>& ModuleDocument::songs() {
     return mModule.songs();
+}
+
+ModuleDocument::EditContext ModuleDocument::beginEdit(bool markModified) {
+    return { *this, markModified };
 }
 
 trackerboy::FormatError ModuleDocument::open(QString filename) {

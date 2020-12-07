@@ -38,8 +38,8 @@ using Speed = uint8_t;
 // minimum possible speed, 1.0 frames per row
 static constexpr Speed SPEED_MIN = 0x8;
 
-// maximum possible speed, 31.0 frames per row
-static constexpr Speed SPEED_MAX = 0xF4;
+// maximum possible speed, 31 frames per row
+static constexpr Speed SPEED_MAX = 0xF8;
 
 
 }

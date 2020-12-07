@@ -34,6 +34,27 @@ class ModuleDocument : public QObject {
     Q_OBJECT
 
 public:
+
+    //
+    // Utility class when editing the document. On construction, the document's
+    // spinlock is locked and then unlocked on destruction. Changes being made 
+    // to the document should occur during the scope of an EditContext. This way
+    // the locking and unlocking of the spinlock is managed by the context's
+    // lifetime.
+    //
+    class EditContext {
+
+    public:
+        EditContext(ModuleDocument &document, bool markModified);
+        ~EditContext();
+
+
+    private:
+        
+        ModuleDocument &mDocument;
+        bool mMarkModified;
+    };
+
     ModuleDocument(QObject *parent = nullptr);
 
     trackerboy::InstrumentTable& instrumentTable();
@@ -43,6 +64,8 @@ public:
     std::vector<trackerboy::Song> &songs();
 
     bool isModified() const;
+
+    EditContext beginEdit(bool markModified = true);
 
     trackerboy::FormatError open(QString filename);
 

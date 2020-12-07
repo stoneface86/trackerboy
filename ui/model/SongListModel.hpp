@@ -24,6 +24,12 @@ public:
     OrderModel* orderModel() const;
 
 
+public slots:
+    void setRowsPerBeat(int rowsPerBeat);
+    void setRowsPerMeasure(int rowsPerMeasure);
+    void setSpeed(double speed);
+
+
 protected:
     virtual bool canAdd() override;
 

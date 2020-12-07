@@ -4,6 +4,7 @@
 #include "model/SongListModel.hpp"
 
 #include <QWidget>
+#include <QLineEdit>
 #include <QSpinBox>
 #include <QRadioButton>
 
@@ -18,21 +19,23 @@ public:
 
 private slots:
     void onSongChanged(int index);
+    void onSpeedChanged(double speed);
+
 
 private:
+
+    void calculateTempo();
 
     SongListModel &mModel;
 
 
     QSpinBox *mRowsPerBeatSpin;
     QSpinBox *mRowsPerMeasureSpin;
-    QRadioButton *mTempoRadio;
-    QRadioButton *mSpeedRadio;
-
-    QSpinBox *mTempoSpin;
     QDoubleSpinBox *mSpeedSpin;
+    QLineEdit *mTempoEdit;
     QSpinBox *mPatternSpin;
     QSpinBox *mRowsPerPatternSpin;
 
+    bool mIgnoreSpeedChanges;
 
 };

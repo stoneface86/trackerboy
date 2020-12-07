@@ -4,6 +4,7 @@
 
 #include "./checkedstream.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -16,8 +17,6 @@ Song::Song() :
     mOrder(),
     mRowsPerBeat(DEFAULT_RPB),
     mRowsPerMeasure(DEFAULT_RPM),
-    mTempo(DEFAULT_TEMPO),
-    mMode(DEFAULT_MODE),
     mSpeed(DEFAULT_SPEED),
     DataItem()
 {
@@ -29,8 +28,7 @@ Song::Song(const Song &song) :
     mMaster(song.mMaster),
     mOrder(song.mOrder),
     mRowsPerBeat(song.mRowsPerBeat),
-    mTempo(song.mTempo),
-    mMode(song.mMode),
+    mRowsPerMeasure(song.mRowsPerMeasure),
     mSpeed(song.mSpeed),
     DataItem(song)
 {
@@ -48,9 +46,6 @@ uint8_t Song::rowsPerMeasure() const noexcept {
     return mRowsPerMeasure;
 }
 
-uint16_t Song::tempo() const noexcept {
-    return mTempo;
-}
 
 Speed Song::speed() const noexcept {
     return mSpeed;
@@ -60,9 +55,6 @@ float Song::speedF() const noexcept {
     return mSpeed * 0.125f;
 }
 
-Song::Mode Song::mode() const noexcept {
-    return mMode;
-}
 
 std::vector<Order>& Song::orders() noexcept {
     return mOrder;
@@ -105,10 +97,6 @@ void Song::setRowsPerMeasure(uint8_t rowsPerMeasure) {
     mRowsPerMeasure = rowsPerMeasure;
 }
 
-void Song::setTempo(uint16_t tempo) {
-    mTempo = tempo;
-}
-
 void Song::setSpeed(Speed speed) {
     if (speed < SPEED_MIN || speed > SPEED_MAX) {
         throw std::invalid_argument("speed out of range");
@@ -117,38 +105,15 @@ void Song::setSpeed(Speed speed) {
 }
 
 void Song::setSpeedF(float speed) {
-    Speed fixed = static_cast<uint8_t>(std::roundf(speed * 8.0f) / 8);
+    Speed fixed = static_cast<uint8_t>(std::roundf(speed * 8.0f));
     setSpeed(fixed);
 }
 
-void Song::setMode(Mode mode) {
-    mMode = mode;
-}
 
-void Song::apply(float framerate) {
-    if (mMode == Mode::speed) {
-        // adjust tempo setting to match the current speed
-
-        float speed = static_cast<float>(mSpeed >> 3);
-        speed += static_cast<float>(mSpeed & 0x3) / 8.0f;
-        float tempo = (60.0f * framerate) / (mRowsPerBeat * speed);
-        mTempo = static_cast<uint16_t>(std::roundf(tempo));
-    } else {
-        // adjust speed setting to match the current tempo
-
-        float speed = (60.0f * framerate) / (mRowsPerBeat * mTempo);
-        // F5.3 so round to nearest 1/8th
-        speed = std::roundf(speed * 8) / 8;
-
-        // now convert floating point -> fixed point
-
-        // calculate the integral part
-        mSpeed = static_cast<uint8_t>(speed) << 3;
-        // calculate the fractional part
-        float junk; // we only want the fractional part
-        uint8_t fract = static_cast<uint8_t>(std::modf(speed, &junk) * 8);
-        mSpeed |= fract;
-    }
+float Song::tempo(float framerate) const noexcept {
+    float speed = static_cast<float>(mSpeed >> 3);
+    speed += static_cast<float>(mSpeed & 0x7) / 8.0f;
+    return (60.0f * framerate) / (mRowsPerBeat * speed);
 }
 
 }
@@ -160,11 +125,9 @@ namespace {
 #pragma pack(push, 1)
 
 struct SongFormat {
-    uint16_t tempo;
     uint8_t rowsPerBeat;
     uint8_t rowsPerMeasure;
     uint8_t speed;
-    uint8_t mode;
     uint8_t orderCount;         // 1-256
     uint8_t rowsPerTrack;       // 1-256
     uint16_t tracks;            // 0-1024
@@ -200,10 +163,8 @@ FormatError Song::deserializeData(std::istream &stream) noexcept {
     checkedRead(stream, &songHeader, sizeof(songHeader));
 
     // correct endian if needed
-    songHeader.tempo = correctEndian(songHeader.tempo);
     songHeader.tracks = correctEndian(songHeader.tracks);
 
-    mTempo = songHeader.tempo;
     mRowsPerBeat = songHeader.rowsPerBeat;
     mRowsPerMeasure = songHeader.rowsPerMeasure;
     if (mRowsPerMeasure < mRowsPerBeat) {
@@ -244,11 +205,9 @@ FormatError Song::serializeData(std::ostream &stream) noexcept {
     auto startpos = stream.tellp();
 
     SongFormat songHeader;
-    songHeader.tempo = correctEndian(mTempo);
     songHeader.rowsPerBeat = mRowsPerBeat;
     songHeader.rowsPerMeasure = mRowsPerMeasure;
     songHeader.speed = mSpeed;
-    songHeader.mode = static_cast<uint8_t>(mMode);
 
     // orderCount is a byte so the count has a bias of -1
     // the size of an order can never be 0

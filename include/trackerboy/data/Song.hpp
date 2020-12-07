@@ -40,15 +40,9 @@ class Song : public DataItem {
 
 public:
 
-    enum class Mode : uint8_t {
-        speed,              // use the speed setting
-        speedFromTempo      // determine speed from tempo setting
-    };
 
     static constexpr uint8_t DEFAULT_RPB = 4;
     static constexpr uint8_t DEFAULT_RPM = 16;
-    static constexpr uint16_t DEFAULT_TEMPO = 150;
-    static constexpr Mode DEFAULT_MODE = Mode::speedFromTempo;
     // Tempo = 150, RPB = 4  => 6.0 frames per row
     static constexpr Speed DEFAULT_SPEED = 0x30;
 
@@ -60,10 +54,6 @@ public:
     uint8_t rowsPerBeat() const noexcept;
 
     uint8_t rowsPerMeasure() const noexcept;
-
-    Mode mode() const noexcept;
-
-    uint16_t tempo() const noexcept;
 
     Speed speed() const noexcept;
 
@@ -82,16 +72,11 @@ public:
 
     void setRowsPerMeasure(uint8_t rowsPerMeasure);
 
-    void setTempo(uint16_t tempo);
-
-    void setMode(Mode mode);
-
     void setSpeed(Speed speed);
 
     void setSpeedF(float speed);
 
-    // apply the current mode to tempo/speed
-    void apply(float framerate = Gbs::FRAMERATE_GB);
+    float tempo(float framerate = Gbs::FRAMERATE_GB) const noexcept;
 
 protected:
 
@@ -109,8 +94,6 @@ private:
 
     uint8_t mRowsPerBeat;
     uint8_t mRowsPerMeasure;
-    uint16_t mTempo;
-    Mode mMode;
 
     // Speed - fixed point Q5.3
     // frame timing for each row
