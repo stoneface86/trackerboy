@@ -33,7 +33,7 @@ TEST_CASE("timer is active on default state", "[Timer]") {
     SECTION("after reset") {
         timer.reset();
         REQUIRE(timer.active());
-        timer.setPeriod(0x10); // 2 frames
+        timer.setPeriod(0x20); // 2 frames
         timer.step();
         timer.reset();
         REQUIRE(timer.active());
@@ -53,7 +53,7 @@ TEST_CASE("timer behavior", "[Timer]") {
         // Frame:    0 1 2   3 4
         // State:  | A - O | A O |
 
-        period = 0x14; // 2.5
+        period = 0x28; // 2.5
         // 3, 2, ...
         expected.emplace_back(true, false);
         expected.emplace_back(false, false);
@@ -65,13 +65,13 @@ TEST_CASE("timer behavior", "[Timer]") {
     }
 
     SECTION("when period = 1.0") {
-        period = 0x08;
+        period = 0x10;
         // 1, ...
         expected.emplace_back(true, true);
     }
 
     SECTION("when period = 1.25") {
-        period = 0x0A;
+        period = 0x14;
         // 2, 1, 1, 1, ...
         
         expected.emplace_back(true, false);

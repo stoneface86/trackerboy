@@ -18,7 +18,7 @@ namespace trackerboy {
 
 namespace {
 
-static constexpr Speed UNIT_SPEED = 8; // 8 = 00001.000 = 1.0 (Q5.3)
+static constexpr Speed UNIT_SPEED = 16; // 16 = 0001.0000 = 1.0 (Q4.4)
 
 }
 

@@ -88,7 +88,7 @@ int main() {
     auto &songs = mod.songs();
     songs.emplace_back();
     Song &testsong = songs[0];
-    testsong.setSpeed(0x11);
+    testsong.setSpeed(0x22);
 
     auto &orders = testsong.orders();
     orders.clear();

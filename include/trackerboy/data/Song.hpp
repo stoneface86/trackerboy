@@ -44,7 +44,7 @@ public:
     static constexpr uint8_t DEFAULT_RPB = 4;
     static constexpr uint8_t DEFAULT_RPM = 16;
     // Tempo = 150, RPB = 4  => 6.0 frames per row
-    static constexpr Speed DEFAULT_SPEED = 0x30;
+    static constexpr Speed DEFAULT_SPEED = 0x60;
 
     Song();
     Song(const Song &song);
@@ -95,7 +95,7 @@ private:
     uint8_t mRowsPerBeat;
     uint8_t mRowsPerMeasure;
 
-    // Speed - fixed point Q5.3
+    // Speed - fixed point Q4.4
     // frame timing for each row
     // 4.0:   4, 4, 4, 4, ...
     // 4.125: 4, 4, 4, 4, 4, 4, 4, 5, ...
