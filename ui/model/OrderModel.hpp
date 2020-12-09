@@ -96,14 +96,18 @@ public slots:
 
 private:
     enum class ModifyMode {
-        incdec,
+        inc,
+        dec,
         set
     };
 
     template <ModifyMode mode>
-    void modifySelection(uint8_t option, QItemSelection const &selection);
+    void modifySelection(QItemSelection const &selection, uint8_t option = 0);
 
-    void _insert(trackerboy::Order order);
+    template <ModifyMode mode>
+    void modifyCell(uint8_t &cell, uint8_t value);
+
+    void updateActions();
 
     ModuleDocument &mDocument;
 
@@ -113,5 +117,7 @@ private:
 
     int mCurrentRow;
     int mCurrentTrack;
+
+    bool mCanSelect;
     
 };

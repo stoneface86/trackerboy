@@ -9,23 +9,26 @@ OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
     mDocument(document),
     mOrder(nullptr),
     mCurrentRow(0),
-    mCurrentTrack(0)
+    mCurrentTrack(0),
+    mCanSelect(true)
 {
 }
 
 void OrderModel::incrementSelection(QItemSelection const &selection) {
-    modifySelection<ModifyMode::incdec>(1, selection);
+    modifySelection<ModifyMode::inc>(selection);
     emit patternsChanged();
 }
 
 void OrderModel::decrementSelection(QItemSelection const &selection) {
-    modifySelection<ModifyMode::incdec>(0, selection);
+    modifySelection<ModifyMode::dec>(selection);
     emit patternsChanged();
 }
 
 void OrderModel::select(int row, int track) {
-    selectPattern(row);
-    selectTrack(track);   
+    if (mCanSelect) {
+        selectPattern(row);
+        selectTrack(track);
+    }
 }
 
 void OrderModel::selectPattern(int pattern) {
@@ -73,6 +76,7 @@ void OrderModel::selectTrack(int track) {
 
 void OrderModel::setActions(OrderActions actions) {
     mActions = actions;
+    updateActions();
 }
 
 void OrderModel::setOrder(std::vector<trackerboy::Order> *order) {
@@ -83,7 +87,7 @@ void OrderModel::setOrder(std::vector<trackerboy::Order> *order) {
 }
 
 void OrderModel::setSelection(QItemSelection const &selection, uint8_t id) {
-    modifySelection<ModifyMode::set>(id, selection);
+    modifySelection<ModifyMode::set>(selection, id);
     emit patternsChanged();
 }
 
@@ -147,11 +151,12 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
 
         bool ok;
         unsigned id = value.toString().toUInt(&ok, 16);
-        if (ok && id < 256) {
-            mDocument.lock();
-            auto &row = (*mOrder)[index.row()];
-            row.tracks[index.column()] = static_cast<uint8_t>(id);
-            mDocument.unlock();
+        if (ok && id < trackerboy::Song::MAX_ORDERS) {
+            {
+                auto ctx = mDocument.beginEdit();
+                auto &row = (*mOrder)[index.row()];
+                row.tracks[index.column()] = static_cast<uint8_t>(id);
+            }
             emit patternsChanged();
             return true;
         }
@@ -164,13 +169,27 @@ bool OrderModel::insertRows(int row, int count, QModelIndex const &parent) {
     Q_UNUSED(parent);
 
     if (mOrder != nullptr) {
-        if (rowCount() + count >= 256) {
+        if (rowCount() + count > trackerboy::Song::MAX_ORDERS) {
             return false;
         }
         
+        mCanSelect = false;
         beginInsertRows(parent, row, row + count - 1);
-        mOrder->insert(mOrder->cbegin() + row, count, { 0, 0, 0, 0 });
+        {
+            auto ctx = mDocument.beginEdit();
+            mOrder->insert(mOrder->cbegin() + row, count, { 0, 0, 0, 0 });
+        }
         endInsertRows();
+        mCanSelect = true;
+
+        if (mCurrentRow == rowCount() - 2) {
+            emit patternsChanged();
+        }
+        // enforce the current selection
+        emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+
+        updateActions();
+
         return true;
     }
     return false;
@@ -180,14 +199,34 @@ bool OrderModel::removeRows(int row, int count, QModelIndex const &parent) {
     Q_UNUSED(parent);
 
     if (mOrder != nullptr) {
-        if (rowCount() - count < 0) {
+        if (rowCount() - count <= 0) {
             return false;
         }
 
-        beginRemoveRows(parent, row, row + count - 1);
-        auto iter = mOrder->cbegin() + row;
-        mOrder->erase(iter, iter + count);
+        int rowEnd = row + count;
+
+        // ignore any selections during the remove
+        mCanSelect = false;
+        beginRemoveRows(parent, row, rowEnd - 1);
+        {
+            auto ctx = mDocument.beginEdit();
+            auto iter = mOrder->cbegin() + row;
+            mOrder->erase(iter, iter + count);
+        }
         endRemoveRows();
+        mCanSelect = true;
+
+        auto rows = rowCount();
+        if (mCurrentRow >= rows) {
+            selectPattern(rows - 1);
+        } else {
+            emit patternsChanged(); // redraw
+            // enforce the current selection
+            emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+        }
+
+        updateActions();
+
         return true;
     }
 
@@ -200,28 +239,33 @@ bool OrderModel::removeRows(int row, int count, QModelIndex const &parent) {
 // slots
 
 void OrderModel::insert() {
-    _insert({ 0, 0, 0, 0 });
+    insertRows(mCurrentRow, 1);
 }
 
 void OrderModel::remove() {
     removeRows(mCurrentRow, 1);
-    auto rows = rowCount();
-    if (rows == 1) {
-        mActions.remove->setEnabled(false);
-    } else if (rows == 254) {
-        mActions.insert->setEnabled(true);
-    }
-    mDocument.setModified(true);
 }
 
 void OrderModel::duplicate() {
-    _insert(mOrder->at(mCurrentRow));
+    mCanSelect = false;
+    beginInsertRows(QModelIndex(), mCurrentRow, mCurrentRow);
+    {
+        auto ctx = mDocument.beginEdit();
+        mOrder->insert(mOrder->cbegin() + mCurrentRow, mOrder->at(mCurrentRow));
+    }
+    endInsertRows();
+    mCanSelect = true;
+
+    updateActions();
 }
 
 void OrderModel::moveUp() {
     // moving a row up is just swapping the current row with the previous one
-    auto iter = mOrder->begin() + mCurrentRow;
-    std::iter_swap(iter, iter - 1);
+    {
+        auto ctx = mDocument.beginEdit();
+        auto iter = mOrder->begin() + mCurrentRow;
+        std::iter_swap(iter, iter - 1);
+    }
     emit dataChanged(
         createIndex(mCurrentRow - 1, 0, nullptr),
         createIndex(mCurrentRow, 3, nullptr),
@@ -231,8 +275,11 @@ void OrderModel::moveUp() {
 }
 
 void OrderModel::moveDown() {
-    auto iter = mOrder->begin() + mCurrentRow;
-    std::iter_swap(iter, iter + 1);
+    {
+        auto ctx = mDocument.beginEdit();
+        auto iter = mOrder->begin() + mCurrentRow;
+        std::iter_swap(iter, iter + 1);
+    }
     emit dataChanged(
         createIndex(mCurrentRow, 0, nullptr),
         createIndex(mCurrentRow + 1, 3, nullptr),
@@ -244,44 +291,61 @@ void OrderModel::moveDown() {
 // private methods
 
 template <OrderModel::ModifyMode mode>
-void OrderModel::modifySelection(uint8_t option, QItemSelection const &selection) {
-    mDocument.lock();
-    for (auto range : selection) {
-        for (auto const &index : range.indexes()) {
-            auto &id = (*mOrder)[index.row()].tracks[index.column()];
-            if constexpr (mode == ModifyMode::incdec) {
-                // incdec
-                if (option) {
-                    if (id != 255) {
-                        ++id;
-                    }
-                } else {
-                    if (id != 0) {
-                        --id;
-                    }
-                }
-            } else {
-                // set
-                id = option;
-            }
+void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option) {
+    auto ctx = mDocument.beginEdit();
 
+    if (selection.isEmpty()) {
+        // no selection, modify the current cell
+        auto &cell = (*mOrder)[mCurrentRow].tracks[mCurrentTrack];
+        modifyCell<mode>(cell, option);
+        auto cellIndex = createIndex(mCurrentRow, mCurrentTrack, nullptr);
+        emit dataChanged(cellIndex, cellIndex, { Qt::DisplayRole });
+    } else {
+
+        for (auto range : selection) {
+            for (auto const &index : range.indexes()) {
+                auto &id = (*mOrder)[index.row()].tracks[index.column()];
+                modifyCell<mode>(id, option);
+
+            }
+            emit dataChanged(range.topLeft(), range.bottomRight(), { Qt::DisplayRole });
         }
-        emit dataChanged(range.topLeft(), range.bottomRight(), { Qt::DisplayRole });
     }
-    mDocument.unlock();
 }
 
-void OrderModel::_insert(trackerboy::Order order) {
-    
-    beginInsertRows(QModelIndex(), mCurrentRow, mCurrentRow);
-    mOrder->insert(mOrder->cbegin() + mCurrentRow, order);
-    endInsertRows();
-
-    auto rows = rowCount();
-    if (rows == 2) {
-        mActions.remove->setEnabled(true);
-    } else if (rows == 255) {
-        mActions.insert->setEnabled(false);
+template <OrderModel::ModifyMode mode>
+void OrderModel::modifyCell(uint8_t &cell, uint8_t value) {
+    if constexpr (mode == ModifyMode::inc) {
+        Q_UNUSED(value);
+        if (cell != 255) {
+            ++cell;
+        }
+    } else if constexpr (mode == ModifyMode::dec) {
+        Q_UNUSED(value);
+        if (cell != 0) {
+            --cell;
+        }
+    } else {
+        cell = value;
     }
-    mDocument.setModified(true);
+}
+
+void OrderModel::updateActions() {
+    auto rows = rowCount();
+    if (mActions.insert) {
+        mActions.insert->setEnabled(rows != trackerboy::Song::MAX_ORDERS);
+    }
+    if (mActions.duplicate) {
+        mActions.duplicate->setEnabled(rows != trackerboy::Song::MAX_ORDERS);
+    }
+    if (mActions.remove) {
+        mActions.remove->setEnabled(rows != 1);
+    }
+    if (mActions.moveUp) {
+        mActions.moveUp->setEnabled(mCurrentRow != 0);
+    }
+    if (mActions.moveDown) {
+        mActions.moveDown->setEnabled(mCurrentRow != rows - 1);
+    }
+
 }

@@ -23,6 +23,8 @@ private slots:
     void calculateTempo();
     void calculateActualTempo(int value = 0);
 
+    void updatePatternSpin(const QModelIndex &parent, int first, int last);
+
 private:
     
 

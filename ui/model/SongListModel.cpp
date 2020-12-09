@@ -60,6 +60,19 @@ void SongListModel::setSpeed(int speed) {
     }
 }
 
+void SongListModel::setPatterns(int patterns) {
+    auto &curr = mSongVector[mCurrentIndex];
+    int currPatterns = mOrderModel->rowCount();
+    if (patterns > currPatterns) {
+        // grow
+        mOrderModel->insertRows(currPatterns, patterns - currPatterns);
+    } else if (patterns < currPatterns) {
+        // shrink
+        int amount = currPatterns - patterns;
+        mOrderModel->removeRows(currPatterns - amount, amount);
+    }
+}
+
 trackerboy::Song* SongListModel::currentSong() {
     return &mSongVector[mCurrentIndex];
 }

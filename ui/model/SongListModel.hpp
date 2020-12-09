@@ -28,6 +28,7 @@ public slots:
     void setRowsPerBeat(int rowsPerBeat);
     void setRowsPerMeasure(int rowsPerMeasure);
     void setSpeed(int speed);
+    void setPatterns(int patterns);
 
 
 protected:

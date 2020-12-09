@@ -46,6 +46,8 @@ public:
     // Tempo = 150, RPB = 4  => 6.0 frames per row
     static constexpr Speed DEFAULT_SPEED = 0x60;
 
+    static constexpr int MAX_ORDERS = 256;
+
     Song();
     Song(const Song &song);
 
