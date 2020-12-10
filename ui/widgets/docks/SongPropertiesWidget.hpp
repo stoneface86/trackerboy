@@ -9,6 +9,11 @@
 #include <QPushButton>
 #include <QRadioButton>
 
+//
+// Composite widget for the "Song Properties" dock. Contains settings for the
+// current song being edited. User can set the tempo, number of patterns and
+// size of a pattern.
+//
 class SongPropertiesWidget : public QWidget {
 
     Q_OBJECT

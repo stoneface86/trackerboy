@@ -205,6 +205,17 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
         mRepaintImage = true;
         update();
         });
+    connect(&model, &SongListModel::patternSizeChanged, this,
+        [this](int rows) {
+            if (mCursorRow >= rows) {
+                mCursorRow = rows - 1;
+                emit cursorRowChanged(mCursorRow);
+            }
+            setPatterns(mCursorPattern);
+            setPatternRect();
+            mRepaintImage = true;
+            update();
+        });
 
     setMouseTracking(true);
 
@@ -869,11 +880,15 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
         auto &pattern = mPatternNext.value();
 
         int nextRow = rowAdjusted - patternSize;
-        int rowsToPaint = std::min(remainder, static_cast<int>(pattern.totalRows()) - nextRow);
-        for (; rowsToPaint--; ) {
-            paintRow(painter, pattern[nextRow], nextRow, ypos);
-            ++nextRow;
-            ypos += mRowHeight;
+        int nextPatternSize = pattern.totalRows();
+        if (nextRow < nextPatternSize) {
+            int rowsToPaint = std::min(remainder, nextPatternSize - nextRow);
+            assert(rowsToPaint >= 0);
+            for (; rowsToPaint--; ) {
+                paintRow(painter, pattern[nextRow], nextRow, ypos);
+                ++nextRow;
+                ypos += mRowHeight;
+            }
         }
     }
 

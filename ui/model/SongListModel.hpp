@@ -24,11 +24,15 @@ public:
     OrderModel* orderModel() const;
 
 
+signals:
+    void patternSizeChanged(int rows);
+
 public slots:
     void setRowsPerBeat(int rowsPerBeat);
     void setRowsPerMeasure(int rowsPerMeasure);
     void setSpeed(int speed);
     void setPatterns(int patterns);
+    void setRowsPerPattern(int rows);
 
 
 protected:

@@ -52,6 +52,7 @@ SongPropertiesWidget::SongPropertiesWidget(SongListModel &model, QWidget *parent
     mTempoSpin->setSuffix(" BPM");
     mTempoActualEdit->setReadOnly(true);
     mPatternSpin->setRange(1, trackerboy::Song::MAX_ORDERS);
+    mRowsPerPatternSpin->setRange(1, 256);
 
     onSongChanged(mModel.currentIndex());
     calculateActualTempo();
@@ -66,6 +67,7 @@ SongPropertiesWidget::SongPropertiesWidget(SongListModel &model, QWidget *parent
     connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SongPropertiesWidget::calculateActualTempo);
     connect(mTempoCalcButton, &QPushButton::clicked, this, &SongPropertiesWidget::calculateTempo);
     connect(mPatternSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SongListModel::setPatterns);
+    connect(mRowsPerPatternSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SongListModel::setRowsPerPattern);
 
     auto orderModel = mModel.orderModel();
     connect(orderModel, &OrderModel::rowsInserted, this, &SongPropertiesWidget::updatePatternSpin);

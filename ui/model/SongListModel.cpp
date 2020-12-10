@@ -73,6 +73,18 @@ void SongListModel::setPatterns(int patterns) {
     }
 }
 
+void SongListModel::setRowsPerPattern(int rows) {
+    // DO NOT CALL THIS IF THE RENDERER IS PLAYING MUSIC
+    auto &pm = mSongVector[mCurrentIndex].patterns();
+    if (pm.rowSize() != rows) {
+        {
+            auto &ctx = mDocument.beginEdit();
+            pm.setRowSize(rows);
+        }
+        emit patternSizeChanged(rows);
+    }
+}
+
 trackerboy::Song* SongListModel::currentSong() {
     return &mSongVector[mCurrentIndex];
 }
