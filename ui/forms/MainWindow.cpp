@@ -450,9 +450,10 @@ void MainWindow::setupUi() {
     mDockWaveforms->setWidget(waveTableForm);
 
     // setup Songs dock
+    SongActions songActions = { mUi->actionNewSong, mUi->actionRemoveSong, mUi->actionNextSong, mUi->actionPreviousSong };
     mDockSongs = new QDockWidget(tr("Songs"), this);
     mDockSongs->setObjectName("mDockSongs");
-    auto songWidget = new SongWidget(mApp.songModel, mDockSongs);
+    auto songWidget = new SongWidget(mApp.songModel, songActions, mDockSongs);
     mDockSongs->setWidget(songWidget);
 
     // module properties dock
