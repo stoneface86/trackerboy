@@ -37,9 +37,6 @@ public slots:
     void setData(const QString &text);
 
     void clear();
-    void invert();
-    void rotateLeft();
-    void rotateRight();
 
     
 protected:
