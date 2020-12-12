@@ -2,41 +2,47 @@
 
 #include <QPainter>
 
-constexpr int STEP_X = 12;
-constexpr int STEP_Y = 12;
-
-constexpr int PLOT_WIDTH = STEP_X * 32;
-constexpr int PLOT_HEIGHT = STEP_Y * 16;
 
 
-WaveGraph::WaveGraph(QWidget *parent) :
-    mModel(nullptr),
+constexpr int PADDING_X = 4;
+constexpr int PADDING_Y = 4;
+
+constexpr int MIN_WIDTH = 8 * 32 + (PADDING_X * 2);
+constexpr int MIN_HEIGHT = 12 * 16 + (PADDING_Y * 2);
+
+WaveGraph::WaveGraph(WaveListModel &model, QWidget *parent) :
+    mModel(model),
     mDragging(false),
     mCurX(0),
     mCurY(0),
     mPlotAxisColor(0x8E, 0x8E, 0x8E),
     mPlotGridColor(0x20, 0x20, 0x20),
-    mPlotLineColor(0xF0, 0xF0, 0xF0),
+    mPlotLineColor(0xC0, 0xC0, 0xC0),
     mPlotSampleColor(0xFF, 0xFF, 0xFF),
-    mPlotRect(0, 0, PLOT_WIDTH, PLOT_HEIGHT),
+    mPlotRect(),
+    mCellWidth(0),
+    mCellHeight(0),
+    mMouseOver(false),
     mData{ 0 },
     QFrame(parent)
 {
     calcGraph();
     setMouseTracking(true);
-    //setFixedSize(400, 200);
-}
+    setMinimumSize(MIN_WIDTH, MIN_HEIGHT);
 
+    // black background
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window, Qt::black);
+    setAutoFillBackground(true);
+    setPalette(pal);
 
-void WaveGraph::setModel(WaveListModel *model) {
-    mModel = model;
-    connect(mModel, &WaveListModel::currentIndexChanged, this,
-        [this](int index) { 
+    connect(&model, &WaveListModel::currentIndexChanged, this,
+        [this](int index) {
             if (index != -1) {
                 waveformUpdated();
             }
         });
-    connect(mModel, QOverload<>::of(&WaveListModel::waveformChanged), this, &WaveGraph::waveformUpdated);
+    connect(&model, qOverload<>(&WaveListModel::waveformChanged), this, &WaveGraph::waveformUpdated);
 }
 
 
@@ -45,42 +51,37 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
 
     QPainter painter(this);
 
-    auto r = rect();
+    // transform to make painting easier
+    painter.translate(QPoint(mPlotRect.x(), height() - mPlotRect.y()));
+    painter.scale(1.0, -1.0);
 
-    painter.fillRect(r, QColor(0, 0, 0));
+    int const cPlotwidth = mPlotRect.width();
 
-
-    int const xaxis = mPlotRect.left();
-    int const yaxis = mPlotRect.bottom();
-
+    // axis
     painter.setPen(mPlotAxisColor);
-    painter.drawLine(xaxis, yaxis, mPlotRect.right(), yaxis);
+    painter.drawLine(0, 0, cPlotwidth, 0);
 
+    // lines
     painter.setPen(mPlotGridColor);
-    int yline = yaxis;
+    int yline = 0;
     for (int i = 0; i != 15; ++i) {
-        yline -= STEP_Y;
-        painter.drawLine(xaxis, yline, mPlotRect.right(), yline);
+        yline += mCellHeight;
+        painter.drawLine(0, yline, cPlotwidth, yline);
     }
 
+    painter.setPen(mPlotSampleColor);
+    
+    // cursor
+    if (mMouseOver) {
+        painter.drawRect(mCurX * mCellWidth, mCurY * mCellHeight, mCellWidth, mCellHeight);
+    }
+
+    // samples
     QBrush brush(mPlotLineColor);
     painter.setBrush(brush);
-    painter.setPen(mPlotSampleColor);
-
-    int x = xaxis + 1;
-    for (int i = 0; i != 32; ++i) {
-
-        uint8_t sample = mData[i];
-
-        if (sample) {
-            int y = ((16 - sample) * STEP_Y) + mPlotRect.top();
-            painter.drawRect(x, y, STEP_X - 2, yaxis - y - 1);
-        } else {
-            painter.drawLine(x, yaxis, x + STEP_X - 2, yaxis);
-        }
-
-        x += STEP_X;
-        
+    
+    for (int i = 0, x = 0; i != 32; ++i, x += mCellWidth) {
+        painter.drawRect(x, mData[i] * mCellHeight, mCellWidth, mCellHeight);
     }
 
 }
@@ -89,10 +90,9 @@ void WaveGraph::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
         mDragging = true;
         mData[mCurX] = mCurY;
-        if (mModel != nullptr) {
-            mModel->setSample(QPoint(mCurX, mCurY));
-        }
-        repaint();
+        mModel.setSample(QPoint(mCurX, mCurY));
+        
+        update();
     }
 }
 
@@ -115,7 +115,7 @@ void WaveGraph::mouseMoveEvent(QMouseEvent *evt) {
     } else if (mx > mPlotRect.right()) {
         newX = 31;
     } else {
-        newX = static_cast<uint8_t>((mx - mPlotRect.x()) / STEP_X);
+        newX = static_cast<uint8_t>((mx - mPlotRect.x()) / mCellWidth);
     }
 
     if (my < mPlotRect.y()) {
@@ -123,7 +123,7 @@ void WaveGraph::mouseMoveEvent(QMouseEvent *evt) {
     } else if (my > mPlotRect.bottom()) {
         newY = 0;
     } else {
-        newY = 0xF - static_cast<uint8_t>((my - mPlotRect.y() - (STEP_Y / 2)) / STEP_Y);
+        newY = 0xF - static_cast<uint8_t>((my - mPlotRect.y()) / mCellHeight);
     }
 
     if (mCurX != newX || mCurY != newY) {
@@ -133,39 +133,56 @@ void WaveGraph::mouseMoveEvent(QMouseEvent *evt) {
         if (mDragging) {
             if (mData[mCurX] != mCurY) {
                 mData[mCurX] = mCurY;
-                if (mModel != nullptr) {
-                    mModel->setSample(QPoint(mCurX, mCurY));
-                }
-                repaint();
+                mModel.setSample(QPoint(mCurX, mCurY));
+                
+                
             }
         }
+        mMouseOver = true;
+        update();
     }
 
 }
 
 void WaveGraph::leaveEvent(QEvent *evt) {
-    (void)evt;
+    Q_UNUSED(evt);
+
     emit coordsTextChanged("");
+    mMouseOver = false;
+    update();
 }
 
 void WaveGraph::resizeEvent(QResizeEvent *evt) {
-    (void)evt;
+    Q_UNUSED(evt);
+
     calcGraph();
-    repaint();
 }
 
 void WaveGraph::waveformUpdated() {
-    auto wavedata = mModel->currentWaveform()->data();
+    auto wavedata = mModel.currentWaveform()->data();
     for (int i = 0, j = 0; i != 16; ++i) {
         uint8_t sample = wavedata[i];
         mData[j++] = sample >> 4;
         mData[j++] = sample & 0xF;
     }
-    repaint();
+    update();
 }
 
 
 void WaveGraph::calcGraph() {
+
+    int cellwidth = (width() - (PADDING_X * 2)) / 32;
+    if (mCellWidth != cellwidth) {
+        mPlotRect.setWidth(cellwidth * 32);
+        mCellWidth = cellwidth;
+    }
+
+    int cellheight = (height() - (PADDING_Y * 2)) / 16;
+    if (mCellHeight != cellheight) {
+        mPlotRect.setHeight(cellheight * 16);
+        mCellHeight = cellheight;
+    }
+
     // re-center plot rectangle
     mPlotRect.moveCenter(rect().center());
 }

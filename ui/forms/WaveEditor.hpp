@@ -4,14 +4,17 @@
 #include "model/ModuleDocument.hpp"
 #include "model/WaveListModel.hpp"
 #include "widgets/PianoWidget.hpp"
+#include "widgets/WaveGraph.hpp"
 
+#include <QBoxLayout>
+#include <QComboBox>
 #include <QDialog>
+#include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
 
 #include <array>
-
-namespace Ui {
-class WaveEditor;
-}
 
 class WaveEditor : public QDialog {
 
@@ -39,16 +42,22 @@ private:
 
     void updateWaveramText();
 
-    void setFromPreset(Preset preset);
-
-    Ui::WaveEditor *mUi;
+    //void setFromPreset(Preset preset);
 
     WaveListModel &mModel;
-
     bool mIgnoreNextUpdate;
 
+    // widgets
+    // indentation is used to show parent/child relationships
 
-    
-
-
+    QBoxLayout mLayout;
+        QBoxLayout mCoordsLayout;
+            QLabel mCoordsLabel;
+            QComboBox mWaveCombo;
+        WaveGraph mGraph;
+        QGroupBox mWaveramGroup;
+            QBoxLayout mWaveramLayout;
+                QLineEdit mWaveramEdit;
+                QPushButton mClearButton;
+        PianoWidget mPiano;
 };

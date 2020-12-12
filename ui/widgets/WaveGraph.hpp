@@ -15,9 +15,7 @@ class WaveGraph : public QFrame {
     Q_OBJECT
 
 public:
-    WaveGraph(QWidget *parent = nullptr);
-
-    void setModel(WaveListModel *model);
+    WaveGraph(WaveListModel &model, QWidget *parent = nullptr);
 
 signals:
     // when the mouse is within the widget, this signal is emitted whenever
@@ -43,7 +41,7 @@ private:
     // resize the plot rectangle
     void calcGraph();
     
-    WaveListModel *mModel;
+    WaveListModel &mModel;
 
     // true when the left mouse button is down
     bool mDragging;
@@ -60,6 +58,10 @@ private:
 
     // boundary of the plot, centered within the widget
     QRect mPlotRect;
+
+    int mCellWidth;
+    int mCellHeight;
+    bool mMouseOver;
     
     std::array<uint8_t, 32> mData;
 
