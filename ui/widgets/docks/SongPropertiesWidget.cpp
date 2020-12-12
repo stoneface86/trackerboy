@@ -5,6 +5,7 @@
 #include <QGridLayout>
 
 #include <algorithm>
+#include <cmath>
 
 SongPropertiesWidget::SongPropertiesWidget(SongListModel &model, QWidget *parent) :
     QWidget(parent),
@@ -98,7 +99,7 @@ void SongPropertiesWidget::calculateTempo() {
     // TODO: get the framerate set in the module
     float speed = (trackerboy::Gbs::FRAMERATE_GB * 60.0f) / (mTempoSpin->value() * mRowsPerBeatSpin->value());
     // convert to fixed point
-    int speedFixed = std::clamp(static_cast<int>(std::roundf(speed * 16.0f)), (int)trackerboy::SPEED_MIN, (int)trackerboy::SPEED_MAX);
+    int speedFixed = std::clamp(static_cast<int>(roundf(speed * 16.0f)), (int)trackerboy::SPEED_MIN, (int)trackerboy::SPEED_MAX);
     mSpeedSpin->setValue(speedFixed);
 
 }

@@ -78,7 +78,7 @@ void SongListModel::setRowsPerPattern(int rows) {
     auto &pm = mSongVector[mCurrentIndex].patterns();
     if (pm.rowSize() != rows) {
         {
-            auto &ctx = mDocument.beginEdit();
+            auto ctx = mDocument.beginEdit();
             pm.setRowSize(rows);
         }
         emit patternSizeChanged(rows);
