@@ -69,7 +69,7 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
         painter.drawLine(0, yline, cPlotwidth, yline);
     }
 
-    painter.setPen(mPlotSampleColor);
+    painter.setPen(mPlotLineColor);
     
     // cursor
     if (mMouseOver) {
@@ -77,7 +77,7 @@ void WaveGraph::paintEvent(QPaintEvent *evt) {
     }
 
     // samples
-    QBrush brush(mPlotLineColor);
+    QBrush brush(mPlotSampleColor);
     painter.setBrush(brush);
     
     for (int i = 0, x = 0; i != 32; ++i, x += mCellWidth) {
