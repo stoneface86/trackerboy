@@ -177,9 +177,8 @@ void MainWindow::windowResetLayout() {
     // toolbars
     // just add them in order to the top toolbar area
 
-    std::array<QToolBar*, 4> toolbarArray = {
+    std::array toolbarArray = {
         mUi->toolbarFile,
-        mUi->toolbarOrder,
         mUi->toolbarTracker,
         mSongToolbar
     };
@@ -188,7 +187,7 @@ void MainWindow::windowResetLayout() {
         addToolBar(Qt::ToolBarArea::TopToolBarArea, toolbar);
     }
 
-    std::array<QDockWidget*, 6> dockArray = {
+    std::array dockArray = {
         mDockSongProperties,
         mDockModuleProperties,
         mDockSongs,
@@ -342,13 +341,6 @@ void MainWindow::setupConnections() {
     connect(mUi->actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
     // Module
     connect(mUi->actionNewSong, &QAction::triggered, &mApp.songModel, &SongListModel::add);
-    // Order
-    auto orderModel = mApp.songModel.orderModel();
-    connect(mUi->actionInsertOrder, &QAction::triggered, orderModel, &OrderModel::insert);
-    connect(mUi->actionRemoveOrder, &QAction::triggered, orderModel, &OrderModel::remove);
-    connect(mUi->actionDuplicateOrder, &QAction::triggered, orderModel, &OrderModel::duplicate);
-    connect(mUi->actionMoveOrderUp, &QAction::triggered, orderModel, &OrderModel::moveUp);
-    connect(mUi->actionMoveOrderDown, &QAction::triggered, orderModel, &OrderModel::moveDown);
 
 
     QApplication::connect(mUi->actionAboutQt, &QAction::triggered, &QApplication::aboutQt);
@@ -402,7 +394,7 @@ void MainWindow::setupUi() {
 
     // toolbar icons
     Tileset tileset(QImage(":/icons/toolbar.png"), TOOLBAR_ICON_WIDTH, TOOLBAR_ICON_HEIGHT);
-    QList<QToolBar*> toolbars = { mUi->toolbarFile, mUi->toolbarOrder, mUi->toolbarTracker, mSongToolbar};
+    QList<QToolBar*> toolbars = { mUi->toolbarFile, mUi->toolbarTracker, mSongToolbar};
 
     for (int i = 0, iconIndex = 0; i != toolbars.size(); ++i) {
         auto toolbar = toolbars.at(i);
@@ -471,18 +463,10 @@ void MainWindow::setupUi() {
     // setup Orders dock
     
     
-    OrderActions orderActions = {
-        mUi->actionInsertOrder,
-        mUi->actionRemoveOrder,
-        mUi->actionDuplicateOrder,
-        mUi->actionMoveOrderUp,
-        mUi->actionMoveOrderDown
-    };
     auto orderModel = mApp.songModel.orderModel();
-    orderModel->setActions(orderActions);
     mDockOrders = new QDockWidget(tr("Orders"), this);
     mDockOrders->setObjectName("mDockOrders");
-    auto orderWidget = new OrderWidget(*orderModel, mUi->menuOrder, mDockOrders);
+    auto orderWidget = new OrderWidget(*orderModel, mDockOrders);
     mDockOrders->setWidget(orderWidget);
 
     addDockWidget(Qt::TopDockWidgetArea, mDockInstruments);
@@ -497,8 +481,12 @@ void MainWindow::setupUi() {
 
     // MENUS =================================================================
 
+    auto menu = orderWidget->createMenu(this);
+    menu->setTitle(tr("Order"));
+    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
+
     // add the context menu for instruments list view to our menubar
-    auto menu = instrumentTableForm->menu();
+    menu = instrumentTableForm->menu();
     menu->setTitle("Instrument");
     mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
     // same thing but for waveforms

@@ -61,7 +61,6 @@ qt5_wrap_ui(UI_DESIGNER
     "designer/EnvelopeForm.ui"
     "designer/MainWindow.ui"
     "designer/ModulePropertiesWidget.ui"
-    "designer/OrderWidget.ui"
     "designer/InstrumentEditor.ui"
 )
 

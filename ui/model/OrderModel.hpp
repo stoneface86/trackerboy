@@ -4,7 +4,6 @@
 #include "trackerboy/data/Order.hpp"
 
 #include "model/ModuleDocument.hpp"
-#include "misc/OrderActions.hpp"
 
 #include <QAbstractTableModel>
 #include <QItemSelection>
@@ -17,9 +16,10 @@ class OrderModel : public QAbstractTableModel {
     Q_OBJECT
 
 public:
+
     explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
     ~OrderModel() = default;
-    
+
     //
     // All track ids in the given selection are incremented by 1
     //
@@ -31,12 +31,6 @@ public:
     void decrementSelection(QItemSelection const &selection);
     
     void select(int row, int track);
-    
-    //
-    // Set the OrderActions struct, the model will enable/disable actions
-    // based on the underlying data
-    //
-    void setActions(OrderActions actions);
     
     //
     // Change the model's order data. Should only be called by SongListModel.
@@ -79,6 +73,12 @@ signals:
     
     void patternsChanged();
 
+    // connect these signals to QAction::setEnabled
+    void canInsert(bool state);
+    void canRemove(bool state);
+    void canMoveUp(bool state);
+    void canMoveDown(bool state);
+
 public slots:
     void insert();
 
@@ -107,13 +107,9 @@ private:
     template <ModifyMode mode>
     void modifyCell(uint8_t &cell, uint8_t value);
 
-    void updateActions();
-
     ModuleDocument &mDocument;
 
     std::vector<trackerboy::Order> *mOrder;
-
-    OrderActions mActions;
 
     int mCurrentRow;
     int mCurrentTrack;

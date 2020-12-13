@@ -105,17 +105,6 @@
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
    </widget>
-   <widget class="QMenu" name="menuOrder">
-    <property name="title">
-     <string>Order</string>
-    </property>
-    <addaction name="actionInsertOrder"/>
-    <addaction name="actionRemoveOrder"/>
-    <addaction name="actionDuplicateOrder"/>
-    <addaction name="separator"/>
-    <addaction name="actionMoveOrderUp"/>
-    <addaction name="actionMoveOrderDown"/>
-   </widget>
    <widget class="QMenu" name="menuModule">
     <property name="title">
      <string>Module</string>
@@ -129,7 +118,6 @@
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuModule"/>
-   <addaction name="menuOrder"/>
    <addaction name="menuTracker"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -157,28 +145,6 @@
    <addaction name="actionCut"/>
    <addaction name="actionCopy"/>
    <addaction name="actionPaste"/>
-  </widget>
-  <widget class="QToolBar" name="toolbarOrder">
-   <property name="windowTitle">
-    <string>Order toolbar</string>
-   </property>
-   <property name="iconSize">
-    <size>
-     <width>16</width>
-     <height>16</height>
-    </size>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionInsertOrder"/>
-   <addaction name="actionRemoveOrder"/>
-   <addaction name="actionMoveOrderUp"/>
-   <addaction name="actionMoveOrderDown"/>
-   <addaction name="actionDuplicateOrder"/>
   </widget>
   <widget class="QToolBar" name="toolbarTracker">
    <property name="windowTitle">

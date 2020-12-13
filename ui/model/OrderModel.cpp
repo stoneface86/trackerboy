@@ -1,6 +1,8 @@
 
 #include "model/OrderModel.hpp"
 
+#include <QColor>
+
 #include <algorithm>
 
 
@@ -45,13 +47,9 @@ void OrderModel::selectPattern(int pattern) {
             { Qt::BackgroundRole });
         emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
         emit currentPatternChanged(pattern);
-    }
-    
-    if (mActions.moveUp) {
-        mActions.moveUp->setEnabled(mCurrentRow != 0);
-    }
-    if (mActions.moveDown) {
-        mActions.moveDown->setEnabled(mCurrentRow != rowCount() - 1);
+
+        emit canMoveUp(pattern != 0);
+        emit canMoveDown(pattern != rowCount() - 1);
     }
 }
 
@@ -72,11 +70,6 @@ void OrderModel::selectTrack(int track) {
         emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
         emit currentTrackChanged(track);
     }
-}
-
-void OrderModel::setActions(OrderActions actions) {
-    mActions = actions;
-    updateActions();
 }
 
 void OrderModel::setOrder(std::vector<trackerboy::Order> *order) {
@@ -182,13 +175,17 @@ bool OrderModel::insertRows(int row, int count, QModelIndex const &parent) {
         endInsertRows();
         mCanSelect = true;
 
-        if (mCurrentRow == rowCount() - 2) {
+        int rows = rowCount();
+        if (mCurrentRow == rows - 2) {
             emit patternsChanged();
         }
         // enforce the current selection
         emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
 
-        updateActions();
+        emit canMoveUp(mCurrentRow != 0);
+        emit canMoveDown(mCurrentRow != rows - 1);
+        emit canRemove(true);
+        emit canInsert(rows != trackerboy::Song::MAX_ORDERS);
 
         return true;
     }
@@ -223,9 +220,14 @@ bool OrderModel::removeRows(int row, int count, QModelIndex const &parent) {
             emit patternsChanged(); // redraw
             // enforce the current selection
             emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+
+            emit canMoveUp(mCurrentRow != 0);
+            emit canMoveDown(mCurrentRow != rows - 1);
         }
 
-        updateActions();
+        // we can always insert after a remove
+        emit canInsert(true);
+        emit canRemove(rows != 1);
 
         return true;
     }
@@ -255,8 +257,6 @@ void OrderModel::duplicate() {
     }
     endInsertRows();
     mCanSelect = true;
-
-    updateActions();
 }
 
 void OrderModel::moveUp() {
@@ -328,24 +328,4 @@ void OrderModel::modifyCell(uint8_t &cell, uint8_t value) {
     } else {
         cell = value;
     }
-}
-
-void OrderModel::updateActions() {
-    auto rows = rowCount();
-    if (mActions.insert) {
-        mActions.insert->setEnabled(rows != trackerboy::Song::MAX_ORDERS);
-    }
-    if (mActions.duplicate) {
-        mActions.duplicate->setEnabled(rows != trackerboy::Song::MAX_ORDERS);
-    }
-    if (mActions.remove) {
-        mActions.remove->setEnabled(rows != 1);
-    }
-    if (mActions.moveUp) {
-        mActions.moveUp->setEnabled(mCurrentRow != 0);
-    }
-    if (mActions.moveDown) {
-        mActions.moveDown->setEnabled(mCurrentRow != rows - 1);
-    }
-
 }
