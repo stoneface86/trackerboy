@@ -1,13 +1,13 @@
 
 #pragma once
 
+#include <QCheckBox>
+#include <QFormLayout>
+#include <QSpinBox>
 #include <QWidget>
 
 #include <cstdint>
 
-namespace Ui {
-    class EnvelopeForm;
-}
 
 class EnvelopeForm : public QWidget {
 
@@ -28,8 +28,12 @@ private slots:
     void updateEnvelope(int value);
 
 private:
-    Ui::EnvelopeForm *mUi;
     bool mIgnoreChanges;
     uint8_t mEnvelope;
+
+    QFormLayout mLayout;
+        QSpinBox mInitVolumeSpin;
+        QCheckBox mIncreasingCheckbox;
+        QSpinBox mPeriodSpin;
 
 };
