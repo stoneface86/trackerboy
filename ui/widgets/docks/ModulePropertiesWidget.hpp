@@ -1,11 +1,11 @@
 
 #pragma once
 
+#include <QBoxLayout>
+#include <QLineEdit>
+#include <QPlainTextEdit>
 #include <QWidget>
 
-namespace Ui {
-class ModulePropertiesWidget;
-}
 
 class ModulePropertiesWidget : public QWidget {
 
@@ -17,6 +17,11 @@ public:
 
 
 private:
-    Ui::ModulePropertiesWidget *mUi;
+
+    QBoxLayout mLayout;
+        QLineEdit mTitleEdit;
+        QLineEdit mArtistEdit;
+        QLineEdit mCopyrightEdit;
+        QPlainTextEdit mCommentsEdit;
 
 };

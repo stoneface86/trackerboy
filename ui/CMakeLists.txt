@@ -59,7 +59,6 @@ set(UI_SRC
 qt5_wrap_ui(UI_DESIGNER
     "designer/ConfigDialog.ui"
     "designer/MainWindow.ui"
-    "designer/ModulePropertiesWidget.ui"
     "designer/InstrumentEditor.ui"
 )
 
