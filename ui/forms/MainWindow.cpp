@@ -147,19 +147,6 @@ bool MainWindow::fileSaveAs() {
     return false;
 }
 
-void MainWindow::moduleRemoveSong() {
-
-    auto result = QMessageBox::question(this,
-        "Trackerboy",
-        "Do you want to remove this song? There is no undo for this action"
-    );
-
-    if (result == QMessageBox::Yes) {
-        mApp.songModel.remove();
-    }
-
-}
-
 void MainWindow::windowResetLayout() {
 
     // this slot will reset all docks and toolbars to the default layout
@@ -337,10 +324,7 @@ void MainWindow::setupConnections() {
     connectAction(actionSave, fileSave);
     connectAction(actionSaveAs, fileSaveAs);
     connectAction(actionQuit, close);
-    connectAction(actionRemoveSong, moduleRemoveSong);
     connect(mUi->actionConfiguration, &QAction::triggered, mConfigDialog, &QDialog::show);
-    // Module
-    connect(mUi->actionNewSong, &QAction::triggered, &mApp.songModel, &SongListModel::add);
 
 
     QApplication::connect(mUi->actionAboutQt, &QAction::triggered, &QApplication::aboutQt);
@@ -442,10 +426,9 @@ void MainWindow::setupUi() {
     mDockWaveforms->setWidget(waveTableForm);
 
     // setup Songs dock
-    SongActions songActions = { mUi->actionNewSong, mUi->actionRemoveSong, mUi->actionNextSong, mUi->actionPreviousSong };
     mDockSongs = new QDockWidget(tr("Songs"), this);
     mDockSongs->setObjectName("mDockSongs");
-    auto songWidget = new SongWidget(mApp.songModel, songActions, mDockSongs);
+    auto songWidget = new SongWidget(mApp.songModel, mDockSongs);
     mDockSongs->setWidget(songWidget);
 
     // module properties dock
@@ -481,18 +464,25 @@ void MainWindow::setupUi() {
 
     // MENUS =================================================================
 
-    auto menu = orderWidget->createMenu(this);
+    auto trackerMenuAction = mUi->menuTracker->menuAction();
+
+    auto menu = new QMenu(this);
+    menu->setTitle(tr("Song"));
+    songWidget->setupMenu(*menu);
+    mUi->menubar->insertMenu(trackerMenuAction, menu);
+
+    menu = orderWidget->createMenu(this);
     menu->setTitle(tr("Order"));
-    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
+    mUi->menubar->insertMenu(trackerMenuAction, menu);
 
     // add the context menu for instruments list view to our menubar
     menu = instrumentTableForm->menu();
     menu->setTitle("Instrument");
-    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
+    mUi->menubar->insertMenu(trackerMenuAction, menu);
     // same thing but for waveforms
     menu = waveTableForm->menu();
     menu->setTitle("Waveform");
-    mUi->menubar->insertMenu(mUi->menuTracker->menuAction(), menu);
+    mUi->menubar->insertMenu(trackerMenuAction, menu);
 
     // add the popup menu to menubar
     QMenu *windowMenu = createPopupMenu();

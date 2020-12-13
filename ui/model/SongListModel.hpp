@@ -19,7 +19,7 @@ public:
 
     QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
 
-    virtual QString name() override;
+    virtual QString nameAt(int index) override;
 
     OrderModel* orderModel() const;
 
@@ -46,7 +46,7 @@ protected:
 
     virtual void dataDuplicate(int row) override;
 
-    virtual void dataRename(const QString &name) override;
+    virtual void dataRename(int index, const QString &name) override;
 
     virtual int nextIndex() override;
 

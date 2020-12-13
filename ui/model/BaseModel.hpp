@@ -23,7 +23,9 @@ public:
     void setEnabled(bool enabled);
 
     // get the name of the current index
-    virtual QString name() = 0;
+    QString name();
+
+    virtual QString nameAt(int index) = 0;
 
     // set the name of the current index
     //void setName(QString name);
@@ -36,10 +38,13 @@ public slots:
     void add();
     // removes the current selected item, the next available item is selected
     void remove();
+    void remove(int index);
 
     void duplicate();
+    void duplicate(int index);
 
     void rename(const QString &name);
+    void rename(int index, const QString &name);
 
     void select(int index);
     void select(const QModelIndex &index);
@@ -50,7 +55,7 @@ signals:
 protected:
     BaseModel(ModuleDocument &document);
 
-    virtual void dataRename(const QString &name) = 0;
+    virtual void dataRename(int index, const QString &name) = 0;
 
     virtual int nextIndex() = 0;
     virtual void dataAdd() = 0;
@@ -66,7 +71,6 @@ protected:
     ModuleDocument &mDocument;
 
     int mCurrentIndex;
-    //bool mEnabled;
 
     QAction *mActNew;
     QAction *mActRemove;
@@ -77,5 +81,6 @@ private:
 
     void updateActions();
 
+    bool mCanSelect;
 
 };

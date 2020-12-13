@@ -38,7 +38,6 @@ private slots:
     void fileOpen();
     bool fileSave();
     bool fileSaveAs();
-    void moduleRemoveSong();
     void windowResetLayout();
 
     // config changes

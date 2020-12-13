@@ -11,7 +11,8 @@ BaseModel::BaseModel(ModuleDocument &document) :
     mActNew(nullptr),
     mActRemove(nullptr),
     mActDuplicate(nullptr),
-    mActEdit(nullptr)
+    mActEdit(nullptr),
+    mCanSelect(true)
 {
 }
 
@@ -21,28 +22,41 @@ int BaseModel::currentIndex() const {
 
 void BaseModel::add() {
     int row = nextIndex();
+
+    mCanSelect = false;
     beginInsertRows(QModelIndex(), row, row);
 
-    mDocument.lock();
-    dataAdd();
-    mDocument.unlock();
-
+    {
+        auto ctx = mDocument.beginEdit();
+        dataAdd();
+    }
     endInsertRows();
+    mCanSelect = true;
+
     // select the newly inserted row
     select(row);
-    mDocument.setModified(true);
+}
+
+QString BaseModel::name() {
+    return nameAt(mCurrentIndex);
 }
 
 void BaseModel::remove() {
-    int row = mCurrentIndex;
-    
-    beginRemoveRows(QModelIndex(), row, row);
+    remove(mCurrentIndex);
+}
 
-    mDocument.lock();
-    dataRemove(row);
-    mDocument.unlock();
+void BaseModel::remove(int index) {
+    
+    mCanSelect = false;
+    beginRemoveRows(QModelIndex(), index, index);
+
+    {
+        auto ctx = mDocument.beginEdit();
+        dataRemove(index);
+    }
 
     endRemoveRows();
+    mCanSelect = true;
 
     // current index remains the same unless it is equivalent to the new row count
 
@@ -64,35 +78,48 @@ void BaseModel::remove() {
     //
     // mCurrentIndex was 2 and is now 1
 
-    select(rowCount() == row ? row - 1 : row);
-    mDocument.setModified(true);
+    if (index == mCurrentIndex && index == rowCount()) {
+        select(index - 1);
+    }
 }
 
 void BaseModel::duplicate() {
-    int row = nextIndex();
-    int rowToDuplicate = mCurrentIndex;
+    duplicate(mCurrentIndex);
+}
 
+void BaseModel::duplicate(int index) {
+    int row = nextIndex();
+
+    mCanSelect = false;
     beginInsertRows(QModelIndex(), row, row);
 
-    mDocument.lock();
-    dataDuplicate(rowToDuplicate);
-    mDocument.unlock();
-
+    {
+        auto ctx = mDocument.beginEdit();
+        dataDuplicate(index);
+    }
     endInsertRows();
+    mCanSelect = true;
+
     // select the newly duplicated row
     select(row);
     
-    mDocument.setModified(true);
 }
 
 void BaseModel::rename(const QString &name) {
-    dataRename(name);
-    mDocument.setModified(true);
+    rename(mCurrentIndex, name);
+}
+
+void BaseModel::rename(int index, const QString &name) {
+    {
+        auto ctx = mDocument.beginEdit();
+        dataRename(index, name);
+    }
+    
     emit dataChanged(createIndex(mCurrentIndex, 0, nullptr), createIndex(mCurrentIndex, 0, nullptr), { Qt::DisplayRole });
 }
 
 void BaseModel::select(int index) {
-    if (mCurrentIndex != index) {
+    if (mCanSelect && mCurrentIndex != index) {
         mCurrentIndex = index;
         dataSelected(index);
         emit currentIndexChanged(index);

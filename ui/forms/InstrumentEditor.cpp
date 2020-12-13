@@ -34,7 +34,7 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
     connect(mUi->mChannelCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InstrumentEditor::onChannelSelect);
     connect(mUi->mInstrumentCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), &mInstrumentModel, QOverload<int>::of(&InstrumentListModel::select));
 
-    connect(mUi->mNameEdit, &QLineEdit::textEdited, &instModel, &InstrumentListModel::rename);
+    connect(mUi->mNameEdit, &QLineEdit::textEdited, &instModel, qOverload<const QString&>(&InstrumentListModel::rename));
 
     connect(mUi->mPanningCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index) {
             if (!mIgnoreChanged) {

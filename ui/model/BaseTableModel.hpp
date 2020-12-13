@@ -16,7 +16,7 @@ public:
 
     QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
 
-    virtual QString name() override;
+    virtual QString nameAt(int index) override;
 
 protected:
     BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table);
@@ -29,7 +29,7 @@ protected:
 
     virtual QVariant iconData(const QModelIndex &index) const = 0;
 
-    virtual void dataRename(const QString &name) override;
+    virtual void dataRename(int index, const QString &name) override;
 
     virtual bool canAdd() override;
 

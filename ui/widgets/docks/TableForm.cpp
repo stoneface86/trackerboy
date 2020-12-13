@@ -86,12 +86,12 @@ TableForm::TableForm(BaseTableModel &model, QWidget *editor, QString editorShort
     auto selectModel = mListView->selectionModel();
     connect(selectModel, &QItemSelectionModel::currentChanged, this, &TableForm::viewCurrentChanged);
     connect(&mModel, &BaseTableModel::currentIndexChanged, this, &TableForm::modelCurrentChanged);
-    connect(mNameEdit, &QLineEdit::textEdited, &mModel, &BaseTableModel::rename);
+    connect(mNameEdit, &QLineEdit::textEdited, &mModel, qOverload<const QString&>(&BaseTableModel::rename));
 
     // actions
     connect(mActAdd, &QAction::triggered, &mModel, &BaseTableModel::add);
-    connect(mActRemove, &QAction::triggered, &mModel, &BaseTableModel::remove);
-    connect(mActDuplicate, &QAction::triggered, &mModel, &BaseTableModel::duplicate);
+    connect(mActRemove, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::remove));
+    connect(mActDuplicate, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::duplicate));
 
     // TODO: connect import action
     // TODO: connect export action

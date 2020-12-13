@@ -24,9 +24,8 @@ QVariant SongListModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
-
-QString SongListModel::name() {
-    return QString::fromStdString(mSongVector[mCurrentIndex].name());
+QString SongListModel::nameAt(int index) {
+    return QString::fromStdString(mSongVector[index].name());
 }
 
 OrderModel* SongListModel::orderModel() const {
@@ -111,8 +110,8 @@ void SongListModel::dataDuplicate(int row) {
     mSongVector.emplace_back(mSongVector[row]);
 }
 
-void SongListModel::dataRename(const QString &name) {
-    mSongVector[mCurrentIndex].setName(name.toStdString());
+void SongListModel::dataRename(int index, const QString &name) {
+    mSongVector[index].setName(name.toStdString());
 }
 
 int SongListModel::nextIndex() {

@@ -105,19 +105,8 @@
     <addaction name="actionAbout"/>
     <addaction name="actionAboutQt"/>
    </widget>
-   <widget class="QMenu" name="menuModule">
-    <property name="title">
-     <string>Module</string>
-    </property>
-    <addaction name="actionNewSong"/>
-    <addaction name="actionRemoveSong"/>
-    <addaction name="separator"/>
-    <addaction name="actionNextSong"/>
-    <addaction name="actionPreviousSong"/>
-   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
-   <addaction name="menuModule"/>
    <addaction name="menuTracker"/>
    <addaction name="menuHelp"/>
   </widget>

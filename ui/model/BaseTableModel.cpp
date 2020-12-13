@@ -68,10 +68,10 @@ int BaseTableModel::nextIndex() {
     return mBaseTable.nextModelId();
 }
 
-QString BaseTableModel::name() {
-    return QString::fromStdString(mBaseTable.getFromOrder(static_cast<uint8_t>(mCurrentIndex))->name());
+QString BaseTableModel::nameAt(int index) {
+    return QString::fromStdString(mBaseTable.getFromOrder(static_cast<uint8_t>(index))->name());
 }
 
-void BaseTableModel::dataRename(const QString &name) {
-    mBaseTable.getFromOrder(static_cast<uint8_t>(mCurrentIndex))->setName(name.toStdString());
+void BaseTableModel::dataRename(int index, const QString &name) {
+    mBaseTable.getFromOrder(static_cast<uint8_t>(index))->setName(name.toStdString());
 }
