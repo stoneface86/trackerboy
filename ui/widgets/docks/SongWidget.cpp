@@ -1,6 +1,8 @@
 
 #include "widgets/docks/SongWidget.hpp"
 
+#include "misc/IconManager.hpp"
+
 #include <QMessageBox>
 
 
@@ -17,8 +19,8 @@ SongWidget::SongWidget(SongListModel &model, QWidget *parent) :
     mActionAdd(tr("Add song")),
     mActionRemove(tr("Remove song")),
     mActionDuplicate(tr("Duplicate song")),
-    mActionMoveUp(tr("Move up")),
-    mActionMoveDown(tr("Move down"))
+    mActionMoveUp(tr("Move song up")),
+    mActionMoveDown(tr("Move song down"))
 {
     setObjectName(QStringLiteral("SongWidget"));
     mSongList.setModel(&model);
@@ -27,6 +29,7 @@ SongWidget::SongWidget(SongListModel &model, QWidget *parent) :
     mLayout.addWidget(&mSongList, 0, 0);
 
     mToolbar.setOrientation(Qt::Vertical);
+    mToolbar.setIconSize(QSize(16, 16));
     mToolbar.addAction(&mActionAdd);
     mToolbar.addAction(&mActionRemove);
     mToolbar.addAction(&mActionDuplicate);
@@ -45,10 +48,15 @@ SongWidget::SongWidget(SongListModel &model, QWidget *parent) :
 
     // actions
     mActionAdd.setStatusTip(tr("Adds a new song to the module"));
+    mActionAdd.setIcon(IconManager::getIcon(Icons::itemAdd));
     mActionRemove.setStatusTip(tr("Removes the selected song from the module"));
+    mActionRemove.setIcon(IconManager::getIcon(Icons::itemRemove));
     mActionDuplicate.setStatusTip(tr("Makes a copy of the selected song"));
+    mActionDuplicate.setIcon(IconManager::getIcon(Icons::itemDuplicate));
     mActionMoveUp.setStatusTip(tr("Move the song up in the list"));
+    mActionMoveUp.setIcon(IconManager::getIcon(Icons::moveUp));
     mActionMoveDown.setStatusTip(tr("Move the song down in the list"));
+    mActionMoveDown.setIcon(IconManager::getIcon(Icons::moveDown));
 
     mActionRemove.setEnabled(false);
     mActionDuplicate.setEnabled(false);

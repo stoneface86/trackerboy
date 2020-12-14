@@ -1,6 +1,8 @@
 
 #include "widgets/docks/OrderWidget.hpp"
 
+#include "misc/IconManager.hpp"
+
 #include <QFontDatabase>
 #include <QHeaderView>
 #include <QtDebug>
@@ -40,25 +42,25 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     mSetEdit.setMaxLength(2);
 
     // actions
-    mActions.insert = new QAction(tr("&Insert order"), this);
+    mActions.insert = new QAction(IconManager::getIcon(Icons::itemAdd), tr("&Insert order"), this);
     connect(mActions.insert, &QAction::triggered, &model, &OrderModel::insert);
     connect(&model, &OrderModel::canInsert, mActions.insert, &QAction::setEnabled);
 
-    mActions.remove = new QAction(tr("&Remove order"), this);
+    mActions.remove = new QAction(IconManager::getIcon(Icons::itemRemove), tr("&Remove order"), this);
     mActions.remove->setEnabled(false);
     connect(mActions.remove, &QAction::triggered, &model, &OrderModel::remove);
     connect(&model, &OrderModel::canRemove, mActions.remove, &QAction::setEnabled);
 
-    mActions.duplicate = new QAction(tr("&Duplicate order"), this);
+    mActions.duplicate = new QAction(IconManager::getIcon(Icons::itemDuplicate), tr("&Duplicate order"), this);
     connect(mActions.duplicate, &QAction::triggered, &model, &OrderModel::duplicate);
     connect(&model, &OrderModel::canInsert, mActions.duplicate, &QAction::setEnabled);
 
-    mActions.moveUp = new QAction(tr("Move order &up"), this);
+    mActions.moveUp = new QAction(IconManager::getIcon(Icons::moveUp), tr("Move order &up"), this);
     mActions.moveUp->setEnabled(false);
     connect(mActions.moveUp, &QAction::triggered, &model, &OrderModel::moveUp);
     connect(&model, &OrderModel::canMoveUp, mActions.moveUp, &QAction::setEnabled);
 
-    mActions.moveDown = new QAction(tr("Move order &down"), this);
+    mActions.moveDown = new QAction(IconManager::getIcon(Icons::moveDown), tr("Move order &down"), this);
     mActions.moveDown->setEnabled(false);
     connect(mActions.moveDown, &QAction::triggered, &model, &OrderModel::moveDown);
     connect(&model, &OrderModel::canMoveDown, mActions.moveDown, &QAction::setEnabled);
