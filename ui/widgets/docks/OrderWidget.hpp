@@ -2,11 +2,13 @@
 
 #include "model/OrderModel.hpp"
 
-#include <QBoxLayout>
+#include <QAction>
+#include <QHBoxLayout>
 #include <QLineEdit>
 #include <QMenu>
 #include <QPushButton>
 #include <QTableView>
+#include <QVBoxLayout>
 #include <QWidget>
 
 
@@ -19,23 +21,10 @@ class OrderWidget : public QWidget {
 
 public:
 
-    //
-    // Container for QActions used within this widget
-    //
-    struct Actions {
-
-        QAction *insert = nullptr;
-        QAction *remove = nullptr;
-        QAction *duplicate = nullptr;
-        QAction *moveUp = nullptr;
-        QAction *moveDown = nullptr;
-
-    };
-
     OrderWidget(OrderModel &model, QWidget *parent = nullptr);
     ~OrderWidget();
 
-    QMenu* createMenu(QWidget *parent = nullptr);
+    void setupMenu(QMenu &menu);
 
 private slots:
 
@@ -50,11 +39,15 @@ private slots:
 private:
     OrderModel &mModel;
 
-    QMenu *mContextMenu;
-    Actions mActions;
+    QMenu mContextMenu;
+    QAction mActionInsert;
+    QAction mActionRemove;
+    QAction mActionDuplicate;
+    QAction mActionMoveUp;
+    QAction mActionMoveDown;
 
-    QBoxLayout mLayout;
-        QBoxLayout mLayoutOperations;
+    QVBoxLayout mLayout;
+        QHBoxLayout mLayoutOperations;
             QPushButton mIncrementButton;
             QPushButton mDecrementButton;
             QLineEdit mSetEdit;

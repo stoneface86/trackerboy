@@ -458,13 +458,12 @@ void MainWindow::setupUi() {
 
     auto trackerMenuAction = mUi->menuTracker->menuAction();
 
-    auto menu = new QMenu(this);
-    menu->setTitle(tr("Song"));
+    auto menu = new QMenu(tr("Song"), this);
     songWidget->setupMenu(*menu);
     mUi->menubar->insertMenu(trackerMenuAction, menu);
 
-    menu = orderWidget->createMenu(this);
-    menu->setTitle(tr("Order"));
+    menu = new QMenu(tr("Order"), this);
+    orderWidget->setupMenu(*menu);
     mUi->menubar->insertMenu(trackerMenuAction, menu);
 
     // add the context menu for instruments list view to our menubar

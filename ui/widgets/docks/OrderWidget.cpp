@@ -11,17 +11,20 @@
 OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
-    mContextMenu(nullptr),
-    mActions(),
-    mLayout(QBoxLayout::TopToBottom),
-    mLayoutOperations(QBoxLayout::LeftToRight),
+    mContextMenu(),
+    mActionInsert(IconManager::getIcon(Icons::itemAdd), tr("&Insert order")),
+    mActionRemove(IconManager::getIcon(Icons::itemRemove), tr("&Remove order")),
+    mActionDuplicate(IconManager::getIcon(Icons::itemDuplicate), tr("&Duplicate order")),
+    mActionMoveUp(IconManager::getIcon(Icons::moveUp), tr("Move order &up")),
+    mActionMoveDown(IconManager::getIcon(Icons::moveDown), tr("Move order &down")),
+    mLayout(),
+    mLayoutOperations(),
     mIncrementButton(QStringLiteral("+")),
     mDecrementButton(QStringLiteral("-")),
     mSetEdit(QStringLiteral("00")),
     mSetButton(tr("Set")),
     mOrderView()
 {
-    
 
     // layout
     mLayoutOperations.addWidget(&mIncrementButton);
@@ -40,33 +43,34 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
 
     mSetEdit.setInputMask(QStringLiteral("HH"));
     mSetEdit.setMaxLength(2);
+    
+    mActionRemove.setEnabled(false);
+    mActionMoveUp.setEnabled(false);
+    mActionMoveDown.setEnabled(false);
 
     // actions
-    mActions.insert = new QAction(IconManager::getIcon(Icons::itemAdd), tr("&Insert order"), this);
-    connect(mActions.insert, &QAction::triggered, &model, &OrderModel::insert);
-    connect(&model, &OrderModel::canInsert, mActions.insert, &QAction::setEnabled);
+    mActionInsert.setStatusTip(tr("Inserts a new order at the current pattern"));
+    connect(&mActionInsert, &QAction::triggered, &model, &OrderModel::insert);
+    connect(&model, &OrderModel::canInsert, &mActionInsert, &QAction::setEnabled);
 
-    mActions.remove = new QAction(IconManager::getIcon(Icons::itemRemove), tr("&Remove order"), this);
-    mActions.remove->setEnabled(false);
-    connect(mActions.remove, &QAction::triggered, &model, &OrderModel::remove);
-    connect(&model, &OrderModel::canRemove, mActions.remove, &QAction::setEnabled);
+    mActionRemove.setStatusTip(tr("Removes the order at the current pattern"));
+    connect(&mActionRemove, &QAction::triggered, &model, &OrderModel::remove);
+    connect(&model, &OrderModel::canRemove, &mActionRemove, &QAction::setEnabled);
 
-    mActions.duplicate = new QAction(IconManager::getIcon(Icons::itemDuplicate), tr("&Duplicate order"), this);
-    connect(mActions.duplicate, &QAction::triggered, &model, &OrderModel::duplicate);
-    connect(&model, &OrderModel::canInsert, mActions.duplicate, &QAction::setEnabled);
+    mActionDuplicate.setStatusTip(tr("Duplicates the order at the current pattern"));
+    connect(&mActionDuplicate, &QAction::triggered, &model, &OrderModel::duplicate);
+    connect(&model, &OrderModel::canInsert, &mActionDuplicate, &QAction::setEnabled);
 
-    mActions.moveUp = new QAction(IconManager::getIcon(Icons::moveUp), tr("Move order &up"), this);
-    mActions.moveUp->setEnabled(false);
-    connect(mActions.moveUp, &QAction::triggered, &model, &OrderModel::moveUp);
-    connect(&model, &OrderModel::canMoveUp, mActions.moveUp, &QAction::setEnabled);
+    mActionMoveUp.setStatusTip(tr("Moves the order up 1"));
+    connect(&mActionMoveUp, &QAction::triggered, &model, &OrderModel::moveUp);
+    connect(&model, &OrderModel::canMoveUp, &mActionMoveUp, &QAction::setEnabled);
 
-    mActions.moveDown = new QAction(IconManager::getIcon(Icons::moveDown), tr("Move order &down"), this);
-    mActions.moveDown->setEnabled(false);
-    connect(mActions.moveDown, &QAction::triggered, &model, &OrderModel::moveDown);
-    connect(&model, &OrderModel::canMoveDown, mActions.moveDown, &QAction::setEnabled);
+    mActionMoveDown.setStatusTip(tr("Moves the order down 1"));
+    connect(&mActionMoveDown, &QAction::triggered, &model, &OrderModel::moveDown);
+    connect(&model, &OrderModel::canMoveDown, &mActionMoveDown, &QAction::setEnabled);
 
     // menu
-    mContextMenu = createMenu(this);
+    setupMenu(mContextMenu);
 
 
     mOrderView.setModel(&model);
@@ -101,15 +105,13 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
 OrderWidget::~OrderWidget() {
 }
 
-QMenu* OrderWidget::createMenu(QWidget *parent) {
-    auto menu = new QMenu(parent);
-    menu->addAction(mActions.insert);
-    menu->addAction(mActions.remove);
-    menu->addAction(mActions.duplicate);
-    menu->addSeparator();
-    menu->addAction(mActions.moveUp);
-    menu->addAction(mActions.moveDown);
-    return menu;
+void OrderWidget::setupMenu(QMenu &menu) {
+    menu.addAction(&mActionInsert);
+    menu.addAction(&mActionRemove);
+    menu.addAction(&mActionDuplicate);
+    menu.addSeparator();
+    menu.addAction(&mActionMoveUp);
+    menu.addAction(&mActionMoveDown);
 }
 
 void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
@@ -140,6 +142,6 @@ void OrderWidget::set() {
 }
 
 void OrderWidget::tableViewContextMenu(QPoint pos) {
-    mContextMenu->popup(mOrderView.viewport()->mapToGlobal(pos));
+    mContextMenu.popup(mOrderView.viewport()->mapToGlobal(pos));
 }
 
