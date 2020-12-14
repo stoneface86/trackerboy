@@ -397,11 +397,11 @@ void MainWindow::setupUi() {
     mDockInstruments->setObjectName("mDockInstruments");
     TableForm *instrumentTableForm = new TableForm(
         mApp.instrumentModel,
-        mInstrumentEditor,
-        "Ctrl-I",
-        "instrument",
+        tr("Ctrl+I"),
+        tr("instrument"),
         mDockInstruments
     );
+    connect(instrumentTableForm, &TableForm::showEditor, mInstrumentEditor, &InstrumentEditor::show);
     mDockInstruments->setWidget(instrumentTableForm);
     
 
@@ -410,11 +410,11 @@ void MainWindow::setupUi() {
     mDockWaveforms->setObjectName("mDockWaveforms");
     TableForm *waveTableForm = new TableForm(
         mApp.waveModel,
-        mWaveEditor,
-        "Ctrl-W",
-        "waveform",
+        tr("Ctrl+W"),
+        tr("waveform"),
         mDockWaveforms
     );
+    connect(waveTableForm, &TableForm::showEditor, mWaveEditor, &WaveEditor::show);
     mDockWaveforms->setWidget(waveTableForm);
 
     // setup Songs dock
@@ -468,12 +468,12 @@ void MainWindow::setupUi() {
     mUi->menubar->insertMenu(trackerMenuAction, menu);
 
     // add the context menu for instruments list view to our menubar
-    menu = instrumentTableForm->menu();
-    menu->setTitle("Instrument");
+    menu = new QMenu(tr("Instrument"), this);
+    instrumentTableForm->setupMenu(*menu);
     mUi->menubar->insertMenu(trackerMenuAction, menu);
     // same thing but for waveforms
-    menu = waveTableForm->menu();
-    menu->setTitle("Waveform");
+    menu = new QMenu(tr("Waveform"), this);
+    waveTableForm->setupMenu(*menu);
     mUi->menubar->insertMenu(trackerMenuAction, menu);
 
     // add the popup menu to menubar

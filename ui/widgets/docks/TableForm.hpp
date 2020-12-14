@@ -1,13 +1,16 @@
+
 #pragma once
 
-#include <QWidget>
-#include <QDialog>
+#include "model/BaseTableModel.hpp"
+
+#include <QAction>
+#include <QHBoxLayout>
 #include <QMenu>
 #include <QLineEdit>
 #include <QListView>
-
-
-#include "model/BaseTableModel.hpp"
+#include <QToolBar>
+#include <QVBoxLayout>
+#include <QWidget>
 
 //
 // Widget containing a list view, toolbar and line edit for the wave and
@@ -16,11 +19,16 @@
 //
 class TableForm : public QWidget {
 
+    Q_OBJECT
+
 public:
-    TableForm(BaseTableModel &model, QWidget *editor, QString editorShortcut, QString typeName, QWidget *parent = nullptr);
+    TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString typeName, QWidget *parent = nullptr);
     ~TableForm() = default;
 
-    QMenu* menu() const;
+    void setupMenu(QMenu &menu);
+
+signals:
+    void showEditor();
 
 private slots:
     void viewCurrentChanged(const QModelIndex &current, const QModelIndex &prev);
@@ -31,20 +39,23 @@ private slots:
 
 private:
     BaseTableModel &mModel;
-    QMenu *mMenu;
-    QWidget *mEditor;
+    
 
-    // widgets
-    QListView *mListView;
-    QLineEdit *mNameEdit;
+    QVBoxLayout mLayout;
+        QHBoxLayout mToolbarLayout;
+            QToolBar mToolbar;
+            QLineEdit mNameEdit;
+        QListView mListView;
+
+    QMenu mContextMenu;    
 
     // actions
-    QAction *mActAdd = nullptr;
-    QAction *mActRemove = nullptr;
-    QAction *mActDuplicate = nullptr;
-    QAction *mActImport = nullptr;
-    QAction *mActExport = nullptr;
-    QAction *mActEdit = nullptr;
+    QAction mActionAdd;
+    QAction mActionRemove;
+    QAction mActionDuplicate;
+    QAction mActionImport;
+    QAction mActionExport;
+    QAction mActionEdit;
 
     
 

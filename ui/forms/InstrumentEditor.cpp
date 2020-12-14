@@ -191,7 +191,9 @@ void InstrumentEditor::onChannelSelect(int channel) {
 }
 
 void InstrumentEditor::currentInstrumentChanged(int index) {
-    if (index != -1) {
+    if (index == -1) {
+        close();
+    } else {
         mUi->mInstrumentCombo->setCurrentIndex(index);
         mUi->mNameEdit->setText(mInstrumentModel.name());
 

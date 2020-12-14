@@ -7,115 +7,114 @@
 
 #include <QPainter>
 
-constexpr int ICON_WIDTH = 16;
-constexpr int ICON_HEIGHT = 16;
 
-
-TableForm::TableForm(BaseTableModel &model, QWidget *editor, QString editorShortcut, QString typeName, QWidget *parent) :
+TableForm::TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString typeName, QWidget *parent) :
+    QWidget(parent),
     mModel(model),
-    mEditor(editor),
-    mMenu(new QMenu(this)),
-    mListView(new QListView()),
-    mNameEdit(new QLineEdit()),
-    QWidget(parent)
+    mLayout(),
+    mToolbarLayout(),
+    mToolbar(),
+    mNameEdit(),
+    mListView(),
+    mContextMenu()
 {
-    mNameEdit->setEnabled(false);
+    // layout
+    mToolbarLayout.addWidget(&mToolbar);
+    mToolbarLayout.addWidget(&mNameEdit, 1);
+    mLayout.addLayout(&mToolbarLayout);
+    mLayout.addWidget(&mListView);
+    setLayout(&mLayout);
+
+
+    mNameEdit.setEnabled(false);
 
     
+    // actions
+    mActionAdd.setText(tr("Add"));
+    mActionAdd.setIcon(IconManager::getIcon(Icons::itemAdd));
+    mActionAdd.setStatusTip(tr("Adds a new %1").arg(typeName));
+    mActionRemove.setText(tr("Remove"));
+    mActionRemove.setIcon(IconManager::getIcon(Icons::itemRemove));
+    mActionRemove.setStatusTip(tr("Removes the current %1").arg(typeName));
+    mActionDuplicate.setText(tr("Duplicate"));
+    mActionDuplicate.setIcon(IconManager::getIcon(Icons::itemDuplicate));
+    mActionDuplicate.setStatusTip(tr("Adds a copy of the current %1").arg(typeName));
+    mActionImport.setText(tr("Import"));
+    mActionImport.setIcon(IconManager::getIcon(Icons::itemImport));
+    mActionImport.setStatusTip(tr("Import %1 from a file").arg(typeName));
+    mActionExport.setText(tr("Export"));
+    mActionExport.setIcon(IconManager::getIcon(Icons::itemExport));
+    mActionExport.setStatusTip(tr("Export %1 to a file").arg(typeName));
+    mActionEdit.setText(tr("Edit"));
+    mActionEdit.setIcon(IconManager::getIcon(Icons::itemEdit));
+    mActionEdit.setStatusTip(tr("Edit the current %1").arg(typeName));
+    mActionEdit.setShortcut(editorShortcut);
 
-    mActAdd = mMenu->addAction(tr("Add"));
-    mActAdd->setIcon(IconManager::getIcon(Icons::itemAdd));
-    mActAdd->setStatusTip(QString("Adds a new %1").arg(typeName));
-    mActRemove = mMenu->addAction(tr("Remove"));
-    mActRemove->setIcon(IconManager::getIcon(Icons::itemRemove));
-    mActRemove->setStatusTip(QString("Removes the current %1").arg(typeName));
-    mActDuplicate = mMenu->addAction(tr("Duplicate"));
-    mActDuplicate->setIcon(IconManager::getIcon(Icons::itemDuplicate));
-    mActDuplicate->setStatusTip(QString("Adds a copy of the current %1").arg(typeName));
-    mMenu->addSeparator();
-    mActImport = mMenu->addAction(tr("Import"));
-    mActImport->setIcon(IconManager::getIcon(Icons::itemImport));
-    mActImport->setStatusTip(QString("Import %1 from a file").arg(typeName));
-    mActExport = mMenu->addAction(tr("Export"));
-    mActExport->setIcon(IconManager::getIcon(Icons::itemExport));
-    mActExport->setStatusTip(QString("Export %1 to a file").arg(typeName));
-    mMenu->addSeparator();
-    mActEdit = mMenu->addAction(tr("Edit"));
-    mActEdit->setIcon(IconManager::getIcon(Icons::itemEdit));
-    mActEdit->setStatusTip(QString("Edit the current %1").arg(typeName));
+    setupMenu(mContextMenu);
 
-    auto toolbar = new QToolBar();
-    toolbar->addAction(mActAdd);
-    toolbar->addAction(mActRemove);
-    toolbar->addAction(mActDuplicate);
-    toolbar->addAction(mActImport);
-    toolbar->addAction(mActExport);
-    toolbar->addAction(mActEdit);
-    toolbar->setIconSize(QSize(ICON_WIDTH, ICON_HEIGHT));
+    mToolbar.addAction(&mActionAdd);
+    mToolbar.addAction(&mActionRemove);
+    mToolbar.addAction(&mActionDuplicate);
+    mToolbar.addAction(&mActionImport);
+    mToolbar.addAction(&mActionExport);
+    mToolbar.addAction(&mActionEdit);
+    mToolbar.setIconSize(QSize(16, 16));
 
-
-    auto layout = new QVBoxLayout();
-    auto toolbarLayout = new QHBoxLayout();
-    toolbarLayout->addWidget(toolbar, 0);
-    toolbarLayout->addWidget(mNameEdit, 1);
-    layout->addLayout(toolbarLayout);
-    layout->addWidget(mListView);
-    setLayout(layout);
-
-    mActRemove->setEnabled(false);
-    mActDuplicate->setEnabled(false);
-    mActEdit->setEnabled(false);
+    mActionRemove.setEnabled(false);
+    mActionDuplicate.setEnabled(false);
+    mActionEdit.setEnabled(false);
     // disable these until we add support for them
-    mActImport->setEnabled(false);
-    mActExport->setEnabled(false);
+    mActionImport.setEnabled(false);
+    mActionExport.setEnabled(false);
 
-    mListView->setWrapping(true);
-    mListView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-    connect(mListView, &QListView::customContextMenuRequested, this, &TableForm::viewContextMenu);
+    mListView.setWrapping(true);
+    mListView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+    connect(&mListView, &QListView::customContextMenuRequested, this, &TableForm::viewContextMenu);
 
-    mModel.setActions(mActAdd, mActRemove, mActDuplicate, mActEdit);
-    mListView->setModel(&mModel);
-    auto selectModel = mListView->selectionModel();
+    mModel.setActions(&mActionAdd, &mActionRemove, &mActionDuplicate, &mActionEdit);
+    mListView.setModel(&mModel);
+    auto selectModel = mListView.selectionModel();
     connect(selectModel, &QItemSelectionModel::currentChanged, this, &TableForm::viewCurrentChanged);
     connect(&mModel, &BaseTableModel::currentIndexChanged, this, &TableForm::modelCurrentChanged);
-    connect(mNameEdit, &QLineEdit::textEdited, &mModel, qOverload<const QString&>(&BaseTableModel::rename));
+    connect(&mNameEdit, &QLineEdit::textEdited, &mModel, qOverload<const QString&>(&BaseTableModel::rename));
 
     // actions
-    connect(mActAdd, &QAction::triggered, &mModel, &BaseTableModel::add);
-    connect(mActRemove, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::remove));
-    connect(mActDuplicate, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::duplicate));
+    connect(&mActionAdd, &QAction::triggered, &mModel, &BaseTableModel::add);
+    connect(&mActionRemove, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::remove));
+    connect(&mActionDuplicate, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::duplicate));
+    connect(&mActionEdit, &QAction::triggered, this, &TableForm::showEditor);
 
     // TODO: connect import action
     // TODO: connect export action
 
-    mEditor = editor;
-    connect(mActEdit, &QAction::triggered, editor, &QWidget::show);
-    connect(mListView, &QListView::doubleClicked, this,
+    connect(&mListView, &QListView::doubleClicked, this,
         [this](const QModelIndex &index) {
             (void)index;
-            mEditor->show();
+            emit showEditor();
         });
-
-    mActEdit->setShortcut(QKeySequence(editorShortcut));
-
-    
 
 }
 
-QMenu* TableForm::menu() const {
-    return mMenu;
+void TableForm::setupMenu(QMenu &menu) {
+    menu.addAction(&mActionAdd);
+    menu.addAction(&mActionRemove);
+    menu.addAction(&mActionDuplicate);
+    menu.addSeparator();
+    menu.addAction(&mActionImport);
+    menu.addAction(&mActionExport);
+    menu.addSeparator();
+    menu.addAction(&mActionEdit);
 }
 
 void TableForm::modelCurrentChanged(int index) {
     if (index == -1) {
-        mNameEdit->setEnabled(false);
-        mNameEdit->setText("");
-        mEditor->setVisible(false);
+        mNameEdit.setEnabled(false);
+        mNameEdit.clear();
     } else {
-        mNameEdit->setEnabled(true);
-        mNameEdit->setText(mModel.name());
+        mNameEdit.setEnabled(true);
+        mNameEdit.setText(mModel.name());
     }
-    mListView->setCurrentIndex(mModel.index(index));
+    mListView.setCurrentIndex(mModel.index(index));
 }
 
 void TableForm::viewCurrentChanged(const QModelIndex &current, const QModelIndex &prev) {
@@ -124,6 +123,6 @@ void TableForm::viewCurrentChanged(const QModelIndex &current, const QModelIndex
 }
 
 void TableForm::viewContextMenu(const QPoint &pos) {
-    mMenu->popup(mListView->viewport()->mapToGlobal(pos));
+    mContextMenu.popup(mListView.viewport()->mapToGlobal(pos));
 }
 

@@ -86,7 +86,9 @@ PianoWidget* WaveEditor::piano() {
 
 // when the user changes mWaveSelect or is set from the MainWindow
 void WaveEditor::selectionChanged(int index) {
-    if (index != -1) {
+    if (index == -1) {
+        close();
+    } else {
         mWaveCombo.setCurrentIndex(index);
         updateWaveramText();
     }
