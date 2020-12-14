@@ -3,11 +3,12 @@
 
 #include "model/SongListModel.hpp"
 
-#include <QWidget>
+#include <QFormLayout>
 #include <QLineEdit>
-#include <QSpinBox>
 #include <QPushButton>
-#include <QRadioButton>
+#include <QSpinBox>
+#include <QWidget>
+
 
 //
 // Composite widget for the "Song Properties" dock. Contains settings for the
@@ -35,15 +36,16 @@ private:
 
     SongListModel &mModel;
 
-
-    QSpinBox *mRowsPerBeatSpin;
-    QSpinBox *mRowsPerMeasureSpin;
-    QSpinBox *mSpeedSpin;
-    QSpinBox *mTempoSpin;
-    QPushButton *mTempoCalcButton;
-    QLineEdit *mTempoActualEdit;
-    QSpinBox *mPatternSpin;
-    QSpinBox *mRowsPerPatternSpin;
+    QFormLayout mLayout;
+        QSpinBox mRowsPerBeatSpin;
+        QSpinBox mRowsPerMeasureSpin;
+        QGridLayout mLayoutSpeed;
+            QSpinBox mSpeedSpin;            // 0, 0
+            QLineEdit mTempoActualEdit;     // 0, 1
+            QSpinBox mTempoSpin;            // 1, 0
+            QPushButton mTempoCalcButton;   // 1, 1    
+        QSpinBox mPatternSpin;
+        QSpinBox mRowsPerPatternSpin;
 
 
 };
