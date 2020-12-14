@@ -8,10 +8,6 @@ BaseModel::BaseModel(ModuleDocument &document) :
     QAbstractListModel(),
     mDocument(document),
     mCurrentIndex(-1),
-    mActNew(nullptr),
-    mActRemove(nullptr),
-    mActDuplicate(nullptr),
-    mActEdit(nullptr),
     mCanSelect(true)
 {
 }
@@ -33,6 +29,11 @@ void BaseModel::add() {
     endInsertRows();
     mCanSelect = true;
 
+    bool _canAdd = canAdd();
+    emit addEnable(_canAdd);
+    emit duplicateEnable(_canAdd);
+    emit removeEnable(true);
+
     // select the newly inserted row
     select(row);
 }
@@ -49,12 +50,10 @@ void BaseModel::remove(int index) {
     
     mCanSelect = false;
     beginRemoveRows(QModelIndex(), index, index);
-
     {
         auto ctx = mDocument.beginEdit();
         dataRemove(index);
     }
-
     endRemoveRows();
     mCanSelect = true;
 
@@ -78,6 +77,10 @@ void BaseModel::remove(int index) {
     //
     // mCurrentIndex was 2 and is now 1
 
+    emit addEnable(true);
+    emit removeEnable(canRemove());
+    emit duplicateEnable(rowCount() != 0);
+
     if (index == mCurrentIndex && index == rowCount()) {
         select(index - 1);
     }
@@ -99,6 +102,11 @@ void BaseModel::duplicate(int index) {
     }
     endInsertRows();
     mCanSelect = true;
+
+    bool _canAdd = canAdd();
+    emit addEnable(_canAdd);
+    emit duplicateEnable(_canAdd);
+    emit removeEnable(true); // can always remove after adding
 
     // select the newly duplicated row
     select(row);
@@ -123,7 +131,6 @@ void BaseModel::select(int index) {
         mCurrentIndex = index;
         dataSelected(index);
         emit currentIndexChanged(index);
-        updateActions();
     }
     
 }
@@ -135,9 +142,14 @@ void BaseModel::select(const QModelIndex &index) {
 void BaseModel::setEnabled(bool enabled) {
     if (enabled) {
         endResetModel();
-        if (rowCount() > 0) {
+        bool notEmpty = rowCount() > 0;
+        if (notEmpty) {
             select(0);
         }
+        bool _canAdd = canAdd();
+        emit addEnable(_canAdd);
+        emit removeEnable(canRemove());
+        emit duplicateEnable(_canAdd && notEmpty);
     } else {
         beginResetModel();
         select(-1);
@@ -148,29 +160,3 @@ void BaseModel::dataSelected(int index) {
     (void)index; // do nothing
 }
 
-void BaseModel::setActions(QAction *actNew, QAction *actRemove, QAction *actDuplicate, QAction *actEdit) {
-    mActNew = actNew;
-    mActRemove = actRemove;
-    mActDuplicate = actDuplicate;
-    mActEdit = actEdit;
-    updateActions();
-}
-
-void BaseModel::updateActions() {
-    bool hasSelection = mCurrentIndex != -1;
-    if (mActNew != nullptr) {
-        mActNew->setEnabled(canAdd());
-    }
-
-    if (mActRemove != nullptr) {
-        mActRemove->setEnabled(hasSelection && canRemove());
-    }
-
-    if (mActDuplicate != nullptr) {
-        mActDuplicate->setEnabled(hasSelection && canAdd());
-    }
-
-    if (mActEdit != nullptr) {
-        mActEdit->setEnabled(hasSelection);
-    }
-}

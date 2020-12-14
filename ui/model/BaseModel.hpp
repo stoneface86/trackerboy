@@ -27,11 +27,6 @@ public:
 
     virtual QString nameAt(int index) = 0;
 
-    // set the name of the current index
-    //void setName(QString name);
-
-    void setActions(QAction *actNew, QAction *actRemove, QAction *actDuplicate, QAction *actEdit);
-
 public slots:
 
     // adds a new item, if there was no items prior then this one is selected
@@ -51,6 +46,9 @@ public slots:
 
 signals:
     void currentIndexChanged(int index);
+    void addEnable(bool state);
+    void removeEnable(bool state);
+    void duplicateEnable(bool state);
 
 protected:
     BaseModel(ModuleDocument &document);
@@ -72,14 +70,7 @@ protected:
 
     int mCurrentIndex;
 
-    QAction *mActNew;
-    QAction *mActRemove;
-    QAction *mActDuplicate;
-    QAction *mActEdit;
-
 private:
-
-    void updateActions();
 
     bool mCanSelect;
 

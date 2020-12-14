@@ -47,12 +47,8 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     // apply the read in configuration
     onConfigApplied(ConfigDialog::CategoryAll);
 
-
     // new documents have an empty string for a filename
     setFilename("");
-    
-    // associate menu actions with the model
-    mApp.songModel.setActions(mUi->actionNewSong, mUi->actionRemoveSong, nullptr, nullptr);
 
     QIcon appIcon;
     appIcon.addFile(":/icons/app/appicon-16.png");

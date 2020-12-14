@@ -71,7 +71,6 @@ TableForm::TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString
     mListView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(&mListView, &QListView::customContextMenuRequested, this, &TableForm::viewContextMenu);
 
-    mModel.setActions(&mActionAdd, &mActionRemove, &mActionDuplicate, &mActionEdit);
     mListView.setModel(&mModel);
     auto selectModel = mListView.selectionModel();
     connect(selectModel, &QItemSelectionModel::currentChanged, this, &TableForm::viewCurrentChanged);
@@ -86,6 +85,11 @@ TableForm::TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString
 
     // TODO: connect import action
     // TODO: connect export action
+
+    connect(&mModel, &BaseTableModel::addEnable, &mActionAdd, &QAction::setEnabled);
+    connect(&mModel, &BaseTableModel::duplicateEnable, &mActionDuplicate, &QAction::setEnabled);
+    connect(&mModel, &BaseTableModel::removeEnable, &mActionRemove, &QAction::setEnabled);
+
 
     connect(&mListView, &QListView::doubleClicked, this,
         [this](const QModelIndex &index) {
@@ -107,12 +111,15 @@ void TableForm::setupMenu(QMenu &menu) {
 }
 
 void TableForm::modelCurrentChanged(int index) {
-    if (index == -1) {
-        mNameEdit.setEnabled(false);
-        mNameEdit.clear();
-    } else {
-        mNameEdit.setEnabled(true);
+
+    bool hasCurrent = index != -1;
+    mNameEdit.setEnabled(hasCurrent);
+    mActionEdit.setEnabled(hasCurrent);
+
+    if (hasCurrent) {
         mNameEdit.setText(mModel.name());
+    } else {
+        mNameEdit.clear();
     }
     mListView.setCurrentIndex(mModel.index(index));
 }
