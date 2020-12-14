@@ -80,8 +80,8 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
 WaveEditor::~WaveEditor() {
 }
 
-PianoWidget* WaveEditor::piano() {
-    return &mPiano;
+PianoWidget& WaveEditor::piano() {
+    return mPiano;
 }
 
 // when the user changes mWaveSelect or is set from the MainWindow

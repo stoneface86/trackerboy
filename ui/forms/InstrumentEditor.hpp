@@ -6,23 +6,33 @@
 #include "widgets/EnvelopeForm.hpp"
 #include "widgets/PianoWidget.hpp"
 
+#include "trackerboy/ChType.hpp"
+
+#include <QComboBox>
 #include <QDialog>
+#include <QFormLayout>
 #include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QVBoxLayout>
 #include <QWidget>
 
-namespace Ui {
-class InstrumentEditor;
-}
 
 class InstrumentEditor : public QDialog {
 
     Q_OBJECT
 
 public:
-    InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget &waveEditor, QWidget *parent = nullptr);
+    InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget *parent = nullptr);
     ~InstrumentEditor();
 
-    PianoWidget* piano();
+    PianoWidget& piano();
+
+signals:
+    // emitted when the wave editor should be shown
+    void waveEditorRequested();
 
 private slots:
     void onChannelSelect(int channel);
@@ -30,12 +40,41 @@ private slots:
 
 private:
 
-    Ui::InstrumentEditor *mUi;
+    void updateTimbreCombo(trackerboy::ChType ch);
 
     InstrumentListModel &mInstrumentModel;
     WaveListModel &mWaveModel;
-    QWidget &mWaveEditor;
-
     bool mIgnoreChanged;
     trackerboy::ChType mLastChannel;
+
+    QVBoxLayout mLayout;
+        QHBoxLayout mLayoutSelect;
+            QComboBox mChannelCombo;
+            QComboBox mInstrumentCombo;
+        QHBoxLayout mLayoutGroup;
+            QGroupBox mGroupSettings;
+                QFormLayout mLayoutSettings;
+                    QLabel mTimbreLabel;
+                    QComboBox mTimbreCombo;
+                    QComboBox mPanningCombo;
+                    QSpinBox mDelaySpin;
+                    QSpinBox mDurationSpin;
+            QGroupBox mGroupFrequency;
+                QFormLayout mLayoutFrequency;
+                    QSpinBox mTuneSpin;
+                    QSpinBox mVibratoSpeedSpin;
+                    QSpinBox mVibratoExtentSpin;
+                    QSpinBox mVibratoDelaySpin;
+            QGroupBox mGroupEnvelope;
+                QGridLayout mLayoutEnvelope;
+                    EnvelopeForm mEnvelopeForm;
+            QGroupBox mGroupWave;
+                QVBoxLayout mLayoutWave;
+                    QComboBox mWaveCombo;
+                    QPushButton mWaveEditButton;
+        PianoWidget mPiano;
+
+
+
+    
 };

@@ -29,7 +29,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mModuleFileDialog(new QFileDialog(this)),
     mApp(trackerboy),
     mWaveEditor(new WaveEditor(mApp.waveModel, this)),
-    mInstrumentEditor(new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, *mWaveEditor, this)),
+    mInstrumentEditor(new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, this)),
     mConfigDialog(new ConfigDialog(mApp.config, this))
 {
     // setup the designer ui
@@ -327,13 +327,13 @@ void MainWindow::setupConnections() {
 
     // connect piano signals to renderer preview slots
 
-    auto wavePiano = mWaveEditor->piano();
-    connect(wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
-    connect(wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
+    auto &wavePiano = mWaveEditor->piano();
+    connect(&wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
+    connect(&wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
 
-    auto instPiano = mInstrumentEditor->piano();
-    connect(instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
-    connect(instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
+    auto &instPiano = mInstrumentEditor->piano();
+    connect(&instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
+    connect(&instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
 
     // song combobox in mSongToolbar
     
@@ -349,7 +349,7 @@ void MainWindow::setupConnections() {
     connect(&mApp.instrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
     connect(&mApp.waveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
 
-    
+    connect(mInstrumentEditor, &InstrumentEditor::waveEditorRequested, mWaveEditor, &WaveEditor::show);
 }
 
 void MainWindow::setupUi() {
