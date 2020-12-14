@@ -70,9 +70,9 @@ SongPropertiesWidget::SongPropertiesWidget(SongListModel &model, QWidget *parent
     connect(mPatternSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SongListModel::setPatterns);
     connect(mRowsPerPatternSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SongListModel::setRowsPerPattern);
 
-    auto orderModel = mModel.orderModel();
-    connect(orderModel, &OrderModel::rowsInserted, this, &SongPropertiesWidget::updatePatternSpin);
-    connect(orderModel, &OrderModel::rowsRemoved, this, &SongPropertiesWidget::updatePatternSpin);
+    auto &orderModel = mModel.orderModel();
+    connect(&orderModel, &OrderModel::rowsInserted, this, &SongPropertiesWidget::updatePatternSpin);
+    connect(&orderModel, &OrderModel::rowsRemoved, this, &SongPropertiesWidget::updatePatternSpin);
 
 }
 

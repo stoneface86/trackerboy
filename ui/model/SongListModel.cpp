@@ -3,7 +3,7 @@
 
 SongListModel::SongListModel(ModuleDocument &document) :
     BaseModel(document),
-    mOrderModel(new OrderModel(document, this)),
+    mOrderModel(document),
     mSongVector(document.songs())
 {
     select(0); // we always have 1 song so the select the first one
@@ -28,7 +28,7 @@ QString SongListModel::nameAt(int index) {
     return QString::fromStdString(mSongVector[index].name());
 }
 
-OrderModel* SongListModel::orderModel() const {
+OrderModel& SongListModel::orderModel() {
     return mOrderModel;
 }
 
@@ -61,14 +61,14 @@ void SongListModel::setSpeed(int speed) {
 
 void SongListModel::setPatterns(int patterns) {
     auto &curr = mSongVector[mCurrentIndex];
-    int currPatterns = mOrderModel->rowCount();
+    int currPatterns = mOrderModel.rowCount();
     if (patterns > currPatterns) {
         // grow
-        mOrderModel->insertRows(currPatterns, patterns - currPatterns);
+        mOrderModel.insertRows(currPatterns, patterns - currPatterns);
     } else if (patterns < currPatterns) {
         // shrink
         int amount = currPatterns - patterns;
-        mOrderModel->removeRows(currPatterns - amount, amount);
+        mOrderModel.removeRows(currPatterns - amount, amount);
     }
 }
 
@@ -122,6 +122,6 @@ int SongListModel::nextIndex() {
 void SongListModel::dataSelected(int index) {
     // index is only -1 when the model is being reset
     if (index != -1) {
-        mOrderModel->setOrder(&mSongVector[index].orders());
+        mOrderModel.setOrder(&mSongVector[index].orders());
     }
 }

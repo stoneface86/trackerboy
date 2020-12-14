@@ -196,11 +196,11 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
     mRownoWidth(0)
 {
     
-    auto orderModel = mModel.orderModel();
-    connect(orderModel, &OrderModel::currentTrackChanged, this, &PatternGrid::setCursorTrack);
-    connect(orderModel, &OrderModel::currentPatternChanged, this, &PatternGrid::setCursorPattern);
+    auto &orderModel = mModel.orderModel();
+    connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternGrid::setCursorTrack);
+    connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternGrid::setCursorPattern);
     connect(&model, &SongListModel::currentIndexChanged, this, &PatternGrid::onSongChanged);
-    connect(orderModel, &OrderModel::patternsChanged, this, [this]() {
+    connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
         setPatterns(mCursorPattern);
         mRepaintImage = true;
         update();
@@ -272,7 +272,7 @@ void PatternGrid::setCursorColumn(int column) {
     int track = mCursorCol / TRACK_COLUMNS;
     int newtrack = column / TRACK_COLUMNS;
     if (track != newtrack) {
-        mModel.orderModel()->selectTrack(newtrack);
+        mModel.orderModel().selectTrack(newtrack);
     }
 
     mCursorCol = column;
@@ -324,7 +324,7 @@ void PatternGrid::setCursorPattern(int pattern) {
     mCursorPattern = pattern;
 
     // update selected pattern in the model
-    mModel.orderModel()->selectPattern(pattern);
+    mModel.orderModel().selectPattern(pattern);
 
     // full repaint
     mRepaintImage = true;

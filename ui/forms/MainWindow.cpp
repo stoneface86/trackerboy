@@ -434,10 +434,10 @@ void MainWindow::setupUi() {
     // setup Orders dock
     
     
-    auto orderModel = mApp.songModel.orderModel();
+    auto &orderModel = mApp.songModel.orderModel();
     mDockOrders = new QDockWidget(tr("Orders"), this);
     mDockOrders->setObjectName("mDockOrders");
-    auto orderWidget = new OrderWidget(*orderModel, mDockOrders);
+    auto orderWidget = new OrderWidget(orderModel, mDockOrders);
     mDockOrders->setWidget(orderWidget);
 
     addDockWidget(Qt::TopDockWidgetArea, mDockInstruments);

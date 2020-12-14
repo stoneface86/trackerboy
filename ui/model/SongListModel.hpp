@@ -21,7 +21,7 @@ public:
 
     virtual QString nameAt(int index) override;
 
-    OrderModel* orderModel() const;
+    OrderModel& orderModel();
 
 
 signals:
@@ -53,7 +53,7 @@ protected:
     virtual void dataSelected(int index) override;
 
 private:
-    OrderModel *mOrderModel;
+    OrderModel mOrderModel;
 
     std::vector<trackerboy::Song> &mSongVector;
 
