@@ -74,17 +74,21 @@ static const trackerboy::Note BLACKKEY_TO_NOTE[] = {
     trackerboy::NOTE_Bb  // A#
 };
 
+std::optional<PianoWidget::Pixmaps> PianoWidget::mPixmaps;
+
 
 PianoWidget::PianoWidget(QWidget *parent) :
-    mWhiteKeyDown(":/images/whitekey_down.png"),
-    mBlackKeyDown(":/images/blackkey_down.png"),
-    mPianoWhitePix(":/images/piano_whitekeys.png"),
-    mPianoBlackPix(":/images/piano_blackkeys.png"),
+    QWidget(parent),
     mIsKeyDown(false),
-    mNote(trackerboy::NOTE_C),
-    QWidget(parent)
+    mNote(trackerboy::NOTE_C)
 {
-
+    if (!mPixmaps) {
+        auto &pixmaps = mPixmaps.emplace();
+        pixmaps.whiteKeyDown.load(QStringLiteral(":/images/whitekey_down.png"));
+        pixmaps.blackKeyDown.load(QStringLiteral(":/images/blackkey_down.png"));
+        pixmaps.pianoWhitePix.load(QStringLiteral(":/images/piano_whitekeys.png"));
+        pixmaps.pianoBlackPix.load(QStringLiteral(":/images/piano_blackkeys.png"));
+    }
     setFixedWidth(PIANO_WIDTH);
     setFixedHeight(PIANO_HEIGHT);
 
@@ -105,18 +109,19 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
         keyInfo = KEY_INFO[keyInOctave];
     }
 
+    auto &pixmaps = mPixmaps.value();
 
     QPainter painter(this);
-    painter.drawPixmap(0, 0, mPianoWhitePix);
+    painter.drawPixmap(0, 0, pixmaps.pianoWhitePix);
     
     if (mIsKeyDown && !keyInfo.isBlack) {
-        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, mWhiteKeyDown);
+        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, pixmaps.whiteKeyDown);
     }
 
-    painter.drawPixmap(0, 0, mPianoBlackPix);
+    painter.drawPixmap(0, 0, pixmaps.pianoBlackPix);
 
     if (mIsKeyDown && keyInfo.isBlack) {
-        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, mBlackKeyDown);
+        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, pixmaps.blackKeyDown);
     }
 
 }
