@@ -1,16 +1,36 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-    <file>icons/gridHeaderFont.bmp</file>
-    <file>icons/instrument_icon_noise.png</file>
-    <file>icons/instrument_icon_pulse.png</file>
-    <file>icons/instrument_icon_wave.png</file>
-    <file>icons/instrumentIcons.png</file>
-    <file>icons/tableFormIcons.png</file>
-    <file>icons/toolbar.png</file>
     <file>icons/app/appicon-16.png</file>
     <file>icons/app/appicon-24.png</file>
     <file>icons/app/appicon-32.png</file>
     <file>icons/app/appicon-48.png</file>
     <file>icons/app/appicon-256.png</file>
-</qresource>
+    
+    <file>icons/fileNew.png</file>
+    <file>icons/fileOpen.png</file>
+    <file>icons/fileSave.png</file>
+    <file>icons/itemAdd.png</file>
+    <file>icons/itemAdd-disabled.png</file>
+    <file>icons/itemRemove.png</file>
+    <file>icons/itemRemove-disabled.png</file>
+    <file>icons/itemDuplicate.png</file>
+    <file>icons/itemDuplicate-disabled.png</file>
+    <file>icons/itemImport.png</file>
+    <file>icons/itemImport-disabled.png</file>
+    <file>icons/itemExport.png</file>
+    <file>icons/itemExport-disabled.png</file>
+    <file>icons/itemEdit.png</file>
+    <file>icons/itemEdit-disabled.png</file>
+    <file>icons/trackerPlay.png</file>
+    <file>icons/trackerPlayPattern.png</file>
+    <file>icons/trackerStop.png</file>
+    <file>icons/trackerEdit.png</file>
+    <file>icons/ch1.png</file>
+    <file>icons/ch2.png</file>
+    <file>icons/ch3.png</file>
+    <file>icons/ch4.png</file>
+
+    <file>icons/placeholder.png</file>
+    <file>icons/placeholder-disabled.png</file>
+</qresource>    
 </RCC>

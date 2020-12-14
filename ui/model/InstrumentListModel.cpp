@@ -1,15 +1,15 @@
 
 
+#include "misc/IconManager.hpp"
 #include "model/InstrumentListModel.hpp"
-
-#include "Tileset.hpp"
 
 InstrumentListModel::InstrumentListModel(ModuleDocument &document) :
     BaseTableModel(document, document.instrumentTable())
 {
-    Tileset tileset(QImage(":/icons/instrumentIcons.png"), 16, 16);
+    size_t iconId = static_cast<size_t>(Icons::ch1);
     for (int i = 0; i != 4; ++i) {
-        mIconArray[i].addPixmap(tileset.getTile(0, i), QIcon::Normal);
+        mIconArray[i] = &IconManager::getIcon(static_cast<Icons>(iconId));
+        ++iconId;
     }
 
 }
@@ -87,7 +87,7 @@ void InstrumentListModel::setVibratoDelay(uint8_t delay) {
 
 QVariant InstrumentListModel::iconData(const QModelIndex &index) const {
     auto inst = instrument(index.row());
-    return QVariant(mIconArray[inst->data().channel]);
+    return *mIconArray[inst->data().channel];
 }
 
 

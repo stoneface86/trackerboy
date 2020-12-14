@@ -41,6 +41,6 @@ protected:
 
 private:
 
-    std::array<QIcon, 4> mIconArray;
+    std::array<QIcon*, 4> mIconArray;
 
 };

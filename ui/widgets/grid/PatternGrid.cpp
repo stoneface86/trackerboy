@@ -176,7 +176,7 @@ static char effectTypeToChar(trackerboy::EffectType et) {
 PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
-    mHeaderFont(":/icons/gridHeaderFont.bmp"),
+    mHeaderFont(":/images/gridHeaderFont.bmp"),
     mRepaintImage(true),
     mCursorRow(0),
     mCursorCol(0),

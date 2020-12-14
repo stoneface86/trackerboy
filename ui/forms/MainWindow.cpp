@@ -1,6 +1,6 @@
 
 #include "MainWindow.hpp"
-#include "Tileset.hpp"
+#include "misc/IconManager.hpp"
 #include "widgets/docks/ModulePropertiesWidget.hpp"
 #include "widgets/docks/OrderWidget.hpp"
 #include "widgets/docks/SongPropertiesWidget.hpp"
@@ -377,21 +377,13 @@ void MainWindow::setupUi() {
     addToolBar(Qt::ToolBarArea::TopToolBarArea, mSongToolbar);
 
     // toolbar icons
-    Tileset tileset(QImage(":/icons/toolbar.png"), TOOLBAR_ICON_WIDTH, TOOLBAR_ICON_HEIGHT);
-    QList<QToolBar*> toolbars = { mUi->toolbarFile, mUi->toolbarTracker, mSongToolbar};
+    mUi->actionNew->setIcon(IconManager::getIcon(Icons::fileNew));
+    mUi->actionOpen->setIcon(IconManager::getIcon(Icons::fileOpen));
+    mUi->actionSave->setIcon(IconManager::getIcon(Icons::fileSave));
+    mUi->actionCut->setIcon(IconManager::getIcon(Icons::editCut));
+    mUi->actionCopy->setIcon(IconManager::getIcon(Icons::editCopy));
+    mUi->actionPaste->setIcon(IconManager::getIcon(Icons::editPaste));
 
-    for (int i = 0, iconIndex = 0; i != toolbars.size(); ++i) {
-        auto toolbar = toolbars.at(i);
-        auto actions = toolbar->actions();
-        for (int j = 0; j != actions.size(); ++j) {
-            auto action = actions.at(j);
-            if (action->isSeparator() || action->isWidgetType()) {
-                continue;
-            }
-            action->setIcon(tileset.getIcon(iconIndex));
-            ++iconIndex;
-        }
-    }
 
     // DIALOGS ===============================================================
 

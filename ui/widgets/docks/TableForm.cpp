@@ -1,6 +1,6 @@
 
+#include "misc/IconManager.hpp"
 #include "widgets/docks/TableForm.hpp"
-#include "Tileset.hpp"
 
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -9,13 +9,6 @@
 
 constexpr int ICON_WIDTH = 16;
 constexpr int ICON_HEIGHT = 16;
-
-constexpr int ICON_ADD = 0;
-constexpr int ICON_REMOVE = 1;
-constexpr int ICON_DUPLICATE = 2;
-constexpr int ICON_IMPORT = 3;
-constexpr int ICON_EXPORT = 4;
-constexpr int ICON_EDIT = 5;
 
 
 TableForm::TableForm(BaseTableModel &model, QWidget *editor, QString editorShortcut, QString typeName, QWidget *parent) :
@@ -28,28 +21,27 @@ TableForm::TableForm(BaseTableModel &model, QWidget *editor, QString editorShort
 {
     mNameEdit->setEnabled(false);
 
-    Tileset tileset(QImage(":/icons/tableFormIcons.png"), ICON_WIDTH, ICON_HEIGHT);
-
+    
 
     mActAdd = mMenu->addAction(tr("Add"));
-    mActAdd->setIcon(tileset.getIcon(ICON_ADD));
+    mActAdd->setIcon(IconManager::getIcon(Icons::itemAdd));
     mActAdd->setStatusTip(QString("Adds a new %1").arg(typeName));
     mActRemove = mMenu->addAction(tr("Remove"));
-    mActRemove->setIcon(tileset.getIcon(ICON_REMOVE));
+    mActRemove->setIcon(IconManager::getIcon(Icons::itemRemove));
     mActRemove->setStatusTip(QString("Removes the current %1").arg(typeName));
     mActDuplicate = mMenu->addAction(tr("Duplicate"));
-    mActDuplicate->setIcon(tileset.getIcon(ICON_DUPLICATE));
+    mActDuplicate->setIcon(IconManager::getIcon(Icons::itemDuplicate));
     mActDuplicate->setStatusTip(QString("Adds a copy of the current %1").arg(typeName));
     mMenu->addSeparator();
     mActImport = mMenu->addAction(tr("Import"));
-    mActImport->setIcon(tileset.getIcon(ICON_IMPORT));
+    mActImport->setIcon(IconManager::getIcon(Icons::itemImport));
     mActImport->setStatusTip(QString("Import %1 from a file").arg(typeName));
     mActExport = mMenu->addAction(tr("Export"));
-    mActExport->setIcon(tileset.getIcon(ICON_EXPORT));
+    mActExport->setIcon(IconManager::getIcon(Icons::itemExport));
     mActExport->setStatusTip(QString("Export %1 to a file").arg(typeName));
     mMenu->addSeparator();
     mActEdit = mMenu->addAction(tr("Edit"));
-    mActEdit->setIcon(tileset.getIcon(ICON_EDIT));
+    mActEdit->setIcon(IconManager::getIcon(Icons::itemEdit));
     mActEdit->setStatusTip(QString("Edit the current %1").arg(typeName));
 
     auto toolbar = new QToolBar();

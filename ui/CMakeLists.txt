@@ -23,6 +23,8 @@ set(UI_SRC
     "forms/MainWindow.cpp"
     "forms/WaveEditor.cpp"
     
+    "misc/IconManager.cpp"
+
     "model/BaseModel.cpp"
     "model/BaseTableModel.cpp"
     "model/ModuleDocument.cpp"
@@ -33,7 +35,7 @@ set(UI_SRC
     
     "resources/fonts.qrc"
     "resources/icons.qrc"
-    "resources/keys.qrc"
+    "resources/images.qrc"
 
     "widgets/docks/ModulePropertiesWidget.cpp"
     "widgets/docks/OrderWidget.cpp"
@@ -52,7 +54,6 @@ set(UI_SRC
     "Renderer.cpp"
     "RendererThread.cpp"
     "samplerates.cpp"
-    "Tileset.cpp"
     "Trackerboy.cpp"
 )
 
