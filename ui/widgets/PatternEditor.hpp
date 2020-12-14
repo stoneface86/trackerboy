@@ -6,6 +6,7 @@
 #include "widgets/grid/PatternGrid.hpp"
 
 #include <QFrame>
+#include <QGridLayout>
 #include <QScrollBar>
 
 
@@ -30,9 +31,10 @@ private slots:
 
 private:
 
-    PatternGrid *mGrid;
-    QScrollBar *mHScroll;
-    QScrollBar *mVScroll;
+    QGridLayout mLayout;
+        PatternGrid mGrid;
+        QScrollBar mHScroll;
+        QScrollBar mVScroll;
 
     int mWheel;
     int mPageStep;

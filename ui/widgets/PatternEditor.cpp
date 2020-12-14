@@ -5,42 +5,42 @@
 
 PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     QFrame(parent),
-    mGrid(new PatternGrid(model, this)),
-    mHScroll(new QScrollBar(Qt::Horizontal, this)),
-    mVScroll(new QScrollBar(Qt::Vertical, this)),
+    mLayout(),
+    mGrid(model),
+    mHScroll(Qt::Horizontal),
+    mVScroll(Qt::Vertical),
     mWheel(0),
     mPageStep(4)
 {
     setFrameStyle(QFrame::StyledPanel);
     setFocusPolicy(Qt::StrongFocus);
 
-    mHScroll->setMinimum(0);
-    mHScroll->setMaximum(47);
-    mHScroll->setPageStep(1);
+    mHScroll.setMinimum(0);
+    mHScroll.setMaximum(47);
+    mHScroll.setPageStep(1);
 
-    mVScroll->setMinimum(0);
-    mVScroll->setMaximum(63);
-    mVScroll->setPageStep(mPageStep);
+    mVScroll.setMinimum(0);
+    mVScroll.setMaximum(63);
+    mVScroll.setPageStep(mPageStep);
 
-    QGridLayout *layout = new QGridLayout();
-    layout->setMargin(0);
-    layout->setSpacing(0);
-    layout->addWidget(mGrid, 0, 0);
-    layout->addWidget(mVScroll, 0, 1);
-    layout->addWidget(mHScroll, 1, 0);
-    setLayout(layout);
+    mLayout.setMargin(0);
+    mLayout.setSpacing(0);
+    mLayout.addWidget(&mGrid, 0, 0);
+    mLayout.addWidget(&mVScroll, 0, 1);
+    mLayout.addWidget(&mHScroll, 1, 0);
+    setLayout(&mLayout);
 
-    connect(mGrid, &PatternGrid::cursorRowChanged, mVScroll, &QScrollBar::setValue);
-    connect(mVScroll, &QScrollBar::valueChanged, mGrid, &PatternGrid::setCursorRow);
-    connect(mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
+    connect(&mGrid, &PatternGrid::cursorRowChanged, &mVScroll, &QScrollBar::setValue);
+    connect(&mVScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorRow);
+    connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
 
-    connect(mGrid, &PatternGrid::cursorColumnChanged, mHScroll, &QScrollBar::setValue);
-    connect(mHScroll, &QScrollBar::valueChanged, mGrid, &PatternGrid::setCursorColumn);
-    connect(mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
+    connect(&mGrid, &PatternGrid::cursorColumnChanged, &mHScroll, &QScrollBar::setValue);
+    connect(&mHScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorColumn);
+    connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
     connect(&model, &SongListModel::patternSizeChanged, this,
         [this](int rows) {
-            mVScroll->setMaximum(rows - 1);
+            mVScroll.setMaximum(rows - 1);
         });
 
 }
@@ -48,22 +48,22 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     switch (evt->key()) {
         case Qt::Key_Left:
-            mGrid->moveCursorColumn(-1);
+            mGrid.moveCursorColumn(-1);
             break;
         case Qt::Key_Right:
-            mGrid->moveCursorColumn(1);
+            mGrid.moveCursorColumn(1);
             break;
         case Qt::Key_Up:
-            mGrid->moveCursorRow(-1);
+            mGrid.moveCursorRow(-1);
             break;
         case Qt::Key_Down:
-            mGrid->moveCursorRow(1);
+            mGrid.moveCursorRow(1);
             break;
         case Qt::Key_PageDown:
-            mGrid->moveCursorRow(mPageStep);
+            mGrid.moveCursorRow(mPageStep);
             break;
         case Qt::Key_PageUp:
-            mGrid->moveCursorRow(-mPageStep);
+            mGrid.moveCursorRow(-mPageStep);
             break;
         default:
             QWidget::keyPressEvent(evt);
@@ -84,7 +84,7 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
     }
 
     if (amount) {
-        mGrid->moveCursorRow(amount);
+        mGrid.moveCursorRow(amount);
     }
 
     evt->accept();
@@ -93,10 +93,10 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
 void PatternEditor::hscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mGrid->moveCursorColumn(1);
+            mGrid.moveCursorColumn(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mGrid->moveCursorColumn(-1);
+            mGrid.moveCursorColumn(-1);
             break;
         default:
             break;
@@ -106,10 +106,10 @@ void PatternEditor::hscrollAction(int action) {
 void PatternEditor::vscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mGrid->moveCursorRow(1);
+            mGrid.moveCursorRow(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mGrid->moveCursorRow(-1);
+            mGrid.moveCursorRow(-1);
             break;
         default:
             break;
