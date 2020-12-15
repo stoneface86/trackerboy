@@ -37,6 +37,8 @@ set(UI_SRC
     "resources/icons.qrc"
     "resources/images.qrc"
 
+    "widgets/config/ConfigTab.cpp"
+    "widgets/config/SoundConfigTab.cpp"
     "widgets/docks/ModulePropertiesWidget.cpp"
     "widgets/docks/OrderWidget.cpp"
     "widgets/docks/SongPropertiesWidget.cpp"
@@ -58,7 +60,6 @@ set(UI_SRC
 )
 
 qt5_wrap_ui(UI_DESIGNER
-    "designer/ConfigDialog.ui"
     "designer/MainWindow.ui"
 )
 

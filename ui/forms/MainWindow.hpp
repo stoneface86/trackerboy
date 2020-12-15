@@ -41,7 +41,7 @@ private slots:
     void windowResetLayout();
 
     // config changes
-    void onConfigApplied(ConfigDialog::Categories categories);
+    void onConfigApplied(Config::Categories categories);
 
     // statusbar
     void statusSetInstrument(int index);

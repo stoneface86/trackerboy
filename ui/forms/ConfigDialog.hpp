@@ -1,32 +1,21 @@
 #pragma once
 
 #include "Config.hpp"
+#include "widgets/config/SoundConfigTab.hpp"
 
 #include <QDialog>
+#include <QDialogButtonBox>
 #include <QSettings>
 #include <QShowEvent>
+#include <QTabWidget>
+#include <QVBoxLayout>
 
-namespace Ui {
-class ConfigDialog;
-}
 
 class ConfigDialog : public QDialog {
 
     Q_OBJECT
 
 public:
-
-    //
-    // Configuration categories flags. When applying settings, only the categories
-    // with changes will get applied.
-    //
-    enum Category {
-        CategoryNone = 0,
-        CategorySound = 1,
-
-        CategoryAll = CategorySound
-    };
-    Q_DECLARE_FLAGS(Categories, Category);
 
     ConfigDialog(Config &config, QWidget *parent = nullptr);
     ~ConfigDialog();
@@ -39,7 +28,7 @@ public:
 
 signals:
     // emitted when changes in the Config must be applied
-    void applied(Categories categories);
+    void applied(Config::Categories categories);
 
 protected:
 
@@ -48,25 +37,26 @@ protected:
 private slots:
     void apply();
 
-    void bufferSizeSliderChanged(int value);
-    void volumeSliderChanged(int value);
-    void samplerateActivated(int index);
-
-
+    void setDirty(Config::Category flag);
     
 private:
-    void setDirty(Category flag);
+    
 
     void clean();
-
-    Ui::ConfigDialog *mUi;
 
     Config &mConfig;
     // configuration categories that are "dirty". A dirty category
     // contains settings changed by the user and must be applied when the
     // user clicks the OK or Apply button.
-    Categories mDirty;
+    Config::Categories mDirty;
+
+    QVBoxLayout mLayout;
+        QTabWidget mTabs;
+            SoundConfigTab mTabSound;
+        QDialogButtonBox mButtons;
+
+
 
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(ConfigDialog::Categories);
+

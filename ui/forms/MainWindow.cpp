@@ -45,7 +45,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mApp.config.readSettings();
     mConfigDialog->resetControls();
     // apply the read in configuration
-    onConfigApplied(ConfigDialog::CategoryAll);
+    onConfigApplied(Config::CategoryAll);
 
     // new documents have an empty string for a filename
     setFilename("");
@@ -211,8 +211,8 @@ void MainWindow::windowResetLayout() {
     resizeDocks({ mDockSongProperties, mDockOrders }, { mDockSongProperties->minimumHeight(), mDockOrders->maximumHeight() }, Qt::Vertical);
 }
 
-void MainWindow::onConfigApplied(ConfigDialog::Categories categories) {
-    if (categories.testFlag(ConfigDialog::CategorySound)) {
+void MainWindow::onConfigApplied(Config::Categories categories) {
+    if (categories.testFlag(Config::CategorySound)) {
         auto &sound = mApp.config.sound();
         //auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
         mSamplerateLabel->setText(QString("%1 Hz").arg(sound.samplerate));
