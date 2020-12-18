@@ -5,6 +5,7 @@
 
 #include <array>
 
+
 enum class Icons : int {
     fileNew,
     fileOpen,
@@ -19,7 +20,6 @@ enum class Icons : int {
     itemRemove,
     itemDuplicate,
     itemImport,
-    itemExport,
     itemEdit,
     trackerPlay,
     trackerPlayPattern,
@@ -34,7 +34,10 @@ enum class Icons : int {
     previous,
     next,
 
-    noIcon
+    noIcon,
+
+    // icons that share the same file(s)
+    itemExport = fileSave
 };
 
 // singleton class for loading and retreiving QIcons

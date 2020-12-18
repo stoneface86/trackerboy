@@ -8,7 +8,8 @@
     
     <file>icons/fileNew.png</file>
     <file>icons/fileOpen.png</file>
-    <file>icons/fileSave.png</file>
+    <file>icons/save.png</file>
+    <file>icons/save-disabled.png</file>
     <file>icons/editUndo.png</file>
     <file>icons/editUndo-disabled.png</file>
     <file>icons/editRedo.png</file>
@@ -21,8 +22,6 @@
     <file>icons/itemDuplicate-disabled.png</file>
     <file>icons/itemImport.png</file>
     <file>icons/itemImport-disabled.png</file>
-    <file>icons/itemExport.png</file>
-    <file>icons/itemExport-disabled.png</file>
     <file>icons/itemEdit.png</file>
     <file>icons/itemEdit-disabled.png</file>
     <file>icons/trackerPlay.png</file>
@@ -33,6 +32,14 @@
     <file>icons/ch2.png</file>
     <file>icons/ch3.png</file>
     <file>icons/ch4.png</file>
+    <file>icons/moveUp.png</file>
+    <file>icons/moveUp-disabled.png</file>
+    <file>icons/moveDown.png</file>
+    <file>icons/moveDown-disabled.png</file>
+    <file>icons/prev.png</file>
+    <file>icons/prev-disabled.png</file>
+    <file>icons/next.png</file>
+    <file>icons/next-disabled.png</file>
 
     <file>icons/placeholder.png</file>
     <file>icons/placeholder-disabled.png</file>

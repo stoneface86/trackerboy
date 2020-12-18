@@ -41,7 +41,8 @@ QIcon& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/fileOpen.png"));
                 break;
             case Icons::fileSave:
-                iconRef.addFile(QStringLiteral(":/icons/fileSave.png"));
+                iconRef.addFile(QStringLiteral(":/icons/save.png"));
+                iconRef.addFile(QStringLiteral(":/icons/save-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::fileConfig:
                 iconRef = instance.mPlaceholder;
@@ -79,10 +80,6 @@ QIcon& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/itemImport.png"));
                 iconRef.addFile(QStringLiteral(":/icons/itemImport-disabled.png"), QSize(), QIcon::Disabled);
                 break;
-            case Icons::itemExport:
-                iconRef.addFile(QStringLiteral(":/icons/itemExport.png"));
-                iconRef.addFile(QStringLiteral(":/icons/itemExport-disabled.png"), QSize(), QIcon::Disabled);
-                break;
             case Icons::itemEdit:
                 iconRef.addFile(QStringLiteral(":/icons/itemEdit.png"));
                 iconRef.addFile(QStringLiteral(":/icons/itemEdit-disabled.png"), QSize(), QIcon::Disabled);
@@ -112,16 +109,20 @@ QIcon& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/ch4.png"));
                 break;
             case Icons::moveUp:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/moveUp.png"));
+                iconRef.addFile(QStringLiteral(":/icons/moveUp-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::moveDown:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/moveDown.png"));
+                iconRef.addFile(QStringLiteral(":/icons/moveDown-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::previous:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/prev.png"));
+                iconRef.addFile(QStringLiteral(":/icons/prev-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::next:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/next.png"));
+                iconRef.addFile(QStringLiteral(":/icons/next-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             default:
                 break;

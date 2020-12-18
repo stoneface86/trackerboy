@@ -374,8 +374,8 @@ void MainWindow::setupUi() {
     setupAction(mActionFileConfig, "&Configuration", "Change application settings", Icons::fileConfig);
     setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
 
-    setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list");
-    setupAction(mActionSongNext, "&Next song", "Selects the next song in the list");
+    setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
+    setupAction(mActionSongNext, "&Next song", "Selects the next song in the list", Icons::next);
 
     setupAction(mActionTrackerPlay, "&Play", "Play the song from the current pattern", Icons::trackerPlay);
     setupAction(mActionTrackerPlayPattern, "Play pattern", "Play and loop the current pattern", Icons::trackerPlayPattern);
