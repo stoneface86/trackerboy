@@ -11,9 +11,23 @@ IconManager::IconManager() {
 
 }
 
+QIcon IconManager::getAppIcon() {
+    QIcon appIcon;
+    appIcon.addFile(":/icons/app/appicon-16.png");
+    appIcon.addFile(":/icons/app/appicon-24.png");
+    appIcon.addFile(":/icons/app/appicon-32.png");
+    appIcon.addFile(":/icons/app/appicon-48.png");
+    appIcon.addFile(":/icons/app/appicon-256.png");
+    return appIcon;
+}
+
 QIcon& IconManager::getIcon(Icons icon) {
 
     auto &instance = getInstance();
+    
+    if (icon == Icons::noIcon) {
+        return instance.mPlaceholder;
+    }
 
     auto &iconRef = instance.mIconTable[static_cast<IconsIntegral>(icon)];
 
@@ -28,6 +42,9 @@ QIcon& IconManager::getIcon(Icons icon) {
                 break;
             case Icons::fileSave:
                 iconRef.addFile(QStringLiteral(":/icons/fileSave.png"));
+                break;
+            case Icons::fileConfig:
+                iconRef = instance.mPlaceholder;
                 break;
             case Icons::editCut:
                 iconRef = instance.mPlaceholder;

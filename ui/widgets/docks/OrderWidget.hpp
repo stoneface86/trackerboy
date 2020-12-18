@@ -1,5 +1,6 @@
 #pragma once
 
+#include "misc/SongActions.hpp"
 #include "model/OrderModel.hpp"
 
 #include <QAction>
@@ -8,6 +9,7 @@
 #include <QMenu>
 #include <QPushButton>
 #include <QTableView>
+#include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -26,6 +28,8 @@ public:
 
     void setupMenu(QMenu &menu);
 
+    void setupToolbar(QToolBar &toolbar);
+
 private slots:
 
     void currentChanged(QModelIndex const &current, QModelIndex const &prev);
@@ -40,11 +44,7 @@ private:
     OrderModel &mModel;
 
     QMenu mContextMenu;
-    QAction mActionInsert;
-    QAction mActionRemove;
-    QAction mActionDuplicate;
-    QAction mActionMoveUp;
-    QAction mActionMoveDown;
+    SongActions mActions;
 
     QVBoxLayout mLayout;
         QHBoxLayout mLayoutOperations;

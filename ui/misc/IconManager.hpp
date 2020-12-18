@@ -9,6 +9,7 @@ enum class Icons : int {
     fileNew,
     fileOpen,
     fileSave,
+    fileConfig,
     editCut,
     editCopy,
     editPaste,
@@ -31,7 +32,7 @@ enum class Icons : int {
     previous,
     next,
 
-    __last = next
+    noIcon
 };
 
 // singleton class for loading and retreiving QIcons
@@ -41,6 +42,8 @@ public:
     IconManager(IconManager const&) = delete;
     void operator=(IconManager const&) = delete;
 
+    static QIcon getAppIcon();
+
     static QIcon& getIcon(Icons icon);
 
 private:
@@ -49,7 +52,7 @@ private:
 
     static IconManager& getInstance() noexcept;
 
-    std::array<QIcon, static_cast<size_t>(Icons::__last) + 1> mIconTable;
+    std::array<QIcon, static_cast<size_t>(Icons::noIcon)> mIconTable;
     QIcon mPlaceholder;
 
 

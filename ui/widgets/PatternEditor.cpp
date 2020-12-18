@@ -1,6 +1,8 @@
 
 #include "widgets/PatternEditor.hpp"
 
+#include "misc/utils.hpp"
+
 #include <QGridLayout>
 
 PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
@@ -30,6 +32,28 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     mLayout.addWidget(&mHScroll, 1, 0);
     setLayout(&mLayout);
 
+
+    setupAction(mActions.undo, "&Undo", "Undos the last operation", QKeySequence::Undo);
+    setupAction(mActions.redo, "&Redo", "Redos the last operation", QKeySequence::Redo);
+    setupAction(mActions.cut, "C&ut", "Copies and deletes selection to the clipboard", Icons::editCut, QKeySequence::Cut);
+    setupAction(mActions.copy, "&Copy", "Copies selected rows to the clipboard", Icons::editCopy, QKeySequence::Copy);
+    setupAction(mActions.paste, "&Paste", "Pastes contents at the cursor", Icons::editPaste, QKeySequence::Paste);
+    setupAction(mActions.pasteMix, "Paste &Mix", "Pastes contents at the cursor, merging with existing rows", tr("Ctrl+M"));
+    setupAction(mActions.delete_, "&Delete", "Deletes selection", QKeySequence::Delete);
+    setupAction(mActions.selectAll, "&Select All", "Selects entire track/pattern", QKeySequence::SelectAll);
+    setupAction(mActions.noteIncrease, "Increase note", "Increases note/notes by 1 step");
+    setupAction(mActions.noteDecrease, "Decrease note", "Decreases note/notes by 1 step");
+    setupAction(mActions.octaveIncrease, "Increase octave", "Increases note/notes by 12 steps");
+    setupAction(mActions.octaveDecrease, "Decrease octave", "Decreases note/notes by 12 steps");
+    setupAction(mActions.reverse, "&Reverse", "Reverses selected rows");
+
+    mTransposeMenu.setTitle(tr("&Transpose"));
+    mTransposeMenu.addAction(&mActions.noteIncrease);
+    mTransposeMenu.addAction(&mActions.noteDecrease);
+    mTransposeMenu.addAction(&mActions.octaveIncrease);
+    mTransposeMenu.addAction(&mActions.octaveDecrease);
+
+
     connect(&mGrid, &PatternGrid::cursorRowChanged, &mVScroll, &QScrollBar::setValue);
     connect(&mVScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorRow);
     connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
@@ -42,6 +66,29 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
         [this](int rows) {
             mVScroll.setMaximum(rows - 1);
         });
+
+}
+
+PatternEditor::Actions& PatternEditor::menuActions() {
+    return mActions;
+}
+
+void PatternEditor::setupMenu(QMenu &menu) {
+    menu.addAction(&mActions.undo);
+    menu.addAction(&mActions.redo);
+    menu.addSeparator();
+    menu.addAction(&mActions.cut);
+    menu.addAction(&mActions.copy);
+    menu.addAction(&mActions.paste);
+    menu.addAction(&mActions.pasteMix);
+    menu.addAction(&mActions.delete_);
+    menu.addSeparator();
+    menu.addAction(&mActions.selectAll);
+    menu.addSeparator();
+    menu.addMenu(&mTransposeMenu);
+    menu.addAction(&mActions.reverse);
+
+
 
 }
 

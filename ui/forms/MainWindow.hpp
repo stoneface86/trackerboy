@@ -4,6 +4,12 @@
 #include "forms/ConfigDialog.hpp"
 #include "forms/InstrumentEditor.hpp"
 #include "forms/WaveEditor.hpp"
+#include "widgets/docks/ModulePropertiesWidget.hpp"
+#include "widgets/docks/OrderWidget.hpp"
+#include "widgets/docks/SongPropertiesWidget.hpp"
+#include "widgets/docks/SongWidget.hpp"
+#include "widgets/docks/TableForm.hpp"
+#include "widgets/PatternEditor.hpp"
 #include "Trackerboy.hpp"
 
 #include <QComboBox>
@@ -14,10 +20,6 @@
 #include <QToolBar>
 
 
-namespace Ui {
-class MainWindow;
-}
-
 class MainWindow : public QMainWindow {
 
     Q_OBJECT
@@ -26,19 +28,24 @@ public:
     explicit MainWindow(Trackerboy &trackerboy);
     ~MainWindow();
 
+    QMenu* createPopupMenu() override;
+
 protected:
 
     void closeEvent(QCloseEvent *evt) override;
+
+    void showEvent(QShowEvent *evt) override;
 
 private slots:
     void updateWindowTitle();
 
     // actions
-    void fileNew();
-    void fileOpen();
-    bool fileSave();
-    bool fileSaveAs();
-    void windowResetLayout();
+    void onFileNew();
+    void onFileOpen();
+    bool onFileSave();
+    bool onFileSaveAs();
+
+    void onWindowResetLayout();
 
     // config changes
     void onConfigApplied(Config::Categories categories);
@@ -50,60 +57,129 @@ private slots:
 
 private:
 
+    //static void setupAction(QAction &action, const char *text, const char *tooltip, QKeySequence const &seq = QKeySequence());
+
     // To be called before loading a new document. Prompts user to save if the
     // current document is modified. Returns false if the user does not want to continue
     bool maybeSave();
-
-    void readSettings();
 
     void setFilename(QString filename);
 
     // enable or disable all models
     void setModelsEnabled(bool enabled);
-    
-    void setupConnections();
-    
+
     void setupUi();
 
-    void writeSettings();
+    void setupWindowMenu(QMenu &menu);
 
-    Ui::MainWindow *mUi;
-
-    QFileDialog *mModuleFileDialog;
 
     Trackerboy &mApp;
     
-    WaveEditor *mWaveEditor;
-    InstrumentEditor *mInstrumentEditor;
-    ConfigDialog *mConfigDialog;
-
+    
     // file name of the currently open file or "Untitled" for a new file
     QString mFilename;
     QString mDocumentName;
 
-    // qwidgets not set in the ui file
+    // dialogs
+    ConfigDialog mConfigDialog;
+    InstrumentEditor mInstrumentEditor;
+    WaveEditor mWaveEditor;
+    QFileDialog mModuleFileDialog;
 
-    QToolBar *mSongToolbar = nullptr;
-    QComboBox *mSongCombo = nullptr;
+
+    // toolbars
+    QToolBar mToolbarFile;
+    QToolBar mToolbarEdit;
+    QToolBar mToolbarOrder;
+    QToolBar mToolbarTracker;
+    QToolBar mToolbarSong;
+        QComboBox mSongCombo;
 
     // dock widgets
-    QDockWidget *mDockInstruments = nullptr;
-    QDockWidget *mDockWaveforms = nullptr;
-    QDockWidget *mDockSongs = nullptr;
-    QDockWidget *mDockSongProperties = nullptr;
-    QDockWidget *mDockModuleProperties = nullptr;
-    QDockWidget *mDockOrders = nullptr;
+    QDockWidget mDockInstruments;
+        TableForm mInstrumentWidget;
+
+    QDockWidget mDockWaveforms;
+        TableForm mWaveformWidget;
+
+    QDockWidget mDockSongs;
+        SongWidget mSongWidget;
+
+    QDockWidget mDockSongProperties;
+        SongPropertiesWidget mSongPropertiesWidget;
+
+    QDockWidget mDockModuleProperties;
+        ModulePropertiesWidget mModulePropertiesWidget;
+
+    QDockWidget mDockOrders;
+        OrderWidget mOrderWidget;
+
+    // central widget (must be heap-alloc'd)
+    PatternEditor *mPatternEditor;
 
 
     // statusbar widgets
-    QLabel *mStatusInstrument = nullptr;
-    QLabel *mStatusWaveform = nullptr;
-    QLabel *mStatusOctave = nullptr;
-    QLabel *mStatusFramerate = nullptr;
-    QLabel *mStatusSpeed = nullptr;
-    QLabel *mStatusTempo = nullptr;
-    QLabel *mStatusElapsed = nullptr;
-    QLabel *mStatusPos = nullptr;
-    QLabel *mSamplerateLabel = nullptr;
+    QLabel mStatusInstrument;
+    QLabel mStatusWaveform;
+    QLabel mStatusOctave;
+    QLabel mStatusFramerate;
+    QLabel mStatusSpeed;
+    QLabel mStatusTempo;
+    QLabel mStatusElapsed;
+    QLabel mStatusPos;
+    QLabel mStatusSamplerate;
+
+    // menus
+
+    // File
+    QMenu mMenuFile;
+    QAction mActionFileNew;
+    QAction mActionFileOpen;
+    QAction mActionFileSave;
+    QAction mActionFileSaveAs;
+    QAction mActionFileConfig;
+    QAction mActionFileQuit;
+
+    // Edit (created by PatternEditor)
+    QMenu mMenuEdit;
+
+    // Song (created by SongWidget)
+    QMenu mMenuSong;
+    QAction mActionSongPrev;
+    QAction mActionSongNext;
+
+    // Order (created by OrderWidget)
+    QMenu mMenuOrder;
+
+    // Instrument (created by TableForm)
+    QMenu mMenuInstrument;
+
+    // Waveform (created by TableForm)
+    QMenu mMenuWaveform;
+
+    // Tracker
+    QMenu mMenuTracker;
+    QAction mActionTrackerPlay;
+    QAction mActionTrackerPlayPattern;
+    QAction mActionTrackerPlayStart;
+    QAction mActionTrackerPlayCursor;
+    QAction mActionTrackerStop;
+    QAction mActionTrackerEditMode;
+    QAction mActionTrackerToggleChannel;
+    QAction mActionTrackerSolo;
+
+    // Window
+    QMenu mMenuWindow;
+    QMenu mMenuWindowToolbars;
+    QAction mActionWindowResetLayout;
+
+    // Help
+    QMenu mMenuHelp;
+    QAction mActionHelpAboutQt;
+    QAction mActionHelpAbout;
+
+    // set from saveState() after setting up the ui
+    QByteArray mDefaultLayoutState;
+
 
 };
