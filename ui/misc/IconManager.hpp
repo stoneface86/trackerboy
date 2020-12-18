@@ -10,6 +10,8 @@ enum class Icons : int {
     fileOpen,
     fileSave,
     fileConfig,
+    editUndo,
+    editRedo,
     editCut,
     editCopy,
     editPaste,

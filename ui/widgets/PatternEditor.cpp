@@ -33,8 +33,8 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     setLayout(&mLayout);
 
 
-    setupAction(mActions.undo, "&Undo", "Undos the last operation", QKeySequence::Undo);
-    setupAction(mActions.redo, "&Redo", "Redos the last operation", QKeySequence::Redo);
+    setupAction(mActions.undo, "&Undo", "Undos the last operation", Icons::editUndo, QKeySequence::Undo);
+    setupAction(mActions.redo, "&Redo", "Redos the last operation", Icons::editRedo, QKeySequence::Redo);
     setupAction(mActions.cut, "C&ut", "Copies and deletes selection to the clipboard", Icons::editCut, QKeySequence::Cut);
     setupAction(mActions.copy, "&Copy", "Copies selected rows to the clipboard", Icons::editCopy, QKeySequence::Copy);
     setupAction(mActions.paste, "&Paste", "Pastes contents at the cursor", Icons::editPaste, QKeySequence::Paste);

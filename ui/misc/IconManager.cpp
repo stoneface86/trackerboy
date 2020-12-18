@@ -46,6 +46,14 @@ QIcon& IconManager::getIcon(Icons icon) {
             case Icons::fileConfig:
                 iconRef = instance.mPlaceholder;
                 break;
+            case Icons::editUndo:
+                iconRef.addFile(QStringLiteral(":/icons/editUndo.png"));
+                iconRef.addFile(QStringLiteral(":/icons/editUndo-disabled.png"), QSize(), QIcon::Disabled);
+                break;
+            case Icons::editRedo:
+                iconRef.addFile(QStringLiteral(":/icons/editRedo.png"));
+                iconRef.addFile(QStringLiteral(":/icons/editRedo-disabled.png"), QSize(), QIcon::Disabled);
+                break;
             case Icons::editCut:
                 iconRef = instance.mPlaceholder;
                 break;

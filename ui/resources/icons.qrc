@@ -9,6 +9,10 @@
     <file>icons/fileNew.png</file>
     <file>icons/fileOpen.png</file>
     <file>icons/fileSave.png</file>
+    <file>icons/editUndo.png</file>
+    <file>icons/editUndo-disabled.png</file>
+    <file>icons/editRedo.png</file>
+    <file>icons/editRedo-disabled.png</file>
     <file>icons/itemAdd.png</file>
     <file>icons/itemAdd-disabled.png</file>
     <file>icons/itemRemove.png</file>
