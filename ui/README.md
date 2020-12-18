@@ -7,70 +7,50 @@ root CMakeLists.txt, with TRACKERBOY_ENABLE_UI option set to ON.
 ## Organization
 
 * `ui/`
-  * `designer/` - Qt Designer files (.ui) go here
   * `forms/` - Form/dialog classes
+  * `misc/` - miscellaneous/utility code
   * `model/` - data model classes using Qt Model/View framework
   * `resources/` - images, Qt resource files (.qrc), etc
   * `widgets/` - QWidget subclasses and custom widgets/controls
 
 ## How to...
 
-### Add a Qt designer widget
 
-We use the pointer member variable approach or PIMPL idiom. See
-https://doc.qt.io/qt-5/designer-using-a-ui-file.html#using-a-pointer-member-variable for more details.
+### Use QObjects without `new`
 
-1. Design your widget with designer, save the ui file in the designer folder
-2. Add the ui file to the UI_DESIGNER list in CMakeLists.txt
-3. Add this header to forms or widgets subdirectory, replacing 
-`YourWidget` with the widget's class name
+Most custom widgets in this repo do not heap allocate their child widgets. This differs from
+the way Qt is generally written. I have chosen not to do it the "Qt way" to help prevent memory
+leaks and improve performance.
 
-```cpp
-#pragma once
+It is safe to do things this way, but you must be careful when ordering your class's widget members.
+Each QObject must have no children when being destructed, otherwise a double delete will occur and the
+program will most likely crash.
 
-#include <QWidget>
-
-namespace Ui {
-class YourWidget;
-}
-
-class YourWidget : public QWidget {
-
-    Q_OBJECT
-
-public:
-    explicit YourWidget(QWidget *parent = nullptr);
-    virtual ~YourWidget();
-
-private:
-    Ui::YourWidget *mUi;
-};
-```
-4. Add this source file to the same directory as step 3, 
-replacing `YourWidget` with the widget's class name.
+For example
 
 ```cpp
+class A : public QWidget {
 
-#include "widgets/YourWidget.hpp"
+    QVBoxLayout mLayout;
+    QLabel mLabel;
 
-#pragma warning(push, 0)
-#include "ui_YourWidget.h"
-#pragma warning(pop)
-
-YourWidget::YourWidget(QWidget *parent) :
-    QWidget(parent),
-    mUi(new Ui::YourWidget())
-{
-    mUi->setupUi(this);
-}
-
-YourWidget::~YourWidget() {
-    delete mUi;
 }
 ```
 
-5. Finally, add the source file path to the CMakeLists.txt, via the
-UI_SRC variable (please keep in alphabetical order). Rebuild the
-project (if you don't you may get linker errors due to AUTOMOC not
-working).
+mLabel's parent is set to mLayout when adding it to the layout. Since mLabel was written last, it will be
+destructed first. Destructing mLabel removes it from mLayout's children, so no double delete will occur
+when mLayout is destructed.
+
+If mLabel was written first, mLayout would delete mLabel in its destructor since mLabel is
+still a child of mLayout. Resulting in the `delete` of a pointer not set via `new` = crash!
+
+Always put parents first, followed by children.
+I recommend using indention to show parent/child relationships between your class's widget members.
+```cpp
+QWidget parent;             // destructed last, had 3 children but all were removed so no children to delete
+    QWidget child1;         // destructed fourth, had 1 child but was removed so no children to delete
+        QWidget child1_1;   // destructed third, no children to delete
+    QWidget child2;         // destructed second, no children to delete
+    QWidget child3;         // destructed first, no children to delete
+```
 
