@@ -2,15 +2,17 @@
 
 #include "misc/SongActions.hpp"
 #include "model/OrderModel.hpp"
+#include "widgets/CustomSpinBox.hpp"
 
 #include <QAction>
 #include <QHBoxLayout>
-#include <QLineEdit>
+#include <QSpinBox>
 #include <QMenu>
-#include <QPushButton>
+#include <QToolButton>
 #include <QTableView>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QShowEvent>
 #include <QWidget>
 
 
@@ -28,8 +30,6 @@ public:
 
     void setupMenu(QMenu &menu);
 
-    void setupToolbar(QToolBar &toolbar);
-
 private slots:
 
     void currentChanged(QModelIndex const &current, QModelIndex const &prev);
@@ -44,15 +44,22 @@ private:
     OrderModel &mModel;
 
     QMenu mContextMenu;
-    SongActions mActions;
+
+    QAction mActionInsert;
+    QAction mActionRemove;
+    QAction mActionDuplicate;
+    QAction mActionMoveUp;
+    QAction mActionMoveDown;
+    QAction mActionIncrement;
+    QAction mActionDecrement;
 
     QVBoxLayout mLayout;
-        QHBoxLayout mLayoutOperations;
-            QPushButton mIncrementButton;
-            QPushButton mDecrementButton;
-            QLineEdit mSetEdit;
-            QPushButton mSetButton;
+        QHBoxLayout mLayoutSet;
+            QToolBar mToolbar;
+            CustomSpinBox mSetSpin;
+            QToolButton mSetButton;
         QTableView mOrderView;
+        
 
 
 };

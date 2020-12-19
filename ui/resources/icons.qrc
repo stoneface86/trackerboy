@@ -40,6 +40,9 @@
     <file>icons/prev-disabled.png</file>
     <file>icons/next.png</file>
     <file>icons/next-disabled.png</file>
+    <file>icons/increment.png</file>
+    <file>icons/decrement.png</file>
+
 
     <file>icons/placeholder.png</file>
     <file>icons/placeholder-disabled.png</file>

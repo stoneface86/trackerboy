@@ -154,9 +154,6 @@ void MainWindow::showEvent(QShowEvent *evt) {
         addToolBar(Qt::TopToolBarArea, &mToolbarEdit);
         mToolbarEdit.show();
 
-        addToolBar(Qt::TopToolBarArea, &mToolbarOrder);
-        mToolbarEdit.show();
-
         addToolBar(Qt::TopToolBarArea, &mToolbarTracker);
         mToolbarTracker.show();
 
@@ -437,7 +434,6 @@ void MainWindow::setupUi() {
     mMenuWindowToolbars.setTitle(tr("&Toolbars"));
     mMenuWindowToolbars.addAction(mToolbarFile.toggleViewAction());
     mMenuWindowToolbars.addAction(mToolbarEdit.toggleViewAction());
-    mMenuWindowToolbars.addAction(mToolbarOrder.toggleViewAction());
     mMenuWindowToolbars.addAction(mToolbarTracker.toggleViewAction());
     mMenuWindowToolbars.addAction(mToolbarSong.toggleViewAction());
 
@@ -482,11 +478,6 @@ void MainWindow::setupUi() {
     mToolbarEdit.addAction(&patternActions.cut);
     mToolbarEdit.addAction(&patternActions.copy);
     mToolbarEdit.addAction(&patternActions.paste);
-    
-    mToolbarOrder.setWindowTitle(tr("Order"));
-    mToolbarOrder.setIconSize(iconSize);
-    setObjectNameFromDeclared(mToolbarOrder);
-    mOrderWidget.setupToolbar(mToolbarOrder);
 
     mToolbarTracker.setWindowTitle(tr("Tracker"));
     mToolbarTracker.setIconSize(iconSize);

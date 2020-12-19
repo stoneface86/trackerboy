@@ -90,7 +90,6 @@ private:
     // toolbars
     QToolBar mToolbarFile;
     QToolBar mToolbarEdit;
-    QToolBar mToolbarOrder;
     QToolBar mToolbarTracker;
     QToolBar mToolbarSong;
         QComboBox mSongCombo;

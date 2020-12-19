@@ -108,6 +108,12 @@ QIcon& IconManager::getIcon(Icons icon) {
             case Icons::ch4:
                 iconRef.addFile(QStringLiteral(":/icons/ch4.png"));
                 break;
+            case Icons::increment:
+                iconRef.addFile(QStringLiteral(":/icons/increment.png"));
+                break;
+            case Icons::decrement:
+                iconRef.addFile(QStringLiteral(":/icons/decrement.png"));
+                break;
             case Icons::moveUp:
                 iconRef.addFile(QStringLiteral(":/icons/moveUp.png"));
                 iconRef.addFile(QStringLiteral(":/icons/moveUp-disabled.png"), QSize(), QIcon::Disabled);

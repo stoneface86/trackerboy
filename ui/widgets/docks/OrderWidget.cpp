@@ -2,6 +2,7 @@
 #include "widgets/docks/OrderWidget.hpp"
 
 #include "misc/IconManager.hpp"
+#include "misc/utils.hpp"
 
 #include <QFontDatabase>
 #include <QHeaderView>
@@ -12,63 +13,70 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
     mContextMenu(),
-    mActions(),
     mLayout(),
-    mLayoutOperations(),
-    mIncrementButton(QStringLiteral("+")),
-    mDecrementButton(QStringLiteral("-")),
-    mSetEdit(QStringLiteral("00")),
-    mSetButton(tr("Set")),
+    mToolbar(),
+    mSetButton(),
     mOrderView()
 {
 
     // layout
-    mLayoutOperations.addWidget(&mIncrementButton);
-    mLayoutOperations.addWidget(&mDecrementButton);
-    mLayoutOperations.addStretch(1);
-    mLayoutOperations.addWidget(&mSetEdit);
-    mLayoutOperations.addWidget(&mSetButton);
+    mLayoutSet.addWidget(&mToolbar);
+    mLayoutSet.addStretch(1);
+    mLayoutSet.addWidget(&mSetSpin);
+    mLayoutSet.addWidget(&mSetButton);
 
-    mLayout.addLayout(&mLayoutOperations);
+    mLayout.addLayout(&mLayoutSet);
     mLayout.addWidget(&mOrderView, 1);
     setLayout(&mLayout);
     
     // settings
-    mIncrementButton.setMaximumWidth(32);
-    mDecrementButton.setMaximumWidth(32);
 
-    mSetEdit.setInputMask(QStringLiteral("HH"));
-    mSetEdit.setMaxLength(2);
+    mToolbar.setIconSize(QSize(16, 16));
+    mToolbar.addAction(&mActionInsert);
+    mToolbar.addAction(&mActionRemove);
+    mToolbar.addAction(&mActionDuplicate);
+    mToolbar.addAction(&mActionMoveUp);
+    mToolbar.addAction(&mActionMoveDown);
+    mToolbar.addAction(&mActionIncrement);
+    mToolbar.addAction(&mActionDecrement);
+
+    mSetSpin.setDigits(2);
+    mSetSpin.setRange(0, 255);
+    mSetSpin.setDisplayIntegerBase(16);
     
-    mActions.remove.setEnabled(false);
-    mActions.moveUp.setEnabled(false);
-    mActions.moveDown.setEnabled(false);
+    mSetButton.setText(tr("Set"));
+    mSetButton.setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    
+    
+    mActionRemove.setEnabled(false);
+    mActionMoveUp.setEnabled(false);
+    mActionMoveDown.setEnabled(false);
 
     // actions
-    mActions.add.setText(tr("&Insert order row"));
-    mActions.add.setStatusTip(tr("Inserts a new order at the current pattern"));
-    connect(&mActions.add, &QAction::triggered, &model, &OrderModel::insert);
-    connect(&model, &OrderModel::canInsert, &mActions.add, &QAction::setEnabled);
+    setupAction(mActionInsert, "&Insert order row", "Inserts a new order at the current pattern", Icons::itemAdd);
+    setupAction(mActionRemove, "&Remove order row", "Removes the order at the current pattern", Icons::itemRemove);
+    setupAction(mActionDuplicate, "&Duplicate order row", "Duplicates the order at the current pattern", Icons::itemDuplicate);
+    setupAction(mActionMoveUp, "Move order &up", "Moves the order up 1", Icons::moveUp);
+    setupAction(mActionMoveDown, "Move order dow&n", "Moves the order down 1", Icons::moveDown);
+    setupAction(mActionIncrement, "Increment selection", "Increments all selected cells by 1", Icons::increment);
+    setupAction(mActionDecrement, "Decrement selection", "Decrements all selected cells by 1", Icons::decrement);
 
-    mActions.remove.setText(tr("&Remove order row"));
-    mActions.remove.setStatusTip(tr("Removes the order at the current pattern"));
-    connect(&mActions.remove, &QAction::triggered, &model, &OrderModel::remove);
-    connect(&model, &OrderModel::canRemove, &mActions.remove, &QAction::setEnabled);
+    connect(&mActionInsert, &QAction::triggered, &model, &OrderModel::insert);
+    connect(&model, &OrderModel::canInsert, &mActionInsert, &QAction::setEnabled);
 
-    mActions.duplicate.setText(tr("&Duplicate order row"));
-    mActions.duplicate.setStatusTip(tr("Duplicates the order at the current pattern"));
-    connect(&mActions.duplicate, &QAction::triggered, &model, &OrderModel::duplicate);
-    connect(&model, &OrderModel::canInsert, &mActions.duplicate, &QAction::setEnabled);
+    connect(&mActionRemove, &QAction::triggered, &model, &OrderModel::remove);
+    connect(&model, &OrderModel::canRemove, &mActionRemove, &QAction::setEnabled);
 
-    mActions.moveUp.setText(tr("Move order &up"));
-    mActions.moveUp.setStatusTip(tr("Moves the order up 1"));
-    connect(&mActions.moveUp, &QAction::triggered, &model, &OrderModel::moveUp);
-    connect(&model, &OrderModel::canMoveUp, &mActions.moveUp, &QAction::setEnabled);
+    connect(&mActionDuplicate, &QAction::triggered, &model, &OrderModel::duplicate);
+    connect(&model, &OrderModel::canInsert, &mActionDuplicate, &QAction::setEnabled);
 
-    mActions.moveDown.setText(tr("Move order dow&n"));
-    mActions.moveDown.setStatusTip(tr("Moves the order down 1"));
-    connect(&mActions.moveDown, &QAction::triggered, &model, &OrderModel::moveDown);
-    connect(&model, &OrderModel::canMoveDown, &mActions.moveDown, &QAction::setEnabled);
+    
+    connect(&mActionMoveUp, &QAction::triggered, &model, &OrderModel::moveUp);
+    connect(&model, &OrderModel::canMoveUp, &mActionMoveUp, &QAction::setEnabled);
+
+   
+    connect(&mActionMoveDown, &QAction::triggered, &model, &OrderModel::moveDown);
+    connect(&model, &OrderModel::canMoveDown, &mActionMoveDown, &QAction::setEnabled);
 
     // menu
     setupMenu(mContextMenu);
@@ -96,9 +104,9 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     verticalHeader->setMinimumSectionSize(-1);
     verticalHeader->setDefaultSectionSize(verticalHeader->minimumSectionSize());
 
-    connect(&mIncrementButton, &QPushButton::clicked, this, &OrderWidget::increment);
-    connect(&mDecrementButton, &QPushButton::clicked, this, &OrderWidget::decrement);
-    connect(&mSetButton, &QPushButton::clicked, this, &OrderWidget::set);
+    connect(&mActionIncrement, &QAction::triggered, this, &OrderWidget::increment);
+    connect(&mActionDecrement, &QAction::triggered, this, &OrderWidget::decrement);
+    connect(&mSetButton, &QToolButton::clicked, this, &OrderWidget::set);
 
 }
 
@@ -106,20 +114,12 @@ OrderWidget::~OrderWidget() {
 }
 
 void OrderWidget::setupMenu(QMenu &menu) {
-    menu.addAction(&mActions.add);
-    menu.addAction(&mActions.remove);
-    menu.addAction(&mActions.duplicate);
+    menu.addAction(&mActionInsert);
+    menu.addAction(&mActionRemove);
+    menu.addAction(&mActionDuplicate);
     menu.addSeparator();
-    menu.addAction(&mActions.moveUp);
-    menu.addAction(&mActions.moveDown);
-}
-
-void OrderWidget::setupToolbar(QToolBar &toolbar) {
-    toolbar.addAction(&mActions.add);
-    toolbar.addAction(&mActions.remove);
-    toolbar.addAction(&mActions.duplicate);
-    toolbar.addAction(&mActions.moveUp);
-    toolbar.addAction(&mActions.moveDown);
+    menu.addAction(&mActionMoveUp);
+    menu.addAction(&mActionMoveDown);
 }
 
 void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
@@ -138,15 +138,15 @@ void OrderWidget::decrement() {
 }
 
 void OrderWidget::set() {
-    bool ok;
-    unsigned id = mSetEdit.text().toUInt(&ok, 16);
+    //bool ok;
+    //unsigned id = mSetEdit.text().toUInt(&ok, 16);
 
-    if (ok) {
+    //if (ok) {
         mModel.setSelection(
             mOrderView.selectionModel()->selection(),
-            static_cast<uint8_t>(id)
+            static_cast<uint8_t>(mSetSpin.value())
             );
-    }
+    //}
 }
 
 void OrderWidget::tableViewContextMenu(QPoint pos) {
