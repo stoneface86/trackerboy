@@ -2,8 +2,8 @@
 #pragma once
 
 #include "model/OrderModel.hpp"
-
 #include "widgets/grid/PatternGrid.hpp"
+#include "Config.hpp"
 
 #include <QFrame>
 #include <QGridLayout>
@@ -35,10 +35,12 @@ public:
 
     };
 
-    explicit PatternEditor(SongListModel &model, QWidget *parent = nullptr);
+    explicit PatternEditor(SongListModel &model, ColorTable const &colortable, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
     Actions& menuActions();
+
+    void setAppearance(Config::Appearance const& appearance);
 
     void setupMenu(QMenu &menu);
 

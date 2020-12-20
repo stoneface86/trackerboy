@@ -173,9 +173,10 @@ static char effectTypeToChar(trackerboy::EffectType et) {
 }
 
 
-PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
+PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, QWidget *parent) :
     QWidget(parent),
     mModel(model),
+    mColorTable(colorTable),
     mHeaderFont(":/images/gridHeaderFont.bmp"),
     mRepaintImage(true),
     mCursorRow(0),
@@ -219,28 +220,14 @@ PatternGrid::PatternGrid(SongListModel &model, QWidget *parent) :
 
     setMouseTracking(true);
 
-    // default colors
-    mColorTable[COLOR_BG] = QColor(8, 24, 32);
-    mColorTable[COLOR_BG_ROW] = QColor(20, 20, 80, 128);
-    mColorTable[COLOR_CURSOR] = QColor(192, 192, 192, 128);
-    mColorTable[COLOR_FG] = QColor(136, 192, 112);
-    mColorTable[COLOR_FG_HIGHLIGHT] = QColor(224, 248, 208);
-    mColorTable[COLOR_FG_INSTRUMENT] = QColor(16, 16, 240);
-    mColorTable[COLOR_FG_EFFECT_TYPE] = QColor(0, 200, 200);
-    mColorTable[COLOR_LINE] = QColor(64, 64, 64);
-
-    mColorTable[COLOR_HEADER_BG] = mColorTable[COLOR_FG_HIGHLIGHT];
-    mColorTable[COLOR_HEADER_FG] = mColorTable[COLOR_BG];
-    mColorTable[COLOR_HEADER_HIGHLIGHT] = mColorTable[COLOR_FG];
-    mColorTable[COLOR_HEADER_DISABLED] = QColor(52, 104, 86);
-
-    QFont font = QFont("Cascadia Mono");
-    font.setPixelSize(12);
-    setFont(font);
-
     // initialize appearance settings for the first time
     appearanceChanged();
 
+}
+
+void PatternGrid::apply() {
+    appearanceChanged();
+    updateAll();
 }
 
 int PatternGrid::row() const {
@@ -349,12 +336,12 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // HEADER ================================================================
 
     // background
-    painter.fillRect(0, 0, width(), HEADER_HEIGHT, mColorTable[COLOR_HEADER_BG]);
+    painter.fillRect(0, 0, width(), HEADER_HEIGHT, mColorTable[+Color::headerBackground]);
 
 
     // disabled tracks
     {
-        QColor disabledColor = mColorTable[COLOR_HEADER_DISABLED];
+        QColor disabledColor = mColorTable[+Color::headerDisabled];
         int xpos = mDisplayXpos + mRownoWidth;
         for (int i = 0; i != 4; ++i) {
             if (!!(mTrackFlags & (1 << i))) {
@@ -366,7 +353,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
 
 
-    painter.setPen(mColorTable[COLOR_HEADER_FG]);
+    painter.setPen(mColorTable[+Color::headerForeground]);
     painter.drawLine(0, HEADER_HEIGHT - 2, width(), HEADER_HEIGHT - 2);
 
     painter.translate(QPoint(mDisplayXpos + mRownoWidth, 0));
@@ -375,7 +362,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
     // highlight
     if (mTrackHover != -1) {
-        painter.setPen(mColorTable[COLOR_HEADER_HIGHLIGHT]);
+        painter.setPen(mColorTable[+Color::headerHover]);
         int trackBegin = mTrackWidth * mTrackHover;
         int trackEnd = trackBegin + mTrackWidth;
         //painter.drawLine(trackBegin, HEADER_HEIGHT - 3, trackEnd, HEADER_HEIGHT - 3);
@@ -415,15 +402,15 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
     // background
 
-    painter.fillRect(0, 0, w, h, mColorTable[COLOR_BG]);
+    painter.fillRect(0, 0, w, h, mColorTable[+Color::background]);
 
     // highlights
     // TODO
 
     // cursor row
-    painter.setPen(mColorTable[COLOR_BG_ROW]);
+    painter.setPen(mColorTable[+Color::backgroundRow]);
     painter.drawLine(0, center, w, center);
-    painter.fillRect(0, center, w, mRowHeight, mColorTable[COLOR_BG_ROW]);
+    painter.fillRect(0, center, w, mRowHeight, mColorTable[+Color::backgroundRow]);
     painter.drawLine(0, center + mRowHeight - 1, w, center + mRowHeight - 1);
 
 
@@ -445,7 +432,8 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // the width of the cursor is always 1 character unless it is over a note column, then it is 3
     int cursorWidth = ((mCursorCol % TRACK_COLUMNS) == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
     int cursorPos = columnLocation(mCursorCol) - 1;
-    QColor cursorColor = mColorTable[COLOR_CURSOR];
+    QColor cursorColor = mColorTable[+Color::cursor];
+    cursorColor.setAlpha(128);
 
     painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
     painter.setPen(cursorColor);
@@ -478,7 +466,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     }
 
     // lines
-    painter.setPen(mColorTable[COLOR_LINE]);
+    painter.setPen(mColorTable[+Color::line]);
     painter.drawLine(0, 0, 0, h);
     int xpos = mRownoWidth;
     for (int i = 0; i != 5; ++i) {
@@ -702,7 +690,7 @@ void PatternGrid::appearanceChanged() {
     mHeaderPixmap = QPixmap(mTrackWidth * 4 + 1, HEADER_HEIGHT);
     mHeaderPixmap.fill(Qt::transparent);
     QPainter painter(&mHeaderPixmap);
-    painter.setPen(mColorTable[COLOR_HEADER_FG]);
+    painter.setPen(mColorTable[+Color::headerForeground]);
     int x = 2;
     for (int i = 0; i != 4; ++i) {
         // draw "CH"
@@ -718,7 +706,7 @@ void PatternGrid::appearanceChanged() {
     }
 
     // draw lines
-    painter.setPen(mColorTable[COLOR_LINE]);
+    painter.setPen(mColorTable[+Color::line]);
     x = 0;
     for (int i = 0; i != 5; ++i) {
         painter.drawLine(x, 0, x, HEADER_HEIGHT);
@@ -807,7 +795,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     unsigned ypos = rowStart * mRowHeight;
 
     painter.setFont(font());
-    painter.setPen(mColorTable[COLOR_FG]);
+    painter.setPen(mColorTable[+Color::foreground]);
 
     //
     // adjusted row index, r
@@ -896,7 +884,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 
 void PatternGrid::paintRow(QPainter &painter, trackerboy::PatternRow rowdata, int rowno, int ypos) {
     QPen fgpen(mColorTable[
-        (rowno % mModel.currentSong()->rowsPerBeat()) == 0 ? COLOR_FG_HIGHLIGHT : COLOR_FG
+        (rowno % mModel.currentSong()->rowsPerBeat()) == 0 ? +Color::foregroundHighlight : +Color::foreground
     ]);
     
     // text centering
@@ -918,7 +906,7 @@ void PatternGrid::paintRow(QPainter &painter, trackerboy::PatternRow rowdata, in
         xpos += (TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH] - TRACK_COLUMN_MAP[COLUMN_NOTE]) * mCharWidth;
         if (!!(trackdata.flags & trackerboy::TrackRow::COLUMN_INST)) {
             uint8_t inst = trackdata.instrumentId;
-            painter.setPen(mColorTable[COLOR_FG_INSTRUMENT]);
+            painter.setPen(mColorTable[+Color::instrument]);
             paintCell(painter, HEX_TABLE[inst >> 4], xpos, ypos);
             paintCell(painter, HEX_TABLE[inst & 0xF], xpos + mCharWidth, ypos);
             painter.setPen(fgpen);
@@ -931,7 +919,7 @@ void PatternGrid::paintRow(QPainter &painter, trackerboy::PatternRow rowdata, in
         for (int effect = 0; effect < trackerboy::TrackRow::MAX_EFFECTS; ++effect) {
             if (!!(trackdata.flags & effectFlag)) {
                 auto effectdata = trackdata.effects[effect];
-                painter.setPen(mColorTable[COLOR_FG_EFFECT_TYPE]);
+                painter.setPen(mColorTable[+Color::effectType]);
 
                 paintCell(painter, effectTypeToChar(effectdata.type), xpos, ypos);
                 xpos += mCharWidth;

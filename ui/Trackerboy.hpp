@@ -6,6 +6,7 @@
 #include "model/SongListModel.hpp"
 #include "model/WaveListModel.hpp"
 #include "Config.hpp"
+#include "ColorTable.hpp"
 #include "Miniaudio.hpp"
 #include "Renderer.hpp"
 
@@ -20,6 +21,7 @@ struct Trackerboy {
     ~Trackerboy() = default;
 
     Miniaudio miniaudio;
+    ColorTable colorTable;
     Config config;
 
     ModuleDocument document;

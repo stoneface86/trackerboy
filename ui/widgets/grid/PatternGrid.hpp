@@ -2,7 +2,7 @@
 #pragma once
 
 #include "model/SongListModel.hpp"
-#include "widgets/grid/PatternColors.hpp"
+#include "ColorTable.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
 
@@ -23,12 +23,12 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(SongListModel &model, QWidget *parent = nullptr);
+    explicit PatternGrid(SongListModel &model, ColorTable const &colorTable, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
 
-    //void apply(); // applies current settings
+    void apply(); // applies current settings
 
     int row() const;
 
@@ -196,6 +196,7 @@ private:
 
 
     SongListModel &mModel;
+    ColorTable const &mColorTable;
 
     // display image, rows get painted here when needed as opposed to every
     // paintEvent
@@ -205,8 +206,6 @@ private:
     QBitmap mHeaderFont;
     // header drawing is cached here, similar to the grid, to speed up painting
     QPixmap mHeaderPixmap;
-
-    ColorTable mColorTable;
 
     // if true all rows will be redrawn on next paint event
     bool mRepaintImage;

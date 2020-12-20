@@ -291,6 +291,11 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         mApp.renderer.setConfig(sound);
     }
 
+    if (categories.testFlag(Config::CategoryAppearance)) {
+        auto &appearance = mApp.config.appearance();
+        mPatternEditor->setAppearance(appearance);
+    }
+
     mApp.config.writeSettings();
 }
 
@@ -357,7 +362,7 @@ void MainWindow::setupUi() {
     // CENTRAL WIDGET ========================================================
 
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
-    mPatternEditor = new PatternEditor(mApp.songModel);
+    mPatternEditor = new PatternEditor(mApp.songModel, mApp.colorTable);
     setCentralWidget(mPatternEditor);
 
     auto &patternActions = mPatternEditor->menuActions();

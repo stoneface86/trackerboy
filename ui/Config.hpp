@@ -1,13 +1,15 @@
 
 #pragma once
 
+#include "ColorTable.hpp"
 #include "Miniaudio.hpp"
 
 #include <QFlags>
+#include <QFont>
+#include <QSettings>
 
 //
 // Class containing application settings. Settings are modified via the ConfigDialog
-// Signals are emitted when a setting changes.
 //
 class Config {
 
@@ -24,10 +26,17 @@ public:
     enum Category {
         CategoryNone = 0,
         CategorySound = 1,
+        CategoryAppearance = 2,
 
-        CategoryAll = CategorySound
+        CategoryAll = CategorySound | CategoryAppearance
     };
     Q_DECLARE_FLAGS(Categories, Category);
+
+    struct Appearance {
+        QFont font;
+        bool showFlats;         // if true flats will be shown for accidental notes
+        bool showPreviews;      // if true, pattern previews will be rendered
+    };
 
     struct Sound {
 
@@ -45,7 +54,7 @@ public:
 
     };
 
-    Config(Miniaudio &miniaudio);
+    Config(ColorTable &colorTable, Miniaudio &miniaudio);
     ~Config() = default;
 
     //
@@ -60,6 +69,8 @@ public:
     //
     void writeSettings();
 
+    Appearance const& appearance();
+
     Sound const& sound();
 
 
@@ -69,8 +80,12 @@ private:
 
     void setSamplerate(int index);
 
-    Miniaudio &mMiniaudio;
+    void readColor(QSettings &settings, Color color, QColor def);
 
+    ColorTable &mColorTable;
+    Miniaudio &mMiniaudio;
+    
+    Appearance mAppearance;
     Sound mSound;
 
 };

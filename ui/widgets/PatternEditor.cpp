@@ -5,10 +5,10 @@
 
 #include <QGridLayout>
 
-PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
+PatternEditor::PatternEditor(SongListModel &model, ColorTable const &colorTable, QWidget *parent) :
     QFrame(parent),
     mLayout(),
-    mGrid(model),
+    mGrid(model, colorTable),
     mHScroll(Qt::Horizontal),
     mVScroll(Qt::Vertical),
     mWheel(0),
@@ -71,6 +71,11 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
 
 PatternEditor::Actions& PatternEditor::menuActions() {
     return mActions;
+}
+
+void PatternEditor::setAppearance(Config::Appearance const& appearance) {
+    mGrid.setFont(appearance.font);
+    mGrid.apply();
 }
 
 void PatternEditor::setupMenu(QMenu &menu) {
