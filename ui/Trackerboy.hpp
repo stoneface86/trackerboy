@@ -26,6 +26,7 @@ struct Trackerboy {
 
     ModuleDocument document;
     InstrumentListModel instrumentModel;
+    OrderModel orderModel;
     SongListModel songModel;
     WaveListModel waveModel;
 

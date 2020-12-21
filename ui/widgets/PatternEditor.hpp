@@ -3,7 +3,6 @@
 
 #include "model/OrderModel.hpp"
 #include "widgets/grid/PatternGrid.hpp"
-#include "Config.hpp"
 
 #include <QFrame>
 #include <QGridLayout>
@@ -39,8 +38,6 @@ public:
     ~PatternEditor() = default;
 
     Actions& menuActions();
-
-    void setAppearance(Config::Appearance const& appearance);
 
     void setupMenu(QMenu &menu);
 

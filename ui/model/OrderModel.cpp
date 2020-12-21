@@ -35,40 +35,13 @@ void OrderModel::select(int row, int track) {
 
 void OrderModel::selectPattern(int pattern) {
     if (mCurrentRow != pattern) {
-        auto oldpattern = mCurrentRow;
-        mCurrentRow = pattern;
-        emit dataChanged(
-            createIndex(oldpattern, 0, nullptr),
-            createIndex(oldpattern, 3, nullptr),
-            { Qt::BackgroundRole });
-        emit dataChanged(
-            createIndex(pattern, 0, nullptr),
-            createIndex(pattern, 3, nullptr),
-            { Qt::BackgroundRole });
-        emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
-        emit currentPatternChanged(pattern);
-
-        emit canMoveUp(pattern != 0);
-        emit canMoveDown(pattern != rowCount() - 1);
+        doSelectPattern(pattern);
     }
 }
 
 void OrderModel::selectTrack(int track) {
     if (mCurrentTrack != track) {
-        auto oldtrack = mCurrentTrack;
-        mCurrentTrack = track;
-
-        emit dataChanged(
-            createIndex(mCurrentRow, oldtrack, nullptr),
-            createIndex(mCurrentRow, oldtrack, nullptr),
-            { Qt::BackgroundRole });
-        emit dataChanged(
-            createIndex(mCurrentRow, track, nullptr),
-            createIndex(mCurrentRow, track, nullptr),
-            { Qt::BackgroundRole });
-
-        emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
-        emit currentTrackChanged(track);
+        doSelectTrack(track);
     }
 }
 
@@ -76,12 +49,18 @@ void OrderModel::setOrder(std::vector<trackerboy::Order> *order) {
     beginResetModel();
     mOrder = order;
     endResetModel();
-    select(0, 0);
+    doSelectPattern(0);
+    doSelectTrack(0);
 }
 
 void OrderModel::setSelection(QItemSelection const &selection, uint8_t id) {
     modifySelection<ModifyMode::set>(selection, id);
     emit patternsChanged();
+}
+
+void OrderModel::setRowColor(QColor const& color) {
+    mRowColor = color;
+    emit dataChanged(createIndex(mCurrentRow, 0, nullptr), createIndex(mCurrentRow, 3, nullptr), { Qt::BackgroundRole });
 }
 
 // model implementation
@@ -93,22 +72,22 @@ int OrderModel::columnCount(const QModelIndex &parent) const {
 
 QVariant OrderModel::data(const QModelIndex &index, int role) const {
     if (mOrder != nullptr) {
-        if (role == Qt::DisplayRole) {
-            auto row = (*mOrder)[index.row()];
-            int id = row.tracks[index.column()];
-            return QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper();
-        } else if (role == Qt::TextAlignmentRole) {
-            return Qt::AlignCenter;
-        } else if (role == Qt::BackgroundRole) {
-            if (index.row() == mCurrentRow) {
+        switch (role) {
 
-                // TODO: use the same colors as PatternGrid
-                if (index.column() == mCurrentTrack) {
-                    return QColor(Qt::blue);
-                } else {
-                    return QColor(Qt::gray);
-                }
+            case Qt::DisplayRole: {
+                auto row = (*mOrder)[index.row()];
+                int id = row.tracks[index.column()];
+                return QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper();
             }
+            case Qt::TextAlignmentRole:
+                return Qt::AlignCenter;
+            case Qt::BackgroundRole:
+                if (index.row() == mCurrentRow) {
+                    return mRowColor;
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -129,6 +108,12 @@ QVariant OrderModel::headerData(int section, Qt::Orientation orientation, int ro
             return QString("%1").arg(section, 2, 16, QLatin1Char('0')).toUpper();
         } else {
             return QString("CH%1").arg(section + 1);
+        }
+    } else if (role == Qt::TextAlignmentRole) {
+        return Qt::AlignCenter;
+    } else if (role == Qt::BackgroundRole) {
+        if (orientation == Qt::Vertical && section == mCurrentRow) {
+            return mRowColor;
         }
     }
     return QVariant();
@@ -328,4 +313,39 @@ void OrderModel::modifyCell(uint8_t &cell, uint8_t value) {
     } else {
         cell = value;
     }
+}
+
+void OrderModel::doSelectPattern(int pattern) {
+    auto oldpattern = mCurrentRow;
+    mCurrentRow = pattern;
+    emit dataChanged(
+        createIndex(oldpattern, 0, nullptr),
+        createIndex(oldpattern, 3, nullptr),
+        { Qt::BackgroundRole });
+    emit dataChanged(
+        createIndex(pattern, 0, nullptr),
+        createIndex(pattern, 3, nullptr),
+        { Qt::BackgroundRole });
+    emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+    emit currentPatternChanged(pattern);
+
+    emit canMoveUp(pattern != 0);
+    emit canMoveDown(pattern != rowCount() - 1);
+}
+
+void OrderModel::doSelectTrack(int track) {
+    auto oldtrack = mCurrentTrack;
+    mCurrentTrack = track;
+
+    emit dataChanged(
+        createIndex(mCurrentRow, oldtrack, nullptr),
+        createIndex(mCurrentRow, oldtrack, nullptr),
+        { Qt::BackgroundRole });
+    emit dataChanged(
+        createIndex(mCurrentRow, track, nullptr),
+        createIndex(mCurrentRow, track, nullptr),
+        { Qt::BackgroundRole });
+
+    emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+    emit currentTrackChanged(track);
 }

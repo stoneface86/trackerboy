@@ -73,11 +73,6 @@ PatternEditor::Actions& PatternEditor::menuActions() {
     return mActions;
 }
 
-void PatternEditor::setAppearance(Config::Appearance const& appearance) {
-    mGrid.setFont(appearance.font);
-    mGrid.apply();
-}
-
 void PatternEditor::setupMenu(QMenu &menu) {
     menu.addAction(&mActions.undo);
     menu.addAction(&mActions.redo);

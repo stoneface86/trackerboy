@@ -60,6 +60,8 @@ public slots:
 
 protected:
 
+    void changeEvent(QEvent *evt) override;
+
     void leaveEvent(QEvent *evt) override;
 
     void mouseMoveEvent(QMouseEvent *evt) override;

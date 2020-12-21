@@ -33,6 +33,7 @@ public:
 private slots:
 
     void currentChanged(QModelIndex const &current, QModelIndex const &prev);
+    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
     void increment();
     void decrement();
@@ -42,6 +43,8 @@ private slots:
 
 private:
     OrderModel &mModel;
+
+    bool mIgnoreSelect;
 
     QMenu mContextMenu;
 

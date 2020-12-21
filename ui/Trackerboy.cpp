@@ -7,7 +7,8 @@ Trackerboy::Trackerboy() :
     config(colorTable, miniaudio),
     document(),
     instrumentModel(document),
-    songModel(document),
+    orderModel(document),
+    songModel(document, orderModel),
     waveModel(document),
     renderer(document, instrumentModel, waveModel)
 {

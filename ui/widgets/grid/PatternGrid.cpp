@@ -328,6 +328,12 @@ void PatternGrid::setCursorTrack(int track) {
 
 // ================================================================ EVENTS ===
 
+void PatternGrid::changeEvent(QEvent *evt) {
+    if (evt->type() == QEvent::FontChange) {
+        appearanceChanged();
+    }
+}
+
 void PatternGrid::paintEvent(QPaintEvent *evt) {
     Q_UNUSED(evt);
 

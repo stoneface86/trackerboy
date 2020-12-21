@@ -4,6 +4,7 @@
 #include "trackerboy/data/Order.hpp"
 
 #include "model/ModuleDocument.hpp"
+#include "ColorTable.hpp"
 
 #include <QAbstractTableModel>
 #include <QItemSelection>
@@ -41,6 +42,8 @@ public:
     // All items in the given selection are set to the given track id
     //
     void setSelection(QItemSelection const &selection, uint8_t id);
+
+    void setRowColor(QColor const& color);
 
     // model implementation
 
@@ -101,6 +104,9 @@ private:
         set
     };
 
+    void doSelectPattern(int pattern);
+    void doSelectTrack(int track);
+
     template <ModifyMode mode>
     void modifySelection(QItemSelection const &selection, uint8_t option = 0);
 
@@ -108,6 +114,7 @@ private:
     void modifyCell(uint8_t &cell, uint8_t value);
 
     ModuleDocument &mDocument;
+    QColor mRowColor;
 
     std::vector<trackerboy::Order> *mOrder;
 

@@ -12,6 +12,7 @@
 OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
+    mIgnoreSelect(false),
     mContextMenu(),
     mLayout(),
     mToolbar(),
@@ -85,10 +86,16 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
 
     auto selectionModel = mOrderView.selectionModel();
     connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderWidget::currentChanged);
+    connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &OrderWidget::selectionChanged);
     connect(&model, &OrderModel::currentIndexChanged, this,
         [this](const QModelIndex &index) {
-            mOrderView.selectionModel()->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
+            if (!mIgnoreSelect) {
+                mOrderView.selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
+            }
         });
+
+    // initialize selection
+    selectionModel->select(model.index(0, 0), QItemSelectionModel::Select);
     
     mOrderView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(&mOrderView, &QTableView::customContextMenuRequested, this, &OrderWidget::tableViewContextMenu);
@@ -96,8 +103,6 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     auto headerView = mOrderView.horizontalHeader();
     headerView->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
 
-    // todo: use the same font as the PatternGrid
-    mOrderView.setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
 
     auto verticalHeader = mOrderView.verticalHeader();
     verticalHeader->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
@@ -125,8 +130,21 @@ void OrderWidget::setupMenu(QMenu &menu) {
 void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
     Q_UNUSED(prev);
 
+    mIgnoreSelect = true;
     mModel.select(current.row(), current.column());
- 
+    mIgnoreSelect = false;
+}
+
+void OrderWidget::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) {
+    Q_UNUSED(selected);
+    Q_UNUSED(deselected);
+
+    // this slot is just for preventing the user from deselecting
+    auto model = mOrderView.selectionModel();
+    if (!model->hasSelection()) {
+        // user deselected everything, force selection of the current index
+        model->select(mOrderView.currentIndex(), QItemSelectionModel::Select);
+    }
 }
 
 void OrderWidget::increment() {

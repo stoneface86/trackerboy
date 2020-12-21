@@ -293,7 +293,54 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
 
     if (categories.testFlag(Config::CategoryAppearance)) {
         auto &appearance = mApp.config.appearance();
-        mPatternEditor->setAppearance(appearance);
+
+        setStyleSheet(QStringLiteral(R"stylesheet(
+PatternEditor PatternGrid {
+    font-family: %5;
+    font-size: %6 px;
+}
+
+OrderWidget QTableView {
+    background-color: %1;
+    gridline-color: %2;
+    color: %3;
+    selection-color: %3;
+    selection-background-color: %4;
+    font-family: %5;
+}
+
+OrderWidget QTableView QTableCornerButton::section {
+    background-color: %1;
+    border-right: 1px solid %2;
+    border-bottom: 1px solid %2;
+    border-top: none;
+    border bottom: none;
+}
+
+OrderWidget QTableView QHeaderView {
+    background-color: %1;
+    color: %3;
+    font-family: %5;
+}
+
+OrderWidget QTableView QHeaderView::section {
+    background-color: %1;
+    border-right: 1px solid %2;
+    border-bottom: 1px solid %2;
+    border-top: none;
+    border bottom: none;
+}
+
+)stylesheet").arg(
+        mApp.colorTable[+Color::background].name(),
+        mApp.colorTable[+Color::line].name(),
+        mApp.colorTable[+Color::foreground].name(),
+        mApp.colorTable[+Color::selection].name(),
+        appearance.font.family(),
+        QString::number(appearance.font.pixelSize())
+        ));
+
+        mApp.orderModel.setRowColor(mApp.colorTable[+Color::backgroundRow]);
     }
 
     mApp.config.writeSettings();

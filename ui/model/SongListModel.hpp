@@ -11,7 +11,7 @@ class SongListModel : public BaseModel {
     Q_OBJECT
 
 public:
-    SongListModel(ModuleDocument &document);
+    SongListModel(ModuleDocument &document, OrderModel &orderModel);
 
     trackerboy::Song* currentSong();
 
@@ -53,7 +53,7 @@ protected:
     virtual void dataSelected(int index) override;
 
 private:
-    OrderModel mOrderModel;
+    OrderModel &mOrderModel;
 
     std::vector<trackerboy::Song> &mSongVector;
 
