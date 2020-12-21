@@ -3,6 +3,8 @@
 
 #include "model/OrderModel.hpp"
 #include "widgets/grid/PatternGrid.hpp"
+#include "widgets/grid/PatternGridHeader.hpp"
+
 
 #include <QFrame>
 #include <QGridLayout>
@@ -15,6 +17,8 @@ class PatternEditor : public QFrame {
     Q_OBJECT
 
 public:
+
+    
 
     struct Actions {
 
@@ -40,6 +44,8 @@ public:
     Actions& menuActions();
 
     void setupMenu(QMenu &menu);
+
+    void setColors(ColorTable const& colors);
 
 //public slots:
 
@@ -79,6 +85,7 @@ private slots:
 private:
 
     QGridLayout mLayout;
+        PatternGridHeader mGridHeader;
         PatternGrid mGrid;
         QScrollBar mHScroll;
         QScrollBar mVScroll;

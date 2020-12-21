@@ -340,6 +340,7 @@ OrderWidget QTableView QHeaderView::section {
         QString::number(appearance.font.pixelSize())
         ));
 
+        mPatternEditor->setColors(mApp.colorTable);
         mApp.orderModel.setRowColor(mApp.colorTable[+Color::backgroundRow]);
     }
 

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "model/SongListModel.hpp"
+#include "widgets/grid/PatternGridHeader.hpp"
 #include "ColorTable.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
@@ -23,16 +24,12 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(SongListModel &model, ColorTable const &colorTable, QWidget *parent = nullptr);
+    explicit PatternGrid(SongListModel &model, ColorTable const &colorTable, PatternGridHeader &header, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
 
-    void apply(); // applies current settings
-
     int row() const;
-
-    void forceRedraw();
 
     // show pattern data for the previous and next patterns
     void setPreviewEnable(bool previews);
@@ -104,11 +101,6 @@ private:
     };
 
     //
-    // Hover state when the mouse is not over any track header
-    //
-    static constexpr int HOVER_NONE = -1;
-
-    //
     // Called when appearance settings have changed, recalculates metrics and redraws
     // all rows.
     //
@@ -152,32 +144,12 @@ private:
     //
     void scroll(int rows);
 
-    void setTrackHover(int track);
-
     //
     // Get pattern data for the given pattern index
     //
     void setPatterns(int pattern);
 
     void setPatternRect();
-
-    //
-    // Schedules a repaint for just the grid portion of the widget
-    //
-    void updateGrid();
-
-    //
-    // Schedules a repaint for just the header portion of the widget
-    //
-    void updateHeader();
-
-    //
-    // Schedules a full repaint for the widget.
-    //
-    void updateAll();
-
-    
-
 
     static constexpr int ROWNO_CELLS = 4; // 4 cells for row numbers
 
@@ -187,10 +159,6 @@ private:
     // total columns on the grid (excludes rowno)
     static constexpr int COLUMNS = TRACK_COLUMNS * 4;
 
-    static constexpr int HEADER_HEIGHT = 32;
-    static constexpr int HEADER_FONT_WIDTH = 7;
-    static constexpr int HEADER_FONT_HEIGHT = 11;
-
     // converts a column index -> cell index
     static uint8_t TRACK_CELL_MAP[TRACK_CELLS];
     // converts a cell index -> column index
@@ -199,15 +167,11 @@ private:
 
     SongListModel &mModel;
     ColorTable const &mColorTable;
+    PatternGridHeader &mHeader;
 
     // display image, rows get painted here when needed as opposed to every
     // paintEvent
     QPixmap mDisplay;
-
-    // 1bpp font 7x11, used for the Header
-    QBitmap mHeaderFont;
-    // header drawing is cached here, similar to the grid, to speed up painting
-    QPixmap mHeaderPixmap;
 
     // if true all rows will be redrawn on next paint event
     bool mRepaintImage;
@@ -224,13 +188,6 @@ private:
     QRect mPatternRect;
 
     bool mSelecting;
-
-    // translation x coordinate for centering the grid
-    int mDisplayXpos;
-
-    // header stuff
-    int mTrackHover;
-    int mTrackFlags;
 
     // settings
 
@@ -249,11 +206,7 @@ private:
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
 
-    // width, in pixels, of a track
-    int mTrackWidth; // = TRACK_CELLS * mCharWidth
-
-    // width, in pixels of the row number column
-    int mRownoWidth; // = 4 * mCharWidth
+    PatternMetrics mMetrics;
 
 
 };

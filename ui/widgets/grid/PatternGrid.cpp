@@ -173,11 +173,11 @@ static char effectTypeToChar(trackerboy::EffectType et) {
 }
 
 
-PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, QWidget *parent) :
+PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
     mModel(model),
     mColorTable(colorTable),
-    mHeaderFont(":/images/gridHeaderFont.bmp"),
+    mHeader(header),
     mRepaintImage(true),
     mCursorRow(0),
     mCursorCol(0),
@@ -185,16 +185,11 @@ PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, QWi
     mPatternPrev(),
     mPatternCurr(mModel.currentSong()->getPattern(0)),
     mPatternNext(),
-    mDisplayXpos(0),
-    mTrackHover(-1),
-    mTrackFlags(0),
     mSettingDisplayFlats(false),
     mSettingShowPreviews(true),
     mRowHeight(0),
     mCharWidth(0),
-    mVisibleRows(0),
-    mTrackWidth(0),
-    mRownoWidth(0)
+    mVisibleRows(0)
 {
     
     auto &orderModel = mModel.orderModel();
@@ -225,14 +220,32 @@ PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, QWi
 
 }
 
-void PatternGrid::apply() {
-    appearanceChanged();
-    updateAll();
-}
-
 int PatternGrid::row() const {
     return mCursorRow;
 }
+
+void PatternGrid::setPreviewEnable(bool previews) {
+    if (previews != mSettingShowPreviews) {
+        mSettingShowPreviews = previews;
+        setPatterns(mCursorPattern);
+        if (!previews) {
+            mPatternPrev.reset();
+            mPatternNext.reset();
+        }
+
+        mRepaintImage = true;
+        update();
+    }
+}
+
+void PatternGrid::setShowFlats(bool showFlats) {
+    if (showFlats != mSettingDisplayFlats) {
+        mSettingDisplayFlats = showFlats;
+        mRepaintImage = true;
+        update();
+    }
+}
+
 
 // ================================================================= SLOTS ===
 
@@ -263,7 +276,7 @@ void PatternGrid::setCursorColumn(int column) {
     }
 
     mCursorCol = column;
-    updateGrid();
+    update();
     emit cursorColumnChanged(mCursorCol);
 }
 
@@ -282,7 +295,7 @@ void PatternGrid::setCursorRow(int row) {
         mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
 
         mRepaintImage = true;
-        updateGrid();
+        update();
     } else if (row >= mPatternCurr.totalRows()) {
         // go to the next pattern or wrap around to the first one
         int nextPattern = mCursorPattern + 1;
@@ -292,7 +305,7 @@ void PatternGrid::setCursorRow(int row) {
         mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
 
         mRepaintImage = true;
-        updateGrid();
+        update();
     } else {
         scroll(row - mCursorRow);
     }
@@ -315,7 +328,7 @@ void PatternGrid::setCursorPattern(int pattern) {
 
     // full repaint
     mRepaintImage = true;
-    updateGrid();
+    update();
     //emit cursorPatternChanged(pattern);
 }
 
@@ -339,52 +352,6 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
     QPainter painter(this);
 
-    // HEADER ================================================================
-
-    // background
-    painter.fillRect(0, 0, width(), HEADER_HEIGHT, mColorTable[+Color::headerBackground]);
-
-
-    // disabled tracks
-    {
-        QColor disabledColor = mColorTable[+Color::headerDisabled];
-        int xpos = mDisplayXpos + mRownoWidth;
-        for (int i = 0; i != 4; ++i) {
-            if (!!(mTrackFlags & (1 << i))) {
-                painter.fillRect(xpos, 0, mTrackWidth, HEADER_HEIGHT, disabledColor);
-            }
-            xpos += mTrackWidth;
-        }
-    }
-
-
-
-    painter.setPen(mColorTable[+Color::headerForeground]);
-    painter.drawLine(0, HEADER_HEIGHT - 2, width(), HEADER_HEIGHT - 2);
-
-    painter.translate(QPoint(mDisplayXpos + mRownoWidth, 0));
-
-
-
-    // highlight
-    if (mTrackHover != -1) {
-        painter.setPen(mColorTable[+Color::headerHover]);
-        int trackBegin = mTrackWidth * mTrackHover;
-        int trackEnd = trackBegin + mTrackWidth;
-        //painter.drawLine(trackBegin, HEADER_HEIGHT - 3, trackEnd, HEADER_HEIGHT - 3);
-        painter.drawLine(trackBegin, HEADER_HEIGHT - 1, trackEnd, HEADER_HEIGHT - 1);
-
-    }
-
-    // lines + text
-    painter.drawPixmap(0, 0, mHeaderPixmap);
-
-    // draw volume meters
-
-
-    painter.resetTransform();
-
-    // GRID ==================================================================
 
     if (mRepaintImage) {
         qDebug() << "Full repaint";
@@ -399,12 +366,10 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         mRepaintImage = false;
     }
 
-    auto const h = height() - HEADER_HEIGHT;
+    auto const h = height();
     auto const w = width();
     unsigned const center = mVisibleRows / 2 * mRowHeight;
 
-
-    painter.translate(QPoint(0, HEADER_HEIGHT));
 
     // background
 
@@ -421,8 +386,8 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
 
     // the grid is centered so translate everything else by the x offset
-    if (mDisplayXpos > 0) {
-        painter.translate(QPoint(mDisplayXpos, 0));
+    if (mMetrics.offset > 0) {
+        painter.translate(QPoint(mMetrics.offset, 0));
     }
 
 
@@ -474,20 +439,21 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // lines
     painter.setPen(mColorTable[+Color::line]);
     painter.drawLine(0, 0, 0, h);
-    int xpos = mRownoWidth;
+    int xpos = mMetrics.rownoWidth;
     for (int i = 0; i != 5; ++i) {
         painter.drawLine(xpos, 0, xpos, h);
-        xpos += mTrackWidth;
+        xpos += mMetrics.trackWidth;
     }
 
-    #ifndef NDEBUG
+    /*#ifndef NDEBUG
     painter.setPen(Qt::green);
     painter.drawRect(mPatternRect);
-    #endif
+    #endif*/
         
 }
 
 void PatternGrid::resizeEvent(QResizeEvent *evt) {
+
     auto oldSize = evt->oldSize();
     auto newSize = evt->size();
 
@@ -554,7 +520,8 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
         // determine x offset for centering
         auto displayRect = mDisplay.rect();
         displayRect.moveCenter(rect().center());
-        mDisplayXpos = displayRect.left();
+        mMetrics.offset = displayRect.left();
+        mHeader.setMetrics(mMetrics);
     }
 
     
@@ -562,28 +529,12 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
 
 void PatternGrid::leaveEvent(QEvent *evt) {
     Q_UNUSED(evt);
-
-    setTrackHover(HOVER_NONE);
 }
 
 void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
 
-    int mx = evt->x();
-    int my = evt->y();
-
-    if (my < HEADER_HEIGHT) {
-        // translate the x coordinate so that 0 = track 1
-        int translated = mx - mDisplayXpos - mRownoWidth;
-        int hover = HOVER_NONE;
-
-        if (translated > 0 && translated < mTrackWidth * 4) {
-            hover = translated / mTrackWidth;
-        }
-        setTrackHover(hover);
-        
-    } else {
-        setTrackHover(HOVER_NONE);
-    }
+    //int mx = evt->x();
+    //int my = evt->y();
 
 
 }
@@ -600,31 +551,23 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
     if (evt->button() == Qt::LeftButton) {
 
-        if (mTrackHover == HOVER_NONE) {
+        int mx = evt->x(), my = evt->y();
 
-            int mx = evt->x(), my = evt->y();
-
-            // translate
-            mx -= mDisplayXpos;
-            my -= HEADER_HEIGHT;
+        // translate
+        mx -= mMetrics.offset;
             
 
-            if (mPatternRect.contains(mx, my)) {
-                unsigned row, column;
-                mx -= mRownoWidth;
-                getCursorFromMouse(mx, my, row, column);
+        if (mPatternRect.contains(mx, my)) {
+            unsigned row, column;
+            mx -= mMetrics.rownoWidth;
+            getCursorFromMouse(mx, my, row, column);
 
-                setCursorRow(row);
-                setCursorColumn(column);
-                // redraw cursor
-                //update();
-            }
-        } else {
-            // user clicked on a track header either to mute or unmute the channel
-            mTrackFlags ^= 1 << mTrackHover;
-            updateHeader();
-
+            setCursorRow(row);
+            setCursorColumn(column);
+            // redraw cursor
+            //update();
         }
+        
     }
 }
 
@@ -652,7 +595,7 @@ void PatternGrid::onSongChanged(int index) {
 
         // redraw everything
         mRepaintImage = true;
-        updateGrid();
+        update();
 
 
     }
@@ -680,8 +623,8 @@ void PatternGrid::appearanceChanged() {
 
     mVisibleRows = getVisibleRows();
 
-    mTrackWidth = TRACK_CELLS * mCharWidth;
-    mRownoWidth = ROWNO_CELLS * mCharWidth;
+    mMetrics.trackWidth = TRACK_CELLS * mCharWidth;
+    mMetrics.rownoWidth = ROWNO_CELLS * mCharWidth;
 
     setPatternRect();
 
@@ -690,35 +633,9 @@ void PatternGrid::appearanceChanged() {
     mRepaintImage = true;
 
     // resize image
-    mDisplay = QPixmap((mTrackWidth * 4) + mRownoWidth, mVisibleRows * mRowHeight);
+    mDisplay = QPixmap((mMetrics.trackWidth * 4) + mMetrics.rownoWidth, mVisibleRows * mRowHeight);
 
-    // draw the header
-    mHeaderPixmap = QPixmap(mTrackWidth * 4 + 1, HEADER_HEIGHT);
-    mHeaderPixmap.fill(Qt::transparent);
-    QPainter painter(&mHeaderPixmap);
-    painter.setPen(mColorTable[+Color::headerForeground]);
-    int x = 2;
-    for (int i = 0; i != 4; ++i) {
-        // draw "CH"
-        painter.drawPixmap(x, 4, mHeaderFont, 0, 0, HEADER_FONT_WIDTH * 2, HEADER_FONT_HEIGHT);
-
-        // draw line for volume meter
-        //painter.drawLine(x, 22, x + mTrackWidth - 4, 22);
-
-        //x += HEADER_FONT_WIDTH * 2;
-        // draw number
-        painter.drawPixmap(x + (HEADER_FONT_WIDTH * 2), 4, mHeaderFont, HEADER_FONT_WIDTH * (2 + i), 0, HEADER_FONT_WIDTH, HEADER_FONT_HEIGHT);
-        x += mTrackWidth;
-    }
-
-    // draw lines
-    painter.setPen(mColorTable[+Color::line]);
-    x = 0;
-    for (int i = 0; i != 5; ++i) {
-        painter.drawLine(x, 0, x, HEADER_HEIGHT);
-        x += mTrackWidth;
-    }
-
+    mHeader.setMetrics(mMetrics);
 }
 
 void PatternGrid::scroll(int rows) {
@@ -764,13 +681,13 @@ void PatternGrid::scroll(int rows) {
         paintRows(painter, rowStart, rowEnd);
         painter.end();
     }
-    updateGrid();
+    update();
 }
 
 int PatternGrid::columnLocation(int column) {
     int track = column / TRACK_COLUMNS;
     int coltype = column % TRACK_COLUMNS;
-    return track * mTrackWidth + TRACK_COLUMN_MAP[coltype] * mCharWidth + mRownoWidth;
+    return track * mMetrics.trackWidth + TRACK_COLUMN_MAP[coltype] * mCharWidth + mMetrics.rownoWidth;
 }
 
 void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
@@ -783,10 +700,7 @@ void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &o
 }
 
 unsigned PatternGrid::getVisibleRows() {
-    auto h = height() - HEADER_HEIGHT;
-    if (h <= 0) {
-        return 1;
-    }
+    auto h = height();
     // integer division, rounding up
     return (h - 1) / mRowHeight + 1;
 }
@@ -1024,12 +938,6 @@ void PatternGrid::eraseCells(QPainter &painter, int cells, int xpos, int ypos) {
     painter.setCompositionMode(compMode);
 }
 
-void PatternGrid::setTrackHover(int hover) {
-    if (mTrackHover != hover) {
-        mTrackHover = hover;
-        updateHeader();
-    }
-}
 
 void PatternGrid::setPatterns(int pattern) {
     auto song = mModel.currentSong();
@@ -1058,20 +966,8 @@ void PatternGrid::setPatterns(int pattern) {
 }
 
 void PatternGrid::setPatternRect() {
-    mPatternRect.setX(mRownoWidth);
+    mPatternRect.setX(mMetrics.rownoWidth);
     mPatternRect.setY(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
-    mPatternRect.setWidth(mTrackWidth * 4);
+    mPatternRect.setWidth(mMetrics.trackWidth * 4);
     mPatternRect.setHeight(mRowHeight * mPatternCurr.totalRows());
-}
-
-void PatternGrid::updateHeader() {
-    update(QRect(0, 0, width(), HEADER_HEIGHT));
-}
-
-void PatternGrid::updateGrid() {
-    update(QRect(0, HEADER_HEIGHT, width(), height() - HEADER_HEIGHT));
-}
-
-void PatternGrid::updateAll() {
-    update();
 }

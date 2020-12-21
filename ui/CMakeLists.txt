@@ -47,6 +47,7 @@ set(UI_SRC
     "widgets/docks/SongWidget.cpp"
     "widgets/docks/TableForm.cpp"
     "widgets/grid/PatternGrid.cpp"
+    "widgets/grid/PatternGridHeader.cpp"
     "widgets/CustomSpinBox.cpp"
     "widgets/EnvelopeForm.cpp"
     "widgets/PatternEditor.cpp"

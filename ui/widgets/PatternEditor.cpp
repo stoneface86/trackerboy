@@ -4,16 +4,19 @@
 #include "misc/utils.hpp"
 
 #include <QGridLayout>
+#include <QtDebug>
 
 PatternEditor::PatternEditor(SongListModel &model, ColorTable const &colorTable, QWidget *parent) :
     QFrame(parent),
     mLayout(),
-    mGrid(model, colorTable),
+    mGridHeader(),
+    mGrid(model, colorTable, mGridHeader),
     mHScroll(Qt::Horizontal),
     mVScroll(Qt::Vertical),
     mWheel(0),
     mPageStep(4)
 {
+
     setFrameStyle(QFrame::StyledPanel);
     setFocusPolicy(Qt::StrongFocus);
 
@@ -27,9 +30,10 @@ PatternEditor::PatternEditor(SongListModel &model, ColorTable const &colorTable,
 
     mLayout.setMargin(0);
     mLayout.setSpacing(0);
-    mLayout.addWidget(&mGrid, 0, 0);
-    mLayout.addWidget(&mVScroll, 0, 1);
-    mLayout.addWidget(&mHScroll, 1, 0);
+    mLayout.addWidget(&mGridHeader, 0, 0);
+    mLayout.addWidget(&mGrid, 1, 0);
+    mLayout.addWidget(&mVScroll, 0, 1, 2, 1);
+    mLayout.addWidget(&mHScroll, 2, 0);
     setLayout(&mLayout);
 
 
@@ -90,6 +94,10 @@ void PatternEditor::setupMenu(QMenu &menu) {
 
 
 
+}
+
+void PatternEditor::setColors(ColorTable const& colors) {
+    mGridHeader.setColors(colors);
 }
 
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {
