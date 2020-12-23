@@ -1,5 +1,6 @@
 
 #include "widgets/grid/PatternGrid.hpp"
+#include "widgets/grid/layout.hpp"
 
 #include "trackerboy/note.hpp"
 
@@ -9,6 +10,8 @@
 #include <QtDebug>
 
 #include <algorithm>
+
+using namespace PatternConstants;
 
 // The TODO list
 //
@@ -57,127 +60,11 @@
 // 222 - effect 2 columns (3 columns, 3 cells)
 // 333 - effect 3 columns (3 columns, 3 cells)
 
-// converts a column index -> cell index
-uint8_t PatternGrid::TRACK_COLUMN_MAP[] = {
-    // .NNN.II.111222333.
-    //  0   12 3456789AB
-    1,  // COLUMN_NOTE
-    5,  // COLUMN_INSTRUMENT_HIGH
-    6,  // COLUMN_INSTRUMENT_LOW
-    8,  // COLUMN_EFFECT1_TYPE
-    9,  // COLUMN_EFFECT1_ARG_HIGH
-    10, // COLUMN_EFFECT1_ARG_LOW
-    11, // COLUMN_EFFECT2_TYPE
-    12, // COLUMN_EFFECT2_ARG_HIGH
-    13, // COLUMN_EFFECT2_ARG_LOW
-    14, // COLUMN_EFFECT3_TYPE
-    15, // COLUMN_EFFECT3_ARG_HIGH
-    16  // COLUMN_EFFECT3_ARG_LOW
-
-};
-
-// converts a cell index -> column index
-uint8_t PatternGrid::TRACK_CELL_MAP[] = {
-    COLUMN_NOTE,    // spacing
-    COLUMN_NOTE,
-    COLUMN_NOTE,
-    COLUMN_NOTE,
-    
-    COLUMN_INSTRUMENT_HIGH, // spacing
-    COLUMN_INSTRUMENT_HIGH,
-    COLUMN_INSTRUMENT_LOW,
-
-    COLUMN_EFFECT1_TYPE, // spacing
-    COLUMN_EFFECT1_TYPE,
-    COLUMN_EFFECT1_ARG_HIGH,
-    COLUMN_EFFECT1_ARG_LOW,
-    //COLUMN_EFFECT2_TYPE, // spacing
-    COLUMN_EFFECT2_TYPE,
-    COLUMN_EFFECT2_ARG_HIGH,
-    COLUMN_EFFECT2_ARG_LOW,
-    //COLUMN_EFFECT3_TYPE, // spacing
-    COLUMN_EFFECT3_TYPE,
-    COLUMN_EFFECT3_ARG_HIGH,
-    COLUMN_EFFECT3_ARG_LOW,
-    COLUMN_EFFECT3_ARG_LOW, // spacing
-};
-
-static const char HEX_TABLE[16] = {
-    '0',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    'A',
-    'B',
-    'C',
-    'D',
-    'E',
-    'F'
-};
-
-// TODO: move this somewhere in the library
-static char effectTypeToChar(trackerboy::EffectType et) {
-
-    switch (et) {
-        case trackerboy::EffectType::patternGoto:
-            return 'B';
-        case trackerboy::EffectType::patternHalt:
-            return 'C';
-        case trackerboy::EffectType::patternSkip:
-            return 'D';
-        case trackerboy::EffectType::setTempo:
-            return 'F';
-        case trackerboy::EffectType::sfx:
-            return 'T';
-        case trackerboy::EffectType::setEnvelope:
-            return 'E';
-        case trackerboy::EffectType::setTimbre:
-            return 'V';
-        case trackerboy::EffectType::setPanning:
-            return 'I';
-        case trackerboy::EffectType::setSweep:
-            return 'H';
-        case trackerboy::EffectType::delayedCut:
-            return 'S';
-        case trackerboy::EffectType::delayedNote:
-            return 'G';
-        case trackerboy::EffectType::lock:
-            return 'L';
-        case trackerboy::EffectType::arpeggio:
-            return '0';
-        case trackerboy::EffectType::pitchUp:
-            return '1';
-        case trackerboy::EffectType::pitchDown:
-            return '2';
-        case trackerboy::EffectType::autoPortamento:
-            return '3';
-        case trackerboy::EffectType::vibrato:
-            return '4';
-        case trackerboy::EffectType::vibratoDelay:
-            return '5';
-        case trackerboy::EffectType::tuning:
-            return 'P';
-        case trackerboy::EffectType::noteSlideUp:
-            return 'Q';
-        case trackerboy::EffectType::noteSlideDown:
-            return 'R';
-        default:
-            return '?';
-    }
-}
-
-
-PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, PatternGridHeader &header, QWidget *parent) :
+PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
     mModel(model),
-    mColorTable(colorTable),
     mHeader(header),
+    mPainter(font()),
     mRepaintImage(true),
     mCursorRow(0),
     mCursorCol(0),
@@ -187,8 +74,6 @@ PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, Pat
     mPatternNext(),
     mSettingDisplayFlats(false),
     mSettingShowPreviews(true),
-    mRowHeight(0),
-    mCharWidth(0),
     mVisibleRows(0)
 {
     
@@ -213,7 +98,8 @@ PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, Pat
             update();
         });
 
-    setMouseTracking(true);
+    setAutoFillBackground(true);
+    //setMouseTracking(true);
 
     // initialize appearance settings for the first time
     appearanceChanged();
@@ -222,6 +108,15 @@ PatternGrid::PatternGrid(SongListModel &model, ColorTable const &colorTable, Pat
 
 int PatternGrid::row() const {
     return mCursorRow;
+}
+
+void PatternGrid::setColors(ColorTable const& colors) {
+    mPainter.setColors(colors);
+    auto pal = palette();
+    pal.setColor(QPalette::Window, colors[+Color::background]);
+    setPalette(pal);
+    mRepaintImage = true;
+    update();
 }
 
 void PatternGrid::setPreviewEnable(bool previews) {
@@ -292,7 +187,7 @@ void PatternGrid::setCursorRow(int row) {
         setCursorPattern(mCursorPattern == 0 ? song->orders().size() - 1 : mCursorPattern - 1);
         int currCount = mPatternCurr.totalRows();
         mCursorRow = std::max(0, currCount + row);
-        mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
+        mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mPainter.cellHeight());
 
         mRepaintImage = true;
         update();
@@ -302,7 +197,7 @@ void PatternGrid::setCursorRow(int row) {
         setCursorPattern(nextPattern == song->orders().size() ? 0 : nextPattern);
         int currCount = mPatternCurr.totalRows();
         mCursorRow = std::min(currCount - 1, row - currCount);
-        mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
+        mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mPainter.cellHeight());
 
         mRepaintImage = true;
         update();
@@ -343,13 +238,14 @@ void PatternGrid::setCursorTrack(int track) {
 
 void PatternGrid::changeEvent(QEvent *evt) {
     if (evt->type() == QEvent::FontChange) {
+        mPainter.setFont(font());
         appearanceChanged();
     }
 }
 
 void PatternGrid::paintEvent(QPaintEvent *evt) {
     Q_UNUSED(evt);
-
+    
     QPainter painter(this);
 
 
@@ -367,53 +263,46 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     }
 
     auto const h = height();
-    auto const w = width();
-    unsigned const center = mVisibleRows / 2 * mRowHeight;
+    //auto const w = width();
+    //auto const cellHeight = mPainter.cellHeight();
+    //auto const cellWidth = mPainter.cellWidth();
+    unsigned const centerRow = mVisibleRows / 2;
+    //unsigned const center = centerRow * cellHeight;
 
 
-    // background
-
-    painter.fillRect(0, 0, w, h, mColorTable[+Color::background]);
-
+    
+    
     // highlights
     // TODO
 
     // cursor row
-    painter.setPen(mColorTable[+Color::backgroundRow]);
+    /*painter.setPen(mColorTable[+Color::backgroundRow]);
     painter.drawLine(0, center, w, center);
-    painter.fillRect(0, center, w, mRowHeight, mColorTable[+Color::backgroundRow]);
-    painter.drawLine(0, center + mRowHeight - 1, w, center + mRowHeight - 1);
+    painter.fillRect(0, center, w, cellHeight, mColorTable[+Color::backgroundRow]);
+    painter.drawLine(0, center + cellHeight - 1, w, center + cellHeight - 1);*/
 
 
     // the grid is centered so translate everything else by the x offset
-    if (mMetrics.offset > 0) {
-        painter.translate(QPoint(mMetrics.offset, 0));
+    if (mOffset > 0) {
+        painter.translate(QPoint(mOffset, 0));
     }
-
 
     // selection
     // TODO
 
     // cursor
+    mPainter.drawCursor(painter, centerRow, mCursorCol);
 
     // the cursor has a 1 pixel border around the width and height of a character
     // this way the cursor outline is not drawn under the character
 
 
-    // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-    int cursorWidth = ((mCursorCol % TRACK_COLUMNS) == COLUMN_NOTE ? 3 : 1) * mCharWidth + 2;
-    int cursorPos = columnLocation(mCursorCol) - 1;
-    QColor cursorColor = mColorTable[+Color::cursor];
-    cursorColor.setAlpha(128);
-
-    painter.fillRect(cursorPos, center, cursorWidth, mRowHeight, cursorColor);
-    painter.setPen(cursorColor);
-    painter.drawRect(cursorPos, center, cursorWidth - 1, mRowHeight - 1);
+    
 
     // text
 
     // previews are drawn at 50% opacity
-    {
+    if (mSettingShowPreviews) {
         int heightPrev = std::max(0, mPatternRect.top());
         int heightCurr = mDisplay.height() - heightPrev;
 
@@ -434,21 +323,13 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         
         painter.setOpacity(1.0);
         painter.drawPixmap(0, heightPrev, mDisplay, 0, heightPrev, -1, heightCurr);
+    } else {
+        painter.drawPixmap(0, 0, mDisplay);
     }
 
     // lines
-    painter.setPen(mColorTable[+Color::line]);
-    painter.drawLine(0, 0, 0, h);
-    int xpos = mMetrics.rownoWidth;
-    for (int i = 0; i != 5; ++i) {
-        painter.drawLine(xpos, 0, xpos, h);
-        xpos += mMetrics.trackWidth;
-    }
+    mPainter.drawLines(painter, h);
 
-    /*#ifndef NDEBUG
-    painter.setPen(Qt::green);
-    painter.drawRect(mPatternRect);
-    #endif*/
         
 }
 
@@ -464,11 +345,12 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
         if (mVisibleRows != oldVisible) {
             // the number of rows visible onscreen has changed
 
+            auto const cellHeight = mPainter.cellHeight();
             unsigned centerOld = oldVisible / 2;
             unsigned centerNew = mVisibleRows / 2;
             if (mVisibleRows < oldVisible) {
                 // less rows visible, crop the old image
-                mDisplay = mDisplay.copy(0, (centerOld - centerNew) * mRowHeight, mDisplay.width(), mVisibleRows * mRowHeight);
+                mDisplay = mDisplay.copy(0, (centerOld - centerNew) * cellHeight, mDisplay.width(), mVisibleRows * cellHeight);
             } else {
                 // more rows to display, enlarge and paint new rows
 
@@ -497,13 +379,13 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
 
                 unsigned oldStart = (centerNew - centerOld);
 
-                QPixmap newDisplay(mDisplay.width(), mVisibleRows * mRowHeight);
+                QPixmap newDisplay(mDisplay.width(), mVisibleRows * cellHeight);
                 newDisplay.fill(Qt::transparent);
                 QPainter painter(&newDisplay);
                 painter.setFont(font());
 
                 paintRows(painter, 0, oldStart);
-                painter.drawPixmap(0, oldStart * mRowHeight, mDisplay);
+                painter.drawPixmap(0, oldStart * cellHeight, mDisplay);
                 paintRows(painter, oldStart + oldVisible, mVisibleRows);
 
 
@@ -518,10 +400,8 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
 
     if (newSize.width() != oldSize.width()) {
         // determine x offset for centering
-        auto displayRect = mDisplay.rect();
-        displayRect.moveCenter(rect().center());
-        mMetrics.offset = displayRect.left();
-        mHeader.setMetrics(mMetrics);
+        calcOffset();
+        mHeader.setOffset(mOffset);
     }
 
     
@@ -554,12 +434,12 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
         int mx = evt->x(), my = evt->y();
 
         // translate
-        mx -= mMetrics.offset;
+        mx -= mOffset;
             
 
         if (mPatternRect.contains(mx, my)) {
             unsigned row, column;
-            mx -= mMetrics.rownoWidth;
+            mx -= mPainter.rownoWidth();
             getCursorFromMouse(mx, my, row, column);
 
             setCursorRow(row);
@@ -603,29 +483,7 @@ void PatternGrid::onSongChanged(int index) {
 
 void PatternGrid::appearanceChanged() {
 
-    // determine character width and height
-    QFontMetrics metrics(font(), &mDisplay);
-
-    // hexadecimal, 0-9, A-F
-    // notes A to G, b, #, 2-8
-    // effects: BCDFTEVIHSGL012345PQR
-    static const char PAINTABLE_CHARS[] = "ABCDEFGHTVIHSLPQR0123456789? -#b";
-    constexpr int PAINTABLE_CHARS_COUNT = sizeof(PAINTABLE_CHARS) - 1;
-
-    // get the bounding rect for the string of all paintable characters
-    // tightBoundingRect is used to remove the spacing between lines
-    auto rect = metrics.tightBoundingRect(PAINTABLE_CHARS);
-    // row height is the maximum height with 2 pixels padding for the cursor outline
-    mRowHeight = rect.height() + 2;
-
-    // get the average character width
-    mCharWidth = metrics.size(Qt::TextSingleLine, PAINTABLE_CHARS).width() / PAINTABLE_CHARS_COUNT;
-
     mVisibleRows = getVisibleRows();
-
-    mMetrics.trackWidth = TRACK_CELLS * mCharWidth;
-    mMetrics.rownoWidth = ROWNO_CELLS * mCharWidth;
-
     setPatternRect();
 
 
@@ -633,9 +491,20 @@ void PatternGrid::appearanceChanged() {
     mRepaintImage = true;
 
     // resize image
-    mDisplay = QPixmap((mMetrics.trackWidth * 4) + mMetrics.rownoWidth, mVisibleRows * mRowHeight);
+    auto const rownoWidth = mPainter.rownoWidth();
+    auto const trackWidth = mPainter.trackWidth();
 
-    mHeader.setMetrics(mMetrics);
+    mDisplay = QPixmap((trackWidth * 4) + rownoWidth, mVisibleRows * mPainter.cellHeight());
+    calcOffset();
+
+    mHeader.setOffset(mOffset);
+    mHeader.setWidths(rownoWidth, trackWidth);
+}
+
+void PatternGrid::calcOffset() {
+    auto displayRect = mDisplay.rect();
+    displayRect.moveCenter(rect().center());
+    mOffset = displayRect.left();
 }
 
 void PatternGrid::scroll(int rows) {
@@ -644,7 +513,8 @@ void PatternGrid::scroll(int rows) {
         return;
     }
 
-    mPatternRect.translate(0, -rows * mRowHeight);
+    auto const cellHeight = mPainter.cellHeight();
+    mPatternRect.translate(0, -rows * cellHeight);
     unsigned distance = abs(rows);
     mCursorRow += rows;
 
@@ -666,7 +536,7 @@ void PatternGrid::scroll(int rows) {
             rowEnd = mVisibleRows;
         }
 
-        mDisplay.scroll(0, -rows * mRowHeight, mDisplay.rect());
+        mDisplay.scroll(0, -rows * cellHeight, mDisplay.rect());
 
         QPainter painter(&mDisplay);
         painter.setFont(font());
@@ -674,7 +544,7 @@ void PatternGrid::scroll(int rows) {
         // erase the old rows
         auto mode = painter.compositionMode();
         painter.setCompositionMode(QPainter::CompositionMode_Source);
-        painter.fillRect(0, rowStart * mRowHeight, mDisplay.width(), distance * mRowHeight, Qt::transparent);
+        painter.fillRect(0, rowStart * cellHeight, mDisplay.width(), distance * cellHeight, Qt::transparent);
 
         // paint the new rows
         painter.setCompositionMode(mode);
@@ -684,25 +554,20 @@ void PatternGrid::scroll(int rows) {
     update();
 }
 
-int PatternGrid::columnLocation(int column) {
-    int track = column / TRACK_COLUMNS;
-    int coltype = column % TRACK_COLUMNS;
-    return track * mMetrics.trackWidth + TRACK_COLUMN_MAP[coltype] * mCharWidth + mMetrics.rownoWidth;
-}
 
 void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
-    int cell = x / mCharWidth;
+    int cell = x / mPainter.cellWidth();
     int track = cell / TRACK_CELLS;
     cell = cell % TRACK_CELLS;
     outCol = (track * TRACK_COLUMNS) + TRACK_CELL_MAP[cell];
-    outRow = mCursorRow + (y / mRowHeight - (mVisibleRows / 2));
+    outRow = mCursorRow + (y / mPainter.cellHeight() - (mVisibleRows / 2));
 
 }
 
 unsigned PatternGrid::getVisibleRows() {
     auto h = height();
     // integer division, rounding up
-    return (h - 1) / mRowHeight + 1;
+    return (h - 1) / mPainter.cellHeight() + 1;
 }
 
 void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
@@ -712,10 +577,10 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
         return;
     }
 
-    unsigned ypos = rowStart * mRowHeight;
+    auto const cellHeight = mPainter.cellHeight();
+    unsigned ypos = rowStart * cellHeight;
 
     painter.setFont(font());
-    painter.setPen(mColorTable[+Color::foreground]);
 
     //
     // adjusted row index, r
@@ -740,7 +605,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
                 if (remainder <= 0) {
                     return;
                 }
-                ypos += -prevRow * mRowHeight;
+                ypos += -prevRow * cellHeight;
                 prevRow = 0;
             }
 
@@ -748,15 +613,15 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
             remainder -= rowsToPaint;
 
             for (; rowsToPaint--; ) {
-                paintRow(painter, pattern[prevRow], prevRow, ypos);
+                mPainter.drawRow(painter, pattern[prevRow], prevRow, ypos);
                 prevRow++;
-                ypos += mRowHeight;
+                ypos += cellHeight;
             }
         } else {
             // no previous pattern (mCursorPattern == 0)
             // just skip these rows
             remainder += rowAdjusted;
-            ypos += mRowHeight * -rowAdjusted;
+            ypos += cellHeight * -rowAdjusted;
         }
 
         // stop here if there are no more rows to paint
@@ -774,9 +639,9 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
         remainder -= rowsToPaint;
 
         for (; rowsToPaint--; ) {
-            paintRow(painter, mPatternCurr[rowAdjusted], rowAdjusted, ypos);
+            mPainter.drawRow(painter, mPatternCurr[rowAdjusted], rowAdjusted, ypos);
             rowAdjusted++;
-            ypos += mRowHeight;
+            ypos += cellHeight;
         }
 
         if (remainder == 0) {
@@ -793,151 +658,14 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
             int rowsToPaint = std::min(remainder, nextPatternSize - nextRow);
             assert(rowsToPaint >= 0);
             for (; rowsToPaint--; ) {
-                paintRow(painter, pattern[nextRow], nextRow, ypos);
+                mPainter.drawRow(painter, pattern[nextRow], nextRow, ypos);
                 ++nextRow;
-                ypos += mRowHeight;
+                ypos += cellHeight;
             }
         }
     }
 
 }
-
-void PatternGrid::paintRow(QPainter &painter, trackerboy::PatternRow rowdata, int rowno, int ypos) {
-    QPen fgpen(mColorTable[
-        (rowno % mModel.currentSong()->rowsPerBeat()) == 0 ? +Color::foregroundHighlight : +Color::foreground
-    ]);
-    
-    // text centering
-    ypos++;
-
-    painter.setPen(fgpen);
-    painter.drawText(mCharWidth, ypos, mCharWidth * 2, mRowHeight, Qt::AlignBottom, QString("%1").arg(rowno, 2, 16, QLatin1Char('0')).toUpper());
-    int xpos = (TRACK_COLUMN_MAP[COLUMN_NOTE] + ROWNO_CELLS) * mCharWidth;
-    for (int track = 0; track != 4; ++track) {
-        auto &trackdata = rowdata[track];
-
-        if (!!(trackdata.flags & trackerboy::TrackRow::COLUMN_NOTE)) {
-            paintNote(painter, trackdata.note, xpos, ypos);
-        } else {
-            paintNone(painter, 3, xpos, ypos);
-        }
-
-
-        xpos += (TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH] - TRACK_COLUMN_MAP[COLUMN_NOTE]) * mCharWidth;
-        if (!!(trackdata.flags & trackerboy::TrackRow::COLUMN_INST)) {
-            uint8_t inst = trackdata.instrumentId;
-            painter.setPen(mColorTable[+Color::instrument]);
-            paintCell(painter, HEX_TABLE[inst >> 4], xpos, ypos);
-            paintCell(painter, HEX_TABLE[inst & 0xF], xpos + mCharWidth, ypos);
-            painter.setPen(fgpen);
-        } else {
-            paintNone(painter, 2, xpos, ypos);
-        }
-
-        xpos += (TRACK_COLUMN_MAP[COLUMN_EFFECT1_TYPE] - TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH]) * mCharWidth;
-        int effectFlag = trackerboy::TrackRow::COLUMN_EFFECT1;
-        for (int effect = 0; effect < trackerboy::TrackRow::MAX_EFFECTS; ++effect) {
-            if (!!(trackdata.flags & effectFlag)) {
-                auto effectdata = trackdata.effects[effect];
-                painter.setPen(mColorTable[+Color::effectType]);
-
-                paintCell(painter, effectTypeToChar(effectdata.type), xpos, ypos);
-                xpos += mCharWidth;
-
-                painter.setPen(fgpen);
-                paintCell(painter, HEX_TABLE[effectdata.param >> 4], xpos, ypos);
-                xpos += mCharWidth;
-                paintCell(painter, HEX_TABLE[effectdata.param & 0xF], xpos, ypos);
-                xpos += mCharWidth;
-            } else {
-                paintNone(painter, 3, xpos, ypos);
-                xpos += mCharWidth * 3;
-            }
-
-            effectFlag <<= 1;
-            
-        }
-
-        xpos += 2 * mCharWidth;
-    }
-}
-
-void PatternGrid::paintNone(QPainter &painter, int cells, int xpos, int ypos) {
-    xpos += 3;
-    ypos += mRowHeight / 2;
-    int const width = mCharWidth - 6;
-    for (int i = cells; i--; ) {
-        painter.drawLine(xpos, ypos, xpos + width, ypos);
-        xpos += mCharWidth;
-    }
-}
-
-void PatternGrid::paintNote(QPainter &painter, uint8_t note, int xpos, int ypos) {
-
-    const char* NOTE_STR_SHARP[] = {
-        "C-",
-        "C#",
-        "D-",
-        "D#",
-        "E-",
-        "F-",
-        "F#",
-        "G-",
-        "G#",
-        "A-",
-        "A#",
-        "B-"
-    };
-
-    const char* NOTE_STR_FLAT[] = {
-        "C-",
-        "Db",
-        "D-",
-        "Eb",
-        "E-",
-        "F-",
-        "Gb",
-        "G-",
-        "Ab",
-        "A-",
-        "Bb",
-        "B-"
-    };
-
-    //painter.setPen(mColorTable[COLOR_FG]);
-
-    if (note == trackerboy::NOTE_CUT) {
-        painter.setBrush(QBrush(painter.pen().color()));
-        painter.drawRect(xpos, ypos + mRowHeight / 2, mCharWidth * 2, 2);
-    } else {
-
-        int octave = note / 12;
-        int key = note % 12;
-        octave += 2;
-
-        auto notetable = (mSettingDisplayFlats) ? NOTE_STR_FLAT : NOTE_STR_SHARP;
-
-        painter.drawText(xpos, ypos, 3 * mCharWidth, mRowHeight, Qt::AlignBottom,
-            QString("%1%2").arg(notetable[key]).arg(octave));
-    }
-}
-
-void PatternGrid::paintCell(QPainter &painter, char cell, int xpos, int ypos) {
-    painter.drawText(xpos, ypos, mCharWidth, mRowHeight, Qt::AlignBottom, QString(cell));
-}
-
-void PatternGrid::eraseCells(QPainter &painter, int cells, int xpos, int ypos) {
-    // save the current composition mode
-    auto compMode = painter.compositionMode();
-
-    // replace all pixels in the cells with transparent pixels
-    painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(xpos, ypos, cells * mCharWidth, mRowHeight, Qt::transparent);
-
-    // restore previous composition mode
-    painter.setCompositionMode(compMode);
-}
-
 
 void PatternGrid::setPatterns(int pattern) {
     auto song = mModel.currentSong();
@@ -966,8 +694,10 @@ void PatternGrid::setPatterns(int pattern) {
 }
 
 void PatternGrid::setPatternRect() {
-    mPatternRect.setX(mMetrics.rownoWidth);
-    mPatternRect.setY(((mVisibleRows / 2) - mCursorRow) * mRowHeight);
-    mPatternRect.setWidth(mMetrics.trackWidth * 4);
-    mPatternRect.setHeight(mRowHeight * mPatternCurr.totalRows());
+    auto const cellHeight = mPainter.cellHeight();
+
+    mPatternRect.setX(mPainter.rownoWidth());
+    mPatternRect.setY(((mVisibleRows / 2) - mCursorRow) * cellHeight);
+    mPatternRect.setWidth(mPainter.trackWidth() * 4);
+    mPatternRect.setHeight(cellHeight * mPatternCurr.totalRows());
 }

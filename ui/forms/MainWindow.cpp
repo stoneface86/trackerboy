@@ -341,7 +341,7 @@ OrderWidget QTableView QHeaderView::section {
         ));
 
         mPatternEditor->setColors(mApp.colorTable);
-        mApp.orderModel.setRowColor(mApp.colorTable[+Color::backgroundRow]);
+        mApp.orderModel.setRowColor(mApp.colorTable[+Color::row]);
     }
 
     mApp.config.writeSettings();

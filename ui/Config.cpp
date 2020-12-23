@@ -39,20 +39,24 @@ void Config::readSettings() {
     mAppearance.font.setPixelSize(settings.value("fontSize", 12).toInt());
 
     settings.beginReadArray("colors");
-    readColor(settings, Color::background, QColor(8, 24, 32));
-    readColor(settings, Color::backgroundHighlight, QColor(0, 0, 0));
-    readColor(settings, Color::backgroundRow, QColor(20, 20, 80));
-    readColor(settings, Color::foreground, QColor(136, 192, 112));
-    readColor(settings, Color::foregroundHighlight, QColor(224, 248, 208));
-    readColor(settings, Color::effectType, QColor(0, 200, 200));
-    readColor(settings, Color::instrument, QColor(16, 16, 240));
-    readColor(settings, Color::selection, QColor(64, 64, 190));
-    readColor(settings, Color::cursor, QColor(192, 192, 192));
-    readColor(settings, Color::line, QColor(64, 64, 64));
-    readColor(settings, Color::headerBackground, QColor(224, 248, 208));
-    readColor(settings, Color::headerForeground, QColor(8, 24, 32));
-    readColor(settings, Color::headerHover, QColor(136, 192, 112));
-    readColor(settings, Color::headerDisabled, QColor(52, 104, 86));
+    readColor(settings, Color::background,              QColor(0x18, 0x18, 0x18));
+    readColor(settings, Color::backgroundHighlight1,    QColor(0x20, 0x20, 0x20));
+    readColor(settings, Color::backgroundHighlight2,    QColor(0x30, 0x30, 0x30));
+    readColor(settings, Color::foreground,              QColor(0xC0, 0xC0, 0xC0));
+    readColor(settings, Color::foregroundHighlight1,    QColor(0xF0, 0xF0, 0xF0));
+    readColor(settings, Color::foregroundHighlight2,    QColor(0xFF, 0xFF, 0xFF));
+    readColor(settings, Color::row,                     QColor(20, 20, 80));
+    readColor(settings, Color::rowEdit,                 QColor(0, 0, 0));
+    readColor(settings, Color::rowPlayer,               QColor(0, 0, 0));
+    readColor(settings, Color::effectType,              QColor(0x80, 0x80, 0xFF));
+    readColor(settings, Color::instrument,              QColor(0x80, 0xFF, 0x80));
+    readColor(settings, Color::selection,               QColor(0x45, 0x45, 0x50));
+    readColor(settings, Color::cursor,                  QColor(192, 192, 192));
+    readColor(settings, Color::line,                    QColor(64, 64, 64));
+    readColor(settings, Color::headerBackground,        QColor(224, 248, 208));
+    readColor(settings, Color::headerForeground,        QColor(8, 24, 32));
+    readColor(settings, Color::headerHover,             QColor(136, 192, 112));
+    readColor(settings, Color::headerDisabled,          QColor(52, 104, 86));
     settings.endArray();
    
     mAppearance.showFlats = settings.value("showFlats", false).toBool();

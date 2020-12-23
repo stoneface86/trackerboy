@@ -3,6 +3,7 @@
 
 #include "model/SongListModel.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
+#include "widgets/grid/PatternPainter.hpp"
 #include "ColorTable.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
@@ -24,12 +25,17 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(SongListModel &model, ColorTable const &colorTable, PatternGridHeader &header, QWidget *parent = nullptr);
+    explicit PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
 
     int row() const;
+
+    //
+    // set color scheme, grid is redrawn afterwards
+    //
+    void setColors(ColorTable const& colors);
 
     // show pattern data for the previous and next patterns
     void setPreviewEnable(bool previews);
@@ -106,6 +112,8 @@ private:
     //
     void appearanceChanged();
 
+    void calcOffset();
+
     //
     // Calculates the number of rows we can draw on this widget
     //
@@ -128,16 +136,6 @@ private:
     //
     void paintRows(QPainter &painter, int rowStart, int rowEnd);
 
-    void paintRow(QPainter &painter, trackerboy::PatternRow rowdata, int rowno, int ypos);
-
-    void paintNone(QPainter &painter, int cells, int xpos, int ypos);
-
-    void paintNote(QPainter &painter, uint8_t note, int xpos, int ypos);
-
-    void paintCell(QPainter &painter, char cell, int xpos, int ypos);
-
-    void eraseCells(QPainter &painter, int cells, int xpos, int ypos);
-
     //
     // Scrolls displayed rows and paints new ones. If rows >= mVisibleRows then
     // no scrolling will occur and the entire display will be repainted
@@ -151,23 +149,10 @@ private:
 
     void setPatternRect();
 
-    static constexpr int ROWNO_CELLS = 4; // 4 cells for row numbers
-
-    static constexpr int TRACK_CELLS = 18;
-    static constexpr int TRACK_COLUMNS = 12;
-
-    // total columns on the grid (excludes rowno)
-    static constexpr int COLUMNS = TRACK_COLUMNS * 4;
-
-    // converts a column index -> cell index
-    static uint8_t TRACK_CELL_MAP[TRACK_CELLS];
-    // converts a cell index -> column index
-    static uint8_t TRACK_COLUMN_MAP[TRACK_COLUMNS];
-
 
     SongListModel &mModel;
-    ColorTable const &mColorTable;
     PatternGridHeader &mHeader;
+    PatternPainter mPainter;
 
     // display image, rows get painted here when needed as opposed to every
     // paintEvent
@@ -179,6 +164,8 @@ private:
     int mCursorRow;
     int mCursorCol;
     int mCursorPattern;    // the current pattern
+
+    int mOffset;
 
     std::optional<trackerboy::Pattern> mPatternPrev;
     trackerboy::Pattern mPatternCurr;
@@ -198,15 +185,8 @@ private:
     // variables here are dependent on appearance settings
     // treat them as constants, only appearanceChanged() can modify them
 
-    // metrics
-    unsigned mRowHeight; // height of a row in pixels, including padding
-    //unsigned mRowHeightHalf;
-    //unsigned mCenter;
-    unsigned mCharWidth; // width of a character
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
-
-    PatternMetrics mMetrics;
 
 
 };

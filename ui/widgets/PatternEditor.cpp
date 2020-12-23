@@ -10,7 +10,7 @@ PatternEditor::PatternEditor(SongListModel &model, ColorTable const &colorTable,
     QFrame(parent),
     mLayout(),
     mGridHeader(),
-    mGrid(model, colorTable, mGridHeader),
+    mGrid(model, mGridHeader),
     mHScroll(Qt::Horizontal),
     mVScroll(Qt::Vertical),
     mWheel(0),
@@ -98,6 +98,7 @@ void PatternEditor::setupMenu(QMenu &menu) {
 
 void PatternEditor::setColors(ColorTable const& colors) {
     mGridHeader.setColors(colors);
+    mGrid.setColors(colors);
 }
 
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {

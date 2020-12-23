@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "widgets/grid/PatternMetrics.hpp"
 #include "ColorTable.hpp"
 
 #include <QBitmap>
@@ -18,7 +17,9 @@ public:
 
     void setColors(ColorTable const& colorTable);
 
-    void setMetrics(PatternMetrics const& metrics);
+    void setWidths(int rownoWidth, int trackWidth);
+
+    void setOffset(int offset);
 
 protected:
 
@@ -51,7 +52,9 @@ private:
     void setTrackHover(int hover);
 
 
-    PatternMetrics mMetrics;
+    int mOffset;
+    int mRownoWidth;
+    int mTrackWidth;
 
     // 1bpp font 7x11, used for the Header
     QBitmap mHeaderFont;

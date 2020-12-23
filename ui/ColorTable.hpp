@@ -14,17 +14,29 @@ enum class Color {
     // background color
     background,
 
-    // background color for highlighted rows
-    backgroundHighlight,
+    // background color for first highlight (beat row)
+    backgroundHighlight1,
 
-    // background color for the cursor row
-    backgroundRow,
+    // background color for second highlight (measure row)
+    backgroundHighlight2,
 
     // general text color
     foreground,
 
-    // text color for highlighted rows
-    foregroundHighlight,
+    // text color for first highlight (beat row)
+    foregroundHighlight1,
+
+    // text color for second highlight (measure row)
+    foregroundHighlight2,
+
+    // background color for the cursor row
+    row,
+
+    // same as row, but edit mode is enabled
+    rowEdit,
+
+    // cursor row of the renderer (only visible when follow mode is off)
+    rowPlayer,
 
     // text color for effect column
     effectType,
