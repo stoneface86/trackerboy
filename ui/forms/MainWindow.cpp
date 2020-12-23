@@ -26,9 +26,9 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mApp(trackerboy),
     mFilename(),
     mDocumentName(),
-    mConfigDialog(trackerboy.config, this),
-    mInstrumentEditor(trackerboy.instrumentModel, trackerboy.waveModel, this),
-    mWaveEditor(trackerboy.waveModel, this),
+    mConfigDialog(nullptr),
+    mInstrumentEditor(nullptr),
+    mWaveEditor(nullptr),
     mModuleFileDialog(),
     mToolbarFile(),
     mToolbarEdit(),
@@ -55,7 +55,6 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mApp.config.readSettings();
     // apply the read in configuration
     onConfigApplied(Config::CategoryAll);
-    mConfigDialog.resetControls();
 
     // new documents have an empty string for a filename
     setFilename("");
@@ -347,6 +346,43 @@ OrderWidget QTableView QHeaderView::section {
     mApp.config.writeSettings();
 }
 
+void MainWindow::showConfigDialog() {
+    if (mConfigDialog == nullptr) {
+        mConfigDialog = new ConfigDialog(mApp.config, this);
+        mConfigDialog->resetControls();
+
+        // configuration changed, apply settings
+        connect(mConfigDialog, &ConfigDialog::applied, this, &MainWindow::onConfigApplied);
+    }
+
+    mConfigDialog->show();
+}
+
+void MainWindow::showInstrumentEditor() {
+    if (mInstrumentEditor == nullptr) {
+        mInstrumentEditor = new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, this);
+
+        // allow the instrument editor to show the wave editor
+        connect(mInstrumentEditor, &InstrumentEditor::waveEditorRequested, this, &MainWindow::showWaveEditor);
+
+        auto &instPiano = mInstrumentEditor->piano();
+        connect(&instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
+        connect(&instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
+    }
+    mInstrumentEditor->show();
+}
+
+void MainWindow::showWaveEditor() {
+    if (mWaveEditor == nullptr) {
+        mWaveEditor = new WaveEditor(mApp.waveModel, this);
+        auto &wavePiano = mWaveEditor->piano();
+        connect(&wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
+        connect(&wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
+    }
+    mWaveEditor->show();
+}
+
+
 void MainWindow::statusSetInstrument(int index) {
     int id = (index == -1) ? 0 : mApp.instrumentModel.instrument(index)->id();
     mStatusInstrument.setText(QString("Instrument: %1").arg(id, 2, 16, QChar('0')));
@@ -613,22 +649,11 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileQuit, close);
     connectActionToThis(mActionWindowResetLayout, onWindowResetLayout);
 
-    connect(&mActionFileConfig, &QAction::triggered, &mConfigDialog, &ConfigDialog::show);
+    connectActionToThis(mActionFileConfig, showConfigDialog);
+    //connect(&mActionFileConfig, &QAction::triggered, &mConfigDialog, &ConfigDialog::show);
 
     QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);
 
-    // allow the instrument editor to show the wave editor
-    connect(&mInstrumentEditor, &InstrumentEditor::waveEditorRequested, &mWaveEditor, &WaveEditor::show);
-
-    // connect piano signals to renderer preview slots
-
-    auto &wavePiano = mWaveEditor.piano();
-    connect(&wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
-    connect(&wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
-
-    auto &instPiano = mInstrumentEditor.piano();
-    connect(&instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
-    connect(&instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
 
     // song combobox in mSongToolbar
     connect(&mSongCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mApp.songModel, qOverload<int>(&SongListModel::select));
@@ -640,11 +665,10 @@ void MainWindow::setupUi() {
     connect(&mApp.waveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
 
     // showEditor signal to each editor's show slot
-    connect(&mInstrumentWidget, &TableForm::showEditor, &mInstrumentEditor, &InstrumentEditor::show);
-    connect(&mWaveformWidget, &TableForm::showEditor, &mWaveEditor, &WaveEditor::show);
+    connect(&mInstrumentWidget, &TableForm::showEditor, this, &MainWindow::showInstrumentEditor);
+    connect(&mWaveformWidget, &TableForm::showEditor, this, &MainWindow::showWaveEditor);
 
-    // configuration changed, apply settings
-    connect(&mConfigDialog, &ConfigDialog::applied, this, &MainWindow::onConfigApplied);
+    
 
 }
 

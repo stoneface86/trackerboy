@@ -5,13 +5,23 @@
 #include <QApplication>
 #include <QFontDatabase>
 #include <QMessageBox>
+#include <QtDebug>
 
+#include <chrono>
 #include <memory>
+#include <new>
+
+constexpr int EXIT_BAD_ALLOC = 1;
+constexpr int EXIT_MINIAUDIO = 2;
 
 
 int main(int argc, char *argv[]) {
 
-    int code = 0;
+    int code;
+
+    #ifndef NDEBUG
+    auto begin = std::chrono::steady_clock::now();
+    #endif
 
     QApplication app(argc, argv);
     QCoreApplication::setOrganizationName("Trackerboy");
@@ -25,37 +35,23 @@ int main(int argc, char *argv[]) {
     // initialize audio
     auto result = trackerboy->miniaudio.init();
     if (result != MA_SUCCESS) {
-        return 1;
+        return EXIT_MINIAUDIO;
     }
 
 
     std::unique_ptr<MainWindow> win(new MainWindow(*trackerboy));
     win->show();
 
-    // don't use a catch-all in debug builds
-    // this way the debugger can tell us exactly what happened
+    #ifndef NDEBUG
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin).count();
+    qDebug() << "Launch time: " << elapsed << " ms";
+    #endif
 
-    // release builds will display the error (if possible) and
-    // will attempt to save a copy of the module
-
-    #ifdef NDEBUG
     try {
-    #endif
         code = app.exec();
-    #ifdef NDEBUG
-    } catch (const std::exception &e) {
-        (void)e;
-
-        // TODO: attempt to save the current module
-        // TODO: display the type of error and extra diagnostic info
-        QMessageBox::critical(
-            win.get(),
-            "Error",
-            "An error has occurred. The application will close now."
-        );
-
+    } catch (const std::bad_alloc &) {
+        return EXIT_BAD_ALLOC;
     }
-    #endif
 
     return code;
 }

@@ -50,6 +50,11 @@ private slots:
     // config changes
     void onConfigApplied(Config::Categories categories);
 
+    // dialog show slots (lazy loading)
+    void showInstrumentEditor();
+    void showWaveEditor();
+    void showConfigDialog();
+
     // statusbar
     void statusSetInstrument(int index);
     void statusSetWaveform(int index);
@@ -81,9 +86,9 @@ private:
     QString mDocumentName;
 
     // dialogs
-    ConfigDialog mConfigDialog;
-    InstrumentEditor mInstrumentEditor;
-    WaveEditor mWaveEditor;
+    ConfigDialog *mConfigDialog;
+    InstrumentEditor *mInstrumentEditor;
+    WaveEditor *mWaveEditor;
     QFileDialog mModuleFileDialog;
 
 
