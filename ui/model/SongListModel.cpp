@@ -36,8 +36,11 @@ void SongListModel::setRowsPerBeat(int rowsPerBeat) {
     auto &curr = mSongVector[mCurrentIndex];
     uint8_t rpb = static_cast<uint8_t>(rowsPerBeat);
     if (rpb != curr.rowsPerBeat()) {
-        auto ctx = mDocument.beginEdit();
-        curr.setRowsPerBeat(rpb);
+        {
+            auto ctx = mDocument.beginEdit();
+            curr.setRowsPerBeat(rpb);
+        }
+        emit rowsPerBeatChanged(rpb);
     }
 }
 
@@ -45,8 +48,11 @@ void SongListModel::setRowsPerMeasure(int rowsPerMeasure) {
     auto &curr = mSongVector[mCurrentIndex];
     uint8_t rpm = static_cast<uint8_t>(rowsPerMeasure);
     if (rpm != curr.rowsPerMeasure()) {
-        auto ctx = mDocument.beginEdit();
-        curr.setRowsPerMeasure(rpm);
+        {
+            auto ctx = mDocument.beginEdit();
+            curr.setRowsPerMeasure(rpm);
+        }
+        emit rowsPerMeasureChanged(rpm);
     }
 }
 

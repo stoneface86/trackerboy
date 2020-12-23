@@ -26,6 +26,8 @@ public:
 
 signals:
     void patternSizeChanged(int rows);
+    void rowsPerBeatChanged(int rpb);
+    void rowsPerMeasureChanged(int rpm);
 
 public slots:
     void setRowsPerBeat(int rowsPerBeat);

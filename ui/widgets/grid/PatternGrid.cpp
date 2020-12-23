@@ -6,7 +6,6 @@
 
 #include <QFontDatabase>
 #include <QPainter>
-
 #include <QtDebug>
 
 #include <algorithm>
@@ -31,11 +30,6 @@ using namespace PatternConstants;
 //    e. Ctrl+Up/Ctrl+Down - selects previous/next instrument
 // 5. Editing - editing a cell requires a redraw of the cell (erase the cell and then draw the new one)
 
-// Optimization
-// if drawing performance is an issue, implement partial redraws. Ie if only the
-// cursor changes we just need to redraw where the cursor was and where it will be.
-// Currently, the entire widget is redrawn on repaint, with the row text being cached
-// in a QPixmap (mDisplay).
 
 // A cell is a single character on the grid, columns are 1 or more cells. A
 // cell with a space is used as spacing, and the adjacent column is selected if
@@ -52,14 +46,6 @@ using namespace PatternConstants;
 // Always profile Release before considering an optimization
 
 
-// New Track layout (always 3 effects)
-// .NNN.II.111222333. = 18 chars
-// NNN - note column (3 cells)
-// II - instrument columns (2 columns, 2 cells)
-// 111 - effect 1 columns (3 columns, 3 cells)
-// 222 - effect 2 columns (3 columns, 3 cells)
-// 333 - effect 3 columns (3 columns, 3 cells)
-
 PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
     mModel(model),
@@ -72,7 +58,6 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
     mPatternPrev(),
     mPatternCurr(mModel.currentSong()->getPattern(0)),
     mPatternNext(),
-    mSettingDisplayFlats(false),
     mSettingShowPreviews(true),
     mVisibleRows(0)
 {
@@ -83,8 +68,7 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
     connect(&model, &SongListModel::currentIndexChanged, this, &PatternGrid::onSongChanged);
     connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
         setPatterns(mCursorPattern);
-        mRepaintImage = true;
-        update();
+        redraw();
         });
     connect(&model, &SongListModel::patternSizeChanged, this,
         [this](int rows) {
@@ -94,16 +78,34 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
             }
             setPatterns(mCursorPattern);
             setPatternRect();
-            mRepaintImage = true;
-            update();
+            redraw();
         });
 
+    connect(&model, &SongListModel::rowsPerBeatChanged, this,
+        [this](int rpb) {
+            mPainter.setFirstHighlight(rpb);
+            redraw();
+        });
+    connect(&model, &SongListModel::rowsPerMeasureChanged, this,
+        [this](int rpm) {
+            mPainter.setSecondHighlight(rpm);
+            redraw();
+        });
+
+    auto song = mModel.currentSong();
+    mPainter.setFirstHighlight(song->rowsPerBeat());
+    mPainter.setSecondHighlight(song->rowsPerMeasure());
+
     setAutoFillBackground(true);
-    //setMouseTracking(true);
 
-    // initialize appearance settings for the first time
-    appearanceChanged();
+    // first time initialization
+    fontChanged();
 
+}
+
+void PatternGrid::redraw() {
+    mRepaintImage = true;
+    update();
 }
 
 int PatternGrid::row() const {
@@ -112,11 +114,14 @@ int PatternGrid::row() const {
 
 void PatternGrid::setColors(ColorTable const& colors) {
     mPainter.setColors(colors);
+
+    // update palette so the background is automatically drawn
     auto pal = palette();
     pal.setColor(QPalette::Window, colors[+Color::background]);
     setPalette(pal);
-    mRepaintImage = true;
-    update();
+
+    // new colors, redraw everything
+    redraw();
 }
 
 void PatternGrid::setPreviewEnable(bool previews) {
@@ -128,16 +133,14 @@ void PatternGrid::setPreviewEnable(bool previews) {
             mPatternNext.reset();
         }
 
-        mRepaintImage = true;
-        update();
+        redraw();
     }
 }
 
 void PatternGrid::setShowFlats(bool showFlats) {
-    if (showFlats != mSettingDisplayFlats) {
-        mSettingDisplayFlats = showFlats;
-        mRepaintImage = true;
-        update();
+    if (showFlats != mPainter.flats()) {
+        mPainter.setFlats(showFlats);
+        redraw();
     }
 }
 
@@ -184,14 +187,16 @@ void PatternGrid::setCursorRow(int row) {
 
     if (row < 0) {
         // go to the previous pattern or wrap around to the last one
-        setCursorPattern(mCursorPattern == 0 ? song->orders().size() - 1 : mCursorPattern - 1);
+        setCursorPattern(mCursorPattern == 0 
+                            ? static_cast<int>(song->orders().size()) - 1 
+                            : mCursorPattern - 1);
         int currCount = mPatternCurr.totalRows();
         mCursorRow = std::max(0, currCount + row);
         mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mPainter.cellHeight());
 
         mRepaintImage = true;
         update();
-    } else if (row >= mPatternCurr.totalRows()) {
+    } else if (row >= static_cast<int>(mPatternCurr.totalRows())) {
         // go to the next pattern or wrap around to the first one
         int nextPattern = mCursorPattern + 1;
         setCursorPattern(nextPattern == song->orders().size() ? 0 : nextPattern);
@@ -222,9 +227,7 @@ void PatternGrid::setCursorPattern(int pattern) {
     mModel.orderModel().selectPattern(pattern);
 
     // full repaint
-    mRepaintImage = true;
-    update();
-    //emit cursorPatternChanged(pattern);
+    redraw();
 }
 
 void PatternGrid::setCursorTrack(int track) {
@@ -239,7 +242,7 @@ void PatternGrid::setCursorTrack(int track) {
 void PatternGrid::changeEvent(QEvent *evt) {
     if (evt->type() == QEvent::FontChange) {
         mPainter.setFont(font());
-        appearanceChanged();
+        fontChanged();
     }
 }
 
@@ -250,7 +253,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
 
     if (mRepaintImage) {
-        qDebug() << "Full repaint";
+        //qDebug() << "Full repaint";
 
         mDisplay.fill(Qt::transparent);
 
@@ -266,14 +269,20 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     //auto const w = width();
     //auto const cellHeight = mPainter.cellHeight();
     //auto const cellWidth = mPainter.cellWidth();
+    auto const rownoWidth = mPainter.rownoWidth();
+    auto const trackWidth = mPainter.trackWidth();
     unsigned const centerRow = mVisibleRows / 2;
     //unsigned const center = centerRow * cellHeight;
 
-
+    // Z-order (from back to front)
+    // 1. window background (drawn by qwidget)
+    // 2. row background (mBackgroundPixmap)
+    // 3. current row
+    // 4. selection
+    // 5. cursor
+    // 6. pattern text (mDisplay)
+    // 7. lines
     
-    
-    // highlights
-    // TODO
 
     // cursor row
     /*painter.setPen(mColorTable[+Color::backgroundRow]);
@@ -287,22 +296,23 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         painter.translate(QPoint(mOffset, 0));
     }
 
-    // selection
+    // [2] row background
+    //mPainter.drawPixmap(mPainter.rownoWidth(), 0, mBackgroundPixmap);
+
+    // [3] current row
+
+    // [4] selection
     // TODO
 
-    // cursor
+    // [5] cursor
     mPainter.drawCursor(painter, centerRow, mCursorCol);
 
-    // the cursor has a 1 pixel border around the width and height of a character
-    // this way the cursor outline is not drawn under the character
-
-
-    
-
-    // text
-
-    // previews are drawn at 50% opacity
+    // [6] text
     if (mSettingShowPreviews) {
+        // previews are drawn at 50% opacity
+        // we paint the portion of the text that contains previews at 50%,
+        // where the current pattern is drawn at 100%
+
         int heightPrev = std::max(0, mPatternRect.top());
         int heightCurr = mDisplay.height() - heightPrev;
 
@@ -327,7 +337,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         painter.drawPixmap(0, 0, mDisplay);
     }
 
-    // lines
+    // [7] lines
     mPainter.drawLines(painter, h);
 
         
@@ -412,7 +422,7 @@ void PatternGrid::leaveEvent(QEvent *evt) {
 }
 
 void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
-
+    Q_UNUSED(evt);
     //int mx = evt->x();
     //int my = evt->y();
 
@@ -473,15 +483,19 @@ void PatternGrid::onSongChanged(int index) {
         // update the rectangle
         setPatternRect();
 
+        // set highlight intervals
+        auto song = mModel.currentSong();
+        mPainter.setFirstHighlight(song->rowsPerBeat());
+        mPainter.setSecondHighlight(song->rowsPerMeasure());
+
         // redraw everything
-        mRepaintImage = true;
-        update();
+        redraw();
 
 
     }
 }
 
-void PatternGrid::appearanceChanged() {
+void PatternGrid::fontChanged() {
 
     mVisibleRows = getVisibleRows();
     setPatternRect();
@@ -497,6 +511,7 @@ void PatternGrid::appearanceChanged() {
     mDisplay = QPixmap((trackWidth * 4) + rownoWidth, mVisibleRows * mPainter.cellHeight());
     calcOffset();
 
+    // let the header know about these changes
     mHeader.setOffset(mOffset);
     mHeader.setWidths(rownoWidth, trackWidth);
 }
@@ -578,7 +593,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     }
 
     auto const cellHeight = mPainter.cellHeight();
-    unsigned ypos = rowStart * cellHeight;
+    int ypos = rowStart * cellHeight;
 
     painter.setFont(font());
 
@@ -613,7 +628,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
             remainder -= rowsToPaint;
 
             for (; rowsToPaint--; ) {
-                mPainter.drawRow(painter, pattern[prevRow], prevRow, ypos);
+                mPainter.drawRow(painter, pattern[static_cast<uint16_t>(prevRow)], prevRow, ypos);
                 prevRow++;
                 ypos += cellHeight;
             }
@@ -639,7 +654,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
         remainder -= rowsToPaint;
 
         for (; rowsToPaint--; ) {
-            mPainter.drawRow(painter, mPatternCurr[rowAdjusted], rowAdjusted, ypos);
+            mPainter.drawRow(painter, mPatternCurr[static_cast<uint16_t>(rowAdjusted)], rowAdjusted, ypos);
             rowAdjusted++;
             ypos += cellHeight;
         }
@@ -658,7 +673,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
             int rowsToPaint = std::min(remainder, nextPatternSize - nextRow);
             assert(rowsToPaint >= 0);
             for (; rowsToPaint--; ) {
-                mPainter.drawRow(painter, pattern[nextRow], nextRow, ypos);
+                mPainter.drawRow(painter, pattern[static_cast<uint16_t>(nextRow)], nextRow, ypos);
                 ++nextRow;
                 ypos += cellHeight;
             }
@@ -668,27 +683,28 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 }
 
 void PatternGrid::setPatterns(int pattern) {
+    Q_ASSERT(pattern >= 0 && pattern < 256);
     auto song = mModel.currentSong();
 
     
     if (mSettingShowPreviews) {
         // get the previous pattern for preview
         if (pattern > 0) {
-            mPatternPrev.emplace(song->getPattern(pattern - 1));
+            mPatternPrev.emplace(song->getPattern(static_cast<uint8_t>(pattern) - 1));
         } else {
             mPatternPrev.reset();
         }
         // get the next pattern for preview
-        int nextPattern = pattern + 1;
+        auto nextPattern = pattern + 1;
         if (nextPattern < song->orders().size()) {
-            mPatternNext.emplace(song->getPattern(nextPattern));
+            mPatternNext.emplace(song->getPattern(static_cast<uint8_t>(nextPattern)));
         } else {
             mPatternNext.reset();
         }
     }
 
     // update the current pattern
-    mPatternCurr = song->getPattern(pattern);
+    mPatternCurr = song->getPattern(static_cast<uint8_t>(pattern));
 
     
 }

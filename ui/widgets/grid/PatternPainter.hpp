@@ -24,6 +24,8 @@ public:
 
     int trackWidth() const;
 
+    bool flats() const;
+
     // --
 
     int columnLocation(int column) const;

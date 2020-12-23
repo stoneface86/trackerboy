@@ -109,6 +109,10 @@ int PatternPainter::trackWidth() const {
     return mTrackWidth;
 }
 
+bool PatternPainter::flats() const {
+    return mDisplayFlats;
+}
+
 void PatternPainter::setFont(QFont const& font) {
     QFontMetrics metrics(font);
 

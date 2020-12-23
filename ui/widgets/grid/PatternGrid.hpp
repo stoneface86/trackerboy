@@ -30,6 +30,14 @@ public:
 
     // Settings
 
+    //
+    // force a full redraw of the pattern
+    //
+    void redraw();
+
+    //
+    // Returns the current row of the cursor
+    //
     int row() const;
 
     //
@@ -110,7 +118,7 @@ private:
     // Called when appearance settings have changed, recalculates metrics and redraws
     // all rows.
     //
-    void appearanceChanged();
+    void fontChanged();
 
     void calcOffset();
 
@@ -177,13 +185,11 @@ private:
     bool mSelecting;
 
     // settings
-
-    bool mSettingDisplayFlats;
     bool mSettingShowPreviews;
 
 
     // variables here are dependent on appearance settings
-    // treat them as constants, only appearanceChanged() can modify them
+    // treat them as constants, only fontChanged() can modify them
 
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
