@@ -38,7 +38,7 @@ public:
 
     };
 
-    explicit PatternEditor(SongListModel &model, ColorTable const &colortable, QWidget *parent = nullptr);
+    explicit PatternEditor(SongListModel &model, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
     Actions& menuActions();

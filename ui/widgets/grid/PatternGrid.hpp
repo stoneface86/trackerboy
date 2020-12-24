@@ -120,17 +120,15 @@ private:
     //
     void fontChanged();
 
+    //
+    // Calculate x offset, mOffset, for centering the grid within the widget
+    //
     void calcOffset();
 
     //
     // Calculates the number of rows we can draw on this widget
     //
     unsigned getVisibleRows();
-
-    //
-    // Calculates the x position of the given column
-    //
-    int columnLocation(int column);
 
     //
     // Converts translated mouse coordinates on the grid to a row and column coordinate
@@ -184,12 +182,10 @@ private:
 
     bool mSelecting;
 
+    bool mEditMode;
+
     // settings
     bool mSettingShowPreviews;
-
-
-    // variables here are dependent on appearance settings
-    // treat them as constants, only fontChanged() can modify them
 
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()

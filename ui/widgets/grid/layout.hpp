@@ -33,7 +33,7 @@ enum ColumnType {
 
 constexpr int ROWNO_CELLS = 4; // 4 cells for row numbers
 
-constexpr int TRACK_CELLS = 18;
+constexpr int TRACK_CELLS = 20;
 constexpr int TRACK_COLUMNS = 12;
 
 // total columns on the grid (excludes rowno)

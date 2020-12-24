@@ -6,7 +6,7 @@
 #include <QGridLayout>
 #include <QtDebug>
 
-PatternEditor::PatternEditor(SongListModel &model, ColorTable const &colorTable, QWidget *parent) :
+PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     QFrame(parent),
     mLayout(),
     mGridHeader(),

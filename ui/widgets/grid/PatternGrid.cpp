@@ -55,9 +55,13 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
     mCursorRow(0),
     mCursorCol(0),
     mCursorPattern(0),
+    mOffset(0),
     mPatternPrev(),
     mPatternCurr(mModel.currentSong()->getPattern(0)),
     mPatternNext(),
+    mPatternRect(),
+    mSelecting(false),
+    mEditMode(false),
     mSettingShowPreviews(true),
     mVisibleRows(0)
 {
@@ -272,7 +276,6 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     auto const rownoWidth = mPainter.rownoWidth();
     auto const trackWidth = mPainter.trackWidth();
     unsigned const centerRow = mVisibleRows / 2;
-    //unsigned const center = centerRow * cellHeight;
 
     // Z-order (from back to front)
     // 1. window background (drawn by qwidget)
@@ -300,6 +303,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     //mPainter.drawPixmap(mPainter.rownoWidth(), 0, mBackgroundPixmap);
 
     // [3] current row
+    mPainter.drawRowBackground(painter, mEditMode ? PatternPainter::ROW_EDIT : PatternPainter::ROW_CURRENT, centerRow);
 
     // [4] selection
     // TODO
@@ -628,9 +632,8 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
             remainder -= rowsToPaint;
 
             for (; rowsToPaint--; ) {
-                mPainter.drawRow(painter, pattern[static_cast<uint16_t>(prevRow)], prevRow, ypos);
+                ypos = mPainter.drawRow(painter, pattern[static_cast<uint16_t>(prevRow)], prevRow, ypos);
                 prevRow++;
-                ypos += cellHeight;
             }
         } else {
             // no previous pattern (mCursorPattern == 0)
@@ -654,9 +657,8 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
         remainder -= rowsToPaint;
 
         for (; rowsToPaint--; ) {
-            mPainter.drawRow(painter, mPatternCurr[static_cast<uint16_t>(rowAdjusted)], rowAdjusted, ypos);
+            ypos = mPainter.drawRow(painter, mPatternCurr[static_cast<uint16_t>(rowAdjusted)], rowAdjusted, ypos);
             rowAdjusted++;
-            ypos += cellHeight;
         }
 
         if (remainder == 0) {
@@ -673,9 +675,8 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
             int rowsToPaint = std::min(remainder, nextPatternSize - nextRow);
             assert(rowsToPaint >= 0);
             for (; rowsToPaint--; ) {
-                mPainter.drawRow(painter, pattern[static_cast<uint16_t>(nextRow)], nextRow, ypos);
+                ypos = mPainter.drawRow(painter, pattern[static_cast<uint16_t>(nextRow)], nextRow, ypos);
                 ++nextRow;
-                ypos += cellHeight;
             }
         }
     }

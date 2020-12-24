@@ -296,7 +296,7 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         setStyleSheet(QStringLiteral(R"stylesheet(
 PatternEditor PatternGrid {
     font-family: %5;
-    font-size: %6 px;
+    font-size: %6pt;
 }
 
 OrderWidget QTableView {
@@ -336,7 +336,7 @@ OrderWidget QTableView QHeaderView::section {
         mApp.colorTable[+Color::foreground].name(),
         mApp.colorTable[+Color::selection].name(),
         appearance.font.family(),
-        QString::number(appearance.font.pixelSize())
+        QString::number(appearance.font.pointSize())
         ));
 
         mPatternEditor->setColors(mApp.colorTable);
@@ -446,7 +446,7 @@ void MainWindow::setupUi() {
     // CENTRAL WIDGET ========================================================
 
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
-    mPatternEditor = new PatternEditor(mApp.songModel, mApp.colorTable);
+    mPatternEditor = new PatternEditor(mApp.songModel);
     setCentralWidget(mPatternEditor);
 
     auto &patternActions = mPatternEditor->menuActions();

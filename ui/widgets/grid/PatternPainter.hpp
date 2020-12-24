@@ -10,9 +10,18 @@
 #include <QPainter>
 #include <QWidget>
 
+#include <array>
+
+
 class PatternPainter {
 
 public:
+
+    enum RowType {
+        ROW_CURRENT,
+        ROW_EDIT,
+        ROW_PLAYER
+    };
 
     PatternPainter(QFont const& font);
 
@@ -45,6 +54,8 @@ public:
     // drawing functions
 
     //void drawBackground(QPainter &painter, int rowStart, int rows);
+
+    void drawRowBackground(QPainter &painter, RowType type, int row);
 
     void drawCursor(QPainter &painter, int row, int column);
 
@@ -84,7 +95,7 @@ public:
 
 private:
 
-    QColor const& foregroundColor(int rowno);
+    int highlightIndex(int rowno);
     
     int mHighlightInterval1;
     int mHighlightInterval2;
@@ -98,12 +109,10 @@ private:
 
     bool mDisplayFlats;
 
-    QColor mColorForeground;
-    QColor mColorForegroundHighlight1;
-    QColor mColorForegroundHighlight2;
-    QColor mColorBackground;
-    QColor mColorBackground1;
-    QColor mColorBackground2;
+
+    std::array<QColor, 3> mForegroundColors;
+    std::array<QColor, 3> mBackgroundColors;
+
 
     QColor mColorInstrument;
     QColor mColorEffect;
@@ -112,6 +121,7 @@ private:
     QColor mColorCursor;
     QColor mColorLine;
 
+    std::array<QColor, 3> mRowColors;
 
 
     

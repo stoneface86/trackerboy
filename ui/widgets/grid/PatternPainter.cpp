@@ -151,18 +151,26 @@ void PatternPainter::setFlats(bool flats) {
 }
 
 void PatternPainter::setColors(ColorTable const& colors) {
-    mColorForeground = colors[+Color::foreground];
-    mColorForegroundHighlight1 = colors[+Color::foregroundHighlight1];
-    mColorForegroundHighlight2 = colors[+Color::foregroundHighlight2];
-    mColorBackground = colors[+Color::background];
-    mColorBackground1 = colors[+Color::backgroundHighlight1];
-    mColorBackground2 = colors[+Color::backgroundHighlight2];
+    mForegroundColors[0] = colors[+Color::foreground];
+    mForegroundColors[1] = colors[+Color::foregroundHighlight1];
+    mForegroundColors[2] = colors[+Color::foregroundHighlight2];
+    mBackgroundColors[0] = colors[+Color::background];
+    mBackgroundColors[1] = colors[+Color::backgroundHighlight1];
+    mBackgroundColors[2] = colors[+Color::backgroundHighlight2];
     mColorInstrument = colors[+Color::instrument];
     mColorEffect = colors[+Color::effectType];
     mColorSelection = colors[+Color::selection];
     mColorCursor = colors[+Color::cursor];
     mColorCursor.setAlpha(128);
     mColorLine = colors[+Color::line];
+
+    mRowColors[0] = colors[+Color::row];
+    mRowColors[1] = colors[+Color::rowEdit];
+    mRowColors[2] = colors[+Color::rowPlayer];
+    for (auto &color : mRowColors) {
+        color.setAlpha(128);
+    }
+
 }
 
 
@@ -170,6 +178,17 @@ int PatternPainter::columnLocation(int column) const {
     int track = column / TRACK_COLUMNS;
     int coltype = column % TRACK_COLUMNS;
     return track * mTrackWidth + TRACK_COLUMN_MAP[coltype] * mCellWidth + mRownoWidth;
+}
+
+void PatternPainter::drawRowBackground(QPainter &painter, RowType type, int row) {
+    auto ypos = row * mCellHeight;
+    auto const& color = mRowColors[type];
+    painter.setPen(color);
+    auto const lineEnd = mRownoWidth + mPatternWidth;
+    painter.drawLine(mRownoWidth, ypos, lineEnd, ypos);
+    painter.fillRect(mRownoWidth, ypos, mPatternWidth, mCellHeight, color);
+    auto bottom = ypos + mCellHeight - 1;
+    painter.drawLine(mRownoWidth, bottom, lineEnd, bottom);
 }
 
 void PatternPainter::drawCursor(QPainter &painter, int row, int column) {
@@ -201,7 +220,7 @@ int PatternPainter::drawRow(
     int ypos
 ) {
 
-    QPen fgpen(foregroundColor(rowno));
+    QPen fgpen(mForegroundColors[highlightIndex(rowno)]);
 
     // text centering
     ypos++;
@@ -250,11 +269,12 @@ int PatternPainter::drawRow(
                 xpos += mCellWidth * 3;
             }
 
+            xpos += mCellWidth;
             effectFlag <<= 1;
 
         }
 
-        xpos += 2 * mCellWidth;
+        xpos += mCellWidth;
     }
 
     return ypos - 1 + mCellHeight;
@@ -341,13 +361,13 @@ void PatternPainter::drawCell(QPainter &painter, char cell, int xpos, int ypos) 
 }
 
 
-QColor const& PatternPainter::foregroundColor(int rowno) {
+int PatternPainter::highlightIndex(int rowno) {
     if (mHighlightInterval2 && rowno % mHighlightInterval2 == 0) {
-        return mColorForegroundHighlight2;
+        return 2;
     } else if (mHighlightInterval1 && rowno % mHighlightInterval1 == 0) {
-        return mColorForegroundHighlight1;
+        return 1;
     } else {
-        return mColorForeground;
+        return 0;
     }
 }
 

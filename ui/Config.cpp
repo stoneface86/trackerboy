@@ -36,7 +36,7 @@ void Config::readSettings() {
     settings.beginGroup("config");
 
     mAppearance.font.setFamily(settings.value("fontFamily", "Cascadia Mono").toString());
-    mAppearance.font.setPixelSize(settings.value("fontSize", 12).toInt());
+    mAppearance.font.setPointSize(settings.value("fontSize", 12).toInt());
 
     settings.beginReadArray("colors");
     readColor(settings, Color::background,              QColor(0x18, 0x18, 0x18));
@@ -45,9 +45,9 @@ void Config::readSettings() {
     readColor(settings, Color::foreground,              QColor(0xC0, 0xC0, 0xC0));
     readColor(settings, Color::foregroundHighlight1,    QColor(0xF0, 0xF0, 0xF0));
     readColor(settings, Color::foregroundHighlight2,    QColor(0xFF, 0xFF, 0xFF));
-    readColor(settings, Color::row,                     QColor(20, 20, 80));
-    readColor(settings, Color::rowEdit,                 QColor(0, 0, 0));
-    readColor(settings, Color::rowPlayer,               QColor(0, 0, 0));
+    readColor(settings, Color::row,                     QColor(0x20, 0x30, 0x80));
+    readColor(settings, Color::rowEdit,                 QColor(0x80, 0x20, 0x20));
+    readColor(settings, Color::rowPlayer,               QColor(0x80, 0x20, 0x80));
     readColor(settings, Color::effectType,              QColor(0x80, 0x80, 0xFF));
     readColor(settings, Color::instrument,              QColor(0x80, 0xFF, 0x80));
     readColor(settings, Color::selection,               QColor(0x45, 0x45, 0x50));
@@ -95,7 +95,7 @@ void Config::writeSettings() {
     settings.beginGroup("config");
 
     settings.setValue("fontFamily", mAppearance.font.family());
-    settings.setValue("fontSize", mAppearance.font.pixelSize());
+    settings.setValue("fontSize", mAppearance.font.pointSize());
     settings.beginWriteArray("colors", mColorTable.size());
     for (int i = 0; i != mColorTable.size(); ++i) {
         settings.setArrayIndex(i);
