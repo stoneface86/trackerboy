@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Spinlock.hpp"
+#include "core/Spinlock.hpp"
 
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/engine/RuntimeContext.hpp"

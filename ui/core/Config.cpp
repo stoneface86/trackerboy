@@ -1,6 +1,6 @@
 
-#include "Config.hpp"
-#include "samplerates.hpp"
+#include "core/Config.hpp"
+#include "core/samplerates.hpp"
 
 #include <QSettings>
 

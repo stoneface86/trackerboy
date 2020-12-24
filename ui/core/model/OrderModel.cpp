@@ -1,5 +1,5 @@
 
-#include "model/OrderModel.hpp"
+#include "core/model/OrderModel.hpp"
 
 #include <QColor>
 

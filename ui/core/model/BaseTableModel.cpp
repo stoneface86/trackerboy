@@ -1,5 +1,5 @@
 
-#include "model/BaseTableModel.hpp"
+#include "core/model/BaseTableModel.hpp"
 
 BaseTableModel::BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table) :
     mBaseTable(table),

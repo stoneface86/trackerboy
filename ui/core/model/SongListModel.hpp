@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "model/BaseModel.hpp"
-#include "model/OrderModel.hpp"
+#include "core/model/BaseModel.hpp"
+#include "core/model/OrderModel.hpp"
 
 #include "trackerboy/data/Song.hpp"
 

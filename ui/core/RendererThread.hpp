@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "model/ModuleDocument.hpp"
-#include "model/InstrumentListModel.hpp"
-#include "model/WaveListModel.hpp"
-#include "Config.hpp"
+#include "core/model/ModuleDocument.hpp"
+#include "core/model/InstrumentListModel.hpp"
+#include "core/model/WaveListModel.hpp"
+#include "core/Config.hpp"
 
 #include "trackerboy/engine/Engine.hpp"
 #include "trackerboy/engine/InstrumentRuntime.hpp"

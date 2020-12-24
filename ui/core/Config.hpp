@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "ColorTable.hpp"
-#include "Miniaudio.hpp"
+#include "core/ColorTable.hpp"
+#include "core/Miniaudio.hpp"
 
 #include <QFlags>
 #include <QFont>

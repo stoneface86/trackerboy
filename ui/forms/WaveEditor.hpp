@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "model/ModuleDocument.hpp"
-#include "model/WaveListModel.hpp"
+#include "core/model/ModuleDocument.hpp"
+#include "core/model/WaveListModel.hpp"
 #include "widgets/PianoWidget.hpp"
 #include "widgets/WaveGraph.hpp"
 

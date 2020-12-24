@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/Trackerboy.hpp"
 #include "forms/ConfigDialog.hpp"
 #include "forms/InstrumentEditor.hpp"
 #include "forms/WaveEditor.hpp"
@@ -10,7 +11,6 @@
 #include "widgets/docks/SongWidget.hpp"
 #include "widgets/docks/TableForm.hpp"
 #include "widgets/PatternEditor.hpp"
-#include "Trackerboy.hpp"
 
 #include <QComboBox>
 #include <QDockWidget>

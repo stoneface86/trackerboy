@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "ColorTable.hpp"
+#include "core/ColorTable.hpp"
 
 #include "trackerboy/data/PatternRow.hpp"
 

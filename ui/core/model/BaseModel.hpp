@@ -4,7 +4,7 @@
 #include <QAbstractListModel>
 #include <QAction>
 
-#include "model/ModuleDocument.hpp"
+#include "core/model/ModuleDocument.hpp"
 
 //
 // Base class for all models used in the UI. Each model is a list model and has a

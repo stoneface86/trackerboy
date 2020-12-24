@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "model/BaseTableModel.hpp"
+#include "core/model/BaseTableModel.hpp"
 
 #include <QAction>
 #include <QHBoxLayout>

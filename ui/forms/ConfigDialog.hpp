@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Config.hpp"
+#include "core/Config.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
 
 #include <QDialog>

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "model/SongListModel.hpp"
+#include "core/model/SongListModel.hpp"
 
 #include <QAction>
 #include <QBoxLayout>

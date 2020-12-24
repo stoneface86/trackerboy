@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include <array>
+#include "core/model/WaveListModel.hpp"
 
 #include <QFrame>
 #include <QMouseEvent>
 #include <QPainter>
 
-#include "model/WaveListModel.hpp"
+#include <array>
 
 
 class WaveGraph : public QFrame {

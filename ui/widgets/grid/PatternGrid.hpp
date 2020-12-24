@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "model/SongListModel.hpp"
+#include "core/model/SongListModel.hpp"
+#include "core/ColorTable.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 #include "widgets/grid/PatternPainter.hpp"
-#include "ColorTable.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
 

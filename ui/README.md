@@ -7,9 +7,10 @@ root CMakeLists.txt, with TRACKERBOY_ENABLE_UI option set to ON.
 ## Organization
 
 * `ui/`
+  * `core/` - Application core internals, non-ui classes
+    * `model/` - data model classes using Qt Model/View framework
   * `forms/` - Form/dialog classes
   * `misc/` - miscellaneous/utility code
-  * `model/` - data model classes using Qt Model/View framework
   * `resources/` - images, Qt resource files (.qrc), etc
   * `widgets/` - QWidget subclasses and custom widgets/controls
 

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "model/BaseModel.hpp"
+#include "core/model/BaseModel.hpp"
+
 #include "trackerboy/data/Table.hpp"
 
 

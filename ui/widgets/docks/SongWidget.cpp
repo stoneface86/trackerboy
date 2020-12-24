@@ -1,6 +1,5 @@
 
 #include "widgets/docks/SongWidget.hpp"
-
 #include "misc/IconManager.hpp"
 
 #include <QMessageBox>

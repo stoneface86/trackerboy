@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "Config.hpp"
+#include "core/Config.hpp"
 
 #include <QWidget>
 

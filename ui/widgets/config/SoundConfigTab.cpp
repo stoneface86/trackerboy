@@ -1,6 +1,6 @@
 
+#include "core/samplerates.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
-#include "samplerates.hpp"
 
 #include <cmath>
 

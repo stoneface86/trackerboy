@@ -1,4 +1,5 @@
-#include "WaveGraph.hpp"
+
+#include "widgets/WaveGraph.hpp"
 
 #include <QPainter>
 

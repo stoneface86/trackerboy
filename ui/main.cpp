@@ -1,6 +1,6 @@
 
+#include "core/Trackerboy.hpp"
 #include "forms/MainWindow.hpp"
-#include "Trackerboy.hpp"
 
 #include <QApplication>
 #include <QFontDatabase>

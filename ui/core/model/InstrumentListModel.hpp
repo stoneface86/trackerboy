@@ -1,10 +1,12 @@
 
 #pragma once
 
-#include "model/BaseTableModel.hpp"
+#include "core/model/BaseTableModel.hpp"
+
+#include <QIcon>
 
 #include <array>
-#include <QIcon>
+
 
 class InstrumentListModel : public BaseTableModel {
 

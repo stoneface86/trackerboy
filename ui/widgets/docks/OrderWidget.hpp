@@ -1,7 +1,7 @@
 #pragma once
 
+#include "core/model/OrderModel.hpp"
 #include "misc/SongActions.hpp"
-#include "model/OrderModel.hpp"
 #include "widgets/CustomSpinBox.hpp"
 
 #include <QAction>

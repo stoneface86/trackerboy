@@ -1,7 +1,7 @@
 
-
+#include "core/model/InstrumentListModel.hpp"
 #include "misc/IconManager.hpp"
-#include "model/InstrumentListModel.hpp"
+
 
 InstrumentListModel::InstrumentListModel(ModuleDocument &document) :
     BaseTableModel(document, document.instrumentTable())

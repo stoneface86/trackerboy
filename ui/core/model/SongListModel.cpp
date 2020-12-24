@@ -1,5 +1,6 @@
 
-#include "model/SongListModel.hpp"
+#include "core/model/SongListModel.hpp"
+
 
 SongListModel::SongListModel(ModuleDocument &document, OrderModel &orderModel) :
     BaseModel(document),

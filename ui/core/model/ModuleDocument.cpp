@@ -1,5 +1,5 @@
 
-#include "ModuleDocument.hpp"
+#include "core/model/ModuleDocument.hpp"
 
 #include <QFileInfo>
 

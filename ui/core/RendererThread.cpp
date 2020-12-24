@@ -1,5 +1,5 @@
 
-#include "RendererThread.hpp"
+#include "core/RendererThread.hpp"
 
 #include "trackerboy/engine/ChannelControl.hpp"
 

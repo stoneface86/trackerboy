@@ -18,6 +18,20 @@ include_directories(
 )
 
 set(UI_SRC
+    "core/model/BaseModel.cpp"
+    "core/model/BaseTableModel.cpp"
+    "core/model/ModuleDocument.cpp"
+    "core/model/InstrumentListModel.cpp"
+    "core/model/OrderModel.cpp"
+    "core/model/SongListModel.cpp"
+    "core/model/WaveListModel.cpp"
+    "core/Config.cpp"
+    "core/Miniaudio.cpp"
+    "core/Renderer.cpp"
+    "core/RendererThread.cpp"
+    "core/samplerates.cpp"
+    "core/Trackerboy.cpp"
+
     "forms/ConfigDialog.cpp"
     "forms/InstrumentEditor.cpp"
     "forms/MainWindow.cpp"
@@ -27,14 +41,6 @@ set(UI_SRC
     "misc/SongActions.cpp"
     "misc/utils.cpp"
 
-    "model/BaseModel.cpp"
-    "model/BaseTableModel.cpp"
-    "model/ModuleDocument.cpp"
-    "model/InstrumentListModel.cpp"
-    "model/OrderModel.cpp"
-    "model/SongListModel.cpp"
-    "model/WaveListModel.cpp"
-    
     "resources/fonts.qrc"
     "resources/icons.qrc"
     "resources/images.qrc"
@@ -56,13 +62,8 @@ set(UI_SRC
     "widgets/PianoWidget.cpp"
     "widgets/WaveGraph.cpp"
     
-    "Config.cpp"
     "main.cpp"
-    "Miniaudio.cpp"
-    "Renderer.cpp"
-    "RendererThread.cpp"
-    "samplerates.cpp"
-    "Trackerboy.cpp"
+    
 )
 
 if (MSVC)

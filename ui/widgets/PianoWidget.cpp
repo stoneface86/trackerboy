@@ -1,5 +1,5 @@
 
-#include "PianoWidget.hpp"
+#include "widgets/PianoWidget.hpp"
 
 #include <QPainter>
 

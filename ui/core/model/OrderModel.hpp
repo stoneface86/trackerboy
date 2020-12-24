@@ -1,12 +1,12 @@
 
 #pragma once
 
+#include "core/model/ModuleDocument.hpp"
+
 #include "trackerboy/data/Order.hpp"
 
-#include "model/ModuleDocument.hpp"
-#include "ColorTable.hpp"
-
 #include <QAbstractTableModel>
+#include <QColor>
 #include <QItemSelection>
 #include <QModelIndex>
 

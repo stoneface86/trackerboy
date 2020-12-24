@@ -1,6 +1,6 @@
 
 #include "ConfigDialog.hpp"
-#include "samplerates.hpp"
+#include "core/samplerates.hpp"
 
 #include <QMessageBox>
 #include <QPushButton>

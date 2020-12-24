@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "model/OrderModel.hpp"
+#include "core/model/OrderModel.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 
