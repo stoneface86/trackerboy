@@ -3,14 +3,10 @@
 
 #include "Spinlock.hpp"
 
-#include <QObject>
-#include <QMutex>
-#include <QUndoStack>
-#include <QStringListModel>
-
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/engine/RuntimeContext.hpp"
 
+#include <QObject>
 
 //
 // Class encapsulates a trackerboy "document", or a module. Provides methods
@@ -55,7 +51,7 @@ public:
         bool mMarkModified;
     };
 
-    ModuleDocument(QObject *parent = nullptr);
+    ModuleDocument(Spinlock &spinlock, QObject *parent = nullptr);
 
     trackerboy::InstrumentTable& instrumentTable();
 
@@ -70,10 +66,11 @@ public:
     trackerboy::FormatError open(QString filename);
 
     // saves the document to the current filename
-    bool save(QString filename);
+    bool save(QString const& filename);
 
     void setModified(bool value);
 
+    // TODO: remove these later
     void lock();
     bool trylock();
     void unlock();
@@ -88,23 +85,8 @@ public slots:
 private:
 
     bool mModified;
-    
     trackerboy::Module mModule;
-
-    //ModuleModel *mModel;
-
-    // the undo stack is for the current song, the stack is
-    // cleared when changing songs
-    QUndoStack *mUndoStack;
-
-    //QMutex mMutex;
-    Spinlock mSpinlock;
-
-
-    // document properties
-    trackerboy::Song *mCurrentSong;
-    uint8_t mCurrentOrder;
-    uint8_t mCurrentRow;
+    Spinlock &mSpinlock;
     
 
 };

@@ -19,12 +19,11 @@ ModuleDocument::EditContext::~EditContext() {
 
 
 
-ModuleDocument::ModuleDocument(QObject *parent) :
+ModuleDocument::ModuleDocument(Spinlock &spinlock, QObject *parent) :
     QObject(parent),
     mModified(false),
     mModule(),
-    mUndoStack(new QUndoStack(this)),
-    mSpinlock()
+    mSpinlock(spinlock)
 {
     clear();
 }
@@ -32,14 +31,9 @@ ModuleDocument::ModuleDocument(QObject *parent) :
 void ModuleDocument::clear() {
     mModule.clear();
 
-    mUndoStack->clear();
-
     // always start with 1 song
     auto &songs = mModule.songs();
     songs.emplace_back();
-    mCurrentSong = &songs[0];
-    mCurrentOrder = 0;
-    mCurrentRow = 0;
     
     setModified(false);
 }
@@ -79,14 +73,13 @@ trackerboy::FormatError ModuleDocument::open(QString filename) {
     
 }
 
-bool ModuleDocument::save(QString filename) {
+bool ModuleDocument::save(QString const& filename) {
     bool success = false;
     std::ofstream out(filename.toStdString(), std::ios::binary | std::ios::out);
     if (out.good()) {
         success = mModule.serialize(out) == trackerboy::FormatError::none;
         if (success) {
             setModified(false);
-            mUndoStack->setClean();
         }
 
     }

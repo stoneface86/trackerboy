@@ -33,6 +33,7 @@ public:
     Q_DECLARE_FLAGS(Categories, Category);
 
     struct Appearance {
+        ColorTable colors;
         QFont font;
         bool showFlats;         // if true flats will be shown for accidental notes
         bool showPreviews;      // if true, pattern previews will be rendered
@@ -54,7 +55,7 @@ public:
 
     };
 
-    Config(ColorTable &colorTable, Miniaudio &miniaudio);
+    Config(Miniaudio &miniaudio);
     ~Config() = default;
 
     //
@@ -82,7 +83,6 @@ private:
 
     void readColor(QSettings &settings, Color color, QColor def);
 
-    ColorTable &mColorTable;
     Miniaudio &mMiniaudio;
     
     Appearance mAppearance;

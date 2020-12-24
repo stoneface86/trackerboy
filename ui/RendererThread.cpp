@@ -229,7 +229,7 @@ void RendererThread::handleCallback(int16_t *out, size_t frames) {
                         resetPreview();
                     }
                     break;
-                case Command::play:
+                case Command::play: 
                     break;
                 case Command::playPattern:
                     break;

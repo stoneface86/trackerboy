@@ -12,6 +12,7 @@
 
 #include "miniaudio.h"
 
+#include <QMutex>
 #include <QWaitCondition>
 
 #include <optional>

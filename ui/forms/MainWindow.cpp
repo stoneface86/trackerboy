@@ -331,16 +331,16 @@ OrderWidget QTableView QHeaderView::section {
 }
 
 )stylesheet").arg(
-        mApp.colorTable[+Color::background].name(),
-        mApp.colorTable[+Color::line].name(),
-        mApp.colorTable[+Color::foreground].name(),
-        mApp.colorTable[+Color::selection].name(),
+        appearance.colors[+Color::background].name(),
+        appearance.colors[+Color::line].name(),
+        appearance.colors[+Color::foreground].name(),
+        appearance.colors[+Color::selection].name(),
         appearance.font.family(),
         QString::number(appearance.font.pointSize())
         ));
 
-        mPatternEditor->setColors(mApp.colorTable);
-        mApp.orderModel.setRowColor(mApp.colorTable[+Color::row]);
+        mPatternEditor->setColors(appearance.colors);
+        mApp.orderModel.setRowColor(appearance.colors[+Color::row]);
     }
 
     mApp.config.writeSettings();

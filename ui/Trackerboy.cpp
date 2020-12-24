@@ -4,8 +4,9 @@
 
 Trackerboy::Trackerboy() :
     miniaudio(),
-    config(colorTable, miniaudio),
-    document(),
+    config(miniaudio),
+    spinlock(),
+    document(spinlock),
     instrumentModel(document),
     orderModel(document),
     songModel(document, orderModel),

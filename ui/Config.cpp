@@ -15,8 +15,7 @@ constexpr unsigned DEFAULT_VOLUME = 100;
 }
 
 
-Config::Config(ColorTable &colorTable, Miniaudio &miniaudio) :
-    mColorTable(colorTable),
+Config::Config(Miniaudio &miniaudio) :
     mMiniaudio(miniaudio)
 {
 }
@@ -86,7 +85,7 @@ void Config::readSettings() {
 
 void Config::readColor(QSettings &settings, Color color, QColor def) {
     settings.setArrayIndex(+color);
-    mColorTable[+color] = settings.value("color", def).value<QColor>();
+    mAppearance.colors[+color] = settings.value("color", def).value<QColor>();
 }
 
 
@@ -96,10 +95,10 @@ void Config::writeSettings() {
 
     settings.setValue("fontFamily", mAppearance.font.family());
     settings.setValue("fontSize", mAppearance.font.pointSize());
-    settings.beginWriteArray("colors", mColorTable.size());
-    for (int i = 0; i != mColorTable.size(); ++i) {
+    settings.beginWriteArray("colors", mAppearance.colors.size());
+    for (int i = 0; i != mAppearance.colors.size(); ++i) {
         settings.setArrayIndex(i);
-        settings.setValue("color", mColorTable[i]);
+        settings.setValue("color", mAppearance.colors[i]);
     }
     settings.endArray();
     settings.setValue("showFlats", mAppearance.showFlats);
