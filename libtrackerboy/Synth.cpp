@@ -29,6 +29,10 @@ int16_t* Synth::buffer() noexcept {
     return mFrameBuf.data();
 }
 
+size_t Synth::framesize() const noexcept {
+    return (mFrameBuf.size() / 2) - 1;
+}
+
 size_t Synth::run() noexcept {
 
     // determine number of cycles to run for the next frame

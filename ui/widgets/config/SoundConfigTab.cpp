@@ -62,11 +62,8 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mVolumeLabel.setAlignment(Qt::AlignCenter);
     mBufferLabel.setAlignment(Qt::AlignCenter);
     mVolumeSlider.setRange(0, 100);
-    mBufferSlider.setRange(0, 10);
-
-    // initialize slider labels
-    bufferSliderChanged(0);
-    volumeSliderChanged(0);
+    mBufferSlider.setRange(1, 10);
+    mBufferSlider.setValue(1);
 
     // populate samplerate combo
     for (int i = 0; i != N_SAMPLERATES; ++i) {

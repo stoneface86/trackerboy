@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/audio/Renderer.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/SongListModel.hpp"
@@ -8,7 +9,6 @@
 #include "core/Config.hpp"
 #include "core/ColorTable.hpp"
 #include "core/Miniaudio.hpp"
-#include "core/Renderer.hpp"
 
 //
 // Container struct for configuration and model classes used throughout the ui.

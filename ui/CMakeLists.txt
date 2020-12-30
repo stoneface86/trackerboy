@@ -18,6 +18,8 @@ include_directories(
 )
 
 set(UI_SRC
+    "core/audio/RenderBuffer.cpp"
+    "core/audio/Renderer.cpp"
     "core/model/BaseModel.cpp"
     "core/model/BaseTableModel.cpp"
     "core/model/ModuleDocument.cpp"
@@ -27,8 +29,6 @@ set(UI_SRC
     "core/model/WaveListModel.cpp"
     "core/Config.cpp"
     "core/Miniaudio.cpp"
-    "core/Renderer.cpp"
-    "core/RendererThread.cpp"
     "core/samplerates.cpp"
     "core/Trackerboy.cpp"
 

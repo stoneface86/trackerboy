@@ -8,7 +8,7 @@
 namespace {
 
 constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
-constexpr unsigned DEFAULT_BUFFERSIZE = 40;
+constexpr unsigned DEFAULT_BUFFERSIZE = 5;
 constexpr unsigned DEFAULT_VOLUME = 100;
 
 

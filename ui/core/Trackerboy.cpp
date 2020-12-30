@@ -11,6 +11,14 @@ Trackerboy::Trackerboy() :
     orderModel(document),
     songModel(document, orderModel),
     waveModel(document),
-    renderer(document, instrumentModel, waveModel)
+    renderer(
+        miniaudio,
+        spinlock,
+        document.instrumentTable(),
+        document.waveTable(),
+        instrumentModel,
+        songModel,
+        waveModel
+    )
 {
 }

@@ -54,6 +54,12 @@ public:
     int16_t* buffer() noexcept;
 
     //
+    // Returns the minimum number of samples per frame. Frame sizes alternate between
+    // the result of this method and 1 extra sample.
+    //
+    size_t framesize() const noexcept;
+
+    //
     // Reset the synthesizer by reseting all hardware components to defaults.
     //
     void reset() noexcept;
