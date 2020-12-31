@@ -2,7 +2,7 @@ project(ui CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-find_package(Qt5 COMPONENTS Widgets Core REQUIRED)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
 if (WIN32)
     set(GUI_TYPE WIN32)
     set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
@@ -78,7 +78,6 @@ target_link_libraries(trackerboy_ui
     trackerboy
     miniaudio
     Qt5::Widgets
-    Qt5::Core
 )
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
@@ -87,5 +86,5 @@ add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_patt
 target_link_libraries(test_pattern_painter
     trackerboy
     Qt5::Widgets
-    Qt5::Core
+   # Qt5::Core
 )

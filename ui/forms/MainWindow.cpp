@@ -61,6 +61,46 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     setFilename("");
 
     setWindowIcon(IconManager::getAppIcon());
+
+    QSettings settings;
+
+    // restore geomtry from the last session
+    const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
+
+    #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    if (geometry.isEmpty()) {
+        // initialize window size to 3/4 of the screen's width and height
+        // screen() was added at version 5.14
+        const QRect availableGeometry = window()->screen()->availableGeometry();
+        resize(availableGeometry.width() / 4 * 3, availableGeometry.height() / 4 * 3);
+        move((availableGeometry.width() - width()) / 2,
+            (availableGeometry.height() - height()) / 2);
+
+    } else {
+        #else
+    if (!geometry.isEmpty()) {
+        #endif
+        restoreGeometry(geometry);
+    }
+
+    // restore window state if it exists
+    const QByteArray windowState = settings.value("windowState").toByteArray();
+    if (windowState.isEmpty()) {
+        // default layout
+        initState();
+    } else {
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockInstruments);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveforms);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockSongs);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
+        addToolBar(&mToolbarFile);
+        addToolBar(&mToolbarEdit);
+        addToolBar(&mToolbarTracker);
+        addToolBar(&mToolbarSong);
+        restoreState(windowState);
+    }
 }
 
 MainWindow::~MainWindow() {
@@ -87,128 +127,6 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
 
 void MainWindow::showEvent(QShowEvent *evt) {
     Q_UNUSED(evt);
-
-    if (mDefaultLayoutState.isEmpty()) {
-
-        QSettings settings;
-
-        // restore geomtry from the last session
-        const QByteArray geometry = settings.value("geometry", QByteArray()).toByteArray();
-
-        #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-        if (geometry.isEmpty()) {
-            // initialize window size to 3/4 of the screen's width and height
-            // screen() was added at version 5.14
-            const QRect availableGeometry = window()->screen()->availableGeometry();
-            resize(availableGeometry.width() / 4 * 3, availableGeometry.height() / 4 * 3);
-            move((availableGeometry.width() - width()) / 2,
-                (availableGeometry.height() - height()) / 2);
-
-        } else {
-            #else
-        if (!geometry.isEmpty()) {
-            #endif
-            restoreGeometry(geometry);
-        }
-
-
-        // setup default layout
-        // +-------------------------------------------------------------------------------+
-        // | Toolbars                                                                      |
-        // +-------------------------------------------------------------------------------+
-        // |                   |                                   |                       |
-        // | Song properties   |      Pattern Editor               | Instruments           |
-        // |       +           |                                   |                       |
-        // |     Songs         |                                   |                       |
-        // |                   |                                   |                       |
-        // +-------------------+                                   |                       |
-        // |                   |                                   |                       |
-        // | Module properties |                                   |                       |
-        // |                   |                                   |                       | 
-        // +-------------------+                                   |                       |
-        // |                   |                                   |                       |
-        // | Song Order        |                                   |                       |
-        // |                   |                                   |                       |
-        // |                   |                                   +-----------------------+
-        // |                   |                                   |                       |
-        // |                   |                                   | Waveforms             |
-        // |                   |                                   |                       |
-        // |                   |                                   |                       |
-        // |                   |                                   |                       |
-        // |                   |                                   |                       |
-        // +-------------------------------------------------------------------------------+
-        // Default locations for all dock widgets + toolbars
-        // The user can move these or hide these however they like
-        // This layout can be restored by invoking menu action Window | Reset Layout
-
-        // setup corners, left and right get both corners
-        setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
-        setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
-        setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
-        setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
-
-
-        addToolBar(Qt::TopToolBarArea, &mToolbarFile);
-        mToolbarFile.show();
-
-        addToolBar(Qt::TopToolBarArea, &mToolbarEdit);
-        mToolbarEdit.show();
-
-        addToolBar(Qt::TopToolBarArea, &mToolbarTracker);
-        mToolbarTracker.show();
-
-        addToolBar(Qt::TopToolBarArea, &mToolbarSong);
-        mToolbarSong.show();
-
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
-        tabifyDockWidget(&mDockSongProperties, &mDockSongs);
-        mDockSongs.show();
-        mDockSongProperties.show();
-        mDockSongProperties.raise();
-
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
-        mDockModuleProperties.show();
-
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
-        mDockOrders.show();
-
-        addDockWidget(Qt::RightDockWidgetArea, &mDockInstruments);
-        mDockInstruments.show();
-
-        addDockWidget(Qt::RightDockWidgetArea, &mDockWaveforms);
-        mDockWaveforms.show();
-
-        // resize
-
-        int const w = width();
-        int const h = height();
-
-        // song properties and module properties get the minimum, stretch orders
-        resizeDocks(
-            { &mDockSongProperties, &mDockModuleProperties, &mDockOrders },
-            { 0, 0, h },
-            Qt::Vertical
-        );
-
-        // give instruments more height
-        resizeDocks(
-            { &mDockInstruments, &mDockWaveforms },
-            { static_cast<int>(h * 0.75f), static_cast<int>(h * 0.25f) },
-            Qt::Vertical
-        );
-
-        resizeDocks({ &mDockInstruments }, { static_cast<int>((w - mDockOrders.width()) * 0.375f) }, Qt::Horizontal);
-
-        mDefaultLayoutState = saveState(); // save this default state so that the user can reset it
-
-        // restore window state if it exists
-        const QByteArray windowState = settings.value("windowState").toByteArray();
-        if (!windowState.isEmpty()) {
-            restoreState(windowState);
-        }
-
-    }
-
 }
 
 // SLOTS ---------------------------------------------------------------------
@@ -279,7 +197,31 @@ bool MainWindow::onFileSaveAs() {
 }
 
 void MainWindow::onWindowResetLayout() {
-    restoreState(mDefaultLayoutState);
+    // remove everything
+    removeToolBar(&mToolbarFile);
+    removeToolBar(&mToolbarEdit);
+    removeToolBar(&mToolbarTracker);
+    removeToolBar(&mToolbarSong);
+
+    mDockInstruments.setFloating(false);
+    removeDockWidget(&mDockInstruments);
+
+    mDockWaveforms.setFloating(false);
+    removeDockWidget(&mDockWaveforms);
+
+    mDockSongs.setFloating(false);
+    removeDockWidget(&mDockSongs);
+
+    mDockSongProperties.setFloating(false);
+    removeDockWidget(&mDockSongProperties);
+
+    mDockModuleProperties.setFloating(false);
+    removeDockWidget(&mDockModuleProperties);
+
+    mDockOrders.setFloating(false);
+    removeDockWidget(&mDockOrders);
+
+    initState();
 }
 
 void MainWindow::onConfigApplied(Config::Categories categories) {
@@ -687,6 +629,96 @@ void MainWindow::setupUi() {
 
     
 
+}
+
+void MainWindow::initState() {
+    // setup default layout
+    // +-------------------------------------------------------------------------------+
+    // | Toolbars                                                                      |
+    // +-------------------------------------------------------------------------------+
+    // |                   |                                   |                       |
+    // | Song properties   |      Pattern Editor               | Instruments           |
+    // |       +           |                                   |                       |
+    // |     Songs         |                                   |                       |
+    // |                   |                                   |                       |
+    // +-------------------+                                   |                       |
+    // |                   |                                   |                       |
+    // | Module properties |                                   |                       |
+    // |                   |                                   |                       | 
+    // +-------------------+                                   |                       |
+    // |                   |                                   |                       |
+    // | Song Order        |                                   |                       |
+    // |                   |                                   |                       |
+    // |                   |                                   +-----------------------+
+    // |                   |                                   |                       |
+    // |                   |                                   | Waveforms             |
+    // |                   |                                   |                       |
+    // |                   |                                   |                       |
+    // |                   |                                   |                       |
+    // |                   |                                   |                       |
+    // +-------------------------------------------------------------------------------+
+    // Default locations for all dock widgets + toolbars
+    // The user can move these or hide these however they like
+    // This layout can be restored by invoking menu action Window | Reset Layout
+
+    // setup corners, left and right get both corners
+    setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
+    setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
+    setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
+    setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
+
+
+    addToolBar(Qt::TopToolBarArea, &mToolbarFile);
+    mToolbarFile.show();
+
+    addToolBar(Qt::TopToolBarArea, &mToolbarEdit);
+    mToolbarEdit.show();
+
+    addToolBar(Qt::TopToolBarArea, &mToolbarTracker);
+    mToolbarTracker.show();
+
+    addToolBar(Qt::TopToolBarArea, &mToolbarSong);
+    mToolbarSong.show();
+
+    addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
+    tabifyDockWidget(&mDockSongProperties, &mDockSongs);
+    mDockSongs.show();
+    mDockSongProperties.show();
+    mDockSongProperties.raise();
+
+    addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
+    mDockModuleProperties.show();
+
+    addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
+    mDockOrders.show();
+
+    addDockWidget(Qt::RightDockWidgetArea, &mDockInstruments);
+    mDockInstruments.show();
+
+    addDockWidget(Qt::RightDockWidgetArea, &mDockWaveforms);
+    mDockWaveforms.show();
+
+    // resize
+
+    int const w = width();
+    int const h = height();
+
+    // song properties and module properties get the minimum, stretch orders
+    resizeDocks(
+        { &mDockSongProperties, &mDockModuleProperties, &mDockOrders },
+        { 1, 1, h },
+        Qt::Vertical
+    );
+
+    // give instruments more height
+    resizeDocks(
+        { &mDockInstruments, &mDockWaveforms },
+        { static_cast<int>(h * 0.75f), static_cast<int>(h * 0.25f) },
+        Qt::Vertical
+    );
+
+    resizeDocks({ &mDockSongProperties }, { 1 }, Qt::Horizontal);
+    resizeDocks({ &mDockInstruments }, { static_cast<int>((w - mDockOrders.width()) * 0.375f) }, Qt::Horizontal);
 }
 
 void MainWindow::setupWindowMenu(QMenu &menu) {

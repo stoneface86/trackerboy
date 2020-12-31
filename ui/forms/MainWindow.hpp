@@ -77,6 +77,8 @@ private:
 
     void setupUi();
 
+    void initState();
+
     void setupWindowMenu(QMenu &menu);
 
 
@@ -185,9 +187,4 @@ private:
     QAction mActionAudioDiag;
     QAction mActionHelpAboutQt;
     QAction mActionHelpAbout;
-
-    // set from saveState() after setting up the ui
-    QByteArray mDefaultLayoutState;
-
-
 };
