@@ -26,6 +26,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mApp(trackerboy),
     mFilename(),
     mDocumentName(),
+    mAudioDiag(nullptr),
     mConfigDialog(nullptr),
     mInstrumentEditor(nullptr),
     mWaveEditor(nullptr),
@@ -288,6 +289,9 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         mStatusSamplerate.setText(QString("%1 Hz").arg(sound.samplerate));
 
         mApp.renderer.setConfig(sound);
+        if (mAudioDiag != nullptr) {
+            mAudioDiag->setConfig(mApp.miniaudio, sound);
+        }
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
@@ -344,6 +348,15 @@ OrderWidget QTableView QHeaderView::section {
     }
 
     mApp.config.writeSettings();
+}
+
+void MainWindow::showAudioDiag() {
+    if (mAudioDiag == nullptr) {
+        mAudioDiag = new AudioDiagDialog(mApp.renderer, this);
+        mAudioDiag->setConfig(mApp.miniaudio, mApp.config.sound());
+    }
+
+    mAudioDiag->show();
 }
 
 void MainWindow::showConfigDialog() {
@@ -457,7 +470,7 @@ void MainWindow::setupUi() {
     setupAction(mActionFileOpen, "&Open", "Open an existing module", Icons::fileOpen, QKeySequence::Open);
     setupAction(mActionFileSave, "&Save", "Save the module", Icons::fileSave, QKeySequence::Save);
     setupAction(mActionFileSaveAs, "Save &As...", "Save the module to a new file", QKeySequence::SaveAs);
-    setupAction(mActionFileConfig, "&Configuration", "Change application settings", Icons::fileConfig);
+    setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
     setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
 
     setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
@@ -474,6 +487,7 @@ void MainWindow::setupUi() {
 
     setupAction(mActionWindowResetLayout, "Reset layout", "Rearranges all docks and toolbars to the default layout");
 
+    setupAction(mActionAudioDiag, "Audio diagnostics...", "Shows the audio diagnostics dialog");
     setupAction(mActionHelpAbout, "&About", "About this program");
     setupAction(mActionHelpAboutQt, "About &Qt", "Shows information about Qt");
 
@@ -529,6 +543,8 @@ void MainWindow::setupUi() {
     setupWindowMenu(mMenuWindow);
 
     mMenuHelp.setTitle(tr("&Help"));
+    mMenuHelp.addAction(&mActionAudioDiag);
+    mMenuHelp.addSeparator();
     mMenuHelp.addAction(&mActionHelpAbout);
     mMenuHelp.addAction(&mActionHelpAboutQt);
 
@@ -652,6 +668,7 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileConfig, showConfigDialog);
     //connect(&mActionFileConfig, &QAction::triggered, &mConfigDialog, &ConfigDialog::show);
 
+    connectActionToThis(mActionAudioDiag, showAudioDiag);
     QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);
 
 

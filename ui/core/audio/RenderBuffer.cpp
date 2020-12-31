@@ -64,7 +64,6 @@ void RenderBuffer::setSize(unsigned frameCount, size_t samplesPerFrame) {
             frames++;
             buffer += maxSamplesPerFrame;
         }
-
         reset();
     }
 

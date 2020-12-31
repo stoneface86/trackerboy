@@ -32,6 +32,7 @@ set(UI_SRC
     "core/samplerates.cpp"
     "core/Trackerboy.cpp"
 
+    "forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"
     "forms/InstrumentEditor.cpp"
     "forms/MainWindow.cpp"

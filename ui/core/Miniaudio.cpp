@@ -1,7 +1,6 @@
 
 #include "core/Miniaudio.hpp"
 
-
 Miniaudio::Miniaudio() :
     mInitialized(false),
     mContext(),
@@ -62,4 +61,66 @@ int Miniaudio::lookupDevice(ma_device_id *id) {
         }
     }
     return -1;
+}
+
+QString Miniaudio::deviceName(int index) {
+    if (mDeviceList == nullptr) {
+        return {};
+    }
+
+    return QString::fromLatin1(mDeviceList[index].name);
+}
+
+QString Miniaudio::backendName() {
+    return QString::fromLatin1(ma_get_backend_name(mContext.backend));
+}
+
+QString Miniaudio::deviceIdString(int index) {
+    if (mDeviceList == nullptr) {
+        return {};
+    }
+
+    auto id = deviceId(index);
+
+    switch (mContext.backend) {
+        case ma_backend_wasapi:
+            // wchar_t string
+            return QString::fromWCharArray(id->wasapi);
+        case ma_backend_dsound:
+            // GUID
+            return {};
+        case ma_backend_winmm:
+            // uint
+            return QString::number(id->winmm);
+        case ma_backend_coreaudio:
+            return QString::fromLatin1(id->coreaudio);
+        case ma_backend_sndio:
+            return QString::fromLatin1(id->sndio);
+        case ma_backend_audio4:
+            return QString::fromLatin1(id->audio4);
+        case ma_backend_oss:
+            return QString::fromLatin1(id->oss);
+        case ma_backend_pulseaudio:
+            return QString::fromLatin1(id->pulse);
+        case ma_backend_alsa:
+            return QString::fromLatin1(id->alsa);
+        case ma_backend_aaudio:
+            return QString::number(id->aaudio);
+        case ma_backend_opensl:
+            return QString::number(id->opensl);
+        case ma_backend_null:
+            return QString::number(id->nullbackend);
+        case ma_backend_webaudio:
+        case ma_backend_jack:
+        default:
+            return QStringLiteral("N/A");
+    }
+}
+
+ma_device_info const* Miniaudio::deviceInfo(int index) {
+    if (mDeviceList == nullptr) {
+        return nullptr;
+    }
+
+    return mDeviceList + index;
 }

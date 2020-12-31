@@ -58,6 +58,22 @@ Renderer::~Renderer() {
     closeDevice();
 }
 
+unsigned Renderer::lockFails() const {
+    return mLockFails.load();
+}
+
+unsigned Renderer::underruns() const {
+    return mUnderruns.load();
+}
+
+unsigned Renderer::elapsed() const {
+    return mSamplesElapsed.load();
+}
+
+unsigned Renderer::bufferUsage() const {
+    return mBufferUsage.load();
+}
+
 void Renderer::setConfig(Config::Sound const &soundConfig) {
     closeDevice();
 
@@ -103,6 +119,7 @@ void Renderer::startDevice() {
         mStopCounter = 0;
         mStopped = false;
         mBuffer.reset();
+        mSamplesElapsed = 0;
 
         ma_device_start(&mDevice.value());
         mRunning = true;
@@ -250,6 +267,8 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
         return;
     }
 
+    mBufferUsage = mBuffer.framesInQueue();
+
     while (frames) {
 
         if (!mStopped && mBuffer.framesToQueue()) {
@@ -293,7 +312,14 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
 
         size_t framesRead = mBuffer.read(out, frames);
         frames -= framesRead;
+
+        // write what we just read to the return buffer for visualizers
+        // wrappedWrite(&mReturnBuffer, out, frames);
+
+
         out += framesRead * 2;
+
+        mSamplesElapsed += framesRead;
     }
 
 }

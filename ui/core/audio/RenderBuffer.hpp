@@ -5,6 +5,7 @@
 
 #include "miniaudio.h"
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <memory>

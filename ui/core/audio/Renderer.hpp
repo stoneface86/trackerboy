@@ -42,6 +42,14 @@ public:
     );
     ~Renderer();
 
+    unsigned lockFails() const;
+
+    unsigned underruns() const;
+
+    unsigned elapsed() const;
+
+    unsigned bufferUsage() const;
+
     void setConfig(Config::Sound const& config);
 
     void playMusic(trackerboy::Song *song, uint8_t orderNo, uint8_t rowNo);
@@ -126,8 +134,9 @@ private:
     bool mStopped;
 
     // diagnostic info
-    std::atomic_uint mLockFails;
-    std::atomic_uint mUnderruns;
-
+    std::atomic_uint mLockFails;        // number of spinlock failures
+    std::atomic_uint mUnderruns;        // number of underruns, or failure to output samples
+    std::atomic_uint mSamplesElapsed;   // number of samples written to be played out
+    std::atomic_uint mBufferUsage;      // number of frames queued in the buffer
 
 };

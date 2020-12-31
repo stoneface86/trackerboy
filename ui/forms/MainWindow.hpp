@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/Trackerboy.hpp"
+#include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
 #include "forms/InstrumentEditor.hpp"
 #include "forms/WaveEditor.hpp"
@@ -51,6 +52,7 @@ private slots:
     void onConfigApplied(Config::Categories categories);
 
     // dialog show slots (lazy loading)
+    void showAudioDiag();
     void showInstrumentEditor();
     void showWaveEditor();
     void showConfigDialog();
@@ -86,6 +88,7 @@ private:
     QString mDocumentName;
 
     // dialogs
+    AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;
     InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
@@ -179,6 +182,7 @@ private:
 
     // Help
     QMenu mMenuHelp;
+    QAction mActionAudioDiag;
     QAction mActionHelpAboutQt;
     QAction mActionHelpAbout;
 

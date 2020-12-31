@@ -43,6 +43,20 @@ public:
     //
     int lookupDevice(ma_device_id *id);
 
+    //
+    // Gets the device name for the given device index
+    //
+    QString deviceName(int index);
+
+    //
+    // User readable version of the device's id
+    //
+    QString deviceIdString(int index);
+
+    ma_device_info const* deviceInfo(int index);
+
+    QString backendName();
+
 private:
 
     bool mInitialized;
