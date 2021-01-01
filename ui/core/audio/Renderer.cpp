@@ -110,6 +110,8 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     auto err = ma_device_init(mMiniaudio.context(), &config, &mDevice.value());
     assert(err == MA_SUCCESS);
 
+    mReturnBuffer.init(mDevice.value().playback.internalPeriodSizeInFrames * 2);
+
     mSynth.setSamplingRate(SAMPLERATE);
     mSynth.setVolume(soundConfig.volume);
     mSynth.setupBuffers();
@@ -328,10 +330,11 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
         frames -= framesRead;
 
         // write what we just read to the return buffer for visualizers
-        // wrappedWrite(&mReturnBuffer, out, frames);
+        auto samplesRead = framesRead * 2;
+        mReturnBuffer.fullWrite(out, samplesRead);
 
 
-        out += framesRead * 2;
+        out += samplesRead;
 
         mSamplesElapsed += framesRead;
     }

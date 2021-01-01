@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/audio/RenderBuffer.hpp"
+#include "core/audio/Ringbuffer.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/SongListModel.hpp"
 #include "core/model/WaveListModel.hpp"
@@ -151,6 +152,7 @@ private:
     WaveListModel &mWaveModel;
 
     RenderBuffer mBuffer;
+    Ringbuffer<int16_t> mReturnBuffer; // audio return data for visualizers
 
     PreviewState mPreviewState;
     trackerboy::ChType mPreviewChannel;
