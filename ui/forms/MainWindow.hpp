@@ -11,6 +11,7 @@
 #include "widgets/docks/SongPropertiesWidget.hpp"
 #include "widgets/docks/SongWidget.hpp"
 #include "widgets/docks/TableForm.hpp"
+#include "widgets/docks/Visualizer.hpp"
 #include "widgets/PatternEditor.hpp"
 
 #include <QComboBox>
@@ -122,6 +123,9 @@ private:
 
     QDockWidget mDockOrders;
         OrderWidget mOrderWidget;
+
+    QDockWidget mDockVisualizer;
+        Visualizer mVisualizer;
 
     // central widget (must be heap-alloc'd)
     PatternEditor *mPatternEditor;

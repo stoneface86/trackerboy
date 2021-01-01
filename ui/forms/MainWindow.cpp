@@ -97,6 +97,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockVisualizer);
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
         addToolBar(&mToolbarTracker);
@@ -573,6 +574,9 @@ void MainWindow::setupUi() {
     mDockSongs.setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     mDockOrders.setWidget(&mOrderWidget);
 
+    setObjectNameFromDeclared(mDockVisualizer);
+    mDockVisualizer.setWindowTitle(tr("Visualizer"));
+    mDockVisualizer.setWidget(&mVisualizer);
     
 
     // STATUSBAR ==============================================================

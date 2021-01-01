@@ -54,6 +54,7 @@ set(UI_SRC
     "widgets/docks/SongPropertiesWidget.cpp"
     "widgets/docks/SongWidget.cpp"
     "widgets/docks/TableForm.cpp"
+    "widgets/docks/Visualizer.cpp"
     "widgets/grid/layout.cpp"
     "widgets/grid/PatternGrid.cpp"
     "widgets/grid/PatternGridHeader.cpp"
@@ -74,7 +75,7 @@ if (MSVC)
 endif ()
 
 
-add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC} ${WINDOWS_APPICON_RC})
+add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC} ${WINDOWS_APPICON_RC} )
 target_link_libraries(trackerboy_ui
     trackerboy
     miniaudio
@@ -83,9 +84,8 @@ target_link_libraries(trackerboy_ui
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
 
-add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp")
+add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
 target_link_libraries(test_pattern_painter
     trackerboy
     Qt5::Widgets
-   # Qt5::Core
 )
