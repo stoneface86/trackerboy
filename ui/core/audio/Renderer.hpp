@@ -31,6 +31,7 @@ class Renderer : public QObject {
     Q_OBJECT
 
 public:
+
     Renderer(
         Miniaudio &miniaudio, 
         Spinlock &spinlock,
@@ -42,13 +43,37 @@ public:
     );
     ~Renderer();
 
+    // DIAGNOSTICS ====
+
+    //
+    // gets the current count of lock failures, or when the callback thread failed
+    // to lock the spinlock.
+    //
     unsigned lockFails() const;
 
+    //
+    // total count of underruns that have occurred
+    //
     unsigned underruns() const;
 
+    //
+    // time elapsed in milleseconds of the current render
+    //
     unsigned elapsed() const;
 
+    //
+    // buffer utilization in whole frames.
+    //
     unsigned bufferUsage() const;
+
+    //
+    // Size of the buffer in whole frames.
+    //
+    unsigned bufferSize() const;
+
+    ma_device const& device() const;
+
+    bool isRunning();
 
     void setConfig(Config::Sound const& config);
 

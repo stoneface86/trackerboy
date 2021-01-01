@@ -1,5 +1,7 @@
 
 #include "MainWindow.hpp"
+
+#include "core/samplerates.hpp"
 #include "misc/IconManager.hpp"
 #include "misc/utils.hpp"
 
@@ -227,13 +229,10 @@ void MainWindow::onWindowResetLayout() {
 void MainWindow::onConfigApplied(Config::Categories categories) {
     if (categories.testFlag(Config::CategorySound)) {
         auto &sound = mApp.config.sound();
-        //auto rate = audio::SAMPLERATE_TABLE[sound.samplerate];
-        mStatusSamplerate.setText(QString("%1 Hz").arg(sound.samplerate));
+        auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
+        mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
         mApp.renderer.setConfig(sound);
-        if (mAudioDiag != nullptr) {
-            mAudioDiag->setConfig(mApp.miniaudio, sound);
-        }
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
@@ -295,7 +294,6 @@ OrderWidget QTableView QHeaderView::section {
 void MainWindow::showAudioDiag() {
     if (mAudioDiag == nullptr) {
         mAudioDiag = new AudioDiagDialog(mApp.renderer, this);
-        mAudioDiag->setConfig(mApp.miniaudio, mApp.config.sound());
     }
 
     mAudioDiag->show();

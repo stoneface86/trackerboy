@@ -41,13 +41,7 @@ public:
 
     struct Sound {
 
-        // device settings
-        //int backendIndex;
-        ma_context *context;
         int deviceIndex;
-        ma_device_id *device;
-
-        unsigned samplerate;        // samplerate to use (0 for device default)
         unsigned samplerateIndex;   // index of the current samplerate
         unsigned buffersize;        // Number of frames to buffer when rendering
         int volume;                 // Synth volume level, percentage, 0-100
@@ -76,10 +70,6 @@ public:
 
 
 private:
-
-    void setDevice(int index);
-
-    void setSamplerate(int index);
 
     void readColor(QSettings &settings, Color color, QColor def);
 

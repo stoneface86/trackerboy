@@ -70,7 +70,6 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
         mSamplerateCombo.addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
     }
 
-    mDeviceCombo.addItem(tr("Default device"));
     mDeviceCombo.addItems(config.mMiniaudio.deviceNames());
 
     connect(&mBufferSlider, &QSlider::valueChanged, this, &SoundConfigTab::bufferSliderChanged);
@@ -85,8 +84,8 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
 }
 
 void SoundConfigTab::apply(Config::Sound &soundConfig) {
-    mConfig.setDevice(mDeviceCombo.currentIndex());
-    mConfig.setSamplerate(mSamplerateCombo.currentIndex());
+    soundConfig.deviceIndex = mDeviceCombo.currentIndex();
+    soundConfig.samplerateIndex = mSamplerateCombo.currentIndex();
     soundConfig.buffersize = mBufferSlider.value();
     soundConfig.volume = mVolumeSlider.value();
     soundConfig.lowLatency = mLatencyCheckbox.isChecked(); 

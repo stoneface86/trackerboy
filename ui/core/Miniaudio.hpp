@@ -28,12 +28,17 @@ public:
     ma_context* context();
 
     //
+    // Returns the total number of devices available
+    //
+    unsigned deviceCount() const;
+
+    //
     // Gets a list of device names to display to the user.
     //
     QStringList deviceNames();
 
     //
-    // Gets the device id of the given device index
+    // Gets the device id of the given device index. Index 0 is the default device.
     //
     ma_device_id* deviceId(int index);
 
@@ -51,10 +56,11 @@ public:
     //
     // User readable version of the device's id
     //
-    QString deviceIdString(int index);
+    QString deviceIdString(ma_device_id const& id);
 
-    ma_device_info const* deviceInfo(int index);
-
+    //
+    // Name of the backend in use
+    //
     QString backendName();
 
 private:

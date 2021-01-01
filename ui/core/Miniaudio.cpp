@@ -1,6 +1,8 @@
 
 #include "core/Miniaudio.hpp"
 
+#include <QCoreApplication>
+
 Miniaudio::Miniaudio() :
     mInitialized(false),
     mContext(),
@@ -32,11 +34,15 @@ ma_context* Miniaudio::context() {
     }
 }
 
+unsigned Miniaudio::deviceCount() const {
+    return mDeviceCount;
+}
+
 QStringList Miniaudio::deviceNames() {
     QStringList list;
     if (mDeviceList != nullptr) {
-        for (unsigned i = 0; i != mDeviceCount; ++i) {
-            list.append(QString::fromLatin1(mDeviceList[i].name));
+        for (unsigned i = 0; i != mDeviceCount + 1; ++i) {
+            list.append(deviceName(i));
         }
     }
     return list;
@@ -44,7 +50,7 @@ QStringList Miniaudio::deviceNames() {
 
 ma_device_id* Miniaudio::deviceId(int index) {
     if (mDeviceList != nullptr) {
-        return &mDeviceList[index].id;
+        return index == 0 ? nullptr : &mDeviceList[index - 1].id;
     } else {
         return nullptr;
     }
@@ -52,12 +58,12 @@ ma_device_id* Miniaudio::deviceId(int index) {
 
 int Miniaudio::lookupDevice(ma_device_id *id) {
     if (id == nullptr) {
-        return -1;
+        return 0;
     }
 
     for (unsigned i = 0; i != mDeviceCount; ++i) {
         if (memcmp(id, &mDeviceList[i].id, sizeof(ma_device_id)) == 0) {
-            return i;
+            return i + 1;
         }
     }
     return -1;
@@ -68,59 +74,50 @@ QString Miniaudio::deviceName(int index) {
         return {};
     }
 
-    return QString::fromLatin1(mDeviceList[index].name);
+    if (index == 0) {
+        return QCoreApplication::tr("Default device");
+    } else {
+        return QString::fromLatin1(mDeviceList[index - 1].name);
+    }
 }
 
 QString Miniaudio::backendName() {
     return QString::fromLatin1(ma_get_backend_name(mContext.backend));
 }
 
-QString Miniaudio::deviceIdString(int index) {
-    if (mDeviceList == nullptr) {
-        return {};
-    }
-
-    auto id = deviceId(index);
+QString Miniaudio::deviceIdString(ma_device_id const& id) {
 
     switch (mContext.backend) {
         case ma_backend_wasapi:
             // wchar_t string
-            return QString::fromWCharArray(id->wasapi);
+            return QString::fromWCharArray(id.wasapi);
         case ma_backend_dsound:
             // GUID
             return {};
         case ma_backend_winmm:
             // uint
-            return QString::number(id->winmm);
+            return QString::number(id.winmm);
         case ma_backend_coreaudio:
-            return QString::fromLatin1(id->coreaudio);
+            return QString::fromLatin1(id.coreaudio);
         case ma_backend_sndio:
-            return QString::fromLatin1(id->sndio);
+            return QString::fromLatin1(id.sndio);
         case ma_backend_audio4:
-            return QString::fromLatin1(id->audio4);
+            return QString::fromLatin1(id.audio4);
         case ma_backend_oss:
-            return QString::fromLatin1(id->oss);
+            return QString::fromLatin1(id.oss);
         case ma_backend_pulseaudio:
-            return QString::fromLatin1(id->pulse);
+            return QString::fromLatin1(id.pulse);
         case ma_backend_alsa:
-            return QString::fromLatin1(id->alsa);
+            return QString::fromLatin1(id.alsa);
         case ma_backend_aaudio:
-            return QString::number(id->aaudio);
+            return QString::number(id.aaudio);
         case ma_backend_opensl:
-            return QString::number(id->opensl);
+            return QString::number(id.opensl);
         case ma_backend_null:
-            return QString::number(id->nullbackend);
+            return QString::number(id.nullbackend);
         case ma_backend_webaudio:
         case ma_backend_jack:
         default:
-            return QStringLiteral("N/A");
+            return QCoreApplication::tr("N/A");
     }
-}
-
-ma_device_info const* Miniaudio::deviceInfo(int index) {
-    if (mDeviceList == nullptr) {
-        return nullptr;
-    }
-
-    return mDeviceList + index;
 }

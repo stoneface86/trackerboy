@@ -11,7 +11,6 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
-#include <QLineEdit>
 #include <QPushButton>
 #include <QSpinBox>
 
@@ -26,8 +25,6 @@ public:
 
     explicit AudioDiagDialog(Renderer &renderer, QWidget *parent = nullptr);
     ~AudioDiagDialog();
-
-    void setConfig(Miniaudio &miniaudio, Config::Sound const& config);
 
 protected:
 
@@ -44,24 +41,16 @@ private:
 
     Renderer &mRenderer;
     int mTimerId;
-    unsigned mBuffersize;
-    unsigned mSamplerate;
 
     QVBoxLayout mLayout;
-        QHBoxLayout mGroupLayout;
-            QGroupBox mRenderGroup;
-                QFormLayout mRenderLayout;
-                    QLabel mLockFailsLabel;
-                    QLabel mUnderrunLabel;
-                    QLabel mBufferLabel;
-                    QLabel mStatusLabel;
-                    QLabel mElapsedLabel;
-                    QPushButton mClearButton;
-            QGroupBox mDeviceGroup;
-                QFormLayout mDeviceLayout;
-                    QLabel mDeviceNameLabel;
-                    QLabel mBackendLabel;
-                    QLineEdit mDeviceIdEdit;
+        QGroupBox mRenderGroup;
+            QFormLayout mRenderLayout;
+                QLabel mLockFailsLabel;
+                QLabel mUnderrunLabel;
+                QLabel mBufferLabel;
+                QLabel mStatusLabel;
+                QLabel mElapsedLabel;
+                QPushButton mClearButton;
         QHBoxLayout mButtonLayout;
             QCheckBox mAutoRefreshCheck;
             QSpinBox mIntervalSpin;

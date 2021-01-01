@@ -1,5 +1,6 @@
 
 #include "core/audio/Renderer.hpp"
+#include "core/samplerates.hpp"
 
 #include <QMutexLocker>
 #include <QtDebug>
@@ -67,11 +68,24 @@ unsigned Renderer::underruns() const {
 }
 
 unsigned Renderer::elapsed() const {
-    return mSamplesElapsed.load();
+    return mSamplesElapsed.load() * 1000 / mDevice.value().sampleRate;
 }
 
 unsigned Renderer::bufferUsage() const {
     return mBufferUsage.load();
+}
+
+unsigned Renderer::bufferSize() const {
+    return mBuffer.size();
+}
+
+ma_device const& Renderer::device() const{
+    return mDevice.value();
+}
+
+bool Renderer::isRunning() {
+    QMutexLocker locker(&mMutex);
+    return mRunning;
 }
 
 void Renderer::setConfig(Config::Sound const &soundConfig) {
@@ -79,15 +93,15 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
 
     QMutexLocker locker(&mMutex);
 
+    auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
+
     auto config = ma_device_config_init(ma_device_type_playback);
-    if (soundConfig.device != nullptr) {
-        config.playback.pDeviceID = soundConfig.device;
-    }
+    config.playback.pDeviceID = mMiniaudio.deviceId(soundConfig.deviceIndex);
     // always 16-bit stereo format
     config.playback.format = ma_format_s16;
     config.playback.channels = 2;
     config.performanceProfile = soundConfig.lowLatency ? ma_performance_profile_low_latency : ma_performance_profile_conservative;
-    config.sampleRate = soundConfig.samplerate;
+    config.sampleRate = SAMPLERATE;
     config.dataCallback = audioCallbackRun;
     config.pUserData = this;
 
@@ -96,7 +110,7 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     auto err = ma_device_init(mMiniaudio.context(), &config, &mDevice.value());
     assert(err == MA_SUCCESS);
 
-    mSynth.setSamplingRate(soundConfig.samplerate);
+    mSynth.setSamplingRate(SAMPLERATE);
     mSynth.setVolume(soundConfig.volume);
     mSynth.setupBuffers();
 

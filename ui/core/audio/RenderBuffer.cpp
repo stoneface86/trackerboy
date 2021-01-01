@@ -26,6 +26,10 @@ bool RenderBuffer::isEmpty() const {
     return mCurrentFrameRemaining == 0 && mFramesAvailable == 0;
 }
 
+unsigned RenderBuffer::size() const {
+    return mBuffersize;
+}
+
 void RenderBuffer::reset() {
     mReadIndex = 0;
     mWriteIndex = 0;

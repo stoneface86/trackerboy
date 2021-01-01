@@ -43,6 +43,8 @@ public:
     //
     unsigned framesInQueue();
 
+    unsigned size() const;
+
 
     // for the audio callback thread:
 
