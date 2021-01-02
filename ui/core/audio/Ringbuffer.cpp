@@ -1,6 +1,7 @@
 
 #include "core/audio/Ringbuffer.hpp"
 
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 
@@ -34,25 +35,37 @@ size_t RingbufferBase::size() const {
     return mSize;
 }
 
-size_t RingbufferBase::read(void *data, size_t bytes) {
-    size_t bytesToRead = bytes;
+size_t RingbufferBase::read(void *data, size_t sizeInBytes) {
+    size_t bytesToRead = sizeInBytes;
     void *src;
-    ma_rb_acquire_read(&mRingbuffer, &bytesToRead, &src);
+    
+    auto result = ma_rb_acquire_read(&mRingbuffer, &bytesToRead, &src);
+    assert(result == MA_SUCCESS);
+
     memcpy(data, src, bytesToRead);
-    ma_rb_commit_read(&mRingbuffer, bytesToRead, src);
+    
+    result = ma_rb_commit_read(&mRingbuffer, bytesToRead, src);
+    assert(result == MA_SUCCESS);
+    
     return bytesToRead;
 }
 
-size_t RingbufferBase::write(void const *data, size_t bytes) {
+size_t RingbufferBase::write(void const *data, size_t sizeInBytes) {
     void *dest;
-    size_t bytesToWrite = bytes;
-    ma_rb_acquire_write(&mRingbuffer, &bytesToWrite, &dest);
+    size_t bytesToWrite = sizeInBytes;
+
+    auto result = ma_rb_acquire_write(&mRingbuffer, &bytesToWrite, &dest);
+    assert(result == MA_SUCCESS);
+
     memcpy(dest, data, bytesToWrite);
+    
     ma_rb_commit_write(&mRingbuffer, bytesToWrite, dest);
+    assert(result == MA_SUCCESS);
+    
     return bytesToWrite;
 }
 
-size_t RingbufferBase::fullRead(void *buf, size_t bufsize) {
+size_t RingbufferBase::fullRead(void *buf, size_t sizeInBytes) {
     size_t readAvail = ma_rb_available_read(&mRingbuffer);
 
     if (readAvail == 0) {
@@ -60,36 +73,35 @@ size_t RingbufferBase::fullRead(void *buf, size_t bufsize) {
     }
 
     // do the first read
-    size_t bytesRead = read(buf, bufsize);
+    size_t bytesRead = read(buf, sizeInBytes);
 
-    bufsize -= bytesRead;
+    sizeInBytes -= bytesRead;
     readAvail -= bytesRead;
 
-    if (bufsize != 0 && readAvail) {
+    if (sizeInBytes != 0 && readAvail) {
         // do the second read (the read pointer starts at the beginning)
-        bytesRead += read(reinterpret_cast<uint8_t*>(buf) + bytesRead, bufsize);
+        bytesRead += read(reinterpret_cast<uint8_t*>(buf) + bytesRead, sizeInBytes);
 
     }
 
     return bytesRead;
 }
 
-size_t RingbufferBase::fullWrite(void const *buf, size_t bufsize) {
+size_t RingbufferBase::fullWrite(void const *buf, size_t sizeInBytes) {
     size_t writeAvail = ma_rb_available_write(&mRingbuffer);
 
     if (writeAvail == 0) {
         return 0;
     }
 
-    size_t bytesWritten = write(buf, bufsize);
+    size_t bytesWritten = write(buf, sizeInBytes);
 
-    bufsize -= bytesWritten;
+    sizeInBytes -= bytesWritten;
     writeAvail -= bytesWritten;
 
-    if (bufsize != 0 && writeAvail) {
-        bytesWritten += write(reinterpret_cast<uint8_t const*>(buf) + bytesWritten, bufsize);
+    if (sizeInBytes != 0 && writeAvail) {
+        bytesWritten += write(reinterpret_cast<uint8_t const*>(buf) + bytesWritten, sizeInBytes);
     }
 
     return bytesWritten;
 }
-
