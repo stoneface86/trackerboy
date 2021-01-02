@@ -82,7 +82,7 @@ void Synth::setSamplingRate(unsigned samplingRate) {
 }
 
 void Synth::setVolume(int percent) {
-    mBuffer.setVolume(percent);
+    mBuffer.setVolume(percent / 100.0f);
 }
 
 void Synth::setupBuffers() {
