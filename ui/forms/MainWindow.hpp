@@ -19,6 +19,7 @@
 #include <QFileDialog>
 #include <QLabel>
 #include <QMainWindow>
+#include <QTimer>
 #include <QToolBar>
 
 
@@ -63,6 +64,8 @@ private slots:
     void statusSetWaveform(int index);
     void statusSetOctave(int octave);
 
+    void audioReturn();
+
 private:
 
     //static void setupAction(QAction &action, const char *text, const char *tooltip, QKeySequence const &seq = QKeySequence());
@@ -89,6 +92,8 @@ private:
     // file name of the currently open file or "Untitled" for a new file
     QString mFilename;
     QString mDocumentName;
+
+    QTimer mReturnTimer;
 
     // dialogs
     AudioDiagDialog *mAudioDiag;

@@ -74,6 +74,12 @@ public:
 
     ma_device const& device() const;
 
+    //
+    // Get the audio return buffer. Note: only the GUI thread may read this
+    // buffer and only the callback thread may write to it.
+    //
+    AudioRingbuffer& returnBuffer();
+
     bool isRunning();
 
     void setConfig(Config::Sound const& config);
@@ -152,7 +158,7 @@ private:
     WaveListModel &mWaveModel;
 
     RenderBuffer mBuffer;
-    Ringbuffer<int16_t> mReturnBuffer; // audio return data for visualizers
+    AudioRingbuffer mReturnBuffer; // audio return data for visualizers
 
     PreviewState mPreviewState;
     trackerboy::ChType mPreviewChannel;

@@ -31,6 +31,7 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     mRenderLayout.addRow(tr("Buffer utilization"), &mBufferLabel);
     mRenderLayout.addRow(tr("Status"), &mStatusLabel);
     mRenderLayout.addRow(tr("Elapsed"), &mElapsedLabel);
+    mRenderLayout.addRow(tr("Return buffer"), &mReturnBufferLabel);
     mRenderLayout.setWidget(5, QFormLayout::LabelRole, &mClearButton);
     mRenderGroup.setLayout(&mRenderLayout);
 
@@ -112,4 +113,6 @@ void AudioDiagDialog::refresh() {
         );
 
     mStatusLabel.setText(mRenderer.isRunning() ? tr("Playing") : tr("Stopped"));
+
+    mReturnBufferLabel.setText(QString::number(mRenderer.returnBuffer().availableRead()));
 }

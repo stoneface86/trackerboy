@@ -50,6 +50,7 @@ private:
                 QLabel mBufferLabel;
                 QLabel mStatusLabel;
                 QLabel mElapsedLabel;
+                QLabel mReturnBufferLabel;
                 QPushButton mClearButton;
         QHBoxLayout mButtonLayout;
             QCheckBox mAutoRefreshCheck;

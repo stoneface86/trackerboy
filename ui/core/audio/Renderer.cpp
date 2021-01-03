@@ -83,6 +83,10 @@ ma_device const& Renderer::device() const{
     return mDevice.value();
 }
 
+AudioRingbuffer& Renderer::returnBuffer() {
+    return mReturnBuffer;
+}
+
 bool Renderer::isRunning() {
     QMutexLocker locker(&mMutex);
     return mRunning;
@@ -110,7 +114,8 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     auto err = ma_device_init(mMiniaudio.context(), &config, &mDevice.value());
     assert(err == MA_SUCCESS);
 
-    mReturnBuffer.init(mDevice.value().playback.internalPeriodSizeInFrames * 2);
+    auto &device = mDevice.value();
+    mReturnBuffer.init(device.playback.internalPeriodSizeInFrames * device.playback.internalPeriods);
 
     mSynth.setSamplingRate(SAMPLERATE);
     mSynth.setVolume(soundConfig.volume);
@@ -274,20 +279,21 @@ void Renderer::audioCallbackRun(
     );
 }
 
-constexpr int STOP_FRAMES = 2;
+constexpr int STOP_FRAMES = 5;
 
 void Renderer::handleCallback(int16_t *out, size_t frames) {
-
-    if (mStopped) {
-        mAudioStopCondition.wakeOne();
-        return;
-    }
 
     mBufferUsage = mBuffer.framesInQueue();
 
     while (frames) {
 
-        if (!mStopped && mBuffer.framesToQueue()) {
+        if (mStopped) {
+            if (mBuffer.isEmpty()) {
+                mAudioStopCondition.wakeOne();
+                return;
+            }
+
+        } else if (mBuffer.framesToQueue()) {
             // attempt to generate a frame and queue it for playback
 
             if (mSpinlock.tryLock()) {
@@ -331,7 +337,7 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
 
         // write what we just read to the return buffer for visualizers
         auto samplesRead = framesRead * 2;
-        mReturnBuffer.fullWrite(out, samplesRead);
+        mReturnBuffer.fullWrite(out, framesRead);
 
 
         out += samplesRead;

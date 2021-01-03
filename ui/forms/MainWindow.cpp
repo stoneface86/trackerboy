@@ -62,6 +62,11 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     // new documents have an empty string for a filename
     setFilename("");
 
+    connect(&mReturnTimer, &QTimer::timeout, this, &MainWindow::audioReturn);
+    mReturnTimer.setTimerType(Qt::PreciseTimer);
+    mReturnTimer.setInterval(16);
+    mReturnTimer.start();
+
     setWindowIcon(IconManager::getAppIcon());
 
     QSettings settings;
@@ -224,6 +229,9 @@ void MainWindow::onWindowResetLayout() {
     mDockOrders.setFloating(false);
     removeDockWidget(&mDockOrders);
 
+    mDockVisualizer.setFloating(false);
+    removeDockWidget(&mDockVisualizer);
+
     initState();
 }
 
@@ -232,6 +240,9 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto &sound = mApp.config.sound();
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
+
+        // 100ms curve duration
+        mVisualizer.setDuration(samplerate / 10);
 
         mApp.renderer.setConfig(sound);
     }
@@ -243,6 +254,11 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
 PatternEditor PatternGrid {
     font-family: %5;
     font-size: %6pt;
+}
+
+Visualizer {
+    background-color: %1;
+    color: %3;
 }
 
 OrderWidget QTableView {
@@ -349,6 +365,20 @@ void MainWindow::statusSetWaveform(int index) {
 
 void MainWindow::statusSetOctave(int octave) {
     mStatusOctave.setText(QString("Octave: %1").arg(octave));
+}
+
+void MainWindow::audioReturn() {
+
+    // get the audio data returned from the callback
+    // this data has already been sent out to the output device
+    auto &returnBuffer = mApp.renderer.returnBuffer();
+    // read as much as we can
+    size_t samples = returnBuffer.size();
+    auto audio = returnBuffer.acquireRead(samples);
+    // send it to the visualizer
+    mVisualizer.addSamples(audio, samples);
+    returnBuffer.commitRead(audio, samples);
+
 }
 
 // PRIVATE METHODS -----------------------------------------------------------
@@ -639,9 +669,9 @@ void MainWindow::initState() {
     // | Toolbars                                                                      |
     // +-------------------------------------------------------------------------------+
     // |                   |                                   |                       |
-    // | Song properties   |      Pattern Editor               | Instruments           |
-    // |       +           |                                   |                       |
-    // |     Songs         |                                   |                       |
+    // | Song properties   |        Visualizer                 | Instruments           |
+    // |       +           +-----------------------------------+                       |
+    // |     Songs         |        Pattern Editor             |                       |
     // |                   |                                   |                       |
     // +-------------------+                                   |                       |
     // |                   |                                   |                       |
@@ -700,6 +730,9 @@ void MainWindow::initState() {
     addDockWidget(Qt::RightDockWidgetArea, &mDockWaveforms);
     mDockWaveforms.show();
 
+    addDockWidget(Qt::TopDockWidgetArea, &mDockVisualizer);
+    mDockVisualizer.show();
+
     // resize
 
     int const w = width();
@@ -730,6 +763,7 @@ void MainWindow::setupWindowMenu(QMenu &menu) {
     menu.addAction(mDockSongProperties.toggleViewAction());
     menu.addAction(mDockModuleProperties.toggleViewAction());
     menu.addAction(mDockOrders.toggleViewAction());
+    menu.addAction(mDockVisualizer.toggleViewAction());
 
     menu.addSeparator();
     

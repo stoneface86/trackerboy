@@ -105,3 +105,35 @@ size_t RingbufferBase::fullWrite(void const *buf, size_t sizeInBytes) {
 
     return bytesWritten;
 }
+
+void* RingbufferBase::acquireRead(size_t &outSize) {
+    void *buf;
+    auto result = ma_rb_acquire_read(&mRingbuffer, &outSize, &buf);
+    assert(result == MA_SUCCESS);
+    return buf;
+}
+
+void RingbufferBase::commitRead(void *buf, size_t size) {
+    auto result = ma_rb_commit_read(&mRingbuffer, size, buf);
+    assert(result == MA_SUCCESS);
+}
+
+void* RingbufferBase::acquireWrite(size_t &outSize) {
+    void *buf;
+    auto result = ma_rb_acquire_write(&mRingbuffer, &outSize, &buf);
+    assert(result == MA_SUCCESS);
+    return buf;
+}
+
+void RingbufferBase::commitWrite(void *buf, size_t size) {
+    auto result = ma_rb_commit_write(&mRingbuffer, size, buf);
+    assert(result == MA_SUCCESS);
+}
+
+size_t RingbufferBase::availableRead() {
+    return ma_rb_available_read(&mRingbuffer);
+}
+
+size_t RingbufferBase::availableWrite() {
+    return ma_rb_available_write(&mRingbuffer);
+}

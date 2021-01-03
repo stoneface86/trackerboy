@@ -21,6 +21,7 @@ Visualizer::Visualizer(QWidget *parent) :
     mWaveformRight(),
     mOffsetY(0)
 {
+    setAttribute(Qt::WA_StyledBackground);
     setMinimumHeight(WAVE_HEIGHT * 2);
     setAutoFillBackground(true);
 
@@ -68,7 +69,6 @@ void Visualizer::addSamples(int16_t data[], size_t nsamples) {
     }
 
     int binsToAdd = nsamples / mBinSize;
-    int lastBinSize = nsamples % mBinSize;
 
 
     int timeIndex;
@@ -76,8 +76,9 @@ void Visualizer::addSamples(int16_t data[], size_t nsamples) {
 
     if (binsToAdd >= mWaveformLeft.width()) {
         // full redraw
-        mWaveformLeft.fill(Qt::transparent);
-        mWaveformRight.fill(Qt::transparent);
+        auto &bgcolor = palette().color(QPalette::Window);
+        mWaveformLeft.fill(bgcolor);
+        mWaveformRight.fill(bgcolor);
         timeIndex = 0;
     } else {
         // partial redraw, just draw the new samples
@@ -97,7 +98,7 @@ void Visualizer::addSamples(int16_t data[], size_t nsamples) {
     initPainter(painterRight);
     
     auto dataPtr = data;
-    auto const w = mWaveformLeft.width() - 1;
+    auto const w = mWaveformLeft.width();
 
     // previous sample from the previous bin
     int8_t prevLeft = mPreviousBinLeft;
@@ -118,12 +119,6 @@ void Visualizer::addSamples(int16_t data[], size_t nsamples) {
         prevRight = sampleRight;
     }
 
-    // last bin size is mBinSize + remainder
-    reduce(dataPtr, sampleLeft, sampleRight, mBinSize + lastBinSize);
-
-    painterLeft.drawLine(w - 1, prevLeft, w, sampleLeft);
-    painterRight.drawLine(w - 1, prevRight, w, sampleRight);
-
     mPreviousBinLeft = prevLeft;
     mPreviousBinRight = prevRight;
 
@@ -134,6 +129,7 @@ void Visualizer::addSamples(int16_t data[], size_t nsamples) {
 }
 
 void Visualizer::paintEvent(QPaintEvent *evt) {
+    Q_UNUSED(evt);
 
     auto const w = width();
 
@@ -159,10 +155,11 @@ void Visualizer::resizeEvent(QResizeEvent *evt) {
     mBinSize = std::max(1, mDuration / w);
 
     if (w != mWaveformLeft.width()) {
+        auto &bgcolor = palette().color(QPalette::Window);
         mWaveformLeft = QPixmap(w, WAVE_HEIGHT);
-        mWaveformLeft.fill(Qt::transparent);
+        mWaveformLeft.fill(bgcolor);
         mWaveformRight = QPixmap(w, WAVE_HEIGHT);
-        mWaveformRight.fill(Qt::transparent);
+        mWaveformRight.fill(bgcolor);
         clear();
     }
 
@@ -185,7 +182,7 @@ void Visualizer::scrollWaveform(QPixmap &waveform, int amount, int timeIndex) {
 
     QPainter painter(&waveform);
     painter.setCompositionMode(QPainter::CompositionMode_Source);
-    painter.fillRect(timeIndex, 0, rect.width(), rect.height(), Qt::transparent);
+    painter.fillRect(timeIndex, 0, rect.width(), rect.height(), palette().color(QPalette::Window));
 }
 
 void Visualizer::initPainter(QPainter &painter) {
