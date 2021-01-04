@@ -194,6 +194,9 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
         });
 
     connect(&mInstrumentModel, &InstrumentListModel::currentIndexChanged, this, &InstrumentEditor::currentInstrumentChanged);
+
+    currentInstrumentChanged(mInstrumentModel.currentIndex());
+
 }
 
 InstrumentEditor::~InstrumentEditor() {

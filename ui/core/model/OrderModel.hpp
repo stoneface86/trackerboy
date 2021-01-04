@@ -21,6 +21,8 @@ public:
     explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
     ~OrderModel() = default;
 
+    int currentPattern();
+
     //
     // All track ids in the given selection are incremented by 1
     //

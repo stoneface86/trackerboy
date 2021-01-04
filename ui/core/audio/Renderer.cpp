@@ -37,7 +37,7 @@ Renderer::Renderer(
     mPreviewState(PreviewState::none),
     mPreviewChannel(trackerboy::ChType::ch1),
     mStopCounter(0),
-    mStopped(false),
+    mShouldStop(false),
     mLockFails(0),
     mUnderruns(0)
 {
@@ -122,6 +122,13 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     mSynth.setupBuffers();
 
     mBuffer.setSize(soundConfig.buffersize, mSynth.framesize());
+
+    if (mRunning) {
+        // the callback was running before we applied the config, restart it
+
+        ma_device_start(&mDevice.value());
+    }
+
 }
 
 void Renderer::closeDevice() {
@@ -136,9 +143,10 @@ void Renderer::closeDevice() {
 void Renderer::startDevice() {
     QMutexLocker locker(&mMutex);
 
+    // the callback thread will output STOP_FRAMES before shutting down, this
+    // this flag will cancel the countdown if it is active
+    mCancelStop = true;
     if (!mRunning) {
-        mStopCounter = 0;
-        mStopped = false;
         mBuffer.reset();
         mSamplesElapsed = 0;
 
@@ -147,9 +155,32 @@ void Renderer::startDevice() {
     }
 }
 
-void Renderer::stopMusic() {
+void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
+    mSpinlock.lock();
+    mEngine.play(*mSongModel.currentSong(), orderNo, rowNo);
+    mSpinlock.unlock();
 
+    startDevice();
 }
+
+// SLOTS
+
+void Renderer::play() {
+    playMusic(mSongModel.orderModel().currentPattern(), 0);
+}
+
+void Renderer::playPattern() {
+    // TODO: Engine needs functionality for looping a single pattern
+}
+
+void Renderer::playFromCursor() {
+    // TODO: we need a way to get the cursor row from the PatternEditor
+}
+
+void Renderer::playFromStart() {
+    playMusic(0, 0);
+}
+
 
 void Renderer::previewInstrument(trackerboy::Note note) {
     mSpinlock.lock();
@@ -159,14 +190,17 @@ void Renderer::previewInstrument(trackerboy::Note note) {
             [[fallthrough]];
         case PreviewState::none:
             {
+                // set instrument runtime's instrument to the current one
                 auto inst = mInstrumentModel.instrument(mInstrumentModel.currentIndex());
                 mIr.setInstrument(*inst);
                 mPreviewState = PreviewState::instrument;
                 mPreviewChannel = static_cast<trackerboy::ChType>(inst->data().channel);
             }
+            // unlock the channel for preview
             mEngine.unlock(mPreviewChannel);
             [[fallthrough]];
         case PreviewState::instrument:
+            // update the current note
             mIr.playNote(note);
             break;
     }
@@ -178,6 +212,9 @@ void Renderer::previewInstrument(trackerboy::Note note) {
 void Renderer::previewWaveform(trackerboy::Note note) {
     mSpinlock.lock();
 
+    // state changes
+    // instrument -> none -> waveform
+
     switch (mPreviewState) {
         case PreviewState::instrument:
             resetPreview();
@@ -185,8 +222,11 @@ void Renderer::previewWaveform(trackerboy::Note note) {
         case PreviewState::none:
             mPreviewState = PreviewState::waveform;
             mPreviewChannel = trackerboy::ChType::ch3;
+            // unlock the channel, no longer effected by music
             mEngine.unlock(trackerboy::ChType::ch3);
+            // middle panning for CH3
             trackerboy::ChannelControl::writePanning(trackerboy::ChType::ch3, mRc, 0x11);
+            // set the waveram with the waveform we are previewing
             trackerboy::ChannelControl::writeWaveram(mRc, *(mWaveModel.currentWaveform()));
             // volume = 100%
             mRc.apu.writeRegister(gbapu::Apu::REG_NR32, 0x20);
@@ -219,6 +259,14 @@ void Renderer::stopPreview() {
     }
     mSpinlock.unlock();
 }
+
+void Renderer::stopMusic() {
+    mSpinlock.lock();
+    mEngine.halt();
+    mSpinlock.unlock();
+}
+
+
 
 void Renderer::resetPreview() {
     // lock the channel so it can be used for music
@@ -287,12 +335,17 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
 
     while (frames) {
 
-        if (mStopped) {
+        if (mCancelStop) {
+            mStopCounter = 0;
+            mShouldStop = false;
+            mCancelStop = false;
+        }
+
+        if (mShouldStop) {
             if (mBuffer.isEmpty()) {
                 mAudioStopCondition.wakeOne();
                 return;
             }
-
         } else if (mBuffer.framesToQueue()) {
             // attempt to generate a frame and queue it for playback
 
@@ -300,7 +353,7 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
 
                 if (mStopCounter) {
                     if (--mStopCounter == 0) {
-                        mStopped = true;
+                        mShouldStop = true;
                     }
                 } else {
 

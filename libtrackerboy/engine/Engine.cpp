@@ -30,6 +30,12 @@ void Engine::play(Song &song, uint8_t orderNo, uint8_t patternRow) {
     mMusicContext.emplace(mRc, mChCtrl, song, orderNo, patternRow);
 }
 
+void Engine::halt() {
+    if (mMusicContext) {
+        mMusicContext.value().halt();
+    }
+}
+
 void Engine::lock(ChType ch) {
     mChCtrl.lock(ch);
     if (mMusicContext) {
@@ -45,11 +51,16 @@ void Engine::step(Frame &frame) {
 
     if (mMusicContext) {
         auto &ctx = mMusicContext.value();
+        
         frame.halted = ctx.step();
         frame.order = ctx.currentOrder();
         frame.row = ctx.currentRow();
         frame.speed = ctx.speed();
+
+        
+
     } else {
+        // no runtime, do nothing
         frame.halted = true;
         frame.order = 0;
         frame.row = 0;

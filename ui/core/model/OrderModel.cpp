@@ -16,6 +16,10 @@ OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
 {
 }
 
+int OrderModel::currentPattern() {
+    return mCurrentRow;
+}
+
 void OrderModel::incrementSelection(QItemSelection const &selection) {
     modifySelection<ModifyMode::inc>(selection);
     emit patternsChanged();

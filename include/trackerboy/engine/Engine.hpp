@@ -49,6 +49,8 @@ public:
     //
     void play(Song &song, uint8_t orderNo, uint8_t patternRow = 0);
 
+    void halt();
+
     //
     // play and loop a single pattern
     //
@@ -79,6 +81,8 @@ private:
     ChannelControl mChCtrl;
 
     //TODO: sfx runtime
+
+    bool mHalted;
 
     // frames elapsed since last reset
     uint32_t mTime;

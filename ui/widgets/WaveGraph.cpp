@@ -37,13 +37,10 @@ WaveGraph::WaveGraph(WaveListModel &model, QWidget *parent) :
     setAutoFillBackground(true);
     setPalette(pal);
 
-    connect(&model, &WaveListModel::currentIndexChanged, this,
-        [this](int index) {
-            if (index != -1) {
-                waveformUpdated();
-            }
-        });
+    connect(&model, &WaveListModel::currentIndexChanged, this, &WaveGraph::currentWaveformChanged);
     connect(&model, qOverload<>(&WaveListModel::waveformChanged), this, &WaveGraph::waveformUpdated);
+
+    currentWaveformChanged(model.currentIndex());
 }
 
 
@@ -157,6 +154,12 @@ void WaveGraph::resizeEvent(QResizeEvent *evt) {
     Q_UNUSED(evt);
 
     calcGraph();
+}
+
+void WaveGraph::currentWaveformChanged(int index) {
+    if (index != -1) {
+        waveformUpdated();
+    }
 }
 
 void WaveGraph::waveformUpdated() {

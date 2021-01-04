@@ -34,6 +34,8 @@ protected:
     void resizeEvent(QResizeEvent *evt) override;
 
 private slots:
+    void currentWaveformChanged(int index);
+
     void waveformUpdated();
 
 private:

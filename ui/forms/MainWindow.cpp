@@ -640,7 +640,11 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionWindowResetLayout, onWindowResetLayout);
 
     connectActionToThis(mActionFileConfig, showConfigDialog);
-    //connect(&mActionFileConfig, &QAction::triggered, &mConfigDialog, &ConfigDialog::show);
+    connect(&mActionTrackerPlay, &QAction::triggered, &mApp.renderer, &Renderer::play);
+    connect(&mActionTrackerPlayPattern, &QAction::triggered, &mApp.renderer, &Renderer::playPattern);
+    connect(&mActionTrackerPlayStart, &QAction::triggered, &mApp.renderer, &Renderer::playFromStart);
+    connect(&mActionTrackerPlayCursor, &QAction::triggered, &mApp.renderer, &Renderer::playFromCursor);
+    connect(&mActionTrackerStop, &QAction::triggered, &mApp.renderer, &Renderer::stopMusic);
 
     connectActionToThis(mActionAudioDiag, showAudioDiag);
     QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);

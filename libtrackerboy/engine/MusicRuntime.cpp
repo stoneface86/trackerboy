@@ -154,6 +154,13 @@ void MusicRuntime::reloadImpl() {
 
 }
 
+void MusicRuntime::halt() noexcept {
+    mFlags |= FLAGS_HALTED;
+    // cut all notes
+    mPanningMask = 0;
+    updatePanning();
+}
+
 bool MusicRuntime::step() {
     if (mFlags & FLAGS_HALTED) {
         return true;
@@ -183,10 +190,10 @@ bool MusicRuntime::step() {
         }
 
         // apply the current row to runtime components
-        bool halt = setRows();
+        bool shouldHalt = setRows();
 
-        if (halt) {
-            mFlags |= FLAGS_HALTED;
+        if (shouldHalt) {
+            halt();
             return true;
         }
 
@@ -201,24 +208,7 @@ bool MusicRuntime::step() {
     // update panning
     if (!!(mFlags & FLAGS_PANNING)) {
 
-        // determine music panning
-        uint8_t panning = mPanning & mPanningMask;
-
-        uint8_t lockbits = mChCtrl.lockbits();
-        if (lockbits) {
-            // when one or more channels are unlocked:
-            // NR51 <- ((y & z) & ~w) | (x & w)
-            // where
-            //  w: channel lock bits
-            //  x: current value of NR51
-            //  y: mPanning
-            //  z: mPanningMask
-            lockbits |= lockbits << 4;
-            panning &= ~lockbits;
-            panning |= mRc.apu.readRegister(gbapu::Apu::REG_NR51) & lockbits;
-        }
-
-        mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
+        updatePanning();
         mFlags &= ~FLAGS_PANNING;
     }
 
@@ -239,6 +229,27 @@ bool MusicRuntime::step() {
     }
 
     return false;
+}
+
+void MusicRuntime::updatePanning() {
+    // determine music panning
+    uint8_t panning = mPanning & mPanningMask;
+
+    uint8_t lockbits = mChCtrl.lockbits();
+    if (lockbits) {
+        // when one or more channels are unlocked:
+        // NR51 <- ((y & z) & ~w) | (x & w)
+        // where
+        //  w: channel lock bits
+        //  x: current value of NR51
+        //  y: mPanning
+        //  z: mPanningMask
+        lockbits |= lockbits << 4;
+        panning &= ~lockbits;
+        panning |= mRc.apu.readRegister(gbapu::Apu::REG_NR51) & lockbits;
+    }
+
+    mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
 }
 
 

@@ -61,6 +61,8 @@ public:
 
     uint8_t currentRow() const noexcept;
 
+    void halt() noexcept;
+
     //
     // Step the runtime for a single frame. If the runtime was halted, true is returned.
     //
@@ -105,6 +107,8 @@ private:
     //
     template <ChType ch>
     void update();
+
+    void updatePanning();
 
     template <ChType ch>
     void setEnvelope(uint8_t envelope);

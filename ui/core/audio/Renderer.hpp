@@ -84,7 +84,7 @@ public:
 
     void setConfig(Config::Sound const& config);
 
-    void playMusic(trackerboy::Song *song, uint8_t orderNo, uint8_t rowNo);
+    void playMusic(uint8_t orderNo, uint8_t rowNo);
     
     // row preview (just the track)
     //void preview(trackerboy::TrackRow const& row);
@@ -102,7 +102,13 @@ public slots:
     // waveform preview
     void previewWaveform(trackerboy::Note note);
 
-    
+    void play();
+
+    void playPattern();
+
+    void playFromCursor();
+
+    void playFromStart();
 
     void stopPreview();
 
@@ -117,7 +123,8 @@ private:
     void closeDevice();
 
     //
-    // Start the audio callback thread for the configured device
+    // Start the audio callback thread for the configured device. If the audio
+    // callback thread is already running, the stop countdown is cancelled
     //
     void startDevice();
 
@@ -163,8 +170,9 @@ private:
     PreviewState mPreviewState;
     trackerboy::ChType mPreviewChannel;
 
+    std::atomic_bool mCancelStop;
     int mStopCounter;
-    bool mStopped;
+    bool mShouldStop;
 
     // diagnostic info
     std::atomic_uint mLockFails;        // number of spinlock failures

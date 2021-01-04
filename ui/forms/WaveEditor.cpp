@@ -75,6 +75,8 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
     connect(&mModel, &WaveListModel::currentIndexChanged, this, &WaveEditor::selectionChanged);
 
     //setFixedSize(size());
+
+    selectionChanged(model.currentIndex());
 }
 
 WaveEditor::~WaveEditor() {
