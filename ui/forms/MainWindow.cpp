@@ -65,7 +65,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     connect(&mReturnTimer, &QTimer::timeout, this, &MainWindow::audioReturn);
     mReturnTimer.setTimerType(Qt::PreciseTimer);
     mReturnTimer.setInterval(16);
-    mReturnTimer.start();
+    //mReturnTimer.start();
 
     setWindowIcon(IconManager::getAppIcon());
 
@@ -367,16 +367,38 @@ void MainWindow::statusSetOctave(int octave) {
     mStatusOctave.setText(QString("Octave: %1").arg(octave));
 }
 
-void MainWindow::audioReturn() {
+void MainWindow::onAudioStart() {
+    mReturnTimer.start();
+    mReturnCounter = -1;
+}
 
+void MainWindow::onAudioStop() {
+    // stop the timer after 1 more interval
+    mReturnCounter = 1;
+}
+
+
+void MainWindow::audioReturn() {
     // get the audio data returned from the callback
     // this data has already been sent out to the output device
     auto &returnBuffer = mApp.renderer.returnBuffer();
     // read as much as we can
     size_t samples = returnBuffer.size();
     auto audio = returnBuffer.acquireRead(samples);
-    // send it to the visualizer
-    mVisualizer.addSamples(audio, samples);
+
+
+    if (mReturnCounter) {
+        // send it to the visualizer
+        mVisualizer.addSamples(audio, samples);
+        
+        if (mReturnCounter > 0) {
+            --mReturnCounter;
+        }
+    } else {
+        mVisualizer.clear();
+        mReturnTimer.stop();
+    }
+
     returnBuffer.commitRead(audio, samples);
 
 }
@@ -664,6 +686,8 @@ void MainWindow::setupUi() {
     connect(&mWaveformWidget, &TableForm::showEditor, this, &MainWindow::showWaveEditor);
 
     
+    connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
+    connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
 
 }
 

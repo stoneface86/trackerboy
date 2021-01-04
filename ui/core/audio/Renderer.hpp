@@ -92,6 +92,12 @@ public:
     // row preview (all channels)
     //void preview(trackerboy::PatternRow const& row);
 
+signals:
+    void audioStarted();
+
+    void audioStopped();
+
+
 public slots:
 
     void stopMusic();

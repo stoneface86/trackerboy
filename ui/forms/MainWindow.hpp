@@ -64,6 +64,11 @@ private slots:
     void statusSetWaveform(int index);
     void statusSetOctave(int octave);
 
+    // renderer
+    void onAudioStart();
+    void onAudioStop();
+
+
     void audioReturn();
 
 private:
@@ -94,6 +99,7 @@ private:
     QString mDocumentName;
 
     QTimer mReturnTimer;
+    int mReturnCounter;
 
     // dialogs
     AudioDiagDialog *mAudioDiag;

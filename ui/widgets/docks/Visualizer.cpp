@@ -39,6 +39,14 @@ Visualizer::Visualizer(QWidget *parent) :
 }
 
 void Visualizer::clear() {
+    auto const w = width();
+
+    auto &bgcolor = palette().color(QPalette::Window);
+    mWaveformLeft = QPixmap(w, WAVE_HEIGHT);
+    mWaveformLeft.fill(bgcolor);
+    mWaveformRight = QPixmap(w, WAVE_HEIGHT);
+    mWaveformRight.fill(bgcolor);
+
     clearWaveform(mWaveformLeft);
     clearWaveform(mWaveformRight);
 
@@ -155,11 +163,7 @@ void Visualizer::resizeEvent(QResizeEvent *evt) {
     mBinSize = std::max(1, mDuration / w);
 
     if (w != mWaveformLeft.width()) {
-        auto &bgcolor = palette().color(QPalette::Window);
-        mWaveformLeft = QPixmap(w, WAVE_HEIGHT);
-        mWaveformLeft.fill(bgcolor);
-        mWaveformRight = QPixmap(w, WAVE_HEIGHT);
-        mWaveformRight.fill(bgcolor);
+        
         clear();
     }
 

@@ -115,7 +115,7 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     assert(err == MA_SUCCESS);
 
     auto &device = mDevice.value();
-    mReturnBuffer.init(device.playback.internalPeriodSizeInFrames * device.playback.internalPeriods);
+    mReturnBuffer.init(device.playback.internalPeriodSizeInFrames * (device.playback.internalPeriods + 1));
 
     mSynth.setSamplingRate(SAMPLERATE);
     mSynth.setVolume(soundConfig.volume);
@@ -150,6 +150,7 @@ void Renderer::startDevice() {
         mBuffer.reset();
         mSamplesElapsed = 0;
 
+        emit audioStarted();
         ma_device_start(&mDevice.value());
         mRunning = true;
     }
@@ -307,6 +308,7 @@ void Renderer::handleBackground() {
             qDebug() << "[Audio background] Stopping device";
             ma_device_stop(&mDevice.value());
             mRunning = false;
+            emit audioStopped();
         }
 
     }
