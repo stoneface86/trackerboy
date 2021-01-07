@@ -102,6 +102,8 @@ signals:
 
 public slots:
 
+    void clearDiagnostics();
+
     void stopMusic();
 
     // instrument preview

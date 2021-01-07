@@ -32,7 +32,7 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     mRenderLayout.addRow(tr("Status"), &mStatusLabel);
     mRenderLayout.addRow(tr("Elapsed"), &mElapsedLabel);
     mRenderLayout.addRow(tr("Return buffer"), &mReturnBufferLabel);
-    mRenderLayout.setWidget(5, QFormLayout::LabelRole, &mClearButton);
+    mRenderLayout.setWidget(6, QFormLayout::LabelRole, &mClearButton);
     mRenderGroup.setLayout(&mRenderLayout);
 
     mButtonLayout.addWidget(&mAutoRefreshCheck);
@@ -55,6 +55,7 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
 
     connect(&mCloseButton, &QPushButton::clicked, this, &AudioDiagDialog::close);
     connect(&mRefreshButton, &QPushButton::clicked, this, &AudioDiagDialog::refresh);
+    connect(&mClearButton, &QPushButton::clicked, &mRenderer, &Renderer::clearDiagnostics);
     connect(&mAutoRefreshCheck, &QCheckBox::stateChanged, this,
         [this](int state) {
             bool checked = state == Qt::Checked;

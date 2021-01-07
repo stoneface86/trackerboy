@@ -173,6 +173,12 @@ void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
 
 // SLOTS
 
+void Renderer::clearDiagnostics() {
+    mLockFails = 0;
+    mUnderruns = 0;
+    mSamplesElapsed = 0;
+}
+
 void Renderer::play() {
     playMusic(mSongModel.orderModel().currentPattern(), 0);
 }
