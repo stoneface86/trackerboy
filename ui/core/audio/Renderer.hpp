@@ -151,6 +151,7 @@ private:
 
     bool mRunning;          // is the audio callback thread active?
     bool mStopBackground;   // flag to stop the background thread
+    bool mStopDevice;       // flag to stop the callback thread
 
 
     std::optional<ma_device> mDevice;

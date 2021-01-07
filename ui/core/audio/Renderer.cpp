@@ -25,6 +25,7 @@ Renderer::Renderer(
     mBackgroundThread(nullptr),
     mRunning(false),
     mStopBackground(false),
+    mStopDevice(false),
     mDevice(),
     mSynth(44100),
     mRc(mSynth.apu(), itable, wtable),
@@ -49,6 +50,7 @@ Renderer::~Renderer() {
     // stop the background thread
     mMutex.lock();
     mStopBackground = true;
+    mStopDevice = true;
     mMutex.unlock();
 
     // wake and wait for the background thread to finish
@@ -295,29 +297,30 @@ void Renderer::handleBackground() {
 
     mMutex.lock();
     for (;;) {
-        
-        if (mStopBackground) {
-            mMutex.unlock();
-            break;
-        }
 
-        qDebug() << "[Audio background] waiting...";
+        mStopDevice = false;
 
         // wait here, we stop waiting if
         // 1. the callback thread has finished and is signalling us to kill it
         // 2. the Renderer is being destroyed and we must exit the loop
-        mAudioStopCondition.wait(&mMutex);
+        do {
+            mAudioStopCondition.wait(&mMutex);
+        } while (!mStopDevice && !mStopBackground);
 
         // kill the callback thread
-        if (mRunning) {
-            qDebug() << "[Audio background] Stopping device";
+        if (mStopDevice && mRunning) {
             ma_device_stop(&mDevice.value());
             mRunning = false;
             mEngine.reset();
             emit audioStopped();
         }
 
+        if (mStopBackground) {
+            break;
+        }
+
     }
+    mMutex.unlock();
 }
 
 // ~~~~~~ CALLBACK THREAD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -351,6 +354,9 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
 
         if (mShouldStop) {
             if (mBuffer.isEmpty()) {
+                mMutex.lock();
+                mStopDevice = true;
+                mMutex.unlock();
                 mAudioStopCondition.wakeOne();
                 return;
             }
