@@ -3,6 +3,8 @@
 
 #include "trackerboy/engine/Frame.hpp"
 
+#include "gbapu.hpp"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -15,9 +17,10 @@ struct RenderFrame {
     trackerboy::Frame engineFrame;
 
     // APU register dump
-    uint8_t registers[20 + 3];
+    gbapu::Registers registers;
 
+    // size in samples of the frame's audio data
     size_t nsamples;
 
-    int16_t *data;
+    bool ignore;
 };

@@ -41,6 +41,8 @@ public:
     explicit PatternEditor(SongListModel &model, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
+    PatternGrid& grid();
+
     Actions& menuActions();
 
     void setupMenu(QMenu &menu);

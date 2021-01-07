@@ -6,20 +6,24 @@
 #include <cmath>
 
 RenderBuffer::RenderBuffer() :
+    mSamples(),
     mFrames(),
-    mSampleBuffer(),
+    mReturnFrames(),
     mBuffersize(0),
     mSamplesPerFrame(0),
-    mReadIndex(0),
-    mWriteIndex(0),
     mFramesAvailable(0),
-    mCurrentFrameData(nullptr),
     mCurrentFrameRemaining(0)
 {
+    // 4 frame buffer so that the GUI thread won't miss any
+    mReturnFrames.init(4);
 }
 
 RenderBuffer::~RenderBuffer() {
 
+}
+
+Ringbuffer<RenderFrame>& RenderBuffer::returnFrames() {
+    return mReturnFrames;
 }
 
 bool RenderBuffer::isEmpty() const {
@@ -31,10 +35,7 @@ unsigned RenderBuffer::size() const {
 }
 
 void RenderBuffer::reset() {
-    mReadIndex = 0;
-    mWriteIndex = 0;
     mFramesAvailable = 0;
-    mCurrentFrameData = nullptr;
     mCurrentFrameRemaining = 0;
 }
 
@@ -47,27 +48,15 @@ void RenderBuffer::setSize(unsigned frameCount, size_t samplesPerFrame) {
     if (mBuffersize != frameCount) {
         resize = true;
         mBuffersize = frameCount;
+        mFrames.init(frameCount);
     }
     if (mSamplesPerFrame != samplesPerFrame) {
         resize = true;
         mSamplesPerFrame = samplesPerFrame;
+        mSamples.init((samplesPerFrame + 1) * frameCount);
     }
 
     if (resize) {
-        auto const maxSamplesPerFrame = (samplesPerFrame + 1) * 2;
-
-        mFrames.reset(new RenderFrame[frameCount]);
-        mSampleBuffer.reset(new int16_t[maxSamplesPerFrame * frameCount]);
-
-        // setup data pointers for each frame
-        auto frames = mFrames.get();
-        auto buffer = mSampleBuffer.get();
-        
-        for (unsigned i = 0; i != frameCount; ++i) {
-            frames->data = buffer;
-            frames++;
-            buffer += maxSamplesPerFrame;
-        }
         reset();
     }
 
@@ -93,24 +82,32 @@ size_t RenderBuffer::read(int16_t *out, size_t samples) {
                 break;
             }
 
-            if (mReadIndex == mBuffersize) {
-                // wrap back to the start
-                mReadIndex = 0;
-            }
+            // transfer the next frame to the return buffer
 
-            auto frame = mFrames.get() + mReadIndex;
+            size_t readCount = 1;
+            auto frame = mFrames.acquireRead(readCount);
+            // there should always be 1 frame to read at this point
             mCurrentFrameRemaining = frame->nsamples;
-            mCurrentFrameData = frame->data;
-            ++mReadIndex;
+
+            size_t writeCount = 1;
+            auto returnFrame = mReturnFrames.acquireWrite(writeCount);
+            // if writeCount is 0 then the GUI thread is out of sync
+            if (writeCount) {
+                *returnFrame = *frame;
+            }
+            mReturnFrames.commitWrite(returnFrame, writeCount);
+            mFrames.commitRead(frame, readCount);
+
+            
             --mFramesAvailable;
         }
 
 
+
         size_t toCopy = std::min(samples, mCurrentFrameRemaining);
-        size_t toCopy2 = toCopy * 2;
-        std::copy_n(mCurrentFrameData, toCopy2, out);
-        mCurrentFrameData += toCopy2;
-        out += toCopy2;
+        mSamples.fullRead(out, toCopy);
+
+        out += toCopy * 2;
         mCurrentFrameRemaining -= toCopy;
 
         samplesRead += toCopy;
@@ -120,20 +117,13 @@ size_t RenderBuffer::read(int16_t *out, size_t samples) {
     return samplesRead;
 }
 
-void RenderBuffer::queueFrame(int16_t data[], size_t framesize) {
+void RenderBuffer::queueFrame(int16_t data[], RenderFrame const& frame) {
     assert(mFramesAvailable != mBuffersize);
 
-    if (mWriteIndex == mBuffersize) {
-        mWriteIndex = 0; // wrap around
-    }
+    mFrames.fullWrite(&frame, 1);
+    mSamples.fullWrite(data, frame.nsamples);
 
-    auto frame = mFrames.get() + mWriteIndex;
-    // update sample size
-    frame->nsamples = framesize;
-    // copy sample data
-    std::copy_n(data, framesize * 2, frame->data);
 
-    ++mWriteIndex;
     ++mFramesAvailable;
     
 }

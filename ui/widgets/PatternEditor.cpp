@@ -73,6 +73,10 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
 
 }
 
+PatternGrid& PatternEditor::grid() {
+    return mGrid;
+}
+
 PatternEditor::Actions& PatternEditor::menuActions() {
     return mActions;
 }

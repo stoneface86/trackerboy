@@ -98,8 +98,10 @@ private:
     QString mFilename;
     QString mDocumentName;
 
+    // audio return stuff
     QTimer mReturnTimer;
     int mReturnCounter;
+    trackerboy::Speed mLastSpeed;
 
     // dialogs
     AudioDiagDialog *mAudioDiag;
@@ -202,4 +204,5 @@ private:
     QAction mActionAudioDiag;
     QAction mActionHelpAboutQt;
     QAction mActionHelpAbout;
+
 };

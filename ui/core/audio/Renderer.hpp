@@ -80,6 +80,8 @@ public:
     //
     AudioRingbuffer& returnBuffer();
 
+    bool currentFrame(RenderFrame &frame);
+
     bool isRunning();
 
     void setConfig(Config::Sound const& config);

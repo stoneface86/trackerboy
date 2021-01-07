@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/audio/RenderFrame.hpp"
+#include "core/audio/Ringbuffer.hpp"
 
 #include "miniaudio.h"
 
@@ -22,6 +23,8 @@ public:
 
     RenderBuffer();
     ~RenderBuffer();
+
+    Ringbuffer<RenderFrame>& returnFrames();
 
     bool isEmpty() const;
 
@@ -53,21 +56,19 @@ public:
     size_t read(int16_t *out, size_t samples);
 
     // queues an APU frame of audio data to the buffer
-    void queueFrame(int16_t data[], size_t framesize);
+    void queueFrame(int16_t data[], RenderFrame const& frame);
 
 private:
 
-    std::unique_ptr<RenderFrame[]> mFrames;
-    std::unique_ptr<int16_t[]> mSampleBuffer;
+    AudioRingbuffer mSamples;
+    Ringbuffer<RenderFrame> mFrames;
+    Ringbuffer<RenderFrame> mReturnFrames;
 
     unsigned mBuffersize;
     size_t mSamplesPerFrame;
 
-    int mReadIndex;
-    int mWriteIndex;
     unsigned mFramesAvailable;
 
-    int16_t *mCurrentFrameData;
     size_t mCurrentFrameRemaining;
 
 };

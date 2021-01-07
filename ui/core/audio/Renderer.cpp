@@ -83,6 +83,11 @@ ma_device const& Renderer::device() const{
     return mDevice.value();
 }
 
+bool Renderer::currentFrame(RenderFrame &frame) {
+    auto& frameBuffer = mBuffer.returnFrames();
+    return frameBuffer.fullRead(&frame, 1);
+}
+
 AudioRingbuffer& Renderer::returnBuffer() {
     return mReturnBuffer;
 }
@@ -308,6 +313,7 @@ void Renderer::handleBackground() {
             qDebug() << "[Audio background] Stopping device";
             ma_device_stop(&mDevice.value());
             mRunning = false;
+            mEngine.reset();
             emit audioStopped();
         }
 
@@ -353,26 +359,31 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
 
             if (mSpinlock.tryLock()) {
 
+                RenderFrame rFrame;
+
                 if (mStopCounter) {
                     if (--mStopCounter == 0) {
                         mShouldStop = true;
                     }
+                    rFrame.ignore = true;
                 } else {
 
-                    trackerboy::Frame frameInfo;
-                    mEngine.step(frameInfo);
+                    mEngine.step(rFrame.engineFrame);
 
                     if (mPreviewState == PreviewState::instrument) {
                         mIr.step();
                     }
 
-                    if (frameInfo.halted && mPreviewState == PreviewState::none) {
+                    if (rFrame.engineFrame.halted && mPreviewState == PreviewState::none) {
                         mStopCounter = STOP_FRAMES;
                     }
-
+                    rFrame.ignore = false;
                 }
-                auto framesize = mSynth.run();
-                mBuffer.queueFrame(mSynth.buffer(), framesize);
+
+                rFrame.registers = mSynth.apu().registers();
+
+                rFrame.nsamples = mSynth.run();
+                mBuffer.queueFrame(mSynth.buffer(), rFrame);
 
                 mSpinlock.unlock();
             } else {

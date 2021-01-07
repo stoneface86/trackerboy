@@ -14,6 +14,8 @@
 #include <QMenuBar>
 #include <QStatusBar>
 
+#include <QtDebug>
+
 #include <array>
 
 #define setObjectNameFromDeclared(var) var.setObjectName(QStringLiteral(#var))
@@ -370,6 +372,8 @@ void MainWindow::statusSetOctave(int octave) {
 void MainWindow::onAudioStart() {
     mReturnTimer.start();
     mReturnCounter = -1;
+    mLastSpeed = 0;
+    audioReturn();
 }
 
 void MainWindow::onAudioStop() {
@@ -377,8 +381,37 @@ void MainWindow::onAudioStop() {
     mReturnCounter = 1;
 }
 
-
+//
+// This slot handles information returned from the callback thread. It is called
+// every 16ms (~60fps) and updates the visualizer and other widgets with the
+// current state of the Renderer.
+//
 void MainWindow::audioReturn() {
+    // get the current frame
+    RenderFrame frame;
+    if (mApp.renderer.currentFrame(frame)) {
+        if (!frame.ignore) {
+            /*
+            //TODO: add setTrackerCursor function and auto-follow setting
+            auto &grid = mPatternEditor->grid();
+            grid.setCursorPattern(frame.engineFrame.order);
+            grid.setCursorRow(frame.engineFrame.row);*/
+
+            if (mLastSpeed != frame.engineFrame.speed) {
+                float speedF = (frame.engineFrame.speed >> 4) + ((frame.engineFrame.speed & 0xF) * (1.0f / 16.0f));
+                mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+                mLastSpeed = frame.engineFrame.speed;
+            }
+
+            mStatusPos.setText(QStringLiteral("%1 / %2")
+                .arg(frame.engineFrame.order)
+                .arg(frame.engineFrame.row));
+
+            // TODO: send frame.registers to the APU registers dock
+        }
+    }
+
+
     // get the audio data returned from the callback
     // this data has already been sent out to the output device
     auto &returnBuffer = mApp.renderer.returnBuffer();
