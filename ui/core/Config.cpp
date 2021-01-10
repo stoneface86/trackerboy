@@ -10,17 +10,68 @@ constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
 constexpr unsigned DEFAULT_BUFFERSIZE = 5;
 constexpr unsigned DEFAULT_VOLUME = 100;
 
+Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
+
+    // base octave
+    Qt::Key_Q,              // C
+    Qt::Key_W,
+    Qt::Key_E,
+    Qt::Key_R,
+    Qt::Key_T,
+    Qt::Key_Y,
+    Qt::Key_U,
+    Qt::Key_I,
+    Qt::Key_O,
+    Qt::Key_P,
+    Qt::Key_BracketLeft,
+    Qt::Key_BracketRight,   // B
+
+    // base octave + 1
+
+    Qt::Key_A,              // C
+    Qt::Key_S,
+    Qt::Key_D,
+    Qt::Key_F,
+    Qt::Key_G,
+    Qt::Key_H,
+    Qt::Key_J,
+    Qt::Key_K,
+    Qt::Key_L,
+    Qt::Key_Semicolon,
+    Qt::Key_Apostrophe,
+    Qt::Key_Backslash,      // B
+
+    // base octave + 2
+
+    Qt::Key_Z,              // C
+    Qt::Key_X,
+    Qt::Key_C,
+    Qt::Key_V,
+    Qt::Key_B,
+    Qt::Key_N,
+    Qt::Key_M,
+    Qt::Key_Comma,
+    Qt::Key_Period,
+    Qt::Key_Slash           // A
+};
 
 }
 
 
 Config::Config(Miniaudio &miniaudio) :
-    mMiniaudio(miniaudio)
+    mMiniaudio(miniaudio),
+    mAppearance(),
+    mKeyboard(),
+    mSound()
 {
 }
 
 Config::Appearance const& Config::appearance() {
     return mAppearance;
+}
+
+Config::Keyboard const& Config::keyboard() {
+    return mKeyboard;
 }
 
 Config::Sound const& Config::sound() {
@@ -32,6 +83,8 @@ void Config::readSettings() {
 
 
     settings.beginGroup("config");
+
+    settings.beginGroup(QStringLiteral("appearance"));
 
     mAppearance.font.setFamily(settings.value("fontFamily", "Cascadia Mono").toString());
     mAppearance.font.setPointSize(settings.value("fontSize", 12).toInt());
@@ -60,6 +113,24 @@ void Config::readSettings() {
     mAppearance.showFlats = settings.value("showFlats", false).toBool();
     mAppearance.showPreviews = settings.value("showPreviews", true).toBool();
 
+    settings.endGroup(); // appearance
+
+    settings.beginGroup(QStringLiteral("keyboard"));
+
+    // keybindings for the piano widget + note column in pattern editor
+    settings.beginReadArray("piano");
+    for (int i = 0; i != sizeof(DEFAULT_PIANO_BINDINGS) / sizeof(Qt::Key); ++i) {
+        settings.setArrayIndex(i);
+        mKeyboard.pianoInput.bind(
+            static_cast<Qt::Key>(settings.value("keycode", DEFAULT_PIANO_BINDINGS[i]).toInt()),
+            i
+        );
+    }
+    settings.endArray();
+
+    settings.endGroup(); // keyboard
+
+    settings.beginGroup(QStringLiteral("sound"));
     
     QByteArray id = settings.value("deviceId").toByteArray();
 
@@ -80,6 +151,10 @@ void Config::readSettings() {
     mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
     mSound.volume = settings.value("volume", DEFAULT_VOLUME).toInt();
     mSound.lowLatency = settings.value("lowLatency", true).toBool();
+
+    settings.endGroup(); // sound
+
+    settings.endGroup(); // config
 }
 
 void Config::readColor(QSettings &settings, Color color, QColor def) {
@@ -92,6 +167,7 @@ void Config::writeSettings() {
     QSettings settings;
     settings.beginGroup("config");
 
+    settings.beginGroup("appearance");
     settings.setValue("fontFamily", mAppearance.font.family());
     settings.setValue("fontSize", mAppearance.font.pointSize());
     settings.beginWriteArray("colors", mAppearance.colors.size());
@@ -102,7 +178,19 @@ void Config::writeSettings() {
     settings.endArray();
     settings.setValue("showFlats", mAppearance.showFlats);
     settings.setValue("showPreviews", mAppearance.showPreviews);
+    settings.endGroup();
 
+    settings.beginGroup("keyboard");
+    settings.beginWriteArray("piano");
+    auto &bindings = mKeyboard.pianoInput.bindings();
+    for (size_t i = 0; i != bindings.size(); ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue("keycode", bindings[i]);
+    }
+    settings.endArray();
+    settings.endGroup();
+
+    settings.beginGroup("sound");
     QByteArray barray;
     if (mSound.deviceIndex != 0) {
         ma_device_id *id = mMiniaudio.deviceId(mSound.deviceIndex);
@@ -116,4 +204,7 @@ void Config::writeSettings() {
     settings.setValue("buffersize", mSound.buffersize);
     settings.setValue("volume", mSound.volume);
     settings.setValue("lowLatency", mSound.lowLatency);
+    settings.endGroup();
+
+    settings.endGroup();
 }

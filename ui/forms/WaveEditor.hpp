@@ -21,7 +21,7 @@ class WaveEditor : public QDialog {
     Q_OBJECT
 
 public:
-    explicit WaveEditor(WaveListModel &model, QWidget *parent = nullptr);
+    explicit WaveEditor(WaveListModel &model, PianoInput &input, QWidget *parent = nullptr);
     ~WaveEditor();
 
     PianoWidget& piano();

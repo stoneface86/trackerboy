@@ -25,7 +25,7 @@ class InstrumentEditor : public QDialog {
     Q_OBJECT
 
 public:
-    InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget *parent = nullptr);
+    InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, PianoInput &input, QWidget *parent = nullptr);
     ~InstrumentEditor();
 
     PianoWidget& piano();

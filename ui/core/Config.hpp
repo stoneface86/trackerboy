@@ -3,6 +3,7 @@
 
 #include "core/ColorTable.hpp"
 #include "core/Miniaudio.hpp"
+#include "core/PianoInput.hpp"
 
 #include <QFlags>
 #include <QFont>
@@ -27,8 +28,9 @@ public:
         CategoryNone = 0,
         CategorySound = 1,
         CategoryAppearance = 2,
+        CategoryKeyboard = 4,
 
-        CategoryAll = CategorySound | CategoryAppearance
+        CategoryAll = CategorySound | CategoryAppearance | CategoryKeyboard
     };
     Q_DECLARE_FLAGS(Categories, Category);
 
@@ -39,8 +41,12 @@ public:
         bool showPreviews;      // if true, pattern previews will be rendered
     };
 
-    struct Sound {
+    struct Keyboard {
 
+        PianoInput pianoInput;
+    };
+
+    struct Sound {
         int deviceIndex;
         unsigned samplerateIndex;   // index of the current samplerate
         unsigned buffersize;        // Number of frames to buffer when rendering
@@ -66,6 +72,8 @@ public:
 
     Appearance const& appearance();
 
+    Keyboard const& keyboard();
+
     Sound const& sound();
 
 
@@ -73,9 +81,12 @@ private:
 
     void readColor(QSettings &settings, Color color, QColor def);
 
+    void readPianoBinding(QSettings &settings, int semitone, Qt::Key def);
+
     Miniaudio &mMiniaudio;
     
     Appearance mAppearance;
+    Keyboard mKeyboard;
     Sound mSound;
 
 };

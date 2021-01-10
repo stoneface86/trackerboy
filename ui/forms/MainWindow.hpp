@@ -103,6 +103,9 @@ private:
     int mReturnCounter;
     trackerboy::Speed mLastSpeed;
 
+    // key bindings for the piano widgets + pattern editor
+    PianoInput mPianoInput;
+
     // dialogs
     AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;

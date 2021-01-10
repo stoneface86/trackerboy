@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "core/PianoInput.hpp"
+
 #include "trackerboy/note.hpp"
 
 #include <QWidget>
@@ -19,7 +21,10 @@ class PianoWidget : public QWidget {
     Q_OBJECT
 
 public:
-    PianoWidget(QWidget *parent = nullptr);
+    PianoWidget(PianoInput &input, QWidget *parent = nullptr);
+
+    void play(trackerboy::Note note);
+    void release();
 
 signals:
     void keyDown(trackerboy::Note note);
@@ -27,13 +32,17 @@ signals:
 
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
+    void focusOutEvent(QFocusEvent *evt) override;
+    void keyPressEvent(QKeyEvent *evt) override;
+    void keyReleaseEvent(QKeyEvent *evt) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void paintEvent(QPaintEvent *event) override;
 
 private:
-
+    
+    trackerboy::Note getNoteFromMouse(int x, int y);
     
     struct Pixmaps {
         QPixmap whiteKeyDown;
@@ -49,7 +58,8 @@ private:
     bool mIsKeyDown;
     trackerboy::Note mNote;
 
-    void setNoteFromMouse(int x, int y);
+    PianoInput &mInput;
+    int mLastKeyPressed;
 
 
 };

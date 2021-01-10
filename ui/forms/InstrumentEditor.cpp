@@ -10,7 +10,7 @@ static const uint8_t PANNING_TABLE[3] = {
     0x11, // Middle
 };
 
-InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, QWidget *parent) :
+InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel &waveModel, PianoInput &input, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mInstrumentModel(instModel),
     mWaveModel(waveModel),
@@ -41,7 +41,7 @@ InstrumentEditor::InstrumentEditor(InstrumentListModel &instModel, WaveListModel
     mLayoutWave(),
     mWaveCombo(),
     mWaveEditButton(tr("Edit")),
-    mPiano()
+    mPiano(input)
 {
     setWindowTitle(tr("Instrument Editor"));
 

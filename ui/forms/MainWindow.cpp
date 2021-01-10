@@ -307,6 +307,10 @@ OrderWidget QTableView QHeaderView::section {
         mApp.orderModel.setRowColor(appearance.colors[+Color::row]);
     }
 
+    if (categories.testFlag(Config::CategoryKeyboard)) {
+        mPianoInput = mApp.config.keyboard().pianoInput;
+    }
+
     mApp.config.writeSettings();
 }
 
@@ -332,7 +336,7 @@ void MainWindow::showConfigDialog() {
 
 void MainWindow::showInstrumentEditor() {
     if (mInstrumentEditor == nullptr) {
-        mInstrumentEditor = new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, this);
+        mInstrumentEditor = new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, mPianoInput, this);
 
         // allow the instrument editor to show the wave editor
         connect(mInstrumentEditor, &InstrumentEditor::waveEditorRequested, this, &MainWindow::showWaveEditor);
@@ -346,7 +350,7 @@ void MainWindow::showInstrumentEditor() {
 
 void MainWindow::showWaveEditor() {
     if (mWaveEditor == nullptr) {
-        mWaveEditor = new WaveEditor(mApp.waveModel, this);
+        mWaveEditor = new WaveEditor(mApp.waveModel, mPianoInput, this);
         auto &wavePiano = mWaveEditor->piano();
         connect(&wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
         connect(&wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);

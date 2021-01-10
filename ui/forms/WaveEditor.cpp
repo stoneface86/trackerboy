@@ -10,7 +10,7 @@
 #include <QFontDatabase>
 
 
-WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
+WaveEditor::WaveEditor(WaveListModel &model, PianoInput &input, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mModel(model),
     mIgnoreNextUpdate(false),
@@ -23,7 +23,7 @@ WaveEditor::WaveEditor(WaveListModel &model, QWidget *parent) :
     mWaveramLayout(QBoxLayout::LeftToRight),
     mWaveramEdit(),
     mClearButton(tr("Clear")),
-    mPiano()
+    mPiano(input)
     
 {
 

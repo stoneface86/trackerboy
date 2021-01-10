@@ -77,11 +77,15 @@ static const trackerboy::Note BLACKKEY_TO_NOTE[] = {
 std::optional<PianoWidget::Pixmaps> PianoWidget::mPixmaps;
 
 
-PianoWidget::PianoWidget(QWidget *parent) :
+PianoWidget::PianoWidget(PianoInput &input, QWidget *parent) :
     QWidget(parent),
     mIsKeyDown(false),
-    mNote(trackerboy::NOTE_C)
+    mNote(trackerboy::NOTE_C),
+    mInput(input),
+    mLastKeyPressed(Qt::Key_unknown)
 {
+    setFocusPolicy(Qt::StrongFocus);
+    
     if (!mPixmaps) {
         auto &pixmaps = mPixmaps.emplace();
         pixmaps.whiteKeyDown.load(QStringLiteral(":/images/whitekey_down.png"));
@@ -94,6 +98,82 @@ PianoWidget::PianoWidget(QWidget *parent) :
 
 }
 
+void PianoWidget::play(trackerboy::Note note) {
+    mIsKeyDown = true;
+    mNote = note;
+    update();
+    emit keyDown(mNote);
+}
+
+void PianoWidget::release() {
+    mIsKeyDown = false;
+    update();
+    emit keyUp();
+}
+
+void PianoWidget::focusOutEvent(QFocusEvent *evt) {
+    if (mIsKeyDown) {
+        release();
+        mLastKeyPressed = Qt::Key_unknown;
+    }
+}
+
+void PianoWidget::keyPressEvent(QKeyEvent *evt) {
+    if (!evt->isAutoRepeat()) {
+        auto key = evt->key();
+        auto note = mInput.keyToNote(key);
+        if (note) {
+            mLastKeyPressed = key;
+            play(note.value());
+            return;
+        }
+    }
+
+    QWidget::keyPressEvent(evt);
+}
+
+void PianoWidget::keyReleaseEvent(QKeyEvent *evt) {
+    if (!evt->isAutoRepeat()) {
+        auto key = evt->key();
+        auto note = mInput.keyToNote(key);
+        if (note && key == mLastKeyPressed) {
+            release();
+            return;
+        }
+    }
+
+    QWidget::keyReleaseEvent(evt);
+}
+
+void PianoWidget::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        play(getNoteFromMouse(event->x(), event->y()));
+    }
+
+}
+
+void PianoWidget::mouseReleaseEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        release();
+    }
+}
+
+void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
+
+    int x = event->x();
+    int y = event->y();
+    if (rect().contains(x, y)) {
+        auto note = getNoteFromMouse(x, y);
+        if (!mIsKeyDown || note != mNote) {
+            play(note);
+        }
+    } else {
+        release();
+    }
+
+
+
+}
 
 void PianoWidget::paintEvent(QPaintEvent *event) {
     (void)event;
@@ -126,49 +206,9 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
 
 }
 
-void PianoWidget::mousePressEvent(QMouseEvent *event) {
-    if (event->button() == Qt::LeftButton) {
-        mIsKeyDown = true;
-        setNoteFromMouse(event->x(), event->y());
-        repaint();
-        emit keyDown(mNote);
 
-    }
-    
-}
 
-void PianoWidget::mouseReleaseEvent(QMouseEvent *event) {
-    if (event->button() == Qt::LeftButton) {
-        mIsKeyDown = false;
-        repaint();
-        emit keyUp();
-
-    }
-}
-
-void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
-
-    int x = event->x();
-    int y = event->y();
-    if (rect().contains(x, y)) {
-        auto oldNote = mNote;
-        setNoteFromMouse(x, y);
-        if (!mIsKeyDown || oldNote != mNote) {
-            mIsKeyDown = true;
-            repaint();
-            emit keyDown(mNote);
-        }
-    } else {
-        mIsKeyDown = false;
-        repaint();
-        emit keyUp();
-    }
-        
-
-    
-}
-
-void PianoWidget::setNoteFromMouse(int x, int y) {
+trackerboy::Note PianoWidget::getNoteFromMouse(int x, int y) {
     bool isBlack = false;
     int wkeyInOctave = x / WKEY_WIDTH;
     int octave = wkeyInOctave / N_WHITEKEYS;
@@ -202,5 +242,5 @@ void PianoWidget::setNoteFromMouse(int x, int y) {
         note += WHITEKEY_TO_NOTE[wkeyInOctave];
     }
 
-    mNote = static_cast<trackerboy::Note>(note);
+    return static_cast<trackerboy::Note>(note);
 }

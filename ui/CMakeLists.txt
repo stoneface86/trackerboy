@@ -30,6 +30,7 @@ set(UI_SRC
     "core/model/WaveListModel.cpp"
     "core/Config.cpp"
     "core/Miniaudio.cpp"
+    "core/PianoInput.cpp"
     "core/samplerates.cpp"
     "core/Trackerboy.cpp"
 
