@@ -121,8 +121,9 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     auto err = ma_device_init(mMiniaudio.context(), &config, &mDevice.value());
     assert(err == MA_SUCCESS);
 
-    auto &device = mDevice.value();
-    mReturnBuffer.init(device.playback.internalPeriodSizeInFrames * (device.playback.internalPeriods + 1));
+    mReturnBuffer.init(SAMPLERATE);
+    //auto &device = mDevice.value();
+    //mReturnBuffer.init(device.playback.internalPeriodSizeInFrames * (device.playback.internalPeriods + 1));
 
     mSynth.setSamplingRate(SAMPLERATE);
     mSynth.setVolume(soundConfig.volume);
@@ -360,9 +361,7 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
 
         if (mShouldStop) {
             if (mBuffer.isEmpty()) {
-                mMutex.lock();
                 mStopDevice = true;
-                mMutex.unlock();
                 mAudioStopCondition.wakeOne();
                 return;
             }

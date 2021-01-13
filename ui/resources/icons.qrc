@@ -25,9 +25,13 @@
     <file>icons/itemEdit.png</file>
     <file>icons/itemEdit-disabled.png</file>
     <file>icons/trackerPlay.png</file>
-    <file>icons/trackerPlayPattern.png</file>
+    <file>icons/trackerPause.png</file>
+    <file>icons/trackerRestart.png</file>
     <file>icons/trackerStop.png</file>
-    <file>icons/trackerEdit.png</file>
+    <file>icons/patternPlay.png</file>
+    <file>icons/patternRestart.png</file>
+    <file>icons/patternPlayRow.png</file>
+    <file>icons/patternRecord.png</file>
     <file>icons/ch1.png</file>
     <file>icons/ch2.png</file>
     <file>icons/ch3.png</file>

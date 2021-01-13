@@ -40,6 +40,10 @@ public:
     //
     int row() const;
 
+    bool isRecording() const;
+
+    void setRecord(bool record);
+
     //
     // set color scheme, grid is redrawn afterwards
     //
@@ -50,6 +54,8 @@ public:
 
     // if true then flats will be shown instead of sharps
     void setShowFlats(bool showFlats);
+
+    void setTrackerCursor(int row, int pattern);
 
 signals:
 
@@ -64,6 +70,8 @@ public slots:
     void setCursorColumn(int column);
     void setCursorRow(int row);
     void setCursorPattern(int pattern);
+
+    void setFollowMode(bool follow);
 
     void moveCursorRow(int amount);
     void moveCursorColumn(int amount);
@@ -170,6 +178,10 @@ private:
     int mCursorRow;
     int mCursorCol;
     int mCursorPattern;    // the current pattern
+
+    int mTrackerRow;       // current row of the renderer
+    int mTrackerPattern;
+    bool mFollowMode;
 
     int mOffset;
 

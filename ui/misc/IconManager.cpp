@@ -87,14 +87,26 @@ QIcon& IconManager::getIcon(Icons icon) {
             case Icons::trackerPlay:
                 iconRef.addFile(QStringLiteral(":/icons/trackerPlay.png"));
                 break;
-            case Icons::trackerPlayPattern:
-                iconRef.addFile(QStringLiteral(":/icons/trackerPlayPattern.png"));
+            case Icons::trackerPause:
+                iconRef.addFile(QStringLiteral(":/icons/trackerPause.png"));
+                break;
+            case Icons::trackerRestart:
+                iconRef.addFile(QStringLiteral(":/icons/trackerRestart.png"));
                 break;
             case Icons::trackerStop:
                 iconRef.addFile(QStringLiteral(":/icons/trackerStop.png"));
                 break;
-            case Icons::trackerEdit:
-                iconRef.addFile(QStringLiteral(":/icons/trackerEdit.png"));
+            case Icons::patternPlay:
+                iconRef.addFile(QStringLiteral(":/icons/patternPlay.png"));
+                break;
+            case Icons::patternRestart:
+                iconRef.addFile(QStringLiteral(":/icons/patternRestart.png"));
+                break;
+            case Icons::patternRecord:
+                iconRef.addFile(QStringLiteral(":/icons/patternRecord.png"));
+                break;
+            case Icons::patternPlayRow:
+                iconRef.addFile(QStringLiteral(":/icons/patternPlayRow.png"));
                 break;
             case Icons::ch1:
                 iconRef.addFile(QStringLiteral(":/icons/ch1.png"));

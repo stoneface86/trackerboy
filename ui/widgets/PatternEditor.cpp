@@ -9,6 +9,18 @@
 PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     QFrame(parent),
     mLayout(),
+    mControls(),
+    mControlsLayout(),
+    mToolbar(),
+    mOctaveLabel(tr("Octave")),
+    mOctaveSpin(),
+    mEditStepLabel(tr("Edit step")),
+    mEditStepSpin(),
+    mLoopPatternCheck(tr("Loop pattern")),
+    mFollowModeCheck(tr("Follow-mode")),
+    mKeyRepeatCheck(tr("Key repetition")),
+    mGridFrame(),
+    mGridLayout(),
     mGridHeader(),
     mGrid(model, mGridHeader),
     mHScroll(Qt::Horizontal),
@@ -17,7 +29,7 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     mPageStep(4)
 {
 
-    setFrameStyle(QFrame::StyledPanel);
+    //setFrameStyle(QFrame::Panel | QFrame::Raised);
     setFocusPolicy(Qt::StrongFocus);
 
     mHScroll.setMinimum(0);
@@ -28,13 +40,46 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     mVScroll.setMaximum(63);
     mVScroll.setPageStep(mPageStep);
 
+    mControlsLayout.addWidget(&mToolbar);
+    mControlsLayout.addWidget(&mOctaveLabel);
+    mControlsLayout.addWidget(&mOctaveSpin);
+    mControlsLayout.addWidget(&mEditStepLabel);
+    mControlsLayout.addWidget(&mEditStepSpin);
+    mControlsLayout.addWidget(&mLoopPatternCheck);
+    mControlsLayout.addWidget(&mFollowModeCheck);
+    mControlsLayout.addWidget(&mKeyRepeatCheck);
+    mControlsLayout.addStretch(1);
+    mControls.setLayout(&mControlsLayout);
+
+    mGridLayout.setMargin(0);
+    mGridLayout.setSpacing(0);
+    mGridLayout.addWidget(&mGridHeader,     0, 0);
+    mGridLayout.addWidget(&mGrid,           1, 0);
+    mGridLayout.addWidget(&mVScroll,        0, 1, 2, 1);
+    mGridLayout.addWidget(&mHScroll,        2, 0);
+    mGridFrame.setLayout(&mGridLayout);
+    mGridFrame.setFrameStyle(QFrame::StyledPanel);
+
     mLayout.setMargin(0);
     mLayout.setSpacing(0);
-    mLayout.addWidget(&mGridHeader, 0, 0);
-    mLayout.addWidget(&mGrid, 1, 0);
-    mLayout.addWidget(&mVScroll, 0, 1, 2, 1);
-    mLayout.addWidget(&mHScroll, 2, 0);
+    mLayout.addWidget(&mControls);
+    mLayout.addWidget(&mGridFrame, 1);
     setLayout(&mLayout);
+
+    mEditStepSpin.setRange(0, 256);
+    mOctaveSpin.setRange(2, 8);
+
+    setupAction(mTrackerActions.play, "Play at cursor", "Play from the cursor", Icons::patternPlay);
+    setupAction(mTrackerActions.restart, "Play pattern", "Plays at the start of the current pattern", Icons::patternRestart);
+    setupAction(mTrackerActions.playRow, "Play row", "Plays the current row", Icons::patternPlayRow);
+    setupAction(mTrackerActions.record, "Record", "Toggles record mode", Icons::patternRecord);
+
+    mToolbar.setIconSize(QSize(16, 16));
+    mToolbar.addAction(&mTrackerActions.play);
+    mToolbar.addAction(&mTrackerActions.restart);
+    mToolbar.addAction(&mTrackerActions.playRow);
+    mToolbar.addAction(&mTrackerActions.record);
+    mTrackerActions.record.setCheckable(true);
 
 
     setupAction(mActions.undo, "&Undo", "Undos the last operation", Icons::editUndo, QKeySequence::Undo);
@@ -57,6 +102,7 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     mTransposeMenu.addAction(&mActions.octaveIncrease);
     mTransposeMenu.addAction(&mActions.octaveDecrease);
 
+    connect(&mTrackerActions.record, &QAction::triggered, &mGrid, &PatternGrid::setRecord);
 
     connect(&mGrid, &PatternGrid::cursorRowChanged, &mVScroll, &QScrollBar::setValue);
     connect(&mVScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorRow);
@@ -71,6 +117,13 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
             mVScroll.setMaximum(rows - 1);
         });
 
+    connect(&mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, &PatternEditor::octaveChanged);
+
+    mOctaveSpin.setValue(4);
+    mFollowModeCheck.setCheckState(Qt::Checked);
+    mKeyRepeatCheck.setCheckState(Qt::Checked);
+
+    connect(&mFollowModeCheck, &QCheckBox::stateChanged, &mGrid, &PatternGrid::setFollowMode);
 }
 
 PatternGrid& PatternEditor::grid() {
@@ -79,6 +132,10 @@ PatternGrid& PatternEditor::grid() {
 
 PatternEditor::Actions& PatternEditor::menuActions() {
     return mActions;
+}
+
+PatternEditor::TrackerActions& PatternEditor::trackerActions() {
+    return mTrackerActions;
 }
 
 void PatternEditor::setupMenu(QMenu &menu) {

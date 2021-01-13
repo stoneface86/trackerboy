@@ -371,6 +371,7 @@ void MainWindow::statusSetWaveform(int index) {
 
 void MainWindow::statusSetOctave(int octave) {
     mStatusOctave.setText(QString("Octave: %1").arg(octave));
+    mPianoInput.setOctave(octave);
 }
 
 void MainWindow::onAudioStart() {
@@ -395,11 +396,10 @@ void MainWindow::audioReturn() {
     RenderFrame frame;
     if (mApp.renderer.currentFrame(frame)) {
         if (!frame.ignore) {
-            /*
+            
             //TODO: add setTrackerCursor function and auto-follow setting
             auto &grid = mPatternEditor->grid();
-            grid.setCursorPattern(frame.engineFrame.order);
-            grid.setCursorRow(frame.engineFrame.row);*/
+            grid.setTrackerCursor(frame.engineFrame.row, frame.engineFrame.order);
 
             if (mLastSpeed != frame.engineFrame.speed) {
                 float speedF = (frame.engineFrame.speed >> 4) + ((frame.engineFrame.speed & 0xF) * (1.0f / 16.0f));
@@ -506,12 +506,9 @@ void MainWindow::setupUi() {
     setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
     setupAction(mActionSongNext, "&Next song", "Selects the next song in the list", Icons::next);
 
-    setupAction(mActionTrackerPlay, "&Play", "Play the song from the current pattern", Icons::trackerPlay);
-    setupAction(mActionTrackerPlayPattern, "Play pattern", "Play and loop the current pattern", Icons::trackerPlayPattern);
-    setupAction(mActionTrackerPlayStart, "Play from start", "Play the song starting at the first pattern");
-    setupAction(mActionTrackerPlayCursor, "Play from cursor", "Play the song starting at the current cursor row");
+    setupAction(mActionTrackerPlay, "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
+    setupAction(mActionTrackerRestart, "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
     setupAction(mActionTrackerStop, "&Stop", "Stop playing", Icons::trackerStop);
-    setupAction(mActionTrackerEditMode, "Toggle &edit mode", "Enables/disables edit mode", Icons::trackerEdit);
     setupAction(mActionTrackerToggleChannel, "Toggle channel output", "Enables/disables sound output for the current track");
     setupAction(mActionTrackerSolo, "Solo", "Solos the current track");
 
@@ -554,11 +551,19 @@ void MainWindow::setupUi() {
 
     mMenuTracker.setTitle(tr("&Tracker"));
     mMenuTracker.addAction(&mActionTrackerPlay);
-    mMenuTracker.addAction(&mActionTrackerPlayPattern);
-    mMenuTracker.addAction(&mActionTrackerPlayStart);
-    mMenuTracker.addAction(&mActionTrackerPlayCursor);
+    mMenuTracker.addAction(&mActionTrackerRestart);
     mMenuTracker.addAction(&mActionTrackerStop);
-    mMenuTracker.addAction(&mActionTrackerEditMode);
+    mMenuTracker.addSeparator();
+
+    {
+        auto &actions = mPatternEditor->trackerActions();
+        mMenuTracker.addAction(&actions.play);
+        mMenuTracker.addAction(&actions.restart);
+        mMenuTracker.addAction(&actions.playRow);
+        mMenuTracker.addAction(&actions.record);
+
+    }
+
     mMenuTracker.addSeparator();
     mMenuTracker.addAction(&mActionTrackerToggleChannel);
     mMenuTracker.addAction(&mActionTrackerSolo);
@@ -618,9 +623,8 @@ void MainWindow::setupUi() {
     mToolbarTracker.setIconSize(iconSize);
     setObjectNameFromDeclared(mToolbarTracker);
     mToolbarTracker.addAction(&mActionTrackerPlay);
-    mToolbarTracker.addAction(&mActionTrackerPlayPattern);
+    mToolbarTracker.addAction(&mActionTrackerRestart);
     mToolbarTracker.addAction(&mActionTrackerStop);
-    mToolbarTracker.addAction(&mActionTrackerEditMode);
 
 
     mToolbarSong.setWindowTitle(tr("Song"));
@@ -700,9 +704,9 @@ void MainWindow::setupUi() {
 
     connectActionToThis(mActionFileConfig, showConfigDialog);
     connect(&mActionTrackerPlay, &QAction::triggered, &mApp.renderer, &Renderer::play);
-    connect(&mActionTrackerPlayPattern, &QAction::triggered, &mApp.renderer, &Renderer::playPattern);
-    connect(&mActionTrackerPlayStart, &QAction::triggered, &mApp.renderer, &Renderer::playFromStart);
-    connect(&mActionTrackerPlayCursor, &QAction::triggered, &mApp.renderer, &Renderer::playFromCursor);
+    //connect(&mActionTrackerPlayPattern, &QAction::triggered, &mApp.renderer, &Renderer::playPattern);
+    //connect(&mActionTrackerPlayStart, &QAction::triggered, &mApp.renderer, &Renderer::playFromStart);
+    //connect(&mActionTrackerPlayCursor, &QAction::triggered, &mApp.renderer, &Renderer::playFromCursor);
     connect(&mActionTrackerStop, &QAction::triggered, &mApp.renderer, &Renderer::stopMusic);
 
     connectActionToThis(mActionAudioDiag, showAudioDiag);
@@ -725,6 +729,9 @@ void MainWindow::setupUi() {
     
     connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
+
+    // octave changes
+    connect(mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
 
 }
 

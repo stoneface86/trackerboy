@@ -120,6 +120,8 @@ private:
     QToolBar mToolbarTracker;
     QToolBar mToolbarSong;
         QComboBox mSongCombo;
+                
+
 
     // dock widgets
     QDockWidget mDockInstruments;
@@ -189,11 +191,8 @@ private:
     // Tracker
     QMenu mMenuTracker;
     QAction mActionTrackerPlay;
-    QAction mActionTrackerPlayPattern;
-    QAction mActionTrackerPlayStart;
-    QAction mActionTrackerPlayCursor;
+    QAction mActionTrackerRestart;
     QAction mActionTrackerStop;
-    QAction mActionTrackerEditMode;
     QAction mActionTrackerToggleChannel;
     QAction mActionTrackerSolo;
 

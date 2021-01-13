@@ -6,10 +6,14 @@
 #include "widgets/grid/PatternGridHeader.hpp"
 
 
+#include <QCheckBox>
 #include <QFrame>
 #include <QGridLayout>
+#include <QLabel>
 #include <QMenu>
 #include <QScrollBar>
+#include <QSpinBox>
+#include <QToolBar>
 
 
 class PatternEditor : public QFrame {
@@ -38,6 +42,13 @@ public:
 
     };
 
+    struct TrackerActions {
+        QAction play;
+        QAction restart;
+        QAction playRow;
+        QAction record;
+    };
+
     explicit PatternEditor(SongListModel &model, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
@@ -45,9 +56,14 @@ public:
 
     Actions& menuActions();
 
+    TrackerActions& trackerActions();
+
     void setupMenu(QMenu &menu);
 
     void setColors(ColorTable const& colors);
+
+signals:
+    void octaveChanged(int octave);
 
 //public slots:
 
@@ -86,15 +102,29 @@ private slots:
 
 private:
 
-    QGridLayout mLayout;
-        PatternGridHeader mGridHeader;
-        PatternGrid mGrid;
-        QScrollBar mHScroll;
-        QScrollBar mVScroll;
+    QVBoxLayout mLayout;
+        QWidget mControls;
+            QHBoxLayout mControlsLayout;
+                QToolBar mToolbar;
+                QLabel mOctaveLabel;
+                QSpinBox mOctaveSpin;
+                QLabel mEditStepLabel;
+                QSpinBox mEditStepSpin;
+                QCheckBox mLoopPatternCheck;
+                QCheckBox mFollowModeCheck;
+                QCheckBox mKeyRepeatCheck;
+        QFrame mGridFrame;
+            QGridLayout mGridLayout;
+                PatternGridHeader mGridHeader;
+                PatternGrid mGrid;
+                QScrollBar mHScroll;
+                QScrollBar mVScroll;
 
     QMenu mContextMenu;
     QMenu mTransposeMenu;
     Actions mActions;
+
+    TrackerActions mTrackerActions;
 
     int mWheel;
     int mPageStep;

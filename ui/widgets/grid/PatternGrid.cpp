@@ -55,6 +55,9 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
     mCursorRow(0),
     mCursorCol(0),
     mCursorPattern(0),
+    mTrackerRow(0),
+    mTrackerPattern(0),
+    mFollowMode(true),
     mOffset(0),
     mPatternPrev(),
     mPatternCurr(mModel.currentSong()->getPattern(0)),
@@ -116,6 +119,17 @@ int PatternGrid::row() const {
     return mCursorRow;
 }
 
+bool PatternGrid::isRecording() const {
+    return mEditMode;
+}
+
+void PatternGrid::setRecord(bool record) {
+    if (mEditMode != record) {
+        mEditMode = record;
+        update();
+    }
+}
+
 void PatternGrid::setColors(ColorTable const& colors) {
     mPainter.setColors(colors);
 
@@ -148,6 +162,22 @@ void PatternGrid::setShowFlats(bool showFlats) {
     }
 }
 
+void PatternGrid::setTrackerCursor(int row, int pattern) {
+    if (mTrackerPattern != pattern) {
+        mTrackerPattern = pattern;
+        if (mFollowMode) {
+            setCursorPattern(pattern);
+            setCursorRow(row);
+        }
+        update();
+    } else if (mTrackerRow != row) {
+        mTrackerRow = row;
+        if (mFollowMode) {
+            setCursorRow(row);
+        }
+        update();
+    }
+}
 
 // ================================================================= SLOTS ===
 
@@ -239,6 +269,10 @@ void PatternGrid::setCursorTrack(int track) {
         return;
     }
     setCursorColumn(track * TRACK_COLUMNS);
+}
+
+void PatternGrid::setFollowMode(bool follow) {
+    mFollowMode = follow;
 }
 
 // ================================================================ EVENTS ===
