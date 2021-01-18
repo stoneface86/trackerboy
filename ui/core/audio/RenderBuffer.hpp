@@ -24,11 +24,13 @@ public:
     RenderBuffer();
     ~RenderBuffer();
 
-    Ringbuffer<RenderFrame>& returnFrames();
-
     bool isEmpty() const;
 
     void reset();
+
+    RenderFrame const& popFrame();
+
+    bool hasNewFrame();
 
     //
     // Sets the total number of frames in the buffer and the minimum number of samples
@@ -62,7 +64,6 @@ private:
 
     AudioRingbuffer mSamples;
     Ringbuffer<RenderFrame> mFrames;
-    Ringbuffer<RenderFrame> mReturnFrames;
 
     unsigned mBuffersize;
     size_t mSamplesPerFrame;
@@ -70,5 +71,8 @@ private:
     unsigned mFramesAvailable;
 
     size_t mCurrentFrameRemaining;
+
+    RenderFrame mCurrentFrame;
+    bool mNewFrame;
 
 };

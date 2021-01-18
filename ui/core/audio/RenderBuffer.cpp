@@ -8,22 +8,15 @@
 RenderBuffer::RenderBuffer() :
     mSamples(),
     mFrames(),
-    mReturnFrames(),
     mBuffersize(0),
     mSamplesPerFrame(0),
     mFramesAvailable(0),
     mCurrentFrameRemaining(0)
 {
-    // 4 frame buffer so that the GUI thread won't miss any
-    mReturnFrames.init(4);
 }
 
 RenderBuffer::~RenderBuffer() {
 
-}
-
-Ringbuffer<RenderFrame>& RenderBuffer::returnFrames() {
-    return mReturnFrames;
 }
 
 bool RenderBuffer::isEmpty() const {
@@ -37,6 +30,15 @@ unsigned RenderBuffer::size() const {
 void RenderBuffer::reset() {
     mFramesAvailable = 0;
     mCurrentFrameRemaining = 0;
+}
+
+RenderFrame const& RenderBuffer::popFrame() {
+    mNewFrame = false;
+    return mCurrentFrame;
+}
+
+bool RenderBuffer::hasNewFrame() {
+    return mNewFrame;
 }
 
 void RenderBuffer::setSize(unsigned frameCount, size_t samplesPerFrame) {
@@ -88,14 +90,9 @@ size_t RenderBuffer::read(int16_t *out, size_t samples) {
             auto frame = mFrames.acquireRead(readCount);
             // there should always be 1 frame to read at this point
             mCurrentFrameRemaining = frame->nsamples;
+            mCurrentFrame = *frame;
+            mNewFrame = true;
 
-            size_t writeCount = 1;
-            auto returnFrame = mReturnFrames.acquireWrite(writeCount);
-            // if writeCount is 0 then the GUI thread is out of sync
-            if (writeCount) {
-                *returnFrame = *frame;
-            }
-            mReturnFrames.commitWrite(returnFrame, writeCount);
             mFrames.commitRead(frame, readCount);
 
             

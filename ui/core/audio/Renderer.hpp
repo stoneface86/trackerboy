@@ -24,6 +24,7 @@
 #include <QWaitCondition>
 
 #include <atomic>
+#include <chrono>
 #include <optional>
 
 
@@ -72,6 +73,11 @@ public:
     //
     unsigned bufferSize() const;
 
+    //
+    // Time since the last sync event in nanoseconds
+    //
+    long long lastSyncTime();
+
     ma_device const& device() const;
 
     //
@@ -80,7 +86,17 @@ public:
     //
     AudioRingbuffer& returnBuffer();
 
-    bool currentFrame(RenderFrame &frame);
+    //
+    // To be called during audioSync(). Gets the current frame being played.
+    // Call releaseFrame() when finished accessing.
+    //
+    RenderFrame const& acquireCurrentFrame();
+
+    //
+    // Releases the previously acquired frame returned from acquireCurrentFrame.
+    // The reference to that frame is now invalid.
+    //
+    void releaseFrame();
 
     bool isRunning();
 
@@ -95,9 +111,25 @@ public:
     //void preview(trackerboy::PatternRow const& row);
 
 signals:
+
+    //
+    // Signal emitted when the audio callback thread was started
+    //
     void audioStarted();
 
+    //
+    // Signal emitted when the audio callback thread was stopped.
+    //
     void audioStopped();
+
+    //
+    // Audio synchronization. Emitted when the callback has finished
+    // rendering a block of audio data to the device. The size of this block
+    // can vary between syncs and its size depends on latency settings.
+    //
+    // The lower the latency, the more often this signal is emitted.
+    //
+    void audioSync();
 
 
 public slots:
@@ -124,11 +156,18 @@ public slots:
 
 private:
 
+    using Clock = std::chrono::steady_clock;
+
     enum class PreviewState {
         none,
         waveform,
         instrument
     };
+
+    // utility function for preview slots
+    void resetPreview();
+
+    // device management -----------------------------------------------------
 
     void closeDevice();
 
@@ -138,32 +177,48 @@ private:
     //
     void startDevice();
 
-    void resetPreview();
+    void stopDevice();
 
 
-    void handleBackground();
+    // thread main functions -------------------------------------------------
+
+    static void audioCallbackRun(ma_device *device, void *out, const void *in, ma_uint32 frames);
+    void handleCallback(int16_t *out, size_t frames);
+
     static void backgroundThreadRun(Renderer *renderer);
+    void handleBackground();
+
+    // class members ---------------------------------------------------------
 
     Miniaudio &mMiniaudio;
     Spinlock &mSpinlock;
 
-    QWaitCondition mAudioStopCondition;
+    InstrumentListModel &mInstrumentModel;
+    SongListModel &mSongModel;
+    WaveListModel &mWaveModel;
+
+    QWaitCondition mIdleCondition;
+    QWaitCondition mCallbackCondition;
+    QMutex mCallbackMutex;
     QMutex mMutex;
     QThread *mBackgroundThread;
 
     bool mRunning;          // is the audio callback thread active?
     bool mStopBackground;   // flag to stop the background thread
-    bool mStopDevice;       // flag to stop the callback thread
-
-
+    bool mStopDevice;
+    bool mSync;
+    //std::atomic_bool mStopDevice;       // flag to stop the callback thread
+    //std::atomic_bool mSync;             // sync audio?
+    std::atomic_bool mCancelStop;
     std::optional<ma_device> mDevice;
 
-    // ~~~~ AUDIO CALLBACK 
-
-    static void audioCallbackRun(ma_device *device, void *out, const void *in, ma_uint32 frames);
-
-    void handleCallback(int16_t *out, size_t frames);
-
+    // diagnostic info
+    std::atomic_uint mLockFails;        // number of spinlock failures
+    std::atomic_uint mUnderruns;        // number of underruns, or failure to output samples
+    std::atomic_uint mSamplesElapsed;   // number of samples written to be played out
+    std::atomic_uint mBufferUsage;      // number of frames queued in the buffer
+    Clock::duration mLatency;
+    
     trackerboy::Synth mSynth;
     trackerboy::RuntimeContext mRc;
     // read access to the current song, wave table and instrument table
@@ -171,24 +226,24 @@ private:
     // has read access to an Instrument and wave table
     trackerboy::InstrumentRuntime mIr;
 
-    InstrumentListModel &mInstrumentModel;
-    SongListModel &mSongModel;
-    WaveListModel &mWaveModel;
-
     RenderBuffer mBuffer;
-    AudioRingbuffer mReturnBuffer; // audio return data for visualizers
 
     PreviewState mPreviewState;
     trackerboy::ChType mPreviewChannel;
 
-    std::atomic_bool mCancelStop;
+        
     int mStopCounter;
     bool mShouldStop;
+    bool mStopped;
 
-    // diagnostic info
-    std::atomic_uint mLockFails;        // number of spinlock failures
-    std::atomic_uint mUnderruns;        // number of underruns, or failure to output samples
-    std::atomic_uint mSamplesElapsed;   // number of samples written to be played out
-    std::atomic_uint mBufferUsage;      // number of frames queued in the buffer
+    size_t mSyncCounter;
+    size_t mSyncPeriod;
+
+    AudioRingbuffer mReturnBuffer;
+
+    
+
+    RenderFrame mLastFrameOut;
+    Spinlock mFrameLock;
 
 };

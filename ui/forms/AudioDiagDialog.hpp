@@ -45,12 +45,12 @@ private:
     QVBoxLayout mLayout;
         QGroupBox mRenderGroup;
             QFormLayout mRenderLayout;
+                QLabel mSyncTimeLabel;
                 QLabel mLockFailsLabel;
                 QLabel mUnderrunLabel;
                 QLabel mBufferLabel;
                 QLabel mStatusLabel;
                 QLabel mElapsedLabel;
-                QLabel mReturnBufferLabel;
                 QPushButton mClearButton;
         QHBoxLayout mButtonLayout;
             QCheckBox mAutoRefreshCheck;

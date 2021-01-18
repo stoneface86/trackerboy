@@ -8,6 +8,12 @@
 #include <cstddef>
 #include <algorithm>
 
+// TODO:
+// 1. optimize atomic variables if possible (all currently use the default memory order seq_cst)
+// 2. the return buffer must be filled with silence when an underrun occurs
+// 3. the return buffer should be cleared on device stop
+// 4. implement stopDevice()
+
 
 Renderer::Renderer(
     Miniaudio &miniaudio,
@@ -20,30 +26,40 @@ Renderer::Renderer(
 ) :
     mMiniaudio(miniaudio),
     mSpinlock(spinlock),
-    mAudioStopCondition(),
+    mInstrumentModel(instrumentModel),
+    mSongModel(songModel),
+    mWaveModel(waveModel),
+    mIdleCondition(),
     mMutex(),
     mBackgroundThread(nullptr),
     mRunning(false),
     mStopBackground(false),
     mStopDevice(false),
+    mSync(false),
     mDevice(),
+    mLockFails(0),
+    mUnderruns(0),
+    mSamplesElapsed(0),
+    mBufferUsage(0),
+    mLatency(0),
     mSynth(44100),
     mRc(mSynth.apu(), itable, wtable),
     mEngine(mRc),
     mIr(mRc),
-    mInstrumentModel(instrumentModel),
-    mSongModel(songModel),
-    mWaveModel(waveModel),
     mBuffer(),
     mPreviewState(PreviewState::none),
     mPreviewChannel(trackerboy::ChType::ch1),
     mStopCounter(0),
     mShouldStop(false),
-    mLockFails(0),
-    mUnderruns(0)
+    mStopped(false),
+    mSyncCounter(0),
+    mSyncPeriod(1),
+    mReturnBuffer(),
+    mLastFrameOut(),
+    mFrameLock()
 {
     mBackgroundThread = QThread::create(&Renderer::backgroundThreadRun, this);
-    mBackgroundThread->start();
+    mBackgroundThread->start(QThread::TimeCriticalPriority);
 }
 
 Renderer::~Renderer() {
@@ -54,7 +70,7 @@ Renderer::~Renderer() {
     mMutex.unlock();
 
     // wake and wait for the background thread to finish
-    mAudioStopCondition.wakeAll();
+    mIdleCondition.wakeAll();
     mBackgroundThread->wait();
     delete mBackgroundThread;
 
@@ -81,17 +97,26 @@ unsigned Renderer::bufferSize() const {
     return mBuffer.size();
 }
 
+long long Renderer::lastSyncTime() {
+    QMutexLocker locker(&mMutex);
+    return mLatency.count();
+}
+
 ma_device const& Renderer::device() const{
     return mDevice.value();
 }
 
-bool Renderer::currentFrame(RenderFrame &frame) {
-    auto& frameBuffer = mBuffer.returnFrames();
-    return frameBuffer.fullRead(&frame, 1);
-}
-
 AudioRingbuffer& Renderer::returnBuffer() {
     return mReturnBuffer;
+}
+
+RenderFrame const& Renderer::acquireCurrentFrame() {
+    mFrameLock.lock();
+    return mLastFrameOut;
+}
+
+void Renderer::releaseFrame() {
+    mFrameLock.unlock();
 }
 
 bool Renderer::isRunning() {
@@ -101,8 +126,6 @@ bool Renderer::isRunning() {
 
 void Renderer::setConfig(Config::Sound const &soundConfig) {
     closeDevice();
-
-    QMutexLocker locker(&mMutex);
 
     auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
 
@@ -121,10 +144,9 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     auto err = ma_device_init(mMiniaudio.context(), &config, &mDevice.value());
     assert(err == MA_SUCCESS);
 
-    mReturnBuffer.init(SAMPLERATE);
-    //auto &device = mDevice.value();
-    //mReturnBuffer.init(device.playback.internalPeriodSizeInFrames * (device.playback.internalPeriods + 1));
+    mSyncPeriod = mDevice.value().playback.internalPeriodSizeInFrames;
 
+    mReturnBuffer.init(SAMPLERATE);
     mSynth.setSamplingRate(SAMPLERATE);
     mSynth.setVolume(soundConfig.volume);
     mSynth.setupBuffers();
@@ -140,9 +162,9 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
 }
 
 void Renderer::closeDevice() {
-    QMutexLocker locker(&mMutex);
 
     if (mDevice) {
+        stopDevice();
         ma_device_uninit(&mDevice.value());
         mDevice.reset();
     }
@@ -155,13 +177,26 @@ void Renderer::startDevice() {
     // this flag will cancel the countdown if it is active
     mCancelStop = true;
     if (!mRunning) {
+
+        // callback initial state
+        mStopped = false;
+        mShouldStop = false;
+        mStopCounter = 0;
+        mSyncCounter = 0;
         mBuffer.reset();
         mSamplesElapsed = 0;
 
-        emit audioStarted();
         ma_device_start(&mDevice.value());
         mRunning = true;
+        locker.unlock();
+        emit audioStarted();
+
+        mIdleCondition.wakeAll();
     }
+}
+
+void Renderer::stopDevice() {
+    // TODO
 }
 
 void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
@@ -292,6 +327,10 @@ void Renderer::resetPreview() {
 
 // ~~~~~~ BACKGROUND THREAD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+// This thread runs alongside the callback thread, for synchronizing audio with
+// the GUI and stopping the callback thread when done rendering (the callback thread
+// cannot stop itself).
+
 void Renderer::backgroundThreadRun(Renderer *renderer) {
     qDebug() << "[Audio background] thread started";
     renderer->handleBackground();
@@ -303,34 +342,79 @@ void Renderer::handleBackground() {
     // nothing to play.
 
     mMutex.lock();
+    
     for (;;) {
-
-        mStopDevice = false;
-
+        
         // wait here, we stop waiting if
-        // 1. the callback thread has finished and is signalling us to kill it
+        // 1. the callback thread was started and we need to keep the GUI in sync
         // 2. the Renderer is being destroyed and we must exit the loop
         do {
-            mAudioStopCondition.wait(&mMutex);
-        } while (!mStopDevice && !mStopBackground);
-
-        // kill the callback thread
-        if (mStopDevice && mRunning) {
-            ma_device_stop(&mDevice.value());
-            mRunning = false;
-            mEngine.reset();
-            emit audioStopped();
-        }
-
+            mIdleCondition.wait(&mMutex);
+        } while (!mRunning && !mStopBackground);
+        
+        // [2]
         if (mStopBackground) {
             break;
         }
+        
+        // [1]
+        if (mRunning) {
+
+            mMutex.unlock();
+
+            // synchronization
+            auto lastSyncTime = Clock::now();
+            mCallbackMutex.lock();
+            for (;;) {
+                
+                // the callback signals this thread via the condition variable
+                // not sure how safe this is, both threads are high priority and signaling shouldn't block
+                // seems to work glitch free on windows 10, ~10ms latency, WASAPI
+                // needs more testing, busy waiting + atomics can be used instead if issues arise
+                do {
+                    mCallbackCondition.wait(&mCallbackMutex);
+                } while (!mSync && !mStopDevice);
+
+                if (mSync) {
+                    emit audioSync();
+                    mSync = false;
+                    auto currentSyncTime = Clock::now();
+                    mMutex.lock();
+                    mLatency = currentSyncTime - lastSyncTime;
+                    mMutex.unlock();
+                    lastSyncTime = currentSyncTime;
+                }
+
+                if (mStopDevice) {
+                    // render complete, exit this loop
+                    mStopDevice = false;
+                    break;
+                }
+
+            }
+            mCallbackMutex.unlock();
+
+            mMutex.lock();
+
+            // stopping, kill the callback thread
+            ma_device_stop(&mDevice.value());
+            mRunning = false;
+            mEngine.reset(); // maybe move this to startDevice ???
+            emit audioStopped();
+
+        }
+
+        
 
     }
+
     mMutex.unlock();
 }
 
 // ~~~~~~ CALLBACK THREAD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// called when audio data is needed to be played out to speakers. All rendering
+// is done here.
 
 void Renderer::audioCallbackRun(
     ma_device *device,
@@ -349,10 +433,15 @@ constexpr int STOP_FRAMES = 5;
 
 void Renderer::handleCallback(int16_t *out, size_t frames) {
 
+    if (mStopped) {
+        return;
+    }
+
     mBufferUsage = mBuffer.framesInQueue();
 
     while (frames) {
 
+        // check if the user immediately previewed/played music after stopping
         if (mCancelStop) {
             mStopCounter = 0;
             mShouldStop = false;
@@ -360,9 +449,12 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
         }
 
         if (mShouldStop) {
+            // do not render anything if we should stop
             if (mBuffer.isEmpty()) {
+                // buffer is now empty, signal to the background thread that we are done
                 mStopDevice = true;
-                mAudioStopCondition.wakeOne();
+                mStopped = true;
+                mCallbackCondition.wakeOne();
                 return;
             }
         } else if (mBuffer.framesToQueue()) {
@@ -376,24 +468,34 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
                     if (--mStopCounter == 0) {
                         mShouldStop = true;
                     }
+                    // the GUI should ignore this frame on audio sync event
                     rFrame.ignore = true;
                 } else {
 
+                    // step the engine
                     mEngine.step(rFrame.engineFrame);
 
+                    // step the instrument runtime if we are previewing an instrument
                     if (mPreviewState == PreviewState::instrument) {
                         mIr.step();
                     }
 
+                    // begin the stop countdown if the engine halted and we are not previewing anything
                     if (rFrame.engineFrame.halted && mPreviewState == PreviewState::none) {
                         mStopCounter = STOP_FRAMES;
                     }
+
+                    // do not ignore this frame
                     rFrame.ignore = false;
                 }
 
+                // get the current register dump
                 rFrame.registers = mSynth.apu().registers();
 
+                // synthesize the frame
                 rFrame.nsamples = mSynth.run();
+
+                // queue it for future playback
                 mBuffer.queueFrame(mSynth.buffer(), rFrame);
 
                 mSpinlock.unlock();
@@ -408,18 +510,32 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
             }
         }
 
-
+        // write buffered data to the speakers
         size_t framesRead = mBuffer.read(out, frames);
         frames -= framesRead;
 
-        // write what we just read to the return buffer for visualizers
-        auto samplesRead = framesRead * 2;
+        if (mBuffer.hasNewFrame()) {
+            if (mFrameLock.tryLock()) {
+                mLastFrameOut = mBuffer.popFrame();
+                mFrameLock.unlock();
+                
+            }
+        }
+
+        // write what we sent to the speakers for visualizers
         mReturnBuffer.fullWrite(out, framesRead);
 
-
+        auto samplesRead = framesRead * 2;
         out += samplesRead;
+        mSyncCounter += framesRead;
 
         mSamplesElapsed += framesRead;
     }
 
+    if (mSyncCounter >= mSyncPeriod) {
+        // sync audio when we have written at least mSyncPeriod samples
+        mSync = true;
+        mCallbackCondition.wakeOne();
+        mSyncCounter %= mSyncPeriod;
+    }
 }

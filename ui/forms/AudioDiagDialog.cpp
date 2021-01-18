@@ -26,12 +26,12 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     mCloseButton(tr("Close"))
 {
 
+    mRenderLayout.addRow(tr("Sync time"), &mSyncTimeLabel);
     mRenderLayout.addRow(tr("Lock fails"), &mLockFailsLabel);
     mRenderLayout.addRow(tr("Underruns"), &mUnderrunLabel);
     mRenderLayout.addRow(tr("Buffer utilization"), &mBufferLabel);
     mRenderLayout.addRow(tr("Status"), &mStatusLabel);
     mRenderLayout.addRow(tr("Elapsed"), &mElapsedLabel);
-    mRenderLayout.addRow(tr("Return buffer"), &mReturnBufferLabel);
     mRenderLayout.setWidget(6, QFormLayout::LabelRole, &mClearButton);
     mRenderGroup.setLayout(&mRenderLayout);
 
@@ -102,6 +102,8 @@ void AudioDiagDialog::timerEvent(QTimerEvent *evt) {
 }
 
 void AudioDiagDialog::refresh() {
+    mSyncTimeLabel.setText(tr("%1 ms").arg(mRenderer.lastSyncTime() * 1e-6));
+
     mLockFailsLabel.setText(QString::number(mRenderer.lockFails()));
     mUnderrunLabel.setText(QString::number(mRenderer.underruns()));
     mBufferLabel.setText(QStringLiteral("%1 / %2").arg(mRenderer.bufferUsage()).arg(mRenderer.bufferSize()));
@@ -114,6 +116,4 @@ void AudioDiagDialog::refresh() {
         );
 
     mStatusLabel.setText(mRenderer.isRunning() ? tr("Playing") : tr("Stopped"));
-
-    mReturnBufferLabel.setText(QString::number(mRenderer.returnBuffer().availableRead()));
 }

@@ -67,9 +67,8 @@ private slots:
     // renderer
     void onAudioStart();
     void onAudioStop();
+    void onAudioSync();
 
-
-    void audioReturn();
 
 private:
 
@@ -98,9 +97,7 @@ private:
     QString mFilename;
     QString mDocumentName;
 
-    // audio return stuff
-    QTimer mReturnTimer;
-    int mReturnCounter;
+    // audio sync stuff
     trackerboy::Speed mLastSpeed;
 
     // key bindings for the piano widgets + pattern editor

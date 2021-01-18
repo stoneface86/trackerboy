@@ -30,6 +30,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mApp(trackerboy),
     mFilename(),
     mDocumentName(),
+    mLastSpeed(0),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
     mInstrumentEditor(nullptr),
@@ -63,11 +64,6 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
 
     // new documents have an empty string for a filename
     setFilename("");
-
-    connect(&mReturnTimer, &QTimer::timeout, this, &MainWindow::audioReturn);
-    mReturnTimer.setTimerType(Qt::PreciseTimer);
-    mReturnTimer.setInterval(16);
-    //mReturnTimer.start();
 
     setWindowIcon(IconManager::getAppIcon());
 
@@ -375,67 +371,47 @@ void MainWindow::statusSetOctave(int octave) {
 }
 
 void MainWindow::onAudioStart() {
-    mReturnTimer.start();
-    mReturnCounter = -1;
     mLastSpeed = 0;
-    audioReturn();
 }
 
 void MainWindow::onAudioStop() {
-    // stop the timer after 1 more interval
-    mReturnCounter = 1;
+    mVisualizer.clear();
 }
 
 //
-// This slot handles information returned from the callback thread. It is called
-// every 16ms (~60fps) and updates the visualizer and other widgets with the
-// current state of the Renderer.
+// Sync renderer output with the GUI. updates visualizer, volume meters, etc
 //
-void MainWindow::audioReturn() {
+void MainWindow::onAudioSync() {
+
     // get the current frame
-    RenderFrame frame;
-    if (mApp.renderer.currentFrame(frame)) {
-        if (!frame.ignore) {
+    auto& frame = mApp.renderer.acquireCurrentFrame();
+    if (!frame.ignore) {
             
-            //TODO: add setTrackerCursor function and auto-follow setting
-            auto &grid = mPatternEditor->grid();
-            grid.setTrackerCursor(frame.engineFrame.row, frame.engineFrame.order);
+        auto &grid = mPatternEditor->grid();
+        grid.setTrackerCursor(frame.engineFrame.row, frame.engineFrame.order);
 
-            if (mLastSpeed != frame.engineFrame.speed) {
-                float speedF = (frame.engineFrame.speed >> 4) + ((frame.engineFrame.speed & 0xF) * (1.0f / 16.0f));
-                mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
-                mLastSpeed = frame.engineFrame.speed;
-            }
-
-            mStatusPos.setText(QStringLiteral("%1 / %2")
-                .arg(frame.engineFrame.order)
-                .arg(frame.engineFrame.row));
-
-            // TODO: send frame.registers to the APU registers dock
+        if (mLastSpeed != frame.engineFrame.speed) {
+            float speedF = (frame.engineFrame.speed >> 4) + ((frame.engineFrame.speed & 0xF) * (1.0f / 16.0f));
+            mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+            mLastSpeed = frame.engineFrame.speed;
         }
-    }
 
+        mStatusPos.setText(QStringLiteral("%1 / %2")
+            .arg(frame.engineFrame.order)
+            .arg(frame.engineFrame.row));
+
+        // TODO: send frame.registers to the APU registers dock
+    }
+    mApp.renderer.releaseFrame();
 
     // get the audio data returned from the callback
     // this data has already been sent out to the output device
     auto &returnBuffer = mApp.renderer.returnBuffer();
     // read as much as we can
-    size_t samples = returnBuffer.size();
+    size_t samples = returnBuffer.availableRead();
     auto audio = returnBuffer.acquireRead(samples);
-
-
-    if (mReturnCounter) {
-        // send it to the visualizer
-        mVisualizer.addSamples(audio, samples);
-        
-        if (mReturnCounter > 0) {
-            --mReturnCounter;
-        }
-    } else {
-        mVisualizer.clear();
-        mReturnTimer.stop();
-    }
-
+    // send it to the visualizer
+    mVisualizer.addSamples(audio, samples);
     returnBuffer.commitRead(audio, samples);
 
 }
@@ -729,6 +705,7 @@ void MainWindow::setupUi() {
     
     connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
+    connect(&mApp.renderer, &Renderer::audioSync, this, &MainWindow::onAudioSync);
 
     // octave changes
     connect(mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
