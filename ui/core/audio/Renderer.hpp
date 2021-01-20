@@ -203,12 +203,10 @@ private:
     QMutex mMutex;
     QThread *mBackgroundThread;
 
-    bool mRunning;          // is the audio callback thread active?
-    bool mStopBackground;   // flag to stop the background thread
-    bool mStopDevice;
-    bool mSync;
-    //std::atomic_bool mStopDevice;       // flag to stop the callback thread
-    //std::atomic_bool mSync;             // sync audio?
+    bool mRunning;              // is the audio callback thread active?
+    bool mStopBackground;       // flag to stop the background thread
+    bool mStopDevice;           // flag to stop the callback thread
+    std::atomic_bool mSync;     // sync audio?                   
     std::atomic_bool mCancelStop;
     std::optional<ma_device> mDevice;
 

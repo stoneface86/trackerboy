@@ -348,9 +348,7 @@ void Renderer::handleBackground() {
         // wait here, we stop waiting if
         // 1. the callback thread was started and we need to keep the GUI in sync
         // 2. the Renderer is being destroyed and we must exit the loop
-        do {
-            mIdleCondition.wait(&mMutex);
-        } while (!mRunning && !mStopBackground);
+        mIdleCondition.wait(&mMutex);
         
         // [2]
         if (mStopBackground) {
@@ -362,19 +360,17 @@ void Renderer::handleBackground() {
 
             mMutex.unlock();
 
+            // NOTE: audio sync is temporary, eventually the GUI will update via timer
+            // according to the module's framerate setting.
+
             // synchronization
             auto lastSyncTime = Clock::now();
             mCallbackMutex.lock();
-            for (;;) {
-                
-                // the callback signals this thread via the condition variable
-                // not sure how safe this is, both threads are high priority and signaling shouldn't block
-                // seems to work glitch free on windows 10, ~10ms latency, WASAPI
-                // needs more testing, busy waiting + atomics can be used instead if issues arise
-                do {
-                    mCallbackCondition.wait(&mCallbackMutex);
-                } while (!mSync && !mStopDevice);
+            
+            do {
 
+                // we have to poll for a sync event because waking this thread from
+                // the callback thread may cause glitches (we don't know how long QWaitCondition::wakeOne takes to execute)
                 if (mSync) {
                     emit audioSync();
                     mSync = false;
@@ -385,21 +381,22 @@ void Renderer::handleBackground() {
                     lastSyncTime = currentSyncTime;
                 }
 
-                if (mStopDevice) {
-                    // render complete, exit this loop
-                    mStopDevice = false;
-                    break;
-                }
-
-            }
+                // wait at least 1 millisecond
+                // timing accuracy of the sync event depends on the OS scheduler
+                // should only be inaccurate for latency < 15ms (cough windows cough)
+                mCallbackCondition.wait(&mCallbackMutex, QDeadlineTimer(std::chrono::milliseconds(1), Qt::PreciseTimer));
+                
+            } while (!mStopDevice);
+            
             mCallbackMutex.unlock();
 
             mMutex.lock();
 
             // stopping, kill the callback thread
+            mStopDevice = false;
             ma_device_stop(&mDevice.value());
             mRunning = false;
-            mEngine.reset(); // maybe move this to startDevice ???
+            mEngine.reset();
             emit audioStopped();
 
         }
@@ -434,6 +431,8 @@ constexpr int STOP_FRAMES = 5;
 void Renderer::handleCallback(int16_t *out, size_t frames) {
 
     if (mStopped) {
+        // keep waking the background thread in case of lost wakeup
+        mCallbackCondition.wakeOne();
         return;
     }
 
@@ -452,7 +451,13 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
             // do not render anything if we should stop
             if (mBuffer.isEmpty()) {
                 // buffer is now empty, signal to the background thread that we are done
+
+                // we can use a mutex here, as we no longer care about audio glitches
+                // at this point
+                mCallbackMutex.lock();
                 mStopDevice = true;
+                mCallbackMutex.unlock();
+
                 mStopped = true;
                 mCallbackCondition.wakeOne();
                 return;
@@ -535,7 +540,6 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
     if (mSyncCounter >= mSyncPeriod) {
         // sync audio when we have written at least mSyncPeriod samples
         mSync = true;
-        mCallbackCondition.wakeOne();
         mSyncCounter %= mSyncPeriod;
     }
 }
