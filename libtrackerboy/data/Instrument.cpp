@@ -7,8 +7,8 @@ namespace trackerboy {
 
 
 Instrument::Instrument() :
-    mData{ 0 },
-    DataItem()
+    DataItem(),
+    mData{ 0 }
 {
     // defaults
     mData.envelope = 0xF0;
@@ -16,8 +16,8 @@ Instrument::Instrument() :
 }
 
 Instrument::Instrument(const Instrument &instrument) :
-    mData(instrument.mData),
-    DataItem(instrument)
+    DataItem(instrument),
+    mData(instrument.mData)
 {
 }
 

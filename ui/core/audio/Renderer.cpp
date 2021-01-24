@@ -2,6 +2,7 @@
 #include "core/audio/Renderer.hpp"
 #include "core/samplerates.hpp"
 
+#include <QDeadlineTimer>
 #include <QMutexLocker>
 #include <QtDebug>
 

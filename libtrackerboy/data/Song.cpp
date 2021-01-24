@@ -13,24 +13,24 @@ namespace trackerboy {
 
 
 Song::Song() :
+    DataItem(),
     mMaster(64),
     mOrder(),
     mRowsPerBeat(DEFAULT_RPB),
     mRowsPerMeasure(DEFAULT_RPM),
-    mSpeed(DEFAULT_SPEED),
-    DataItem()
+    mSpeed(DEFAULT_SPEED)
 {
     mName = "New song";
     mOrder.push_back({ 0 });
 }
 
 Song::Song(const Song &song) :
+    DataItem(song),
     mMaster(song.mMaster),
     mOrder(song.mOrder),
     mRowsPerBeat(song.mRowsPerBeat),
     mRowsPerMeasure(song.mRowsPerMeasure),
-    mSpeed(song.mSpeed),
-    DataItem(song)
+    mSpeed(song.mSpeed)
 {
 }
 
