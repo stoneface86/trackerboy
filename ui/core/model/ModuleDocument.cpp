@@ -3,39 +3,48 @@
 
 #include <QFileInfo>
 
-ModuleDocument::EditContext::EditContext(ModuleDocument &document, bool markModified) :
-    mDocument(document),
-    mMarkModified(markModified)
+template <bool tPermanent>
+ModuleDocument::EditContext<tPermanent>::EditContext(ModuleDocument &document) :
+    mDocument(document)
 {
-    mDocument.lock();
+    mDocument.mSpinlock.lock();
 }
 
-ModuleDocument::EditContext::~EditContext() {
-    mDocument.unlock();
-    if (mMarkModified) {
-        mDocument.setModified(true);
+template <bool tPermanent>
+ModuleDocument::EditContext<tPermanent>::~EditContext() {
+    mDocument.mSpinlock.unlock();
+    if constexpr (tPermanent) {
+        mDocument.makeDirty();
     }
 }
+
+template class ModuleDocument::EditContext<true>;
+template class ModuleDocument::EditContext<false>;
 
 
 
 ModuleDocument::ModuleDocument(Spinlock &spinlock, QObject *parent) :
     QObject(parent),
+    mPermaDirty(false),
     mModified(false),
     mModule(),
     mSpinlock(spinlock)
 {
     clear();
+    connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }
 
 void ModuleDocument::clear() {
+    
+    mUndoStack.clear();
     mModule.clear();
+
+    clean();
 
     // always start with 1 song
     auto &songs = mModule.songs();
     songs.emplace_back();
     
-    setModified(false);
 }
 
 bool ModuleDocument::isModified() const {
@@ -54,17 +63,32 @@ std::vector<trackerboy::Song>& ModuleDocument::songs() {
     return mModule.songs();
 }
 
-ModuleDocument::EditContext ModuleDocument::beginEdit(bool markModified) {
-    return { *this, markModified };
+QUndoStack& ModuleDocument::undoStack() {
+    return mUndoStack;
 }
 
-trackerboy::FormatError ModuleDocument::open(QString filename) {
+void ModuleDocument::abandonStack() {
+    if (!mUndoStack.isClean()) {
+        makeDirty();
+    }
+    mUndoStack.clear();
+}
+
+ModuleDocument::EditContext<true> ModuleDocument::beginEdit() {
+    return { *this };
+}
+
+ModuleDocument::EditContext<false> ModuleDocument::beginCommandEdit() {
+    return { *this };
+}
+
+trackerboy::FormatError ModuleDocument::open(QString const& filename) {
     trackerboy::FormatError error = trackerboy::FormatError::none;
     std::ifstream in(filename.toStdString(), std::ios::binary | std::ios::in);
     if (in.good()) {
         error = mModule.deserialize(in);
         if (error == trackerboy::FormatError::none) {
-            setModified(false);
+            clean();
         }
     }
 
@@ -79,7 +103,7 @@ bool ModuleDocument::save(QString const& filename) {
     if (out.good()) {
         success = mModule.serialize(out) == trackerboy::FormatError::none;
         if (success) {
-            setModified(false);
+            clean();
         }
 
     }
@@ -94,6 +118,33 @@ void ModuleDocument::setModified(bool value) {
         mModified = value;
         emit modifiedChanged(value);
     }
+}
+
+void ModuleDocument::makeDirty() {
+    if (!mPermaDirty) {
+        mPermaDirty = true;
+        if (!mModified) {
+            mModified = true;
+            emit modifiedChanged(true);
+        }
+    }
+}
+
+void ModuleDocument::onStackCleanChanged(bool clean) {
+    bool modified = mPermaDirty || !clean;
+    if (mModified != modified) {
+        mModified = modified;
+        emit modifiedChanged(mModified);
+    }
+}
+
+void ModuleDocument::clean() {
+    mPermaDirty = false;
+    if (mModified) {
+        mModified = false;
+        emit modifiedChanged(false);
+    }
+    mUndoStack.setClean();
 }
 
 void ModuleDocument::lock() {

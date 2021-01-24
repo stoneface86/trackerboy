@@ -61,9 +61,9 @@ public:
 
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 
-    bool insertRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
+    //bool insertRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
 
-    bool removeRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
+    //bool removeRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
 
 signals:
     // the selected pattern has changed
@@ -99,7 +99,18 @@ public slots:
 
     void selectTrack(int track);
 
+    void setPatternCount(int count);
+
 private:
+    // QUndoCommand classes
+    friend class OrderModelCommand;
+    friend class OrderModifyCommand;
+    friend class OrderSwapCommand;
+    friend class OrderInsertCommand;
+    friend class OrderRemoveCommand;
+    friend class OrderDuplicateCommand;
+
+
     enum class ModifyMode {
         inc,
         dec,
@@ -113,7 +124,13 @@ private:
     void modifySelection(QItemSelection const &selection, uint8_t option = 0);
 
     template <ModifyMode mode>
-    void modifyCell(uint8_t &cell, uint8_t value);
+    void modifyCell(QUndoStack &stack, uint8_t pattern, uint8_t track, uint8_t option = 0);
+
+    // methods called by command classes
+
+    void cmdInsertRows(int row, int count, trackerboy::Order *rowdata = nullptr);
+
+    void cmdRemoveRows(int row, int count);
 
     ModuleDocument &mDocument;
     QColor mRowColor;

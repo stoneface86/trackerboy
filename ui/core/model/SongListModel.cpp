@@ -67,16 +67,8 @@ void SongListModel::setSpeed(int speed) {
 }
 
 void SongListModel::setPatterns(int patterns) {
-    auto &curr = mSongVector[mCurrentIndex];
-    int currPatterns = mOrderModel.rowCount();
-    if (patterns > currPatterns) {
-        // grow
-        mOrderModel.insertRows(currPatterns, patterns - currPatterns);
-    } else if (patterns < currPatterns) {
-        // shrink
-        int amount = currPatterns - patterns;
-        mOrderModel.removeRows(currPatterns - amount, amount);
-    }
+    // this function was moved to OrderModel, refactor this later
+    mOrderModel.setPatternCount(patterns);
 }
 
 void SongListModel::setRowsPerPattern(int rows) {
@@ -130,5 +122,7 @@ void SongListModel::dataSelected(int index) {
     // index is only -1 when the model is being reset
     if (index != -1) {
         mOrderModel.setOrder(&mSongVector[index].orders());
+        // changing songs, abandon the undo stack
+        mDocument.abandonStack();
     }
 }

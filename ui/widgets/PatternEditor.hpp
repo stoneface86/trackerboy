@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/model/OrderModel.hpp"
+#include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 
@@ -25,9 +26,6 @@ public:
     
 
     struct Actions {
-
-        QAction undo;
-        QAction redo;
         QAction cut;
         QAction copy;
         QAction paste;
@@ -49,7 +47,7 @@ public:
         QAction record;
     };
 
-    explicit PatternEditor(SongListModel &model, QWidget *parent = nullptr);
+    explicit PatternEditor(PianoInput &input, SongListModel &model, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
     PatternGrid& grid();
@@ -93,6 +91,8 @@ protected:
 
     void keyPressEvent(QKeyEvent *evt) override;
 
+    void keyReleaseEvent(QKeyEvent *evt) override;
+
     void wheelEvent(QWheelEvent *evt) override;
 
 private slots:
@@ -101,6 +101,8 @@ private slots:
     void vscrollAction(int action);
 
 private:
+
+    PianoInput &mPianoIn;
 
     QVBoxLayout mLayout;
         QWidget mControls;
@@ -128,5 +130,7 @@ private:
 
     int mWheel;
     int mPageStep;
+
+    int mPreviewKey;
 
 };

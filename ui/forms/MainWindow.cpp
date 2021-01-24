@@ -101,6 +101,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockVisualizer);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockHistory);
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
         addToolBar(&mToolbarTracker);
@@ -229,6 +230,9 @@ void MainWindow::onWindowResetLayout() {
 
     mDockVisualizer.setFloating(false);
     removeDockWidget(&mDockVisualizer);
+
+    mDockHistory.setFloating(false);
+    removeDockWidget(&mDockHistory);
 
     initState();
 }
@@ -462,10 +466,12 @@ void MainWindow::setModelsEnabled(bool enabled) {
 
 void MainWindow::setupUi() {
 
+    auto &undoStack = mApp.document.undoStack();
+
     // CENTRAL WIDGET ========================================================
 
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
-    mPatternEditor = new PatternEditor(mApp.songModel);
+    mPatternEditor = new PatternEditor(mPianoInput, mApp.songModel);
     setCentralWidget(mPatternEditor);
 
     auto &patternActions = mPatternEditor->menuActions();
@@ -478,6 +484,13 @@ void MainWindow::setupUi() {
     setupAction(mActionFileSaveAs, "Save &As...", "Save the module to a new file", QKeySequence::SaveAs);
     setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
     setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
+
+    mActionEditUndo = undoStack.createUndoAction(this);
+    mActionEditUndo->setIcon(IconManager::getIcon(Icons::editUndo));
+    mActionEditUndo->setShortcut(QKeySequence::Undo);
+    mActionEditRedo = undoStack.createRedoAction(this);
+    mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
+    mActionEditRedo->setShortcut(QKeySequence::Redo);
 
     setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
     setupAction(mActionSongNext, "&Next song", "Selects the next song in the list", Icons::next);
@@ -508,6 +521,9 @@ void MainWindow::setupUi() {
     mMenuFile.addAction(&mActionFileQuit);
 
     mMenuEdit.setTitle(tr("&Edit"));
+    mMenuEdit.addAction(mActionEditUndo);
+    mMenuEdit.addAction(mActionEditRedo);
+    mMenuEdit.addSeparator();
     mPatternEditor->setupMenu(mMenuEdit);
 
     mMenuSong.setTitle(tr("&Song"));
@@ -588,8 +604,8 @@ void MainWindow::setupUi() {
     mToolbarEdit.setWindowTitle(tr("Edit"));
     mToolbarEdit.setIconSize(iconSize);
     setObjectNameFromDeclared(mToolbarEdit);
-    mToolbarEdit.addAction(&patternActions.undo);
-    mToolbarEdit.addAction(&patternActions.redo);
+    mToolbarEdit.addAction(mActionEditUndo);
+    mToolbarEdit.addAction(mActionEditRedo);
     mToolbarEdit.addSeparator();
     mToolbarEdit.addAction(&patternActions.cut);
     mToolbarEdit.addAction(&patternActions.copy);
@@ -646,6 +662,11 @@ void MainWindow::setupUi() {
     setObjectNameFromDeclared(mDockVisualizer);
     mDockVisualizer.setWindowTitle(tr("Visualizer"));
     mDockVisualizer.setWidget(&mVisualizer);
+
+    setObjectNameFromDeclared(mDockHistory);
+    mDockHistory.setWindowTitle(tr("History"));
+    mDockHistory.setWidget(&mUndoView);
+    mUndoView.setStack(&undoStack);
     
 
     // STATUSBAR ==============================================================
@@ -773,6 +794,9 @@ void MainWindow::initState() {
     addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
     mDockOrders.show();
 
+    mDockHistory.setFloating(true);
+    mDockHistory.hide();
+
     addDockWidget(Qt::RightDockWidgetArea, &mDockInstruments);
     mDockInstruments.show();
 
@@ -813,6 +837,7 @@ void MainWindow::setupWindowMenu(QMenu &menu) {
     menu.addAction(mDockModuleProperties.toggleViewAction());
     menu.addAction(mDockOrders.toggleViewAction());
     menu.addAction(mDockVisualizer.toggleViewAction());
+    menu.addAction(mDockHistory.toggleViewAction());
 
     menu.addSeparator();
     

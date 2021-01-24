@@ -7,6 +7,7 @@
 #include "widgets/grid/PatternPainter.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
+#include "trackerboy/note.hpp"
 
 #include <QWidget>
 #include <QPaintEvent>
@@ -27,6 +28,16 @@ public:
 
     explicit PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent = nullptr);
     ~PatternGrid() = default;
+    
+    bool cursorOnNote();
+
+    bool edit(trackerboy::Note note);
+
+    bool edit(char key, bool &valid);
+
+    void erase();
+
+    void backspace();
 
     // Settings
 
@@ -99,28 +110,6 @@ private slots:
 
 private:
 
-    enum ColumnType {
-        COLUMN_NOTE,
-
-        // high is the upper nibble (bits 4-7)
-        // low is the lower nibble (bits 0-3)
-
-        COLUMN_INSTRUMENT_HIGH,
-        COLUMN_INSTRUMENT_LOW,
-
-        COLUMN_EFFECT1_TYPE,
-        COLUMN_EFFECT1_ARG_HIGH,
-        COLUMN_EFFECT1_ARG_LOW,
-
-        COLUMN_EFFECT2_TYPE,
-        COLUMN_EFFECT2_ARG_HIGH,
-        COLUMN_EFFECT2_ARG_LOW,
-
-        COLUMN_EFFECT3_TYPE,
-        COLUMN_EFFECT3_ARG_HIGH,
-        COLUMN_EFFECT3_ARG_LOW
-
-    };
 
     //
     // Called when appearance settings have changed, recalculates metrics and redraws

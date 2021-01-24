@@ -21,6 +21,7 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QToolBar>
+#include <QUndoView>
 
 
 class MainWindow : public QMainWindow {
@@ -142,6 +143,9 @@ private:
     QDockWidget mDockVisualizer;
         Visualizer mVisualizer;
 
+    QDockWidget mDockHistory;
+        QUndoView mUndoView;
+
     // central widget (must be heap-alloc'd)
     PatternEditor *mPatternEditor;
 
@@ -170,6 +174,8 @@ private:
 
     // Edit (created by PatternEditor)
     QMenu mMenuEdit;
+    QAction *mActionEditUndo;
+    QAction *mActionEditRedo;
 
     // Song (created by SongWidget)
     QMenu mMenuSong;

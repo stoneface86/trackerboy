@@ -7,6 +7,7 @@
 #include "trackerboy/engine/RuntimeContext.hpp"
 
 #include <QObject>
+#include <QUndoStack>
 
 //
 // Class encapsulates a trackerboy "document", or a module. Provides methods
@@ -17,13 +18,14 @@
 // There are two threads that access the document:
 //  * The GUI thread    (read/write)
 //  * The render thread (read-only)
-// When accessing the document, the document's mutex should be locked so that
+// When accessing the document, the document's spinlock should be locked so that
 // the render thread does not read while the gui thread (ie the user) modifies
 // data. Only the gui thread modifies the document, so locking is not necessary
 // when the gui is reading.
 //
 // Any class that modifies the document's data outside of this class (ie Model classes)
-// should lock the document when making changes.
+// should lock the document when making changes. Use the beginEdit() to get an edit context
+// object that will automatically lock and unlock the spinlock.
 //
 class ModuleDocument : public QObject {
 
@@ -38,20 +40,22 @@ public:
     // the locking and unlocking of the spinlock is managed by the context's
     // lifetime.
     //
+    template <bool tPermanent = true>
     class EditContext {
 
     public:
-        EditContext(ModuleDocument &document, bool markModified);
+        EditContext(ModuleDocument &document);
         ~EditContext();
 
 
     private:
         
         ModuleDocument &mDocument;
-        bool mMarkModified;
     };
 
     ModuleDocument(Spinlock &spinlock, QObject *parent = nullptr);
+
+    // accessors for the underlying module data containers
 
     trackerboy::InstrumentTable& instrumentTable();
 
@@ -59,16 +63,36 @@ public:
 
     std::vector<trackerboy::Song> &songs();
 
+    QUndoStack& undoStack();
+
     bool isModified() const;
 
-    EditContext beginEdit(bool markModified = true);
+    //
+    // Clear the undo stack, if the stack was not clean the perma dirty flag is set
+    //
+    void abandonStack();
 
-    trackerboy::FormatError open(QString filename);
+    //
+    // Utility method constructs an edit context. markModified sets the perma
+    // dirty flag if true.
+    //
+    EditContext<true> beginEdit();
+
+    //
+    // Same as beginEdit, but does not set the perma dirty flag. Use this method
+    // when redo/undo'ing QUndoCommands
+    //
+    EditContext<false> beginCommandEdit();
+
+    trackerboy::FormatError open(QString const& filename);
 
     // saves the document to the current filename
     bool save(QString const& filename);
 
+    // TODO: remove this (replaced by markDirty)
     void setModified(bool value);
+
+    void makeDirty();
 
     // TODO: remove these later
     void lock();
@@ -79,14 +103,31 @@ signals:
     void modifiedChanged(bool value);
 
 public slots:
+    //
+    // Clears the document to the default state. Call this slot when creating a new document
+    //
     void clear();
 
+private slots:
+    void onStackCleanChanged(bool clean);
 
 private:
 
+    void clean();
+
+    // permanent dirty flag. Not all edits to the document can be undone. When such
+    // edit occurs, this flag is set to true. It is reset when the document is
+    // saved or when the document is reset or loaded from disk.
+    bool mPermaDirty;
+    
+    //
+    // Flag determines if the document has been modified and should be saved to disk
+    // The flag is the result of mPermaDirty || !mUndoStack.isClean()
+    //
     bool mModified;
     trackerboy::Module mModule;
     Spinlock &mSpinlock;
     
+    QUndoStack mUndoStack;
 
 };

@@ -110,6 +110,30 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
 
 }
 
+bool PatternGrid::cursorOnNote() {
+    return (mCursorCol % TRACK_COLUMNS) == COLUMN_NOTE;
+}
+
+bool PatternGrid::edit(trackerboy::Note note) {
+    return false;
+}
+
+bool PatternGrid::edit(char key, bool &valid) {
+    return false;
+}
+
+void PatternGrid::erase() {
+    
+}
+
+void PatternGrid::backspace() {
+    // erases the row in the track before the cursor row, 
+
+    if (mCursorRow > 0) {
+
+    }
+}
+
 void PatternGrid::redraw() {
     mRepaintImage = true;
     update();

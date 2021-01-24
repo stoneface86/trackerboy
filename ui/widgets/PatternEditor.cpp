@@ -6,8 +6,9 @@
 #include <QGridLayout>
 #include <QtDebug>
 
-PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
+PatternEditor::PatternEditor(PianoInput &input, SongListModel &model, QWidget *parent) :
     QFrame(parent),
+    mPianoIn(input),
     mLayout(),
     mControls(),
     mControlsLayout(),
@@ -82,8 +83,6 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     mTrackerActions.record.setCheckable(true);
 
 
-    setupAction(mActions.undo, "&Undo", "Undos the last operation", Icons::editUndo, QKeySequence::Undo);
-    setupAction(mActions.redo, "&Redo", "Redos the last operation", Icons::editRedo, QKeySequence::Redo);
     setupAction(mActions.cut, "C&ut", "Copies and deletes selection to the clipboard", Icons::editCut, QKeySequence::Cut);
     setupAction(mActions.copy, "&Copy", "Copies selected rows to the clipboard", Icons::editCopy, QKeySequence::Copy);
     setupAction(mActions.paste, "&Paste", "Pastes contents at the cursor", Icons::editPaste, QKeySequence::Paste);
@@ -102,7 +101,7 @@ PatternEditor::PatternEditor(SongListModel &model, QWidget *parent) :
     mTransposeMenu.addAction(&mActions.octaveIncrease);
     mTransposeMenu.addAction(&mActions.octaveDecrease);
 
-    connect(&mTrackerActions.record, &QAction::triggered, &mGrid, &PatternGrid::setRecord);
+    connect(&mTrackerActions.record, &QAction::toggled, &mGrid, &PatternGrid::setRecord);
 
     connect(&mGrid, &PatternGrid::cursorRowChanged, &mVScroll, &QScrollBar::setValue);
     connect(&mVScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorRow);
@@ -139,9 +138,6 @@ PatternEditor::TrackerActions& PatternEditor::trackerActions() {
 }
 
 void PatternEditor::setupMenu(QMenu &menu) {
-    menu.addAction(&mActions.undo);
-    menu.addAction(&mActions.redo);
-    menu.addSeparator();
     menu.addAction(&mActions.cut);
     menu.addAction(&mActions.copy);
     menu.addAction(&mActions.paste);
@@ -163,28 +159,83 @@ void PatternEditor::setColors(ColorTable const& colors) {
 }
 
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {
-    switch (evt->key()) {
+    
+    
+    int const key = evt->key();
+    bool const recording = mGrid.isRecording();
+
+    bool validKey = false;
+    
+    // navigation keys / non-edit keys
+    switch (key) {
         case Qt::Key_Left:
             mGrid.moveCursorColumn(-1);
-            break;
+            return;
         case Qt::Key_Right:
             mGrid.moveCursorColumn(1);
-            break;
+            return;
         case Qt::Key_Up:
             mGrid.moveCursorRow(-1);
-            break;
+            return;
         case Qt::Key_Down:
             mGrid.moveCursorRow(1);
-            break;
+            return;
         case Qt::Key_PageDown:
             mGrid.moveCursorRow(mPageStep);
-            break;
+            return;
         case Qt::Key_PageUp:
             mGrid.moveCursorRow(-mPageStep);
-            break;
-        default:
-            QWidget::keyPressEvent(evt);
-            break;
+            return;
+        case Qt::Key_Space:
+            mTrackerActions.record.toggle();
+            return;
+        case Qt::Key_Backspace:
+            mGrid.backspace();
+            return;
+    }
+
+    if (evt->isAutoRepeat() && !mKeyRepeatCheck.isChecked()) {
+        return; // key repetition disabled, ignore this event
+    }
+    
+    int const editStep = mEditStepSpin.value();
+    
+    bool cellWasEdited = false;
+    if (key == Qt::Key_Delete) {
+        // erase the cell
+        mGrid.erase();
+        validKey = true;
+    } else {
+        // check if the cursor is on a note column
+        if (mGrid.cursorOnNote()) {
+            auto note = mPianoIn.keyToNote(key);
+            if (note) {
+                // TODO: preview the note
+                mPreviewKey = key;
+                // set it in the grid
+                cellWasEdited = mGrid.edit(note.value());
+                validKey = true;
+            }
+        } else {
+            if (key < 256) {
+                cellWasEdited = mGrid.edit(static_cast<char>(key), validKey);
+            }
+        }
+    }
+
+    if (cellWasEdited) {
+        mGrid.moveCursorRow(editStep);
+    }
+
+    if (!validKey) {
+        QWidget::keyPressEvent(evt);
+    }
+    
+}
+
+void PatternEditor::keyReleaseEvent(QKeyEvent *evt) {
+    if (evt->key() == mPreviewKey) {
+        // TODO: stop preview
     }
 }
 

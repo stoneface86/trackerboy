@@ -5,6 +5,177 @@
 
 #include <algorithm>
 
+//
+// Command that changes a single track id in the order list. 
+//
+class OrderModifyCommand : public QUndoCommand {
+public:
+    OrderModifyCommand(OrderModel &model, uint8_t pattern, uint8_t track, uint8_t newValue, uint8_t oldValue) :
+        QUndoCommand(),
+        mModel(model),
+        mPattern(pattern),
+        mTrack(track),
+        mNewValue(newValue),
+        mOldValue(oldValue)
+    {
+
+    }
+
+    void undo() override {
+        setCell(mOldValue);
+    }
+
+    void redo() override {
+        setCell(mNewValue);
+    }
+
+private:
+
+    void setCell(uint8_t value) {
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            (*mModel.mOrder)[mPattern].tracks[mTrack] = value;
+        }
+        auto cellIndex = mModel.createIndex(mPattern, mTrack, nullptr);
+        emit mModel.dataChanged(cellIndex, cellIndex, { Qt::DisplayRole });
+    }
+    
+    OrderModel &mModel;
+    uint8_t const mPattern;
+    uint8_t const mTrack;
+    uint8_t const mNewValue; // set on redo
+    uint8_t const mOldValue; // set on undo
+
+};
+
+//
+// Command that swaps two rows in the order list, used by move up and move down
+//
+class OrderSwapCommand : public QUndoCommand {
+
+public:
+
+    OrderSwapCommand(OrderModel &model, uint8_t row1, uint8_t row2) :
+        QUndoCommand(),
+        mModel(model),
+        mRowFrom(row1),
+        mRowTo(row2)
+    {
+    }
+
+    void undo() override {
+        swap();
+        mModel.select(mRowFrom, mModel.mCurrentTrack);
+    }
+
+    void redo() override {
+        swap();
+        mModel.select(mRowTo, mModel.mCurrentTrack);
+    }
+
+
+private:
+
+    void swap() {
+        auto iter = mModel.mOrder->begin();
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            std::iter_swap(iter + mRowFrom, iter + mRowTo);
+        }
+        emit mModel.dataChanged(
+            mModel.createIndex(std::min(mRowFrom, mRowTo), 0, nullptr),
+            mModel.createIndex(std::max(mRowFrom, mRowTo), 3, nullptr),
+            { Qt::DisplayRole }
+        );
+    }
+
+    OrderModel &mModel;
+    uint8_t const mRowFrom; // row index we are moving from
+    uint8_t const mRowTo;   // row index we are moving to
+
+};
+
+class OrderInsertCommand : public QUndoCommand {
+public:
+    OrderInsertCommand(OrderModel &model, int row, int count) :
+        QUndoCommand(),
+        mModel(model),
+        mRow(row),
+        mCount(count)
+    {
+    }
+
+    void redo() override {
+        mModel.cmdInsertRows(mRow, mCount);
+    }
+
+    void undo() override {
+        // remove the previously added rows
+        mModel.cmdRemoveRows(mRow, mCount);
+    }
+
+private:
+    OrderModel &mModel;
+    int const mRow;
+    int const mCount;
+
+};
+
+class OrderRemoveCommand : public QUndoCommand {
+public:
+    OrderRemoveCommand(OrderModel &model, int row, int count) :
+        QUndoCommand(),
+        mModel(model),
+        mRow(row),
+        mCount(count),
+        mRowData(new trackerboy::Order[count])
+    {
+        // keep a copy of the rows we removed
+        std::copy_n(mModel.mOrder->begin() + row, count, mRowData.get());
+    }
+
+    void redo() override {
+        mModel.cmdRemoveRows(mRow, mCount);
+    }
+
+    void undo() override {
+        // add back the previously removed rows
+        mModel.cmdInsertRows(mRow, mCount, mRowData.get());
+    }
+
+private:
+    OrderModel &mModel;
+    int const mRow;
+    int const mCount;
+    std::unique_ptr<trackerboy::Order[]> mRowData;
+};
+
+class OrderDuplicateCommand : public QUndoCommand {
+
+public:
+    OrderDuplicateCommand(OrderModel &model, int row) :
+        QUndoCommand(),
+        mModel(model),
+        mRow(row)
+    {
+    }
+
+    void redo() override {
+        auto toDuplicate = mModel.mOrder->at(mRow);
+        mModel.cmdInsertRows(mRow, 1, &toDuplicate);
+    }
+
+    void undo() override {
+        mModel.cmdRemoveRows(mRow, 1);
+    }
+
+private:
+    OrderModel &mModel;
+    int const mRow;
+
+};
+
+
 
 OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
     QAbstractTableModel(parent),
@@ -135,9 +306,12 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
         unsigned id = value.toString().toUInt(&ok, 16);
         if (ok && id < trackerboy::Song::MAX_ORDERS) {
             {
-                auto ctx = mDocument.beginEdit();
-                auto &row = (*mOrder)[index.row()];
-                row.tracks[index.column()] = static_cast<uint8_t>(id);
+                auto row = index.row();
+                auto track = index.column();
+
+                auto cmd = new OrderModifyCommand(*this, row, track, id, (*mOrder)[row].tracks[track]);
+                cmd->setText(tr("Set track in pattern #%1\nSet track").arg(row));
+                mDocument.undoStack().push(cmd);
             }
             emit patternsChanged();
             return true;
@@ -147,177 +321,168 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
     return false;
 }
 
-bool OrderModel::insertRows(int row, int count, QModelIndex const &parent) {
-    Q_UNUSED(parent);
-
-    if (mOrder != nullptr) {
-        if (rowCount() + count > trackerboy::Song::MAX_ORDERS) {
-            return false;
-        }
-        
-        mCanSelect = false;
-        beginInsertRows(parent, row, row + count - 1);
-        {
-            auto ctx = mDocument.beginEdit();
-            mOrder->insert(mOrder->cbegin() + row, count, { 0, 0, 0, 0 });
-        }
-        endInsertRows();
-        mCanSelect = true;
-
-        int rows = rowCount();
-        if (mCurrentRow == rows - 2) {
-            emit patternsChanged();
-        }
-        // enforce the current selection
-        emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
-
-        emit canMoveUp(mCurrentRow != 0);
-        emit canMoveDown(mCurrentRow != rows - 1);
-        emit canRemove(true);
-        emit canInsert(rows != trackerboy::Song::MAX_ORDERS);
-
-        return true;
-    }
-    return false;
-}
-
-bool OrderModel::removeRows(int row, int count, QModelIndex const &parent) {
-    Q_UNUSED(parent);
-
-    if (mOrder != nullptr) {
-        if (rowCount() - count <= 0) {
-            return false;
-        }
-
-        int rowEnd = row + count;
-
-        // ignore any selections during the remove
-        mCanSelect = false;
-        beginRemoveRows(parent, row, rowEnd - 1);
-        {
-            auto ctx = mDocument.beginEdit();
-            auto iter = mOrder->cbegin() + row;
-            mOrder->erase(iter, iter + count);
-        }
-        endRemoveRows();
-        mCanSelect = true;
-
-        auto rows = rowCount();
-        if (mCurrentRow >= rows) {
-            selectPattern(rows - 1);
-        } else {
-            emit patternsChanged(); // redraw
-            // enforce the current selection
-            emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
-
-            emit canMoveUp(mCurrentRow != 0);
-            emit canMoveDown(mCurrentRow != rows - 1);
-        }
-
-        // we can always insert after a remove
-        emit canInsert(true);
-        emit canRemove(rows != 1);
-
-        return true;
-    }
-
-
-    return false;
-}
-
-
-
 // slots
 
 void OrderModel::insert() {
-    insertRows(mCurrentRow, 1);
+    auto cmd = new OrderInsertCommand(*this, mCurrentRow, 1);
+    cmd->setText(tr("Insert pattern at #%1\nInsert pattern").arg(mCurrentRow));
+    mDocument.undoStack().push(cmd);
 }
 
 void OrderModel::remove() {
-    removeRows(mCurrentRow, 1);
+    auto cmd = new OrderRemoveCommand(*this, mCurrentRow, 1);
+    cmd->setText(tr("Remove pattern #%1\nRemove pattern").arg(mCurrentRow));
+    mDocument.undoStack().push(cmd);
 }
 
 void OrderModel::duplicate() {
-    mCanSelect = false;
-    beginInsertRows(QModelIndex(), mCurrentRow, mCurrentRow);
-    {
-        auto ctx = mDocument.beginEdit();
-        mOrder->insert(mOrder->cbegin() + mCurrentRow, mOrder->at(mCurrentRow));
-    }
-    endInsertRows();
-    mCanSelect = true;
+    auto cmd = new OrderDuplicateCommand(*this, mCurrentRow);
+    cmd->setText(tr("Duplicate pattern #%1\nDuplicate order").arg(mCurrentRow));
+    mDocument.undoStack().push(cmd);
 }
 
 void OrderModel::moveUp() {
     // moving a row up is just swapping the current row with the previous one
-    {
-        auto ctx = mDocument.beginEdit();
-        auto iter = mOrder->begin() + mCurrentRow;
-        std::iter_swap(iter, iter - 1);
-    }
-    emit dataChanged(
-        createIndex(mCurrentRow - 1, 0, nullptr),
-        createIndex(mCurrentRow, 3, nullptr),
-        { Qt::DisplayRole }
-    );
-    select(mCurrentRow - 1, mCurrentTrack);
+    auto cmd = new OrderSwapCommand(*this, mCurrentRow, mCurrentRow - 1);
+    cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern up").arg(mCurrentRow).arg(mCurrentRow - 1));
+    mDocument.undoStack().push(cmd);
 }
 
 void OrderModel::moveDown() {
-    {
-        auto ctx = mDocument.beginEdit();
-        auto iter = mOrder->begin() + mCurrentRow;
-        std::iter_swap(iter, iter + 1);
+    auto cmd = new OrderSwapCommand(*this, mCurrentRow, mCurrentRow + 1);
+    cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern down").arg(mCurrentRow).arg(mCurrentRow + 1));
+    mDocument.undoStack().push(cmd);
+
+}
+
+void OrderModel::setPatternCount(int count) {
+    QUndoCommand *cmd = nullptr;
+
+    auto const currentCount = rowCount();
+    if (count > currentCount) {
+        // grow
+        cmd = new OrderInsertCommand(*this, currentCount, count - currentCount);
+    } else if (count < currentCount) {
+        // shrink
+        int amount = currentCount - count;
+        cmd = new OrderRemoveCommand(*this, currentCount - amount, amount);
     }
-    emit dataChanged(
-        createIndex(mCurrentRow, 0, nullptr),
-        createIndex(mCurrentRow + 1, 3, nullptr),
-        { Qt::DisplayRole }
-    );
-    select(mCurrentRow + 1, mCurrentTrack);
+
+    if (cmd != nullptr) {
+        cmd->setText(tr("Set pattern count to %1\nSet patterns").arg(count));
+        mDocument.undoStack().push(cmd);
+    }
 }
 
 // private methods
 
+
 template <OrderModel::ModifyMode mode>
 void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option) {
-    auto ctx = mDocument.beginEdit();
+    auto &stack = mDocument.undoStack();
+
+    QString operationStr;
+    if constexpr (mode == ModifyMode::set) {
+        operationStr = tr("Order set selection");
+    } else if constexpr (mode == ModifyMode::inc) {
+        operationStr = tr("Order increment selection");
+    } else {
+        operationStr = tr("Order decrement selection");
+    }
+
+
+    stack.beginMacro(operationStr);
 
     if (selection.isEmpty()) {
         // no selection, modify the current cell
-        auto &cell = (*mOrder)[mCurrentRow].tracks[mCurrentTrack];
-        modifyCell<mode>(cell, option);
-        auto cellIndex = createIndex(mCurrentRow, mCurrentTrack, nullptr);
-        emit dataChanged(cellIndex, cellIndex, { Qt::DisplayRole });
+        modifyCell<mode>(stack, mCurrentRow, mCurrentTrack, option);
     } else {
-
+        // modify all cells in the selection
         for (auto range : selection) {
             for (auto const &index : range.indexes()) {
-                auto &id = (*mOrder)[index.row()].tracks[index.column()];
-                modifyCell<mode>(id, option);
-
+                modifyCell<mode>(stack, index.row(), index.column(), option);
             }
-            emit dataChanged(range.topLeft(), range.bottomRight(), { Qt::DisplayRole });
         }
     }
+
+    stack.endMacro();
 }
 
 template <OrderModel::ModifyMode mode>
-void OrderModel::modifyCell(uint8_t &cell, uint8_t value) {
+void OrderModel::modifyCell(QUndoStack &stack, uint8_t pattern, uint8_t track, uint8_t option) {
+    auto oldVal = (*mOrder)[pattern].tracks[track];
+    uint8_t newVal;
     if constexpr (mode == ModifyMode::inc) {
-        Q_UNUSED(value);
-        if (cell != 255) {
-            ++cell;
-        }
+        newVal = (oldVal == 255) ? oldVal : oldVal + 1;
     } else if constexpr (mode == ModifyMode::dec) {
-        Q_UNUSED(value);
-        if (cell != 0) {
-            --cell;
-        }
+        newVal = (oldVal == 0) ? oldVal : oldVal - 1;
     } else {
-        cell = value;
+        newVal = option;
     }
+    if (newVal != oldVal) {
+        stack.push(new OrderModifyCommand(*this, pattern, track, newVal, oldVal));
+    }
+
 }
+
+void OrderModel::cmdInsertRows(int row, int count, trackerboy::Order *rowdata) {
+    mCanSelect = false;
+    beginInsertRows(QModelIndex(), row, row + count - 1);
+    {
+        auto ctx = mDocument.beginCommandEdit();
+        mOrder->insert(mOrder->cbegin() + row, count, { 0, 0, 0, 0 });
+        
+        if (rowdata != nullptr) {
+            std::copy_n(rowdata, count, mOrder->begin() + row);
+        }
+    }
+    endInsertRows();
+    mCanSelect = true;
+
+    int rows = rowCount();
+    if (mCurrentRow == rows - 2) {
+        emit patternsChanged();
+    }
+    // enforce the current selection
+    emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+
+    emit canMoveUp(mCurrentRow != 0);
+    emit canMoveDown(mCurrentRow != rows - 1);
+    emit canRemove(true);
+    emit canInsert(rows != trackerboy::Song::MAX_ORDERS);
+}
+
+void OrderModel::cmdRemoveRows(int row, int count) {
+    int rowEnd = row + count;
+    
+    // ignore any selections during the remove
+    mCanSelect = false;
+    beginRemoveRows(QModelIndex(), row, rowEnd - 1);
+    {
+        auto ctx = mDocument.beginEdit();
+        auto iter = mOrder->cbegin() + row;
+        mOrder->erase(iter, iter + count);
+    }
+    endRemoveRows();
+    mCanSelect = true;
+    
+    auto rows = rowCount();
+    if (mCurrentRow >= rows) {
+        selectPattern(rows - 1);
+    } else {
+        emit patternsChanged(); // redraw
+        // enforce the current selection
+        emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
+    
+        emit canMoveUp(mCurrentRow != 0);
+        emit canMoveDown(mCurrentRow != rows - 1);
+    }
+    
+    // we can always insert after a remove
+    emit canInsert(true);
+    emit canRemove(rows != 1);
+}
+
 
 void OrderModel::doSelectPattern(int pattern) {
     auto oldpattern = mCurrentRow;
