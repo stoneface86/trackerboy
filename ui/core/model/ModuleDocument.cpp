@@ -112,14 +112,6 @@ bool ModuleDocument::save(QString const& filename) {
     return success;
 }
 
-
-void ModuleDocument::setModified(bool value) {
-    if (mModified != value) {
-        mModified = value;
-        emit modifiedChanged(value);
-    }
-}
-
 void ModuleDocument::makeDirty() {
     if (!mPermaDirty) {
         mPermaDirty = true;
@@ -145,18 +137,6 @@ void ModuleDocument::clean() {
         emit modifiedChanged(false);
     }
     mUndoStack.setClean();
-}
-
-void ModuleDocument::lock() {
-    mSpinlock.lock();
-}
-
-bool ModuleDocument::trylock() {
-    return mSpinlock.tryLock();
-}
-
-void ModuleDocument::unlock() {
-    mSpinlock.unlock();
 }
 
 

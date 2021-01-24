@@ -89,15 +89,7 @@ public:
     // saves the document to the current filename
     bool save(QString const& filename);
 
-    // TODO: remove this (replaced by markDirty)
-    void setModified(bool value);
-
     void makeDirty();
-
-    // TODO: remove these later
-    void lock();
-    bool trylock();
-    void unlock();
 
 signals:
     void modifiedChanged(bool value);

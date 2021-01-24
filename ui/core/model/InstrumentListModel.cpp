@@ -21,67 +21,76 @@ trackerboy::Instrument* InstrumentListModel::instrument(int modelIndex) const {
 void InstrumentListModel::setChannel(trackerboy::ChType ch) {
     auto inst = instrument(mCurrentIndex);
 
-    mDocument.lock();
+    {
+        auto ctx = mDocument.beginEdit();
     inst->data().channel = static_cast<uint8_t>(ch);
-    mDocument.unlock();
+    }
 
     dataChanged(createIndex(mCurrentIndex, 0, nullptr), createIndex(mCurrentIndex, 0, nullptr), { Qt::DecorationRole });
 }
 
 void InstrumentListModel::setPanning(uint8_t panning) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().panning = panning;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().panning = panning;
+    }
 }
 
 void InstrumentListModel::setDelay(uint8_t delay) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().delay = delay;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().delay = delay;
+    }
 }
 
 void InstrumentListModel::setDuration(uint8_t duration) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().duration = duration;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().duration = duration;
+    }
 }
 
 void InstrumentListModel::setTune(int8_t tune) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().tune = tune;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().tune = tune;
+    }
 }
 
 void InstrumentListModel::setEnvelope(uint8_t envelope) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().envelope = envelope;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().envelope = envelope;
+    }
 }
 
 void InstrumentListModel::setTimbre(uint8_t timbre) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().timbre = timbre;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().timbre = timbre;
+    }
 }
 
 void InstrumentListModel::setVibrato(uint8_t extent, uint8_t speed) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().vibrato = (speed << 4) | extent;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().vibrato = (speed << 4) | extent;
+    }
 }
 
 void InstrumentListModel::setVibratoDelay(uint8_t delay) {
     auto inst = instrument(mCurrentIndex);
-    mDocument.lock();
-    inst->data().vibratoDelay = delay;
-    mDocument.unlock();
+    {
+        auto ctx = mDocument.beginEdit();
+        inst->data().vibratoDelay = delay;
+    }
 }
 
 
