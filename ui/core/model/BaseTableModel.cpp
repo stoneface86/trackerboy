@@ -14,8 +14,7 @@ int BaseTableModel::rowCount(const QModelIndex &parent) const {
 }
 
 int BaseTableModel::idToModel(uint8_t id) {
-    auto item = mBaseTable.get(id);
-    if (item == nullptr) {
+    if (mBaseTable.get(id) == nullptr) {
         return -1;
     } else {
         int index = 0;

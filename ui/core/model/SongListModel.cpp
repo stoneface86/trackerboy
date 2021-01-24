@@ -11,7 +11,8 @@ SongListModel::SongListModel(ModuleDocument &document, OrderModel &orderModel) :
 }
 
 int SongListModel::rowCount(const QModelIndex &parent) const {
-    return mSongVector.size();
+    Q_UNUSED(parent);
+    return (int)mSongVector.size();
 }
 
 QVariant SongListModel::data(const QModelIndex &index, int role) const {
@@ -77,7 +78,7 @@ void SongListModel::setRowsPerPattern(int rows) {
     if (pm.rowSize() != rows) {
         {
             auto ctx = mDocument.beginEdit();
-            pm.setRowSize(rows);
+            pm.setRowSize(static_cast<uint16_t>(rows));
         }
         emit patternSizeChanged(rows);
     }
@@ -115,7 +116,7 @@ void SongListModel::dataRename(int index, const QString &name) {
 
 int SongListModel::nextIndex() {
     // songs always get added/duplicated to the end of the list
-    return mSongVector.size();
+    return (int)mSongVector.size();
 }
 
 void SongListModel::dataSelected(int index) {

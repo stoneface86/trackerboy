@@ -70,13 +70,13 @@ void Visualizer::setDuration(int samples) {
 }
 
 
-void Visualizer::addSamples(int16_t data[], size_t nsamples) {
+void Visualizer::addSamples(int16_t sampleData[], size_t nsamples) {
 
     if (nsamples == 0) {
         return;
     }
 
-    int binsToAdd = nsamples / mBinSize;
+    int binsToAdd = (int)(nsamples / mBinSize);
 
 
     int timeIndex;
@@ -105,7 +105,7 @@ void Visualizer::addSamples(int16_t data[], size_t nsamples) {
     initPainter(painterLeft);
     initPainter(painterRight);
     
-    auto dataPtr = data;
+    auto dataPtr = sampleData;
     auto const w = mWaveformLeft.width();
 
     // previous sample from the previous bin
@@ -155,6 +155,8 @@ void Visualizer::paintEvent(QPaintEvent *evt) {
 
 
 void Visualizer::resizeEvent(QResizeEvent *evt) {
+    Q_UNUSED(evt);
+
     auto const h = height();
     auto const w = width();
 
@@ -207,6 +209,6 @@ void Visualizer::reduce(int16_t *&samples, int8_t &left, int8_t &right, int binS
         sumLeft += static_cast<int8_t>(*samples++ / (65536 / WAVE_HEIGHT));
         sumRight += static_cast<int8_t>(*samples++ / (65536 / WAVE_HEIGHT));
     }
-    left = sumLeft / binSize;
-    right = sumRight / binSize;
+    left = static_cast<int8_t>(sumLeft / binSize);
+    right = static_cast<int8_t>(sumRight / binSize);
 }

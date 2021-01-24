@@ -34,6 +34,8 @@ follow these rules when contributing:
    use enums or constexpr instead of `#define`
  * avoid `if(cond) statement;` always use braces.
  * summarize in comments what your code does (don't comment every line)
+ * C-style casts should not be used except for integer conversions
+   (ie int -> uint8_t)
 
 See [ORGANIZATION.md](ORGANIZATION.md) for details on where to put source files,
 as well as editing the build system.

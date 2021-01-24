@@ -46,14 +46,14 @@ void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelo
 }
 
 void ChannelControl::writeFrequency(ChType ch, RuntimeContext &rc, uint16_t frequency) {
-    uint16_t lsbReg = gbapu::Apu::REG_NR13 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL);
-    rc.apu.writeRegister(lsbReg++, frequency & 0xFF);
-    rc.apu.writeRegister(lsbReg, frequency >> 8);
+    auto lsbReg = (uint8_t)(gbapu::Apu::REG_NR13 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL));
+    rc.apu.writeRegister(lsbReg++, (uint8_t)(frequency & 0xFF));
+    rc.apu.writeRegister(lsbReg, (uint8_t)(frequency >> 8));
 
 }
 
 void ChannelControl::writeTimbre(ChType ch, RuntimeContext &rc, uint8_t timbre) {
-    uint16_t reg;
+    uint8_t reg = 0;
     switch (ch) {
         case ChType::ch1:
             reg = gbapu::Apu::REG_NR11;
@@ -104,7 +104,7 @@ void ChannelControl::writeWaveram(RuntimeContext &rc, Waveform &waveform) {
     // copy wave
     auto data = waveform.data();
     for (int i = 0; i != 16; ++i) {
-        rc.apu.writeRegister(gbapu::Apu::REG_WAVERAM + i, data[i]);
+        rc.apu.writeRegister((uint8_t)(gbapu::Apu::REG_WAVERAM + i), data[i]);
     }
 
     // DAC ON

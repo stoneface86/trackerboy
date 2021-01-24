@@ -170,7 +170,7 @@ void Config::writeSettings() {
     settings.beginGroup("appearance");
     settings.setValue("fontFamily", mAppearance.font.family());
     settings.setValue("fontSize", mAppearance.font.pointSize());
-    settings.beginWriteArray("colors", mAppearance.colors.size());
+    settings.beginWriteArray("colors", (int)mAppearance.colors.size());
     for (int i = 0; i != mAppearance.colors.size(); ++i) {
         settings.setArrayIndex(i);
         settings.setValue("color", mAppearance.colors[i]);
@@ -184,7 +184,7 @@ void Config::writeSettings() {
     settings.beginWriteArray("piano");
     auto &bindings = mKeyboard.pianoInput.bindings();
     for (size_t i = 0; i != bindings.size(); ++i) {
-        settings.setArrayIndex(i);
+        settings.setArrayIndex((int)i);
         settings.setValue("keycode", bindings[i]);
     }
     settings.endArray();

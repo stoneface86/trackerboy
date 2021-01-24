@@ -281,6 +281,11 @@ int PatternPainter::drawRow(
 }
 
 void PatternPainter::drawColumn(QPainter &painter, trackerboy::PatternRow const& data, int cell, int ypos) {
+    Q_UNUSED(painter);
+    Q_UNUSED(data);
+    Q_UNUSED(cell);
+    Q_UNUSED(ypos);
+    
     //int track = cell / TRACK_CELLS;
     //
     //auto col = static_cast<ColumnType>(TRACK_CELL_MAP[cell % TRACK_CELLS]);

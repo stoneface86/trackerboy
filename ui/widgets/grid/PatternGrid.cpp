@@ -115,10 +115,13 @@ bool PatternGrid::cursorOnNote() {
 }
 
 bool PatternGrid::edit(trackerboy::Note note) {
+    Q_UNUSED(note);
     return false;
 }
 
 bool PatternGrid::edit(char key, bool &valid) {
+    Q_UNUSED(key);
+    Q_UNUSED(valid);
     return false;
 }
 

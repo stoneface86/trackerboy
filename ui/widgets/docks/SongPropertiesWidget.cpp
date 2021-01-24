@@ -84,7 +84,7 @@ void SongPropertiesWidget::onSongChanged(int index) {
         mRowsPerBeatSpin.setValue(song->rowsPerBeat());
         mRowsPerMeasureSpin.setValue(song->rowsPerMeasure());
         mSpeedSpin.setValue(song->speed());
-        mPatternSpin.setValue(song->orders().size());
+        mPatternSpin.setValue((int)song->orders().size());
         mRowsPerPatternSpin.setValue(song->patterns().rowSize());
 
 
@@ -112,5 +112,5 @@ void SongPropertiesWidget::updatePatternSpin(const QModelIndex &parent, int firs
     Q_UNUSED(first);
     Q_UNUSED(last);
 
-    mPatternSpin.setValue(mModel.currentSong()->orders().size());
+    mPatternSpin.setValue((int)mModel.currentSong()->orders().size());
 }

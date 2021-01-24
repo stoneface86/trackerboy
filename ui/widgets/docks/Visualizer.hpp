@@ -22,7 +22,7 @@ public:
     // data is a buffer of interleaved stereo PCM samples. The size of data must be
     // >= 2 * nsamples
     //
-    void addSamples(int16_t data[], size_t nsamples);
+    void addSamples(int16_t sampleData[], size_t nsamples);
 
 public slots:
 

@@ -97,7 +97,7 @@ private:
 
 class OrderInsertCommand : public QUndoCommand {
 public:
-    OrderInsertCommand(OrderModel &model, int row, int count) :
+    OrderInsertCommand(OrderModel &model, uint8_t row, uint8_t count) :
         QUndoCommand(),
         mModel(model),
         mRow(row),
@@ -116,14 +116,14 @@ public:
 
 private:
     OrderModel &mModel;
-    int const mRow;
-    int const mCount;
+    uint8_t const mRow;
+    uint8_t const mCount;
 
 };
 
 class OrderRemoveCommand : public QUndoCommand {
 public:
-    OrderRemoveCommand(OrderModel &model, int row, int count) :
+    OrderRemoveCommand(OrderModel &model, uint8_t row, uint8_t count) :
         QUndoCommand(),
         mModel(model),
         mRow(row),
@@ -145,15 +145,15 @@ public:
 
 private:
     OrderModel &mModel;
-    int const mRow;
-    int const mCount;
+    uint8_t const mRow;
+    uint8_t const mCount;
     std::unique_ptr<trackerboy::Order[]> mRowData;
 };
 
 class OrderDuplicateCommand : public QUndoCommand {
 
 public:
-    OrderDuplicateCommand(OrderModel &model, int row) :
+    OrderDuplicateCommand(OrderModel &model, uint8_t row) :
         QUndoCommand(),
         mModel(model),
         mRow(row)
@@ -171,7 +171,7 @@ public:
 
 private:
     OrderModel &mModel;
-    int const mRow;
+    uint8_t const mRow;
 
 };
 
@@ -187,7 +187,7 @@ OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
 {
 }
 
-int OrderModel::currentPattern() {
+uint8_t OrderModel::currentPattern() {
     return mCurrentRow;
 }
 
@@ -209,14 +209,18 @@ void OrderModel::select(int row, int track) {
 }
 
 void OrderModel::selectPattern(int pattern) {
-    if (mCurrentRow != pattern) {
-        doSelectPattern(pattern);
+    Q_ASSERT(pattern >= 0 && pattern < mOrder->size());
+    auto patternU8 = (uint8_t)pattern;
+    if (mCurrentRow != patternU8) {
+        doSelectPattern(patternU8);
     }
 }
 
 void OrderModel::selectTrack(int track) {
-    if (mCurrentTrack != track) {
-        doSelectTrack(track);
+    Q_ASSERT(track >= 0 && track < 4);
+    auto trackU8 = (uint8_t)track;
+    if (mCurrentTrack != trackU8) {
+        doSelectTrack(trackU8);
     }
 }
 
@@ -305,14 +309,19 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
         bool ok;
         unsigned id = value.toString().toUInt(&ok, 16);
         if (ok && id < trackerboy::Song::MAX_ORDERS) {
-            {
-                auto row = index.row();
-                auto track = index.column();
+            auto row = index.row();
+            auto track = index.column();
 
-                auto cmd = new OrderModifyCommand(*this, row, track, id, (*mOrder)[row].tracks[track]);
-                cmd->setText(tr("Set track in pattern #%1\nSet track").arg(row));
-                mDocument.undoStack().push(cmd);
-            }
+            auto cmd = new OrderModifyCommand(
+                *this, 
+                (uint8_t)row,
+                (uint8_t)track,
+                (uint8_t)id, 
+                (*mOrder)[row].tracks[track]
+            );
+            cmd->setText(tr("Set track in pattern #%1\nSet track").arg(row));
+            mDocument.undoStack().push(cmd);
+
             emit patternsChanged();
             return true;
         }
@@ -343,29 +352,32 @@ void OrderModel::duplicate() {
 
 void OrderModel::moveUp() {
     // moving a row up is just swapping the current row with the previous one
-    auto cmd = new OrderSwapCommand(*this, mCurrentRow, mCurrentRow - 1);
-    cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern up").arg(mCurrentRow).arg(mCurrentRow - 1));
+    auto prev = (uint8_t)(mCurrentRow - 1);
+    auto cmd = new OrderSwapCommand(*this, mCurrentRow, prev);
+    cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern up").arg(mCurrentRow).arg(prev));
     mDocument.undoStack().push(cmd);
 }
 
 void OrderModel::moveDown() {
-    auto cmd = new OrderSwapCommand(*this, mCurrentRow, mCurrentRow + 1);
-    cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern down").arg(mCurrentRow).arg(mCurrentRow + 1));
+    auto next = (uint8_t)(mCurrentRow + 1);
+    auto cmd = new OrderSwapCommand(*this, mCurrentRow, next);
+    cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern down").arg(mCurrentRow).arg(next));
     mDocument.undoStack().push(cmd);
 
 }
 
 void OrderModel::setPatternCount(int count) {
+    Q_ASSERT(count > 0 && count <= 256);
     QUndoCommand *cmd = nullptr;
 
     auto const currentCount = rowCount();
     if (count > currentCount) {
         // grow
-        cmd = new OrderInsertCommand(*this, currentCount, count - currentCount);
+        cmd = new OrderInsertCommand(*this, (uint8_t)currentCount, (uint8_t)(count - currentCount));
     } else if (count < currentCount) {
         // shrink
-        int amount = currentCount - count;
-        cmd = new OrderRemoveCommand(*this, currentCount - amount, amount);
+        auto amount = (uint8_t)(currentCount - count);
+        cmd = new OrderRemoveCommand(*this, (uint8_t)(currentCount - amount), amount);
     }
 
     if (cmd != nullptr) {
@@ -400,7 +412,7 @@ void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option
         // modify all cells in the selection
         for (auto range : selection) {
             for (auto const &index : range.indexes()) {
-                modifyCell<mode>(stack, index.row(), index.column(), option);
+                modifyCell<mode>(stack, (uint8_t)index.row(), (uint8_t)index.column(), option);
             }
         }
     }
@@ -425,7 +437,7 @@ void OrderModel::modifyCell(QUndoStack &stack, uint8_t pattern, uint8_t track, u
 
 }
 
-void OrderModel::cmdInsertRows(int row, int count, trackerboy::Order *rowdata) {
+void OrderModel::cmdInsertRows(uint8_t row, uint8_t count, trackerboy::Order *rowdata) {
     mCanSelect = false;
     beginInsertRows(QModelIndex(), row, row + count - 1);
     {
@@ -452,7 +464,7 @@ void OrderModel::cmdInsertRows(int row, int count, trackerboy::Order *rowdata) {
     emit canInsert(rows != trackerboy::Song::MAX_ORDERS);
 }
 
-void OrderModel::cmdRemoveRows(int row, int count) {
+void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
     int rowEnd = row + count;
     
     // ignore any selections during the remove
@@ -484,7 +496,7 @@ void OrderModel::cmdRemoveRows(int row, int count) {
 }
 
 
-void OrderModel::doSelectPattern(int pattern) {
+void OrderModel::doSelectPattern(uint8_t pattern) {
     auto oldpattern = mCurrentRow;
     mCurrentRow = pattern;
     emit dataChanged(
@@ -502,7 +514,7 @@ void OrderModel::doSelectPattern(int pattern) {
     emit canMoveDown(pattern != rowCount() - 1);
 }
 
-void OrderModel::doSelectTrack(int track) {
+void OrderModel::doSelectTrack(uint8_t track) {
     auto oldtrack = mCurrentTrack;
     mCurrentTrack = track;
 

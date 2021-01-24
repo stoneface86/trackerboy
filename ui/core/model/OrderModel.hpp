@@ -21,7 +21,7 @@ public:
     explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
     ~OrderModel() = default;
 
-    int currentPattern();
+    uint8_t currentPattern();
 
     //
     // All track ids in the given selection are incremented by 1
@@ -117,8 +117,8 @@ private:
         set
     };
 
-    void doSelectPattern(int pattern);
-    void doSelectTrack(int track);
+    void doSelectPattern(uint8_t pattern);
+    void doSelectTrack(uint8_t track);
 
     template <ModifyMode mode>
     void modifySelection(QItemSelection const &selection, uint8_t option = 0);
@@ -128,17 +128,17 @@ private:
 
     // methods called by command classes
 
-    void cmdInsertRows(int row, int count, trackerboy::Order *rowdata = nullptr);
+    void cmdInsertRows(uint8_t row, uint8_t count, trackerboy::Order *rowdata = nullptr);
 
-    void cmdRemoveRows(int row, int count);
+    void cmdRemoveRows(uint8_t row, uint8_t count);
 
     ModuleDocument &mDocument;
     QColor mRowColor;
 
     std::vector<trackerboy::Order> *mOrder;
 
-    int mCurrentRow;
-    int mCurrentTrack;
+    uint8_t mCurrentRow;
+    uint8_t mCurrentTrack;
 
     bool mCanSelect;
     

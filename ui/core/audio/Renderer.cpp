@@ -534,7 +534,7 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
         out += samplesRead;
         mSyncCounter += framesRead;
 
-        mSamplesElapsed += framesRead;
+        mSamplesElapsed += (unsigned)framesRead;
     }
 
     if (mSyncCounter >= mSyncPeriod) {

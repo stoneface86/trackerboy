@@ -112,6 +112,8 @@ void PianoWidget::release() {
 }
 
 void PianoWidget::focusOutEvent(QFocusEvent *evt) {
+    Q_UNUSED(evt);
+
     if (mIsKeyDown) {
         release();
         mLastKeyPressed = Qt::Key_unknown;

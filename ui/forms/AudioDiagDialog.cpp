@@ -82,6 +82,8 @@ AudioDiagDialog::~AudioDiagDialog() {
 
 
 void AudioDiagDialog::closeEvent(QCloseEvent *evt) {
+    Q_UNUSED(evt);
+
     if (mTimerId != -1) {
         killTimer(mTimerId);
         mTimerId = -1;
@@ -89,6 +91,8 @@ void AudioDiagDialog::closeEvent(QCloseEvent *evt) {
 }
 
 void AudioDiagDialog::showEvent(QShowEvent *evt) {
+    Q_UNUSED(evt);
+
     if (mAutoRefreshCheck.isChecked() && mTimerId == -1) {
         mTimerId = startTimer(mIntervalSpin.value());
     }
