@@ -380,13 +380,17 @@ void MainWindow::onAudioStart() {
 
 void MainWindow::onAudioStop() {
     mVisualizer.clear();
+    // clear the return buffer by advancing the read pointer
+    auto &returnBuffer = mApp.renderer.returnBuffer();
+    auto all = returnBuffer.availableRead();
+    auto buf = returnBuffer.acquireRead(all);
+    returnBuffer.commitRead(buf, all);
 }
 
 //
 // Sync renderer output with the GUI. updates visualizer, volume meters, etc
 //
 void MainWindow::onAudioSync() {
-
     // get the current frame
     auto& frame = mApp.renderer.acquireCurrentFrame();
     if (!frame.ignore) {
@@ -408,15 +412,29 @@ void MainWindow::onAudioSync() {
     }
     mApp.renderer.releaseFrame();
 
+
     // get the audio data returned from the callback
     // this data has already been sent out to the output device
     auto &returnBuffer = mApp.renderer.returnBuffer();
     // read as much as we can
     size_t samples = returnBuffer.availableRead();
-    auto audio = returnBuffer.acquireRead(samples);
-    // send it to the visualizer
-    mVisualizer.addSamples(audio, samples);
-    returnBuffer.commitRead(audio, samples);
+    if (samples) {
+        do {
+            // this loop is only necessary when the read pointer wraps around
+            // it should only take two iterations to complete
+
+            size_t toRead = samples;
+            auto audio = returnBuffer.acquireRead(toRead);
+            // send it to the visualizer
+            mVisualizer.addSamples(audio, toRead);
+            returnBuffer.commitRead(audio, toRead);
+
+            samples -= toRead;
+        } while (samples);
+
+        mVisualizer.update();
+    }
+        
 
 }
 

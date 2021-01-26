@@ -14,6 +14,11 @@
 // 3. the return buffer should be cleared on device stop
 // 4. implement stopDevice()
 
+//
+// if defined the background thread will poll for a sync event instead of waiting on the condition variable
+// not using polling may cause glitches on some systems
+//
+#define USE_POLLING
 
 Renderer::Renderer(
     Miniaudio &miniaudio,
@@ -381,11 +386,14 @@ void Renderer::handleBackground() {
                     lastSyncTime = currentSyncTime;
                 }
 
+                #ifdef USE_POLLING
                 // wait at least 1 millisecond
                 // timing accuracy of the sync event depends on the OS scheduler
                 // should only be inaccurate for latency < 15ms (cough windows cough)
                 mCallbackCondition.wait(&mCallbackMutex, QDeadlineTimer(std::chrono::milliseconds(1), Qt::PreciseTimer));
-                
+                #else
+                mCallbackCondition.wait(&mCallbackMutex);
+                #endif
             } while (!mStopDevice);
             
             mCallbackMutex.unlock();
@@ -540,6 +548,9 @@ void Renderer::handleCallback(int16_t *out, size_t frames) {
     if (mSyncCounter >= mSyncPeriod) {
         // sync audio when we have written at least mSyncPeriod samples
         mSync = true;
+        #ifndef USE_POLLING
+        mCallbackCondition.wakeOne();
+        #endif
         mSyncCounter %= mSyncPeriod;
     }
 }
