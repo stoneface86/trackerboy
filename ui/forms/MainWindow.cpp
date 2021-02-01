@@ -52,7 +52,8 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mDockModuleProperties(),
     mModulePropertiesWidget(),
     mDockOrders(),
-    mOrderWidget(trackerboy.songModel.orderModel())
+    mOrderWidget(trackerboy.songModel.orderModel()),
+    mPatternEditor(mPianoInput, mApp.songModel)
 
 {
     setupUi();
@@ -100,7 +101,6 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockVisualizer);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockHistory);
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
@@ -228,9 +228,6 @@ void MainWindow::onWindowResetLayout() {
     mDockOrders.setFloating(false);
     removeDockWidget(&mDockOrders);
 
-    mDockVisualizer.setFloating(false);
-    removeDockWidget(&mDockVisualizer);
-
     mDockHistory.setFloating(false);
     removeDockWidget(&mDockHistory);
 
@@ -244,7 +241,12 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
         // 100ms curve duration
-        mVisualizer.setDuration(samplerate / 10);
+        mSamplesPerFrame = samplerate / 60;
+        mLeftScope.setDuration(mSamplesPerFrame);
+        mRightScope.setDuration(mSamplesPerFrame);
+
+
+        mSampleBuffer.reset(new int16_t[mSamplesPerFrame * 2]);
 
         mApp.renderer.setConfig(sound);
     }
@@ -258,7 +260,7 @@ PatternEditor PatternGrid {
     font-size: %6pt;
 }
 
-Visualizer {
+AudioScope {
     background-color: %1;
     color: %3;
 }
@@ -303,7 +305,7 @@ OrderWidget QTableView QHeaderView::section {
         QString::number(appearance.font.pointSize())
         ));
 
-        mPatternEditor->setColors(appearance.colors);
+        mPatternEditor.setColors(appearance.colors);
         mApp.orderModel.setRowColor(appearance.colors[+Color::row]);
     }
 
@@ -379,23 +381,22 @@ void MainWindow::onAudioStart() {
 }
 
 void MainWindow::onAudioStop() {
-    mVisualizer.clear();
-    // clear the return buffer by advancing the read pointer
+    // clear the return buffer by advancing the read pointer to the write pointer
     auto &returnBuffer = mApp.renderer.returnBuffer();
     auto all = returnBuffer.availableRead();
-    auto buf = returnBuffer.acquireRead(all);
-    returnBuffer.commitRead(buf, all);
+    returnBuffer.seekRead(all);
 }
 
 //
 // Sync renderer output with the GUI. updates visualizer, volume meters, etc
+// TODO: move this to a worker thread so we don't make the GUI unresponsive
 //
 void MainWindow::onAudioSync() {
     // get the current frame
     auto& frame = mApp.renderer.acquireCurrentFrame();
     if (!frame.ignore) {
             
-        auto &grid = mPatternEditor->grid();
+        auto &grid = mPatternEditor.grid();
         grid.setTrackerCursor(frame.engineFrame.row, frame.engineFrame.order);
 
         if (mLastSpeed != frame.engineFrame.speed) {
@@ -418,22 +419,36 @@ void MainWindow::onAudioSync() {
     auto &returnBuffer = mApp.renderer.returnBuffer();
     // read as much as we can
     size_t samples = returnBuffer.availableRead();
-    if (samples) {
-        do {
-            // this loop is only necessary when the read pointer wraps around
-            // it should only take two iterations to complete
+    auto frameCount = samples / mSamplesPerFrame;
+    if (frameCount) {
 
-            size_t toRead = samples;
-            auto audio = returnBuffer.acquireRead(toRead);
-            // send it to the visualizer
-            mVisualizer.addSamples(audio, toRead);
-            returnBuffer.commitRead(audio, toRead);
+        if (frameCount > 1) {
+            // skip these frames
+            returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
+        }
+        // read the frame
+        returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
 
-            samples -= toRead;
-        } while (samples);
+        // TODO: uncomment this when the peakmeter visualizer is complete
+        // determine peak amplitudes for each channel
+        //int16_t peakLeft = 0;
+        //int16_t peakRight = 0;
+        //auto samplePtr = mSampleBuffer.get();
+        //for (size_t i = 0; i != mSamplesPerFrame; ++i) {
+        //    auto sampleLeft = (int16_t)abs(*samplePtr++);
+        //    auto sampleRight = (int16_t)abs(*samplePtr++);
+        //    peakLeft = std::max(sampleLeft, peakLeft);
+        //    peakRight = std::max(sampleRight, peakRight);
+        //}
 
-        mVisualizer.update();
+        // send to visualizers
+        mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
+        mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
+        mLeftScope.update();
+        mRightScope.update();
+
     }
+    
         
 
 }
@@ -489,10 +504,19 @@ void MainWindow::setupUi() {
     // CENTRAL WIDGET ========================================================
 
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
-    mPatternEditor = new PatternEditor(mPianoInput, mApp.songModel);
-    setCentralWidget(mPatternEditor);
+    mMainWidget = new QWidget(this);
 
-    auto &patternActions = mPatternEditor->menuActions();
+    mVisLayout.addWidget(&mLeftScope);
+    mVisLayout.addWidget(&mRightScope);
+
+
+    mLayout.addLayout(&mVisLayout);
+    mLayout.addWidget(&mPatternEditor);
+    mMainWidget->setLayout(&mLayout);
+
+    setCentralWidget(mMainWidget);
+
+    auto &patternActions = mPatternEditor.menuActions();
 
     // ACTIONS ===============================================================
 
@@ -542,7 +566,7 @@ void MainWindow::setupUi() {
     mMenuEdit.addAction(mActionEditUndo);
     mMenuEdit.addAction(mActionEditRedo);
     mMenuEdit.addSeparator();
-    mPatternEditor->setupMenu(mMenuEdit);
+    mPatternEditor.setupMenu(mMenuEdit);
 
     mMenuSong.setTitle(tr("&Song"));
     mSongWidget.setupMenu(mMenuSong);
@@ -566,7 +590,7 @@ void MainWindow::setupUi() {
     mMenuTracker.addSeparator();
 
     {
-        auto &actions = mPatternEditor->trackerActions();
+        auto &actions = mPatternEditor.trackerActions();
         mMenuTracker.addAction(&actions.play);
         mMenuTracker.addAction(&actions.restart);
         mMenuTracker.addAction(&actions.playRow);
@@ -677,10 +701,6 @@ void MainWindow::setupUi() {
     mDockSongs.setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     mDockOrders.setWidget(&mOrderWidget);
 
-    setObjectNameFromDeclared(mDockVisualizer);
-    mDockVisualizer.setWindowTitle(tr("Visualizer"));
-    mDockVisualizer.setWidget(&mVisualizer);
-
     setObjectNameFromDeclared(mDockHistory);
     mDockHistory.setWindowTitle(tr("History"));
     mDockHistory.setWidget(&mUndoView);
@@ -747,7 +767,7 @@ void MainWindow::setupUi() {
     connect(&mApp.renderer, &Renderer::audioSync, this, &MainWindow::onAudioSync);
 
     // octave changes
-    connect(mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
+    connect(&mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
 
 }
 
@@ -821,9 +841,6 @@ void MainWindow::initState() {
     addDockWidget(Qt::RightDockWidgetArea, &mDockWaveforms);
     mDockWaveforms.show();
 
-    addDockWidget(Qt::TopDockWidgetArea, &mDockVisualizer);
-    mDockVisualizer.show();
-
     // resize
 
     int const w = width();
@@ -854,7 +871,6 @@ void MainWindow::setupWindowMenu(QMenu &menu) {
     menu.addAction(mDockSongProperties.toggleViewAction());
     menu.addAction(mDockModuleProperties.toggleViewAction());
     menu.addAction(mDockOrders.toggleViewAction());
-    menu.addAction(mDockVisualizer.toggleViewAction());
     menu.addAction(mDockHistory.toggleViewAction());
 
     menu.addSeparator();

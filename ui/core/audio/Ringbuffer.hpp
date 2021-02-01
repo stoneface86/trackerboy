@@ -48,6 +48,10 @@ protected:
 
     size_t availableWrite();
 
+    void seekRead(size_t bytes);
+
+    void seekWrite(size_t bytes);
+
     
 private:
 
@@ -121,6 +125,15 @@ public:
     constexpr size_t availableWrite() {
         return RingbufferBase::availableWrite() / SIZE_UNIT;
     }
+
+    constexpr void seekRead(size_t count) {
+        RingbufferBase::seekRead(count * SIZE_UNIT);
+    }
+
+    constexpr void seekWrite(size_t count) {
+        RingbufferBase::seekWrite(count * SIZE_UNIT);
+    }
+
 };
 
 //

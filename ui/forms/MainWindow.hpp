@@ -11,7 +11,7 @@
 #include "widgets/docks/SongPropertiesWidget.hpp"
 #include "widgets/docks/SongWidget.hpp"
 #include "widgets/docks/TableForm.hpp"
-#include "widgets/docks/Visualizer.hpp"
+#include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/PatternEditor.hpp"
 
 #include <QComboBox>
@@ -100,6 +100,8 @@ private:
 
     // audio sync stuff
     trackerboy::Speed mLastSpeed;
+    size_t mSamplesPerFrame;
+    std::unique_ptr<int16_t[]> mSampleBuffer;
 
     // key bindings for the piano widgets + pattern editor
     PianoInput mPianoInput;
@@ -140,14 +142,16 @@ private:
     QDockWidget mDockOrders;
         OrderWidget mOrderWidget;
 
-    QDockWidget mDockVisualizer;
-        Visualizer mVisualizer;
-
     QDockWidget mDockHistory;
         QUndoView mUndoView;
 
     // central widget (must be heap-alloc'd)
-    PatternEditor *mPatternEditor;
+    QWidget *mMainWidget;
+        QVBoxLayout mLayout;
+            QHBoxLayout mVisLayout;
+            AudioScope mLeftScope;
+            AudioScope mRightScope;
+        PatternEditor mPatternEditor;
 
 
     // statusbar widgets

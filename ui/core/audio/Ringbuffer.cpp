@@ -137,3 +137,11 @@ size_t RingbufferBase::availableRead() {
 size_t RingbufferBase::availableWrite() {
     return ma_rb_available_write(&mRingbuffer);
 }
+
+void RingbufferBase::seekRead(size_t bytes) {
+    assert(ma_rb_seek_read(&mRingbuffer, bytes) == MA_SUCCESS);
+}
+
+void RingbufferBase::seekWrite(size_t bytes) {
+    assert(ma_rb_seek_write(&mRingbuffer, bytes) == MA_SUCCESS);
+}
