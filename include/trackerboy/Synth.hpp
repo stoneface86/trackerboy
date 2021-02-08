@@ -83,7 +83,6 @@ public:
 
 private:
 
-    gbapu::Buffer mBuffer;
     gbapu::Apu mApu;
     
     // output sampling rate

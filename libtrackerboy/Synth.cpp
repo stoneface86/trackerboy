@@ -8,8 +8,7 @@ namespace trackerboy {
 
 
 Synth::Synth(unsigned samplingRate, float framerate) noexcept :
-    mBuffer(samplingRate, static_cast<size_t>(samplingRate / framerate) + 1),
-    mApu(mBuffer),
+    mApu(samplingRate, static_cast<size_t>(samplingRate / framerate) + 1),
     mSamplerate(samplingRate),
     mFramerate(framerate),
     mCyclesPerFrame(gbapu::constants::CLOCK_SPEED<float> / mFramerate),
@@ -47,8 +46,8 @@ size_t Synth::run() noexcept {
     // end the frame and copy samples to the synth's frame buffer
     auto framedata = mFrameBuf.data();
 
-    auto samples = mBuffer.available();
-    mBuffer.read(framedata, samples);
+    auto samples = mApu.availableSamples();
+    mApu.readSamples(framedata, samples);
 
     mLastFrameSize = samples;
     return samples;
@@ -58,7 +57,7 @@ size_t Synth::run() noexcept {
 
 void Synth::reset() noexcept {
     mApu.reset();
-    mBuffer.clear();
+    mApu.clearSamples();
     mCycleOffset = 0.0f;
     mLastFrameSize = 0;
 
@@ -82,7 +81,7 @@ void Synth::setSamplingRate(unsigned samplingRate) {
 }
 
 void Synth::setVolume(int percent) {
-    mBuffer.setVolume(percent / 100.0f);
+    mApu.setVolume(percent / 100.0f);
 }
 
 void Synth::setupBuffers() {
@@ -91,9 +90,9 @@ void Synth::setupBuffers() {
         size_t samplesPerFrame = static_cast<size_t>(mSamplerate / mFramerate) + 1;
         mFrameBuf.resize(samplesPerFrame * 2);
 
-        mBuffer.setSamplerate(mSamplerate);
-        mBuffer.setBuffersize(samplesPerFrame);
-        mBuffer.resize();
+        mApu.setSamplerate(mSamplerate);
+        mApu.setBuffersize(samplesPerFrame);
+        mApu.resizeBuffer();
 
         reset();
         mResizeRequired = false;
