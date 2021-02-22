@@ -17,7 +17,7 @@ public:
     
     void uninit();
 
-    size_t size() const;
+    void reset();
 
 protected:
     RingbufferBase();
@@ -52,7 +52,8 @@ protected:
 
     void seekWrite(size_t bytes);
 
-    
+    size_t size() const;
+
 private:
 
     bool mInitialized;
@@ -71,67 +72,108 @@ class Ringbuffer : public RingbufferBase {
 
 public:
 
+    // read interface for the ringbuffer
+    class Reader {
+
+        Ringbuffer<T, channels> &mRb;
+    
+    public:
+
+        constexpr Reader(Ringbuffer<T, channels> &rb) :
+            mRb(rb)
+        {
+        }
+
+        constexpr size_t read(T *data, size_t count) {
+            return mRb.read(data, count * SIZE_UNIT) / SIZE_UNIT;
+        }
+
+        constexpr size_t fullRead(T *data, size_t count) {
+            return mRb.fullRead(data, count * SIZE_UNIT) / SIZE_UNIT;
+        }
+
+        constexpr T* acquireRead(size_t &outCount) {
+            size_t size = outCount * SIZE_UNIT;
+            auto result = static_cast<T*>(mRb.acquireRead(size));
+            outCount = size / SIZE_UNIT;
+            return result;
+        }
+
+        constexpr void commitRead(T *buf, size_t count) {
+            mRb.commitRead(buf, count * SIZE_UNIT);
+        }
+
+        constexpr size_t availableRead() {
+            return mRb.availableRead() / SIZE_UNIT;
+        }
+
+        constexpr void seekRead(size_t count) {
+            mRb.seekRead(count * SIZE_UNIT);
+        }
+
+    };
+
+    // write interface for the ringbuffer
+    class Writer {
+        Ringbuffer<T, channels> &mRb;
+
+
+    public:
+        constexpr Writer(Ringbuffer<T, channels> &rb) :
+            mRb(rb)
+        {
+        }
+
+        constexpr size_t write(T const *data, size_t count) {
+            return mRb.write(data, count * SIZE_UNIT) / SIZE_UNIT;
+        }
+
+        constexpr size_t fullWrite(T const *data, size_t count) {
+            return mRb.fullWrite(data, count * SIZE_UNIT) / SIZE_UNIT;
+        }
+
+        constexpr T* acquireWrite(size_t &outCount) {
+            size_t size = outCount * SIZE_UNIT;
+            auto result = static_cast<T*>(mRb.acquireWrite(size));
+            outCount = size / SIZE_UNIT;
+            return result;
+        }
+
+        constexpr void commitWrite(T *buf, size_t count) {
+            mRb.commitWrite(buf, count * SIZE_UNIT);
+        }
+
+        constexpr size_t availableWrite() {
+            return mRb.availableWrite() / SIZE_UNIT;
+        }
+
+
+        constexpr void seekWrite(size_t count) {
+            mRb.seekWrite(count * SIZE_UNIT);
+        }
+
+    };
+
+
     constexpr Ringbuffer() :
         RingbufferBase() 
     { 
+    }
+
+    constexpr Reader reader() {
+        return { *this };
+    }
+
+    constexpr Writer writer() {
+        return { *this };
     }
 
     constexpr void init(size_t count, T* buffer = nullptr) {
         RingbufferBase::init(count * SIZE_UNIT, buffer);
     }
 
-    constexpr size_t read(T *data, size_t count) {
-        return RingbufferBase::read(data, count * SIZE_UNIT) / SIZE_UNIT;
-    }
-
-    constexpr size_t write(T const *data, size_t count) {
-        return RingbufferBase::write(data, count * SIZE_UNIT) / SIZE_UNIT;
-    }
-
-    constexpr size_t fullRead(T *data, size_t count) {
-        return RingbufferBase::fullRead(data, count * SIZE_UNIT) / SIZE_UNIT;
-    }
-
-    constexpr size_t fullWrite(T const *data, size_t count) {
-        return RingbufferBase::fullWrite(data, count * SIZE_UNIT) / SIZE_UNIT;
-    }
-
-    constexpr T* acquireRead(size_t &outCount) {
-        size_t size = outCount * SIZE_UNIT;
-        auto result = static_cast<T*>(RingbufferBase::acquireRead(size));
-        outCount = size / SIZE_UNIT;
-        return result;
-    }
-
-    constexpr void commitRead(T *buf, size_t count) {
-        RingbufferBase::commitRead(buf, count * SIZE_UNIT);
-    }
-
-    constexpr T* acquireWrite(size_t &outCount) {
-        size_t size = outCount * SIZE_UNIT;
-        auto result = static_cast<T*>(RingbufferBase::acquireWrite(size));
-        outCount = size / SIZE_UNIT;
-        return result;
-    }
-
-    constexpr void commitWrite(T *buf, size_t count) {
-        RingbufferBase::commitWrite(buf, count * SIZE_UNIT);
-    }
-
-    constexpr size_t availableRead() {
-        return RingbufferBase::availableRead() / SIZE_UNIT;
-    }
-
-    constexpr size_t availableWrite() {
-        return RingbufferBase::availableWrite() / SIZE_UNIT;
-    }
-
-    constexpr void seekRead(size_t count) {
-        RingbufferBase::seekRead(count * SIZE_UNIT);
-    }
-
-    constexpr void seekWrite(size_t count) {
-        RingbufferBase::seekWrite(count * SIZE_UNIT);
+    constexpr size_t size() {
+        return RingbufferBase::size() / SIZE_UNIT;
     }
 
 };

@@ -18,7 +18,8 @@ include_directories(
 )
 
 set(UI_SRC
-    "core/audio/RenderBuffer.cpp"
+    "core/audio/AudioOutStream.cpp"
+    #"core/audio/RenderBuffer.cpp"
     "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
     "core/model/BaseModel.cpp"
@@ -89,4 +90,14 @@ add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_patt
 target_link_libraries(test_pattern_painter
     trackerboy
     Qt5::Widgets
+)
+
+add_executable(test_AudioOutStream EXCLUDE_FROM_ALL 
+    "test/test_AudioOutStream.cpp"
+    "core/audio/Ringbuffer.cpp"
+    "core/audio/AudioOutStream.cpp"
+)
+target_link_libraries(test_AudioOutStream PRIVATE
+    miniaudio
+    Qt5::Core
 )

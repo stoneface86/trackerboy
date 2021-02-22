@@ -145,3 +145,7 @@ void RingbufferBase::seekRead(size_t bytes) {
 void RingbufferBase::seekWrite(size_t bytes) {
     assert(ma_rb_seek_write(&mRingbuffer, bytes) == MA_SUCCESS);
 }
+
+void RingbufferBase::reset() {
+    ma_rb_reset(&mRingbuffer);
+}

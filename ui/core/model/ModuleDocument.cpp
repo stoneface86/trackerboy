@@ -2,17 +2,18 @@
 #include "core/model/ModuleDocument.hpp"
 
 #include <QFileInfo>
+#include <QThread>
 
 template <bool tPermanent>
 ModuleDocument::EditContext<tPermanent>::EditContext(ModuleDocument &document) :
     mDocument(document)
 {
-    mDocument.mSpinlock.lock();
+    mDocument.mMutex.lock();
 }
 
 template <bool tPermanent>
 ModuleDocument::EditContext<tPermanent>::~EditContext() {
-    mDocument.mSpinlock.unlock();
+    mDocument.mMutex.unlock();
     if constexpr (tPermanent) {
         mDocument.makeDirty();
     }
@@ -23,12 +24,11 @@ template class ModuleDocument::EditContext<false>;
 
 
 
-ModuleDocument::ModuleDocument(Spinlock &spinlock, QObject *parent) :
+ModuleDocument::ModuleDocument(QObject *parent) :
     QObject(parent),
     mPermaDirty(false),
     mModified(false),
-    mModule(),
-    mSpinlock(spinlock)
+    mModule()
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
@@ -137,6 +137,14 @@ void ModuleDocument::clean() {
         emit modifiedChanged(false);
     }
     mUndoStack.setClean();
+}
+
+void ModuleDocument::lock() {
+    mMutex.lock();
+}
+
+void ModuleDocument::unlock() {
+    mMutex.unlock();
 }
 
 

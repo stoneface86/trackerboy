@@ -6,7 +6,9 @@
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/engine/RuntimeContext.hpp"
 
+#include <QMutex>
 #include <QObject>
+#include <QThread>
 #include <QUndoStack>
 
 //
@@ -53,7 +55,7 @@ public:
         ModuleDocument &mDocument;
     };
 
-    ModuleDocument(Spinlock &spinlock, QObject *parent = nullptr);
+    ModuleDocument(QObject *parent = nullptr);
 
     // accessors for the underlying module data containers
 
@@ -91,6 +93,10 @@ public:
 
     void makeDirty();
 
+    void lock();
+
+    void unlock();
+
 signals:
     void modifiedChanged(bool value);
 
@@ -118,7 +124,10 @@ private:
     //
     bool mModified;
     trackerboy::Module mModule;
-    Spinlock &mSpinlock;
+
+    QMutex mMutex;
+
+    //Spinlock &mSpinlock;
     
     QUndoStack mUndoStack;
 

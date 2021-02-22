@@ -1,14 +1,12 @@
 
 #pragma once
 
-#include "core/audio/RenderBuffer.hpp"
-#include "core/audio/Ringbuffer.hpp"
+#include "core/audio/AudioOutStream.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/SongListModel.hpp"
 #include "core/model/WaveListModel.hpp"
 #include "core/Config.hpp"
 #include "core/Miniaudio.hpp"
-#include "core/Spinlock.hpp"
 
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/Instrument.hpp"
@@ -23,9 +21,8 @@
 #include <QThread>
 #include <QWaitCondition>
 
-#include <atomic>
-#include <chrono>
-#include <optional>
+#include <cstddef>
+#include <memory>
 
 
 class Renderer : public QObject {
@@ -34,11 +31,18 @@ class Renderer : public QObject {
 
 public:
 
+    struct Diagnostics {
+        unsigned underruns;
+        unsigned elapsed;
+        size_t bufferUsage;
+        size_t bufferSize;
+        long long lastSyncTime;
+    };
+
+
     Renderer(
-        Miniaudio &miniaudio, 
-        Spinlock &spinlock,
-        trackerboy::InstrumentTable &itable,
-        trackerboy::WaveTable &wtable,
+        Miniaudio &miniaudio,
+        ModuleDocument &document,
         InstrumentListModel &instrumentModel,
         SongListModel &songModel,
         WaveListModel &waveModel
@@ -47,56 +51,9 @@ public:
 
     // DIAGNOSTICS ====
 
-    //
-    // gets the current count of lock failures, or when the callback thread failed
-    // to lock the spinlock.
-    //
-    unsigned lockFails() const;
-
-    //
-    // total count of underruns that have occurred
-    //
-    unsigned underruns() const;
-
-    //
-    // time elapsed in milleseconds of the current render
-    //
-    unsigned elapsed() const;
-
-    //
-    // buffer utilization in whole frames.
-    //
-    unsigned bufferUsage() const;
-
-    //
-    // Size of the buffer in whole frames.
-    //
-    unsigned bufferSize() const;
-
-    //
-    // Time since the last sync event in nanoseconds
-    //
-    long long lastSyncTime();
+    Diagnostics diagnostics();
 
     ma_device const& device() const;
-
-    //
-    // Get the audio return buffer. Note: only the GUI thread may read this
-    // buffer and only the callback thread may write to it.
-    //
-    AudioRingbuffer& returnBuffer();
-
-    //
-    // To be called during audioSync(). Gets the current frame being played.
-    // Call releaseFrame() when finished accessing.
-    //
-    RenderFrame const& acquireCurrentFrame();
-
-    //
-    // Releases the previously acquired frame returned from acquireCurrentFrame.
-    // The reference to that frame is now invalid.
-    //
-    void releaseFrame();
 
     bool isRunning();
 
@@ -123,13 +80,10 @@ signals:
     void audioStopped();
 
     //
-    // Audio synchronization. Emitted when the callback has finished
-    // rendering a block of audio data to the device. The size of this block
-    // can vary between syncs and its size depends on latency settings.
+    // A frame of audio data has been synthesized and is buffered to be played out
+    // The GUI should update tracker position, visualizers, etc based on this new frame
     //
-    // The lower the latency, the more often this signal is emitted.
-    //
-    void audioSync();
+    void frameSync();
 
 
 public slots:
@@ -156,8 +110,6 @@ public slots:
 
 private:
 
-    using Clock = std::chrono::steady_clock;
-
     enum class PreviewState {
         none,
         waveform,
@@ -167,6 +119,9 @@ private:
     // utility function for preview slots
     void resetPreview();
 
+    // render audio data to the given buffer
+    void render(AudioRingbuffer::Writer &buffer);
+
     // device management -----------------------------------------------------
 
     void closeDevice();
@@ -175,15 +130,9 @@ private:
     // Start the audio callback thread for the configured device. If the audio
     // callback thread is already running, the stop countdown is cancelled
     //
-    void startDevice();
-
-    void stopDevice();
-
+    void beginRender();
 
     // thread main functions -------------------------------------------------
-
-    static void audioCallbackRun(ma_device *device, void *out, const void *in, ma_uint32 frames);
-    void handleCallback(int16_t *out, size_t frames);
 
     static void backgroundThreadRun(Renderer *renderer);
     void handleBackground();
@@ -191,31 +140,25 @@ private:
     // class members ---------------------------------------------------------
 
     Miniaudio &mMiniaudio;
-    Spinlock &mSpinlock;
+    ModuleDocument &mDocument;
 
     InstrumentListModel &mInstrumentModel;
     SongListModel &mSongModel;
     WaveListModel &mWaveModel;
 
     QWaitCondition mIdleCondition;
-    QWaitCondition mCallbackCondition;
-    QMutex mCallbackMutex;
     QMutex mMutex;
-    QThread *mBackgroundThread;
+    std::unique_ptr<QThread> mBackgroundThread;
+
+    AudioOutStream mStream;
 
     bool mRunning;              // is the audio callback thread active?
     bool mStopBackground;       // flag to stop the background thread
     bool mStopDevice;           // flag to stop the callback thread
-    std::atomic_bool mSync;     // sync audio?                   
-    std::atomic_bool mCancelStop;
-    std::optional<ma_device> mDevice;
+    std::unique_ptr<ma_device> mDevice;
 
-    // diagnostic info
-    std::atomic_uint mLockFails;        // number of spinlock failures
-    std::atomic_uint mUnderruns;        // number of underruns, or failure to output samples
-    std::atomic_uint mSamplesElapsed;   // number of samples written to be played out
-    std::atomic_uint mBufferUsage;      // number of frames queued in the buffer
-    Clock::duration mLatency;
+
+    // renderering
     
     trackerboy::Synth mSynth;
     trackerboy::RuntimeContext mRc;
@@ -224,24 +167,13 @@ private:
     // has read access to an Instrument and wave table
     trackerboy::InstrumentRuntime mIr;
 
-    RenderBuffer mBuffer;
 
     PreviewState mPreviewState;
     trackerboy::ChType mPreviewChannel;
 
-        
+    size_t mSynthBufferRemaining;
+    int16_t *mSynthBuffer;
+
     int mStopCounter;
-    bool mShouldStop;
-    bool mStopped;
-
-    size_t mSyncCounter;
-    size_t mSyncPeriod;
-
-    AudioRingbuffer mReturnBuffer;
-
-    
-
-    RenderFrame mLastFrameOut;
-    Spinlock mFrameLock;
 
 };

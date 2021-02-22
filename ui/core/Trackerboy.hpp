@@ -29,12 +29,6 @@ struct Trackerboy {
     Config config;
 
     //
-    // Spinlock used by the audio callback thread and GUI thread
-    // for synchronization
-    //
-    Spinlock spinlock;
-
-    //
     // The document (module) being worked on
     //
     ModuleDocument document;

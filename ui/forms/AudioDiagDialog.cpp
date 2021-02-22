@@ -13,7 +13,6 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     mLayout(),
     mRenderGroup(tr("Render statistics")),
     mRenderLayout(),
-    mLockFailsLabel(),
     mUnderrunLabel(),
     mBufferLabel(),
     mStatusLabel(),
@@ -27,12 +26,11 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
 {
 
     mRenderLayout.addRow(tr("Sync time"), &mSyncTimeLabel);
-    mRenderLayout.addRow(tr("Lock fails"), &mLockFailsLabel);
     mRenderLayout.addRow(tr("Underruns"), &mUnderrunLabel);
     mRenderLayout.addRow(tr("Buffer utilization"), &mBufferLabel);
     mRenderLayout.addRow(tr("Status"), &mStatusLabel);
     mRenderLayout.addRow(tr("Elapsed"), &mElapsedLabel);
-    mRenderLayout.setWidget(6, QFormLayout::LabelRole, &mClearButton);
+    mRenderLayout.setWidget(5, QFormLayout::LabelRole, &mClearButton);
     mRenderGroup.setLayout(&mRenderLayout);
 
     mButtonLayout.addWidget(&mAutoRefreshCheck);
@@ -106,13 +104,18 @@ void AudioDiagDialog::timerEvent(QTimerEvent *evt) {
 }
 
 void AudioDiagDialog::refresh() {
-    mSyncTimeLabel.setText(tr("%1 ms").arg(mRenderer.lastSyncTime() * 1e-6));
 
-    mLockFailsLabel.setText(QString::number(mRenderer.lockFails()));
-    mUnderrunLabel.setText(QString::number(mRenderer.underruns()));
-    mBufferLabel.setText(QStringLiteral("%1 / %2").arg(mRenderer.bufferUsage()).arg(mRenderer.bufferSize()));
+    auto diags = mRenderer.diagnostics();
+    mSyncTimeLabel.setText(tr("%1 ms").arg(diags.lastSyncTime * 1e-6));
 
-    auto elapsed = mRenderer.elapsed();
+    mUnderrunLabel.setText(QString::number(diags.underruns));
+    mBufferLabel.setText(QStringLiteral("%1% (%2 / %3)")
+        .arg(diags.bufferUsage * 100 / diags.bufferSize)
+        .arg(diags.bufferUsage)
+        .arg(diags.bufferSize)
+        );
+
+    auto elapsed = diags.elapsed * 1000 / mRenderer.device().sampleRate;
     mElapsedLabel.setText(QStringLiteral("%1:%2.%3")
         .arg(elapsed / 60000, 2, 10, QChar('0'))
         .arg((elapsed % 60000) / 1000, 2, 10, QChar('0'))
