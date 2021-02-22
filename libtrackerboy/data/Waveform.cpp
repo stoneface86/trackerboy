@@ -7,8 +7,8 @@ namespace trackerboy {
 
 
 Waveform::Waveform() noexcept :
-    mData{0},
-    DataItem()
+    DataItem(),
+    mData{0}
 {       
 }
 
@@ -19,8 +19,8 @@ Waveform::Waveform(std::string &hexstr) :
 }
 
 Waveform::Waveform(const Waveform &wave) :
-    mData{ 0 },
-    DataItem(wave)
+    DataItem(wave),
+    mData{ 0 }
 {
     std::copy(wave.mData.begin(), wave.mData.end(), mData.begin());
 }
