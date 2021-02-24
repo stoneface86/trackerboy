@@ -55,7 +55,7 @@ public:
         ModuleDocument &mDocument;
     };
 
-    ModuleDocument(QObject *parent = nullptr);
+    ModuleDocument(Spinlock &spinlock, QObject *parent = nullptr);
 
     // accessors for the underlying module data containers
 
@@ -125,9 +125,9 @@ private:
     bool mModified;
     trackerboy::Module mModule;
 
-    QMutex mMutex;
+    //QMutex mMutex;
 
-    //Spinlock &mSpinlock;
+    Spinlock &mSpinlock;
     
     QUndoStack mUndoStack;
 

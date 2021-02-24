@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/audio/AudioOutStream.hpp"
+#include "core/audio/RenderBuffer.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/SongListModel.hpp"
 #include "core/model/WaveListModel.hpp"
@@ -23,6 +24,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 
 
 class Renderer : public QObject {
@@ -32,16 +34,15 @@ class Renderer : public QObject {
 public:
 
     struct Diagnostics {
+        unsigned lockFails;
         unsigned underruns;
         unsigned elapsed;
-        size_t bufferUsage;
-        size_t bufferSize;
         long long lastSyncTime;
     };
 
-
     Renderer(
         Miniaudio &miniaudio,
+        Spinlock &spinlock,
         ModuleDocument &document,
         InstrumentListModel &instrumentModel,
         SongListModel &songModel,
@@ -54,6 +55,8 @@ public:
     Diagnostics diagnostics();
 
     ma_device const& device() const;
+
+    AudioRingbuffer::Reader returnBuffer();
 
     bool isRunning();
 
@@ -83,7 +86,7 @@ signals:
     // A frame of audio data has been synthesized and is buffered to be played out
     // The GUI should update tracker position, visualizers, etc based on this new frame
     //
-    void frameSync();
+    void audioSync();
 
 
 public slots:
@@ -110,17 +113,22 @@ public slots:
 
 private:
 
+    using Clock = std::chrono::steady_clock;
+
     enum class PreviewState {
         none,
         waveform,
         instrument
     };
 
+    enum class CallbackState {
+        running,
+        stopping,
+        stopped
+    };
+
     // utility function for preview slots
     void resetPreview();
-
-    // render audio data to the given buffer
-    void render(AudioRingbuffer::Writer &buffer);
 
     // device management -----------------------------------------------------
 
@@ -137,28 +145,33 @@ private:
     static void backgroundThreadRun(Renderer *renderer);
     void handleBackground();
 
+    static void audioThreadRun(ma_device *device, void *out, const void *in, ma_uint32 frames);
+    void handleAudio(int16_t *out, size_t frames);
+
     // class members ---------------------------------------------------------
 
     Miniaudio &mMiniaudio;
-    ModuleDocument &mDocument;
+    Spinlock &mSpinlock;
 
     InstrumentListModel &mInstrumentModel;
     SongListModel &mSongModel;
     WaveListModel &mWaveModel;
 
     QWaitCondition mIdleCondition;
+    QWaitCondition mCallbackCondition;
     QMutex mMutex;
+    QMutex mCallbackMutex;
     std::unique_ptr<QThread> mBackgroundThread;
-
-    AudioOutStream mStream;
 
     bool mRunning;              // is the audio callback thread active?
     bool mStopBackground;       // flag to stop the background thread
     bool mStopDevice;           // flag to stop the callback thread
-    std::unique_ptr<ma_device> mDevice;
+    std::atomic_bool mSync;
+    std::atomic_bool mCancelStop;
+    std::optional<ma_device> mDevice;
 
 
-    // renderering
+    // renderering (synchronize access via spinlock)
     
     trackerboy::Synth mSynth;
     trackerboy::RuntimeContext mRc;
@@ -171,9 +184,20 @@ private:
     PreviewState mPreviewState;
     trackerboy::ChType mPreviewChannel;
 
-    size_t mSynthBufferRemaining;
-    int16_t *mSynthBuffer;
-
+    CallbackState mCallbackState;
     int mStopCounter;
+
+    RenderBuffer mBuffer;
+    AudioRingbuffer mReturnBuffer;
+
+    size_t mSyncCounter;
+    size_t mSyncPeriod;
+
+    // diagnostics
+    std::atomic_uint mLockFails;
+    std::atomic_uint mUnderruns;
+    std::atomic_uint mSamplesElapsed;
+    Clock::duration mSyncTime;
+
 
 };

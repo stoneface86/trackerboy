@@ -9,6 +9,7 @@
 #include "core/Config.hpp"
 #include "core/ColorTable.hpp"
 #include "core/Miniaudio.hpp"
+#include "core/Spinlock.hpp"
 
 //
 // Container struct for configuration and model classes used throughout the ui.
@@ -17,6 +18,8 @@ struct Trackerboy {
 
     Trackerboy();
     ~Trackerboy() = default;
+
+    Spinlock spinlock;
 
     //
     // manages a miniaudio context and device list

@@ -68,7 +68,7 @@ private slots:
     // renderer
     void onAudioStart();
     void onAudioStop();
-    void onFrameSync();
+    void onAudioSync();
 
 
 private:

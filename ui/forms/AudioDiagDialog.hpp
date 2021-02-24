@@ -46,8 +46,8 @@ private:
         QGroupBox mRenderGroup;
             QFormLayout mRenderLayout;
                 QLabel mSyncTimeLabel;
+                QLabel mLockFailsLabel;
                 QLabel mUnderrunLabel;
-                QLabel mBufferLabel;
                 QLabel mStatusLabel;
                 QLabel mElapsedLabel;
                 QPushButton mClearButton;

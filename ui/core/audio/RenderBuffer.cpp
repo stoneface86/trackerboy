@@ -75,6 +75,9 @@ unsigned RenderBuffer::framesInQueue() {
 
 size_t RenderBuffer::read(int16_t *out, size_t samples) {
     
+    auto frameReader = mFrames.reader();
+    auto sampleReader = mSamples.reader();
+
     size_t samplesRead = 0;
     while (samples) {
         
@@ -87,13 +90,13 @@ size_t RenderBuffer::read(int16_t *out, size_t samples) {
             // transfer the next frame to the return buffer
 
             size_t readCount = 1;
-            auto frame = mFrames.acquireRead(readCount);
+            auto frame = frameReader.acquireRead(readCount);
             // there should always be 1 frame to read at this point
             mCurrentFrameRemaining = frame->nsamples;
             mCurrentFrame = *frame;
             mNewFrame = true;
 
-            mFrames.commitRead(frame, readCount);
+            frameReader.commitRead(frame, readCount);
 
             
             --mFramesAvailable;
@@ -102,7 +105,7 @@ size_t RenderBuffer::read(int16_t *out, size_t samples) {
 
 
         size_t toCopy = std::min(samples, mCurrentFrameRemaining);
-        mSamples.fullRead(out, toCopy);
+        sampleReader.fullRead(out, toCopy);
 
         out += toCopy * 2;
         mCurrentFrameRemaining -= toCopy;
@@ -117,8 +120,8 @@ size_t RenderBuffer::read(int16_t *out, size_t samples) {
 void RenderBuffer::queueFrame(int16_t data[], RenderFrame const& frame) {
     assert(mFramesAvailable != mBuffersize);
 
-    mFrames.fullWrite(&frame, 1);
-    mSamples.fullWrite(data, frame.nsamples);
+    mFrames.writer().fullWrite(&frame, 1);
+    mSamples.writer().fullWrite(data, frame.nsamples);
 
 
     ++mFramesAvailable;

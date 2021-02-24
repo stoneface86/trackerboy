@@ -391,7 +391,7 @@ void MainWindow::onAudioStop() {
 // Sync renderer output with the GUI. updates visualizer, volume meters, etc
 // TODO: move this to a worker thread so we don't make the GUI unresponsive
 //
-void MainWindow::onFrameSync() {
+void MainWindow::onAudioSync() {
     // get the current frame
     //auto& frame = mApp.renderer.acquireCurrentFrame();
     //if (!frame.ignore) {
@@ -414,40 +414,40 @@ void MainWindow::onFrameSync() {
     //mApp.renderer.releaseFrame();
 
 
-    //// get the audio data returned from the callback
-    //// this data has already been sent out to the output device
-    //auto &returnBuffer = mApp.renderer.returnBuffer();
-    //// read as much as we can
-    //size_t samples = returnBuffer.availableRead();
-    //auto frameCount = samples / mSamplesPerFrame;
-    //if (frameCount) {
+    // get the audio data returned from the callback
+    // this data has already been sent out to the output device
+    auto returnBuffer = mApp.renderer.returnBuffer();
+    // read as much as we can
+    size_t samples = returnBuffer.availableRead();
+    auto frameCount = samples / mSamplesPerFrame;
+    if (frameCount) {
 
-    //    if (frameCount > 1) {
-    //        // skip these frames
-    //        returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
-    //    }
-    //    // read the frame
-    //    returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
+        if (frameCount > 1) {
+            // skip these frames
+            returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
+        }
+        // read the frame
+        returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
 
-    //    // TODO: uncomment this when the peakmeter visualizer is complete
-    //    // determine peak amplitudes for each channel
-    //    //int16_t peakLeft = 0;
-    //    //int16_t peakRight = 0;
-    //    //auto samplePtr = mSampleBuffer.get();
-    //    //for (size_t i = 0; i != mSamplesPerFrame; ++i) {
-    //    //    auto sampleLeft = (int16_t)abs(*samplePtr++);
-    //    //    auto sampleRight = (int16_t)abs(*samplePtr++);
-    //    //    peakLeft = std::max(sampleLeft, peakLeft);
-    //    //    peakRight = std::max(sampleRight, peakRight);
-    //    //}
+        // TODO: uncomment this when the peakmeter visualizer is complete
+        // determine peak amplitudes for each channel
+        //int16_t peakLeft = 0;
+        //int16_t peakRight = 0;
+        //auto samplePtr = mSampleBuffer.get();
+        //for (size_t i = 0; i != mSamplesPerFrame; ++i) {
+        //    auto sampleLeft = (int16_t)abs(*samplePtr++);
+        //    auto sampleRight = (int16_t)abs(*samplePtr++);
+        //    peakLeft = std::max(sampleLeft, peakLeft);
+        //    peakRight = std::max(sampleRight, peakRight);
+        //}
 
-    //    // send to visualizers
-    //    mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
-    //    mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
-    //    mLeftScope.update();
-    //    mRightScope.update();
+        // send to visualizers
+        mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
+        mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
+        mLeftScope.update();
+        mRightScope.update();
 
-    //}
+    }
     
         
 
@@ -764,7 +764,7 @@ void MainWindow::setupUi() {
     
     connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
-    connect(&mApp.renderer, &Renderer::frameSync, this, &MainWindow::onFrameSync);
+    connect(&mApp.renderer, &Renderer::audioSync, this, &MainWindow::onAudioSync);
 
     // octave changes
     connect(&mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);

@@ -8,12 +8,12 @@ template <bool tPermanent>
 ModuleDocument::EditContext<tPermanent>::EditContext(ModuleDocument &document) :
     mDocument(document)
 {
-    mDocument.mMutex.lock();
+    mDocument.mSpinlock.lock();
 }
 
 template <bool tPermanent>
 ModuleDocument::EditContext<tPermanent>::~EditContext() {
-    mDocument.mMutex.unlock();
+    mDocument.mSpinlock.unlock();
     if constexpr (tPermanent) {
         mDocument.makeDirty();
     }
@@ -24,11 +24,13 @@ template class ModuleDocument::EditContext<false>;
 
 
 
-ModuleDocument::ModuleDocument(QObject *parent) :
+ModuleDocument::ModuleDocument(Spinlock &spinlock, QObject *parent) :
     QObject(parent),
     mPermaDirty(false),
     mModified(false),
-    mModule()
+    mModule(),
+    mSpinlock(spinlock),
+    mUndoStack()
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
@@ -140,11 +142,11 @@ void ModuleDocument::clean() {
 }
 
 void ModuleDocument::lock() {
-    mMutex.lock();
+    mSpinlock.lock();
 }
 
 void ModuleDocument::unlock() {
-    mMutex.unlock();
+    mSpinlock.unlock();
 }
 
 
