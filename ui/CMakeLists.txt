@@ -33,6 +33,7 @@ set(UI_SRC
     "core/Miniaudio.cpp"
     "core/PianoInput.cpp"
     "core/samplerates.cpp"
+    "core/SyncWorker.cpp"
     "core/Trackerboy.cpp"
 
     "forms/AudioDiagDialog.cpp"
@@ -61,6 +62,8 @@ set(UI_SRC
     "widgets/grid/PatternGridHeader.cpp"
     "widgets/grid/PatternPainter.cpp"
     "widgets/visualizers/AudioScope.cpp"
+    "widgets/visualizers/PeakMeter.cpp"
+    "widgets/visualizers/VolumeMeterAnimation.cpp"
     "widgets/CustomSpinBox.cpp"
     "widgets/EnvelopeForm.cpp"
     "widgets/PatternEditor.cpp"

@@ -55,7 +55,7 @@ void AudioScope::clear() {
     
     mPreviousBin = 0.0f;
     
-    update();
+    //update();
 }
 
 void AudioScope::setDuration(size_t samples) {

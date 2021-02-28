@@ -21,7 +21,6 @@
 #define setObjectNameFromDeclared(var) var.setObjectName(QStringLiteral(#var))
 #define connectActionToThis(action, slot) connect(&action, &QAction::triggered, this, &MainWindow::slot)
 
-
 constexpr int TOOLBAR_ICON_WIDTH = 16;
 constexpr int TOOLBAR_ICON_HEIGHT = 16;
 
@@ -53,7 +52,8 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mModulePropertiesWidget(),
     mDockOrders(),
     mOrderWidget(trackerboy.songModel.orderModel()),
-    mPatternEditor(mPianoInput, mApp.songModel)
+    mPatternEditor(mPianoInput, mApp.songModel),
+    mSyncWorker(trackerboy.renderer, mLeftScope, mRightScope)
 
 {
     setupUi();
@@ -108,9 +108,16 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         addToolBar(&mToolbarSong);
         restoreState(windowState);
     }
+
+    // audio sync worker thread
+    mSyncWorker.moveToThread(&mSyncWorkerThread);
+    mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
+    mSyncWorkerThread.start();
 }
 
 MainWindow::~MainWindow() {
+    mSyncWorkerThread.quit();
+    mSyncWorkerThread.wait();
 }
 
 QMenu* MainWindow::createPopupMenu() {
@@ -241,12 +248,14 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
         // 100ms curve duration
-        mSamplesPerFrame = samplerate / 60;
-        mLeftScope.setDuration(mSamplesPerFrame);
-        mRightScope.setDuration(mSamplesPerFrame);
+        auto samplesPerFrame = samplerate / 60;
+        mSyncWorker.setSamplesPerFrame(samplesPerFrame);
+        //mSamplesPerFrame = samplerate / 60;
+        mLeftScope.setDuration(samplesPerFrame);
+        mRightScope.setDuration(samplesPerFrame);
 
 
-        mSampleBuffer.reset(new int16_t[mSamplesPerFrame * 2]);
+        //mSampleBuffer.reset(new int16_t[mSamplesPerFrame * 2]);
 
         mApp.renderer.setConfig(sound);
     }
@@ -376,22 +385,11 @@ void MainWindow::statusSetOctave(int octave) {
     mPianoInput.setOctave(octave);
 }
 
-void MainWindow::onAudioStart() {
-    mLastSpeed = 0;
-}
-
-void MainWindow::onAudioStop() {
-    // clear the return buffer by advancing the read pointer to the write pointer
-    //auto &returnBuffer = mApp.renderer.returnBuffer();
-    //auto all = returnBuffer.availableRead();
-    //returnBuffer.seekRead(all);
-}
-
 //
 // Sync renderer output with the GUI. updates visualizer, volume meters, etc
 // TODO: move this to a worker thread so we don't make the GUI unresponsive
 //
-void MainWindow::onAudioSync() {
+//void MainWindow::onAudioSync() {
     // get the current frame
     //auto& frame = mApp.renderer.acquireCurrentFrame();
     //if (!frame.ignore) {
@@ -416,42 +414,42 @@ void MainWindow::onAudioSync() {
 
     // get the audio data returned from the callback
     // this data has already been sent out to the output device
-    auto returnBuffer = mApp.renderer.returnBuffer();
-    // read as much as we can
-    size_t samples = returnBuffer.availableRead();
-    auto frameCount = samples / mSamplesPerFrame;
-    if (frameCount) {
+    //auto returnBuffer = mApp.renderer.returnBuffer();
+    //// read as much as we can
+    //size_t samples = returnBuffer.availableRead();
+    //auto frameCount = samples / mSamplesPerFrame;
+    //if (frameCount) {
 
-        if (frameCount > 1) {
-            // skip these frames
-            returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
-        }
-        // read the frame
-        returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
+    //    if (frameCount > 1) {
+    //        // skip these frames
+    //        returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
+    //    }
+    //    // read the frame
+    //    returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
 
-        // TODO: uncomment this when the peakmeter visualizer is complete
-        // determine peak amplitudes for each channel
-        //int16_t peakLeft = 0;
-        //int16_t peakRight = 0;
-        //auto samplePtr = mSampleBuffer.get();
-        //for (size_t i = 0; i != mSamplesPerFrame; ++i) {
-        //    auto sampleLeft = (int16_t)abs(*samplePtr++);
-        //    auto sampleRight = (int16_t)abs(*samplePtr++);
-        //    peakLeft = std::max(sampleLeft, peakLeft);
-        //    peakRight = std::max(sampleRight, peakRight);
-        //}
+    //    // TODO: uncomment this when the peakmeter visualizer is complete
+    //    // determine peak amplitudes for each channel
+    //    //int16_t peakLeft = 0;
+    //    //int16_t peakRight = 0;
+    //    //auto samplePtr = mSampleBuffer.get();
+    //    //for (size_t i = 0; i != mSamplesPerFrame; ++i) {
+    //    //    auto sampleLeft = (int16_t)abs(*samplePtr++);
+    //    //    auto sampleRight = (int16_t)abs(*samplePtr++);
+    //    //    peakLeft = std::max(sampleLeft, peakLeft);
+    //    //    peakRight = std::max(sampleRight, peakRight);
+    //    //}
 
-        // send to visualizers
-        mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
-        mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
-        mLeftScope.update();
-        mRightScope.update();
+    //    // send to visualizers
+    //    mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
+    //    mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
+    //    mLeftScope.update();
+    //    mRightScope.update();
 
-    }
+    //}
     
         
 
-}
+//}
 
 // PRIVATE METHODS -----------------------------------------------------------
 
@@ -507,6 +505,7 @@ void MainWindow::setupUi() {
     mMainWidget = new QWidget(this);
 
     mVisLayout.addWidget(&mLeftScope);
+    mVisLayout.addWidget(&mPeakMeter);
     mVisLayout.addWidget(&mRightScope);
 
 
@@ -761,13 +760,11 @@ void MainWindow::setupUi() {
     connect(&mInstrumentWidget, &TableForm::showEditor, this, &MainWindow::showInstrumentEditor);
     connect(&mWaveformWidget, &TableForm::showEditor, this, &MainWindow::showWaveEditor);
 
-    
-    connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
-    connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
-    connect(&mApp.renderer, &Renderer::audioSync, this, &MainWindow::onAudioSync);
-
     // octave changes
     connect(&mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
+
+    // sync worker
+    connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
 
 }
 

@@ -278,8 +278,6 @@ void Renderer::stopMusic() {
     
 }
 
-
-
 void Renderer::resetPreview() {
     // lock the channel so it can be used for music
     trackerboy::ChannelControl::writePanning(mPreviewChannel, mRc, 0);
@@ -328,6 +326,7 @@ void Renderer::handleBackground() {
                     mSyncTime = syncTime - lastSyncTime;
                     mMutex.unlock();
                     lastSyncTime = syncTime;
+
                 }
 
                 // poll at a 1ms interval

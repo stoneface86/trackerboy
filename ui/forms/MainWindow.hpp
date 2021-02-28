@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/Trackerboy.hpp"
+#include "core/SyncWorker.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
 #include "forms/InstrumentEditor.hpp"
@@ -12,6 +13,7 @@
 #include "widgets/docks/SongWidget.hpp"
 #include "widgets/docks/TableForm.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
+#include "widgets/visualizers/PeakMeter.hpp"
 #include "widgets/PatternEditor.hpp"
 
 #include <QComboBox>
@@ -65,10 +67,6 @@ private slots:
     void statusSetWaveform(int index);
     void statusSetOctave(int octave);
 
-    // renderer
-    void onAudioStart();
-    void onAudioStop();
-    void onAudioSync();
 
 
 private:
@@ -100,8 +98,7 @@ private:
 
     // audio sync stuff
     trackerboy::Speed mLastSpeed;
-    size_t mSamplesPerFrame;
-    std::unique_ptr<int16_t[]> mSampleBuffer;
+    
 
     // key bindings for the piano widgets + pattern editor
     PianoInput mPianoInput;
@@ -149,8 +146,9 @@ private:
     QWidget *mMainWidget;
         QVBoxLayout mLayout;
             QHBoxLayout mVisLayout;
-            AudioScope mLeftScope;
-            AudioScope mRightScope;
+                AudioScope mLeftScope;
+                PeakMeter mPeakMeter;
+                AudioScope mRightScope;
         PatternEditor mPatternEditor;
 
 
@@ -213,5 +211,8 @@ private:
     QAction mActionAudioDiag;
     QAction mActionHelpAboutQt;
     QAction mActionHelpAbout;
+
+    SyncWorker mSyncWorker;
+    QThread mSyncWorkerThread;
 
 };

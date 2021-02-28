@@ -111,6 +111,13 @@ public:
             mRb.seekRead(count * SIZE_UNIT);
         }
 
+        //
+        // Advance the read pointer to the write pointer, removing any existing reads
+        //
+        constexpr void flush() {
+            seekRead(availableRead());
+        }
+
     };
 
     // write interface for the ringbuffer
