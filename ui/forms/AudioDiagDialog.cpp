@@ -24,13 +24,11 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     mRefreshButton(tr("Refresh")),
     mCloseButton(tr("Close"))
 {
-
-    mRenderLayout.addRow(tr("Sync time"), &mSyncTimeLabel);
     mRenderLayout.addRow(tr("Lock fails"), &mLockFailsLabel);
     mRenderLayout.addRow(tr("Underruns"), &mUnderrunLabel);
     mRenderLayout.addRow(tr("Status"), &mStatusLabel);
     mRenderLayout.addRow(tr("Elapsed"), &mElapsedLabel);
-    mRenderLayout.setWidget(5, QFormLayout::LabelRole, &mClearButton);
+    mRenderLayout.setWidget(4, QFormLayout::LabelRole, &mClearButton);
     mRenderGroup.setLayout(&mRenderLayout);
 
     mButtonLayout.addWidget(&mAutoRefreshCheck);
@@ -106,7 +104,6 @@ void AudioDiagDialog::timerEvent(QTimerEvent *evt) {
 void AudioDiagDialog::refresh() {
 
     auto diags = mRenderer.diagnostics();
-    mSyncTimeLabel.setText(tr("%1 ms").arg(diags.lastSyncTime * 1e-6));
 
     mLockFailsLabel.setText(QString::number(diags.lockFails));
     mUnderrunLabel.setText(QString::number(diags.underruns));

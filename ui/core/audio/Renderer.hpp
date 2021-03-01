@@ -37,7 +37,6 @@ public:
         unsigned lockFails;
         unsigned underruns;
         unsigned elapsed;
-        long long lastSyncTime;
     };
 
     Renderer(
@@ -112,8 +111,6 @@ public slots:
     void stopPreview();
 
 private:
-
-    using Clock = std::chrono::steady_clock;
 
     enum class PreviewState {
         none,
@@ -190,14 +187,10 @@ private:
     RenderBuffer mBuffer;
     AudioRingbuffer mReturnBuffer;
 
-    size_t mSyncCounter;
-    size_t mSyncPeriod;
-
     // diagnostics
     std::atomic_uint mLockFails;
     std::atomic_uint mUnderruns;
     std::atomic_uint mSamplesElapsed;
-    Clock::duration mSyncTime;
 
 
 };

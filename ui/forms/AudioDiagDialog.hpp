@@ -45,7 +45,6 @@ private:
     QVBoxLayout mLayout;
         QGroupBox mRenderGroup;
             QFormLayout mRenderLayout;
-                QLabel mSyncTimeLabel;
                 QLabel mLockFailsLabel;
                 QLabel mUnderrunLabel;
                 QLabel mStatusLabel;

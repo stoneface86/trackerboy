@@ -4,17 +4,28 @@
 #include "core/audio/Renderer.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
 
-#include <QObject>
+#include <QAbstractAnimation>
+#include <QElapsedTimer>
+#include <QTimer>
 
+#include <chrono>
 #include <cstdint>
 #include <cstddef>
 #include <memory>
 
-class SyncWorker : public QObject {
+//
+// Not actually an animation, we just need to periodically read the return buffer
+// and update the visualizers, which QAbstractAnimation provides via the updateCurrentTime method
+// (using the animation class is more performant and accurate than using a QTimer since it
+// will most likely be using vsync).
+//
+class SyncWorker : public QAbstractAnimation {
     Q_OBJECT
 
 public:
     SyncWorker(Renderer &renderer, AudioScope &left, AudioScope &right);
+
+    int duration() const override;
 
     void setSamplesPerFrame(size_t samples);
 
@@ -28,8 +39,12 @@ signals:
     void peaksChanged(qint16 peakLeft, qint16 peakRight);
 
 public slots:
-    void onAudioSync();
     void onAudioStop();
+    void onAudioStart();
+
+protected:
+
+    void updateCurrentTime(int currentTime) override;
 
 private:
 

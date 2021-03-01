@@ -1,12 +1,15 @@
 
 #include "core/SyncWorker.hpp"
 
+#include <QtDebug>
+#include <QTimer>
+
 //
 // SyncWorker handles audio synchronization in a separate thread.
 //
 
 SyncWorker::SyncWorker(Renderer &renderer, AudioScope &leftScope, AudioScope &rightScope) :
-    QObject(),
+    QAbstractAnimation(),
     mRenderer(renderer),
     mLeftScope(leftScope),
     mRightScope(rightScope),
@@ -18,8 +21,12 @@ SyncWorker::SyncWorker(Renderer &renderer, AudioScope &leftScope, AudioScope &ri
 {
     connect(this, &SyncWorker::updateScopes, &mLeftScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
     connect(this, &SyncWorker::updateScopes, &mRightScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
-    connect(&renderer, &Renderer::audioSync, this, &SyncWorker::onAudioSync, Qt::QueuedConnection);
+    connect(&renderer, &Renderer::audioStarted, this, &SyncWorker::onAudioStart, Qt::QueuedConnection);
     connect(&renderer, &Renderer::audioStopped, this, &SyncWorker::onAudioStop, Qt::QueuedConnection);
+}
+
+int SyncWorker::duration() const {
+    return -1;
 }
 
 void SyncWorker::setSamplesPerFrame(size_t samples) {
@@ -31,7 +38,14 @@ void SyncWorker::setSamplesPerFrame(size_t samples) {
     }
 }
 
+void SyncWorker::onAudioStart() {
+    start();
+}
+
 void SyncWorker::onAudioStop() {
+    stop();
+    
+
     // ignore any pending reads on the return buffer
     // as we are no longer processing them
     mRenderer.returnBuffer().flush();
@@ -48,23 +62,20 @@ void SyncWorker::onAudioStop() {
     emit updateScopes();
 }
 
-void SyncWorker::onAudioSync() {
+void SyncWorker::updateCurrentTime(int currentTime) {
+    Q_UNUSED(currentTime)
+    
     QMutexLocker locker(&mMutex);
     Q_ASSERT(mSamplesPerFrame != 0);
     Q_ASSERT(mSampleBuffer);
+    
 
     // get the audio data returned from the callback
     // this data has already been sent out to the output device
     auto returnBuffer = mRenderer.returnBuffer();
-    // read as much as we can
-    size_t samples = returnBuffer.availableRead();
-    auto frameCount = samples / mSamplesPerFrame;
-    if (frameCount) {
+    // read a frame if we can
+    if (returnBuffer.availableRead() >= mSamplesPerFrame) {
 
-        if (frameCount > 1) {
-            // skip these frames
-            returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
-        }
         // read the frame
         returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
 
@@ -88,6 +99,7 @@ void SyncWorker::onAudioSync() {
         emit updateScopes();
 
     }
+    // if there was not enough samples for a whole frame, then this frame will be skipped
 }
 
 void SyncWorker::setPeaks(int16_t peakLeft, int16_t peakRight) {

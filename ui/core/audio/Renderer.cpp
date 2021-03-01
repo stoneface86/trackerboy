@@ -44,12 +44,9 @@ Renderer::Renderer(
     mStopCounter(0),
     mBuffer(),
     mReturnBuffer(),
-    mSyncCounter(0),
-    mSyncPeriod(0),
     mLockFails(0),
     mUnderruns(0),
-    mSamplesElapsed(0),
-    mSyncTime(0)
+    mSamplesElapsed(0)
 {
     mBackgroundThread.reset(QThread::create(&Renderer::backgroundThreadRun, this));
     mBackgroundThread->start();
@@ -80,8 +77,7 @@ Renderer::Diagnostics Renderer::diagnostics() {
     return {
         mLockFails.load(),
         mUnderruns.load(),
-        mSamplesElapsed.load(),
-        mSyncTime.count()
+        mSamplesElapsed.load()
     };
 }
 
@@ -118,11 +114,10 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     mDevice.emplace();
     auto err = ma_device_init(mMiniaudio.context(), &config, &mDevice.value());
     assert(err == MA_SUCCESS);
-
-    mSyncPeriod = mDevice.value().playback.internalPeriodSizeInFrames;
+    
+    mReturnBuffer.init(SAMPLERATE);
 
     // update the synthesizer
-    mReturnBuffer.init(SAMPLERATE);
     mSynth.setSamplingRate(SAMPLERATE);
     mSynth.setVolume(soundConfig.volume);
     mSynth.setupBuffers();
@@ -156,7 +151,7 @@ void Renderer::beginRender() {
         mStopCounter = 0;
 
         mRunning = true;
-        ma_device_start(&mDevice.value());
+        
         mIdleCondition.wakeOne();
     }
 }
@@ -312,26 +307,14 @@ void Renderer::handleBackground() {
 
         // [1]
         if (mRunning) {
+            ma_device_start(&mDevice.value());
+            emit audioStarted();
             mMutex.unlock();
 
-            auto lastSyncTime = Clock::now();
-
+            
             mCallbackMutex.lock();
             do {
-                if (mSync) {
-                    mSync = false;
-                    emit audioSync();
-                    auto syncTime = Clock::now();
-                    mMutex.lock();
-                    mSyncTime = syncTime - lastSyncTime;
-                    mMutex.unlock();
-                    lastSyncTime = syncTime;
-
-                }
-
-                // poll at a 1ms interval
-                mCallbackCondition.wait(&mCallbackMutex, QDeadlineTimer(std::chrono::milliseconds(1), Qt::PreciseTimer));
-
+                mCallbackCondition.wait(&mCallbackMutex);
             } while (!mStopDevice);
             mCallbackMutex.unlock();
 
@@ -492,13 +475,6 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
 
     // write what we sent to the speakers for visualizers
     mReturnBuffer.writer().fullWrite(out, frames);
-
-    mSyncCounter += frames;
-    if (mSyncCounter >= mSyncPeriod) {
-        // an entire period has been sent to the speakers, synchronize with the GUI
-        mSync = true;
-        mSyncCounter %= mSyncPeriod;
-    }
     
 
 }
