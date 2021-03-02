@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "core/audio/AudioOutStream.hpp"
-#include "core/audio/RenderBuffer.hpp"
+#include "core/audio/RenderFrame.hpp"
+#include "core/audio/Ringbuffer.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/SongListModel.hpp"
 #include "core/model/WaveListModel.hpp"
@@ -57,6 +57,8 @@ public:
 
     AudioRingbuffer::Reader returnBuffer();
 
+    Ringbuffer<RenderFrame>::Reader frameReturnBuffer();
+
     bool isRunning();
 
     void setConfig(Config::Sound const& config);
@@ -80,12 +82,6 @@ signals:
     // Signal emitted when the audio callback thread was stopped.
     //
     void audioStopped();
-
-    //
-    // A frame of audio data has been synthesized and is buffered to be played out
-    // The GUI should update tracker position, visualizers, etc based on this new frame
-    //
-    void audioSync();
 
 
 public slots:
@@ -155,9 +151,7 @@ private:
     WaveListModel &mWaveModel;
 
     QWaitCondition mIdleCondition;
-    QWaitCondition mCallbackCondition;
     QMutex mMutex;
-    QMutex mCallbackMutex;
     std::unique_ptr<QThread> mBackgroundThread;
 
     bool mRunning;              // is the audio callback thread active?
@@ -183,9 +177,13 @@ private:
 
     CallbackState mCallbackState;
     int mStopCounter;
-
-    RenderBuffer mBuffer;
-    AudioRingbuffer mReturnBuffer;
+    
+    // internal sample buffer (callback reads + writes)
+    AudioRingbuffer mBuffer;
+    // outgoing sample buffer for GUI (callback writes, GUI reads)
+    AudioRingbuffer mSampleReturnBuffer;
+    // outgoing RenderFrame buffer for GUI (callback writes, GUI reads)
+    Ringbuffer<RenderFrame> mFrameReturnBuffer;
 
     // diagnostics
     std::atomic_uint mLockFails;

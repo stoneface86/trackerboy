@@ -18,8 +18,6 @@ include_directories(
 )
 
 set(UI_SRC
-    "core/audio/AudioOutStream.cpp"
-    "core/audio/RenderBuffer.cpp"
     "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
     "core/model/BaseModel.cpp"

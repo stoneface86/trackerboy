@@ -21,6 +21,9 @@ void RingbufferBase::init(size_t buffersize, void *buffer) {
     uninit();
     auto result = ma_rb_init(buffersize, buffer, nullptr, &mRingbuffer);
     mInitialized = result == MA_SUCCESS;
+    if (mInitialized) {
+        ma_rb_reset(&mRingbuffer);
+    }
     mSize = buffersize;
 }
 

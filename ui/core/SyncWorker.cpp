@@ -49,6 +49,7 @@ void SyncWorker::onAudioStop() {
     // ignore any pending reads on the return buffer
     // as we are no longer processing them
     mRenderer.returnBuffer().flush();
+    mRenderer.frameReturnBuffer().flush();
 
     // clear peaks
     setPeaks(0, 0);
@@ -69,6 +70,21 @@ void SyncWorker::updateCurrentTime(int currentTime) {
     Q_ASSERT(mSamplesPerFrame != 0);
     Q_ASSERT(mSampleBuffer);
     
+    // get the current frame
+    /*auto frameReturn = mRenderer.frameReturnBuffer();
+    size_t readCount = 1;
+    auto frame = frameReturn.acquireRead(readCount);
+    if (readCount == 1) {
+        if (!frame->ignore) {
+            if (mLastFrame.engineFrame.speed != frame->engineFrame.speed) {
+                emit speedChanged()
+            }
+            mLastFrame = *frame;
+        }
+        frameReturn.commitRead(frame, readCount);
+    }*/
+
+
 
     // get the audio data returned from the callback
     // this data has already been sent out to the output device

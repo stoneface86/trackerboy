@@ -19,8 +19,4 @@ struct RenderFrame {
     // APU register dump
     gbapu::Registers registers;
 
-    // size in samples of the frame's audio data
-    size_t nsamples;
-
-    bool ignore;
 };

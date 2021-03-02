@@ -62,4 +62,6 @@ private:
     int16_t mPeakLeft;
     int16_t mPeakRight;
 
+    //RenderFrame mLastFrame;
+
 };
