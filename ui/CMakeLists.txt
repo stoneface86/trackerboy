@@ -92,13 +92,3 @@ target_link_libraries(test_pattern_painter
     trackerboy
     Qt5::Widgets
 )
-
-add_executable(test_AudioOutStream EXCLUDE_FROM_ALL 
-    "test/test_AudioOutStream.cpp"
-    "core/audio/Ringbuffer.cpp"
-    "core/audio/AudioOutStream.cpp"
-)
-target_link_libraries(test_AudioOutStream PRIVATE
-    miniaudio
-    Qt5::Core
-)
