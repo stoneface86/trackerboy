@@ -41,6 +41,7 @@ signals:
 public slots:
     void onAudioStop();
     void onAudioStart();
+    void onAudioSync();
 
 protected:
 

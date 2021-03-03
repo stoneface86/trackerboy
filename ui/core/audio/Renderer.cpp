@@ -42,8 +42,14 @@ Renderer::Renderer(
     mPreviewChannel(trackerboy::ChType::ch1),
     mCallbackState(CallbackState::stopped),
     mStopCounter(0),
-    mBuffer(),
+    //mBuffer(),
     //mReturnBuffer(),
+    mFrameBuffer(nullptr),
+    mFrameBuffersize(0),
+    mSyncCounter(0),
+    mSyncPeriod(0),
+    mCurrentFrameLock(),
+    mNewFrameSinceLastSync(false),
     mLockFails(0),
     mUnderruns(0),
     mSamplesElapsed(0)
@@ -89,9 +95,9 @@ AudioRingbuffer::Reader Renderer::returnBuffer() {
     return mSampleReturnBuffer.reader();
 }
 
-Ringbuffer<RenderFrame>::Reader Renderer::frameReturnBuffer() {
-    return mFrameReturnBuffer.reader();
-}
+//Ringbuffer<RenderFrame>::Reader Renderer::frameReturnBuffer() {
+//    return mFrameReturnBuffer.reader();
+//}
 
 bool Renderer::isRunning() {
     QMutexLocker locker(&mMutex);
@@ -120,10 +126,11 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     // TODO: handle error conditions
     assert(err == MA_SUCCESS);
     
-    mBuffer.init(mSynth.framesize() * soundConfig.buffersize);
+    //mBuffer.init(mSynth.framesize() * soundConfig.buffersize);
     // TODO: properly determine the size of these buffers
-    mFrameReturnBuffer.init(soundConfig.buffersize);
     mSampleReturnBuffer.init(SAMPLERATE);
+
+    mSyncPeriod = mDevice.value().playback.internalPeriodSizeInFrames;
 
     // update the synthesizer
     mSynth.setSamplingRate(SAMPLERATE);
@@ -152,7 +159,9 @@ void Renderer::beginRender() {
     } else {
 
         mCallbackState = CallbackState::running;
-        mBuffer.reset();
+        mFrameBuffersize = 0;
+        mSyncCounter = 0;
+        mSync = false;
         mSamplesElapsed = 0;
         mStopCounter = 0;
 
@@ -316,11 +325,20 @@ void Renderer::handleBackground() {
             // start the device (TODO: error check!)
             ma_device_start(&mDevice.value());
             emit audioStarted();
+            
+            //mMutex.unlock();
 
             do {
-                // wait for the callback to finish playing
-                mIdleCondition.wait(&mMutex);
+                if (mSync) {
+                    mSync = false;
+                    emit audioSync();
+                }
+
+                // wait for the callback to finish playing or poll for a sync event
+                mIdleCondition.wait(&mMutex, QDeadlineTimer(1, Qt::PreciseTimer));
             } while (!mStopDevice);
+
+            //mMutex.lock();
 
             // stop the device
             ma_device_stop(&mDevice.value());
@@ -375,12 +393,14 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
     // if the buffer is exhausted and we are not stopping = underrun!
     // an underrun can only occur if the buffer was exhausted and we could not lock the spinlock
 
+    bool locked = false;
+
     // internal buffer reader + writer objects
-    auto reader = mBuffer.reader();
-    auto writer = mBuffer.writer();
+    //auto reader = mBuffer.reader();
+    //auto writer = mBuffer.writer();
 
     // frame and sample return buffer writers (to send to the GUI)
-    auto frameWriter = mFrameReturnBuffer.writer();
+    //auto frameWriter = mFrameReturnBuffer.writer();
     auto sampleReturnWriter = mSampleReturnBuffer.writer();
 
     auto outIter = out;
@@ -393,9 +413,8 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
             mCancelStop = false;
         }
 
-        
-        if (mCallbackState == CallbackState::stopping) {
-            if (reader.availableRead() == 0) {
+        if (mFrameBuffersize == 0) {
+            if (mCallbackState == CallbackState::stopping) {
                 // buffer is now empty, signal to the background thread that we are done
 
                 // we can use a mutex here, as we no longer care about audio glitches
@@ -406,81 +425,86 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
                 mIdleCondition.wakeOne();
                 mMutex.unlock();
                 break;
-            }
-        } else  {
+            } else {
 
-            // there is space in the buffer, write to it
-            auto framesAvailable = writer.availableWrite() / mSynth.framesize();
-            if (framesAvailable) {
-                if (mSpinlock.tryLock()) {
-                    
-                    for (size_t i = 0; i < framesAvailable; ++i) {
-
-                        if (mStopCounter) {
-                            if (--mStopCounter == 0) {
-                                mCallbackState = CallbackState::stopping;
-                                i = framesAvailable;
-                            }
-                        } else {
-
-                            RenderFrame rFrame;
-                            // step the engine
-                            mEngine.step(rFrame.engineFrame);
-
-                            // step the instrument runtime if we are previewing an instrument
-                            if (mPreviewState == PreviewState::instrument) {
-                                mIr.step();
-                            }
-
-                            // begin the stop countdown if the engine halted and we are not previewing anything
-                            if (rFrame.engineFrame.halted && mPreviewState == PreviewState::none) {
-                                mStopCounter = STOP_FRAMES;
-                            }
-                            
-                            rFrame.registers = mSynth.apu().registers();
-                            frameWriter.fullWrite(&rFrame, 1);
-                        }
-
-                        // get the current register dump
-
-                        // synthesize the frame
-                        auto nsamples = mSynth.run();
-
-                        // queue it for future playback
-                        auto synthBuffer = mSynth.buffer();
-                        writer.fullWrite(synthBuffer, nsamples);
-
-                        // queue this "return" data for the GUI
-                        sampleReturnWriter.fullWrite(synthBuffer, nsamples);
-                    }
-
-                    mSpinlock.unlock();
-                } else {
-                    // failed to lock the spinlock, the user (GUI thread) is modifying the document
-                    ++mLockFails;
-                    if (reader.availableRead() == 0) {
-                        // the buffer is empty and we cannot replenish it, an underrun will occur
-                        // increment underrun counter and give up
-                        ++mUnderruns;
+                // attempt to acquire the lock if we have not already
+                if (!locked) {
+                    locked = mSpinlock.tryLock();
+                    if (!locked) {
+                        ++mLockFails;
                         break;
                     }
                 }
+
+                if (mStopCounter) {
+                    if (--mStopCounter == 0) {
+                        mCallbackState = CallbackState::stopping;
+                    }
+                } else {
+                    mNewFrameSinceLastSync = true;
+                    //RenderFrame rFrame;
+                    // step the engine
+                    mEngine.step(mCurrentFrame.engineFrame);
+
+                    // step the instrument runtime if we are previewing an instrument
+                    if (mPreviewState == PreviewState::instrument) {
+                        mIr.step();
+                    }
+
+                    // begin the stop countdown if the engine halted and we are not previewing anything
+                    if (mCurrentFrame.engineFrame.halted && mPreviewState == PreviewState::none) {
+                        mStopCounter = STOP_FRAMES;
+                    }
+
+                    mCurrentFrame.registers = mSynth.apu().registers();
+                    //frameWriter.fullWrite(&rFrame, 1);
+                }
+
+                // get the current register dump
+
+                // synthesize the frame
+                mFrameBuffersize = mSynth.run();
+                mFrameBuffer = mSynth.buffer();
             }
         }
 
 
         // write buffered data to the speakers
-        size_t framesRead = reader.fullRead(outIter, framesRemaining);
-        framesRemaining -= framesRead;
+        auto toWrite = std::min(mFrameBuffersize, framesRemaining);
+        auto toWriteInSamples = toWrite * 2;
 
-        outIter += framesRead * 2;
+        // copy from frame buffer to out
+        std::copy_n(mFrameBuffer, toWriteInSamples, outIter);
+        mFrameBuffersize -= toWrite;
+        mFrameBuffer += toWriteInSamples;
+        
+        // adjust out iterator
+        framesRemaining -= toWrite;
+        outIter += toWriteInSamples;
  
-        mSamplesElapsed += (unsigned)framesRead;
+        
 
 
     }
 
-    
+    if (locked) {
+        mSpinlock.unlock();
+    }
+
+    mSyncCounter += frames;
+    if (mSyncCounter >= mSyncPeriod) {
+        if (mNewFrameSinceLastSync && mCurrentFrameLock.tryLock()) {
+            mCurrentFrameCopy = mCurrentFrame;
+            mNewFrameSinceLastSync = false;
+            mCurrentFrameLock.unlock();
+        }
+
+        mSyncCounter %= mSyncPeriod;
+        mSync = true;
+    }
+
+    sampleReturnWriter.fullWrite(out, frames);
+    mSamplesElapsed += (unsigned)frames;
 
 }
 

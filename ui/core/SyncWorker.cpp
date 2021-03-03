@@ -23,6 +23,7 @@ SyncWorker::SyncWorker(Renderer &renderer, AudioScope &leftScope, AudioScope &ri
     connect(this, &SyncWorker::updateScopes, &mRightScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
     connect(&renderer, &Renderer::audioStarted, this, &SyncWorker::onAudioStart, Qt::QueuedConnection);
     connect(&renderer, &Renderer::audioStopped, this, &SyncWorker::onAudioStop, Qt::QueuedConnection);
+    connect(&renderer, &Renderer::audioSync, this, &SyncWorker::onAudioSync, Qt::QueuedConnection);
 }
 
 int SyncWorker::duration() const {
@@ -39,7 +40,7 @@ void SyncWorker::setSamplesPerFrame(size_t samples) {
 }
 
 void SyncWorker::onAudioStart() {
-    start();
+    //start();
 }
 
 void SyncWorker::onAudioStop() {
@@ -49,7 +50,6 @@ void SyncWorker::onAudioStop() {
     // ignore any pending reads on the return buffer
     // as we are no longer processing them
     mRenderer.returnBuffer().flush();
-    mRenderer.frameReturnBuffer().flush();
 
     // clear peaks
     setPeaks(0, 0);
@@ -63,59 +63,56 @@ void SyncWorker::onAudioStop() {
     emit updateScopes();
 }
 
+void SyncWorker::onAudioSync() {
+    // if stopped and we have enough to animate a frame, start the animation
+    if (state() == Stopped && mRenderer.returnBuffer().availableRead() >= mSamplesPerFrame) {
+        start();
+    }
+
+
+
+}
+
 void SyncWorker::updateCurrentTime(int currentTime) {
     Q_UNUSED(currentTime)
     
     QMutexLocker locker(&mMutex);
     Q_ASSERT(mSamplesPerFrame != 0);
     Q_ASSERT(mSampleBuffer);
-    
-    // get the current frame
-    /*auto frameReturn = mRenderer.frameReturnBuffer();
-    size_t readCount = 1;
-    auto frame = frameReturn.acquireRead(readCount);
-    if (readCount == 1) {
-        if (!frame->ignore) {
-            if (mLastFrame.engineFrame.speed != frame->engineFrame.speed) {
-                emit speedChanged()
-            }
-            mLastFrame = *frame;
-        }
-        frameReturn.commitRead(frame, readCount);
-    }*/
-
-
 
     // get the audio data returned from the callback
     // this data has already been sent out to the output device
     auto returnBuffer = mRenderer.returnBuffer();
-    // read a frame if we can
-    if (returnBuffer.availableRead() >= mSamplesPerFrame) {
+    // assert that there is enough for a frame
+    Q_ASSERT(returnBuffer.availableRead() >= mSamplesPerFrame);
 
-        // read the frame
-        returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
+    // read the frame
+    returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
 
-        // determine peak amplitudes for each channel
-        int16_t peakLeft = 0;
-        int16_t peakRight = 0;
-        auto samplePtr = mSampleBuffer.get();
-        for (size_t i = 0; i != mSamplesPerFrame; ++i) {
-            auto sampleLeft = (int16_t)abs(*samplePtr++);
-            auto sampleRight = (int16_t)abs(*samplePtr++);
-            peakLeft = std::max(sampleLeft, peakLeft);
-            peakRight = std::max(sampleRight, peakRight);
-        }
-        setPeaks(peakLeft, peakRight);
-
-        // send to visualizers
-        mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
-        mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
-
-        // calls AudioScope::update via event queue (cannot call directly as this thread is not the GUI thread)
-        emit updateScopes();
-
+    // determine peak amplitudes for each channel
+    int16_t peakLeft = 0;
+    int16_t peakRight = 0;
+    auto samplePtr = mSampleBuffer.get();
+    for (size_t i = 0; i != mSamplesPerFrame; ++i) {
+        auto sampleLeft = (int16_t)abs(*samplePtr++);
+        auto sampleRight = (int16_t)abs(*samplePtr++);
+        peakLeft = std::max(sampleLeft, peakLeft);
+        peakRight = std::max(sampleRight, peakRight);
     }
-    // if there was not enough samples for a whole frame, then this frame will be skipped
+    setPeaks(peakLeft, peakRight);
+
+    // send to visualizers
+    mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
+    mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
+
+    // calls AudioScope::update via event queue (cannot call directly as this thread is not the GUI thread)
+    emit updateScopes();
+
+    if (returnBuffer.availableRead() < mSamplesPerFrame) {
+        // no more frames available, stop the animation
+        stop();
+    }
+
 }
 
 void SyncWorker::setPeaks(int16_t peakLeft, int16_t peakRight) {

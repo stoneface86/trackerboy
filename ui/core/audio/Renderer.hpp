@@ -57,8 +57,6 @@ public:
 
     AudioRingbuffer::Reader returnBuffer();
 
-    Ringbuffer<RenderFrame>::Reader frameReturnBuffer();
-
     bool isRunning();
 
     void setConfig(Config::Sound const& config);
@@ -83,6 +81,7 @@ signals:
     //
     void audioStopped();
 
+    void audioSync();
 
 public slots:
 
@@ -179,11 +178,22 @@ private:
     int mStopCounter;
     
     // internal sample buffer (callback reads + writes)
-    AudioRingbuffer mBuffer;
+    //AudioRingbuffer mBuffer;
     // outgoing sample buffer for GUI (callback writes, GUI reads)
     AudioRingbuffer mSampleReturnBuffer;
-    // outgoing RenderFrame buffer for GUI (callback writes, GUI reads)
-    Ringbuffer<RenderFrame> mFrameReturnBuffer;
+
+    // the current frame buffer
+    int16_t *mFrameBuffer;
+    size_t mFrameBuffersize;
+
+    size_t mSyncCounter;
+    size_t mSyncPeriod;
+
+    Spinlock mCurrentFrameLock;
+    RenderFrame mCurrentFrame;
+    RenderFrame mCurrentFrameCopy;
+
+    bool mNewFrameSinceLastSync;
 
     // diagnostics
     std::atomic_uint mLockFails;
