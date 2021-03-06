@@ -16,7 +16,8 @@ static std::array<int16_t, 16> SINC_SAMPLE = {
 
 SoundQualityPreview::SoundQualityPreview(QWidget *parent) :
     QFrame(parent),
-    mQuality(false)
+    mQuality(false),
+    mPath()
 {
     setFrameStyle(QFrame::Box | QFrame::Plain);
     setLineWidth(1);
@@ -45,7 +46,7 @@ void SoundQualityPreview::paintEvent(QPaintEvent *evt) {
 
     painter.setPen(QPen(pal.text(), 1, Qt::SolidLine, Qt::RoundCap));
     painter.translate(crect.topLeft());
-    painter.drawPath(mPath);
+    painter.drawPath(mPath.value());
 
 }
 
@@ -61,8 +62,12 @@ void SoundQualityPreview::updatePath() {
     auto const startY = 0.75 * ch;
     auto const endY = 0.25 * ch;
     
-    mPath.clear();
-    mPath.moveTo(0.0, startY);
+    // clear was added in 5.13 so we cannot use it
+    //mPath.clear();
+    // instead we reconstruct a new QPainterPath
+    mPath.emplace();
+    auto &path = mPath.value();
+    path.moveTo(0.0, startY);
     if (mQuality) {
         // draw a sinc-interpolated step
         constexpr double stepWidth = 0.25;
@@ -72,16 +77,16 @@ void SoundQualityPreview::updatePath() {
         auto y = startY;
         auto const stepHeight = startY - endY;
         auto const xstep = sampleWidth * cw;
-        mPath.lineTo(x, y);
+        path.lineTo(x, y);
         for (auto sample : SINC_SAMPLE) {
             x += xstep;
             y -= (sample / 32767.0 * stepHeight);
-            mPath.lineTo(x, y);
+            path.lineTo(x, y);
         }
     } else {
         // draw a linear-interpolated step
-        mPath.lineTo(0.475 * cw, startY);
-        mPath.lineTo(0.525 * cw, endY);
+        path.lineTo(0.475 * cw, startY);
+        path.lineTo(0.525 * cw, endY);
     }
-    mPath.lineTo(cw, endY);
+    path.lineTo(cw, endY);
 }

@@ -4,6 +4,8 @@
 #include <QFrame>
 #include <QPainterPath>
 
+#include <optional>
+
 //
 // Simple widget for showing how quality settings affect the synthesizer.
 // A low quality setting results in a linear interpolated transition whereas
@@ -32,6 +34,6 @@ private:
     Q_DISABLE_COPY(SoundQualityPreview)
 
     bool mQuality;
-    QPainterPath mPath;
+    std::optional<QPainterPath> mPath;
 
 };
