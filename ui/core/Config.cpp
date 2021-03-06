@@ -1,14 +1,17 @@
 
 #include "core/Config.hpp"
 
+#include "gbapu.hpp"
+
 #include <QSettings>
 
 
 namespace {
 
 constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
-constexpr unsigned DEFAULT_BUFFERSIZE = 5;
-constexpr unsigned DEFAULT_VOLUME = 100;
+constexpr double DEFAULT_PERIOD = 10.0;
+constexpr double DEFAULT_LATENCY = 30.0;
+constexpr int DEFAULT_QUALITY = static_cast<int>(gbapu::Apu::Quality::medium);
 
 Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
 
@@ -148,9 +151,9 @@ void Config::readSettings() {
     }
 
     mSound.samplerateIndex = settings.value("samplerateIndex", DEFAULT_SAMPLERATE_INDEX).toUInt();
-    mSound.buffersize = settings.value("buffersize", DEFAULT_BUFFERSIZE).toUInt();
-    mSound.volume = settings.value("volume", DEFAULT_VOLUME).toInt();
-    mSound.lowLatency = settings.value("lowLatency", true).toBool();
+    mSound.latency = settings.value("latency", DEFAULT_LATENCY).toReal();
+    mSound.period = settings.value("period", DEFAULT_PERIOD).toReal();
+    mSound.quality = settings.value("quality", DEFAULT_QUALITY).toInt();
 
     settings.endGroup(); // sound
 
@@ -201,9 +204,9 @@ void Config::writeSettings() {
     settings.setValue("deviceId", barray);
 
     settings.setValue("samplerateIndex", mSound.samplerateIndex);
-    settings.setValue("buffersize", mSound.buffersize);
-    settings.setValue("volume", mSound.volume);
-    settings.setValue("lowLatency", mSound.lowLatency);
+    settings.setValue("latency", mSound.latency);
+    settings.setValue("period", mSound.period);
+    settings.setValue("quality", mSound.quality);
     settings.endGroup();
 
     settings.endGroup();

@@ -2,7 +2,11 @@
 #include "core/samplerates.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
 
+#include "gbapu.hpp"
+
+#include <array>
 #include <cmath>
+
 
 SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     ConfigTab(Config::CategorySound, parent),
@@ -11,84 +15,95 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mDeviceGroup(tr("Device")),
     mDeviceLayout(),
     mDeviceCombo(),
-    mSettingsLayout(),
-    mVolumeGroup(tr("Volume")),
-    mVolumeLayout(),
-    mVolumeSlider(Qt::Horizontal),
-    mVolumeLabel(),
-    mBufferGroup(tr("Buffer size")),
-    mBufferLayout(),
-    mBufferSlider(Qt::Horizontal),
-    mBufferLabel(),
-    mSamplerateGroup(tr("Sample rate")),
-    mSamplerateLayout(),
+    mDeviceFormLayout(),
+    mLatencyLabel(tr("Latency")),
+    mLatencySpin(),
+    mPeriodLabel(tr("Period")),
+    mPeriodSpin(),
+    mSamplerateLabel(tr("Sample rate")),
     mSamplerateCombo(),
-    mLatencyGroup(tr("Latency")),
-    mLatencyLayout(),
-    mLatencyCheckbox(tr("Low latency playback")),
-    mQualityCheckbox(tr("High quality synthesis"))
+    mQualityGroup(tr("Quality")),
+    mQualityLayout(),
+    mQualityRadioLayout(),
+    mLowQualityRadio(tr("Low")),
+    mMedQualityRadio(tr("Medium")),
+    mHighQualityRadio(tr("High")),
+    mPreviewLayout(),
+    mChannels12Label(tr("CH1 + CH2")),
+    mChannels34Label(tr("CH3 + CH4")),
+    mPreview12(),
+    mPreview34()
 {
     // layout
+    mDeviceFormLayout.addRow(&mLatencyLabel, &mLatencySpin);
+    mDeviceFormLayout.addRow(&mPeriodLabel, &mPeriodSpin);
+    mDeviceFormLayout.addRow(&mSamplerateLabel, &mSamplerateCombo);
+
     mDeviceLayout.addWidget(&mDeviceCombo);
+    mDeviceLayout.addLayout(&mDeviceFormLayout);
     mDeviceGroup.setLayout(&mDeviceLayout);
 
-    mVolumeLayout.addWidget(&mVolumeSlider);
-    mVolumeLayout.addWidget(&mVolumeLabel, 0, Qt::AlignCenter);
-    mVolumeGroup.setLayout(&mVolumeLayout);
+    mQualityRadioLayout.addWidget(&mLowQualityRadio);
+    mQualityRadioLayout.addWidget(&mMedQualityRadio);
+    mQualityRadioLayout.addWidget(&mHighQualityRadio);
+    
+    mPreviewLayout.addWidget(&mChannels12Label, 0, 0);
+    mPreviewLayout.addWidget(&mChannels34Label, 0, 1);
+    mPreviewLayout.addWidget(&mPreview12, 1, 0);
+    mPreviewLayout.addWidget(&mPreview34, 1, 1);
 
-    mBufferLayout.addWidget(&mBufferSlider);
-    mBufferLayout.addWidget(&mBufferLabel, 0, Qt::AlignCenter);
-    mBufferGroup.setLayout(&mBufferLayout);
 
-    mSamplerateLayout.addWidget(&mSamplerateCombo);
-    mSamplerateGroup.setLayout(&mSamplerateLayout);
-
-    mLatencyLayout.addWidget(&mLatencyCheckbox);
-    mLatencyGroup.setLayout(&mLatencyLayout);
-
-    mSettingsLayout.addWidget(&mVolumeGroup, 0, 0);
-    mSettingsLayout.addWidget(&mBufferGroup, 0, 1);
-    mSettingsLayout.addWidget(&mSamplerateGroup, 1, 0);
-    mSettingsLayout.addWidget(&mLatencyGroup, 1, 1);
-
+    mQualityLayout.addLayout(&mQualityRadioLayout);
+    mQualityLayout.addLayout(&mPreviewLayout, 1);
+    mQualityGroup.setLayout(&mQualityLayout);
 
     mLayout.addWidget(&mDeviceGroup);
-    mLayout.addLayout(&mSettingsLayout);
-    mLayout.addWidget(&mQualityCheckbox);
+    mLayout.addWidget(&mQualityGroup);
     mLayout.addStretch();
     setLayout(&mLayout);
 
     // settings
-    mVolumeLabel.setAlignment(Qt::AlignCenter);
-    mBufferLabel.setAlignment(Qt::AlignCenter);
-    mVolumeSlider.setRange(0, 100);
-    mBufferSlider.setRange(1, 10);
-    mBufferSlider.setValue(1);
 
+    mDeviceCombo.addItems(config.mMiniaudio.deviceNames());
     // populate samplerate combo
     for (int i = 0; i != N_SAMPLERATES; ++i) {
         mSamplerateCombo.addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
     }
 
-    mDeviceCombo.addItems(config.mMiniaudio.deviceNames());
+    setupTimeSpinbox(mLatencySpin);
+    mLatencySpin.setMaximum(2000.0);
+    mLatencySpin.setValue(30.0);
 
-    connect(&mBufferSlider, &QSlider::valueChanged, this, &SoundConfigTab::bufferSliderChanged);
-    connect(&mVolumeSlider, &QSlider::valueChanged, this, &SoundConfigTab::volumeSliderChanged);
+    setupTimeSpinbox(mPeriodSpin);
+    mPeriodSpin.setMaximum(500.0);
+    mPeriodSpin.setValue(10.0);
+    
+    mQualityButtons.addButton(&mLowQualityRadio, (int)gbapu::Apu::Quality::low);
+    mQualityButtons.addButton(&mMedQualityRadio, (int)gbapu::Apu::Quality::medium);
+    mQualityButtons.addButton(&mHighQualityRadio, (int)gbapu::Apu::Quality::high);
 
     // any changes made by the user will mark this tab as "dirty"
     connect(&mSamplerateCombo, QOverload<int>::of(&QComboBox::activated), this, &SoundConfigTab::setDirty);
     connect(&mDeviceCombo, QOverload<int>::of(&QComboBox::activated), this, &SoundConfigTab::setDirty);
-    connect(&mLatencyCheckbox, &QCheckBox::stateChanged, this, &SoundConfigTab::setDirty);
-    connect(&mQualityCheckbox, &QCheckBox::stateChanged, this, &SoundConfigTab::setDirty);
+    connect(&mLatencySpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
+    connect(&mPeriodSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
+    connect(&mQualityButtons, &QButtonGroup::idToggled, this, &SoundConfigTab::qualityRadioToggled);
 
+}
+
+void SoundConfigTab::setupTimeSpinbox(QDoubleSpinBox &spin) {
+    spin.setSuffix(tr(" ms"));
+    spin.setDecimals(2);
+    spin.setMinimum(1.0);
 }
 
 void SoundConfigTab::apply(Config::Sound &soundConfig) {
     soundConfig.deviceIndex = mDeviceCombo.currentIndex();
     soundConfig.samplerateIndex = mSamplerateCombo.currentIndex();
-    soundConfig.buffersize = mBufferSlider.value();
-    soundConfig.volume = mVolumeSlider.value();
-    soundConfig.lowLatency = mLatencyCheckbox.isChecked(); 
+
+    soundConfig.latency = mLatencySpin.value();
+    soundConfig.period = mPeriodSpin.value();
+    soundConfig.quality = mQualityButtons.checkedId();
 
     clean();
 }
@@ -98,25 +113,18 @@ void SoundConfigTab::resetControls(Config::Sound &soundConfig) {
     mDeviceCombo.setCurrentIndex(soundConfig.deviceIndex);
     mSamplerateCombo.setCurrentIndex(soundConfig.samplerateIndex);
 
-    mBufferSlider.setValue(soundConfig.buffersize);
-    mVolumeSlider.setValue(soundConfig.volume);
-    mLatencyCheckbox.setChecked(soundConfig.lowLatency);
+    mLatencySpin.setValue(soundConfig.latency);
+    mPeriodSpin.setValue(soundConfig.period);
+    mQualityButtons.button(soundConfig.quality)->setChecked(true);
 
     clean();
 }
 
-void SoundConfigTab::volumeSliderChanged(int value) {
-    double db = value / 100.0;
-    db *= db;
-    db = 6.0 * log2(db);
-    mVolumeLabel.setText(QStringLiteral("%1% (%2 dB)").arg(
-        QString::number(value),
-        QString::number(db, 'f', 2)
-    ));
-    setDirty();
+void SoundConfigTab::qualityRadioToggled(int id, bool checked) {
+    if (checked) {
+        mPreview12.setHighQuality(id != (int)gbapu::Apu::Quality::low);
+        mPreview34.setHighQuality(id == (int)gbapu::Apu::Quality::high);
+        setDirty();
+    }
 }
 
-void SoundConfigTab::bufferSliderChanged(int value) {
-    mBufferLabel.setText(tr("%1 frames").arg(QString::number(value)));
-    setDirty();
-}

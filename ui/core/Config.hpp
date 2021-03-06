@@ -49,10 +49,9 @@ public:
     struct Sound {
         int deviceIndex;
         unsigned samplerateIndex;   // index of the current samplerate
-        unsigned buffersize;        // Number of frames to buffer when rendering
-        int volume;                 // Synth volume level, percentage, 0-100
-        bool lowLatency;            // low latency playback enable
-
+        double latency;             // latency, or internal buffer size, in milliseconds
+        double period;              // period, in milliseconds
+        int quality;                // synthesizer quality setting
     };
 
     Config(Miniaudio &miniaudio);

@@ -115,7 +115,7 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     // always 16-bit stereo format
     config.playback.format = ma_format_s16;
     config.playback.channels = 2;
-    config.performanceProfile = soundConfig.lowLatency ? ma_performance_profile_low_latency : ma_performance_profile_conservative;
+    config.periodSizeInFrames = (unsigned)(soundConfig.period * SAMPLERATE / 1000);
     config.sampleRate = SAMPLERATE;
     config.dataCallback = audioThreadRun;
     config.pUserData = this;
@@ -126,15 +126,14 @@ void Renderer::setConfig(Config::Sound const &soundConfig) {
     // TODO: handle error conditions
     assert(err == MA_SUCCESS);
     
-    //mBuffer.init(mSynth.framesize() * soundConfig.buffersize);
-    // TODO: properly determine the size of these buffers
+    //mBuffer.init(soundConfig.latency * SAMPLERATE / 1000);
     mSampleReturnBuffer.init(SAMPLERATE);
 
     mSyncPeriod = mDevice.value().playback.internalPeriodSizeInFrames;
 
     // update the synthesizer
     mSynth.setSamplingRate(SAMPLERATE);
-    mSynth.setVolume(soundConfig.volume);
+    mSynth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
     mSynth.setupBuffers();
 
     if (mRunning) {
@@ -494,6 +493,7 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
     mSyncCounter += frames;
     if (mSyncCounter >= mSyncPeriod) {
         if (mNewFrameSinceLastSync && mCurrentFrameLock.tryLock()) {
+            // Save a copy for the GUI
             mCurrentFrameCopy = mCurrentFrame;
             mNewFrameSinceLastSync = false;
             mCurrentFrameLock.unlock();

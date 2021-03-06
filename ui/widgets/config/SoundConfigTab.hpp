@@ -2,12 +2,16 @@
 #pragma once
 
 #include "widgets/config/ConfigTab.hpp"
+#include "widgets/config/SoundQualityPreview.hpp"
 
+#include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
-#include <QSlider>
+#include <QRadioButton>
 #include <QVBoxLayout>
 
 //
@@ -25,34 +29,38 @@ public:
     void resetControls(Config::Sound &soundConfig);
 
 private slots:
-    void bufferSliderChanged(int value);
-    void volumeSliderChanged(int value);
 
+    void qualityRadioToggled(int id, bool checked);
 
 private:
+
+    void setupTimeSpinbox(QDoubleSpinBox &spin);
 
     Config &mConfig;
 
     QVBoxLayout mLayout;
         QGroupBox mDeviceGroup;
-            QGridLayout mDeviceLayout;
+            QVBoxLayout mDeviceLayout;
                 QComboBox mDeviceCombo;
-        QGridLayout mSettingsLayout;
-            QGroupBox mVolumeGroup;         // 0, 0
-                QVBoxLayout mVolumeLayout;
-                    QSlider mVolumeSlider;
-                    QLabel mVolumeLabel;
-            QGroupBox mBufferGroup;         // 0, 1
-                QVBoxLayout mBufferLayout;
-                    QSlider mBufferSlider;
-                    QLabel mBufferLabel;
-            QGroupBox mSamplerateGroup;     // 1, 0
-                QGridLayout mSamplerateLayout;
+                QFormLayout mDeviceFormLayout;
+                    QLabel mLatencyLabel;
+                    QDoubleSpinBox mLatencySpin;
+                    QLabel mPeriodLabel;
+                    QDoubleSpinBox mPeriodSpin;
+                    QLabel mSamplerateLabel;
                     QComboBox mSamplerateCombo;
-            QGroupBox mLatencyGroup;        // 1, 1
-                QGridLayout mLatencyLayout;
-                    QCheckBox mLatencyCheckbox;
-        QCheckBox mQualityCheckbox;
+        QGroupBox mQualityGroup;
+            QVBoxLayout mQualityLayout;
+                QHBoxLayout mQualityRadioLayout;
+                    QRadioButton mLowQualityRadio;
+                    QRadioButton mMedQualityRadio;
+                    QRadioButton mHighQualityRadio;
+                QGridLayout mPreviewLayout;
+                    QLabel mChannels12Label;        // 0, 0
+                    QLabel mChannels34Label;        // 0, 1
+                    SoundQualityPreview mPreview12; // 1, 0
+                    SoundQualityPreview mPreview34; // 1, 1
 
+    QButtonGroup mQualityButtons;
 
 };

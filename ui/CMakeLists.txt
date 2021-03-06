@@ -50,6 +50,7 @@ set(UI_SRC
 
     "widgets/config/ConfigTab.cpp"
     "widgets/config/SoundConfigTab.cpp"
+    "widgets/config/SoundQualityPreview.cpp"
     "widgets/docks/ModulePropertiesWidget.cpp"
     "widgets/docks/OrderWidget.cpp"
     "widgets/docks/SongPropertiesWidget.cpp"
