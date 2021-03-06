@@ -30,7 +30,7 @@ public:
 
 private slots:
 
-    void qualityRadioToggled(int id, bool checked);
+    void qualityRadioToggled(QAbstractButton *btn, bool checked);
 
 private:
 

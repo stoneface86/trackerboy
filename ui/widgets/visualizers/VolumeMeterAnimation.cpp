@@ -3,6 +3,8 @@
 
 #include <QtDebug>
 
+#include <cmath>
+
 constexpr int DURATION = 100;
 
 VolumeMeterAnimation::VolumeMeterAnimation(QObject *parent) :

@@ -87,7 +87,7 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     connect(&mDeviceCombo, QOverload<int>::of(&QComboBox::activated), this, &SoundConfigTab::setDirty);
     connect(&mLatencySpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
     connect(&mPeriodSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
-    connect(&mQualityButtons, &QButtonGroup::idToggled, this, &SoundConfigTab::qualityRadioToggled);
+    connect(&mQualityButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &SoundConfigTab::qualityRadioToggled);
 
 }
 
@@ -120,8 +120,9 @@ void SoundConfigTab::resetControls(Config::Sound &soundConfig) {
     clean();
 }
 
-void SoundConfigTab::qualityRadioToggled(int id, bool checked) {
+void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
     if (checked) {
+        auto id = mQualityButtons.id(btn);
         mPreview12.setHighQuality(id != (int)gbapu::Apu::Quality::low);
         mPreview34.setHighQuality(id == (int)gbapu::Apu::Quality::high);
         setDirty();

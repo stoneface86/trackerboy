@@ -21,7 +21,7 @@ protected:
     void paintEvent(QPaintEvent *evt) override;
 
 private:
-    Q_DISABLE_COPY_MOVE(PeakMeter)
+    Q_DISABLE_COPY(PeakMeter)
 
     VolumeMeterAnimation mMeterLeft;
     VolumeMeterAnimation mMeterRight;

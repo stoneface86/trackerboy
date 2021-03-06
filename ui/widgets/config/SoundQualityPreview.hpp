@@ -29,7 +29,7 @@ private:
 
     void updatePath();
 
-    Q_DISABLE_COPY_MOVE(SoundQualityPreview)
+    Q_DISABLE_COPY(SoundQualityPreview)
 
     bool mQuality;
     QPainterPath mPath;

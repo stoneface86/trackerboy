@@ -51,7 +51,7 @@ protected:
 
 private:
 
-    Q_DISABLE_COPY_MOVE(VolumeMeterAnimation)
+    Q_DISABLE_COPY(VolumeMeterAnimation)
 
     qint16 mTargetSample;
 
