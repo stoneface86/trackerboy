@@ -2,6 +2,7 @@
 #include "widgets/visualizers/AudioScope.hpp"
 
 #include <QGuiApplication>
+#include <QMutexLocker>
 #include <QPainter>
 #include <QPen>
 
@@ -42,6 +43,7 @@ AudioScope::AudioScope(QWidget *parent) :
 }
 
 void AudioScope::clear() {
+    QMutexLocker locker(&mMutex);
     auto const w = width();
 
     auto &bgcolor = palette().color(QPalette::Window);
@@ -67,6 +69,8 @@ void AudioScope::setDuration(size_t samples) {
 
 void AudioScope::render(int16_t samples[], size_t nsamples, size_t skip) {
     Q_UNUSED(nsamples);
+
+    QMutexLocker locker(&mMutex);
 
     auto &pal = palette();
     mWaveform.fill(pal.color(QPalette::Window));
@@ -103,6 +107,8 @@ void AudioScope::render(int16_t samples[], size_t nsamples, size_t skip) {
 
 void AudioScope::paintEvent(QPaintEvent *evt) {
     QFrame::paintEvent(evt);
+
+    QMutexLocker locker(&mMutex);
 
     QPainter painter(this);
     painter.drawPixmap(LINE_WIDTH, LINE_WIDTH, mWaveform);

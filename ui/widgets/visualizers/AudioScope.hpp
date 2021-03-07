@@ -3,6 +3,7 @@
 
 
 #include <QFrame>
+#include <QMutex>
 #include <QPixmap>
 
 #include <array>
@@ -63,6 +64,8 @@ private:
     // Cached drawing of the waveform (so we don't have to do it every paint event)
     //
     QPixmap mWaveform;
+
+    QMutex mMutex;
 
 
 };
