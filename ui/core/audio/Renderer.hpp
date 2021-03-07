@@ -140,6 +140,8 @@ private:
     static void audioThreadRun(ma_device *device, void *out, const void *in, ma_uint32 frames);
     void handleAudio(int16_t *out, size_t frames);
 
+    void render(AudioRingbuffer::Writer &writer);
+
     // class members ---------------------------------------------------------
 
     Miniaudio &mMiniaudio;
@@ -178,7 +180,7 @@ private:
     int mStopCounter;
     
     // internal sample buffer (callback reads + writes)
-    //AudioRingbuffer mBuffer;
+    AudioRingbuffer mBuffer;
     // outgoing sample buffer for GUI (callback writes, GUI reads)
     AudioRingbuffer mSampleReturnBuffer;
 
@@ -190,8 +192,8 @@ private:
     size_t mSyncPeriod;
 
     Spinlock mCurrentFrameLock;
+    trackerboy::Frame mCurrentEngineFrame;
     RenderFrame mCurrentFrame;
-    RenderFrame mCurrentFrameCopy;
 
     bool mNewFrameSinceLastSync;
 
