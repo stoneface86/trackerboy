@@ -13,6 +13,13 @@
 //
 struct RenderFrame {
 
+    constexpr RenderFrame() :
+        engineFrame(),
+        registers{ 0 }
+    {
+
+    }
+
     // engine information
     trackerboy::Frame engineFrame;
 

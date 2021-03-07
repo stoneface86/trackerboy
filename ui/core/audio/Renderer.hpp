@@ -37,6 +37,8 @@ public:
         unsigned lockFails;
         unsigned underruns;
         unsigned elapsed;
+        unsigned bufferUsage;
+        unsigned bufferSize;
     };
 
     Renderer(
@@ -201,6 +203,6 @@ private:
     std::atomic_uint mLockFails;
     std::atomic_uint mUnderruns;
     std::atomic_uint mSamplesElapsed;
-
+    std::atomic_uint mBufferUsage;
 
 };

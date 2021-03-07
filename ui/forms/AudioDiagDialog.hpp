@@ -47,6 +47,7 @@ private:
             QFormLayout mRenderLayout;
                 QLabel mLockFailsLabel;
                 QLabel mUnderrunLabel;
+                QLabel mBufferLabel;
                 QLabel mStatusLabel;
                 QLabel mElapsedLabel;
                 QPushButton mClearButton;

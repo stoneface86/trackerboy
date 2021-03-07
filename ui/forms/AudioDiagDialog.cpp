@@ -26,9 +26,10 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
 {
     mRenderLayout.addRow(tr("Lock fails"), &mLockFailsLabel);
     mRenderLayout.addRow(tr("Underruns"), &mUnderrunLabel);
+    mRenderLayout.addRow(tr("Buffer usage"), &mBufferLabel);
     mRenderLayout.addRow(tr("Status"), &mStatusLabel);
     mRenderLayout.addRow(tr("Elapsed"), &mElapsedLabel);
-    mRenderLayout.setWidget(4, QFormLayout::LabelRole, &mClearButton);
+    mRenderLayout.setWidget(5, QFormLayout::LabelRole, &mClearButton);
     mRenderGroup.setLayout(&mRenderLayout);
 
     mButtonLayout.addWidget(&mAutoRefreshCheck);
@@ -107,6 +108,12 @@ void AudioDiagDialog::refresh() {
 
     mLockFailsLabel.setText(QString::number(diags.lockFails));
     mUnderrunLabel.setText(QString::number(diags.underruns));
+
+    mBufferLabel.setText(tr("%1% (%2 / %3 samples)")
+        .arg(diags.bufferUsage * 100 / diags.bufferSize)
+        .arg(diags.bufferUsage)
+        .arg(diags.bufferSize)
+    );
 
     auto elapsed = diags.elapsed * 1000 / mRenderer.device().sampleRate;
     mElapsedLabel.setText(QStringLiteral("%1:%2.%3")

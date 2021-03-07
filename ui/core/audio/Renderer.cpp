@@ -24,9 +24,7 @@ Renderer::Renderer(
     mSongModel(songModel),
     mWaveModel(waveModel),
     mIdleCondition(),
-    //mCallbackCondition(),
     mMutex(),
-    //mCallbackMutex(),
     mBackgroundThread(nullptr),
     mRunning(false),
     mStopBackground(false),
@@ -42,17 +40,20 @@ Renderer::Renderer(
     mPreviewChannel(trackerboy::ChType::ch1),
     mCallbackState(CallbackState::stopped),
     mStopCounter(0),
-    //mBuffer(),
-    //mReturnBuffer(),
+    mBuffer(),
+    mSampleReturnBuffer(),
     mFrameBuffer(nullptr),
     mFrameBuffersize(0),
     mSyncCounter(0),
     mSyncPeriod(0),
     mCurrentFrameLock(),
+    mCurrentEngineFrame(),
+    mCurrentFrame(),
     mNewFrameSinceLastSync(false),
     mLockFails(0),
     mUnderruns(0),
-    mSamplesElapsed(0)
+    mSamplesElapsed(0),
+    mBufferUsage(0)
 {
     mBackgroundThread.reset(QThread::create(&Renderer::backgroundThreadRun, this));
     mBackgroundThread->start();
@@ -78,7 +79,9 @@ Renderer::Diagnostics Renderer::diagnostics() {
     return {
         mLockFails.load(),
         mUnderruns.load(),
-        mSamplesElapsed.load()
+        mSamplesElapsed.load(),
+        mBufferUsage.load(),
+        (unsigned)mBuffer.size()
     };
 }
 
@@ -485,6 +488,8 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
     // the GUI will read this on sync event for visualizers
     mSampleReturnBuffer.writer().fullWrite(out, frames);
     mSamplesElapsed += (unsigned)frames;
+
+    mBufferUsage = (unsigned)reader.availableRead();
 
 }
 

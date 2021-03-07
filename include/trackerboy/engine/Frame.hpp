@@ -35,6 +35,15 @@ namespace trackerboy {
 //
 struct Frame {
 
+    constexpr Frame() :
+        halted(false),
+        time(0),
+        speed(0),
+        order(0),
+        row(0)
+    {
+    }
+
     bool halted;        // halt status
     uint32_t time;      // time index
     Speed speed;        // the current engine speed
