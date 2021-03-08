@@ -2,6 +2,23 @@
 #include "core/Miniaudio.hpp"
 
 #include <QCoreApplication>
+#include <QMessageLogger>
+#include <QDebug>
+
+//
+// logging callback for miniaudio, redirects to Qt's message logging utility
+//
+void logCallback(ma_context* pContext, ma_device* pDevice, ma_uint32 logLevel, const char* message) {
+    Q_UNUSED(pContext)
+    Q_UNUSED(pDevice)
+
+    static QMessageLogger logger;
+    
+    QDebug dbg = (logLevel == MA_LOG_LEVEL_ERROR) ? logger.critical() :
+        ((logLevel == MA_LOG_LEVEL_WARNING) ? logger.warning() : logger.info());
+    dbg << "[Miniaudio]" << message;
+}
+
 
 Miniaudio::Miniaudio() :
     mInitialized(false),
@@ -18,7 +35,9 @@ Miniaudio::~Miniaudio() {
 }
 
 ma_result Miniaudio::init() {
-    auto result = ma_context_init(nullptr, 0, nullptr, &mContext);
+    auto config = ma_context_config_init();
+    config.logCallback = logCallback;
+    auto result = ma_context_init(nullptr, 0, &config, &mContext);
     mInitialized = result == MA_SUCCESS;
     if (mInitialized) {
         ma_context_get_devices(&mContext, &mDeviceList, &mDeviceCount, nullptr, nullptr);

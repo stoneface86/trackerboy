@@ -49,6 +49,10 @@ if (SOUND_REQUIRED)
     #    MA_NO_DECODING
     #    MA_NO_GENERATION
     #)
+    if (CMAKE_BUILD_TYPE MATCHES "Debug")
+        # MA_LOG_LEVEL_INFO for debug builds
+        target_compile_definitions(miniaudio PRIVATE MA_LOG_LEVEL=3)
+    endif ()
     target_include_directories(miniaudio PUBLIC "external/miniaudio/extras/miniaudio_split")
     # miniaudio dependencies
     # windows: none
