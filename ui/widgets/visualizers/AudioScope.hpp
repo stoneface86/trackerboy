@@ -44,6 +44,7 @@ protected:
     void paintEvent(QPaintEvent *evt) override;
 
 private:
+    Q_DISABLE_COPY(AudioScope)
 
     static constexpr int WAVE_WIDTH = 160;
     static constexpr int WAVE_HEIGHT = 64;

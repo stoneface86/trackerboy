@@ -9,6 +9,9 @@
 #include <cstddef>
 #include <memory>
 
+//
+// Worker object that updates visualizers, tracker position, etc, on audio sync.
+//
 class SyncWorker : public QObject {
     Q_OBJECT
 

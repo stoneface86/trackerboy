@@ -22,6 +22,7 @@ protected:
     QString textFromValue(int value) const override;
 
 private:
+    Q_DISABLE_COPY(CustomSpinBox)
 
     int mDigits;
 

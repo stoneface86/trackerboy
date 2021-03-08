@@ -109,7 +109,7 @@ private slots:
     void onSongChanged(int index);
 
 private:
-
+    Q_DISABLE_COPY(PatternGrid)
 
     //
     // Called when appearance settings have changed, recalculates metrics and redraws

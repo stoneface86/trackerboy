@@ -101,6 +101,7 @@ private slots:
     void vscrollAction(int action);
 
 private:
+    Q_DISABLE_COPY(PatternEditor)
 
     PianoInput &mPianoIn;
 

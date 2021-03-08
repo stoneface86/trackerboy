@@ -38,6 +38,7 @@ private slots:
     void refresh();
 
 private:
+    Q_DISABLE_COPY(AudioDiagDialog)
 
     Renderer &mRenderer;
     int mTimerId;

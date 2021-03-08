@@ -6,6 +6,10 @@
 #include <QWidget>
 
 
+//
+// Base class for a configuration tab, or the underlying widget for a tab in a QTabWidget.
+// When the user modifies the configuration, the tab is marked as "dirty"
+//
 class ConfigTab : public QWidget {
     
     Q_OBJECT
@@ -23,6 +27,8 @@ protected slots:
 
 
 private:
+    Q_DISABLE_COPY(ConfigTab)
+
     Config::Category const mDirtyFlag;
     bool mDirty;
 

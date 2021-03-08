@@ -38,6 +38,8 @@ private slots:
     void modelCurrentChanged(int index);
 
 private:
+    Q_DISABLE_COPY(TableForm)
+
     BaseTableModel &mModel;
     
 

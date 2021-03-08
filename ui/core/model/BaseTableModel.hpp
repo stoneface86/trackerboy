@@ -5,6 +5,9 @@
 #include "trackerboy/data/Table.hpp"
 
 
+//
+// Base class for the WaveListModel and InstrumentListModel.
+//
 class BaseTableModel : public BaseModel {
     Q_OBJECT
 
@@ -40,5 +43,7 @@ protected:
 
     trackerboy::BaseTable &mBaseTable;
 
+private:
+    Q_DISABLE_COPY(BaseTableModel)
 
 };

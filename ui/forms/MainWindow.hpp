@@ -25,7 +25,9 @@
 #include <QToolBar>
 #include <QUndoView>
 
-
+//
+// Main form for the application
+//
 class MainWindow : public QMainWindow {
 
     Q_OBJECT
@@ -70,6 +72,7 @@ private slots:
 
 
 private:
+    Q_DISABLE_COPY(MainWindow)
 
     //static void setupAction(QAction &action, const char *text, const char *tooltip, QKeySequence const &seq = QKeySequence());
 

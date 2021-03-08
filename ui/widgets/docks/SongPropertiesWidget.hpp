@@ -32,7 +32,7 @@ private slots:
     void updatePatternSpin(const QModelIndex &parent, int first, int last);
 
 private:
-    
+    Q_DISABLE_COPY(SongPropertiesWidget)
 
     SongListModel &mModel;
 

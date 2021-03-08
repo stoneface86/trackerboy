@@ -15,7 +15,7 @@
 #include <QVBoxLayout>
 
 //
-// Container struct for the "Sound" tab in ConfigDialog
+// Tab widget for the "Sound" tab in ConfigDialog
 //
 class SoundConfigTab : public ConfigTab {
 
@@ -33,6 +33,7 @@ private slots:
     void qualityRadioToggled(QAbstractButton *btn, bool checked);
 
 private:
+    Q_DISABLE_COPY(SoundConfigTab)
 
     void setupTimeSpinbox(QDoubleSpinBox &spin);
 

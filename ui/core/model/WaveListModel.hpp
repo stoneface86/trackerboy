@@ -41,5 +41,7 @@ public slots:
 protected:
     QVariant iconData(const QModelIndex &index) const override;
 
+private:
+    Q_DISABLE_COPY(WaveListModel)
 
 };

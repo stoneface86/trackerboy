@@ -35,6 +35,7 @@ protected:
 
 
 private:
+    Q_DISABLE_COPY(PatternGridHeader)
 
     static constexpr int HEIGHT = 32;
     static constexpr int FONT_WIDTH = 7;

@@ -7,7 +7,9 @@
 
 #include <array>
 
-
+//
+// Model implementation for a trackerboy::InstrumentTable
+//
 class InstrumentListModel : public BaseTableModel {
 
     Q_OBJECT
@@ -42,6 +44,7 @@ protected:
     QVariant iconData(const QModelIndex &index) const override;
 
 private:
+    Q_DISABLE_COPY(InstrumentListModel)
 
     std::array<QIcon*, 4> mIconArray;
 

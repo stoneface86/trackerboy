@@ -12,6 +12,11 @@
 
 #include <vector>
 
+//
+// Model class for the current song's order. The song order is a "table"
+// with 4 columns (1 for each channel). Each row in the model is a pattern
+// in the song.
+//
 class OrderModel : public QAbstractTableModel {
 
     Q_OBJECT
@@ -102,6 +107,8 @@ public slots:
     void setPatternCount(int count);
 
 private:
+    Q_DISABLE_COPY(OrderModel)
+
     // QUndoCommand classes
     friend class OrderModelCommand;
     friend class OrderModifyCommand;

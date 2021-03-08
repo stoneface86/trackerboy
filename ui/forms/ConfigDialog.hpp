@@ -11,6 +11,9 @@
 #include <QVBoxLayout>
 
 
+//
+// Configuration dialog. Allows the user to change application settings
+//
 class ConfigDialog : public QDialog {
 
     Q_OBJECT
@@ -40,7 +43,7 @@ private slots:
     void setDirty(Config::Category flag);
     
 private:
-    
+    Q_DISABLE_COPY(ConfigDialog)
 
     void clean();
 

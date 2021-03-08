@@ -110,6 +110,7 @@ private slots:
     void onStackCleanChanged(bool clean);
 
 private:
+    Q_DISABLE_COPY(ModuleDocument)
 
     void clean();
 

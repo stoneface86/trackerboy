@@ -33,6 +33,7 @@ private slots:
     void onTitleEdited(const QString &text);
 
 private:
+    Q_DISABLE_COPY(SongWidget)
 
     void updateActions();
 

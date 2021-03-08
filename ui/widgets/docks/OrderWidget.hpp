@@ -42,6 +42,8 @@ private slots:
     void tableViewContextMenu(QPoint pos);
 
 private:
+    Q_DISABLE_COPY(OrderWidget)
+
     OrderModel &mModel;
 
     bool mIgnoreSelect;

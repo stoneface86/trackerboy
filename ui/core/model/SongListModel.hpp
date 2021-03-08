@@ -6,6 +6,9 @@
 
 #include "trackerboy/data/Song.hpp"
 
+//
+// Model class for a module's song list.
+//
 class SongListModel : public BaseModel {
 
     Q_OBJECT
@@ -55,6 +58,8 @@ protected:
     virtual void dataSelected(int index) override;
 
 private:
+    Q_DISABLE_COPY(SongListModel)
+
     OrderModel &mOrderModel;
 
     std::vector<trackerboy::Song> &mSongVector;

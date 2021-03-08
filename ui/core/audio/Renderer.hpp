@@ -26,7 +26,10 @@
 #include <memory>
 #include <optional>
 
-
+//
+// Class handles all sound renderering. Sound is either sent to the
+// configured device set in Config or is written to file (export, not implemented yet)
+//
 class Renderer : public QObject {
 
     Q_OBJECT
@@ -108,6 +111,7 @@ public slots:
     void stopPreview();
 
 private:
+    Q_DISABLE_COPY(Renderer)
 
     enum class PreviewState {
         none,

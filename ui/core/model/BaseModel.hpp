@@ -71,6 +71,7 @@ protected:
     int mCurrentIndex;
 
 private:
+    Q_DISABLE_COPY(BaseModel)
 
     bool mCanSelect;
 

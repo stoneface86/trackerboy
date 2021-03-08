@@ -39,6 +39,7 @@ private slots:
     void waveformUpdated();
 
 private:
+    Q_DISABLE_COPY(WaveGraph)
 
     // resize the plot rectangle
     void calcGraph();

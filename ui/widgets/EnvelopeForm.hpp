@@ -8,7 +8,9 @@
 
 #include <cstdint>
 
-
+//
+// Composite widget for an envelope editor.
+//
 class EnvelopeForm : public QWidget {
 
     Q_OBJECT
@@ -28,6 +30,8 @@ private slots:
     void updateEnvelope(int value);
 
 private:
+    Q_DISABLE_COPY(EnvelopeForm)
+
     bool mIgnoreChanges;
     uint8_t mEnvelope;
 

@@ -19,7 +19,9 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-
+//
+// Instrument editor dialog
+//
 class InstrumentEditor : public QDialog {
 
     Q_OBJECT
@@ -39,6 +41,7 @@ private slots:
     void currentInstrumentChanged(int index);
 
 private:
+    Q_DISABLE_COPY(InstrumentEditor)
 
     void updateTimbreCombo(trackerboy::ChType ch);
 

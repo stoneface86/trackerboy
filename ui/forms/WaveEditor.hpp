@@ -16,6 +16,9 @@
 
 #include <array>
 
+//
+// Waveform editor dialog
+//
 class WaveEditor : public QDialog {
 
     Q_OBJECT
@@ -32,6 +35,7 @@ private slots:
     void selectionChanged(int index);
 
 private:
+    Q_DISABLE_COPY(WaveEditor)
 
     enum class Preset {
         square,

@@ -41,6 +41,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
+    Q_DISABLE_COPY(PianoWidget)
     
     trackerboy::Note getNoteFromMouse(int x, int y);
     

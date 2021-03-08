@@ -6,7 +6,10 @@
 #include <QPlainTextEdit>
 #include <QWidget>
 
-
+//
+// Module properties dock widget. Allows the user to set the title, artist, copyright
+// and comments for the module.
+//
 class ModulePropertiesWidget : public QWidget {
 
     Q_OBJECT
@@ -17,6 +20,7 @@ public:
 
 
 private:
+    Q_DISABLE_COPY(ModulePropertiesWidget)
 
     QBoxLayout mLayout;
         QLineEdit mTitleEdit;
