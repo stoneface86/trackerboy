@@ -10,6 +10,13 @@
 #include <chrono>
 #include <type_traits>
 
+static auto LOG_PREFIX = "[Renderer]";
+
+static void logMaResult(ma_result result) {
+    qCritical() << LOG_PREFIX << result << ":" << ma_result_description(result);
+}
+
+
 Renderer::Renderer(
     Miniaudio &miniaudio,
     Spinlock &spinlock,
@@ -26,12 +33,16 @@ Renderer::Renderer(
     mIdleCondition(),
     mMutex(),
     mBackgroundThread(nullptr),
+    mEnabled(false),
     mRunning(false),
     mStopBackground(false),
     mStopDevice(false),
+    mAborted(false),
     mSync(false),
     mCancelStop(false),
     mDevice(),
+    mDeviceConfig(),
+    mLastDeviceError(MA_SUCCESS),
     mSynth(44100),
     mRc(mSynth.apu(), document.instrumentTable(), document.waveTable()),
     mEngine(mRc),
@@ -57,6 +68,14 @@ Renderer::Renderer(
 {
     mBackgroundThread.reset(QThread::create(&Renderer::backgroundThreadRun, this));
     mBackgroundThread->start();
+
+    mDeviceConfig = ma_device_config_init(ma_device_type_playback);
+    // always 16-bit stereo format
+    mDeviceConfig.playback.format = ma_format_s16;
+    mDeviceConfig.playback.channels = 2;
+    mDeviceConfig.dataCallback = audioThreadRun;
+    mDeviceConfig.stopCallback = deviceStopHandler;
+    mDeviceConfig.pUserData = this;
 }
 
 Renderer::~Renderer() {
@@ -98,41 +117,51 @@ bool Renderer::isRunning() {
     return mRunning;
 }
 
+bool Renderer::isDeviceOpen() {
+    if (mDevice) {
+        return mDevice.value().pContext->backend != ma_backend_null;
+    }
+    return false;
+}
+
+ma_result Renderer::lastDeviceError() {
+    QMutexLocker locker(&mMutex);
+    return mLastDeviceError;
+}
+
 void Renderer::setConfig(Config::Sound const &soundConfig) {
     QMutexLocker locker(&mMutex);
     closeDevice();
 
     auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
 
-    auto config = ma_device_config_init(ma_device_type_playback);
-    config.playback.pDeviceID = mMiniaudio.deviceId(soundConfig.deviceIndex);
-    // always 16-bit stereo format
-    config.playback.format = ma_format_s16;
-    config.playback.channels = 2;
-    config.periodSizeInFrames = (unsigned)(soundConfig.period * SAMPLERATE / 1000);
-    config.sampleRate = SAMPLERATE;
-    config.dataCallback = audioThreadRun;
-    config.pUserData = this;
+    // update device config
+    mDeviceConfig.playback.pDeviceID = mMiniaudio.deviceId(soundConfig.deviceIndex);
+    mDeviceConfig.periodSizeInFrames = (unsigned)(soundConfig.period * SAMPLERATE / 1000);
+    mDeviceConfig.sampleRate = SAMPLERATE;
 
     // initialize device with settings
     mDevice.emplace();
-    auto err = ma_device_init(mMiniaudio.context(), &config, &mDevice.value());
-    // TODO: handle error conditions
-    assert(err == MA_SUCCESS);
-    
-    mBuffer.init((size_t)(soundConfig.latency * SAMPLERATE / 1000));
-    mSampleReturnBuffer.init(SAMPLERATE);
+    mLastDeviceError = ma_device_init(mMiniaudio.context(), &mDeviceConfig, &mDevice.value());
+    mEnabled = mLastDeviceError == MA_SUCCESS;
+    if (mEnabled) {
+        mBuffer.init((size_t)(soundConfig.latency * SAMPLERATE / 1000));
+        mSampleReturnBuffer.init(SAMPLERATE);
 
-    mSyncPeriod = mDevice.value().playback.internalPeriodSizeInFrames;
+        mSyncPeriod = mDevice.value().playback.internalPeriodSizeInFrames;
 
-    // update the synthesizer
-    mSynth.setSamplingRate(SAMPLERATE);
-    mSynth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
-    mSynth.setupBuffers();
+        // update the synthesizer
+        mSynth.setSamplingRate(SAMPLERATE);
+        mSynth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
+        mSynth.setupBuffers();
 
-    if (mRunning) {
-        // the callback was running before we applied the config, restart it
-        ma_device_start(&mDevice.value());
+        if (mRunning) {
+            // the callback was running before we applied the config, restart it
+            ma_device_start(&mDevice.value());
+        }
+    } else {
+        qCritical() << LOG_PREFIX << "failed to initialize the configured device";
+        logMaResult(mLastDeviceError);
     }
 
 }
@@ -141,11 +170,11 @@ void Renderer::closeDevice() {
 
     if (mDevice) {
         ma_device_uninit(&mDevice.value());
+        mDevice.reset();
     }
 }
 
 void Renderer::beginRender() {
-
     if (mRunning) {
         // reset the stop counter if we are already rendering
         mCancelStop = true;
@@ -165,6 +194,7 @@ void Renderer::beginRender() {
 }
 
 void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
+
     mSpinlock.lock();
     mEngine.play(*mSongModel.currentSong(), orderNo, rowNo);
     mSpinlock.unlock();
@@ -181,7 +211,9 @@ void Renderer::clearDiagnostics() {
 }
 
 void Renderer::play() {
-    playMusic(mSongModel.orderModel().currentPattern(), 0);
+    if (mEnabled) {
+        playMusic(mSongModel.orderModel().currentPattern(), 0);
+    }
 }
 
 void Renderer::playPattern() {
@@ -193,17 +225,20 @@ void Renderer::playFromCursor() {
 }
 
 void Renderer::playFromStart() {
-    playMusic(0, 0);
+    if (mEnabled) {
+        playMusic(0, 0);
+    }
 }
 
 
 void Renderer::previewInstrument(trackerboy::Note note) {
-    mSpinlock.lock();
-    switch (mPreviewState) {
-        case PreviewState::waveform:
-            resetPreview();
-            [[fallthrough]];
-        case PreviewState::none:
+    if (mEnabled) {
+        mSpinlock.lock();
+        switch (mPreviewState) {
+            case PreviewState::waveform:
+                resetPreview();
+                [[fallthrough]];
+            case PreviewState::none:
             {
                 // set instrument runtime's instrument to the current one
                 auto inst = mInstrumentModel.instrument(mInstrumentModel.currentIndex());
@@ -214,71 +249,78 @@ void Renderer::previewInstrument(trackerboy::Note note) {
             // unlock the channel for preview
             mEngine.unlock(mPreviewChannel);
             [[fallthrough]];
-        case PreviewState::instrument:
-            // update the current note
-            mIr.playNote(note);
-            break;
-    }
-    mSpinlock.unlock();
+            case PreviewState::instrument:
+                // update the current note
+                mIr.playNote(note);
+                break;
+        }
+        mSpinlock.unlock();
 
-    beginRender();
+        beginRender();
+    }
 }
 
 void Renderer::previewWaveform(trackerboy::Note note) {
 
-    // state changes
-    // instrument -> none -> waveform
+    if (mEnabled) {
+        // state changes
+        // instrument -> none -> waveform
 
-    mSpinlock.lock();
-    switch (mPreviewState) {
-        case PreviewState::instrument:
-            resetPreview();
-            [[fallthrough]];
-        case PreviewState::none:
-            mPreviewState = PreviewState::waveform;
-            mPreviewChannel = trackerboy::ChType::ch3;
-            // unlock the channel, no longer effected by music
-            mEngine.unlock(trackerboy::ChType::ch3);
-            // middle panning for CH3
-            trackerboy::ChannelControl::writePanning(trackerboy::ChType::ch3, mRc, 0x11);
-            // set the waveram with the waveform we are previewing
-            trackerboy::ChannelControl::writeWaveram(mRc, *(mWaveModel.currentWaveform()));
-            // volume = 100%
-            mRc.apu.writeRegister(gbapu::Apu::REG_NR32, 0x20);
-            // retrigger
-            mRc.apu.writeRegister(gbapu::Apu::REG_NR34, 0x80);
+        mSpinlock.lock();
+        switch (mPreviewState) {
+            case PreviewState::instrument:
+                resetPreview();
+                [[fallthrough]];
+            case PreviewState::none:
+                mPreviewState = PreviewState::waveform;
+                mPreviewChannel = trackerboy::ChType::ch3;
+                // unlock the channel, no longer effected by music
+                mEngine.unlock(trackerboy::ChType::ch3);
+                // middle panning for CH3
+                trackerboy::ChannelControl::writePanning(trackerboy::ChType::ch3, mRc, 0x11);
+                // set the waveram with the waveform we are previewing
+                trackerboy::ChannelControl::writeWaveram(mRc, *(mWaveModel.currentWaveform()));
+                // volume = 100%
+                mRc.apu.writeRegister(gbapu::Apu::REG_NR32, 0x20);
+                // retrigger
+                mRc.apu.writeRegister(gbapu::Apu::REG_NR34, 0x80);
 
-            [[fallthrough]];
-        case PreviewState::waveform:
-            if (note > trackerboy::NOTE_LAST) {
-                // should never happen, but clamp just in case
-                note = trackerboy::NOTE_LAST;
-            }
-            trackerboy::ChannelControl::writeFrequency(
-                trackerboy::ChType::ch3,
-                mRc,
-                trackerboy::NOTE_FREQ_TABLE[note]
-            );
-            break;
+                [[fallthrough]];
+            case PreviewState::waveform:
+                if (note > trackerboy::NOTE_LAST) {
+                    // should never happen, but clamp just in case
+                    note = trackerboy::NOTE_LAST;
+                }
+                trackerboy::ChannelControl::writeFrequency(
+                    trackerboy::ChType::ch3,
+                    mRc,
+                    trackerboy::NOTE_FREQ_TABLE[note]
+                );
+                break;
+        }
+        mSpinlock.unlock();
+
+        beginRender();
     }
-    mSpinlock.unlock();
-
-    beginRender();
 }
 
 void Renderer::stopPreview() {
-    mSpinlock.lock();
-    if (mPreviewState != PreviewState::none) {
-        resetPreview();
+    if (mEnabled) {
+        mSpinlock.lock();
+        if (mPreviewState != PreviewState::none) {
+            resetPreview();
+        }
+        mSpinlock.unlock();
     }
-    mSpinlock.unlock();
     
 }
 
 void Renderer::stopMusic() {
-    mSpinlock.lock();
-    mEngine.halt();
-    mSpinlock.unlock();
+    if (mEnabled) {
+        mSpinlock.lock();
+        mEngine.halt();
+        mSpinlock.unlock();
+    }
     
 }
 
@@ -296,9 +338,9 @@ void Renderer::resetPreview() {
 // cannot stop itself).
 
 void Renderer::backgroundThreadRun(Renderer *renderer) {
-    qDebug() << "[Audio background] thread started";
+    qDebug() << LOG_PREFIX << "background thread started";
     renderer->handleBackground();
-    qDebug() << "[Audio background] thread stopped";
+    qDebug() << LOG_PREFIX << "background thread stopped";
 }
 
 void Renderer::handleBackground() {
@@ -316,27 +358,44 @@ void Renderer::handleBackground() {
 
         // [1]
         if (mRunning) {
-            // start the device (TODO: error check!)
-            ma_device_start(&mDevice.value());
-            emit audioStarted();
+            // start the device
+            mLastDeviceError = ma_device_start(&mDevice.value());
+            if (mLastDeviceError == MA_SUCCESS) {
 
-            do {
-                if (mSync) {
-                    mSync = false;
-                    emit audioSync();
+                emit audioStarted();
+
+                do {
+                    if (mSync) {
+                        mSync = false;
+                        emit audioSync();
+                    }
+
+                    // wait for the callback to finish playing or poll for a sync event
+                    mIdleCondition.wait(&mMutex, QDeadlineTimer(1, Qt::PreciseTimer));
+                } while (!mStopDevice);
+
+                if (mAborted) {
+                    mAborted = false;
+                    mEnabled = false;
+                    qCritical() << LOG_PREFIX << "render aborted due to device error during render";
+                    emit audioError();
+                } else {
+                    mMutex.unlock();
+                    ma_device_stop(&mDevice.value());
+                    mMutex.lock();
                 }
-
-                // wait for the callback to finish playing or poll for a sync event
-                mIdleCondition.wait(&mMutex, QDeadlineTimer(1, Qt::PreciseTimer));
-            } while (!mStopDevice);
-
-            // stop the device
-            ma_device_stop(&mDevice.value());
-            emit audioStopped();
-            mStopDevice = false;
+                emit audioStopped();
+                mStopDevice = false;
+                mEngine.reset();
+            } else {
+                // could not open the device, disable renderer
+                mEnabled = false;
+                qCritical() << LOG_PREFIX << "failed to start device";
+                logMaResult(mLastDeviceError);
+                emit audioError();
+            }
+            
             mRunning = false;
-            mEngine.reset();
-
         }
 
         // [2]
@@ -370,6 +429,23 @@ void Renderer::audioThreadRun(
         reinterpret_cast<int16_t*>(out),
         frames
     );
+}
+
+void Renderer::deviceStopHandler(ma_device *device) {
+    // this handler is called explicitly via ma_device_stop or
+    // implicitly via error during playback.
+    
+    // do nothing when called explicitly (mStopDevice is true)
+    // force the background thread to stop when called implicitly
+
+    Renderer *_this = static_cast<Renderer*>(device->pUserData);
+    QMutexLocker locker(&_this->mMutex);
+    if (!_this->mStopDevice) {
+        // an error has occurred during playback, wake up the background thread
+        _this->mAborted = true;
+        _this->mStopDevice = true;
+        _this->mIdleCondition.wakeOne();
+    }
 }
 
 void Renderer::handleAudio(int16_t *out, size_t frames) {

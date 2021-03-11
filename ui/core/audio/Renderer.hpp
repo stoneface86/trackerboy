@@ -64,6 +64,11 @@ public:
 
     bool isRunning();
 
+    // returns true if the configured device was successfully opened, false otherwise
+    bool isDeviceOpen();
+
+    ma_result lastDeviceError();
+
     void setConfig(Config::Sound const& config);
 
     void playMusic(uint8_t orderNo, uint8_t rowNo);
@@ -87,6 +92,11 @@ signals:
     void audioStopped();
 
     void audioSync();
+
+    //
+    // An error occurred during audio playback.
+    //
+    void audioError();
 
 public slots:
 
@@ -146,6 +156,8 @@ private:
     static void audioThreadRun(ma_device *device, void *out, const void *in, ma_uint32 frames);
     void handleAudio(int16_t *out, size_t frames);
 
+    static void deviceStopHandler(ma_device *device);
+
     void render(AudioRingbuffer::Writer &writer);
 
     // class members ---------------------------------------------------------
@@ -161,13 +173,20 @@ private:
     QMutex mMutex;
     std::unique_ptr<QThread> mBackgroundThread;
 
+    // enable flag, if true then the renderer will output sound when requested
+    // otherwise it will do nothing. Renderer is enabled when setConfig successfully
+    // initializes the configured device. It is disabled when an error occurs during
+    // render or when initialization fails.
+    bool mEnabled;
     bool mRunning;              // is the audio callback thread active?
     bool mStopBackground;       // flag to stop the background thread
     bool mStopDevice;           // flag to stop the callback thread
+    bool mAborted;              // true if the render was aborted due to device error
     std::atomic_bool mSync;
     std::atomic_bool mCancelStop;
     std::optional<ma_device> mDevice;
-
+    ma_device_config mDeviceConfig;
+    ma_result mLastDeviceError;
 
     // renderering (synchronize access via spinlock)
     

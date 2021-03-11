@@ -35,13 +35,20 @@ Miniaudio::~Miniaudio() {
 }
 
 ma_result Miniaudio::init() {
+    return initImpl(nullptr, 0);
+}
+
+ma_result Miniaudio::init(ma_backend const backend) {
+    return initImpl(&backend, 1);
+}
+
+ma_result Miniaudio::initImpl(ma_backend const *backends, ma_uint32 count) {
     auto config = ma_context_config_init();
     config.logCallback = logCallback;
-    auto result = ma_context_init(nullptr, 0, &config, &mContext);
+    auto result = ma_context_init(backends, count, &config, &mContext);
     mInitialized = result == MA_SUCCESS;
-    if (mInitialized) {
-        ma_context_get_devices(&mContext, &mDeviceList, &mDeviceCount, nullptr, nullptr);
-    }
+    rescan();
+
     return result;
 }
 
@@ -138,5 +145,11 @@ QString Miniaudio::deviceIdString(ma_device_id const& id) {
         case ma_backend_jack:
         default:
             return QCoreApplication::tr("N/A");
+    }
+}
+
+void Miniaudio::rescan() {
+    if (mInitialized) {
+        ma_context_get_devices(&mContext, &mDeviceList, &mDeviceCount, nullptr, nullptr);
     }
 }

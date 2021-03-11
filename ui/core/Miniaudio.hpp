@@ -23,6 +23,11 @@ public:
     ma_result init();
 
     //
+    // Initialize the miniaudio context using the specified backend
+    //
+    ma_result init(ma_backend const backend);
+
+    //
     // Gets the miniaudio context set by init()
     //
     ma_context* context();
@@ -63,7 +68,14 @@ public:
     //
     QString backendName();
 
+    //
+    // Enumerates all devices in the initialized context again.
+    //
+    void rescan();
+
 private:
+
+    ma_result initImpl(ma_backend const *backends, ma_uint32 count);
 
     bool mInitialized;
     ma_context mContext;

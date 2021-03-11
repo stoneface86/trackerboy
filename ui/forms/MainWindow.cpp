@@ -30,6 +30,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mFilename(),
     mDocumentName(),
     mLastSpeed(0),
+    mErrorSinceLastConfig(false),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
     mInstrumentEditor(nullptr),
@@ -247,17 +248,20 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
-        // 100ms curve duration
         auto samplesPerFrame = samplerate / 60;
         mSyncWorker.setSamplesPerFrame(samplesPerFrame);
-        //mSamplesPerFrame = samplerate / 60;
         mLeftScope.setDuration(samplesPerFrame);
         mRightScope.setDuration(samplesPerFrame);
 
-
-        //mSampleBuffer.reset(new int16_t[mSamplesPerFrame * 2]);
-
         mApp.renderer.setConfig(sound);
+        mErrorSinceLastConfig = mApp.renderer.lastDeviceError() != MA_SUCCESS;
+        if (isVisible() && mErrorSinceLastConfig) {
+            QMessageBox msgbox(this);
+            msgbox.setIcon(QMessageBox::Critical);
+            msgbox.setText(tr("Could not initialize device"));
+            msgbox.setInformativeText(tr("The configured device could not be initialized. Playback is disabled."));
+            settingsMessageBox(msgbox);
+        }
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
@@ -383,6 +387,32 @@ void MainWindow::statusSetWaveform(int index) {
 void MainWindow::statusSetOctave(int octave) {
     mStatusOctave.setText(QString("Octave: %1").arg(octave));
     mPianoInput.setOctave(octave);
+}
+
+void MainWindow::onAudioStart() {
+    mStatusRenderer.setText(tr("Playing"));
+}
+
+void MainWindow::onAudioError() {
+    mStatusRenderer.setText(tr("Device error"));
+    if (!mErrorSinceLastConfig) {
+        mErrorSinceLastConfig = true;
+        QMessageBox msgbox(this);
+        msgbox.setIcon(QMessageBox::Critical);
+        msgbox.setText(tr("Audio error"));
+        msgbox.setInformativeText(tr(
+            "A device error has occurred during playback.\n\n" \
+            "Playback is disabled until a new device is configured in the settings."
+        ));
+        settingsMessageBox(msgbox);
+
+    }
+}
+
+void MainWindow::onAudioStop() {
+    if (!mErrorSinceLastConfig) {
+        mStatusRenderer.setText(tr("Ready"));
+    }
 }
 
 //
@@ -711,6 +741,7 @@ void MainWindow::setupUi() {
     auto statusbar = statusBar();
     #define addLabelToStatusbar(var, text) var.setText(QStringLiteral(text)); statusbar->addPermanentWidget(&var)
     
+    addLabelToStatusbar(mStatusRenderer, "Ready");
     addLabelToStatusbar(mStatusInstrument, "Instrument: 00");
     addLabelToStatusbar(mStatusWaveform, "Waveform: 00");
     addLabelToStatusbar(mStatusOctave, "Octave: 3");
@@ -765,6 +796,11 @@ void MainWindow::setupUi() {
 
     // sync worker
     connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
+
+    connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
+    connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
+    connect(&mApp.renderer, &Renderer::audioError, this, &MainWindow::onAudioError);
+
 
 }
 
@@ -879,6 +915,16 @@ void MainWindow::setupWindowMenu(QMenu &menu) {
     menu.addAction(&mActionWindowResetLayout);
 }
 
+void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
+    auto settingsBtn = msgbox.addButton(tr("Change settings"), QMessageBox::ActionRole);
+    msgbox.addButton(QMessageBox::Close);
+    msgbox.setDefaultButton(settingsBtn);
+    msgbox.exec();
+
+    if (msgbox.clickedButton() == settingsBtn) {
+        showConfigDialog();
+    }
+}
 
 //void MainWindow::setupAction(QAction &action, const char *text, const char *tooltip, QKeySequence const &seq) {
 //    action.setText(tr(text));

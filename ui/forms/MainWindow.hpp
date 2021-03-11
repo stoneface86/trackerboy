@@ -21,6 +21,7 @@
 #include <QFileDialog>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QTimer>
 #include <QToolBar>
 #include <QUndoView>
@@ -69,6 +70,9 @@ private slots:
     void statusSetWaveform(int index);
     void statusSetOctave(int octave);
 
+    void onAudioStart();
+    void onAudioError();
+    void onAudioStop();
 
 
 private:
@@ -91,6 +95,7 @@ private:
 
     void setupWindowMenu(QMenu &menu);
 
+    void settingsMessageBox(QMessageBox &msgbox);
 
     Trackerboy &mApp;
     
@@ -101,6 +106,7 @@ private:
 
     // audio sync stuff
     trackerboy::Speed mLastSpeed;
+    bool mErrorSinceLastConfig;
     
 
     // key bindings for the piano widgets + pattern editor
@@ -156,6 +162,7 @@ private:
 
 
     // statusbar widgets
+    QLabel mStatusRenderer;
     QLabel mStatusInstrument;
     QLabel mStatusWaveform;
     QLabel mStatusOctave;

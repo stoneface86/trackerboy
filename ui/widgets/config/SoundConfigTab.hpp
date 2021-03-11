@@ -11,6 +11,7 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QPushButton>
 #include <QRadioButton>
 #include <QVBoxLayout>
 
@@ -32,6 +33,8 @@ private slots:
 
     void qualityRadioToggled(QAbstractButton *btn, bool checked);
 
+    void rescan();
+
 private:
     Q_DISABLE_COPY(SoundConfigTab)
 
@@ -43,6 +46,9 @@ private:
         QGroupBox mDeviceGroup;
             QVBoxLayout mDeviceLayout;
                 QComboBox mDeviceCombo;
+                QHBoxLayout mBackendLayout;
+                    QLabel mBackendLabel;
+                    QPushButton mRescanButton;
                 QFormLayout mDeviceFormLayout;
                     QLabel mLatencyLabel;
                     QDoubleSpinBox mLatencySpin;

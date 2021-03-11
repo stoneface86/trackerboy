@@ -15,6 +15,9 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mDeviceGroup(tr("Device")),
     mDeviceLayout(),
     mDeviceCombo(),
+    mBackendLayout(),
+    mBackendLabel(),
+    mRescanButton(tr("Rescan device list")),
     mDeviceFormLayout(),
     mLatencyLabel(tr("Latency")),
     mLatencySpin(),
@@ -35,11 +38,15 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mPreview34()
 {
     // layout
+    mBackendLayout.addWidget(&mBackendLabel, 1);
+    mBackendLayout.addWidget(&mRescanButton);
+
     mDeviceFormLayout.addRow(&mLatencyLabel, &mLatencySpin);
     mDeviceFormLayout.addRow(&mPeriodLabel, &mPeriodSpin);
     mDeviceFormLayout.addRow(&mSamplerateLabel, &mSamplerateCombo);
 
     mDeviceLayout.addWidget(&mDeviceCombo);
+    mDeviceLayout.addLayout(&mBackendLayout);
     mDeviceLayout.addLayout(&mDeviceFormLayout);
     mDeviceGroup.setLayout(&mDeviceLayout);
 
@@ -63,6 +70,7 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     setLayout(&mLayout);
 
     // settings
+    mBackendLabel.setText(tr("Backend: %1").arg(mConfig.mMiniaudio.backendName()));
 
     mDeviceCombo.addItems(config.mMiniaudio.deviceNames());
     // populate samplerate combo
@@ -77,6 +85,10 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     setupTimeSpinbox(mPeriodSpin);
     mPeriodSpin.setMaximum(500.0);
     mPeriodSpin.setValue(10.0);
+
+    mLowQualityRadio.setToolTip(tr("Linear interpolation on all channels"));
+    mMedQualityRadio.setToolTip(tr("Sinc interpolation on channels 1 and 2, linear interpolation on channels 3 and 4."));
+    mHighQualityRadio.setToolTip(tr("Sinc interpolation on all channels"));
     
     mQualityButtons.addButton(&mLowQualityRadio, (int)gbapu::Apu::Quality::low);
     mQualityButtons.addButton(&mMedQualityRadio, (int)gbapu::Apu::Quality::medium);
@@ -88,7 +100,7 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     connect(&mLatencySpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
     connect(&mPeriodSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
     connect(&mQualityButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &SoundConfigTab::qualityRadioToggled);
-
+    connect(&mRescanButton, &QPushButton::clicked, this, &SoundConfigTab::rescan);
 }
 
 void SoundConfigTab::setupTimeSpinbox(QDoubleSpinBox &spin) {
@@ -129,3 +141,29 @@ void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
     }
 }
 
+void SoundConfigTab::rescan() {
+    auto &miniaudio = mConfig.mMiniaudio;
+    
+    // copy the current id for looking up
+    auto deviceId = miniaudio.deviceId(mDeviceCombo.currentIndex());
+    std::optional<ma_device_id> deviceIdCopy;
+    if (deviceId != nullptr) {
+        deviceIdCopy = *deviceId;
+    }
+
+    mDeviceCombo.clear();
+    miniaudio.rescan();
+    mDeviceCombo.addItems(miniaudio.deviceNames());
+
+    int index = 0;
+    if (deviceIdCopy) {
+        index = miniaudio.lookupDevice(&*deviceIdCopy);
+        if (index == -1) {
+            // the old device wasn't found (probably got disconnected)
+            // go to the default device
+            index = 0;
+            setDirty();
+        }
+    }
+    mDeviceCombo.setCurrentIndex(index);
+}
