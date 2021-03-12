@@ -87,6 +87,10 @@ target_link_libraries(trackerboy_ui
 )
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
+if (NOT DEBUG_BUILD)
+    target_compile_definitions(trackerboy_ui PRIVATE QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
+endif ()
+
 
 add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
 target_link_libraries(test_pattern_painter

@@ -34,6 +34,12 @@ else ()
     set(SOUND_REQUIRED FALSE)
 endif ()
 
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+    set(DEBUG_BUILD TRUE)
+else ()
+    set(DEBUG_BUILD FALSE)
+endif ()
+
 # ============================================================================
 # Dependencies
 # ============================================================================
@@ -49,7 +55,7 @@ if (SOUND_REQUIRED)
     #    MA_NO_DECODING
     #    MA_NO_GENERATION
     #)
-    if (CMAKE_BUILD_TYPE MATCHES "Debug")
+    if (DEBUG_BUILD)
         # MA_LOG_LEVEL_INFO for debug builds
         target_compile_definitions(miniaudio PRIVATE MA_LOG_LEVEL=3)
     endif ()
