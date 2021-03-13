@@ -23,7 +23,10 @@ public:
 signals:
     void updateScopes();
 
-    void positionChanged(QString const& pos);
+    //
+    // Tracker position is stored as a QPoint with x = pattern id, y = row
+    //
+    void positionChanged(QPoint const point);
 
     void speedChanged(QString const& speed);
 
@@ -51,6 +54,6 @@ private:
     int16_t mPeakLeft;
     int16_t mPeakRight;
 
-    //RenderFrame mLastFrame;
+    RenderFrame mLastFrame;
 
 };

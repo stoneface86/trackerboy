@@ -70,6 +70,8 @@ private slots:
     void statusSetWaveform(int index);
     void statusSetOctave(int octave);
 
+    void trackerPositionChanged(QPoint const pos);
+
     void onAudioStart();
     void onAudioError();
     void onAudioStop();
@@ -104,8 +106,6 @@ private:
     QString mFilename;
     QString mDocumentName;
 
-    // audio sync stuff
-    trackerboy::Speed mLastSpeed;
     bool mErrorSinceLastConfig;
     
 

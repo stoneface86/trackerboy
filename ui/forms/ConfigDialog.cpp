@@ -10,7 +10,7 @@
 
 
 ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mConfig(config),
     mDirty(Config::CategoryNone),
     mLayout(),
@@ -28,6 +28,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     setLayout(&mLayout);
 
     setWindowTitle(tr("Configuration"));
+    setModal(true);
 
     connect(&mTabSound, &SoundConfigTab::dirty, this, &ConfigDialog::setDirty);
 

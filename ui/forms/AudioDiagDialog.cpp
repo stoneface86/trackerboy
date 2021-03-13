@@ -40,6 +40,7 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
 
     mLayout.addWidget(&mRenderGroup, 1);
     mLayout.addLayout(&mButtonLayout);
+    mLayout.setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
     setLayout(&mLayout);
 
     mIntervalSpin.setSuffix(tr(" ms"));

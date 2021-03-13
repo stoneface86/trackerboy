@@ -36,13 +36,14 @@ void SyncWorker::setSamplesPerFrame(size_t samples) {
 }
 
 void SyncWorker::onAudioStart() {
-
+    mLastFrame = {};
 }
 
 void SyncWorker::onAudioStop() {
     // ignore any pending reads on the return buffer
     // as we are no longer processing them
     mRenderer.returnBuffer().flush();
+    mRenderer.frameReturnBuffer().flush();
 
     // clear peaks
     setPeaks(0, 0);
@@ -56,6 +57,30 @@ void SyncWorker::onAudioStop() {
 
 void SyncWorker::onAudioSync() {
     QMutexLocker locker(&mMutex);
+
+    // check for any new frames
+    auto frameReturn = mRenderer.frameReturnBuffer();
+    size_t toRead = 1;
+    auto rframe = frameReturn.acquireRead(toRead);
+    if (toRead) {
+        // new frame, process it
+
+        // check if the player position changed
+        if (mLastFrame.engineFrame.order != rframe->engineFrame.order ||
+            mLastFrame.engineFrame.row != rframe->engineFrame.row) {
+            emit positionChanged({ rframe->engineFrame.order, rframe->engineFrame.row });
+        }
+
+        // check if the speed changed
+        auto speed = rframe->engineFrame.speed;
+        if (mLastFrame.engineFrame.speed != speed) {
+            float speedF = (speed >> 4) + ((speed & 0xF) * (1.0f / 16.0f));
+            emit speedChanged(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+        }
+
+        mLastFrame = *rframe;
+    }
+    frameReturn.commitRead(rframe, toRead);
 
     auto returnBuffer = mRenderer.returnBuffer();
     auto avail = returnBuffer.availableRead();

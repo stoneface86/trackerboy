@@ -29,7 +29,6 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mApp(trackerboy),
     mFilename(),
     mDocumentName(),
-    mLastSpeed(0),
     mErrorSinceLastConfig(false),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
@@ -389,6 +388,16 @@ void MainWindow::statusSetOctave(int octave) {
     mPianoInput.setOctave(octave);
 }
 
+void MainWindow::trackerPositionChanged(QPoint const pos) {
+    auto pattern = pos.x();
+    auto row = pos.y();
+    
+    auto &grid = mPatternEditor.grid();
+    grid.setTrackerCursor(row, pattern);
+
+    mStatusPos.setText(QStringLiteral("%1 / %2").arg(pattern).arg(row));
+}
+
 void MainWindow::onAudioStart() {
     mStatusRenderer.setText(tr("Playing"));
 }
@@ -414,72 +423,6 @@ void MainWindow::onAudioStop() {
         mStatusRenderer.setText(tr("Ready"));
     }
 }
-
-//
-// Sync renderer output with the GUI. updates visualizer, volume meters, etc
-// TODO: move this to a worker thread so we don't make the GUI unresponsive
-//
-//void MainWindow::onAudioSync() {
-    // get the current frame
-    //auto& frame = mApp.renderer.acquireCurrentFrame();
-    //if (!frame.ignore) {
-    //        
-    //    auto &grid = mPatternEditor.grid();
-    //    grid.setTrackerCursor(frame.engineFrame.row, frame.engineFrame.order);
-
-    //    if (mLastSpeed != frame.engineFrame.speed) {
-    //        float speedF = (frame.engineFrame.speed >> 4) + ((frame.engineFrame.speed & 0xF) * (1.0f / 16.0f));
-    //        mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
-    //        mLastSpeed = frame.engineFrame.speed;
-    //    }
-
-    //    mStatusPos.setText(QStringLiteral("%1 / %2")
-    //        .arg(frame.engineFrame.order)
-    //        .arg(frame.engineFrame.row));
-
-    //    // TODO: send frame.registers to the APU registers dock
-    //}
-    //mApp.renderer.releaseFrame();
-
-
-    // get the audio data returned from the callback
-    // this data has already been sent out to the output device
-    //auto returnBuffer = mApp.renderer.returnBuffer();
-    //// read as much as we can
-    //size_t samples = returnBuffer.availableRead();
-    //auto frameCount = samples / mSamplesPerFrame;
-    //if (frameCount) {
-
-    //    if (frameCount > 1) {
-    //        // skip these frames
-    //        returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
-    //    }
-    //    // read the frame
-    //    returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
-
-    //    // TODO: uncomment this when the peakmeter visualizer is complete
-    //    // determine peak amplitudes for each channel
-    //    //int16_t peakLeft = 0;
-    //    //int16_t peakRight = 0;
-    //    //auto samplePtr = mSampleBuffer.get();
-    //    //for (size_t i = 0; i != mSamplesPerFrame; ++i) {
-    //    //    auto sampleLeft = (int16_t)abs(*samplePtr++);
-    //    //    auto sampleRight = (int16_t)abs(*samplePtr++);
-    //    //    peakLeft = std::max(sampleLeft, peakLeft);
-    //    //    peakRight = std::max(sampleRight, peakRight);
-    //    //}
-
-    //    // send to visualizers
-    //    mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
-    //    mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
-    //    mLeftScope.update();
-    //    mRightScope.update();
-
-    //}
-    
-        
-
-//}
 
 // PRIVATE METHODS -----------------------------------------------------------
 
@@ -746,7 +689,7 @@ void MainWindow::setupUi() {
     addLabelToStatusbar(mStatusWaveform, "Waveform: 00");
     addLabelToStatusbar(mStatusOctave, "Octave: 3");
     addLabelToStatusbar(mStatusFramerate, "59.7 FPS");
-    addLabelToStatusbar(mStatusSpeed, "6.0 FPR");
+    addLabelToStatusbar(mStatusSpeed, "6.000 FPR");
     addLabelToStatusbar(mStatusTempo, "150 BPM");
     addLabelToStatusbar(mStatusElapsed, "00:00:00");
     addLabelToStatusbar(mStatusPos, "00 / 00");
@@ -796,6 +739,8 @@ void MainWindow::setupUi() {
 
     // sync worker
     connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
+    connect(&mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged);
+    connect(&mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText);
 
     connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);

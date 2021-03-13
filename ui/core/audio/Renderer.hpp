@@ -62,10 +62,9 @@ public:
 
     AudioRingbuffer::Reader returnBuffer();
 
-    bool isRunning();
+    Ringbuffer<RenderFrame>::Reader frameReturnBuffer();
 
-    // returns true if the configured device was successfully opened, false otherwise
-    bool isDeviceOpen();
+    bool isRunning();
 
     ma_result lastDeviceError();
 
@@ -216,9 +215,8 @@ private:
     size_t mSyncCounter;
     size_t mSyncPeriod;
 
-    Spinlock mCurrentFrameLock;
     trackerboy::Frame mCurrentEngineFrame;
-    RenderFrame mCurrentFrame;
+    Ringbuffer<RenderFrame> mFrameReturnBuffer;
 
     bool mNewFrameSinceLastSync;
 

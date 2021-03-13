@@ -57,9 +57,8 @@ Renderer::Renderer(
     mFrameBuffersize(0),
     mSyncCounter(0),
     mSyncPeriod(0),
-    mCurrentFrameLock(),
     mCurrentEngineFrame(),
-    mCurrentFrame(),
+    mFrameReturnBuffer(),
     mNewFrameSinceLastSync(false),
     mLockFails(0),
     mUnderruns(0),
@@ -68,6 +67,8 @@ Renderer::Renderer(
 {
     mBackgroundThread.reset(QThread::create(&Renderer::backgroundThreadRun, this));
     mBackgroundThread->start();
+
+    mFrameReturnBuffer.init(4);
 
     mDeviceConfig = ma_device_config_init(ma_device_type_playback);
     // always 16-bit stereo format
@@ -112,16 +113,13 @@ AudioRingbuffer::Reader Renderer::returnBuffer() {
     return mSampleReturnBuffer.reader();
 }
 
+Ringbuffer<RenderFrame>::Reader Renderer::frameReturnBuffer() {
+    return mFrameReturnBuffer.reader();
+}
+
 bool Renderer::isRunning() {
     QMutexLocker locker(&mMutex);
     return mRunning;
-}
-
-bool Renderer::isDeviceOpen() {
-    if (mDevice) {
-        return mDevice.value().pContext->backend != ma_backend_null;
-    }
-    return false;
 }
 
 ma_result Renderer::lastDeviceError() {
@@ -546,14 +544,20 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
     // update sync counter, check if we have outputted an entire period
     mSyncCounter += frames;
     if (mSyncCounter >= mSyncPeriod) {
-        // it's possible we can miss a frame on the sync event if the GUI is still holding the frame lock
-        // maybe find a better way to do this, a ringbuffer perhaps
-        if (mNewFrameSinceLastSync && mCurrentFrameLock.tryLock()) {
-            // Set the current render frame for the GUI
-            mCurrentFrame.engineFrame = mCurrentEngineFrame;
-            mCurrentFrame.registers = mSynth.apu().registers();
+
+        auto frameWriter = mFrameReturnBuffer.writer();
+        if (mNewFrameSinceLastSync && frameWriter.availableWrite()) {
+
+            size_t toWrite = 1;
+            auto rframe = frameWriter.acquireWrite(toWrite);
+
+            rframe->engineFrame = mCurrentEngineFrame;
+            rframe->registers = mSynth.apu().registers();
+
+            frameWriter.commitWrite(rframe, toWrite);
+
+
             mNewFrameSinceLastSync = false;
-            mCurrentFrameLock.unlock();
         }
 
         mSyncCounter %= mSyncPeriod;
@@ -563,8 +567,9 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
     // write what we sent to the device to the return buffer
     // the GUI will read this on sync event for visualizers
     mSampleReturnBuffer.writer().fullWrite(out, frames);
+    
+    // update diagnostic counters
     mSamplesElapsed += (unsigned)frames;
-
     mBufferUsage = (unsigned)reader.availableRead();
 
 }
