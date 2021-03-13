@@ -11,6 +11,9 @@ consoles.
 
 WIP! This project is currently in the development phase (major version 0).
 
+If you have any questions or would like to contribute, feel free to contact me on discord.
+My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
+
 ## Getting Started
 
  * __Build:__ To compile Trackerboy from source, see the [build instructions](BUILD.md)
@@ -19,24 +22,26 @@ WIP! This project is currently in the development phase (major version 0).
 
 ## Status
 
+v0.2.0 is in progress and will be the first "functional" version of trackerboy. This version
+will feature a usable pattern editor.
+
 ### Pattern Editor Demo
 ![Pattern Editor Demo](/.github/pattern_editor_demo.gif)
-
-### Wave Editor Demo
-![Wave Editor Demo](/.github/wave_editor_demo.gif)
 
 The library is (almost) finished and the UI is being worked on now.
 
 Here is a general list of what needs to be completed:
- * Sound effect support in the library (SfxRuntime, Sfx, SfxTable classes)
- * More unit tests for the library
  * ~~Instrument editor~~
  * ~~Wave editor~~
  * Pattern editor / Tracker grid (In progress)
  * Visualizers: Oscilloscopes and volume meters (master and one for each channel)
+ * Instruments rewrite. Similar to FamiTracker's
+
+ Post-release features:
+ * Sound effects
+ * MIDI support
  * Export to .asm (pattern compilation)
  * Export to .gbs
- * MIDI support
  * Import from famitracker (tool to convert .ftm -> .tbm)
 
 ## Versioning
