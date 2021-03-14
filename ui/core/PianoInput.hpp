@@ -58,7 +58,7 @@ public:
     // Converts a Qt keycode to a trackerboy note. If no binding was set for
     // the key, nullopt is returned.
     //
-    std::optional<trackerboy::Note> keyToNote(int key);
+    std::optional<trackerboy::Note> keyToNote(int key) const;
 
     void setOctave(int octave);
 

@@ -45,6 +45,65 @@ using namespace PatternConstants;
 //
 // Always profile Release before considering an optimization
 
+static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
+    switch (key) {
+        case Qt::Key_B:
+            return trackerboy::EffectType::patternGoto;
+        case Qt::Key_C:
+            return trackerboy::EffectType::patternHalt;
+        case Qt::Key_D:
+            return trackerboy::EffectType::patternSkip;
+        case Qt::Key_F:
+            return trackerboy::EffectType::setTempo;
+        case Qt::Key_T:
+            return trackerboy::EffectType::sfx;
+        case Qt::Key_E:
+            return trackerboy::EffectType::setEnvelope;
+        case Qt::Key_V:
+            return trackerboy::EffectType::setTimbre;
+        case Qt::Key_I:
+            return trackerboy::EffectType::setPanning;
+        case Qt::Key_H:
+            return trackerboy::EffectType::setSweep;
+        case Qt::Key_S:
+            return trackerboy::EffectType::delayedCut;
+        case Qt::Key_G:
+            return trackerboy::EffectType::delayedNote;
+        case Qt::Key_L:
+            return trackerboy::EffectType::lock;
+        case Qt::Key_0:
+            return trackerboy::EffectType::arpeggio;
+        case Qt::Key_1:
+            return trackerboy::EffectType::pitchUp;
+        case Qt::Key_2:
+            return trackerboy::EffectType::pitchDown;
+        case Qt::Key_3:
+            return trackerboy::EffectType::autoPortamento;
+        case Qt::Key_4:
+            return trackerboy::EffectType::vibrato;
+        case Qt::Key_5:
+            return trackerboy::EffectType::vibratoDelay;
+        case Qt::Key_P:
+            return trackerboy::EffectType::tuning;
+        case Qt::Key_Q:
+            return trackerboy::EffectType::noteSlideUp;
+        case Qt::Key_R:
+            return trackerboy::EffectType::noteSlideDown;
+        default:
+            return std::nullopt;
+    }
+}
+
+static std::optional<int> keyToHex(int const key) {
+    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+        return key - Qt::Key_0;
+    } else if (key >= Qt::Key_A && key <= Qt::Key_F) {
+        return key - Qt::Key_A + 0xA;
+    } else {
+        return std::nullopt;
+    }
+}
+
 
 PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
@@ -110,33 +169,6 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
 
 }
 
-bool PatternGrid::cursorOnNote() {
-    return (mCursorCol % TRACK_COLUMNS) == COLUMN_NOTE;
-}
-
-bool PatternGrid::edit(trackerboy::Note note) {
-    Q_UNUSED(note);
-    return false;
-}
-
-bool PatternGrid::edit(char key, bool &valid) {
-    Q_UNUSED(key);
-    Q_UNUSED(valid);
-    return false;
-}
-
-void PatternGrid::erase() {
-    
-}
-
-void PatternGrid::backspace() {
-    // erases the row in the track before the cursor row, 
-
-    if (mCursorRow > 0) {
-
-    }
-}
-
 void PatternGrid::redraw() {
     mRepaintImage = true;
     update();
@@ -144,6 +176,14 @@ void PatternGrid::redraw() {
 
 int PatternGrid::row() const {
     return mCursorRow;
+}
+
+int PatternGrid::column() const {
+    return mCursorCol;
+}
+
+PatternConstants::ColumnType PatternGrid::columnType() const {
+    return static_cast<PatternConstants::ColumnType>(mCursorCol % TRACK_COLUMNS);
 }
 
 bool PatternGrid::isRecording() const {
@@ -204,6 +244,85 @@ void PatternGrid::setTrackerCursor(int row, int pattern) {
         }
         update();
     }
+}
+
+bool PatternGrid::processKeyPress(PianoInput const& input, int const key) {
+    bool validKey = false;
+
+    switch (key) {
+        case Qt::Key_Delete:
+            validKey = true;
+            break;
+        case Qt::Key_Backspace:
+            validKey = true;
+            break;
+        default:
+        {
+            auto coltype = static_cast<ColumnType>(mCursorCol % TRACK_COLUMNS);
+            switch (coltype) {
+                case PatternConstants::COLUMN_NOTE:
+                {
+                    auto note = input.keyToNote(key);
+                    if (note) {
+                        // TODO: preview the note
+                        //mPreviewKey = key;
+                        // set it in the grid
+                        if (mEditMode) {
+                            // TODO: set note
+
+                        }
+
+                        validKey = true;
+                    }
+                }
+                    break;
+                case PatternConstants::COLUMN_EFFECT1_TYPE:
+                case PatternConstants::COLUMN_EFFECT2_TYPE:
+                case PatternConstants::COLUMN_EFFECT3_TYPE:
+                {
+                    // check if the key pressed is a valid effect type
+                    auto effectType = keyToEffectType(key);
+                    if (effectType) {
+                        // shortcut for converting the column type to its corresponding effect number
+                        // assert that we can do this
+                        static_assert(PatternConstants::COLUMN_EFFECT1_TYPE / 3 - 1 == 0);
+                        static_assert(PatternConstants::COLUMN_EFFECT2_TYPE / 3 - 1 == 1);
+                        static_assert(PatternConstants::COLUMN_EFFECT3_TYPE / 3 - 1 == 2);
+
+                        if (mEditMode) {
+                            // TODO edit effect type
+                        }
+
+                        validKey = true;
+                    }
+                }
+                    break;
+                case PatternConstants::COLUMN_INSTRUMENT_HIGH:
+                case PatternConstants::COLUMN_INSTRUMENT_LOW:
+                case PatternConstants::COLUMN_EFFECT1_ARG_HIGH:
+                case PatternConstants::COLUMN_EFFECT1_ARG_LOW:
+                case PatternConstants::COLUMN_EFFECT2_ARG_HIGH:
+                case PatternConstants::COLUMN_EFFECT2_ARG_LOW:
+                case PatternConstants::COLUMN_EFFECT3_ARG_HIGH:
+                case PatternConstants::COLUMN_EFFECT3_ARG_LOW:
+                {
+                    // check if the key pressed is a hex number
+                    auto hex = keyToHex(key);
+                    if (hex) {
+                        if (mEditMode) {
+                            // TODO edit instrument/effect arg
+                        }
+
+                        validKey = true;
+                    }
+                }
+                break;
+            }
+        }
+        break;
+    }
+
+    return validKey;
 }
 
 // ================================================================= SLOTS ===

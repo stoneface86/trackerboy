@@ -32,7 +32,7 @@ void PianoInput::unbind(int semitoneOffset) {
 }
 
 
-std::optional<trackerboy::Note> PianoInput::keyToNote(int key) {
+std::optional<trackerboy::Note> PianoInput::keyToNote(int key) const {
 
     if (mBindingLookup.contains(key)) {
         int note = mOctave * 12 + mBindingLookup[key];

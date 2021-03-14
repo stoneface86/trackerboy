@@ -3,8 +3,10 @@
 
 #include "core/model/SongListModel.hpp"
 #include "core/ColorTable.hpp"
+#include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 #include "widgets/grid/PatternPainter.hpp"
+#include "widgets/grid/layout.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
 #include "trackerboy/note.hpp"
@@ -28,16 +30,6 @@ public:
 
     explicit PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent = nullptr);
     ~PatternGrid() = default;
-    
-    bool cursorOnNote();
-
-    bool edit(trackerboy::Note note);
-
-    bool edit(char key, bool &valid);
-
-    void erase();
-
-    void backspace();
 
     // Settings
 
@@ -46,10 +38,20 @@ public:
     //
     void redraw();
 
+    //void redrawRow();
+
+    //void redrawRow(int start, int end);
+
     //
     // Returns the current row of the cursor
     //
     int row() const;
+
+    int column() const;
+
+    PatternConstants::ColumnType columnType() const;
+
+    int channel() const;
 
     bool isRecording() const;
 
@@ -67,6 +69,10 @@ public:
     void setShowFlats(bool showFlats);
 
     void setTrackerCursor(int row, int pattern);
+
+    bool processKeyPress(PianoInput const& input, int const key);
+
+    void processKeyRelease(int const key);
 
 signals:
 

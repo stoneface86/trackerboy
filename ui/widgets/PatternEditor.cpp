@@ -2,9 +2,34 @@
 #include "widgets/PatternEditor.hpp"
 
 #include "misc/utils.hpp"
+#include "widgets/grid/layout.hpp"
 
 #include <QGridLayout>
 #include <QtDebug>
+
+
+
+// PatternEditor is just a composite widget containing the grid, header and
+// two scrollbars. (PatternGrid does most of the work)
+//
+// +-------------------------------------+
+// | PatternGridHeader                   |
+// |                                     |
+// +----------------------------------+--+
+// |                                  |  |
+// |                                  |  |
+// |                                  |  |
+// |                                  |  |
+// | PatternGrid                      |  | <--- VScrollBar
+// |                                  |  |
+// |                                  |  |
+// |                                  |  |
+// |                                  |  |
+// +----------------------------------+--+
+// | HScrollBar                       |XX|
+// +----------------------------------+--+
+
+
 
 PatternEditor::PatternEditor(PianoInput &input, SongListModel &model, QWidget *parent) :
     QFrame(parent),
@@ -162,11 +187,10 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     
     
     int const key = evt->key();
-    bool const recording = mGrid.isRecording();
-
-    bool validKey = false;
+    
     
     // navigation keys / non-edit keys
+    // these keys also ignore the key repetition setting (they always repeat)
     switch (key) {
         case Qt::Key_Left:
             mGrid.moveCursorColumn(-1);
@@ -189,45 +213,18 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         case Qt::Key_Space:
             mTrackerActions.record.toggle();
             return;
-        case Qt::Key_Backspace:
-            mGrid.backspace();
-            return;
     }
 
     if (evt->isAutoRepeat() && !mKeyRepeatCheck.isChecked()) {
+        QWidget::keyPressEvent(evt);
         return; // key repetition disabled, ignore this event
     }
-    
-    int const editStep = mEditStepSpin.value();
-    
-    bool cellWasEdited = false;
-    if (key == Qt::Key_Delete) {
-        // erase the cell
-        mGrid.erase();
-        validKey = true;
+
+    if (mGrid.processKeyPress(mPianoIn, key)) {
+        mGrid.moveCursorRow(mEditStepSpin.value());
+        
     } else {
-        // check if the cursor is on a note column
-        if (mGrid.cursorOnNote()) {
-            auto note = mPianoIn.keyToNote(key);
-            if (note) {
-                // TODO: preview the note
-                mPreviewKey = key;
-                // set it in the grid
-                cellWasEdited = mGrid.edit(note.value());
-                validKey = true;
-            }
-        } else {
-            if (key < 256) {
-                cellWasEdited = mGrid.edit(static_cast<char>(key), validKey);
-            }
-        }
-    }
-
-    if (cellWasEdited) {
-        mGrid.moveCursorRow(editStep);
-    }
-
-    if (!validKey) {
+        // invalid key or edit mode is off, let QWidget handle it
         QWidget::keyPressEvent(evt);
     }
     
