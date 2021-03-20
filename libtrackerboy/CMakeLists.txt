@@ -2,17 +2,6 @@
 project("libtrackerboy")
 
 set(SRC_FILES
-    "export/Wav.cpp"
-
-    "engine/ChannelControl.cpp"
-    "engine/Engine.cpp"
-    "engine/FrequencyControl.cpp"
-    "engine/InstrumentRuntime.cpp"
-    "engine/MusicRuntime.cpp"
-    "engine/NoteControl.cpp"
-    "engine/RuntimeContext.cpp"
-    "engine/Timer.cpp"
-
     "data/DataItem.cpp"
     "data/DataList.cpp"
     "data/Instrument.cpp"
@@ -23,6 +12,20 @@ set(SRC_FILES
     "data/Song.cpp"
     "data/Track.cpp"
     "data/Waveform.cpp"
+
+    "engine/ChannelControl.cpp"
+    "engine/Engine.cpp"
+    "engine/FrequencyControl.cpp"
+    "engine/InstrumentRuntime.cpp"
+    "engine/MusicRuntime.cpp"
+    "engine/NoteControl.cpp"
+    "engine/RuntimeContext.cpp"
+    "engine/Timer.cpp"
+
+    "export/Wav.cpp"
+    
+    "internal/endian.cpp"
+    "internal/tlv.cpp"
 
     "fileformat.cpp"
     "note.cpp"
@@ -69,7 +72,8 @@ if (TRACKERBOY_ENABLE_TESTS)
         "engine/test_NoteControl.cpp"
         "engine/test_Timer.cpp"
 
-        "test_fileformat.cpp"
+        "internal/test_endian.cpp"
+        "internal/test_tlv.cpp"
     )
 
     add_catch_test(TEST_EXE ${TEST_SRC_FILES})
@@ -91,7 +95,8 @@ if (TRACKERBOY_ENABLE_TESTS)
     unit_test(PatternMaster)
     unit_test(NoteControl)
     unit_test(Timer)
-    unit_test(fileformat)
+    unit_test(endian)
+    unit_test(tlv)
     unit_test(Table)
     
     

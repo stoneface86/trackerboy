@@ -2,6 +2,8 @@
 #include "trackerboy/export/Wav.hpp"
 #include "trackerboy/fileformat.hpp"
 
+#include "internal/endian.hpp"
+
 #include <cassert>
 
 

@@ -3,6 +3,7 @@
 #include "trackerboy/fileformat.hpp"
 
 #include "./checkedstream.hpp"
+#include "internal/endian.hpp"
 
 #include <algorithm>
 #include <cstddef>

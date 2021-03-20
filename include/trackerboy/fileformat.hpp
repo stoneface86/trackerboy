@@ -151,16 +151,4 @@ extern const char *FILE_SIGNATURE;
 static constexpr uint8_t FILE_REVISION = 0;
 
 
-//
-// Change the endian of the given value if needed. On big endian
-// systems, the value is byte swapped. On little endian systems
-// the same value is returned.
-//
-uint32_t correctEndian(uint32_t val);
-
-uint16_t correctEndian(uint16_t val);
-
-float correctEndian(float val);
-
-
 }

@@ -68,11 +68,13 @@ DataItem* DataListBase::duplicateItem(uint8_t id) {
     }
 
     if (id < mData.size()) {
-        auto &cellToDup = mData[id];
-        if (cellToDup) {
+        if (mData[id]) {
+            if (mNextId >= mData.size()) {
+                mData.resize((size_t)mNextId + 1);
+            }
             auto &cell = mData[mNextId];
             // copy constructor
-            auto item = copyItem(*cellToDup);
+            auto item = copyItem(*mData[id]);
             item->setId(mNextId);
             cell.reset(item);
             ++mItemCount;
