@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstdint>
+#include <exception>
 #include <istream>
 #include <ostream>
 
@@ -31,28 +32,56 @@ namespace trackerboy {
 //
 namespace tlvparser {
 
+class IOError : public std::exception {
 
-bool readTag(std::istream &stream, uint8_t &tag, uint32_t &length);
-bool readValue(std::istream &stream, uint32_t const length, char *value);
+public:
+    IOError(std::ios &stream);
+
+    // get the stream that caused the error
+    std::ios &stream();
+
+    const char* what() const override;
+
+private:
+    std::ios &mStream;
+
+};
+
+class LengthMismatchError : public std::exception {
+
+public:
+    LengthMismatchError(uint32_t expected, uint32_t got);
+
+    const char* what() const override;
+
+private:
+    uint32_t mExpected;
+    uint32_t mGot;
+
+};
+
+
+void readTag(std::istream &stream, uint8_t &tag, uint32_t &length);
+void readValue(std::istream &stream, uint32_t const length, char *value);
 
 template <typename T>
-inline bool readValue(std::istream &stream, uint32_t const length, T &value) {
+inline void readValue(std::istream &stream, uint32_t const length, T &value) {
     if (length != sizeof(T)) {
-        return false; // length mismatch!
+        throw LengthMismatchError(sizeof(T), length);
     }
-    return readValue(stream, sizeof(T), reinterpret_cast<char*>(&value));
+    readValue(stream, sizeof(T), reinterpret_cast<char*>(&value));
 }
 
 // generic write function
-bool write(std::ostream &stream, uint8_t const tag, uint32_t const length, const char *value);
+void write(std::ostream &stream, uint8_t const tag, uint32_t const length, const char *value);
 
 // write void value (or no data, just the tag and length = 0)
-bool write(std::ostream &stream, uint8_t const tag);
+void write(std::ostream &stream, uint8_t const tag);
 
 
 template <typename T>
-inline bool write(std::ostream &stream, uint8_t const tag, T const& value) {
-    return write(stream, tag, sizeof(T), reinterpret_cast<const char*>(&value));
+inline void write(std::ostream &stream, uint8_t const tag, T const& value) {
+    write(stream, tag, sizeof(T), reinterpret_cast<const char*>(&value));
 }
 
 }

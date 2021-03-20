@@ -24,9 +24,9 @@ TEST_CASE("read/write equivalence", "[tlv]") {
 
 
     // write out some sample tlv data
-    REQUIRE(tlvparser::write(out, 'I', 4));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'I', 4));
     const char str[] = "I'm a string or something";
-    REQUIRE(tlvparser::write(out, 'S', sizeof(str), str));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'S', sizeof(str), str));
 
 
     // read it back
@@ -35,18 +35,18 @@ TEST_CASE("read/write equivalence", "[tlv]") {
     uint8_t tag;
     uint32_t length;
     int value1;
-    REQUIRE(tlvparser::readTag(in, tag, length));
+    REQUIRE_NOTHROW(tlvparser::readTag(in, tag, length));
     REQUIRE(tag == 'I');
     REQUIRE(length == sizeof(int));
-    REQUIRE(tlvparser::readValue(in, length, value1));
+    REQUIRE_NOTHROW(tlvparser::readValue(in, length, value1));
     REQUIRE(value1 == 4);
 
-    REQUIRE(tlvparser::readTag(in, tag, length));
+    REQUIRE_NOTHROW(tlvparser::readTag(in, tag, length));
     REQUIRE(tag == 'S');
     REQUIRE(length == sizeof(str));
 
     char strReadIn[sizeof(str)];
-    REQUIRE(tlvparser::readValue(in, length, strReadIn));
+    REQUIRE_NOTHROW(tlvparser::readValue(in, length, strReadIn));
     REQUIRE(strcmp(str, strReadIn) == 0);
 
 
@@ -85,10 +85,10 @@ static std::array SAMPLE_DATA = {
 TEST_CASE("format is correct", "[tlv]") {
     std::ostringstream out(std::ios::out | std::ios::binary);
 
-    REQUIRE(tlvparser::write(out, 'I', 0x11223344));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'I', 0x11223344));
     const char str[] = "Hi";
-    REQUIRE(tlvparser::write(out, 'S', sizeof(str), str));
-    REQUIRE(tlvparser::write(out, 'A'));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'S', sizeof(str), str));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'A'));
 
     auto outputStr = out.str();
     REQUIRE(outputStr.length() == SAMPLE_DATA.size());
@@ -99,24 +99,24 @@ TEST_CASE("can read and write 0-length", "[tlv]") {
     std::istringstream in(std::ios::in | std::ios::binary);
     std::ostringstream out(std::ios::out | std::ios::binary);
 
-    REQUIRE(tlvparser::write(out, 'T'));
-    REQUIRE(tlvparser::write(out, 'A'));
-    REQUIRE(tlvparser::write(out, 'G'));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'T'));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'A'));
+    REQUIRE_NOTHROW(tlvparser::write(out, 'G'));
 
     // read it back
     in.str(out.str());
 
     uint8_t tag;
     uint32_t length;
-    REQUIRE(tlvparser::readTag(in, tag, length));
+    REQUIRE_NOTHROW(tlvparser::readTag(in, tag, length));
     REQUIRE(tag == 'T');
     REQUIRE(length == 0);
 
-    REQUIRE(tlvparser::readTag(in, tag, length));
+    REQUIRE_NOTHROW(tlvparser::readTag(in, tag, length));
     REQUIRE(tag == 'A');
     REQUIRE(length == 0);
 
-    REQUIRE(tlvparser::readTag(in, tag, length));
+    REQUIRE_NOTHROW(tlvparser::readTag(in, tag, length));
     REQUIRE(tag == 'G');
     REQUIRE(length == 0);
 

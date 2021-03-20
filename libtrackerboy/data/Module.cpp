@@ -4,6 +4,7 @@
 
 #include "./checkedstream.hpp"
 #include "internal/endian.hpp"
+#include "internal/tlv.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -83,6 +84,47 @@ void Module::setTitle(std::string title) noexcept {
 }
 
 // ---- Serialization ----
+
+enum class FormatCmd : uint8_t {
+    songAppend = 'S',           // 'S'
+    instrumentInsert = 'I',     // 'I' <id>: inserts an instrument with the given id
+    waveInsert = 'W',           // 'W' <id> -> W/1/<id>
+    name = 'N',                 // 'N' <name>: sets the name for the last added DataItem (S I or W must preceed this command!)
+    comments = 'C',             // 'C' <comments>: sets comments for the module
+    // song commands (applies to song created from songAppend)
+    songSpeed = 'E',            // 'E' <speed>: sets the song's speed
+    songRpb = 'B',              // 'B' <rpb>: sets the song's rows per beat
+    songRpm = 'M',              // 'M' <rpm>: sets the song's rows per measure
+    songAppendPattern = 'P',    // 'P' <order>: appends a pattern to the song's order
+    songSelectTrack = 'T',      // 'T' <ch> <trackId>: selects a track to edit
+    songSetRow = 'R',           // 'R' <rowno> <rowdata>: sets rowdata for the selected track
+    // waveform commands
+    waveSet = 'w',              // 'w' <wavedata>: sets waveform data
+    // instrument commands
+    instrumentSet = 'i'         // 'i' <instrumentData>: sets instrument data
+
+};
+
+// command argument structs
+
+#pragma pack(push, 1)
+
+struct SelectTrackArgs {
+    uint8_t channel;
+    uint8_t trackId;
+};
+
+struct SetRowArgs {
+    uint8_t rowno;
+    TrackRow rowdata;
+};
+
+#pragma pack(pop)
+
+constexpr uint8_t operator+(FormatCmd lhs) {
+    return static_cast<uint8_t>(lhs);
+}
+
 
 FormatError Module::deserialize(std::istream &stream) noexcept {
 
@@ -184,26 +226,73 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
     // write the header
     checkedWrite(stream, &header, sizeof(header));
     
-    FormatError error;
+    try {
 
-    // write songs
-    uint8_t songCount = static_cast<uint8_t>(mSongs.size()) - 1;
-    checkedWrite(stream, &songCount, sizeof(songCount));
-    for (auto &song : mSongs) {
-        error = song.serialize(stream);
-        if (error != FormatError::none) {
-            return error;
+        // write comments if set
+
+        // write songs
+        for (auto &song : mSongs) {
+            tlvparser::write(stream, +FormatCmd::songAppend);
+
+            auto name = song.name();
+            tlvparser::write(stream, +FormatCmd::name, (uint32_t)name.length(), name.c_str());
+
+            tlvparser::write(stream, +FormatCmd::songSpeed, song.speed());
+
+            tlvparser::write(stream, +FormatCmd::songRpb, song.rowsPerBeat());
+
+            tlvparser::write(stream, +FormatCmd::songRpm, song.rowsPerMeasure());
+
+            // order
+            auto &order = song.orders();
+            for (auto &pattern : order) {
+                tlvparser::write(stream, +FormatCmd::songAppendPattern, pattern);
+            }
+
+            // pattern data
+            auto &pm = song.patterns();
+            // iterate all channels
+            for (uint8_t ch = 0; ch <= static_cast<uint8_t>(ChType::ch4); ++ch) {
+                // track iterators for the current channel
+                auto begin = pm.tracksBegin(static_cast<ChType>(ch));
+                auto end = pm.tracksEnd(static_cast<ChType>(ch));
+
+                // iterate all tracks for this channel
+                for (auto pair = begin; pair != end; ++pair) {
+                    // make sure track is non-empty
+                    if (pair->second.rowCount() > 0) {
+                        SelectTrackArgs selectTrackArgs = { ch, pair->first };
+                        tlvparser::write(stream, +FormatCmd::songSelectTrack, selectTrackArgs);
+
+                        // iterate all rows in this track
+                        uint8_t rowno = 0;
+                        SetRowArgs setRowArgs;
+                        for (auto &row : pair->second) {
+                            if (row.flags) {
+                                setRowArgs = { rowno, row };
+                                tlvparser::write(stream, +FormatCmd::songSetRow, setRowArgs);
+                            }
+
+                            ++rowno;
+                        }
+                    }
+                }
+            }
+
         }
+
+        // write instruments
+        // TODO
+
+        // write waveforms
+        // TODO
+
+
+    } catch (tlvparser::IOError const& err) {
+        (void)err;
+        return FormatError::writeError;
     }
 
-    // instrument table
-    //error = mInstrumentTable.serialize(stream);
-    //if (error != FormatError::none) {
-    //    return error;
-    //}
-
-    //// wave table
-    //return mWaveTable.serialize(stream);
     return FormatError::none;
 }
 
