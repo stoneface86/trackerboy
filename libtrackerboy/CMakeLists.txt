@@ -14,12 +14,13 @@ set(SRC_FILES
     "engine/Timer.cpp"
 
     "data/DataItem.cpp"
+    "data/DataList.cpp"
     "data/Instrument.cpp"
     "data/Module.cpp"
     "data/Pattern.cpp"
     "data/PatternMaster.cpp"
+    "data/Sequence.cpp"
     "data/Song.cpp"
-    "data/Table.cpp"
     "data/Track.cpp"
     "data/Waveform.cpp"
 
@@ -60,6 +61,7 @@ if (TRACKERBOY_ENABLE_TESTS)
 
     set(TEST_SRC_FILES
         "data/test_DataItem.cpp"
+        "data/test_DataList.cpp"
         "data/test_Instrument.cpp"
         "data/test_Module.cpp"
         "data/test_PatternMaster.cpp"
@@ -68,7 +70,6 @@ if (TRACKERBOY_ENABLE_TESTS)
         "engine/test_Timer.cpp"
 
         "test_fileformat.cpp"
-        "test_Table.cpp"
     )
 
     add_catch_test(TEST_EXE ${TEST_SRC_FILES})
@@ -84,6 +85,7 @@ if (TRACKERBOY_ENABLE_TESTS)
     endmacro(unit_test)
 
     unit_test(DataItem)
+    unit_test(DataList)
     unit_test(Instrument)
     unit_test(Module)
     unit_test(PatternMaster)

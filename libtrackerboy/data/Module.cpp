@@ -13,8 +13,8 @@ namespace trackerboy {
 
 Module::Module() noexcept :
     mSongs(),
-    mWaveTable(),
-    mInstrumentTable(),
+    mInstrumentList(),
+    mWaveformList(),
     mVersion(VERSION),
     mRevision(FILE_REVISION),
     mTitle(""),
@@ -33,8 +33,8 @@ void Module::clear() noexcept {
     mArtist = "";
     mCopyright = "";
     mSongs.clear();
-    mInstrumentTable.clear();
-    mWaveTable.clear();
+    mInstrumentList.clear();
+    mWaveformList.clear();
 }
 
 std::string Module::artist() const noexcept {
@@ -61,12 +61,12 @@ std::vector<Song>& Module::songs() noexcept {
     return mSongs;
 }
 
-InstrumentTable& Module::instrumentTable() noexcept {
-    return mInstrumentTable;
+InstrumentList& Module::instrumentList() noexcept {
+    return mInstrumentList;
 }
 
-WaveTable& Module::waveTable() noexcept {
-    return mWaveTable;
+WaveformList& Module::waveformList() noexcept {
+    return mWaveformList;
 }
 
 void Module::setArtist(std::string artist) noexcept {
@@ -132,13 +132,13 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
     }
 
     // instrument table
-    error = mInstrumentTable.deserialize(stream);
-    if (error != FormatError::none) {
-        return error;
-    }
+    //error = mInstrumentTable.deserialize(stream);
+    //if (error != FormatError::none) {
+    //    return error;
+    //}
 
-    // wave table
-    error = mWaveTable.deserialize(stream);
+    //// wave table
+    //error = mWaveTable.deserialize(stream);
 
 
     return error;
@@ -196,13 +196,14 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
     }
 
     // instrument table
-    error = mInstrumentTable.serialize(stream);
-    if (error != FormatError::none) {
-        return error;
-    }
+    //error = mInstrumentTable.serialize(stream);
+    //if (error != FormatError::none) {
+    //    return error;
+    //}
 
-    // wave table
-    return mWaveTable.serialize(stream);
+    //// wave table
+    //return mWaveTable.serialize(stream);
+    return FormatError::none;
 }
 
 }

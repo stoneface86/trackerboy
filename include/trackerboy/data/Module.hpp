@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "trackerboy/data/Table.hpp"
+#include "trackerboy/data/DataList.hpp"
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/version.hpp"
 
@@ -55,9 +55,9 @@ public:
 
     std::vector<Song>& songs() noexcept;
 
-    WaveTable& waveTable() noexcept;
+    WaveformList& waveformList() noexcept;
 
-    InstrumentTable& instrumentTable() noexcept;
+    InstrumentList& instrumentList() noexcept;
 
     FormatError deserialize(std::istream &stream) noexcept;
 
@@ -73,8 +73,10 @@ public:
 private:
 
     std::vector<Song> mSongs;
-    WaveTable mWaveTable;
-    InstrumentTable mInstrumentTable;
+    InstrumentList mInstrumentList;
+    WaveformList mWaveformList;
+    //WaveTable mWaveTable;
+    //InstrumentTable mInstrumentTable;
 
     // header settings
     Version mVersion;

@@ -24,24 +24,55 @@
 
 #pragma once
 
-#include "trackerboy/data/DataList.hpp"
-
-#include "gbapu.hpp"
+#include <cstdint>
+#include <optional>
+#include <vector>
 
 namespace trackerboy {
 
 //
-// The RuntimeContext struct is a utility struct that contains references for
-// the APU and data tables.
+// A sequence is a list of bytes that modulate an instrument parameter, such as
+// duty or pitch.
 //
-struct RuntimeContext {
+class Sequence {
 
-    RuntimeContext(gbapu::Apu &apu, InstrumentList &instList, WaveformList &waveList);
+public:
 
-    gbapu::Apu &apu;
-    InstrumentList &instList;
-    WaveformList &waveList;
+    //
+    // class for enumerating the values of a sequence
+    //
+    class Enumerator {
 
+    public:
+
+        std::optional<uint8_t> next();
+
+    private:
+        friend class Sequence;
+        Enumerator(Sequence &sequence);
+
+        Sequence &mSequence;
+        uint8_t mIndex;
+    };
+
+    Sequence();
+
+    Enumerator enumerator();
+
+    void resize(size_t size);
+
+    void setLoop(uint8_t loop);
+
+    void removeLoop();
+
+
+
+private:
+
+    // sequence data
+    std::vector<uint8_t> mData;
+    // index of the loop point, when end of sequence is reached it will loop back to this index
+    std::optional<uint8_t> mLoop;
 
 };
 

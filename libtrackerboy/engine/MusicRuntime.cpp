@@ -78,7 +78,7 @@ bool MusicRuntime::setRows() {
     }
 
     if (!!(row.flags & TrackRow::COLUMN_INST)) {
-        auto instrument = mRc.instTable[row.instrumentId];
+        auto instrument = mRc.instList[row.instrumentId];
         if (instrument != nullptr) {
             auto &idata = instrument->data();
             setTimbre<ch>(idata.timbre);

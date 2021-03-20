@@ -28,7 +28,7 @@ void ChannelControl::unlock(ChType ch) noexcept {
 void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelope, uint8_t freqMsb) {
     if (ch == ChType::ch3) {
 
-        Waveform *waveform = rc.waveTable[envelope];
+        Waveform *waveform = rc.waveList[envelope];
         if (waveform == nullptr) {
             return; // do nothing if no waveform exists
         }

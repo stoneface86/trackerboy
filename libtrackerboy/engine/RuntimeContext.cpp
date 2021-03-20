@@ -4,10 +4,10 @@
 namespace trackerboy {
 
 
-RuntimeContext::RuntimeContext(gbapu::Apu &apu, InstrumentTable &instTable, WaveTable &waveTable) :
+RuntimeContext::RuntimeContext(gbapu::Apu &apu, InstrumentList &instList, WaveformList &waveList) :
     apu(apu),
-    instTable(instTable),
-    waveTable(waveTable)
+    instList(instList),
+    waveList(waveList)
 {
 }
 

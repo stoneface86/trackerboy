@@ -61,27 +61,27 @@ int main() {
 
     Module mod;
 
-    InstrumentTable &itable = mod.instrumentTable();
-    WaveTable &wtable = mod.waveTable();
+    auto &itable = mod.instrumentList();
+    auto &wtable = mod.waveformList();
     RuntimeContext rc(synth.apu(), itable, wtable);
     
 
     {
-        auto &inst = itable.insert();
-        auto &idata = inst.data();
+        auto inst = itable.insert();
+        auto &idata = inst->data();
         idata.envelope = 0x57;
         idata.timbre = 1;
     }
 
     {
-        auto &inst = itable.insert();
-        auto &idata = inst.data();
+        auto inst = itable.insert();
+        auto &idata = inst->data();
         idata.envelope = 0x77;
         idata.timbre = 0x0;
     }
 
-    auto &triangle = wtable.insert();
-    triangle.fromString("0123456789ABCDEFFEDCBA9876543210");
+    auto triangle = wtable.insert();
+    triangle->fromString("0123456789ABCDEFFEDCBA9876543210");
 
     
     
