@@ -16,7 +16,7 @@ DataListBase::~DataListBase() noexcept {
 
 }
 
-DataListBase::Iterator DataListBase::begin() noexcept {
+DataListBase::Iterator DataListBase::begin() const noexcept {
     return mIdsInUse.cbegin();
 }
 
@@ -26,7 +26,7 @@ void DataListBase::clear() noexcept {
     mNextId = 0u;
 }
 
-DataListBase::Iterator DataListBase::end() noexcept {
+DataListBase::Iterator DataListBase::end() const noexcept {
     return mIdsInUse.cend();
 }
 
@@ -114,7 +114,7 @@ void DataListBase::remove(uint8_t id) {
     throw std::runtime_error("cannot remove: item does not exist");
 }
 
-DataItem* DataListBase::itemAt(uint8_t id) {
+DataItem* DataListBase::itemAt(uint8_t id) const {
     if (id >= mData.size()) {
         return nullptr;
     } else {
@@ -149,7 +149,7 @@ DataList<T>::~DataList() {
 }
 
 template <class T>
-T* DataList<T>::operator[](uint8_t id) {
+T* DataList<T>::operator[](uint8_t id) const {
     return static_cast<T*>(itemAt(id));
 }
 

@@ -25,7 +25,6 @@ set(SRC_FILES
     "export/Wav.cpp"
     
     "internal/endian.cpp"
-    "internal/tlv.cpp"
 
     "fileformat.cpp"
     "note.cpp"
@@ -71,7 +70,6 @@ if (TRACKERBOY_ENABLE_TESTS)
         "engine/test_Timer.cpp"
 
         "internal/test_endian.cpp"
-        "internal/test_tlv.cpp"
     )
 
     add_catch_test(TEST_EXE ${TEST_SRC_FILES})
@@ -92,7 +90,6 @@ if (TRACKERBOY_ENABLE_TESTS)
     unit_test(NoteControl)
     unit_test(Timer)
     unit_test(endian)
-    unit_test(tlv)
     unit_test(Table)
     
     

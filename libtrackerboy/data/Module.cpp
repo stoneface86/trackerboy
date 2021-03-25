@@ -3,7 +3,6 @@
 #include "trackerboy/fileformat.hpp"
 
 #include "internal/endian.hpp"
-#include "internal/tlv.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -316,7 +315,15 @@ std::string deserializeString(InputBlock &block) {
 }
 
 template <class T>
-void deserializeDataList(InputBlock &block, size_t count, T &list) {
+void writeListIndex(OutputBlock &block, T const& list) {
+    for (auto id : list) {
+        block.write(id);
+        serializeString(block, list[id]->name());
+    }
+}
+
+template <class T>
+void readListIndex(InputBlock &block, size_t count, T &list) {
     while (count--) {
         uint8_t id;
         block.read(id);
@@ -400,8 +407,8 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             song.setName(deserializeString(block));
         }
 
-        deserializeDataList(block, header.numberOfInstruments, mInstrumentList);
-        deserializeDataList(block, header.numberOfWaveforms, mWaveformList);
+        readListIndex(block, header.numberOfInstruments, mInstrumentList);
+        readListIndex(block, header.numberOfWaveforms, mWaveformList);
 
         if (!block.finished()) {
             return FormatError::invalid;
@@ -507,6 +514,9 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
     } catch (IOError const& err) {
         (void)err;
         return FormatError::readError;
+    } catch (BoundsError const& err) {
+        (void)err;
+        return FormatError::invalid;
     }
     
     if (stream.peek() == EOF) {
@@ -573,15 +583,9 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
             serializeString(block, song.name());
         }
 
-        for (auto id : mInstrumentList) {
-            block.write(id);
-            serializeString(block, mInstrumentList[id]->name());
-        }
+        writeListIndex(block, mInstrumentList);
+        writeListIndex(block, mWaveformList);
 
-        for (auto id : mWaveformList) {
-            block.write(id);
-            serializeString(block, mWaveformList[id]->name());
-        }
         block.finish();
         
 

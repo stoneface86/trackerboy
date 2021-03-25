@@ -30,11 +30,11 @@ public:
     //
     // Gets an iterator for all IDs in use by this list
     //
-    Iterator begin() noexcept;
+    Iterator begin() const noexcept;
 
     void clear() noexcept;
 
-    Iterator end() noexcept;
+    Iterator end() const noexcept;
 
     //
     // total count of items in the list
@@ -63,7 +63,7 @@ protected:
 
     DataItem* duplicateItem(uint8_t id);
 
-    DataItem* itemAt(uint8_t id);
+    DataItem* itemAt(uint8_t id) const;
 
     virtual DataItem* createItem() = 0;
 
@@ -98,7 +98,7 @@ public:
     // item does not exist, nullptr is returned. The pointer may be invalidated
     // after calling insert()
     //
-    T* operator[](uint8_t id);
+    T* operator[](uint8_t id) const;
 
     T* insert();
 
