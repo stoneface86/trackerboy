@@ -63,9 +63,7 @@ endif ()
 if (TRACKERBOY_ENABLE_TESTS)
 
     set(TEST_SRC_FILES
-        "data/test_DataItem.cpp"
         "data/test_DataList.cpp"
-        "data/test_Instrument.cpp"
         "data/test_Module.cpp"
         "data/test_PatternMaster.cpp"
 
@@ -88,9 +86,7 @@ if (TRACKERBOY_ENABLE_TESTS)
         add_test(NAME ${unit} COMMAND ${TEST_EXE} "[${unit}]")
     endmacro(unit_test)
 
-    unit_test(DataItem)
     unit_test(DataList)
-    unit_test(Instrument)
     unit_test(Module)
     unit_test(PatternMaster)
     unit_test(NoteControl)

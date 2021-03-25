@@ -62,10 +62,6 @@ public:
 
     Data& data();
 
-protected:
-    virtual FormatError serializeData(std::ostream &stream) noexcept override;
-    virtual FormatError deserializeData(std::istream &stream) noexcept override;
-
 private:
     Data mData;
 };

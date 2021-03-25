@@ -75,13 +75,6 @@ public:
 
     float tempo(float framerate = Gbs::FRAMERATE_GB) const noexcept;
 
-protected:
-
-    virtual FormatError deserializeData(std::istream &stream) noexcept override;
-    
-    virtual FormatError serializeData(std::ostream &stream) noexcept override;
-
-
 private:
 
     //void calcSpeed();

@@ -2,6 +2,7 @@
 #include "trackerboy/data/DataList.hpp"
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace trackerboy {
 

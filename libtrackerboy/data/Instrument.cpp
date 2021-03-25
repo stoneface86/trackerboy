@@ -25,15 +25,5 @@ Instrument::Data& Instrument::data() {
     return mData;
 }
 
-FormatError Instrument::serializeData(std::ostream &stream) noexcept {
-    checkedWrite(stream, &mData, sizeof(Data));
-    return FormatError::none;
-}
-
-FormatError Instrument::deserializeData(std::istream &stream) noexcept {
-    checkedRead(stream, &mData, sizeof(Data));
-    return FormatError::none;
-}
-
 
 }

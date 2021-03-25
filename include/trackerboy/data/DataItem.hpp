@@ -27,8 +27,6 @@
 #include "trackerboy/fileformat.hpp"
 
 #include <cstdint>
-#include <istream>
-#include <ostream>
 #include <string>
 
 
@@ -53,17 +51,9 @@ public:
 
     void setId(uint8_t id) noexcept;
 
-    FormatError serialize(std::ostream &stream) noexcept;
-
-    FormatError deserialize(std::istream &stream) noexcept;
-
-
 protected:
     DataItem();
     DataItem(const DataItem &item);
-
-    virtual FormatError serializeData(std::ostream &stream) noexcept = 0;
-    virtual FormatError deserializeData(std::istream &stream) noexcept = 0;
 
     uint8_t mId;
     std::string mName;

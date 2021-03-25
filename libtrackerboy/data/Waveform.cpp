@@ -46,15 +46,5 @@ uint8_t& Waveform::operator[](int index) {
     return mData[index];
 }
 
-FormatError Waveform::serializeData(std::ostream &stream) noexcept {
-    checkedWrite(stream, mData.data(), Gbs::WAVE_RAMSIZE);
-    return FormatError::none;
-}
-
-FormatError Waveform::deserializeData(std::istream &stream) noexcept {
-    checkedRead(stream, mData.data(), Gbs::WAVE_RAMSIZE);
-    return FormatError::none;
-}
-
 
 }

@@ -49,11 +49,6 @@ public:
 
     uint8_t& operator[](int index);
 
-protected:
-    virtual FormatError serializeData(std::ostream &stream) noexcept override;
-    virtual FormatError deserializeData(std::istream &stream) noexcept override;
-
-
 private:
     //uint8_t mData[Gbs::WAVE_RAMSIZE];
     std::array<uint8_t, Gbs::WAVE_RAMSIZE> mData;
