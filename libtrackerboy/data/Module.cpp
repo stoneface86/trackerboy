@@ -20,9 +20,10 @@ Module::Module() noexcept :
     mWaveformList(),
     mVersion(VERSION),
     mRevision(FILE_REVISION),
-    mTitle(""),
-    mArtist(""),
-    mCopyright("") 
+    mTitle(),
+    mArtist(),
+    mCopyright(),
+    mComments()
 {
 }
 
@@ -50,6 +51,10 @@ std::string const& Module::title() const noexcept {
 
 std::string const& Module::copyright() const noexcept {
     return mCopyright;
+}
+
+std::string const& Module::comments() const noexcept {
+    return mComments;
 }
 
 Version Module::version() const noexcept {
@@ -84,6 +89,10 @@ void Module::setTitle(std::string const& title) noexcept {
     mTitle = title;
 }
 
+void Module::setComments(std::string const& comments) noexcept {
+    mComments = comments;
+}
+
 // ---- Serialization ----
 
 
@@ -111,6 +120,10 @@ public:
         mPosition(0)
     {
         
+    }
+
+    size_t size() const {
+        return mSize;
     }
 
     BlockId begin() {
@@ -400,6 +413,10 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             return FormatError::invalid;
         }
 
+        // the entire block is the comments string
+        auto commentsLength = block.size();
+        mComments.resize(commentsLength);
+        block.read(commentsLength, mComments.data());
 
         if (!block.finished()) {
             return FormatError::invalid;
@@ -570,7 +587,7 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
 
         // "COMM"
         block.begin(BLOCK_ID_COMMENT);
-
+        block.write(mComments.size(), mComments.c_str());
         block.finish();
         
 

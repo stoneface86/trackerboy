@@ -49,6 +49,8 @@ public:
 
     std::string const& copyright() const noexcept;
 
+    std::string const& comments() const noexcept;
+
     Version version() const noexcept;
 
     uint8_t revision() const noexcept;
@@ -69,6 +71,8 @@ public:
 
     void setCopyright(std::string const& copyright) noexcept;
 
+    void setComments(std::string const& comments) noexcept;
+
 
 private:
 
@@ -84,6 +88,8 @@ private:
     std::string mArtist;
     std::string mCopyright;
 
+    // user comments/info about the module itself
+    std::string mComments;
 };
 
 
