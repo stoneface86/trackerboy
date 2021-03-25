@@ -36,22 +36,23 @@ class Waveform : public DataItem {
 
 public:
 
+    using Data = std::array<uint8_t, Gbs::WAVE_RAMSIZE>;
+
     Waveform() noexcept;
 
     Waveform(const Waveform &wave);
 
-    Waveform(std::string &hexstring);
+    Waveform(std::string const& hexstring);
 
-    uint8_t* data() noexcept;
+    Data& data() noexcept;
 
     // convenience method, sets the waveform data from a string of hex nibbles
-    void fromString(std::string hexstring);
+    void fromString(std::string const& hexstring);
 
     uint8_t& operator[](int index);
 
 private:
-    //uint8_t mData[Gbs::WAVE_RAMSIZE];
-    std::array<uint8_t, Gbs::WAVE_RAMSIZE> mData;
+    Data mData;
 };
 
 }

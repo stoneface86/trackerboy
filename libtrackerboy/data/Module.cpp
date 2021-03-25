@@ -40,15 +40,15 @@ void Module::clear() noexcept {
     mWaveformList.clear();
 }
 
-std::string Module::artist() const noexcept {
+std::string const& Module::artist() const noexcept {
     return mArtist;
 }
 
-std::string Module::title() const noexcept {
+std::string const& Module::title() const noexcept {
     return mTitle;
 }
 
-std::string Module::copyright() const noexcept {
+std::string const& Module::copyright() const noexcept {
     return mCopyright;
 }
 
@@ -72,15 +72,15 @@ WaveformList& Module::waveformList() noexcept {
     return mWaveformList;
 }
 
-void Module::setArtist(std::string artist) noexcept {
+void Module::setArtist(std::string const& artist) noexcept {
     mArtist = artist;
 }
 
-void Module::setCopyright(std::string copyright) noexcept {
+void Module::setCopyright(std::string const& copyright) noexcept {
     mCopyright = copyright;
 }
 
-void Module::setTitle(std::string title) noexcept {
+void Module::setTitle(std::string const& title) noexcept {
     mTitle = title;
 }
 
@@ -479,7 +479,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
 
         for (auto id : mWaveformList) {
             auto wave = mWaveformList[id];
-            block.read(Gbs::WAVE_RAMSIZE, wave->data());
+            block.read(wave->data());
         }
 
         if (!block.finished()) {
@@ -645,7 +645,7 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
         block.begin(BLOCK_ID_WAVE);
         for (auto id : mWaveformList) {
             auto waveform = mWaveformList[id];
-            block.write(Gbs::WAVE_RAMSIZE, waveform->data());
+            block.write(waveform->data());
         }
         block.finish();
         

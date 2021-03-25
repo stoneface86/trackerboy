@@ -43,11 +43,11 @@ public:
 
     void clear() noexcept;
 
-    std::string artist() const noexcept;
+    std::string const& artist() const noexcept;
 
-    std::string title() const noexcept;
+    std::string const& title() const noexcept;
 
-    std::string copyright() const noexcept;
+    std::string const& copyright() const noexcept;
 
     Version version() const noexcept;
 
@@ -63,11 +63,11 @@ public:
 
     FormatError serialize(std::ostream &stream) noexcept;
 
-    void setArtist(std::string artist) noexcept;
+    void setArtist(std::string const& artist) noexcept;
 
-    void setTitle(std::string title) noexcept;
+    void setTitle(std::string const& title) noexcept;
 
-    void setCopyright(std::string copyright) noexcept;
+    void setCopyright(std::string const& copyright) noexcept;
 
 
 private:
@@ -75,8 +75,6 @@ private:
     std::vector<Song> mSongs;
     InstrumentList mInstrumentList;
     WaveformList mWaveformList;
-    //WaveTable mWaveTable;
-    //InstrumentTable mInstrumentTable;
 
     // header settings
     Version mVersion;

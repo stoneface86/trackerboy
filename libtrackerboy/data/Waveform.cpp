@@ -12,7 +12,7 @@ Waveform::Waveform() noexcept :
 {       
 }
 
-Waveform::Waveform(std::string &hexstr) :
+Waveform::Waveform(std::string const& hexstr) :
     mData{ 0 }
 {
     fromString(hexstr);
@@ -26,11 +26,11 @@ Waveform::Waveform(const Waveform &wave) :
 }
 
 
-uint8_t* Waveform::data() noexcept {
-    return mData.data();
+Waveform::Data& Waveform::data() noexcept {
+    return mData;
 }
 
-void Waveform::fromString(std::string hexstring) {
+void Waveform::fromString(std::string const& hexstring) {
     for (size_t pos = 0, i = 0; pos < hexstring.size() && i != Gbs::WAVE_RAMSIZE; pos += 2, ++i) {
         std::string sub = hexstring.substr(pos, 2);
         uint8_t byte = (uint8_t)std::stoul(sub, nullptr, 16);
