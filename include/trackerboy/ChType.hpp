@@ -35,4 +35,8 @@ enum class ChType : uint8_t {
     ch4 = 3
 };
 
+constexpr inline auto operator+(ChType ch) {
+    return static_cast<uint8_t>(ch);
+}
+
 }

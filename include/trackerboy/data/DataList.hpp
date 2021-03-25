@@ -7,6 +7,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <set>
 #include <type_traits>
 #include <vector>
 
@@ -15,12 +16,25 @@ namespace trackerboy {
 
 class DataListBase {
 
+    using DataVector = std::vector<std::unique_ptr<DataItem>>;
+    using IdSet = std::set<uint8_t>;
+
 public:
     static constexpr size_t MAX_SIZE = 256;
-    
+
+    using Iterator = IdSet::const_iterator;
+
+
     virtual ~DataListBase() noexcept;
 
+    //
+    // Gets an iterator for all IDs in use by this list
+    //
+    Iterator begin() noexcept;
+
     void clear() noexcept;
+
+    Iterator end() noexcept;
 
     //
     // total count of items in the list
@@ -59,8 +73,8 @@ private:
 
     void findNextId();
 
-    std::vector<std::unique_ptr<DataItem>> mData;
-    size_t mItemCount;
+    DataVector mData;
+    IdSet mIdsInUse;
     uint8_t mNextId;
 };
 

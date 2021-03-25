@@ -53,6 +53,7 @@ public:
     uint16_t rowSize();
 
     size_t tracks(ChType ch);
+    size_t tracks();
 
     Data::iterator tracksBegin(ChType ch);
 

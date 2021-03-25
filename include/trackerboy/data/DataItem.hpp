@@ -47,9 +47,9 @@ public:
 
     uint8_t id() const noexcept;
 
-    std::string name() const noexcept;
+    std::string const& name() const noexcept;
     
-    void setName(std::string name) noexcept;
+    void setName(std::string const& name) noexcept;
 
     void setId(uint8_t id) noexcept;
 

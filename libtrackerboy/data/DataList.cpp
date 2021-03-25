@@ -7,7 +7,6 @@ namespace trackerboy {
 
 DataListBase::DataListBase() noexcept :
     mData(),
-    mItemCount(0),
     mNextId(0u)
 {
 }
@@ -16,14 +15,22 @@ DataListBase::~DataListBase() noexcept {
 
 }
 
+DataListBase::Iterator DataListBase::begin() noexcept {
+    return mIdsInUse.cbegin();
+}
+
 void DataListBase::clear() noexcept {
     mData.clear();
-    mItemCount = 0;
+    mIdsInUse.clear();
     mNextId = 0u;
 }
 
+DataListBase::Iterator DataListBase::end() noexcept {
+    return mIdsInUse.cend();
+}
+
 size_t DataListBase::size() const noexcept {
-    return mItemCount;
+    return mIdsInUse.size();
 }
 
 size_t DataListBase::capacity() const noexcept {
@@ -39,7 +46,7 @@ DataItem* DataListBase::insertItem() {
 }
 
 DataItem* DataListBase::insertItem(uint8_t id) {
-    if (mItemCount == MAX_SIZE) {
+    if (size() == MAX_SIZE) {
         throw std::runtime_error("cannot insert: maximum capacity reached");
     }
 
@@ -55,15 +62,14 @@ DataItem* DataListBase::insertItem(uint8_t id) {
     auto item = createItem();
     item->setId(id);
     cell.reset(item);
-    ++mItemCount;
-
+    mIdsInUse.insert(id);
     findNextId();
 
     return item;
 }
 
 DataItem* DataListBase::duplicateItem(uint8_t id) {
-    if (mItemCount == MAX_SIZE) {
+    if (size() == MAX_SIZE) {
         throw std::runtime_error("cannot duplicate: maximum capacity reached");
     }
 
@@ -77,7 +83,7 @@ DataItem* DataListBase::duplicateItem(uint8_t id) {
             auto item = copyItem(*mData[id]);
             item->setId(mNextId);
             cell.reset(item);
-            ++mItemCount;
+            mIdsInUse.insert(mNextId);
             findNextId();
             return item;
         }
@@ -88,14 +94,14 @@ DataItem* DataListBase::duplicateItem(uint8_t id) {
 }
 
 void DataListBase::remove(uint8_t id) {
-    if (mItemCount == 0) {
+    if (size() == 0) {
         throw std::runtime_error("cannot remove: list is empty");
     }
 
     if (id < mData.size()) {
         auto &cell = mData[id];
         if (cell) {
-            --mItemCount;
+            mIdsInUse.erase(id);
             cell.reset();
             if (mNextId > id) {
                 mNextId = id;
@@ -116,7 +122,7 @@ DataItem* DataListBase::itemAt(uint8_t id) {
 }
 
 void DataListBase::findNextId() {
-    if (mItemCount < MAX_SIZE) {
+    if (size() < MAX_SIZE) {
         // find the next available id
         auto iter = mData.cbegin() + mNextId + 1;
         auto endIter = mData.cend();

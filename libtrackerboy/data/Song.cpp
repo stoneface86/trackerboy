@@ -21,8 +21,6 @@ Song::Song() :
     mRowsPerMeasure(DEFAULT_RPM),
     mSpeed(DEFAULT_SPEED)
 {
-    mName = "New song";
-    mOrder.push_back({ 0 });
 }
 
 Song::Song(const Song &song) :
@@ -192,7 +190,7 @@ FormatError Song::deserializeData(std::istream &stream) noexcept {
 }
 
 FormatError Song::serializeData(std::ostream &stream) noexcept {
-    
+
     auto startpos = stream.tellp();
 
     SongFormat songHeader;

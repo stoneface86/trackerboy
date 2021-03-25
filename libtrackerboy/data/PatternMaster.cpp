@@ -70,6 +70,13 @@ size_t PatternMaster::tracks(ChType ch) {
     return mMap[static_cast<size_t>(ch)].size();
 }
 
+size_t PatternMaster::tracks() {
+    return mMap[+ChType::ch1].size() +
+           mMap[+ChType::ch2].size() +
+           mMap[+ChType::ch3].size() +
+           mMap[+ChType::ch4].size();
+}
+
 PatternMaster::Data::iterator PatternMaster::tracksBegin(ChType ch) {
     return mMap[static_cast<size_t>(ch)].begin();
 }

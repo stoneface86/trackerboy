@@ -25,7 +25,7 @@ uint8_t DataItem::id() const noexcept {
     return mId;
 }
 
-std::string DataItem::name() const noexcept {
+std::string const& DataItem::name() const noexcept {
     return mName;
 }
 
@@ -33,7 +33,7 @@ void DataItem::setId(uint8_t id) noexcept {
     mId = id;
 }
 
-void DataItem::setName(std::string name) noexcept {
+void DataItem::setName(std::string const& name) noexcept {
     mName = name;
 }
 

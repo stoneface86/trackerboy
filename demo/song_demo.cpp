@@ -68,6 +68,7 @@ int main() {
 
     {
         auto inst = itable.insert();
+        inst->setName("main 1");
         auto &idata = inst->data();
         idata.envelope = 0x57;
         idata.timbre = 1;
@@ -75,6 +76,7 @@ int main() {
 
     {
         auto inst = itable.insert();
+        inst->setName("main 2");
         auto &idata = inst->data();
         idata.envelope = 0x77;
         idata.timbre = 0x0;
@@ -82,12 +84,14 @@ int main() {
 
     auto triangle = wtable.insert();
     triangle->fromString("0123456789ABCDEFFEDCBA9876543210");
+    triangle->setName("triangle");
 
     
     
     auto &songs = mod.songs();
     songs.emplace_back();
     Song &testsong = songs[0];
+    testsong.setName("rushing heart");
     testsong.setSpeed(0x22);
 
     auto &orders = testsong.orders();

@@ -31,57 +31,59 @@ namespace trackerboy {
 
 // new header format
 //
-//     +0     +1     +2     +3
-// 0   +---------------------------+
-//     |                           |
-//     | signature ( TRACKERBOY )  |
-//     |                           |
-// 12  +---------------------------+
-//     | version major             |
-// 16  +---------------------------+
-//     | version minor             |
-// 20  +---------------------------+
-//     | version patch             |
-// 24  +------+------+-------------+
-//     | rev  | type | reserved0   |
-// 28  +------+------+-------------+
-//     |                           |
-//     |                           |
-//     |                           |
-//     | title                     |
-//     |                           |
-//     |                           |
-//     |                           |
-//     |                           |
-// 60  +---------------------------+
-//     |                           |
-//     |                           |
-//     |                           |
-//     | artist                    |
-//     |                           |
-//     |                           |
-//     |                           |
-//     |                           |
-// 92  +---------------------------|
-//     |                           |
-//     |                           |
-//     |                           |
-//     | copyright                 |
-//     |                           |
-//     |                           |
-//     |                           |
-//     |                           |
-// 124 +---------------------------+
-//     |                           |
-//     |                           |
-//     |                           |
-//     |                           |
-//     | reserved1                 |
-//     |                           |
-//     |                           |
-//     |                           |
-//     |                           |
-// 160 +---------------------------+
+//     +0         +1         +2        +3
+// 0   +-------------------------------------------+
+//     |                                           |
+//     | signature ( TRACKERBOY )                  |
+//     |                                           |
+// 12  +-------------------------------------------+
+//     | version major                             |
+// 16  +-------------------------------------------+
+//     | version minor                             |
+// 20  +-------------------------------------------+
+//     | version patch                             |
+// 24  +----------+----------+---------------------+
+//     | rev      | type     | reserved0           |
+// 28  +----------+----------+---------------------+
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     | title                                     |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+// 60  +-------------------------------------------+
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     | artist                                    |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+// 92  +-------------------------------------------|
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     | copyright                                 |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+// 124 +---------------------+---------------------+
+//     | numberOfInstruments | numberOfWaveforms   |
+// 128 +---------------------+---------------------+
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     | reserved1                                 |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+//     |                                           |
+// 160 +-------------------------------------------+
 //
 // the chunk then follows (contents depend on type)
 
@@ -99,12 +101,15 @@ struct Header {
     uint32_t versionPatch;
     uint8_t revision;
     uint8_t type;
-    uint16_t reserved0;
+    uint8_t reserved0;
+    uint8_t numberOfSongs;
     char title[TITLE_LENGTH];
     char artist[ARTIST_LENGTH];
     char copyright[COPYRIGHT_LENGTH];
-    // 36 bytes (9 words) are reserved for future revisions of the format
-    uint32_t reserved1[9];
+    uint16_t numberOfInstruments;
+    uint16_t numberOfWaveforms;
+    // 32 bytes (8 words) are reserved for future revisions of the format
+    uint32_t reserved1[8];
 };
 #pragma pack(pop)
 
@@ -137,9 +142,48 @@ enum class FormatError {
     tableSizeBounds,        // size of table exceeds maximum
     tableDuplicateId,       // 2 or more items with the same id
     unknownChannel,         // unknown channel id for track data
+    invalid,
+    duplicateId,
     readError,              // read error occurred
     writeError              // write error occurred
 };
+
+// All data past the header is contained within "blocks"
+// A block starts with a 4-byte identifier (BlockId) and
+// a 4-byte length (BlockSize). The identifier defines the
+// type of data.
+
+using BlockId = uint32_t;
+using BlockSize = uint32_t;
+
+//
+// Index block (INDX), this block contains all names and ids
+// for all songs, instruments and waveforms in the module.
+//
+constexpr BlockId BLOCK_ID_INDEX       = 0x58444e49; // "INDX"
+
+//
+// Comment block (COMM), this block contains comment data for
+// the module.
+//
+constexpr BlockId BLOCK_ID_COMMENT     = 0x4d4d4f43; // "COMM"
+
+//
+// Song block (SONG), contains song data for all songs
+//
+constexpr BlockId BLOCK_ID_SONG        = 0x474E4F53; // "SONG"
+
+//
+// Instrument block (INST), contains instrument data for instruments,
+// which are stored in the same order as the Index block.
+//
+constexpr BlockId BLOCK_ID_INSTRUMENT  = 0x54534e49; // "INST"
+
+//
+// Waveform block (WAVE), contains waveform data. Also stored in
+// the same order as the Index block.
+//
+constexpr BlockId BLOCK_ID_WAVE        = 0x45564157; // "WAVE"
 
 extern const char *FILE_SIGNATURE;
 
