@@ -1,8 +1,6 @@
 
 #include "trackerboy/data/Instrument.hpp"
 
-#include "./checkedstream.hpp"
-
 namespace trackerboy {
 
 
