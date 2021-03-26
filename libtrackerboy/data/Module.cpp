@@ -473,7 +473,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             // read in the order
             size_t const patterns = unbias<size_t>(songFormat.patternCount);
             for (size_t i = 0; i != patterns; ++i) {
-                Order order;
+                OrderRow order;
                 block.read(order);
                 orders.push_back(order);
             }

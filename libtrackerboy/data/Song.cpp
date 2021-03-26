@@ -51,7 +51,7 @@ Speed Song::speed() const noexcept {
 }
 
 
-std::vector<Order>& Song::orders() noexcept {
+std::vector<OrderRow>& Song::orders() noexcept {
     return mOrder;
 }
 
@@ -64,17 +64,17 @@ Pattern Song::getPattern(uint8_t orderNo) {
         throw std::invalid_argument("order does not exist");
     }
 
-    Order &order = mOrder[orderNo];
+    auto &order = mOrder[orderNo];
     return mMaster.getPattern(
-        order.tracks[0],
-        order.tracks[1],
-        order.tracks[2],
-        order.tracks[3]
+        order[0],
+        order[1],
+        order[2],
+        order[3]
     );
 }
 
 TrackRow Song::getRow(ChType ch, uint8_t order, uint16_t row) {
-    return mMaster.getTrack(ch, mOrder[order].tracks[static_cast<int>(ch)])[row];
+    return mMaster.getTrack(ch, mOrder[order][static_cast<int>(ch)])[row];
 }
 
 void Song::setRowsPerBeat(uint8_t rowsPerBeat) {

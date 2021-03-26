@@ -24,24 +24,11 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace trackerboy {
 
-#pragma pack(push, 1)
-
-// An order is an assignment of track Ids for each channel. A sequence of these
-// determines the layout of a song.
-struct Order {
-
-    // same as Pattern, except with IDs instead of iterators
-
-    uint8_t tracks[4];
-
-};
-
-#pragma pack(pop)
-
-
+using OrderRow = std::array<uint8_t, 4>;
 
 }
