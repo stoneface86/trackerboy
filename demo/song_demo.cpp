@@ -87,10 +87,7 @@ int main() {
     triangle->setName("triangle");
 
     
-    
-    auto &songs = mod.songs();
-    songs.emplace_back();
-    Song &testsong = songs[0];
+    auto &testsong = mod.getSong(0);
     testsong.setName("rushing heart");
     testsong.setSpeed(0x22);
 
@@ -369,7 +366,7 @@ int main() {
 
 
     Engine engine(rc);
-    engine.play(mod.songs()[0], 0, 0);
+    engine.play(testsong, 0, 0);
     std::ofstream file("song_demo.wav", std::ios::binary | std::ios::out);
     Wav wav(file, 2, SAMPLERATE_INT);
     wav.begin();

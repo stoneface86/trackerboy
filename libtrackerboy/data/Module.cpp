@@ -24,6 +24,7 @@ Module::Module() noexcept :
     mCopyright(),
     mComments()
 {
+    mSongs.emplace_back(); // always have at least 1 song
 }
 
 Module::~Module() noexcept {
@@ -36,6 +37,7 @@ void Module::clear() noexcept {
     mArtist = "";
     mCopyright = "";
     mSongs.clear();
+    mSongs.emplace_back();
     mInstrumentList.clear();
     mWaveformList.clear();
 }
@@ -64,7 +66,7 @@ uint8_t Module::revision() const noexcept {
     return mRevision;
 }
 
-std::vector<Song>& Module::songs() noexcept {
+std::vector<Song> const& Module::songs() const noexcept {
     return mSongs;
 }
 
@@ -74,6 +76,25 @@ InstrumentList& Module::instrumentList() noexcept {
 
 WaveformList& Module::waveformList() noexcept {
     return mWaveformList;
+}
+
+size_t Module::songCount() const noexcept {
+    return mSongs.size();
+}
+
+Song& Module::addSong() noexcept {
+    return mSongs.emplace_back();
+}
+
+Song& Module::getSong(size_t index) noexcept {
+    return mSongs[index];
+}
+
+void Module::removeSong(size_t index) noexcept {
+    if (mSongs.size() == 1) {
+        throw std::runtime_error("cannot remove: Module must have at least one song");
+    }
+    mSongs.erase(mSongs.begin() + index);
 }
 
 void Module::setArtist(std::string const& artist) noexcept {

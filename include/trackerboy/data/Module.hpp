@@ -43,6 +43,8 @@ public:
 
     void clear() noexcept;
 
+    // header information
+
     std::string const& artist() const noexcept;
 
     std::string const& title() const noexcept;
@@ -55,11 +57,23 @@ public:
 
     uint8_t revision() const noexcept;
 
-    std::vector<Song>& songs() noexcept;
+    // song management
+
+    std::vector<Song> const& songs() const noexcept;
+
+    size_t songCount() const noexcept;
+
+    Song& addSong() noexcept;
+
+    Song& getSong(size_t index) noexcept;
+
+    void removeSong(size_t index) noexcept;
 
     WaveformList& waveformList() noexcept;
 
     InstrumentList& instrumentList() noexcept;
+
+    // File I/O
 
     FormatError deserialize(std::istream &stream) noexcept;
 
