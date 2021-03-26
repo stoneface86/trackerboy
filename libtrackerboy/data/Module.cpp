@@ -24,7 +24,7 @@ Module::Module() noexcept :
     mCopyright(),
     mComments()
 {
-    mSongs.emplace_back(); // always have at least 1 song
+    mSongs.emplace_back(new Song()); // always have at least 1 song
 }
 
 Module::~Module() noexcept {
@@ -37,7 +37,7 @@ void Module::clear() noexcept {
     mArtist = "";
     mCopyright = "";
     mSongs.clear();
-    mSongs.emplace_back();
+    mSongs.emplace_back(new Song());
     mInstrumentList.clear();
     mWaveformList.clear();
 }
@@ -66,7 +66,7 @@ uint8_t Module::revision() const noexcept {
     return mRevision;
 }
 
-std::vector<Song> const& Module::songs() const noexcept {
+Module::SongList const& Module::songs() const noexcept {
     return mSongs;
 }
 
@@ -83,11 +83,11 @@ size_t Module::songCount() const noexcept {
 }
 
 Song& Module::addSong() noexcept {
-    return mSongs.emplace_back();
+    return *mSongs.emplace_back(new Song);
 }
 
 Song& Module::getSong(size_t index) noexcept {
-    return mSongs[index];
+    return *mSongs[index];
 }
 
 void Module::removeSong(size_t index) noexcept {
@@ -424,7 +424,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
         }
 
         for (size_t songCount = unbias<size_t>(header.numberOfSongs); songCount--; ) {
-            auto &song = mSongs.emplace_back();
+            auto &song = addSong();
             song.setName(deserializeString(block));
         }
 
@@ -461,12 +461,12 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             // read in song settings
             SongFormat songFormat;
             block.read(songFormat);
-            song.setRowsPerBeat(songFormat.rowsPerBeat);
-            song.setRowsPerMeasure(songFormat.rowsPerMeasure);
-            song.setSpeed(songFormat.speed);
+            song->setRowsPerBeat(songFormat.rowsPerBeat);
+            song->setRowsPerMeasure(songFormat.rowsPerMeasure);
+            song->setSpeed(songFormat.speed);
 
-            auto &orders = song.orders();
-            auto &pm = song.patterns();
+            auto &orders = song->orders();
+            auto &pm = song->patterns();
 
             pm.setRowSize(unbias<uint16_t>(songFormat.rowsPerTrack));
 
@@ -601,7 +601,7 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
         // "INDX"
         block.begin(BLOCK_ID_INDEX);
         for (auto &song : mSongs) {
-            serializeString(block, song.name());
+            serializeString(block, song->name());
         }
 
         writeListIndex(block, mInstrumentList);
@@ -619,13 +619,13 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
         // "SONG"
         block.begin(BLOCK_ID_SONG);
         for (auto &song : mSongs) {
-            auto &orders = song.orders();
-            auto &pm = song.patterns();
+            auto &orders = song->orders();
+            auto &pm = song->patterns();
 
             SongFormat songHeader;
-            songHeader.rowsPerBeat = song.rowsPerBeat();
-            songHeader.rowsPerMeasure = song.rowsPerMeasure();
-            songHeader.speed = song.speed();
+            songHeader.rowsPerBeat = song->rowsPerBeat();
+            songHeader.rowsPerMeasure = song->rowsPerMeasure();
+            songHeader.speed = song->speed();
             songHeader.patternCount = bias(orders.size());
             songHeader.rowsPerTrack = bias(pm.rowSize());
             songHeader.numberOfTracks = correctEndian((uint16_t)pm.tracks());

@@ -28,7 +28,10 @@
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/version.hpp"
 
-#include <fstream>
+#include <cstddef>
+#include <istream>
+#include <memory>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -38,6 +41,9 @@ namespace trackerboy {
 class Module {
 
 public:
+    // songs are stored on heap to prevent reference invalidation
+    using SongList = std::vector<std::unique_ptr<Song>>;
+
     Module() noexcept;
     ~Module() noexcept;
 
@@ -59,7 +65,7 @@ public:
 
     // song management
 
-    std::vector<Song> const& songs() const noexcept;
+    SongList const& songs() const noexcept;
 
     size_t songCount() const noexcept;
 
@@ -90,7 +96,7 @@ public:
 
 private:
 
-    std::vector<Song> mSongs;
+    SongList mSongs;
     InstrumentList mInstrumentList;
     WaveformList mWaveformList;
 
