@@ -41,8 +41,6 @@ namespace trackerboy {
 class Module {
 
 public:
-    // songs are stored on heap to prevent reference invalidation
-    using SongList = std::vector<std::unique_ptr<Song>>;
 
     Module() noexcept;
     ~Module() noexcept;
@@ -63,17 +61,7 @@ public:
 
     uint8_t revision() const noexcept;
 
-    // song management
-
-    SongList const& songs() const noexcept;
-
-    size_t songCount() const noexcept;
-
-    Song& addSong() noexcept;
-
-    Song& getSong(size_t index) noexcept;
-
-    void removeSong(size_t index);
+    Song& song() noexcept;
 
     WaveformList& waveformList() noexcept;
 
@@ -96,7 +84,7 @@ public:
 
 private:
 
-    SongList mSongs;
+    Song mSong;
     InstrumentList mInstrumentList;
     WaveformList mWaveformList;
 

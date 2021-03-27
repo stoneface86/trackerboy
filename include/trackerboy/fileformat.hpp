@@ -101,8 +101,7 @@ struct Header {
     uint32_t versionPatch;
     uint8_t revision;
     uint8_t type;
-    uint8_t reserved0;
-    uint8_t numberOfSongs;
+    uint16_t reserved0;
     char title[TITLE_LENGTH];
     char artist[ARTIST_LENGTH];
     char copyright[COPYRIGHT_LENGTH];

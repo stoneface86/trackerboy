@@ -14,7 +14,7 @@ namespace trackerboy {
 
 
 Module::Module() noexcept :
-    mSongs(),
+    mSong(),
     mInstrumentList(),
     mWaveformList(),
     mVersion(VERSION),
@@ -24,7 +24,6 @@ Module::Module() noexcept :
     mCopyright(),
     mComments()
 {
-    mSongs.emplace_back(new Song()); // always have at least 1 song
 }
 
 Module::~Module() noexcept {
@@ -36,8 +35,7 @@ void Module::clear() noexcept {
     mTitle = "";
     mArtist = "";
     mCopyright = "";
-    mSongs.clear();
-    mSongs.emplace_back(new Song());
+    mSong.reset();
     mInstrumentList.clear();
     mWaveformList.clear();
 }
@@ -66,8 +64,8 @@ uint8_t Module::revision() const noexcept {
     return mRevision;
 }
 
-Module::SongList const& Module::songs() const noexcept {
-    return mSongs;
+Song& Module::song() noexcept {
+    return mSong;
 }
 
 InstrumentList& Module::instrumentList() noexcept {
@@ -76,25 +74,6 @@ InstrumentList& Module::instrumentList() noexcept {
 
 WaveformList& Module::waveformList() noexcept {
     return mWaveformList;
-}
-
-size_t Module::songCount() const noexcept {
-    return mSongs.size();
-}
-
-Song& Module::addSong() noexcept {
-    return *mSongs.emplace_back(new Song);
-}
-
-Song& Module::getSong(size_t index) noexcept {
-    return *mSongs[index];
-}
-
-void Module::removeSong(size_t index) {
-    if (mSongs.size() == 1) {
-        throw std::runtime_error("cannot remove: Module must have at least one song");
-    }
-    mSongs.erase(mSongs.begin() + index);
 }
 
 void Module::setArtist(std::string const& artist) noexcept {
@@ -410,7 +389,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
     mArtist = std::string(header.artist);
     mCopyright = std::string(header.copyright);
 
-    mSongs.clear();
+    mSong.reset();
     mInstrumentList.clear();
     mWaveformList.clear();
 
@@ -423,11 +402,8 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             return FormatError::invalid;
         }
 
-        for (size_t songCount = unbias<size_t>(header.numberOfSongs); songCount--; ) {
-            auto &song = addSong();
-            song.setName(deserializeString(block));
-        }
-
+        mSong.setName(deserializeString(block));
+        
         readListIndex(block, header.numberOfInstruments, mInstrumentList);
         readListIndex(block, header.numberOfWaveforms, mWaveformList);
 
@@ -456,16 +432,16 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             return FormatError::invalid;
         }
 
-        for (auto &song : mSongs) {
+        {
 
             // read in song settings
             SongFormat songFormat;
             block.read(songFormat);
-            song->setRowsPerBeat(songFormat.rowsPerBeat);
-            song->setRowsPerMeasure(songFormat.rowsPerMeasure);
-            song->setSpeed(songFormat.speed);
+            mSong.setRowsPerBeat(songFormat.rowsPerBeat);
+            mSong.setRowsPerMeasure(songFormat.rowsPerMeasure);
+            mSong.setSpeed(songFormat.speed);
 
-            auto &pm = song->patterns();
+            auto &pm = mSong.patterns();
             pm.setRowSize(unbias<uint16_t>(songFormat.rowsPerTrack));
 
             // read in the order
@@ -476,7 +452,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
                     block.read(row);
                 }
                 // the order takes ownership of orderData
-                song->order().setData(std::move(orderData));
+                mSong.order().setData(std::move(orderData));
             }
 
 
@@ -583,7 +559,6 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
     copyStringToFixed(header.artist, mArtist, Header::ARTIST_LENGTH);
     copyStringToFixed(header.copyright, mCopyright, Header::COPYRIGHT_LENGTH);
 
-    header.numberOfSongs = bias(mSongs.size());
     header.numberOfInstruments = correctEndian((uint16_t)mInstrumentList.size());
     header.numberOfWaveforms = correctEndian((uint16_t)mWaveformList.size());
 
@@ -602,10 +577,8 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
 
         // "INDX"
         block.begin(BLOCK_ID_INDEX);
-        for (auto &song : mSongs) {
-            serializeString(block, song->name());
-        }
-
+        serializeString(block, mSong.name());
+        
         writeListIndex(block, mInstrumentList);
         writeListIndex(block, mWaveformList);
 
@@ -620,14 +593,14 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
 
         // "SONG"
         block.begin(BLOCK_ID_SONG);
-        for (auto &song : mSongs) {
-            auto &order = song->order();
-            auto &pm = song->patterns();
+        {
+            auto &order = mSong.order();
+            auto &pm = mSong.patterns();
 
             SongFormat songHeader;
-            songHeader.rowsPerBeat = song->rowsPerBeat();
-            songHeader.rowsPerMeasure = song->rowsPerMeasure();
-            songHeader.speed = song->speed();
+            songHeader.rowsPerBeat = mSong.rowsPerBeat();
+            songHeader.rowsPerMeasure = mSong.rowsPerMeasure();
+            songHeader.speed = mSong.speed();
             songHeader.patternCount = bias(order.size());
             songHeader.rowsPerTrack = bias(pm.rowSize());
             songHeader.numberOfTracks = correctEndian((uint16_t)pm.tracks());

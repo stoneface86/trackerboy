@@ -87,7 +87,7 @@ int main() {
     triangle->setName("triangle");
 
     
-    auto &testsong = mod.getSong(0);
+    auto &testsong = mod.song();
     testsong.setName("rushing heart");
     testsong.setSpeed(0x22);
 

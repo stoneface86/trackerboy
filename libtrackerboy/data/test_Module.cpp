@@ -17,7 +17,6 @@ TEST_CASE("Module::clear resets the module to its initialized state", "[Module]"
     mod.setArtist("foobar");
     mod.setCopyright("2020");
     mod.setTitle("music");
-    mod.addSong();
 
     mod.clear();
 
@@ -26,7 +25,6 @@ TEST_CASE("Module::clear resets the module to its initialized state", "[Module]"
     REQUIRE(mod.copyright() == init.copyright());
     REQUIRE(mod.instrumentList().size() == 0);
     REQUIRE(mod.waveformList().size() == 0);
-    REQUIRE(mod.songs().size() == 1);
 
 }
 

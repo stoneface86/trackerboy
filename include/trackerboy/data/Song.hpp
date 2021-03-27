@@ -43,13 +43,14 @@ public:
     static constexpr uint8_t DEFAULT_RPM = 16;
     // Tempo = 150, RPB = 4  => 6.0 frames per row
     static constexpr Speed DEFAULT_SPEED = 0x60;
-
-    static constexpr int MAX_ORDERS = 256;
+    static constexpr uint16_t DEFAULT_ROWS = 64;
 
     Song();
     Song(const Song &song);
 
     ~Song();
+
+    void reset() noexcept;
 
     uint8_t rowsPerBeat() const noexcept;
 

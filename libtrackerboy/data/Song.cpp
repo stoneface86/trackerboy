@@ -14,7 +14,7 @@ namespace trackerboy {
 
 Song::Song() :
     DataItem(),
-    mMaster(64),
+    mMaster(DEFAULT_ROWS),
     mOrder(),
     mRowsPerBeat(DEFAULT_RPB),
     mRowsPerMeasure(DEFAULT_RPM),
@@ -34,6 +34,17 @@ Song::Song(const Song &song) :
 
 Song::~Song() {
 
+}
+
+void Song::reset() noexcept {
+
+    mRowsPerBeat = DEFAULT_RPB;
+    mRowsPerMeasure = DEFAULT_RPM;
+    mSpeed = DEFAULT_SPEED;
+    mOrder.resize(1);
+    mOrder[0] = { 0 };
+    mMaster.clear();
+    mMaster.setRowSize(DEFAULT_ROWS);
 }
 
 uint8_t Song::rowsPerBeat() const noexcept {

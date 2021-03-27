@@ -29,6 +29,7 @@
 #include "trackerboy/data/Track.hpp"
 #include "trackerboy/data/TrackRow.hpp"
 
+#include <array>
 #include <cstdint>
 #include <unordered_map>
 
@@ -49,6 +50,8 @@ public:
     PatternMaster(uint16_t mRows);
 
     PatternMaster(const PatternMaster &master);
+
+    void clear();
 
     uint16_t rowSize();
 
@@ -83,7 +86,7 @@ private:
 
     // maps a track id -> TrackData
         
-    Data mMap[4];
+    std::array<Data, 4> mMap;
 
 
 };

@@ -20,6 +20,12 @@ PatternMaster::PatternMaster(const PatternMaster &master) :
 {
 }
 
+void PatternMaster::clear() {
+    for (auto &trackMap : mMap) {
+        trackMap.clear();
+    }
+}
+
 uint16_t PatternMaster::rowSize() {
     return mRows;
 }
