@@ -91,12 +91,14 @@ int main() {
     testsong.setName("rushing heart");
     testsong.setSpeed(0x22);
 
-    auto &orders = testsong.orders();
-    orders.clear();
-    orders.push_back({ 0, 0, 0, 0 });
-    orders.push_back({ 0, 1, 0, 1 });
-    orders.push_back({ 0, 0, 0, 0 });
-    orders.push_back({ 0, 2, 0, 2 });
+    {
+        std::vector<OrderRow> order;
+        order.push_back({ 0, 0, 0, 0 });
+        order.push_back({ 0, 1, 0, 1 });
+        order.push_back({ 0, 0, 0, 0 });
+        order.push_back({ 0, 2, 0, 2 });
+        testsong.order().setData(std::move(order));
+    }
 
 
     auto &pm = testsong.patterns();

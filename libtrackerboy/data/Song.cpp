@@ -20,7 +20,6 @@ Song::Song() :
     mRowsPerMeasure(DEFAULT_RPM),
     mSpeed(DEFAULT_SPEED)
 {
-    mOrder.push_back({ 0 });
 }
 
 Song::Song(const Song &song) :
@@ -51,7 +50,8 @@ Speed Song::speed() const noexcept {
 }
 
 
-std::vector<OrderRow>& Song::orders() noexcept {
+//std::vector<OrderRow>& Song::orders() noexcept {
+Order& Song::order() noexcept {
     return mOrder;
 }
 

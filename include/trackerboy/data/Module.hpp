@@ -73,7 +73,7 @@ public:
 
     Song& getSong(size_t index) noexcept;
 
-    void removeSong(size_t index) noexcept;
+    void removeSong(size_t index);
 
     WaveformList& waveformList() noexcept;
 

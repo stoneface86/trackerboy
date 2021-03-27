@@ -6,6 +6,7 @@ set(SRC_FILES
     "data/DataList.cpp"
     "data/Instrument.cpp"
     "data/Module.cpp"
+    "data/Order.cpp"
     "data/Pattern.cpp"
     "data/PatternMaster.cpp"
     "data/Sequence.cpp"

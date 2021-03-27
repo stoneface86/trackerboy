@@ -9,7 +9,7 @@ MusicRuntime::MusicRuntime(RuntimeContext rc, ChannelControl &chCtrl, Song &song
     mSong(song),
     mOrderCounter(orderNo),
     mRowCounter(patternRow),
-    mLastOrder(static_cast<uint8_t>(song.orders().size() - 1)),
+    mLastOrder(static_cast<uint8_t>(song.order().size() - 1)),
     mRowsPerTrack(song.patterns().rowSize()),
     mCommand(PatternCommand::none),
     mCommandParam(0),

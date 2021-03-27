@@ -25,13 +25,11 @@
 #pragma once
 
 #include "trackerboy/data/DataItem.hpp"
+#include "trackerboy/data/Order.hpp"
 #include "trackerboy/data/OrderRow.hpp"
 #include "trackerboy/data/PatternMaster.hpp"
-#include "trackerboy/fileformat.hpp"
 #include "trackerboy/gbs.hpp"
 #include "trackerboy/Speed.hpp"
-
-#include <fstream>
 
 namespace trackerboy {
 
@@ -59,7 +57,7 @@ public:
 
     Speed speed() const noexcept;
 
-    std::vector<OrderRow>& orders() noexcept;
+    Order& order() noexcept;
 
     PatternMaster& patterns() noexcept;
 
@@ -80,7 +78,7 @@ private:
     //void calcSpeed();
 
     PatternMaster mMaster;
-    std::vector<OrderRow> mOrder;
+    Order mOrder;
 
     uint8_t mRowsPerBeat;
     uint8_t mRowsPerMeasure;

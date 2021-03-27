@@ -1,6 +1,7 @@
 
 #include "trackerboy/engine/Engine.hpp"
 
+#include <stdexcept>
 
 namespace trackerboy {
 
@@ -19,8 +20,7 @@ void Engine::reset() {
 
 void Engine::play(Song &song, uint8_t orderNo, uint8_t patternRow) {
     
-    auto &orders = song.orders();
-    if (orderNo >= orders.size()) {
+    if (orderNo >= song.order().size()) {
         throw std::invalid_argument("cannot play order, order does not exist");
     }
     if (patternRow >= song.patterns().rowSize()) {

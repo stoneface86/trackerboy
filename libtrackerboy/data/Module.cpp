@@ -90,7 +90,7 @@ Song& Module::getSong(size_t index) noexcept {
     return *mSongs[index];
 }
 
-void Module::removeSong(size_t index) noexcept {
+void Module::removeSong(size_t index) {
     if (mSongs.size() == 1) {
         throw std::runtime_error("cannot remove: Module must have at least one song");
     }
@@ -465,18 +465,20 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             song->setRowsPerMeasure(songFormat.rowsPerMeasure);
             song->setSpeed(songFormat.speed);
 
-            auto &orders = song->orders();
             auto &pm = song->patterns();
-
             pm.setRowSize(unbias<uint16_t>(songFormat.rowsPerTrack));
 
             // read in the order
-            size_t const patterns = unbias<size_t>(songFormat.patternCount);
-            for (size_t i = 0; i != patterns; ++i) {
-                OrderRow order;
-                block.read(order);
-                orders.push_back(order);
+            {
+                std::vector<OrderRow> orderData;
+                orderData.resize(unbias<size_t>(songFormat.patternCount));
+                for (auto &row : orderData) {
+                    block.read(row);
+                }
+                // the order takes ownership of orderData
+                song->order().setData(std::move(orderData));
             }
+
 
             // read in track data
             size_t const tracks = (size_t)correctEndian(songFormat.numberOfTracks);
@@ -619,21 +621,21 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
         // "SONG"
         block.begin(BLOCK_ID_SONG);
         for (auto &song : mSongs) {
-            auto &orders = song->orders();
+            auto &order = song->order();
             auto &pm = song->patterns();
 
             SongFormat songHeader;
             songHeader.rowsPerBeat = song->rowsPerBeat();
             songHeader.rowsPerMeasure = song->rowsPerMeasure();
             songHeader.speed = song->speed();
-            songHeader.patternCount = bias(orders.size());
+            songHeader.patternCount = bias(order.size());
             songHeader.rowsPerTrack = bias(pm.rowSize());
             songHeader.numberOfTracks = correctEndian((uint16_t)pm.tracks());
             block.write(songHeader);
 
             // write out song order
-            for (auto &order : orders) {
-                block.write(order);
+            for (auto &orderRow : order.data()) {
+                block.write(orderRow);
             }
 
             // write out all tracks
