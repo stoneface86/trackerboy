@@ -3,6 +3,7 @@
 #include "trackerboy/fileformat.hpp"
 
 #include "internal/endian.hpp"
+#include "internal/enumutils.hpp"
 
 #include <algorithm>
 #include <cstddef>

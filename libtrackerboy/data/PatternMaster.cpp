@@ -1,6 +1,8 @@
 
 #include "trackerboy/data/PatternMaster.hpp"
 
+#include "internal/enumutils.hpp"
+
 namespace trackerboy {
 
 
