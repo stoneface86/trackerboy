@@ -13,8 +13,7 @@ Synth::Synth(unsigned samplingRate, float framerate) noexcept :
     mFramerate(framerate),
     mCyclesPerFrame(gbapu::constants::CLOCK_SPEED<float> / mFramerate),
     mCycleOffset(0.0f),
-    mFrameBuf(),
-    mLastFrameSize(0),
+    mFrameSize(0),
     mResizeRequired(true)
 {
     setupBuffers();
@@ -24,15 +23,11 @@ gbapu::Apu& Synth::apu() noexcept {
     return mApu;
 }
 
-int16_t* Synth::buffer() noexcept {
-    return mFrameBuf.data();
-}
-
 size_t Synth::framesize() const noexcept {
-    return (mFrameBuf.size() / 2) - 1;
+    return mFrameSize;
 }
 
-size_t Synth::run() noexcept {
+void Synth::run() noexcept {
 
     // determine number of cycles to run for the next frame
     float cycles = mCyclesPerFrame + mCycleOffset;
@@ -43,15 +38,6 @@ size_t Synth::run() noexcept {
     mApu.stepTo(static_cast<uint32_t>(wholeCycles));
     mApu.endFrame();
 
-    // end the frame and copy samples to the synth's frame buffer
-    auto framedata = mFrameBuf.data();
-
-    auto samples = mApu.availableSamples();
-    mApu.readSamples(framedata, samples);
-
-    mLastFrameSize = samples;
-    return samples;
-
 }
 
 
@@ -59,7 +45,6 @@ void Synth::reset() noexcept {
     mApu.reset();
     mApu.clearSamples();
     mCycleOffset = 0.0f;
-    mLastFrameSize = 0;
 
     // turn sound on
     mApu.writeRegister(gbapu::Apu::REG_NR52, 0x80, 0);
@@ -80,18 +65,13 @@ void Synth::setSamplingRate(unsigned samplingRate) {
     }
 }
 
-void Synth::setVolume(int percent) {
-    mApu.setVolume(percent / 100.0f);
-}
-
 void Synth::setupBuffers() {
     if (mResizeRequired) {
         mCyclesPerFrame = gbapu::constants::CLOCK_SPEED<float> / mFramerate;
-        size_t samplesPerFrame = static_cast<size_t>(mSamplerate / mFramerate) + 1;
-        mFrameBuf.resize(samplesPerFrame * 2);
+        mFrameSize = static_cast<size_t>(mSamplerate / mFramerate) + 1;
 
         mApu.setSamplerate(mSamplerate);
-        mApu.setBuffersize(samplesPerFrame);
+        mApu.setBuffersize(mFrameSize);
         mApu.resizeBuffer();
 
         reset();
@@ -100,26 +80,5 @@ void Synth::setupBuffers() {
 
     
 }
-
-//void Synth::setWaveram(Waveform &waveform) {
-//    // turn CH3 DAC off
-//    writeRegister(Gbs::REG_NR30, 0);
-//
-//    // write the waveform
-//    mInternal->hf.gen3.copyWave(waveform);
-//
-//    // simulate writing the waveform via:
-//    // ; hl points to the waveform to copy
-//    // WAVE_POS = 0
-//    // REPT 16
-//    //     ld   a, [hl+]                ; 2 cycles
-//    //     ldh  [$FF30 + WAVE_POS], a   ; 3 cycles
-//    // WAVE_POS = WAVE_POS + 1
-//    // ENDR                             ; 5 * 16 = 80 cycles
-//    step(80);
-//
-//    // turn DAC back on
-//    writeRegister(Gbs::REG_NR30, 0x80);
-//}
 
 }

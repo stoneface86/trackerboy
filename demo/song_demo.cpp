@@ -1,9 +1,10 @@
 
-#include "trackerboy/export/Wav.hpp"
 #include "trackerboy/engine/Engine.hpp"
 #include "trackerboy/note.hpp"
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/Synth.hpp"
+
+#include "miniaudio.h"
 
 #include <fstream>
 #include <iostream>
@@ -361,34 +362,41 @@ int main() {
         //File file;
         std::ofstream modfile("song_demo.tbm", std::ios::binary | std::ios::out);
         mod.serialize(modfile);
-        //file.saveHeader(modfile);
-        //file.saveModule(modfile, mod);
         modfile.close();
     }
 
 
+    
+    ma_encoder_config config = ma_encoder_config_init(ma_resource_format_wav, ma_format_s16, 2, SAMPLERATE_INT);
+    ma_encoder encoder;
+    auto result = ma_encoder_init_file("song_demo.wav", &config, &encoder);
+    if (result != MA_SUCCESS) {
+        return 1;
+    }
+
+    std::vector<int16_t> buffer;
+    buffer.resize(synth.framesize() * 2);
+
     Engine engine(rc);
     engine.play(testsong, 0, 0);
-    std::ofstream file("song_demo.wav", std::ios::binary | std::ios::out);
-    Wav wav(file, 2, SAMPLERATE_INT);
-    wav.begin();
-
-    std::vector<float> floatBuf;
 
     for (int i = 600; i != 0; --i) {
         Frame frame;
         engine.step(frame);
-        size_t framesize = synth.run();
-        int16_t *buffer = synth.buffer();
-        floatBuf.resize(framesize * 2);
-        for (size_t i = 0; i != framesize * 2; ++i) {
-            floatBuf[i] = static_cast<float>(buffer[i]) / 32768.0f;
+        synth.run();
+        auto samplesRead = synth.apu().readSamples(buffer.data(), buffer.size());
+
+        size_t toWrite = samplesRead;
+        auto dataPtr = buffer.data();
+        while (toWrite) {
+            auto written = ma_encoder_write_pcm_frames(&encoder, dataPtr, toWrite);
+            toWrite -= written;
+            dataPtr += written * 2;
         }
-        wav.write(floatBuf.data(), framesize);
     }
 
-    wav.finish();
-    file.close();
+    ma_encoder_uninit(&encoder);
+    
 
     return 0;
 

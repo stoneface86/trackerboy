@@ -22,8 +22,6 @@ set(SRC_FILES
     "engine/NoteControl.cpp"
     "engine/RuntimeContext.cpp"
     "engine/Timer.cpp"
-
-    "export/Wav.cpp"
     
     "internal/endian.cpp"
 

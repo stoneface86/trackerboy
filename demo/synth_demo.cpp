@@ -10,51 +10,15 @@
 
 using namespace trackerboy;
 
-class Spinlock {
-
-public:
-
-    Spinlock() {
-        mFlag.clear();
-    }
-    ~Spinlock() = default;
-
-    // no copying
-    Spinlock(Spinlock const &ref) = delete;
-    void operator=(Spinlock const &ref) = delete;
-
-
-    void lock() noexcept {
-        while (mFlag.test_and_set(std::memory_order_acquire));
-    }
-
-    bool tryLock() noexcept {
-        return !mFlag.test_and_set(std::memory_order_acquire);
-    }
-
-    void unlock() noexcept {
-        mFlag.clear(std::memory_order_release);
-    }
-
-private:
-
-    std::atomic_flag mFlag = ATOMIC_FLAG_INIT;
-
-
-};
 
 struct AudioContext {
 
     Synth synth;
-    int16_t *buffer;
-    int16_t *bufferEnd;
-    Spinlock spinlock;
+    std::atomic_flag changeFrequency;
+    std::atomic_uint16_t frequency;
 
     AudioContext(unsigned samplerate) :
-        synth(samplerate),
-        buffer(nullptr),
-        bufferEnd(nullptr),
-        spinlock()
+        synth(samplerate)
     {
     }
 };
@@ -65,31 +29,27 @@ void audioCallback(ma_device *device, void *out, const void *in, ma_uint32 frame
     AudioContext *ctx = static_cast<AudioContext*>(device->pUserData);
 
     auto &synth = ctx->synth;
-    auto buffer = ctx->buffer;
-    auto bufferEnd = ctx->bufferEnd;
-    auto &spinlock = ctx->spinlock;
+    auto &apu = synth.apu();
+
+    if (!ctx->changeFrequency.test_and_set()) {
+        auto freq = ctx->frequency.load();
+        apu.writeRegister(gbapu::Apu::REG_NR13, freq & 0xFF);
+        apu.writeRegister(gbapu::Apu::REG_NR14, (freq >> 8) & 0x7);
+    }
 
     int16_t *out16 = reinterpret_cast<int16_t*>(out);
 
     while (frames) {
-        if (buffer == bufferEnd) {
-            spinlock.lock();
-            size_t frameLen = synth.run();
-            buffer = synth.buffer();
-            spinlock.unlock();
-            bufferEnd = buffer + (frameLen * 2);
+
+        auto nread = apu.readSamples(out16, frames);
+        if (nread == 0) {
+            synth.run();
+        } else {
+            frames -= nread;
+            out16 += nread * 2;
         }
 
-        size_t framesToWrite = std::min(static_cast<size_t>(frames), static_cast<size_t>(bufferEnd - buffer) / 2);
-        size_t samplesToWrite = framesToWrite * 2;
-        std::copy_n(buffer, samplesToWrite, out16);
-        buffer += samplesToWrite;
-        out16 += samplesToWrite;
-        frames -= framesToWrite;
     }
-
-    ctx->buffer = buffer;
-    ctx->bufferEnd = bufferEnd;
 
 }
 
@@ -148,12 +108,14 @@ int main() {
                 continue;
             }
 
+            if (freq > GB_MAX_FREQUENCY) {
+                std::cout << "Frequency too large" << std::endl;
+                continue;
+            }
+
             // set the frequency
-            ctx.spinlock.lock();
-            auto &apu = ctx.synth.apu();
-            apu.writeRegister(gbapu::Apu::REG_NR13, freq & 0xFF);
-            apu.writeRegister(gbapu::Apu::REG_NR14, (freq >> 8) & 0x7);
-            ctx.spinlock.unlock();
+            ctx.frequency = freq;
+            ctx.changeFrequency.clear();
         }
 
     }

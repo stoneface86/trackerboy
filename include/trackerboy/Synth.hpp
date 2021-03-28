@@ -38,20 +38,10 @@ class Synth {
     
 public:
 
-    // max possible volume, prevents clipping on the overshoots of a bandlimited step
-    // no clipping should occur when all channels are at max volume
-    static constexpr double HEADROOM = 0.7071067812; // -3.0 dB
-
     Synth(unsigned samplingRate, float framerate = GB_FRAMERATE_DMG) noexcept;
     ~Synth() = default;
 
     gbapu::Apu& apu() noexcept;
-
-
-    //
-    // Get the frame buffer
-    //
-    int16_t* buffer() noexcept;
 
     //
     // Returns the minimum number of samples per frame. Frame sizes alternate between
@@ -66,9 +56,9 @@ public:
 
     //
     // Run the synth for 1 frame. Synthesized output is stored in
-    // the synth's frame buffer. The number of samples generated is returned
+    // the apu's buffer. All samples must be read out before calling this method
     //
-    size_t run() noexcept;
+    void run() noexcept;
 
     //
     // Set the interval for 1 frame, default is DMG vblank or 59.7 Hz
@@ -76,8 +66,6 @@ public:
     void setFramerate(float framerate);
 
     void setSamplingRate(unsigned samplingRate);
-
-    void setVolume(int percent);
 
     void setupBuffers();
 
@@ -97,11 +85,7 @@ private:
     // fraction offset of cycles leftover from the last run()
     float mCycleOffset;
 
-    // buffer of generated samples from the last run()
-    std::vector<int16_t> mFrameBuf;
-
-    // size in samples of the last frame
-    size_t mLastFrameSize;
+    size_t mFrameSize;
 
     bool mResizeRequired;
 

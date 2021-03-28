@@ -15,7 +15,7 @@ set(DEMO_SRC
 #target_link_libraries(${DEMO} trackerboy ${Soundio_LIBRARY})
 
 add_executable(demo_song "song_demo.cpp")
-target_link_libraries(demo_song trackerboy)
+target_link_libraries(demo_song trackerboy miniaudio)
 
 #add_executable(demo_device_table "device_table.cpp")
 #target_link_libraries(demo_device_table audio)

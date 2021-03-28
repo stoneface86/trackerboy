@@ -31,10 +31,13 @@ int main() {
     triangle.fromString("0123456789ABCDEFFEDCBA9876543210");
     auto wavedata = triangle.data();
     
+    std::vector<int16_t> buffer;
+    buffer.resize(synth.framesize() * 2);
     
     unsigned volume = 100;
-    for (unsigned volume = 0; volume <= 100; volume += 10) {
-        synth.setVolume(volume);
+    constexpr int TOTAL_STEPS = 10;
+    for (int steps = 0; steps != TOTAL_STEPS; steps++) {
+        apu.setVolume((steps + 1) / (float)TOTAL_STEPS);
         synth.reset();
 
         // copy wave
@@ -62,8 +65,9 @@ int main() {
         apu.writeRegister(gbapu::Apu::REG_NR44, 0x80);
 
         for (int i = 0; i != 30; ++i) {
-            auto samples = synth.run();
-            ma_encoder_write_pcm_frames(&encoder, synth.buffer(), samples);
+            synth.run();
+            auto samples = apu.readSamples(buffer.data(), buffer.size());
+            ma_encoder_write_pcm_frames(&encoder, buffer.data(), samples);
         }
     }
 
