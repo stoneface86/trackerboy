@@ -28,7 +28,6 @@
 #include "trackerboy/data/Order.hpp"
 #include "trackerboy/data/OrderRow.hpp"
 #include "trackerboy/data/PatternMaster.hpp"
-#include "trackerboy/gbs.hpp"
 #include "trackerboy/trackerboy.hpp"
 
 namespace trackerboy {
@@ -72,7 +71,7 @@ public:
 
     void setSpeed(Speed speed);
 
-    float tempo(float framerate = Gbs::FRAMERATE_GB) const noexcept;
+    float tempo(float framerate = GB_FRAMERATE_DMG) const noexcept;
 
 private:
 

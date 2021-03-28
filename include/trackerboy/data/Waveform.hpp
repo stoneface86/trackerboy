@@ -25,7 +25,7 @@
 #pragma once
 
 #include "trackerboy/data/DataItem.hpp"
-#include "trackerboy/gbs.hpp"
+#include "trackerboy/trackerboy.hpp"
 
 #include <array>
 #include <cstdint>
@@ -36,7 +36,7 @@ class Waveform : public DataItem {
 
 public:
 
-    using Data = std::array<uint8_t, Gbs::WAVE_RAMSIZE>;
+    using Data = std::array<uint8_t, GB_WAVERAM_SIZE>;
 
     Waveform() noexcept;
 

@@ -29,7 +29,7 @@ Waveform::Data& Waveform::data() noexcept {
 }
 
 void Waveform::fromString(std::string const& hexstring) {
-    for (size_t pos = 0, i = 0; pos < hexstring.size() && i != Gbs::WAVE_RAMSIZE; pos += 2, ++i) {
+    for (size_t pos = 0, i = 0; pos < hexstring.size() && i != mData.size(); pos += 2, ++i) {
         std::string sub = hexstring.substr(pos, 2);
         uint8_t byte = (uint8_t)std::stoul(sub, nullptr, 16);
         if (sub.size() == 1) {

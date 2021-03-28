@@ -39,14 +39,14 @@ void ChannelControl::writeEnvelope(ChType ch, RuntimeContext &rc, uint8_t envelo
     } else {
         // write envelope
         // [rNRx2] <- envelope
-        rc.apu.writeRegister(gbapu::Apu::REG_NR12 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), envelope);
+        rc.apu.writeRegister(gbapu::Apu::REG_NR12 + (static_cast<int>(ch) * GB_CHANNEL_REGS), envelope);
     }
     // retrigger
-    rc.apu.writeRegister(gbapu::Apu::REG_NR14 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL), 0x80 | freqMsb);
+    rc.apu.writeRegister(gbapu::Apu::REG_NR14 + (static_cast<int>(ch) * GB_CHANNEL_REGS), 0x80 | freqMsb);
 }
 
 void ChannelControl::writeFrequency(ChType ch, RuntimeContext &rc, uint16_t frequency) {
-    auto lsbReg = (uint8_t)(gbapu::Apu::REG_NR13 + (static_cast<int>(ch) * Gbs::REGS_PER_CHANNEL));
+    auto lsbReg = (uint8_t)(gbapu::Apu::REG_NR13 + (static_cast<int>(ch) * GB_CHANNEL_REGS));
     rc.apu.writeRegister(lsbReg++, (uint8_t)(frequency & 0xFF));
     rc.apu.writeRegister(lsbReg, (uint8_t)(frequency >> 8));
 

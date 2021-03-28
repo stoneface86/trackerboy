@@ -102,6 +102,25 @@ constexpr size_t MAX_INSTRUMENTS = 256;
 constexpr size_t MAX_WAVEFORMS = 256;
 constexpr size_t MAX_PATTERNS = 256;
 
+template <typename T>
+constexpr T GB_CLOCK_SPEED = T(4194304);
+
+constexpr float GB_FRAMERATE_DMG = 59.7f;
+constexpr float GB_FRAMERATE_SGB = 61.1f;
+
+// each channel has 5 registers
+constexpr unsigned GB_CHANNEL_REGS = 5;
+
+//
+// Maximum frequency setting for channels 1, 2 and 3
+//
+constexpr uint16_t GB_MAX_FREQUENCY = 2047;
+
+//
+// CH3 waveram is 16 bytes
+//
+constexpr size_t GB_WAVERAM_SIZE = 16;
+
 
 // convert an enum class to its underlying type using unary operator +
 // so instead of

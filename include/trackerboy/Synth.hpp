@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "trackerboy/gbs.hpp"
+#include "trackerboy/trackerboy.hpp"
 
 #include "gbapu.hpp"
 
@@ -42,7 +42,7 @@ public:
     // no clipping should occur when all channels are at max volume
     static constexpr double HEADROOM = 0.7071067812; // -3.0 dB
 
-    Synth(unsigned samplingRate, float framerate = Gbs::FRAMERATE_GB) noexcept;
+    Synth(unsigned samplingRate, float framerate = GB_FRAMERATE_DMG) noexcept;
     ~Synth() = default;
 
     gbapu::Apu& apu() noexcept;

@@ -1,8 +1,7 @@
 
 #include "trackerboy/engine/FrequencyControl.hpp"
 #include "trackerboy/note.hpp"
-#include "trackerboy/gbs.hpp"
-
+#include "trackerboy/trackerboy.hpp"
 
 #include <algorithm>
 
@@ -49,7 +48,7 @@ uint16_t FrequencyControl::frequency() const noexcept {
     return static_cast<uint16_t>(std::clamp(
         freq,
         static_cast<int16_t>(0),
-        static_cast<int16_t>(Gbs::MAX_FREQUENCY))
+        static_cast<int16_t>(GB_MAX_FREQUENCY))
         );
 
 }
