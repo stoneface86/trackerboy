@@ -43,7 +43,7 @@ namespace trackerboy {
 // 20  +-------------------------------------------+
 //     | version patch                             |
 // 24  +----------+----------+---------------------+
-//     | rev      | type     | reserved0           |
+//     | rev      | system   | customFramerate     |
 // 28  +----------+----------+---------------------+
 //     |                                           |
 //     |                                           |
@@ -100,8 +100,8 @@ struct Header {
     uint32_t versionMinor;
     uint32_t versionPatch;
     uint8_t revision;
-    uint8_t type;
-    uint16_t reserved0;
+    uint8_t system; // DMG, SGB, custom
+    uint16_t customFramerate; // framerate if system == System::custom
     char title[TITLE_LENGTH];
     char artist[ARTIST_LENGTH];
     char copyright[COPYRIGHT_LENGTH];
@@ -112,32 +112,12 @@ struct Header {
 };
 #pragma pack(pop)
 
-enum class FileType : uint8_t {
-
-    // chunk for a module file, contains chunk data for instrument, song
-    // and wave tables.
-    mod = 0,
-
-    // instrument table chunk, item data for an instrument table
-    instrument = 1,
-
-    // song table chunk, item data for a song table
-    song = 2,
-
-    // waveform table chunk, item data for a waveform table
-    wave = 3,
-
-    last = wave
-
-};
-
 
 
 enum class FormatError {
     none,                   // no error
     invalidSignature,       // signature does not match
     invalidRevision,        // unsupported file revision
-    invalidType,            // unknown payload type
     tableSizeBounds,        // size of table exceeds maximum
     tableDuplicateId,       // 2 or more items with the same id
     unknownChannel,         // unknown channel id for track data

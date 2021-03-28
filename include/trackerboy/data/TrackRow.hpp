@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "trackerboy/EffectType.hpp"
+#include "trackerboy/trackerboy.hpp"
 
 #include <cstdint>
 

@@ -22,11 +22,29 @@
 **
 */
 
+// common typedefs and constants used throughout the library
+
 #pragma once
 
+#include <type_traits>
 #include <cstdint>
 
 namespace trackerboy {
+
+enum class System : uint8_t {
+    dmg,
+    sgb
+};
+
+//
+// Channel enum
+//
+enum class ChType : uint8_t {
+    ch1 = 0,
+    ch2 = 1,
+    ch3 = 2,
+    ch4 = 3
+};
 
 constexpr uint8_t EFFECT_CATEGORY_PATTERN = 0x00;
 constexpr uint8_t EFFECT_CATEGORY_TRACK = 0x40;
@@ -42,7 +60,7 @@ enum class EffectType : uint8_t {
     patternSkip,                            //   1 2 3 4 D00 begin playing next pattern immediately
     setTempo,                               //   1 2 3 4 Fxx set the tempo
     sfx,                                    // * 1 2 3 4 Txx play sound effect
-    
+
     // track effect (bits 6-7 = 01)
 
     setEnvelope = EFFECT_CATEGORY_TRACK,    //   1 2 3 4 Exx set the persistent envelope/wave id setting
@@ -64,7 +82,36 @@ enum class EffectType : uint8_t {
     tuning,                                 //   1 2 3   Pxx fine tuning
     noteSlideUp,                            // * 1 2 3   Qxy note slide up
     noteSlideDown                           // * 1 2 3   Rxy note slide down
-    
+
 };
+
+//
+// The speed type determines the tempo during pattern playback. Its unit is
+// frames per row in Q4.4 format. Speeds with a fractional component will
+// have some rows taking an extra frame.
+//
+using Speed = uint8_t;
+
+// minimum possible speed, 1.0 frames per row
+static constexpr Speed SPEED_MIN = 0x10;
+
+// maximum possible speed, 15.0 frames per row
+static constexpr Speed SPEED_MAX = 0xF0;
+
+constexpr size_t MAX_INSTRUMENTS = 256;
+constexpr size_t MAX_WAVEFORMS = 256;
+constexpr size_t MAX_PATTERNS = 256;
+
+
+// convert an enum class to its underlying type using unary operator +
+// so instead of
+// `static_cast<std::underlying_type<Foo>>(Foo::bar)` is equvalent to `+Foo::bar`
+// 
+template <typename T>
+constexpr auto operator+(T e) noexcept
+-> std::enable_if_t<std::is_enum<T>::value, std::underlying_type_t<T>>
+{
+    return static_cast<std::underlying_type_t<T>>(e);
+}
 
 }

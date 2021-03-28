@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "trackerboy/ChType.hpp"
+#include "trackerboy/trackerboy.hpp"
 #include "trackerboy/data/DataItem.hpp"
 
 #include <cstdint>

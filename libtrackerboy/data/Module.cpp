@@ -373,10 +373,6 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
         return FormatError::invalidRevision;
     }
 
-    // check file type for module
-    if (static_cast<FileType>(header.type) != FileType::mod) {
-        return FormatError::invalidType;
-    }
 
     mRevision = header.revision;
 
@@ -547,7 +543,6 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
     // revision remains the same as the one that was loaded.
     // for new files, it is set to the current revision.
     header.revision = mRevision;
-    header.type = static_cast<uint8_t>(FileType::mod);
 
     #define copyStringToFixed(dest, string, count) do { \
             size_t len = std::min(count - 1, string.length()); \

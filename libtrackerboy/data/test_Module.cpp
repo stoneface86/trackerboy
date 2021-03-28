@@ -36,7 +36,6 @@ TEST_CASE("Module::serialize writes a valid header", "[Module]") {
     sample.versionMinor = VERSION.minor;
     sample.versionPatch = VERSION.patch;
     sample.revision = FILE_REVISION;
-    sample.type = static_cast<uint8_t>(FileType::mod);
 
 
     std::string sampleData(sizeof(sample) + 10, '\0');
@@ -70,11 +69,6 @@ TEST_CASE("Module::deserialize returns error", "[Module]") {
     SECTION("when the file has a future revision") {
         header->revision++;
         expected = FormatError::invalidRevision;
-    }
-
-    SECTION("when the file is not a module") {
-        header->type = static_cast<uint8_t>(FileType::wave);
-        expected = FormatError::invalidType;
     }
 
     in.str(dataStr);

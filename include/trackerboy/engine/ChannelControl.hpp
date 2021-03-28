@@ -25,7 +25,7 @@
 #pragma once
 
 #include "trackerboy/engine/RuntimeContext.hpp"
-#include "trackerboy/ChType.hpp"
+#include "trackerboy/trackerboy.hpp"
 
 #include <cstdint>
 

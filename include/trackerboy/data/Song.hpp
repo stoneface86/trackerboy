@@ -29,7 +29,7 @@
 #include "trackerboy/data/OrderRow.hpp"
 #include "trackerboy/data/PatternMaster.hpp"
 #include "trackerboy/gbs.hpp"
-#include "trackerboy/Speed.hpp"
+#include "trackerboy/trackerboy.hpp"
 
 namespace trackerboy {
 

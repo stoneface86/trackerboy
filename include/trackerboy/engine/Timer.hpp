@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "trackerboy/Speed.hpp"
+#include "trackerboy/trackerboy.hpp"
 
 namespace trackerboy {
 
