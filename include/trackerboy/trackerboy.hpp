@@ -85,6 +85,19 @@ enum class EffectType : uint8_t {
 
 };
 
+enum class InstrumentType {
+    pulse,
+    wave,
+    noise
+};
+
+enum class Panning : uint8_t {
+    mute,
+    left,
+    right,
+    middle
+};
+
 //
 // The speed type determines the tempo during pattern playback. Its unit is
 // frames per row in Q4.4 format. Speeds with a fractional component will

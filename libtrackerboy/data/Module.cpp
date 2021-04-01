@@ -289,6 +289,13 @@ struct RowFormat {
     TrackRow rowdata;
 };
 
+struct InstrumentFormat {
+    uint8_t channel;
+    bool envelopeEnabled;
+    uint8_t envelope;
+    // sequence data follows
+};
+
 #pragma pack(pop)
 
 void serializeString(OutputBlock &block, std::string const& str) {
@@ -483,7 +490,15 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
 
         for (auto id : mInstrumentList) {
             auto inst = mInstrumentList[id];
-            block.read(inst->data());
+            InstrumentFormat format;
+            block.read(format);
+            if (format.channel > +ChType::ch4) {
+                return FormatError::unknownChannel;
+            }
+            inst->setChannel(static_cast<ChType>(format.channel));
+            inst->setEnvelopeEnable(format.envelopeEnabled);
+            inst->setEnvelope(format.envelope);
+            // TODO: read in sequences
         }
 
 
@@ -649,7 +664,14 @@ FormatError Module::serialize(std::ostream &stream) noexcept {
         block.begin(BLOCK_ID_INSTRUMENT);
         for (auto id : mInstrumentList) {
             auto instrument = mInstrumentList[id];
-            block.write(instrument->data());
+            InstrumentFormat format;
+            format.channel = +instrument->channel();
+            format.envelopeEnabled = instrument->hasEnvelope();
+            format.envelope = instrument->envelope();
+            block.write(format);
+
+            // TODO: write out sequences
+
         }
         block.finish();
         

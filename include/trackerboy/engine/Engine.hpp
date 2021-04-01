@@ -25,10 +25,11 @@
 #pragma once
 
 #include "trackerboy/data/Song.hpp"
+#include "trackerboy/data/Module.hpp"
 #include "trackerboy/engine/ChannelControl.hpp"
 #include "trackerboy/engine/Frame.hpp"
-#include "trackerboy/engine/MusicRuntime.hpp"
-#include "trackerboy/engine/RuntimeContext.hpp"
+//#include "trackerboy/engine/MusicRuntime.hpp"
+//#include "trackerboy/engine/RuntimeContext.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -40,7 +41,7 @@ class Engine {
 
 public:
 
-    Engine(RuntimeContext rc);
+    Engine(gbapu::Apu &apu, Module &mod);
 
     void reset();
 
@@ -50,12 +51,6 @@ public:
     void play(Song &song, uint8_t orderNo, uint8_t patternRow = 0);
 
     void halt();
-
-    //
-    // play and loop a single pattern
-    //
-    // TODO
-    //void playPattern(Song &song, uint8_t orderNo);
     
     //
     // Lock the given channel. Channel is reloaded with music settings.
@@ -76,13 +71,12 @@ public:
 
 private:
 
-    RuntimeContext mRc;
-    std::optional<MusicRuntime> mMusicContext;
-    ChannelControl mChCtrl;
+    gbapu::Apu &mApu;
+    Module &mModule;
+    //std::optional<MusicRuntime> mMusicContext;
+    //ChannelControl mChCtrl;
 
     //TODO: sfx runtime
-
-    bool mHalted;
 
     // frames elapsed since last reset
     uint32_t mTime;

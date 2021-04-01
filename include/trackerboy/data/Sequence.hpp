@@ -49,15 +49,16 @@ public:
 
     private:
         friend class Sequence;
-        Enumerator(Sequence &sequence);
+        Enumerator(Sequence const& sequence);
 
-        Sequence &mSequence;
+        Sequence const& mSequence;
         uint8_t mIndex;
     };
 
     Sequence();
+    Sequence(Sequence const& seq);
 
-    Enumerator enumerator();
+    Enumerator enumerator() const;
 
     void resize(size_t size);
 

@@ -6,66 +6,67 @@
 namespace trackerboy {
 
 
-Engine::Engine(RuntimeContext rc) :
-    mRc(rc),
-    mMusicContext(std::nullopt),
+Engine::Engine(gbapu::Apu &apu, Module &mod) :
+    mApu(apu),
+    mModule(mod),
+    //mMusicContext(std::nullopt),
     mTime(0)
 {
 }
 
 void Engine::reset() {
-    mMusicContext.reset();
+    //mMusicContext.reset();
     mTime = 0;
 }
 
 void Engine::play(Song &song, uint8_t orderNo, uint8_t patternRow) {
     
-    if (orderNo >= song.order().size()) {
+    /*if (orderNo >= song.order().size()) {
         throw std::invalid_argument("cannot play order, order does not exist");
     }
     if (patternRow >= song.patterns().rowSize()) {
         throw std::invalid_argument("cannot start at given row, exceeds pattern size");
     }
 
-    mMusicContext.emplace(mRc, mChCtrl, song, orderNo, patternRow);
+    mMusicContext.emplace(mRc, mChCtrl, song, orderNo, patternRow);*/
 }
 
 void Engine::halt() {
-    if (mMusicContext) {
+    /*if (mMusicContext) {
         mMusicContext.value().halt();
-    }
+    }*/
 }
 
 void Engine::lock(ChType ch) {
-    mChCtrl.lock(ch);
+    /*mChCtrl.lock(ch);
     if (mMusicContext) {
         mMusicContext.value().reload(ch);
-    }
+    }*/
 }
 
 void Engine::unlock(ChType ch) {
-    mChCtrl.unlock(ch);
+    //mChCtrl.unlock(ch);
 }
 
 void Engine::step(Frame &frame) {
 
-    if (mMusicContext) {
-        auto &ctx = mMusicContext.value();
-        
-        frame.halted = ctx.step();
-        frame.order = ctx.currentOrder();
-        frame.row = ctx.currentRow();
-        frame.speed = ctx.speed();
+    //if (mMusicContext) {
+    //    auto &ctx = mMusicContext.value();
+    //    
+    //    frame.halted = ctx.step();
+    //    frame.order = ctx.currentOrder();
+    //    frame.row = ctx.currentRow();
+    //    frame.speed = ctx.speed();
 
-        
+    //    
 
-    } else {
+    //} else {
         // no runtime, do nothing
         frame.halted = true;
         frame.order = 0;
         frame.row = 0;
         frame.speed = 0;
-    }
+    //}
 
     frame.time = mTime;
 

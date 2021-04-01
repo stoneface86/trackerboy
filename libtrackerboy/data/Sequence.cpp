@@ -9,6 +9,12 @@ Sequence::Sequence() :
 {
 }
 
+Sequence::Sequence(Sequence const& seq) :
+    mData(seq.mData),
+    mLoop(seq.mLoop)
+{
+}
+
 void Sequence::resize(size_t size) {
     mData.resize(size);
     if (mLoop && *mLoop >= size) {
@@ -25,11 +31,11 @@ void Sequence::removeLoop() {
 }
 
 
-Sequence::Enumerator Sequence::enumerator() {
+Sequence::Enumerator Sequence::enumerator() const {
     return { *this };
 }
 
-Sequence::Enumerator::Enumerator(Sequence &seq) :
+Sequence::Enumerator::Enumerator(Sequence const& seq) :
     mSequence(seq),
     mIndex(0)
 {

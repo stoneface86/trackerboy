@@ -26,45 +26,66 @@
 
 #include "trackerboy/trackerboy.hpp"
 #include "trackerboy/data/DataItem.hpp"
+#include "trackerboy/data/Sequence.hpp"
 
+#include <array>
 #include <cstdint>
+#include <optional>
 
 namespace trackerboy {
 
 
-// Instruments are just a combination of effect settings that get
-// applied on note trigger, used as a convenience for the composer
-
-
+// New instrument format:
+// - an envelope/waveform setting
+// - 4 sequences that each modulate a parameter (panning, arp, pitch, timbre)
 
 
 class Instrument : public DataItem {
 
 public:
 
-    #pragma pack(push, 1)
-    struct Data {
-        uint8_t channel;        // channel id, used by the ui
-        uint8_t timbre;         // V0x effect
-        uint8_t envelope;       // Exx
-        uint8_t panning;        // Ixy
-        uint8_t delay;          // 0 for no delay (Gxx)
-        uint8_t duration;       // 0 for infinite duration (Sxx)
-        int8_t tune;            // Pxx
-        uint8_t vibrato;        // 4xy
-        uint8_t vibratoDelay;   // 5xx
-    };
-    #pragma pack(pop)
+    static constexpr size_t SEQUENCE_PANNING = 0;
+    static constexpr size_t SEQUENCE_ARP = 1;
+    static constexpr size_t SEQUENCE_PITCH = 2;
+    static constexpr size_t SEQUENCE_TIMBRE = 3;
+
 
     Instrument();
+    Instrument(Instrument const& instrument);
 
-    Instrument(const Instrument &instrument); // copy constructor
+    ChType channel() const noexcept;
 
-    Data& data();
+    bool hasEnvelope() const noexcept;
+
+    uint8_t envelope() const noexcept;
+
+    std::optional<uint8_t> queryEnvelope() const noexcept;
+
+    Sequence::Enumerator enumerateSequence(size_t parameter) const noexcept;
+
+    Sequence& sequence(size_t parameter) noexcept;
+
+    void setChannel(ChType ch) noexcept;
+
+    void setEnvelope(uint8_t value) noexcept;
+
+    void setEnvelopeEnable(bool enable) noexcept;
+
 
 private:
-    Data mData;
+
+    ChType mChannel;
+    bool mEnvelopeEnabled;
+    // volume envelope / waveform id
+    uint8_t mEnvelope;
+
+    // parameter sequences
+    std::array<Sequence, 4> mSequences;
+
+
 };
+
+
 
 
 }
