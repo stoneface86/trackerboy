@@ -134,6 +134,13 @@ void FrequencyControl::apply() noexcept {
     //  * arpeggio effect is activated
     bool updateChord = false;
 
+    // copy the current note (noteSlide effect changes it)
+    auto noteCurr = mNote;
+    if (mNewNote && mMod == ModType::noteSlide) {
+        // setting a new note cancels a note slide
+        mMod = ModType::none;
+    }
+
     if (mEffectToApply) {
         auto param = mEffectToApply->parameter;
         switch (mEffectToApply->type) {
@@ -202,7 +209,7 @@ void FrequencyControl::apply() noexcept {
     }
 
     if (mNewNote) {
-        auto freq = NOTE_FREQ_TABLE[mNote];
+        auto freq = NOTE_FREQ_TABLE[noteCurr];
         if (mMod == ModType::portamento) {
             mSlideTarget = freq;
         } else {
