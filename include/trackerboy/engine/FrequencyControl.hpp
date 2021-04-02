@@ -24,11 +24,16 @@
 
 #pragma once
 
+#include <array>
+#include <optional>
 #include <cstddef>
 #include <cstdint>
 
 namespace trackerboy {
 
+//
+// This class handles frequency effects for a channel. 
+//
 class FrequencyControl {
 
 public:
@@ -41,12 +46,6 @@ public:
     FrequencyControl() noexcept;
 
     uint16_t frequency() const noexcept;
-
-    // used for testing
-
-    /*bool slideActive() const noexcept;
-    bool portamentoActive() const noexcept;
-    bool arpeggioActive() const noexcept;*/
 
     void reset() noexcept;
 
@@ -79,47 +78,49 @@ public:
 
 private:
 
-
-
-
-    enum EffectCommand {
-        EFF_ARP = 0,
-        EFF_PITCH = 1,
-        EFF_NOTE = 2,
-        EFF_PORTAMENTO = 3
-    };
-
     enum class ModType {
         none,               // no frequency modulation
-        slide,              // frequency slides toward a target
+        portamento,
+        pitchSlide,         // frequency slides toward a target
+        noteSlide,
         arpeggio            // frequency alternates between 3 notes
     };
 
-    void setEffect(EffectCommand cmd, SlideDirection dir, uint8_t param) noexcept;
-    void setTarget(uint16_t freq) noexcept;
+    struct ModEffect {
+
+        ModType type;
+        SlideDirection direction;
+        uint8_t parameter;
+
+        constexpr ModEffect(ModType type, uint8_t parameter, SlideDirection dir = SlideDirection::down) :
+            type(type),
+            parameter(parameter),
+            direction(dir)
+        {
+        }
+
+    };
+
+    void finishSlide() noexcept;
     void setChord() noexcept;
-
-    static constexpr size_t CHORD_LEN = 3;
-
-    static constexpr int FLAG_EFFECT_CMD = 0x3;
-    static constexpr int FLAG_EFFECT_DIR = 0x4;
-    static constexpr int FLAG_EFFECT_SET = 0x8;
-    static constexpr int FLAG_NOTE_SET = 0x10;
-    static constexpr int FLAG_PORTAMENTO = 0x20;
-    static constexpr int FLAG_VIBRATO = 0x40;
-    static constexpr int FLAG_SLIDING = 0x80;
 
     // only 1 slide can be active note/pitch/portamento
     // arpeggio cannot be used with slides
     // (setting a slide disables arpeggio, setting arpeggio disables a slide)
 
-    int mFlags;
-    uint8_t mEffectParam;
+    bool mNewNote;
+
+    std::optional<ModEffect> mEffectToApply;
+
+    // the current modulation effect
     ModType mMod;
 
+    // the current note
     uint8_t mNote;
 
+    // pitch offset
     int8_t mTune;
+    // the current frequency
     int16_t mFrequency;
 
     // pitch slide
@@ -130,20 +131,22 @@ private:
 
     // arpeggio
 
-    uint8_t mChordParam;
+    uint8_t mChordOffset1;
+    uint8_t mChordOffset2;
 
     // index in the chord array
     unsigned mChordIndex;
     // note frequencies for the arpeggio "chord"
-    uint16_t mChord[CHORD_LEN];
+    std::array<uint16_t, 3> mChord;
 
     // vibrato
+    bool mVibratoEnabled;
     uint8_t mVibratoDelayCounter;
     uint8_t mVibratoCounter;
 
-    int8_t mVibratoValue;
-    uint8_t mVibratoDelay;
-    uint8_t mVibratoParam;
+    int8_t mVibratoValue;   // current offset value of the vibrato (+/- vibrato depth)
+    uint8_t mVibratoDelay;  // vibrato delay setting
+    uint8_t mVibratoParam;  // vibrato effect parameter (upper nibble is speed, lower is depth)
 };
 
 

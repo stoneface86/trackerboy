@@ -1,27 +1,21 @@
 project(demo CXX)
 
-set(DEMO "demo")
-set(DEMO_SRC
-    "main.cpp"
-    "Demo.cpp"
-    "demos/DutyDemo.cpp"
-    "demos/SweepDemo.cpp"
-    "demos/WaveDemo.cpp"
-    "demos/WaveVolDemo.cpp"
-)
 
-#add_executable(${DEMO} ${DEMO_SRC})
-#target_include_directories(${DEMO} PUBLIC ${INC_DIR})
-#target_link_libraries(${DEMO} trackerboy ${Soundio_LIBRARY})
+# interactive demos
+# these program play sound and read input from the user
 
-#add_executable(demo_song "song_demo.cpp")
-#target_link_libraries(demo_song trackerboy miniaudio)
+# code used by all interactive demos
+add_library(interactive_demo STATIC "interactive/interactive.cpp")
+target_link_libraries(interactive_demo PUBLIC trackerboy miniaudio)
 
-#add_executable(demo_device_table "device_table.cpp")
-#target_link_libraries(demo_device_table audio)
+add_executable(demo_apu "interactive/apu_demo.cpp")
+target_link_libraries(demo_apu interactive_demo)
 
-add_executable(demo_synth "synth_demo.cpp")
-target_link_libraries(demo_synth trackerboy miniaudio)
+add_executable(demo_frequency "interactive/frequency_demo.cpp")
+target_link_libraries(demo_frequency interactive_demo)
+
+# WAV demos
+# these demos produce WAV files
 
 add_executable(demo_volume "volume_demo.cpp")
 target_link_libraries(demo_volume trackerboy miniaudio)
