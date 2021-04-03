@@ -43,8 +43,6 @@ public:
         down
     };
 
-    FrequencyControl() noexcept;
-
     uint16_t frequency() const noexcept;
 
     void reset() noexcept;
@@ -76,13 +74,23 @@ public:
 
     void step() noexcept;
 
+protected:
+
+    FrequencyControl(uint16_t maxFrequency, uint8_t maxNote) noexcept;
+
+    //
+    // Converts a note -> pitch
+    //
+    virtual uint16_t noteLookup(uint8_t note) = 0;
+
+
 private:
 
     enum class ModType {
         none,               // no frequency modulation
-        portamento,
+        portamento,         // automatic note slide
         pitchSlide,         // frequency slides toward a target
-        noteSlide,
+        noteSlide,          // frequency slides toward a target note
         arpeggio            // frequency alternates between 3 notes
     };
 
@@ -103,6 +111,16 @@ private:
 
     void finishSlide() noexcept;
     void setChord() noexcept;
+
+    //
+    // maximum pitch unit
+    //
+    uint16_t const mMaxFrequency;
+    
+    //
+    // maximum note index
+    //
+    uint8_t const mMaxNote;
 
     // only 1 slide can be active note/pitch/portamento
     // arpeggio cannot be used with slides
@@ -147,6 +165,42 @@ private:
     int8_t mVibratoValue;   // current offset value of the vibrato (+/- vibrato depth)
     uint8_t mVibratoDelay;  // vibrato delay setting
     uint8_t mVibratoParam;  // vibrato effect parameter (upper nibble is speed, lower is depth)
+};
+
+//
+// Frequency control for channels 1, 2 and 3. The value returned by frequency() should be
+// written to the channel's frequency registers, NRx3 and NRx4.
+//
+class ToneFrequencyControl : public FrequencyControl {
+
+public:
+
+    ToneFrequencyControl() noexcept;
+
+protected:
+
+    uint16_t noteLookup(uint8_t note) override;
+
+};
+
+//
+// Frequency control for CH4. The value returned by frequency() should be used to lookup the
+// NR43 value via the NOTE_NOISE_TABLE, after dividing by UNITS_PER_NOTE.
+//
+class NoiseFrequencyControl : public FrequencyControl {
+
+public:
+    // 4 pitch units make a note
+    // lowering this increases the speed of pitch slides and allows for finer tuning
+    static constexpr int UNITS_PER_NOTE = 4;
+
+
+    NoiseFrequencyControl() noexcept;
+
+protected:
+
+    uint16_t noteLookup(uint8_t note) override;
+
 };
 
 

@@ -13,7 +13,10 @@ class FrequencyDemo : public InteractiveDemo {
 
 public:
     FrequencyDemo() :
-        InteractiveDemo()
+        InteractiveDemo(),
+        mFc(&mToneFc),
+        mToneFc(),
+        mNoiseFc()
     {
     }
 
@@ -28,19 +31,45 @@ protected:
         apu.writeRegister(gbapu::Apu::REG_NR51, 0x11);
         apu.writeRegister(gbapu::Apu::REG_NR12, 0x80);
         apu.writeRegister(gbapu::Apu::REG_NR14, 0x80);
+        apu.writeRegister(gbapu::Apu::REG_NR42, 0x80);
+        apu.writeRegister(gbapu::Apu::REG_NR44, 0x80);
 
         std::cout << "Frequency effects demo. Syntax: <note> [effect]..." << std::endl;
         std::cout << "Available effects: 0xy 1xx 2xx 3xx 4xy 5xx Pxx Qxy Rxy" << std::endl << std::endl;
 
+        std::cout << "Tone mode" << std::endl;
 
         return 0;
     }
 
     bool processLine(std::string const& line) override {
 
+        if (line.size() == 1) {
 
-        if (line[0] == 'q') {
-            return true;
+            switch (tolower(line[0])) {
+                case 'q':
+                    return true;
+                case 't': {
+                    // tone mode
+                    lock();
+                    auto &apu = mSynth.apu();
+                    apu.writeRegister(gbapu::Apu::REG_NR51, 0x11);
+                    mFc = &mToneFc;
+                    unlock();
+                    std::cout << "Tone mode" << std::endl;
+                    return false;
+                }
+                case 'n': {
+                    // noise mode
+                    lock();
+                    auto &apu = mSynth.apu();
+                    apu.writeRegister(gbapu::Apu::REG_NR51, 0x88);
+                    mFc = &mNoiseFc;
+                    unlock();
+                    std::cout << "Noise mode" << std::endl;
+                    return false;
+                }
+            }
         }
 
 
@@ -65,7 +94,7 @@ protected:
                     return false;
                 }
 
-                mFc.setNote((uint8_t)noteIn);
+                mFc->setNote((uint8_t)noteIn);
             }
 
             ++iter;
@@ -93,31 +122,31 @@ protected:
 
             switch (effectChar) {
                 case '0':
-                    mFc.setArpeggio(param);
+                    mFc->setArpeggio(param);
                     break;
                 case '1':
-                    mFc.setPitchSlide(trackerboy::FrequencyControl::SlideDirection::up, param);
+                    mFc->setPitchSlide(trackerboy::FrequencyControl::SlideDirection::up, param);
                     break;
                 case '2':
-                    mFc.setPitchSlide(trackerboy::FrequencyControl::SlideDirection::down, param);
+                    mFc->setPitchSlide(trackerboy::FrequencyControl::SlideDirection::down, param);
                     break;
                 case '3':
-                    mFc.setPortamento(param);
+                    mFc->setPortamento(param);
                     break;
                 case '4':
-                    mFc.setVibrato(param);
+                    mFc->setVibrato(param);
                     break;
                 case '5':
-                    mFc.setVibratoDelay(param);
+                    mFc->setVibratoDelay(param);
                     break;
                 case 'P':
-                    mFc.setTune(param);
+                    mFc->setTune(param);
                     break;
                 case 'Q':
-                    mFc.setNoteSlide(trackerboy::FrequencyControl::SlideDirection::up, param);
+                    mFc->setNoteSlide(trackerboy::FrequencyControl::SlideDirection::up, param);
                     break;
                 case 'R':
-                    mFc.setNoteSlide(trackerboy::FrequencyControl::SlideDirection::down, param);
+                    mFc->setNoteSlide(trackerboy::FrequencyControl::SlideDirection::down, param);
                     break;
                 default:
                     std::cout << "unknown effect" << std::endl;
@@ -129,7 +158,7 @@ protected:
         }
 
         lock();
-        mFc.apply();
+        mFc->apply();
         unlock();
 
         return false;
@@ -138,16 +167,22 @@ protected:
     void runFrame() override {
         
         auto &apu = mSynth.apu();
-        mFc.step();
-        auto freq = mFc.frequency();
-        apu.writeRegister(gbapu::Apu::REG_NR13, freq & 0xFF);
-        apu.writeRegister(gbapu::Apu::REG_NR14, freq >> 8);
+        mFc->step();
+        auto freq = mFc->frequency();
+        if (mFc == &mToneFc) {
+            apu.writeRegister(gbapu::Apu::REG_NR13, freq & 0xFF);
+            apu.writeRegister(gbapu::Apu::REG_NR14, freq >> 8);
+        } else {
+            apu.writeRegister(gbapu::Apu::REG_NR43, trackerboy::NOTE_NOISE_TABLE[freq / trackerboy::NoiseFrequencyControl::UNITS_PER_NOTE]);
+        }
 
     }
 
 
 private:
-    trackerboy::FrequencyControl mFc;
+    trackerboy::FrequencyControl *mFc;
+    trackerboy::ToneFrequencyControl mToneFc;
+    trackerboy::NoiseFrequencyControl mNoiseFc;
 
 };
 

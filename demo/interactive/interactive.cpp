@@ -71,6 +71,7 @@ int InteractiveDemo::exec() {
 
     std::string input;
     do {
+        std::cout << "> ";
         std::getline(std::cin, input);
 
         if (input.size() == 0) {

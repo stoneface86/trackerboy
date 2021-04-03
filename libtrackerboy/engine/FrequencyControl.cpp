@@ -11,7 +11,9 @@ namespace trackerboy {
 // sine vibrato was removed to reduce memory usage for the driver. It was replaced with
 // a simplier version (square vibrato).
 
-FrequencyControl::FrequencyControl() noexcept :
+FrequencyControl::FrequencyControl(uint16_t maxFrequency, uint8_t maxNote) noexcept :
+    mMaxFrequency(maxFrequency),
+    mMaxNote(maxNote),
     mNewNote(false),
     mEffectToApply(),
     mMod(ModType::none),
@@ -44,7 +46,7 @@ uint16_t FrequencyControl::frequency() const noexcept {
     return static_cast<uint16_t>(std::clamp(
         freq,
         static_cast<int16_t>(0),
-        static_cast<int16_t>(GB_MAX_FREQUENCY))
+        static_cast<int16_t>(mMaxFrequency))
         );
 
 }
@@ -114,7 +116,7 @@ void FrequencyControl::setPortamento(uint8_t param) noexcept {
 
 void FrequencyControl::setNote(uint8_t note) noexcept {
     // ignore special note and illegal note indices
-    if (note <= NOTE_LAST) {
+    if (note <= mMaxNote) {
         mNote = note;
         mNewNote = true;
     }
@@ -160,7 +162,7 @@ void FrequencyControl::apply() noexcept {
                 } else {
                     mMod = ModType::pitchSlide;
                     if (mEffectToApply->direction == SlideDirection::up) {
-                        mSlideTarget = GB_MAX_FREQUENCY;
+                        mSlideTarget = mMaxFrequency;
                     } else {
                         mSlideTarget = 0;
                     }
@@ -175,8 +177,8 @@ void FrequencyControl::apply() noexcept {
                     uint8_t targetNote = mNote;
                     if (mEffectToApply->direction == SlideDirection::up) {
                         targetNote += semitones;
-                        if (targetNote > NOTE_LAST) {
-                            targetNote = NOTE_LAST; // clamp to highest note
+                        if (targetNote > mMaxNote) {
+                            targetNote = mMaxNote; // clamp to highest note
                         }
                     } else {
                         if (targetNote < semitones) {
@@ -186,7 +188,7 @@ void FrequencyControl::apply() noexcept {
                         }
                     }
                     mMod = ModType::noteSlide;
-                    mSlideTarget = NOTE_FREQ_TABLE[targetNote];
+                    mSlideTarget = noteLookup(targetNote);
                     // current note becomes the target note (even though it hasn't reached it yet)
                     // this allows for bigger slides by chaining multiple note slide effects
                     mNote = targetNote;
@@ -209,7 +211,7 @@ void FrequencyControl::apply() noexcept {
     }
 
     if (mNewNote) {
-        auto freq = NOTE_FREQ_TABLE[noteCurr];
+        auto freq = noteLookup(noteCurr);
         if (mMod == ModType::portamento) {
             mSlideTarget = freq;
         } else {
@@ -288,11 +290,11 @@ void FrequencyControl::step() noexcept {
 
 void FrequencyControl::setChord() noexcept {
     // first note in the chord is always the current note
-    mChord[0] = NOTE_FREQ_TABLE[mNote];
+    mChord[0] = noteLookup(mNote);
     // second note is the upper nibble + the current (clamped to the last possible note)
-    mChord[1] = NOTE_FREQ_TABLE[std::min(mNote + mChordOffset1, static_cast<int>(NOTE_LAST))];
+    mChord[1] = noteLookup(std::min((uint8_t)(mNote + mChordOffset1), mMaxNote));
     // third note is the lower nibble + current (also clamped)
-    mChord[2] = NOTE_FREQ_TABLE[std::min(mNote + mChordOffset2, static_cast<int>(NOTE_LAST))];
+    mChord[2] = noteLookup(std::min((uint8_t)(mNote + mChordOffset2), mMaxNote));
 }
 
 void FrequencyControl::finishSlide() noexcept {
@@ -301,6 +303,25 @@ void FrequencyControl::finishSlide() noexcept {
         // stop sliding once the target note is reached
         mMod = ModType::none;
     }
+}
+
+
+ToneFrequencyControl::ToneFrequencyControl() noexcept :
+    FrequencyControl(GB_MAX_FREQUENCY, NOTE_LAST)
+{
+}
+
+uint16_t ToneFrequencyControl::noteLookup(uint8_t note) {
+    return NOTE_FREQ_TABLE[note];
+}
+
+NoiseFrequencyControl::NoiseFrequencyControl() noexcept :
+    FrequencyControl((NOTE_NOISE_LAST + 1) * UNITS_PER_NOTE, NOTE_NOISE_LAST)
+{
+}
+
+uint16_t NoiseFrequencyControl::noteLookup(uint8_t note) {
+    return note * UNITS_PER_NOTE;
 }
 
 
