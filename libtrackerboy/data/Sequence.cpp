@@ -32,26 +32,37 @@ void Sequence::removeLoop() {
 
 
 Sequence::Enumerator Sequence::enumerator() const {
-    return { *this };
+    return { this };
 }
 
-Sequence::Enumerator::Enumerator(Sequence const& seq) :
+Sequence::Enumerator::Enumerator() :
+    mSequence(nullptr),
+    mIndex(0)
+{
+}
+
+Sequence::Enumerator::Enumerator(Sequence const* seq) :
     mSequence(seq),
     mIndex(0)
 {
 }
 
+
 std::optional<uint8_t> Sequence::Enumerator::next() {
-    auto const seqsize = mSequence.mData.size();
+    if (mSequence == nullptr) {
+        return std::nullopt;
+    }
+
+    auto const seqsize = mSequence->mData.size();
     if (mIndex >= seqsize) {
-        if (seqsize != 0 && mSequence.mLoop) {
-            mIndex = *mSequence.mLoop;
+        if (seqsize != 0 && mSequence->mLoop) {
+            mIndex = *mSequence->mLoop;
         } else {
             return std::nullopt;
         }
     }
 
-    auto curr = mSequence.mData[mIndex];
+    auto curr = mSequence->mData[mIndex];
     ++mIndex;
 
     return curr;

@@ -24,6 +24,9 @@
 
 #pragma once
 
+#include "trackerboy/data/Sequence.hpp"
+#include "trackerboy/trackerboy.hpp"
+
 #include <array>
 #include <optional>
 #include <cstddef>
@@ -36,41 +39,54 @@ namespace trackerboy {
 //
 class FrequencyControl {
 
-public:
+    enum class ModType {
+        none,               // no frequency modulation
+        portamento,         // automatic note slide
+        pitchSlide,         // frequency slides toward a target
+        noteSlide,          // frequency slides toward a target note
+        arpeggio            // frequency alternates between 3 notes
+    };
 
     enum class SlideDirection {
         up,
         down
     };
 
+public:
+
+    class Parameters {
+        friend class FrequencyControl;
+
+    public:
+        Parameters();
+
+        void setEffect(EffectType type, uint8_t param) noexcept;
+
+        void setNote(uint8_t note) noexcept;
+
+        void setPitchSequence(Sequence const& seq) noexcept;
+
+        void setArpSequence(Sequence const& seq) noexcept;
+
+    private:
+
+        ModType mModType;
+        SlideDirection mDirection;
+        uint8_t mModParam;
+        std::optional<uint8_t> mVibratoParam;
+        std::optional<uint8_t> mVibratoDelayParam;
+        std::optional<uint8_t> mTuneParam;
+        std::optional<uint8_t> mNote;
+
+        std::optional<Sequence::Enumerator> mPitchSequence;
+        std::optional<Sequence::Enumerator> mArpSequence;
+    };
+
     uint16_t frequency() const noexcept;
 
     void reset() noexcept;
 
-    // Effects 1xx and 2xx
-    void setPitchSlide(SlideDirection dir, uint8_t param) noexcept;
-
-    // Effects Qxy and Rxy
-    void setNoteSlide(SlideDirection dir, uint8_t parameter) noexcept;
-
-    // Effect 4xy
-    void setVibrato(uint8_t vibrato) noexcept;
-
-    // Effect 5xx
-    void setVibratoDelay(uint8_t delay) noexcept;
-
-    // Effect 0xy
-    void setArpeggio(uint8_t param) noexcept;
-
-    // Effect 3xx
-    void setPortamento(uint8_t param) noexcept;
-
-    void setNote(uint8_t note) noexcept;
-
-    // Effect Pxx
-    void setTune(uint8_t param) noexcept;
-
-    void apply() noexcept;
+    void apply(Parameters const& params) noexcept;
 
     void step() noexcept;
 
@@ -86,31 +102,7 @@ protected:
 
 private:
 
-    enum class ModType {
-        none,               // no frequency modulation
-        portamento,         // automatic note slide
-        pitchSlide,         // frequency slides toward a target
-        noteSlide,          // frequency slides toward a target note
-        arpeggio            // frequency alternates between 3 notes
-    };
-
-    struct ModEffect {
-
-        ModType type;
-        SlideDirection direction;
-        uint8_t parameter;
-
-        constexpr ModEffect(ModType type, uint8_t parameter, SlideDirection dir = SlideDirection::down) :
-            type(type),
-            parameter(parameter),
-            direction(dir)
-        {
-        }
-
-    };
-
     void finishSlide() noexcept;
-    void setChord() noexcept;
 
     //
     // maximum pitch unit
@@ -125,10 +117,6 @@ private:
     // only 1 slide can be active note/pitch/portamento
     // arpeggio cannot be used with slides
     // (setting a slide disables arpeggio, setting arpeggio disables a slide)
-
-    bool mNewNote;
-
-    std::optional<ModEffect> mEffectToApply;
 
     // the current modulation effect
     ModType mMod;
@@ -146,8 +134,13 @@ private:
     uint8_t mSlideAmount;
     uint16_t mSlideTarget;
 
+    // instrument sequences
+    int16_t mInstrumentPitch;
+    Sequence::Enumerator mPitchSequence;
+    Sequence::Enumerator mArpSequence;
 
     // arpeggio
+
 
     uint8_t mChordOffset1;
     uint8_t mChordOffset2;

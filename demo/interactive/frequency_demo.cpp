@@ -76,6 +76,8 @@ protected:
         std::istringstream iss(line);
         std::istream_iterator<std::string> iter(iss), end;
 
+        trackerboy::FrequencyControl::Parameters params;
+
         if (iter != end) {
             if (*iter != ".") {
                 unsigned long noteIn;
@@ -94,7 +96,7 @@ protected:
                     return false;
                 }
 
-                mFc->setNote((uint8_t)noteIn);
+                params.setNote((uint8_t)noteIn);
             }
 
             ++iter;
@@ -120,45 +122,46 @@ protected:
                 return false;
             }
 
+            trackerboy::EffectType type;
             switch (effectChar) {
                 case '0':
-                    mFc->setArpeggio(param);
+                    type = trackerboy::EffectType::arpeggio;
                     break;
                 case '1':
-                    mFc->setPitchSlide(trackerboy::FrequencyControl::SlideDirection::up, param);
+                    type = trackerboy::EffectType::pitchUp;
                     break;
                 case '2':
-                    mFc->setPitchSlide(trackerboy::FrequencyControl::SlideDirection::down, param);
+                    type = trackerboy::EffectType::pitchDown;
                     break;
                 case '3':
-                    mFc->setPortamento(param);
+                    type = trackerboy::EffectType::autoPortamento;
                     break;
                 case '4':
-                    mFc->setVibrato(param);
+                    type = trackerboy::EffectType::vibrato;
                     break;
                 case '5':
-                    mFc->setVibratoDelay(param);
+                    type = trackerboy::EffectType::vibratoDelay;
                     break;
                 case 'P':
-                    mFc->setTune(param);
+                    type = trackerboy::EffectType::tuning;
                     break;
                 case 'Q':
-                    mFc->setNoteSlide(trackerboy::FrequencyControl::SlideDirection::up, param);
+                    type = trackerboy::EffectType::noteSlideUp;
                     break;
                 case 'R':
-                    mFc->setNoteSlide(trackerboy::FrequencyControl::SlideDirection::down, param);
+                    type = trackerboy::EffectType::noteSlideDown;
                     break;
                 default:
                     std::cout << "unknown effect" << std::endl;
-                    break;
+                    return false;
             }
-
+            params.setEffect(type, param);
 
             ++iter;
         }
 
         lock();
-        mFc->apply();
+        mFc->apply(params);
         unlock();
 
         return false;

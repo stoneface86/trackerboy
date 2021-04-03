@@ -8,20 +8,78 @@
 
 namespace trackerboy {
 
-// sine vibrato was removed to reduce memory usage for the driver. It was replaced with
-// a simplier version (square vibrato).
+FrequencyControl::Parameters::Parameters() :
+    mModType(ModType::none),
+    mDirection(SlideDirection::down),
+    mModParam(0)
+{
+}
+
+void FrequencyControl::Parameters::setEffect(EffectType type, uint8_t param) noexcept {
+    switch (type) {
+        case EffectType::arpeggio:
+            mModType = ModType::arpeggio;
+            mModParam = param;
+            break;
+        case EffectType::pitchUp:
+            mModType = ModType::pitchSlide;
+            mDirection = SlideDirection::up;
+            mModParam = param;
+            break;
+        case EffectType::pitchDown:
+            mModType = ModType::pitchSlide;
+            mDirection = SlideDirection::down;
+            mModParam = param;
+            break;
+        case EffectType::autoPortamento:
+            mModType = ModType::portamento;
+            mModParam = param;
+            break;
+        case EffectType::vibrato:
+            mVibratoParam = param;
+            break;
+        case EffectType::vibratoDelay:
+            mVibratoDelayParam = param;
+            break;
+        case EffectType::tuning:
+            mTuneParam = param;
+            break;
+        case EffectType::noteSlideUp:
+            mModType = ModType::noteSlide;
+            mDirection = SlideDirection::up;
+            mModParam = param;
+            break;
+        case EffectType::noteSlideDown:
+            mModType = ModType::noteSlide;
+            mDirection = SlideDirection::down;
+            mModParam = param;
+            break;
+    }
+}
+
+void FrequencyControl::Parameters::setNote(uint8_t note) noexcept {
+    mNote = note;
+}
+
+void FrequencyControl::Parameters::setArpSequence(Sequence const& seq) noexcept {
+    mArpSequence.emplace(seq.enumerator());
+}
+
+void FrequencyControl::Parameters::setPitchSequence(Sequence const& seq) noexcept {
+    mPitchSequence.emplace(seq.enumerator());
+}
+
 
 FrequencyControl::FrequencyControl(uint16_t maxFrequency, uint8_t maxNote) noexcept :
     mMaxFrequency(maxFrequency),
     mMaxNote(maxNote),
-    mNewNote(false),
-    mEffectToApply(),
     mMod(ModType::none),
     mNote(0),
     mTune(0),
     mFrequency(0),
     mSlideAmount(0),
     mSlideTarget(0),
+    mInstrumentPitch(0),
     mChordOffset1(0),
     mChordOffset2(0),
     mChordIndex(0),
@@ -36,7 +94,7 @@ FrequencyControl::FrequencyControl(uint16_t maxFrequency, uint8_t maxNote) noexc
 
 uint16_t FrequencyControl::frequency() const noexcept {
 
-    int16_t freq = mFrequency + mTune;
+    int16_t freq = mFrequency + mTune + mInstrumentPitch;
 
     // vibrato
     if (mVibratoEnabled && mVibratoDelayCounter == 0) {
@@ -52,8 +110,6 @@ uint16_t FrequencyControl::frequency() const noexcept {
 }
 
 void FrequencyControl::reset() noexcept {
-    mNewNote = false;
-    mEffectToApply.reset();
     mMod = ModType::none;
     mNote = 0;
     mTune = 0;
@@ -72,149 +128,139 @@ void FrequencyControl::reset() noexcept {
 }
 
 
-void FrequencyControl::setPitchSlide(SlideDirection dir, uint8_t param) noexcept {
-    mEffectToApply.emplace(ModType::pitchSlide, param, dir);
-}
-
-void FrequencyControl::setNoteSlide(SlideDirection dir, uint8_t param) noexcept {
-    mEffectToApply.emplace(ModType::noteSlide, param, dir);
-
-}
-
-void FrequencyControl::setVibrato(uint8_t param) noexcept {
-    mVibratoParam = param;
-    if (!(param & 0x0F)) {
-        // extent is 0, disable vibrato
-        mVibratoEnabled = false;
-        mVibratoValue = 0;
-    } else {
-        // both nibbles are non-zero, set vibrato
-        mVibratoEnabled = true;
-        if (mVibratoValue) {
-            int8_t newvalue = param & 0xF;
-            if (mVibratoValue < 0) {
-                mVibratoValue = -newvalue;
-            } else {
-                mVibratoValue = newvalue;
-            }
-        }
-    }
-}
-
-void FrequencyControl::setVibratoDelay(uint8_t delay) noexcept {
-    mVibratoDelay = delay;
-}
-
-void FrequencyControl::setArpeggio(uint8_t param) noexcept {
-    mEffectToApply.emplace(ModType::arpeggio, param);
-
-}
-
-void FrequencyControl::setPortamento(uint8_t param) noexcept {
-    mEffectToApply.emplace(ModType::portamento, param);
-}
-
-void FrequencyControl::setNote(uint8_t note) noexcept {
-    // ignore special note and illegal note indices
-    if (note <= mMaxNote) {
-        mNote = note;
-        mNewNote = true;
-    }
-}
-
-void FrequencyControl::setTune(uint8_t param) noexcept {
-    // tune values have a bias of 0x80, so 0x80 is 0, is in tune
-    // 0x81 is +1, frequency is pitch adjusted by 1
-    // 0x7F is -1, frequency is pitch adjusted by -1
-    mTune = static_cast<int8_t>(param - 0x80);
-}
-
-void FrequencyControl::apply() noexcept {
+void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcept {
 
     // the arpeggio chord needs to be recalculated when:
     //  * a new note is triggerred and arpeggio is active
     //  * arpeggio effect is activated
     bool updateChord = false;
 
-    // copy the current note (noteSlide effect changes it)
-    auto noteCurr = mNote;
-    if (mNewNote && mMod == ModType::noteSlide) {
-        // setting a new note cancels a note slide
-        mMod = ModType::none;
-    }
-
-    if (mEffectToApply) {
-        auto param = mEffectToApply->parameter;
-        switch (mEffectToApply->type) {
-            case ModType::arpeggio:
-                if (param == 0) {
-                    mMod = ModType::none;
-                } else {
-                    mMod = ModType::arpeggio;
-                    mChordOffset1 = param >> 4;
-                    mChordOffset2 = param & 0xF;
-                    updateChord = true;
-                }
-                break;
-            case ModType::pitchSlide:
-                if (param == 0) {
-                    mMod = ModType::none;
-                } else {
-                    mMod = ModType::pitchSlide;
-                    if (mEffectToApply->direction == SlideDirection::up) {
-                        mSlideTarget = mMaxFrequency;
-                    } else {
-                        mSlideTarget = 0;
-                    }
-                    mSlideAmount = param;
-                }
-                break;
-            case ModType::noteSlide:
-                mSlideAmount = 1 + (2 * (param & 0xF));
-                // upper 4 bits is the # of semitones to slide to
-                {
-                    uint8_t semitones = param >> 4;
-                    uint8_t targetNote = mNote;
-                    if (mEffectToApply->direction == SlideDirection::up) {
-                        targetNote += semitones;
-                        if (targetNote > mMaxNote) {
-                            targetNote = mMaxNote; // clamp to highest note
-                        }
-                    } else {
-                        if (targetNote < semitones) {
-                            targetNote = 0; // clamp to the lowest possible note
-                        } else {
-                            targetNote -= semitones;
-                        }
-                    }
-                    mMod = ModType::noteSlide;
-                    mSlideTarget = noteLookup(targetNote);
-                    // current note becomes the target note (even though it hasn't reached it yet)
-                    // this allows for bigger slides by chaining multiple note slide effects
-                    mNote = targetNote;
-                }
-                break;
-            case ModType::portamento:
-                if (param == 0) {
-                    // turn off portamento
-                    mMod = ModType::none;
-                } else {
-                    mMod = ModType::portamento;
-                    mSlideAmount = param;
-                }
-                break;
-            default:
-                // should never happen
-                break;
+    bool newNote;
+    if (params.mNote && *params.mNote <= mMaxNote) {
+        if (mMod == ModType::noteSlide) {
+            // setting a new note cancels a note slide
+            mMod = ModType::none;
         }
-        mEffectToApply.reset();
+
+        mNote = *params.mNote;
+        newNote = true;
+    } else {
+        newNote = false;
+    }
+    uint8_t currNote = mNote;
+    
+
+    switch (params.mModType) {
+        case ModType::arpeggio:
+            if (params.mModParam == 0) {
+                mMod = ModType::none;
+            } else {
+                mMod = ModType::arpeggio;
+                mChordOffset1 = params.mModParam >> 4;
+                mChordOffset2 = params.mModParam & 0xF;
+                updateChord = true;
+            }
+            break;
+        case ModType::pitchSlide:
+            if (params.mModParam == 0) {
+                mMod = ModType::none;
+            } else {
+                mMod = ModType::pitchSlide;
+                if (params.mDirection == SlideDirection::up) {
+                    mSlideTarget = mMaxFrequency;
+                } else {
+                    mSlideTarget = 0;
+                }
+                mSlideAmount = params.mModParam;
+            }
+            break;
+        case ModType::noteSlide:
+            mSlideAmount = 1 + (2 * (params.mModParam & 0xF));
+            // upper 4 bits is the # of semitones to slide to
+            {
+                uint8_t semitones = params.mModParam >> 4;
+                uint8_t targetNote = mNote;
+                if (params.mDirection == SlideDirection::up) {
+                    targetNote += semitones;
+                    if (targetNote > mMaxNote) {
+                        targetNote = mMaxNote; // clamp to highest note
+                    }
+                } else {
+                    if (targetNote < semitones) {
+                        targetNote = 0; // clamp to the lowest possible note
+                    } else {
+                        targetNote -= semitones;
+                    }
+                }
+                mMod = ModType::noteSlide;
+                mSlideTarget = noteLookup(targetNote);
+                // current note becomes the target note (even though it hasn't reached it yet)
+                // this allows for bigger slides by chaining multiple note slide effects
+                mNote = targetNote;
+            }
+            break;
+        case ModType::portamento:
+            if (params.mModParam == 0) {
+                // turn off portamento
+                mMod = ModType::none;
+            } else {
+                mMod = ModType::portamento;
+                mSlideAmount = params.mModParam;
+            }
+            break;
+        default:
+            // no mod type set, do nothing
+            break;
     }
 
-    if (mNewNote) {
-        auto freq = noteLookup(noteCurr);
+    if (params.mVibratoParam) {
+        auto param = *params.mVibratoParam;
+        mVibratoParam = param;
+        if (!(param & 0x0F)) {
+            // extent is 0, disable vibrato
+            mVibratoEnabled = false;
+            mVibratoValue = 0;
+        } else {
+            // extent is non-zero, set vibrato
+            mVibratoEnabled = true;
+            if (mVibratoValue) {
+                int8_t newvalue = param & 0xF;
+                if (mVibratoValue < 0) {
+                    mVibratoValue = -newvalue;
+                } else {
+                    mVibratoValue = newvalue;
+                }
+            }
+        }
+    }
+
+    if (params.mVibratoDelayParam) {
+        mVibratoDelay = *params.mVibratoDelayParam;
+    }
+
+    if (params.mTuneParam) {
+        // tune values have a bias of 0x80, so 0x80 is 0, is in tune
+        // 0x81 is +1, frequency is pitch adjusted by 1
+        // 0x7F is -1, frequency is pitch adjusted by -1
+        mTune = (int8_t)(*params.mTuneParam - 0x80);
+    }
+
+    if (params.mPitchSequence) {
+        mPitchSequence = *params.mPitchSequence;
+    }
+
+    if (params.mArpSequence) {
+        mArpSequence = *params.mArpSequence;
+    }
+    
+
+    if (newNote) {
+        auto freq = noteLookup(currNote);
         if (mMod == ModType::portamento) {
+            // automatic portamento, slide to this note
             mSlideTarget = freq;
         } else {
+            // otherwise set the current frequency
             if (mMod == ModType::arpeggio) {
                 updateChord = true;
             }
@@ -228,11 +274,16 @@ void FrequencyControl::apply() noexcept {
             mVibratoValue = mVibratoParam & 0xF;
         }
 
-        mNewNote = false;
+        mInstrumentPitch = 0;
     }
 
     if (updateChord) {
-        setChord();
+        // first note in the chord is always the current note
+        mChord[0] = noteLookup(mNote);
+        // second note is the upper nibble + the current (clamped to the last possible note)
+        mChord[1] = noteLookup(std::min((uint8_t)(mNote + mChordOffset1), mMaxNote));
+        // third note is the lower nibble + current (also clamped)
+        mChord[2] = noteLookup(std::min((uint8_t)(mNote + mChordOffset2), mMaxNote));
     }
 
 
@@ -254,47 +305,49 @@ void FrequencyControl::step() noexcept {
         }
     }
 
-    switch (mMod) {
-        case ModType::none:
-            break;
-        case ModType::portamento:
-        case ModType::pitchSlide:
-        case ModType::noteSlide:
-            if (mFrequency != mSlideTarget) {
-                if (mFrequency < mSlideTarget) {
-                    // sliding up
-                    mFrequency += mSlideAmount;
-                    if (mFrequency > mSlideTarget) {
-                        finishSlide();
-                    }
-                } else {
-                    // sliding down
-                    mFrequency -= mSlideAmount;
+    auto pitch = mPitchSequence.next();
+    if (pitch) {
+        mInstrumentPitch += *pitch;
+    }
+
+    auto arp = mArpSequence.next();
+    if (arp) {
+        mNote = *arp;
+        mFrequency = noteLookup(mNote);
+    } else {
+        switch (mMod) {
+            case ModType::none:
+                break;
+            case ModType::portamento:
+            case ModType::pitchSlide:
+            case ModType::noteSlide:
+                if (mFrequency != mSlideTarget) {
                     if (mFrequency < mSlideTarget) {
-                        finishSlide();
+                        // sliding up
+                        mFrequency += mSlideAmount;
+                        if (mFrequency > mSlideTarget) {
+                            finishSlide();
+                        }
+                    } else {
+                        // sliding down
+                        mFrequency -= mSlideAmount;
+                        if (mFrequency < mSlideTarget) {
+                            finishSlide();
+                        }
                     }
                 }
-            }
-            break;
-        case ModType::arpeggio:
-            mFrequency = mChord[mChordIndex];
-            if (++mChordIndex == mChord.size()) {
-                mChordIndex = 0;
-            }
-            break;
+                break;
+            case ModType::arpeggio:
+                mFrequency = mChord[mChordIndex];
+                if (++mChordIndex == mChord.size()) {
+                    mChordIndex = 0;
+                }
+                break;
+        }
     }
 
 
 
-}
-
-void FrequencyControl::setChord() noexcept {
-    // first note in the chord is always the current note
-    mChord[0] = noteLookup(mNote);
-    // second note is the upper nibble + the current (clamped to the last possible note)
-    mChord[1] = noteLookup(std::min((uint8_t)(mNote + mChordOffset1), mMaxNote));
-    // third note is the lower nibble + current (also clamped)
-    mChord[2] = noteLookup(std::min((uint8_t)(mNote + mChordOffset2), mMaxNote));
 }
 
 void FrequencyControl::finishSlide() noexcept {
