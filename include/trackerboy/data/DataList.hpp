@@ -16,7 +16,7 @@ namespace trackerboy {
 
 class DataListBase {
 
-    using DataVector = std::vector<std::unique_ptr<DataItem>>;
+    using DataVector = std::vector<std::shared_ptr<DataItem>>;
     using IdSet = std::set<uint8_t>;
 
 public:
@@ -57,17 +57,17 @@ protected:
     
     DataListBase() noexcept;
 
-    DataItem* insertItem();
+    std::shared_ptr<DataItem> insertItem();
 
-    DataItem* insertItem(uint8_t id);
+    std::shared_ptr<DataItem> insertItem(uint8_t id);
 
-    DataItem* duplicateItem(uint8_t id);
+    std::shared_ptr<DataItem> duplicateItem(uint8_t id);
 
-    DataItem* itemAt(uint8_t id) const;
+    std::shared_ptr<DataItem> itemAt(uint8_t id) const;
 
-    virtual DataItem* createItem() = 0;
+    virtual std::shared_ptr<DataItem> createItem() = 0;
 
-    virtual DataItem* copyItem(DataItem const& item) = 0;
+    virtual std::shared_ptr<DataItem> copyItem(DataItem const& item) = 0;
 
 private:
 
@@ -98,19 +98,19 @@ public:
     // item does not exist, nullptr is returned. The pointer may be invalidated
     // after calling insert()
     //
-    T* operator[](uint8_t id) const;
+    std::shared_ptr<T> operator[](uint8_t id) const;
 
-    T* insert();
+    std::shared_ptr<T> insert();
 
-    T* insert(uint8_t id);
+    std::shared_ptr<T> insert(uint8_t id);
 
-    T* duplicate(uint8_t id);
+    std::shared_ptr<T> duplicate(uint8_t id);
 
 protected:
 
-    DataItem* createItem() override;
+    std::shared_ptr<DataItem> createItem() override;
 
-    DataItem* copyItem(DataItem const& item) override;
+    std::shared_ptr<DataItem> copyItem(DataItem const& item) override;
 
 };
 

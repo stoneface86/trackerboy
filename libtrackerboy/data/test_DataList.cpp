@@ -51,7 +51,7 @@ TEMPLATE_TEST_CASE("list duplicates item", "[DataItem]", Instrument, Waveform) {
 
     auto nextId = list.nextAvailableId();
 
-    TestType *item;
+    std::shared_ptr<TestType> item;
     REQUIRE_NOTHROW(item = list.duplicate(0));
     REQUIRE(item != nullptr);
     REQUIRE(nextId == item->id());
