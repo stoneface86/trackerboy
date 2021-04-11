@@ -23,6 +23,7 @@ the source list in alphabetical order when adding your file.
 
 Unit test code follows this naming scheme: `test_<module>.cpp`. Where
 module is the name of the unit you are testing. This file resides in the
-same directory as the module.
+test directory, with similar subdirectory organization as the module you
+are testing.
 
 Catch2 is used as the unit testing framework.

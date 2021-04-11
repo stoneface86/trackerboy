@@ -63,14 +63,13 @@ endif ()
 if (TRACKERBOY_ENABLE_TESTS)
 
     set(TEST_SRC_FILES
-        "data/test_DataList.cpp"
-        "data/test_Module.cpp"
-        "data/test_PatternMaster.cpp"
+        "test/data/test_DataList.cpp"
+        "test/data/test_Module.cpp"
+        "test/data/test_PatternMaster.cpp"
+        
+        "test/engine/test_Timer.cpp"
 
-        #"engine/test_NoteControl.cpp"
-        "engine/test_Timer.cpp"
-
-        "internal/test_endian.cpp"
+        "test/internal/test_endian.cpp"
     )
 
     add_catch_test(TEST_EXE ${TEST_SRC_FILES})
