@@ -25,12 +25,38 @@
 #pragma once
 
 #include "trackerboy/engine/RuntimeContext.hpp"
+#include "trackerboy/engine/ChannelState.hpp"
+#include "trackerboy/engine/IApu.hpp"
 #include "trackerboy/trackerboy.hpp"
 
+#include <array>
+#include <bitset>
 #include <cstdint>
 
 namespace trackerboy {
 
+//
+// Class handles all APU register writes
+//
+template <ChType ch>
+class ChannelControl {
+
+public:
+
+    static void update(
+        IApu &apu,
+        WaveformList const& waveList,
+        ChannelState const& lastState,
+        ChannelState const& state
+    ) noexcept;
+
+    static void clear(IApu &apu) noexcept;
+
+    static void init(IApu &apu, WaveformList const& waveList, ChannelState const& state) noexcept;
+
+};
+
+/*
 class ChannelControl {
 
 public:
@@ -38,11 +64,20 @@ public:
 
     bool isLocked(ChType ch) const noexcept;
 
-    uint8_t lockbits() const noexcept;
+    //uint8_t lockbits() const noexcept;
 
-    void lock(ChType ch) noexcept;
+    void lock(RuntimeContext const& rc, ChType ch) noexcept;
 
-    void unlock(ChType ch) noexcept;
+    void unlock(RuntimeContext const& rc, ChType ch) noexcept;
+
+    //
+    // Update the given channel's state. If the channel is locked, the state is
+    // written to the Apu's registers
+    //
+    void update(ChType ch, RuntimeContext const& rc, ChannelState const& state) noexcept;
+
+    template <ChType ch>
+    void update(gbapu::Apu &apu, WaveformList const& wavelist, ChannelState const& state) noexcept;
 
     //
     // Write the given envelope to the channel's registers. For channels 1, 2 and 4 this
@@ -84,8 +119,13 @@ private:
     // Bit 7: CH4 Sfx trigger status
     // 
     //
-    uint8_t mLocks;
+    //uint8_t mLocks;
+
+    std::bitset<4> mLocks;
+
+    std::array<ChannelState, 4> mChannelState;
 
 };
+*/
 
 }

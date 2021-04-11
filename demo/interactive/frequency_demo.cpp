@@ -176,7 +176,7 @@ protected:
             apu.writeRegister(gbapu::Apu::REG_NR13, freq & 0xFF);
             apu.writeRegister(gbapu::Apu::REG_NR14, freq >> 8);
         } else {
-            apu.writeRegister(gbapu::Apu::REG_NR43, trackerboy::NOTE_NOISE_TABLE[freq / trackerboy::NoiseFrequencyControl::UNITS_PER_NOTE]);
+            apu.writeRegister(gbapu::Apu::REG_NR43, trackerboy::NoiseFrequencyControl::toNR43(freq)); //trackerboy::NOTE_NOISE_TABLE[freq / trackerboy::NoiseFrequencyControl::UNITS_PER_NOTE]);
         }
 
     }

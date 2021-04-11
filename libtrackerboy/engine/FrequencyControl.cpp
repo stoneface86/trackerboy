@@ -15,6 +15,10 @@ FrequencyControl::Parameters::Parameters() :
 {
 }
 
+FrequencyControl::~FrequencyControl() {
+
+}
+
 void FrequencyControl::Parameters::setEffect(EffectType type, uint8_t param) noexcept {
     switch (type) {
         case EffectType::arpeggio:
@@ -127,6 +131,10 @@ void FrequencyControl::reset() noexcept {
     mVibratoParam = 0;
 }
 
+//void FrequencyControl::apply(Operation const& op) noexcept {
+
+
+//}
 
 void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcept {
 
@@ -204,7 +212,10 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
                 // turn off portamento
                 mMod = ModType::none;
             } else {
-                mMod = ModType::portamento;
+                if (mMod != ModType::portamento) {
+                    mSlideTarget = mFrequency;
+                    mMod = ModType::portamento;
+                }
                 mSlideAmount = params.mModParam;
             }
             break;
@@ -223,13 +234,11 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
         } else {
             // extent is non-zero, set vibrato
             mVibratoEnabled = true;
-            if (mVibratoValue) {
-                int8_t newvalue = param & 0xF;
-                if (mVibratoValue < 0) {
-                    mVibratoValue = -newvalue;
-                } else {
-                    mVibratoValue = newvalue;
-                }
+            int8_t newvalue = param & 0xF;
+            if (mVibratoValue < 0) {
+                mVibratoValue = -newvalue;
+            } else {
+                mVibratoValue = newvalue;
             }
         }
     }
@@ -368,14 +377,33 @@ uint16_t ToneFrequencyControl::noteLookup(uint8_t note) {
     return NOTE_FREQ_TABLE[note];
 }
 
+// Noise "pitch" units
+// frequency values for the noise channel are a modified version of the NR43 register, in
+// that the step-width bit is removed
+// sssswddd => ssssddd
+//
+// Noise pitches now range from 0 to 0x67.
+// 0 is the highest period, which is not ideal, since 0 should be the lowest frequency possible
+// so we use an adjust pitch value by calculating p = 0x67 - p;
+//
+//
+// to convert pitch p to nr43
+// nr43 = 0x67 - p
+// nr43 = ((nr43 << 1) & 0xF0) | (nr43 & 7)
+
+
 NoiseFrequencyControl::NoiseFrequencyControl() noexcept :
-    FrequencyControl((NOTE_NOISE_LAST + 1) * UNITS_PER_NOTE, NOTE_NOISE_LAST)
+    FrequencyControl(NOTE_NOISE_LAST, NOTE_NOISE_LAST)
 {
 }
 
 uint16_t NoiseFrequencyControl::noteLookup(uint8_t note) {
-    return note * UNITS_PER_NOTE;
+    return note;
 }
 
+uint8_t NoiseFrequencyControl::toNR43(uint16_t frequency) noexcept {
+    return NOTE_NOISE_TABLE[frequency];
+
+}
 
 }

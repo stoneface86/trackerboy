@@ -1,113 +1,214 @@
 
 #include "trackerboy/engine/InstrumentRuntime.hpp"
-
-#include "trackerboy/engine/ChannelControl.hpp"
-
+#include "trackerboy/note.hpp"
+#include "internal/enumutils.hpp"
 
 namespace trackerboy {
 
 
-InstrumentRuntime::InstrumentRuntime(RuntimeContext rc) :
-    mRc(rc),
-    mCh(ChType::ch1),
-    mNc(),
-    mFc(),
-    mInstrument{ 0 },
-    mAutoRetrigger(false)
+//
+// Apply a row operation to this runtime
+//
+//void InstrumentRuntimeBase::apply(RuntimeContext const& rc, Operation const& op) {
+//    bool retriggerInst = false;
+//
+//    std::optional<uint8_t> envelopeToSet;
+//
+//    if (op.note) {
+//        retriggerInst = true;
+//    }
+//
+//    if (op.instrument) {
+//        // change the current instrument
+//        auto inst = rc.instList[*op.instrument];
+//        if (inst) {
+//            mInstrument = std::move(inst);
+//            retriggerInst = true;
+//        }
+//        // for unknown instruments, do nothing
+//    }
+//
+//    if (retriggerInst && mInstrument) {
+//        // restart instrument sequences if
+//        //  * a note was triggerred
+//        //  * the current instrument changed
+//        //  * both of the above
+//        
+//        // set envelope
+//        envelopeToSet = mInstrument->queryEnvelope();
+//
+//        // restart sequences
+//        mPanningSequence = mInstrument->sequence(Instrument::SEQUENCE_PANNING).enumerator();
+//        mTimbreSequence = mInstrument->sequence(Instrument::SEQUENCE_TIMBRE).enumerator();
+//    }
+//
+//    if (!envelopeToSet) {
+//        envelopeToSet = op.envelope;
+//    }
+//
+//    if (op.timbre) {
+//        mTimbre = *op.timbre;
+//
+//    }
+//
+//    if (op.duration) {
+//        mCutCounter = op.duration;
+//    }
+//
+//    //
+//    // Envelope priority:
+//    //  1. if the instrument was retriggered and the instrument has an envelope
+//    //  2. the Exx effect was used
+//    //  3. no envelope to set otherwise
+//    //
+//    if (envelopeToSet) {
+//        auto envelope = *envelopeToSet;
+//        if (envelope != mCurrentEnvelope) {
+//            // set the envelope
+//            if (mCh == ChType::ch3) {
+//                // set the waveform
+//            } else {
+//                // set the envelope register
+//
+//            }
+//            mCurrentEnvelope = envelope;
+//        }
+//    }
+//
+//    mFc.apply(op);
+//
+//}
+
+InstrumentRuntimeBase::InstrumentRuntimeBase(FrequencyControl &fc) :
+    mFc(fc),
+    mInstrument(),
+    mRestart(false),
+    mPanningSequence(),
+    mTimbreSequence()
 {
 }
 
-void InstrumentRuntime::setChannel(ChType ch) {
-    mCh = ch;
-
+void InstrumentRuntimeBase::setInstrument(std::shared_ptr<Instrument> &&instrument) {
+    mInstrument = std::move(instrument);
+    mRestart = true;
 }
 
-void InstrumentRuntime::setInstrument(Instrument &inst) {
-    mInstrument = inst.data();
-    mCh = static_cast<ChType>(mInstrument.channel);
-    mFc.setVibrato(mInstrument.vibrato);
-    mFc.setVibratoDelay(mInstrument.vibratoDelay);
-    mFc.setTune(mInstrument.tune + 0x80);
-    ChannelControl::writeEnvelope(mCh, mRc, mInstrument.envelope);
-    ChannelControl::writeTimbre(mCh, mRc, mInstrument.timbre);
-    uint8_t panning = mRc.apu.readRegister(gbapu::Apu::REG_NR51);
-    panning &= ~(0x11 << static_cast<int>(mCh));
-    mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
-    //mRc.synth.setOutputEnable(mCh, Gbs::TERM_BOTH, false);
-    if (mCh == ChType::ch3) {
-        mAutoRetrigger = false;
-    } else {
-        mAutoRetrigger = !!(mInstrument.envelope & 0x7);
-    }
+void InstrumentRuntimeBase::restart() {
+    mRestart = true;
 }
 
-void InstrumentRuntime::playNote(Note note) {
-    
-    mNc.noteTrigger(note, mInstrument.delay);
-    if (mInstrument.duration) {
-        mNc.noteCut(mInstrument.duration);
-    }
-    
-    
-}
+void InstrumentRuntimeBase::step(ChannelState &state) {
 
-void InstrumentRuntime::step() {
-    // NOTE: this code is similar to MusicRuntime::update, might be worth
-    // extracting to a separate function usable by both.
-
-    auto note = mNc.step();
-    if (mNc.isPlaying()) {
-
-        uint16_t retrigger = 0;
-
-        if (note) {
-
-            uint8_t noteVal = note.value();
-
-            if (mAutoRetrigger) {
-                retrigger = 0x8000;
+    if (mRestart) {
+        if (mInstrument) {
+            auto envelope = mInstrument->queryEnvelope();
+            if (envelope) {
+                state.envelope = *envelope;
             }
 
-            if (mCh != ChType::ch4) {
-                mFc.setNote(noteVal);
-                mFc.apply();
-            } else {
-                // CH4
-                if (noteVal <= NOTE_NOISE_LAST) {
-                    uint8_t noise = NOTE_NOISE_TABLE[noteVal];
-                    if (mInstrument.timbre) {
-                        // nonzero timbre, 7-bit step width
-                        noise |= 0x08;
-                    }
-                    ChannelControl::writeFrequency(ChType::ch4, mRc, retrigger | noise);
-                }
-
-            }
-
-
-
-            // output on
-            uint8_t panning = mRc.apu.readRegister(gbapu::Apu::REG_NR51);
-            panning |= mInstrument.panning << static_cast<int>(mCh);
-            mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
+            mPanningSequence = mInstrument->sequence(Instrument::SEQUENCE_PANNING).enumerator();
+            mTimbreSequence = mInstrument->sequence(Instrument::SEQUENCE_TIMBRE).enumerator();
+            //mFc.useInstrument(*mInstrument);
         }
 
-
-        if (mCh != ChType::ch4) {
-            mFc.step();
-            // write frequency
-            ChannelControl::writeFrequency(mCh, mRc, retrigger | mFc.frequency());
-            
-        }
-    } else {
-        // output off
-        uint8_t panning = mRc.apu.readRegister(gbapu::Apu::REG_NR51);
-        panning &= ~(0x11 << static_cast<int>(mCh));
-        mRc.apu.writeRegister(gbapu::Apu::REG_NR51, panning);
+        mRestart = false;
     }
+
+    auto panning = mPanningSequence.next();
+    if (panning) {
+        state.panning = *panning;
+    }
+
+    auto timbre = mTimbreSequence.next();
+    if (timbre) {
+        state.timbre = *timbre;
+    }
+
+    mFc.step();
+    state.frequency = mFc.frequency();
+
 }
 
+ToneInstrumentRuntime::ToneInstrumentRuntime() :
+    InstrumentRuntimeBase(mFcImpl),
+    mFcImpl()
+{
+}
 
+NoiseInstrumentRuntime::NoiseInstrumentRuntime() :
+    InstrumentRuntimeBase(mFcImpl),
+    mFcImpl()
+{
+}
+
+//void InstrumentRuntimeBase::step(RuntimeContext const& rc) {
+//
+//    if (mPlaying) {
+//
+//        if (mCutCounter) {
+//            if (*mCutCounter == 0) {
+//                // cut the note
+//                mCutCounter.reset();
+//                mPlaying = false;
+//                return;
+//            } else {
+//                (*mCutCounter)--;
+//            }
+//        }
+//
+//
+//        auto panning = mPanningSequence.next();
+//        if (panning) {
+//            
+//            std::optional<uint8_t> setval;
+//            /*switch (static_cast<Panning>(*panning)) {
+//                case Panning::left:
+//                    setval = (uint8_t)0x10;
+//                    break;
+//                case Panning::right:
+//                    setval = (uint8_t)0x01;
+//                    break;
+//                case Panning::middle:
+//                    setval = (uint8_t)0x11;
+//                    break;
+//                default:
+//                    break;
+//            }
+//            if (setval) {
+//                auto nr51 = rc.apu.readRegister(gbapu::Apu::REG_NR51);
+//                nr51 &= ~((uint8_t)0x11 << +mCh);
+//                nr51 |= *setval << +mCh;
+//                rc.apu.writeRegister(gbapu::Apu::REG_NR51, nr51);
+//            }*/
+//
+//        }
+//
+//        uint8_t currentTimbre;
+//        auto timbre = mTimbreSequence.next();
+//        if (timbre) {
+//            currentTimbre = *timbre;
+//        } else {
+//            currentTimbre = mTimbre;
+//        }
+//
+//        mFc.step();
+//        if (mCh == ChType::ch4) {
+//            auto nr43 = NOTE_NOISE_TABLE[mFc.frequency() / NoiseFrequencyControl::UNITS_PER_NOTE];
+//            if (currentTimbre) {
+//                nr43 |= 0x08;
+//            }
+//            rc.apu.writeRegister(gbapu::Apu::REG_NR43, nr43);
+//        } else {
+//            auto freq = mFc.frequency();
+//            rc.apu.writeRegister(mRegAddr + 3, freq & 0xFF);
+//            rc.apu.writeRegister(mRegAddr + 4, freq >> 8);
+//
+//        }
+//
+//
+//    }
+//
+//}
 
 
 }

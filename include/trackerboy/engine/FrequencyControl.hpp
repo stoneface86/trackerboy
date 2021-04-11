@@ -25,6 +25,7 @@
 #pragma once
 
 #include "trackerboy/data/Sequence.hpp"
+#include "trackerboy/engine/Operation.hpp"
 #include "trackerboy/trackerboy.hpp"
 
 #include <array>
@@ -53,6 +54,8 @@ class FrequencyControl {
     };
 
 public:
+
+    virtual ~FrequencyControl();
 
     class Parameters {
         friend class FrequencyControl;
@@ -86,7 +89,12 @@ public:
 
     void reset() noexcept;
 
+    // deprecated
     void apply(Parameters const& params) noexcept;
+
+    //void apply(Operation const& op) noexcept;
+
+    //void useInstrument(Instrument const& instrument) noexcept;
 
     void step() noexcept;
 
@@ -183,12 +191,10 @@ protected:
 class NoiseFrequencyControl : public FrequencyControl {
 
 public:
-    // 4 pitch units make a note
-    // lowering this increases the speed of pitch slides and allows for finer tuning
-    static constexpr int UNITS_PER_NOTE = 4;
-
 
     NoiseFrequencyControl() noexcept;
+
+    static uint8_t toNR43(uint16_t frequency) noexcept;
 
 protected:
 

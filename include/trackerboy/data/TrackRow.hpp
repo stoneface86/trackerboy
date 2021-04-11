@@ -26,7 +26,9 @@
 
 #include "trackerboy/trackerboy.hpp"
 
+#include <array>
 #include <cstdint>
+#include <optional>
 
 namespace trackerboy {
 
@@ -72,7 +74,15 @@ struct TrackRow {
     uint8_t instrumentId;
 
     // Column 3 - Effect 1
-    Effect effects[MAX_EFFECTS];
+    std::array<Effect, MAX_EFFECTS> effects;
+
+    bool isEmpty() const noexcept;
+
+    std::optional<uint8_t> queryNote() const noexcept;
+
+    std::optional<uint8_t> queryInstrument() const noexcept;
+    
+    std::optional<Effect> queryEffect(size_t effectNo) const noexcept;
 
 };
 

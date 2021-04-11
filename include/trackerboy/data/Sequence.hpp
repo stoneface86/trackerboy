@@ -46,6 +46,8 @@ public:
     public:
         Enumerator();
 
+        bool hasNext();
+
         std::optional<uint8_t> next();
 
     private:

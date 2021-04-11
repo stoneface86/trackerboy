@@ -12,16 +12,18 @@ set(SRC_FILES
     "data/Sequence.cpp"
     "data/Song.cpp"
     "data/Track.cpp"
+    "data/TrackRow.cpp"
     "data/Waveform.cpp"
 
     "engine/ChannelControl.cpp"
     "engine/Engine.cpp"
     "engine/FrequencyControl.cpp"
-    #"engine/InstrumentRuntime.cpp"
-    #"engine/MusicRuntime.cpp"
-    "engine/NoteControl.cpp"
+    "engine/IApu.cpp"
+    "engine/InstrumentRuntime.cpp"
+    "engine/Operation.cpp"
     "engine/RuntimeContext.cpp"
     "engine/Timer.cpp"
+    "engine/TrackRuntime.cpp"
     
     "internal/endian.cpp"
 
@@ -65,7 +67,7 @@ if (TRACKERBOY_ENABLE_TESTS)
         "data/test_Module.cpp"
         "data/test_PatternMaster.cpp"
 
-        "engine/test_NoteControl.cpp"
+        #"engine/test_NoteControl.cpp"
         "engine/test_Timer.cpp"
 
         "internal/test_endian.cpp"
