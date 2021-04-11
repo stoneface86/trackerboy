@@ -86,7 +86,7 @@ private:
 template <class T>
 class DataList : public DataListBase {
 
-    static_assert(std::is_base_of<DataItem, typename T>::value, "T must inherit from DataItem");
+    static_assert(std::is_base_of<DataItem, T>::value, "T must inherit from DataItem");
 
 public:
 

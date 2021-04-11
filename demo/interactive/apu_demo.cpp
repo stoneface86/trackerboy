@@ -2,6 +2,7 @@
 #include "interactive.hpp"
 #include <iostream>
 #include <iomanip>
+#include <iterator>
 #include <sstream>
 #include <optional>
 

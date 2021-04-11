@@ -20,6 +20,7 @@ NullApu::~NullApu() {
 }
 
 uint8_t NullApu::readRegister(uint8_t reg) {
+    (void)reg;
     return (uint8_t)0;
 }
 

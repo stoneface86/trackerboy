@@ -49,7 +49,7 @@ Sequence::Enumerator::Enumerator(Sequence const* seq) :
 
 bool Sequence::Enumerator::hasNext() {
     // a sequence with a loop always has a next
-    return mSequence && mSequence->mLoop || mIndex < mSequence->mData.size();
+    return mSequence && (mSequence->mLoop || mIndex < mSequence->mData.size());
 }
 
 std::optional<uint8_t> Sequence::Enumerator::next() {

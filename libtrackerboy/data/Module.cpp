@@ -155,21 +155,7 @@ public:
         read(count * sizeof(T), reinterpret_cast<char*>(data));
     }
 
-    template <>
-    void read(size_t count, char *data) {
-        auto newpos = mPosition + count;
-        if (newpos > mSize) {
-            // attempted to read past the block, error!
-            // the data is corrupted or ill-formed
-            throw BoundsError();
-        }
-
-        mStream.read(data, count);
-        if (!mStream.good()) {
-            throw IOError();
-        }
-        mPosition = newpos;
-    }
+    
 
     //
     // Returns true if the entire block has been read
@@ -185,6 +171,22 @@ private:
     size_t mPosition;
 
 };
+
+template <>
+void InputBlock::read(size_t count, char *data) {
+    auto newpos = mPosition + count;
+    if (newpos > mSize) {
+        // attempted to read past the block, error!
+        // the data is corrupted or ill-formed
+        throw BoundsError();
+    }
+
+    mStream.read(data, count);
+    if (!mStream.good()) {
+        throw IOError();
+    }
+    mPosition = newpos;
+}
 
 //
 // Class for writing data and encapsulating it in a "block"
@@ -248,14 +250,7 @@ public:
         write(sizeof(T) * count, reinterpret_cast<const char*>(data));
     }
 
-    template <>
-    void write(size_t count, const char* data) {
-        mStream.write(data, count);
-        if (!mStream.good()) {
-            throw IOError();
-        }
-        mSize += count;
-    }
+    
 
 
 private:
@@ -263,6 +258,15 @@ private:
     std::streampos mLengthPos;
     size_t mSize;
 };
+
+template <>
+void OutputBlock::write(size_t count, const char* data) {
+    mStream.write(data, count);
+    if (!mStream.good()) {
+        throw IOError();
+    }
+    mSize += count;
+}
 
 #pragma pack(push, 1)
 

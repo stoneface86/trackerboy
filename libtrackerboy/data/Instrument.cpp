@@ -12,6 +12,7 @@ Instrument::Instrument() :
 }
 
 Instrument::Instrument(Instrument const& instrument) :
+    DataItem(instrument),
     mChannel(instrument.mChannel),
     mEnvelopeEnabled(instrument.mEnvelopeEnabled),
     mEnvelope(instrument.mEnvelope),

@@ -58,6 +58,8 @@ void FrequencyControl::Parameters::setEffect(EffectType type, uint8_t param) noe
             mDirection = SlideDirection::down;
             mModParam = param;
             break;
+        default:
+            break;
     }
 }
 

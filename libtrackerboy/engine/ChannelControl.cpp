@@ -119,7 +119,7 @@ void ChannelControl<ch>::update(
 
                 // copy wave
                 auto data = waveform->data();
-                for (int i = 0; i != data.size(); ++i) {
+                for (size_t i = 0; i != data.size(); ++i) {
                     apu.writeRegister((uint8_t)(gbapu::Apu::REG_WAVERAM + i), data[i]);
                 }
 
