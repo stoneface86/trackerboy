@@ -8,73 +8,10 @@
 
 namespace trackerboy {
 
-FrequencyControl::Parameters::Parameters() :
-    mModType(ModType::none),
-    mDirection(SlideDirection::down),
-    mModParam(0)
-{
-}
 
 FrequencyControl::~FrequencyControl() {
 
 }
-
-void FrequencyControl::Parameters::setEffect(EffectType type, uint8_t param) noexcept {
-    switch (type) {
-        case EffectType::arpeggio:
-            mModType = ModType::arpeggio;
-            mModParam = param;
-            break;
-        case EffectType::pitchUp:
-            mModType = ModType::pitchSlide;
-            mDirection = SlideDirection::up;
-            mModParam = param;
-            break;
-        case EffectType::pitchDown:
-            mModType = ModType::pitchSlide;
-            mDirection = SlideDirection::down;
-            mModParam = param;
-            break;
-        case EffectType::autoPortamento:
-            mModType = ModType::portamento;
-            mModParam = param;
-            break;
-        case EffectType::vibrato:
-            mVibratoParam = param;
-            break;
-        case EffectType::vibratoDelay:
-            mVibratoDelayParam = param;
-            break;
-        case EffectType::tuning:
-            mTuneParam = param;
-            break;
-        case EffectType::noteSlideUp:
-            mModType = ModType::noteSlide;
-            mDirection = SlideDirection::up;
-            mModParam = param;
-            break;
-        case EffectType::noteSlideDown:
-            mModType = ModType::noteSlide;
-            mDirection = SlideDirection::down;
-            mModParam = param;
-            break;
-        default:
-            break;
-    }
-}
-
-void FrequencyControl::Parameters::setNote(uint8_t note) noexcept {
-    mNote = note;
-}
-
-void FrequencyControl::Parameters::setArpSequence(Sequence const& seq) noexcept {
-    mArpSequence.emplace(seq.enumerator());
-}
-
-void FrequencyControl::Parameters::setPitchSequence(Sequence const& seq) noexcept {
-    mPitchSequence.emplace(seq.enumerator());
-}
-
 
 FrequencyControl::FrequencyControl(uint16_t maxFrequency, uint8_t maxNote) noexcept :
     mMaxFrequency(maxFrequency),
@@ -133,12 +70,7 @@ void FrequencyControl::reset() noexcept {
     mVibratoParam = 0;
 }
 
-//void FrequencyControl::apply(Operation const& op) noexcept {
-
-
-//}
-
-void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcept {
+void FrequencyControl::apply(Operation const& op) noexcept {
 
     // the arpeggio chord needs to be recalculated when:
     //  * a new note is triggerred and arpeggio is active
@@ -146,13 +78,13 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
     bool updateChord = false;
 
     bool newNote;
-    if (params.mNote && *params.mNote <= mMaxNote) {
+    if (op.note && *op.note <= mMaxNote) {
         if (mMod == ModType::noteSlide) {
             // setting a new note cancels a note slide
             mMod = ModType::none;
         }
 
-        mNote = *params.mNote;
+        mNote = *op.note;
         newNote = true;
     } else {
         newNote = false;
@@ -160,37 +92,39 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
     uint8_t currNote = mNote;
     
 
-    switch (params.mModType) {
-        case ModType::arpeggio:
-            if (params.mModParam == 0) {
+    switch (op.modulationType) {
+        case Operation::FrequencyMod::arpeggio:
+            if (op.modulationParam == 0) {
                 mMod = ModType::none;
             } else {
                 mMod = ModType::arpeggio;
-                mChordOffset1 = params.mModParam >> 4;
-                mChordOffset2 = params.mModParam & 0xF;
+                mChordOffset1 = op.modulationParam >> 4;
+                mChordOffset2 = op.modulationParam & 0xF;
                 updateChord = true;
             }
             break;
-        case ModType::pitchSlide:
-            if (params.mModParam == 0) {
+        case Operation::FrequencyMod::pitchSlideDown:
+        case Operation::FrequencyMod::pitchSlideUp:
+            if (op.modulationParam == 0) {
                 mMod = ModType::none;
             } else {
                 mMod = ModType::pitchSlide;
-                if (params.mDirection == SlideDirection::up) {
+                if (op.modulationType == Operation::FrequencyMod::pitchSlideUp) {
                     mSlideTarget = mMaxFrequency;
                 } else {
                     mSlideTarget = 0;
                 }
-                mSlideAmount = params.mModParam;
+                mSlideAmount = op.modulationParam;
             }
             break;
-        case ModType::noteSlide:
-            mSlideAmount = 1 + (2 * (params.mModParam & 0xF));
+        case Operation::FrequencyMod::noteSlideDown:
+        case Operation::FrequencyMod::noteSlideUp:
+            mSlideAmount = 1 + (2 * (op.modulationParam & 0xF));
             // upper 4 bits is the # of semitones to slide to
             {
-                uint8_t semitones = params.mModParam >> 4;
+                uint8_t semitones = op.modulationParam >> 4;
                 uint8_t targetNote = mNote;
-                if (params.mDirection == SlideDirection::up) {
+                if (op.modulationType == Operation::FrequencyMod::noteSlideUp) {
                     targetNote += semitones;
                     if (targetNote > mMaxNote) {
                         targetNote = mMaxNote; // clamp to highest note
@@ -209,8 +143,8 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
                 mNote = targetNote;
             }
             break;
-        case ModType::portamento:
-            if (params.mModParam == 0) {
+        case Operation::FrequencyMod::portamento:
+            if (op.modulationParam == 0) {
                 // turn off portamento
                 mMod = ModType::none;
             } else {
@@ -218,7 +152,7 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
                     mSlideTarget = mFrequency;
                     mMod = ModType::portamento;
                 }
-                mSlideAmount = params.mModParam;
+                mSlideAmount = op.modulationParam;
             }
             break;
         default:
@@ -226,8 +160,8 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
             break;
     }
 
-    if (params.mVibratoParam) {
-        auto param = *params.mVibratoParam;
+    if (op.vibrato) {
+        auto param = *op.vibrato;
         mVibratoParam = param;
         if (!(param & 0x0F)) {
             // extent is 0, disable vibrato
@@ -245,25 +179,16 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
         }
     }
 
-    if (params.mVibratoDelayParam) {
-        mVibratoDelay = *params.mVibratoDelayParam;
+    if (op.vibratoDelay) {
+        mVibratoDelay = *op.vibratoDelay;
     }
 
-    if (params.mTuneParam) {
+    if (op.tune) {
         // tune values have a bias of 0x80, so 0x80 is 0, is in tune
         // 0x81 is +1, frequency is pitch adjusted by 1
         // 0x7F is -1, frequency is pitch adjusted by -1
-        mTune = (int8_t)(*params.mTuneParam - 0x80);
+        mTune = (int8_t)(*op.tune - 0x80);
     }
-
-    if (params.mPitchSequence) {
-        mPitchSequence = *params.mPitchSequence;
-    }
-
-    if (params.mArpSequence) {
-        mArpSequence = *params.mArpSequence;
-    }
-    
 
     if (newNote) {
         auto freq = noteLookup(currNote);
@@ -297,6 +222,12 @@ void FrequencyControl::apply(FrequencyControl::Parameters const& params) noexcep
         mChord[2] = noteLookup(std::min((uint8_t)(mNote + mChordOffset2), mMaxNote));
     }
 
+
+}
+
+void FrequencyControl::useInstrument(Instrument const& instrument) noexcept {
+    mArpSequence = instrument.enumerateSequence(Instrument::SEQUENCE_ARP);
+    mPitchSequence = instrument.enumerateSequence(Instrument::SEQUENCE_PITCH);
 
 }
 

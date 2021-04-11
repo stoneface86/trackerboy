@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "trackerboy/data/Instrument.hpp"
 #include "trackerboy/data/Sequence.hpp"
 #include "trackerboy/engine/Operation.hpp"
 #include "trackerboy/trackerboy.hpp"
@@ -48,53 +49,17 @@ class FrequencyControl {
         arpeggio            // frequency alternates between 3 notes
     };
 
-    enum class SlideDirection {
-        up,
-        down
-    };
-
 public:
 
     virtual ~FrequencyControl();
-
-    class Parameters {
-        friend class FrequencyControl;
-
-    public:
-        Parameters();
-
-        void setEffect(EffectType type, uint8_t param) noexcept;
-
-        void setNote(uint8_t note) noexcept;
-
-        void setPitchSequence(Sequence const& seq) noexcept;
-
-        void setArpSequence(Sequence const& seq) noexcept;
-
-    private:
-
-        ModType mModType;
-        SlideDirection mDirection;
-        uint8_t mModParam;
-        std::optional<uint8_t> mVibratoParam;
-        std::optional<uint8_t> mVibratoDelayParam;
-        std::optional<uint8_t> mTuneParam;
-        std::optional<uint8_t> mNote;
-
-        std::optional<Sequence::Enumerator> mPitchSequence;
-        std::optional<Sequence::Enumerator> mArpSequence;
-    };
 
     uint16_t frequency() const noexcept;
 
     void reset() noexcept;
 
-    // deprecated
-    void apply(Parameters const& params) noexcept;
+    void apply(Operation const& op) noexcept;
 
-    //void apply(Operation const& op) noexcept;
-
-    //void useInstrument(Instrument const& instrument) noexcept;
+    void useInstrument(Instrument const& instrument) noexcept;
 
     void step() noexcept;
 

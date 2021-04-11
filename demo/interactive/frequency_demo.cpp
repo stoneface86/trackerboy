@@ -77,7 +77,9 @@ protected:
         std::istringstream iss(line);
         std::istream_iterator<std::string> iter(iss), end;
 
-        trackerboy::FrequencyControl::Parameters params;
+        //trackerboy::FrequencyControl::Parameters params;
+        trackerboy::Operation op;
+
 
         if (iter != end) {
             if (*iter != ".") {
@@ -97,7 +99,7 @@ protected:
                     return false;
                 }
 
-                params.setNote((uint8_t)noteIn);
+                op.note = (uint8_t)noteIn;
             }
 
             ++iter;
@@ -123,46 +125,50 @@ protected:
                 return false;
             }
 
-            trackerboy::EffectType type;
             switch (effectChar) {
                 case '0':
-                    type = trackerboy::EffectType::arpeggio;
+                    op.modulationType = trackerboy::Operation::FrequencyMod::arpeggio;
+                    op.modulationParam = param;
                     break;
                 case '1':
-                    type = trackerboy::EffectType::pitchUp;
+                    op.modulationType = trackerboy::Operation::FrequencyMod::pitchSlideUp;
+                    op.modulationParam = param;
                     break;
                 case '2':
-                    type = trackerboy::EffectType::pitchDown;
+                    op.modulationType = trackerboy::Operation::FrequencyMod::pitchSlideDown;
+                    op.modulationParam = param;
                     break;
                 case '3':
-                    type = trackerboy::EffectType::autoPortamento;
+                    op.modulationType = trackerboy::Operation::FrequencyMod::portamento;
+                    op.modulationParam = param;
                     break;
                 case '4':
-                    type = trackerboy::EffectType::vibrato;
+                    op.vibrato = param;
                     break;
                 case '5':
-                    type = trackerboy::EffectType::vibratoDelay;
+                    op.vibratoDelay = param;
                     break;
                 case 'P':
-                    type = trackerboy::EffectType::tuning;
+                    op.tune = param;
                     break;
                 case 'Q':
-                    type = trackerboy::EffectType::noteSlideUp;
+                    op.modulationType = trackerboy::Operation::FrequencyMod::noteSlideUp;
+                    op.modulationParam = param;
                     break;
                 case 'R':
-                    type = trackerboy::EffectType::noteSlideDown;
+                    op.modulationType = trackerboy::Operation::FrequencyMod::noteSlideDown;
+                    op.modulationParam = param;
                     break;
                 default:
                     std::cout << "unknown effect" << std::endl;
                     return false;
             }
-            params.setEffect(type, param);
 
             ++iter;
         }
 
         lock();
-        mFc->apply(params);
+        mFc->apply(op);
         unlock();
 
         return false;

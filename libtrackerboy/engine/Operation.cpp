@@ -4,6 +4,28 @@
 
 namespace trackerboy {
 
+Operation::Operation() :
+    patternCommand(PatternCommand::none),
+    patternCommandParam(0),
+    speed(0),
+    halt(false),
+    note(),
+    instrument(),
+    delay(0),
+    duration(),
+    envelope(),
+    timbre(),
+    panning(),
+    sweep(),
+    modulationType(FrequencyMod::none),
+    modulationParam(0),
+    vibrato(),
+    vibratoDelay(),
+    tune()
+{
+}
+
+
 Operation::Operation(TrackRow const& row) :
     patternCommand(PatternCommand::none),
     patternCommandParam(0),

@@ -108,7 +108,7 @@ void InstrumentRuntimeBase::step(ChannelState &state) {
 
             mPanningSequence = mInstrument->sequence(Instrument::SEQUENCE_PANNING).enumerator();
             mTimbreSequence = mInstrument->sequence(Instrument::SEQUENCE_TIMBRE).enumerator();
-            //mFc.useInstrument(*mInstrument);
+            mFc.useInstrument(*mInstrument);
         }
 
         mRestart = false;

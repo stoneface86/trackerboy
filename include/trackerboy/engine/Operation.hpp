@@ -2,7 +2,6 @@
 #pragma once
 
 #include "trackerboy/data/TrackRow.hpp"
-#include "trackerboy/engine/FrequencyControl.hpp"
 #include "trackerboy/trackerboy.hpp"
 
 #include <cstdint>
@@ -33,6 +32,8 @@ struct Operation {
         noteSlideDown,
         arpeggio            // frequency alternates between 3 notes
     };
+
+    Operation();
 
     // Create an operation from the given track row
     Operation(TrackRow const& row);
