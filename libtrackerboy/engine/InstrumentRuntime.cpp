@@ -79,7 +79,7 @@ namespace trackerboy {
 //
 //}
 
-InstrumentRuntimeBase::InstrumentRuntimeBase(FrequencyControl &fc) :
+InstrumentRuntime::InstrumentRuntime(FrequencyControl &fc) :
     mFc(fc),
     mInstrument(),
     mRestart(false),
@@ -88,16 +88,16 @@ InstrumentRuntimeBase::InstrumentRuntimeBase(FrequencyControl &fc) :
 {
 }
 
-void InstrumentRuntimeBase::setInstrument(std::shared_ptr<Instrument> &&instrument) {
+void InstrumentRuntime::setInstrument(std::shared_ptr<Instrument> instrument) {
     mInstrument = std::move(instrument);
     mRestart = true;
 }
 
-void InstrumentRuntimeBase::restart() {
+void InstrumentRuntime::restart() {
     mRestart = true;
 }
 
-void InstrumentRuntimeBase::step(ChannelState &state) {
+void InstrumentRuntime::step(ChannelState &state) {
 
     if (mRestart) {
         if (mInstrument) {
@@ -127,18 +127,6 @@ void InstrumentRuntimeBase::step(ChannelState &state) {
     mFc.step();
     state.frequency = mFc.frequency();
 
-}
-
-ToneInstrumentRuntime::ToneInstrumentRuntime() :
-    InstrumentRuntimeBase(mFcImpl),
-    mFcImpl()
-{
-}
-
-NoiseInstrumentRuntime::NoiseInstrumentRuntime() :
-    InstrumentRuntimeBase(mFcImpl),
-    mFcImpl()
-{
 }
 
 //void InstrumentRuntimeBase::step(RuntimeContext const& rc) {

@@ -15,6 +15,10 @@ Sequence::Sequence(Sequence const& seq) :
 {
 }
 
+std::vector<uint8_t>& Sequence::data() noexcept {
+    return mData;
+}
+
 void Sequence::resize(size_t size) {
     mData.resize(size);
     if (mLoop && *mLoop >= size) {

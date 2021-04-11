@@ -11,19 +11,18 @@
 
 namespace trackerboy {
 
-class InstrumentRuntimeBase {
+class InstrumentRuntime {
 
 
 public:
+    InstrumentRuntime(FrequencyControl &fc);
 
     void restart();
 
-    void setInstrument(std::shared_ptr<Instrument> &&instrument);
+    void setInstrument(std::shared_ptr<Instrument> instrument);
 
     void step(ChannelState &state);
 
-protected:
-    InstrumentRuntimeBase(FrequencyControl &fc);
 
 private:
 
@@ -38,20 +37,5 @@ private:
 
 };
 
-class ToneInstrumentRuntime : public InstrumentRuntimeBase {
-public:
-    ToneInstrumentRuntime();
-
-private:
-    ToneFrequencyControl mFcImpl;
-};
-
-class NoiseInstrumentRuntime : public InstrumentRuntimeBase {
-public:
-    NoiseInstrumentRuntime();
-
-private:
-    NoiseFrequencyControl mFcImpl;
-};
 
 }

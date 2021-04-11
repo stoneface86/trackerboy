@@ -67,6 +67,7 @@ if (TRACKERBOY_ENABLE_TESTS)
         "test/data/test_Module.cpp"
         "test/data/test_PatternMaster.cpp"
         
+        "test/engine/test_InstrumentRuntime.cpp"
         "test/engine/test_Timer.cpp"
 
         "test/internal/test_endian.cpp"
@@ -86,6 +87,7 @@ if (TRACKERBOY_ENABLE_TESTS)
 
     unit_test(DataList)
     unit_test(Module)
+    unit_test(InstrumentRuntime)
     unit_test(PatternMaster)
     unit_test(NoteControl)
     unit_test(Timer)

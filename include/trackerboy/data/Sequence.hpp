@@ -61,6 +61,8 @@ public:
     Sequence();
     Sequence(Sequence const& seq);
 
+    std::vector<uint8_t>& data() noexcept;
+
     Enumerator enumerator() const;
 
     void resize(size_t size);

@@ -32,6 +32,15 @@ struct ChannelState {
     {
     }
 
+    constexpr ChannelState(bool playing, uint8_t envelope, uint8_t timbre, uint8_t panning, uint16_t frequency) :
+        playing(playing),
+        envelope(envelope),
+        timbre(timbre),
+        panning(panning),
+        frequency(frequency)
+    {
+    }
+
     // determines if a note is playing, or if the DAC is on
     bool playing;
     uint8_t envelope;   // volume envelope or waveform id for CH3
