@@ -75,6 +75,14 @@ protected:
 
 private:
 
+    // Instrument context
+    struct Context {
+        Context(Instrument const& instrument);
+
+        Sequence::Enumerator arpSequence;
+        Sequence::Enumerator pitchSequence;
+    };
+
     void finishSlide() noexcept;
 
     //
@@ -109,8 +117,11 @@ private:
 
     // instrument sequences
     int16_t mInstrumentPitch;
-    Sequence::Enumerator mPitchSequence;
-    Sequence::Enumerator mArpSequence;
+
+
+    std::optional<Context> mContext;
+    //Sequence::Enumerator mPitchSequence;
+    //Sequence::Enumerator mArpSequence;
 
     // arpeggio
 

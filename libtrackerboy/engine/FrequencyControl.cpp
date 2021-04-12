@@ -9,6 +9,12 @@
 namespace trackerboy {
 
 
+FrequencyControl::Context::Context(Instrument const& instrument) :
+    arpSequence(instrument.enumerateSequence(Instrument::SEQUENCE_ARP)),
+    pitchSequence(instrument.enumerateSequence(Instrument::SEQUENCE_PITCH))
+{
+}
+
 FrequencyControl::~FrequencyControl() {
 
 }
@@ -226,9 +232,7 @@ void FrequencyControl::apply(Operation const& op) noexcept {
 }
 
 void FrequencyControl::useInstrument(Instrument const& instrument) noexcept {
-    mArpSequence = instrument.enumerateSequence(Instrument::SEQUENCE_ARP);
-    mPitchSequence = instrument.enumerateSequence(Instrument::SEQUENCE_PITCH);
-
+    mContext.emplace(instrument);
 }
 
 void FrequencyControl::step() noexcept {
@@ -247,12 +251,16 @@ void FrequencyControl::step() noexcept {
         }
     }
 
-    auto pitch = mPitchSequence.next();
-    if (pitch) {
-        mInstrumentPitch += *pitch;
+    std::optional<uint8_t> arp;
+    if (mContext) {
+        auto pitch = mContext->pitchSequence.next();
+        if (pitch) {
+            mInstrumentPitch += *pitch;
+        }
+
+        arp = mContext->arpSequence.next();
     }
 
-    auto arp = mArpSequence.next();
     if (arp) {
         mNote = *arp;
         mFrequency = noteLookup(mNote);

@@ -44,17 +44,15 @@ public:
     class Enumerator {
 
     public:
-        Enumerator();
-
         bool hasNext();
 
         std::optional<uint8_t> next();
 
     private:
         friend class Sequence;
-        Enumerator(Sequence const* sequence);
+        Enumerator(Sequence const& sequence);
 
-        Sequence const * mSequence;
+        Sequence const& mSequence;
         uint8_t mIndex;
     };
 

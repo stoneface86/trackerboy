@@ -1,39 +1,34 @@
 
 #pragma once
 
-#include "trackerboy/trackerboy.hpp"
 #include "trackerboy/data/Instrument.hpp"
-#include "trackerboy/data/TrackRow.hpp"
-#include "trackerboy/engine/FrequencyControl.hpp"
-#include "trackerboy/engine/Operation.hpp"
-#include "trackerboy/engine/RuntimeContext.hpp"
 #include "trackerboy/engine/ChannelState.hpp"
+
 
 namespace trackerboy {
 
+//
+// Runtime class for instruments. Stepping this runtime with an associated
+// instrument will modify the given ChannelState according to the Instrument's
+// sequence data. Single-use object.
+//
 class InstrumentRuntime {
 
 
 public:
-    InstrumentRuntime(FrequencyControl &fc);
-
-    void restart();
-
-    void setInstrument(std::shared_ptr<Instrument> instrument);
+    InstrumentRuntime(Instrument const& instrument);
 
     void step(ChannelState &state);
 
 
 private:
 
-    FrequencyControl &mFc;
+    std::optional<uint8_t> mEnvelope;
 
-    std::shared_ptr<Instrument> mInstrument;
-
-    bool mRestart;
-
-    Sequence::Enumerator mPanningSequence;
     Sequence::Enumerator mTimbreSequence;
+    Sequence::Enumerator mPanningSequence;
+
+    
 
 };
 

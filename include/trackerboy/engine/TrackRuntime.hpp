@@ -54,8 +54,8 @@ private:
     uint8_t mDelayCounter;
     uint8_t mCutCounter;
 
-    Sequence::Enumerator mPanningSequence;
-    Sequence::Enumerator mTimbreSequence;
+    //Sequence::Enumerator mPanningSequence;
+    //Sequence::Enumerator mTimbreSequence;
 
 
     // set by Exx
