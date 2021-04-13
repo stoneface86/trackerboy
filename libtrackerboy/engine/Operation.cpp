@@ -91,22 +91,7 @@ Operation::Operation(TrackRow const& row) :
                     timbre = param;
                     break;
                 case trackerboy::EffectType::setPanning:
-                    switch (param) {
-                        case 0x00:
-                            panning = Panning::mute;
-                            break;
-                        case 0x01:
-                            panning = Panning::right;
-                            break;
-                        case 0x10:
-                            panning = Panning::left;
-                            break;
-                        case 0x11:
-                            panning = Panning::middle;
-                            break;
-                        default:
-                            break;
-                    }
+                    panning = param;
                     break;
                 case trackerboy::EffectType::setSweep:
                     sweep = param;

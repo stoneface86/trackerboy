@@ -25,8 +25,7 @@
 #pragma once
 
 #include "trackerboy/data/DataList.hpp"
-
-#include "gbapu.hpp"
+#include "trackerboy/engine/IApu.hpp"
 
 namespace trackerboy {
 
@@ -36,9 +35,9 @@ namespace trackerboy {
 //
 struct RuntimeContext {
 
-    RuntimeContext(gbapu::Apu &apu, InstrumentList &instList, WaveformList &waveList);
+    RuntimeContext(IApu &apu, InstrumentList &instList, WaveformList &waveList);
 
-    gbapu::Apu &apu;
+    IApu &apu;
     InstrumentList &instList;
     WaveformList &waveList;
 

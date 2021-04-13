@@ -19,3 +19,6 @@ target_link_libraries(demo_frequency interactive_demo)
 
 add_executable(demo_volume "volume_demo.cpp")
 target_link_libraries(demo_volume trackerboy miniaudio)
+
+add_executable(demo_song "song_demo.cpp")
+target_link_libraries(demo_song trackerboy miniaudio)

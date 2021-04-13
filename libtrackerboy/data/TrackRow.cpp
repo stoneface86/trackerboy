@@ -30,5 +30,8 @@ std::optional<Effect> TrackRow::queryEffect(size_t effectNo) const noexcept {
     }
 }
 
+bool TrackRow::isEmpty() const noexcept {
+    return flags == 0;
+}
 
 }

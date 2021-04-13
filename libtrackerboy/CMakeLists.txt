@@ -20,10 +20,11 @@ set(SRC_FILES
     "engine/FrequencyControl.cpp"
     "engine/IApu.cpp"
     "engine/InstrumentRuntime.cpp"
+    "engine/MusicRuntime.cpp"
     "engine/Operation.cpp"
     "engine/RuntimeContext.cpp"
     "engine/Timer.cpp"
-    "engine/TrackRuntime.cpp"
+    "engine/TrackControl.cpp"
     
     "internal/endian.cpp"
 

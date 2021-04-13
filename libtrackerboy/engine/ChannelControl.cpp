@@ -8,32 +8,6 @@
 namespace trackerboy {
 
 template <ChType ch>
-void writePanning(IApu &apu, uint8_t panning) {
-    constexpr uint8_t panningMask = 0x11 << +ch;
-    auto nr51 = apu.readRegister(gbapu::Apu::REG_NR51);
-    nr51 &= ~panningMask; // clear current setting
-    switch (panning) {
-        case 0x00:
-            // mute
-            break;
-        case 0x01:
-            // left
-            nr51 |= 0x10 << +ch;
-            break;
-        case 0x02:
-            // right
-            nr51 |= 0x01 << +ch;
-            break;
-        default:
-            // middle
-            nr51 |= 0x11 << +ch;
-            break;
-
-    }
-    apu.writeRegister(gbapu::Apu::REG_NR51, nr51);
-}
-
-template <ChType ch>
 void ChannelControl<ch>::update(
     IApu &apu,
     WaveformList const& waveList,
@@ -48,7 +22,8 @@ void ChannelControl<ch>::update(
     // retrigger the channel when:
     //  1. a note is triggered on an envelope channel (state.playing transitions from false -> true)
     //  2. the envelope is changed
-    bool retrigger = false;
+    //  3. the override is set (happens a new note plays or instrument is reloaded)
+    bool retrigger = state.retrigger;
 
     // starting register address for the channel (each channel has 5 registers)
     // Offset   CH1         CH2         CH3         CH4
@@ -58,6 +33,7 @@ void ChannelControl<ch>::update(
     //  +3                 freq LSB                 noise
     //  +4            freq MSB / retrigger          retrigger
     constexpr uint8_t REGS_START = gbapu::Apu::REG_NR10 + (+ch * GB_CHANNEL_REGS);
+
 
     // there are two ways to silence a channel:
     //  1. disable the DAC
@@ -72,25 +48,17 @@ void ChannelControl<ch>::update(
     // We'll go with #2 since it's the same process for each channel and updating panning
     // is much easier to deal with than the envelope
 
-    bool const panningChanged = lastState.panning != state.panning;
-    bool const envelopeChanged = lastState.envelope != state.envelope;
+    bool writePanning = lastState.panning != state.panning;
+    bool writeEnvelope = lastState.envelope != state.envelope;
 
     if (lastState.playing != state.playing) {
         if (state.playing) {
             // note trigger
-            // reload panning (if not changed, otherwise do it later)
-            if (!panningChanged) {
-                writePanning<ch>(apu, state.panning);
-            }
+            // reload panning + envelope register
+            writePanning = true;
 
-            if (!envelopeChanged) {
-                // note trigger
-                if constexpr (ch != ChType::ch3) {
-                    // refresh envelope (NRx2 registers are "unstable", manual recommends to write before retrigger)
-                    apu.writeRegister(REGS_START + 2, state.envelope);
-                    retrigger = true;
-
-                }
+            if constexpr (ch != ChType::ch3) {
+                writeEnvelope = true; // reload envelope register on note trigger
             }
 
         } else {
@@ -103,9 +71,7 @@ void ChannelControl<ch>::update(
     }
 
 
-    if (envelopeChanged) {
-        // we cannot update the envelope if the channel is not playing,
-        // since doing so will re-enable the DAC
+    if (writeEnvelope) {
 
         // changing the envelope requires a retrigger for all channels
         // write the envelope
@@ -118,7 +84,7 @@ void ChannelControl<ch>::update(
                 apu.writeRegister(gbapu::Apu::REG_NR30, 0x00);
 
                 // copy wave
-                auto data = waveform->data();
+                auto &data = waveform->data();
                 for (size_t i = 0; i != data.size(); ++i) {
                     apu.writeRegister((uint8_t)(gbapu::Apu::REG_WAVERAM + i), data[i]);
                 }
@@ -138,10 +104,31 @@ void ChannelControl<ch>::update(
 
     }
 
-    if (state.playing && panningChanged) {
+    if (state.playing && writePanning) {
         // we can only update panning when the channel is playing
         // doing so otherwise may cause the note to start playing after being cut
-        writePanning<ch>(apu, state.panning);
+        constexpr uint8_t panningMask = 0x11 << +ch;
+        auto nr51 = apu.readRegister(gbapu::Apu::REG_NR51);
+        nr51 &= ~panningMask; // clear current setting
+        switch (state.panning) {
+            case 0x00:
+                // mute
+                break;
+            case 0x01:
+                // left
+                nr51 |= 0x10 << +ch;
+                break;
+            case 0x02:
+                // right
+                nr51 |= 0x01 << +ch;
+                break;
+            default:
+                // middle
+                nr51 |= 0x11 << +ch;
+                break;
+
+        }
+        apu.writeRegister(gbapu::Apu::REG_NR51, nr51);
     }
 
     bool const timbreChanged = lastState.timbre != state.timbre;
@@ -246,12 +233,10 @@ template <ChType ch>
 void ChannelControl<ch>::init(IApu &apu, WaveformList const& waveList, ChannelState const& state) noexcept {
     ChannelState fakeLast = state;
     fakeLast.playing = !state.playing;
-    if (state.playing) {
-        fakeLast.envelope = ~state.envelope;
-        fakeLast.panning = ~state.panning;
-        fakeLast.timbre = ~state.timbre;
-        fakeLast.frequency = ~state.frequency;
-    }
+    fakeLast.envelope = ~state.envelope;
+    fakeLast.panning = ~state.panning;
+    fakeLast.timbre = ~state.timbre;
+    fakeLast.frequency = ~state.frequency;
     update(apu, waveList, fakeLast, state);
 }
 

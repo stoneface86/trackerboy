@@ -3,6 +3,7 @@
 #include "trackerboy/note.hpp"
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/Synth.hpp"
+#include "trackerboy/engine/MusicRuntime.hpp"
 
 #include "miniaudio.h"
 
@@ -34,53 +35,35 @@ void printFrame(Frame &frame) {
 
 int main() {
 
-    /*struct SoundIo *soundio = soundio_create();
-    if (soundio == nullptr) {
-        return FAIL_SOUNDIO;
-    }
 
-    int err = soundio_connect(soundio);
-    if (err) {
-        std::cerr << soundio_strerror(err);
-        return FAIL_SOUNDIO;
-    }
-
-    audio::DeviceTable deviceTable;
-    deviceTable.rescan(soundio);
-
-    if (deviceTable.isEmpty()) {
-        return FAIL_NO_DEVICES;
-    }*/
 
 
     Synth synth(SAMPLERATE_INT);
-    //std::unique_ptr<PlaybackQueue> pb(new PlaybackQueue());
-
-    /*struct SoundIoDevice *device = soundio_get_output_device(soundio, deviceTable.defaultDevice());
-    pb.setDevice(device, SAMPLERATE);
-    soundio_device_unref(device);*/
 
     Module mod;
 
     auto &itable = mod.instrumentList();
     auto &wtable = mod.waveformList();
-    RuntimeContext rc(synth.apu(), itable, wtable);
+    GbApu apu(synth.apu());
+    RuntimeContext rc(apu, itable, wtable);
     
 
     {
         auto inst = itable.insert();
         inst->setName("main 1");
-        auto &idata = inst->data();
-        idata.envelope = 0x57;
-        idata.timbre = 1;
+        inst->setEnvelope(0x57);
+        inst->setEnvelopeEnable(true);
+        auto &seq = inst->sequence(Instrument::SEQUENCE_TIMBRE);
+        seq.data().push_back(0x1);
     }
 
     {
         auto inst = itable.insert();
         inst->setName("main 2");
-        auto &idata = inst->data();
-        idata.envelope = 0x77;
-        idata.timbre = 0x0;
+        inst->setEnvelope(0x77);
+        inst->setEnvelopeEnable(true);
+        auto &seq = inst->sequence(Instrument::SEQUENCE_TIMBRE);
+        seq.data().push_back(0x0);
     }
 
     auto triangle = wtable.insert();
@@ -377,12 +360,15 @@ int main() {
     std::vector<int16_t> buffer;
     buffer.resize(synth.framesize() * 2);
 
-    Engine engine(rc);
-    engine.play(testsong, 0, 0);
+    //Engine engine(rc);
+    //engine.play(testsong, 0, 0);
+    MusicRuntime mr(testsong, 0, 0);
+
 
     for (int i = 600; i != 0; --i) {
         Frame frame;
-        engine.step(frame);
+        //engine.step(frame);
+        mr.step(rc);
         synth.run();
         auto samplesRead = synth.apu().readSamples(buffer.data(), buffer.size());
 

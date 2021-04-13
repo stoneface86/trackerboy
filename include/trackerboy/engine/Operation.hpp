@@ -57,7 +57,7 @@ struct Operation {
 
     std::optional<uint8_t> envelope;
     std::optional<uint8_t> timbre;
-    std::optional<Panning> panning;
+    std::optional<uint8_t> panning;
     std::optional<uint8_t> sweep;
 
     // frequency effects
