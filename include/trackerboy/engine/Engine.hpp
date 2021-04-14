@@ -24,12 +24,10 @@
 
 #pragma once
 
-#include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/Module.hpp"
-#include "trackerboy/engine/ChannelControl.hpp"
-#include "trackerboy/engine/Frame.hpp"
-//#include "trackerboy/engine/MusicRuntime.hpp"
-//#include "trackerboy/engine/RuntimeContext.hpp"
+#include "trackerboy/engine/IApu.hpp"
+#include "trackerboy/engine/MusicRuntime.hpp"
+#include "trackerboy/engine/RuntimeContext.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -41,15 +39,36 @@ class Engine {
 
 public:
 
-    Engine(gbapu::Apu &apu, Module &mod);
+    struct Frame {
+        constexpr Frame() :
+            halted(false),
+            time(0),
+            speed(0),
+            order(0),
+            row(0)
+        {
+        }
+
+        bool halted;        // halt status
+        uint32_t time;      // time index
+        Speed speed;        // the current engine speed
+        uint8_t order;      // current order index
+        uint8_t row;        // current row index
+    };
+
+
+    Engine(IApu &apu, Module &mod);
 
     void reset();
 
     //
     // begin playing music from a starting order and row
     //
-    void play(Song &song, uint8_t orderNo, uint8_t patternRow = 0);
+    void play(uint8_t orderNo, uint8_t patternRow = 0);
 
+    //
+    // Stops music playback if playing music.
+    //
     void halt();
     
     //
@@ -71,10 +90,10 @@ public:
 
 private:
 
-    gbapu::Apu &mApu;
+    IApu &mApu;
     Module &mModule;
-    //std::optional<MusicRuntime> mMusicContext;
-    //ChannelControl mChCtrl;
+    RuntimeContext mRc;
+    std::optional<MusicRuntime> mMusicContext;
 
     //TODO: sfx runtime
 

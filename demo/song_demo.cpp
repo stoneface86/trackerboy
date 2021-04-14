@@ -21,16 +21,6 @@ constexpr unsigned SAMPLERATE_INT = 48000;
 constexpr int FAIL_SOUNDIO = 1;
 constexpr int FAIL_NO_DEVICES = 2;
 
-void printFrame(Frame &frame) {
-
-    std::cout << frame.time
-              << ": "
-              << static_cast<int>(frame.row)
-              << " / "
-              << static_cast<int>(frame.order)
-              << std::endl;
-}
-
 
 
 int main() {
@@ -45,7 +35,6 @@ int main() {
     auto &itable = mod.instrumentList();
     auto &wtable = mod.waveformList();
     GbApu apu(synth.apu());
-    RuntimeContext rc(apu, itable, wtable);
     
 
     {
@@ -360,15 +349,13 @@ int main() {
     std::vector<int16_t> buffer;
     buffer.resize(synth.framesize() * 2);
 
-    //Engine engine(rc);
-    //engine.play(testsong, 0, 0);
-    MusicRuntime mr(testsong, 0, 0);
+    Engine engine(apu, mod);
+    engine.play(0, 0);
 
 
     for (int i = 600; i != 0; --i) {
-        Frame frame;
-        //engine.step(frame);
-        mr.step(rc);
+        Engine::Frame frame;
+        engine.step(frame);
         synth.run();
         auto samplesRead = synth.apu().readSamples(buffer.data(), buffer.size());
 

@@ -16,10 +16,22 @@
 namespace trackerboy {
 
 
+//
+// A MusicRuntime is responsible for playing "music" or pattern data on locked channels.
+// The runtime will modify the given IApu each frame via the step() method. The runtime
+// plays indefinitely unless it is halted (pattern effect B00). A MusicRuntime can only play
+// one song for its entire lifetime.
+//
 class MusicRuntime {
 
 public:
     MusicRuntime(Song &song, uint8_t orderNo, uint8_t patternRow);
+
+    uint8_t currentOrder() const noexcept;
+
+    uint8_t currentRow() const noexcept;
+
+    uint8_t currentSpeed() const noexcept;
 
     void halt();
 
@@ -27,7 +39,7 @@ public:
 
     void unlock(RuntimeContext const& rc, ChType ch);
 
-    void step(RuntimeContext const& rc);
+    bool step(RuntimeContext const& rc);
 
 private:
 
@@ -47,9 +59,6 @@ private:
 
     uint8_t mOrderCounter;
     uint8_t mRowCounter;
-
-    //uint8_t const mLastOrder;
-    //uint8_t const mRowsPerTrack;
 
     Timer mTimer;
 

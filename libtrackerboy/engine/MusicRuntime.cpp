@@ -25,6 +25,18 @@ MusicRuntime::MusicRuntime(Song &song, uint8_t orderNo, uint8_t patternRow) :
     mTimer.setPeriod(song.speed());
 }
 
+uint8_t MusicRuntime::currentOrder() const noexcept {
+    return mOrderCounter;
+}
+
+uint8_t MusicRuntime::currentRow() const noexcept {
+    return mRowCounter;
+}
+
+uint8_t MusicRuntime::currentSpeed() const noexcept {
+    return mTimer.period();
+}
+
 void MusicRuntime::halt() {
     mFlags.set(FLAG_HALT);
 }
@@ -75,9 +87,9 @@ void MusicRuntime::unlock(RuntimeContext const& rc, ChType ch) {
     }
 }
 
-void MusicRuntime::step(RuntimeContext const& rc) {
+bool MusicRuntime::step(RuntimeContext const& rc) {
     if (mFlags.test(FLAG_HALT)) {
-        return;
+        return true;
     }
     
     if (mFlags.test(FLAG_INIT)) {
@@ -120,7 +132,7 @@ void MusicRuntime::step(RuntimeContext const& rc) {
         
         if (mGlobal.halt) {
             halt();
-            return;
+            return true;
         }
 
         // change the speed if the Fxx effect was used
@@ -147,7 +159,7 @@ void MusicRuntime::step(RuntimeContext const& rc) {
         }
     }
 
-
+    return false;
 
 }
 

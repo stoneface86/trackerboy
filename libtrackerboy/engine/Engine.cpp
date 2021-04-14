@@ -6,67 +6,66 @@
 namespace trackerboy {
 
 
-Engine::Engine(gbapu::Apu &apu, Module &mod) :
+Engine::Engine(IApu &apu, Module &mod) :
     mApu(apu),
     mModule(mod),
-    //mMusicContext(std::nullopt),
+    mRc(apu, mod.instrumentList(), mod.waveformList()),
+    mMusicContext(),
     mTime(0)
 {
 }
 
 void Engine::reset() {
-    //mMusicContext.reset();
+    mMusicContext.reset();
     mTime = 0;
 }
 
-void Engine::play(Song &song, uint8_t orderNo, uint8_t patternRow) {
+void Engine::play(uint8_t orderNo, uint8_t patternRow) {
     
-    /*if (orderNo >= song.order().size()) {
+    auto &song = mModule.song();
+
+    if (orderNo >= song.order().size()) {
         throw std::invalid_argument("cannot play order, order does not exist");
     }
     if (patternRow >= song.patterns().rowSize()) {
         throw std::invalid_argument("cannot start at given row, exceeds pattern size");
     }
 
-    mMusicContext.emplace(mRc, mChCtrl, song, orderNo, patternRow);*/
+    mMusicContext.emplace(song, orderNo, patternRow);
 }
 
 void Engine::halt() {
-    /*if (mMusicContext) {
-        mMusicContext.value().halt();
-    }*/
+    if (mMusicContext) {
+        mMusicContext->halt();
+    }
 }
 
 void Engine::lock(ChType ch) {
-    /*mChCtrl.lock(ch);
     if (mMusicContext) {
-        mMusicContext.value().reload(ch);
-    }*/
+        mMusicContext->lock(mRc, ch);
+    }
 }
 
 void Engine::unlock(ChType ch) {
-    //mChCtrl.unlock(ch);
+    if (mMusicContext) {
+        mMusicContext->unlock(mRc, ch);
+    }
 }
 
 void Engine::step(Frame &frame) {
 
-    //if (mMusicContext) {
-    //    auto &ctx = mMusicContext.value();
-    //    
-    //    frame.halted = ctx.step();
-    //    frame.order = ctx.currentOrder();
-    //    frame.row = ctx.currentRow();
-    //    frame.speed = ctx.speed();
-
-    //    
-
-    //} else {
+    if (mMusicContext) {
+        frame.halted = mMusicContext->step(mRc);
+        frame.order = mMusicContext->currentOrder();
+        frame.row = mMusicContext->currentRow();
+        frame.speed = mMusicContext->currentSpeed();
+    } else {
         // no runtime, do nothing
         frame.halted = true;
         frame.order = 0;
         frame.row = 0;
         frame.speed = 0;
-    //}
+    }
 
     frame.time = mTime;
 
