@@ -29,6 +29,7 @@ set(SRC_FILES
     "internal/endian.cpp"
 
     "fileformat.cpp"
+    "InstrumentPreview.cpp"
     "note.cpp"
     "Synth.cpp"
     "version.cpp"

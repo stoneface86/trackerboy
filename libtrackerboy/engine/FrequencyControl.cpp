@@ -262,8 +262,17 @@ void FrequencyControl::step() noexcept {
     }
 
     if (arp) {
-        mNote = *arp;
-        mFrequency = noteLookup(mNote);
+        // absolute
+        int8_t offset = (int8_t)*arp;
+        int8_t note = (int8_t)std::clamp((int)mNote + offset, 0, (int)mMaxNote);
+        mFrequency = noteLookup(note);
+
+        // relative (same as absolute but saves the note)
+        //mNote = note;
+
+        // fixed
+        //mNote = *arp;
+        //mFrequency = noteLookup(mNote);
     } else {
         switch (mMod) {
             case ModType::none:
