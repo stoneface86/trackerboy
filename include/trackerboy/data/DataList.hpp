@@ -57,13 +57,15 @@ protected:
     
     DataListBase() noexcept;
 
-    std::shared_ptr<DataItem> insertItem();
+    DataItem* insertItem();
 
-    std::shared_ptr<DataItem> insertItem(uint8_t id);
+    DataItem* insertItem(uint8_t id);
 
-    std::shared_ptr<DataItem> duplicateItem(uint8_t id);
+    DataItem* duplicateItem(uint8_t id);
 
-    std::shared_ptr<DataItem> itemAt(uint8_t id) const;
+    DataItem* itemAt(uint8_t id) const;
+
+    std::shared_ptr<DataItem> itemAtShared(uint8_t id) const;
 
     virtual std::shared_ptr<DataItem> createItem() = 0;
 
@@ -84,7 +86,7 @@ private:
 // accessible via their id.
 //
 template <class T>
-class DataList : public DataListBase {
+class DataList final : public DataListBase {
 
     static_assert(std::is_base_of<DataItem, T>::value, "T must inherit from DataItem");
 
@@ -98,19 +100,21 @@ public:
     // item does not exist, nullptr is returned. The pointer may be invalidated
     // after calling insert()
     //
-    std::shared_ptr<T> operator[](uint8_t id) const;
+    T* operator[](uint8_t id) const;
 
-    std::shared_ptr<T> insert();
+    T* insert();
 
-    std::shared_ptr<T> insert(uint8_t id);
+    T* insert(uint8_t id);
 
-    std::shared_ptr<T> duplicate(uint8_t id);
+    T* duplicate(uint8_t id);
+
+    std::shared_ptr<T> getShared(uint8_t id) const;
 
 protected:
 
-    std::shared_ptr<DataItem> createItem() override;
+    virtual std::shared_ptr<DataItem> createItem() override;
 
-    std::shared_ptr<DataItem> copyItem(DataItem const& item) override;
+    virtual std::shared_ptr<DataItem> copyItem(DataItem const& item) override;
 
 };
 

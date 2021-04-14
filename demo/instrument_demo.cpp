@@ -52,7 +52,7 @@ int main() {
     buffer.resize(synth.framesize() * 2);
 
     InstrumentPreview preview;
-    preview.setInstrument(inst);
+    preview.setInstrument(ilist.getShared(0));
     uint8_t note = 36;
     
 

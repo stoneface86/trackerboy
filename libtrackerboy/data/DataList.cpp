@@ -42,11 +42,11 @@ uint8_t DataListBase::nextAvailableId() const noexcept {
     return mNextId;
 }
 
-std::shared_ptr<DataItem> DataListBase::insertItem() {
+DataItem* DataListBase::insertItem() {
     return insertItem(mNextId);
 }
 
-std::shared_ptr<DataItem> DataListBase::insertItem(uint8_t id) {
+DataItem* DataListBase::insertItem(uint8_t id) {
     if (size() == MAX_SIZE) {
         throw std::runtime_error("cannot insert: maximum capacity reached");
     }
@@ -62,14 +62,14 @@ std::shared_ptr<DataItem> DataListBase::insertItem(uint8_t id) {
 
     auto item = createItem();
     item->setId(id);
-    cell = item;
+    cell = std::move(item);
     mIdsInUse.insert(id);
     findNextId();
 
-    return item;
+    return cell.get();
 }
 
-std::shared_ptr<DataItem> DataListBase::duplicateItem(uint8_t id) {
+DataItem* DataListBase::duplicateItem(uint8_t id) {
     if (size() == MAX_SIZE) {
         throw std::runtime_error("cannot duplicate: maximum capacity reached");
     }
@@ -83,10 +83,10 @@ std::shared_ptr<DataItem> DataListBase::duplicateItem(uint8_t id) {
             // copy constructor
             auto item = copyItem(*mData[id]);
             item->setId(mNextId);
-            cell = item;
+            cell = std::move(item);
             mIdsInUse.insert(mNextId);
             findNextId();
-            return item;
+            return cell.get();
         }
     }
 
@@ -114,7 +114,15 @@ void DataListBase::remove(uint8_t id) {
     throw std::runtime_error("cannot remove: item does not exist");
 }
 
-std::shared_ptr<DataItem> DataListBase::itemAt(uint8_t id) const {
+DataItem* DataListBase::itemAt(uint8_t id) const {
+    if (id >= mData.size()) {
+        return nullptr;
+    } else {
+        return mData[id].get();
+    }
+}
+
+std::shared_ptr<DataItem> DataListBase::itemAtShared(uint8_t id) const {
     if (id >= mData.size()) {
         return nullptr;
     } else {
@@ -149,23 +157,28 @@ DataList<T>::~DataList() {
 }
 
 template <class T>
-std::shared_ptr<T> DataList<T>::operator[](uint8_t id) const {
-    return std::static_pointer_cast<T>(itemAt(id));
+T* DataList<T>::operator[](uint8_t id) const {
+    return static_cast<T*>(itemAt(id));
 }
 
 template <class T>
-std::shared_ptr<T> DataList<T>::insert() {
-    return std::static_pointer_cast<T>(insertItem());
+T* DataList<T>::insert() {
+    return static_cast<T*>(insertItem());
 }
 
 template <class T>
-std::shared_ptr<T> DataList<T>::insert(uint8_t id) {
-    return std::static_pointer_cast<T>(insertItem(id));
+T* DataList<T>::insert(uint8_t id) {
+    return static_cast<T*>(insertItem(id));
 }
 
 template <class T>
-std::shared_ptr<T> DataList<T>::duplicate(uint8_t id) {
-    return std::static_pointer_cast<T>(duplicateItem(id));
+T* DataList<T>::duplicate(uint8_t id) {
+    return static_cast<T*>(duplicateItem(id));
+}
+
+template <class T>
+std::shared_ptr<T> DataList<T>::getShared(uint8_t id) const {
+    return std::static_pointer_cast<T>(itemAtShared(id));
 }
 
 template <class T>

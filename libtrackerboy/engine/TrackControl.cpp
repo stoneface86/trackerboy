@@ -60,7 +60,7 @@ void TrackControl::step(RuntimeContext const &rc, ChannelState &state, GlobalSta
             bool restartIr = false;
 
             if (mOp.instrument) {
-                auto inst = rc.instList[*mOp.instrument];
+                auto inst = rc.instList.getShared(*mOp.instrument);
                 if (inst) {
                     mInstrument = std::move(inst);
                     restartIr = true;
