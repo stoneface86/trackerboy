@@ -50,22 +50,22 @@ public:
     // gets the next available id to insert/duplicate an item into
     //
     uint8_t nextAvailableId() const noexcept;
+    
+    DataItem* insert();
+
+    DataItem* insert(uint8_t id);
+
+    DataItem* duplicate(uint8_t id);
+
+    DataItem* get(uint8_t id) const;
+
+    std::shared_ptr<DataItem> getShared(uint8_t id) const;
 
     void remove(uint8_t id);
 
 protected:
     
     DataListBase() noexcept;
-
-    DataItem* insertItem();
-
-    DataItem* insertItem(uint8_t id);
-
-    DataItem* duplicateItem(uint8_t id);
-
-    DataItem* itemAt(uint8_t id) const;
-
-    std::shared_ptr<DataItem> itemAtShared(uint8_t id) const;
 
     virtual std::shared_ptr<DataItem> createItem() = 0;
 
@@ -107,6 +107,8 @@ public:
     T* insert(uint8_t id);
 
     T* duplicate(uint8_t id);
+
+    T* get(uint8_t id) const;
 
     std::shared_ptr<T> getShared(uint8_t id) const;
 
