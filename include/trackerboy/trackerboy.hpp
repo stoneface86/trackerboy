@@ -108,8 +108,9 @@ static constexpr Speed SPEED_MIN = 0x10;
 // maximum possible speed, 15.0 frames per row
 static constexpr Speed SPEED_MAX = 0xF0;
 
-constexpr size_t MAX_INSTRUMENTS = 256;
-constexpr size_t MAX_WAVEFORMS = 256;
+constexpr size_t TABLE_SIZE = 64;
+constexpr size_t MAX_INSTRUMENTS = TABLE_SIZE;
+constexpr size_t MAX_WAVEFORMS = TABLE_SIZE;
 constexpr size_t MAX_PATTERNS = 256;
 
 template <typename T>
@@ -130,7 +131,6 @@ constexpr uint16_t GB_MAX_FREQUENCY = 2047;
 // CH3 waveram is 16 bytes
 //
 constexpr size_t GB_WAVERAM_SIZE = 16;
-
 
 
 

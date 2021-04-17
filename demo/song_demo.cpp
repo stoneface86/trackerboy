@@ -32,32 +32,32 @@ int main() {
 
     Module mod;
 
-    auto &itable = mod.instrumentList();
-    auto &wtable = mod.waveformList();
+    auto &itable = mod.instrumentTable();
+    auto &wtable = mod.waveformTable();
     GbApu apu(synth.apu());
     
 
     {
-        auto inst = itable.insert();
-        inst->setName("main 1");
-        inst->setEnvelope(0x57);
-        inst->setEnvelopeEnable(true);
-        auto &seq = inst->sequence(Instrument::SEQUENCE_TIMBRE);
+        auto &inst = itable.insert();
+        inst.setName("main 1");
+        inst.setEnvelope(0x57);
+        inst.setEnvelopeEnable(true);
+        auto &seq = inst.sequence(Instrument::SEQUENCE_TIMBRE);
         seq.data().push_back(0x1);
     }
 
     {
-        auto inst = itable.insert();
-        inst->setName("main 2");
-        inst->setEnvelope(0x77);
-        inst->setEnvelopeEnable(true);
-        auto &seq = inst->sequence(Instrument::SEQUENCE_TIMBRE);
+        auto &inst = itable.insert();
+        inst.setName("main 2");
+        inst.setEnvelope(0x77);
+        inst.setEnvelopeEnable(true);
+        auto &seq = inst.sequence(Instrument::SEQUENCE_TIMBRE);
         seq.data().push_back(0x0);
     }
 
-    auto triangle = wtable.insert();
-    triangle->fromString("0123456789ABCDEFFEDCBA9876543210");
-    triangle->setName("triangle");
+    auto &triangle = wtable.insert();
+    triangle.fromString("0123456789ABCDEFFEDCBA9876543210");
+    triangle.setName("triangle");
 
     
     auto &testsong = mod.song();

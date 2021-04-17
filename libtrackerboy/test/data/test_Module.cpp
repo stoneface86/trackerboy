@@ -12,8 +12,8 @@ TEST_CASE("Module::clear resets the module to its initialized state", "[Module]"
     Module init;
 
     Module mod;
-    mod.instrumentList().insert();
-    mod.waveformList().insert();
+    mod.instrumentTable().insert();
+    mod.waveformTable().insert();
     mod.setArtist("foobar");
     mod.setCopyright("2020");
     mod.setTitle("music");
@@ -23,8 +23,8 @@ TEST_CASE("Module::clear resets the module to its initialized state", "[Module]"
     REQUIRE(mod.artist() == init.artist());
     REQUIRE(mod.title() == init.title());
     REQUIRE(mod.copyright() == init.copyright());
-    REQUIRE(mod.instrumentList().size() == 0);
-    REQUIRE(mod.waveformList().size() == 0);
+    REQUIRE(mod.instrumentTable().size() == 0);
+    REQUIRE(mod.waveformTable().size() == 0);
 
 }
 

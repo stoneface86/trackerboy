@@ -9,7 +9,7 @@ namespace trackerboy {
 Engine::Engine(IApu &apu, Module &mod) :
     mApu(apu),
     mModule(mod),
-    mRc(apu, mod.instrumentList(), mod.waveformList()),
+    mRc(apu, mod.instrumentTable(), mod.waveformTable()),
     mMusicContext(),
     mTime(0)
 {

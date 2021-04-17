@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "trackerboy/data/DataList.hpp"
+#include "trackerboy/data/Table.hpp"
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/version.hpp"
 
@@ -63,9 +63,9 @@ public:
 
     Song& song() noexcept;
 
-    WaveformList& waveformList() noexcept;
+    WaveformTable& waveformTable() noexcept;
 
-    InstrumentList& instrumentList() noexcept;
+    InstrumentTable& instrumentTable() noexcept;
 
     // File I/O
 
@@ -85,8 +85,9 @@ public:
 private:
 
     Song mSong;
-    InstrumentList mInstrumentList;
-    WaveformList mWaveformList;
+
+    InstrumentTable mInstrumentTable;
+    WaveformTable mWaveformTable;
 
     // header settings
     Version mVersion;

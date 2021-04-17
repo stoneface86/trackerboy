@@ -45,14 +45,14 @@ public:
 
     static void update(
         IApu &apu,
-        WaveformList const& waveList,
+        WaveformTable const& waveTable,
         ChannelState const& lastState,
         ChannelState const& state
     ) noexcept;
 
     static void clear(IApu &apu) noexcept;
 
-    static void init(IApu &apu, WaveformList const& waveList, ChannelState const& state) noexcept;
+    static void init(IApu &apu, WaveformTable const& waveTable, ChannelState const& state) noexcept;
 
 };
 

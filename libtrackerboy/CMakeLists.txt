@@ -3,7 +3,6 @@ project("libtrackerboy")
 
 set(SRC_FILES
     "data/DataItem.cpp"
-    "data/DataList.cpp"
     "data/Instrument.cpp"
     "data/Module.cpp"
     "data/Order.cpp"
@@ -11,6 +10,7 @@ set(SRC_FILES
     "data/PatternMaster.cpp"
     "data/Sequence.cpp"
     "data/Song.cpp"
+    "data/Table.cpp"
     "data/Track.cpp"
     "data/TrackRow.cpp"
     "data/Waveform.cpp"
@@ -65,7 +65,7 @@ endif ()
 if (TRACKERBOY_ENABLE_TESTS)
 
     set(TEST_SRC_FILES
-        "test/data/test_DataList.cpp"
+        "test/data/test_Table.cpp"
         "test/data/test_Module.cpp"
         "test/data/test_PatternMaster.cpp"
         
@@ -87,14 +87,13 @@ if (TRACKERBOY_ENABLE_TESTS)
         add_test(NAME ${unit} COMMAND ${TEST_EXE} "[${unit}]")
     endmacro(unit_test)
 
-    unit_test(DataList)
+    unit_test(Table)
     unit_test(Module)
     unit_test(InstrumentRuntime)
     unit_test(PatternMaster)
     unit_test(NoteControl)
     unit_test(Timer)
     unit_test(endian)
-    unit_test(Table)
     
     
 

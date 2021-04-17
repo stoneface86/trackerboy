@@ -10,13 +10,13 @@ namespace trackerboy {
 template <ChType ch>
 void ChannelControl<ch>::update(
     IApu &apu,
-    WaveformList const& waveList,
+    WaveformTable const& waveTable,
     ChannelState const& lastState,
     ChannelState const& state
 ) noexcept {
 
     if constexpr (ch != ChType::ch3) {
-        (void)waveList; // waveList is only needed for CH3
+        (void)waveTable; // waveTable is only needed for CH3
     }
 
     // retrigger the channel when:
@@ -76,7 +76,7 @@ void ChannelControl<ch>::update(
         // changing the envelope requires a retrigger for all channels
         // write the envelope
         if constexpr (ch == ChType::ch3) {
-            auto waveform = waveList[state.envelope];
+            auto waveform = waveTable[state.envelope];
             // TODO: we don't need a shared_ptr here since the wave data is copied
             // might be worth adding a getRaw method to DataList that gets a raw pointer
             if (waveform != nullptr) {
@@ -230,14 +230,14 @@ void ChannelControl<ch>::clear(IApu &apu) noexcept {
 }
 
 template <ChType ch>
-void ChannelControl<ch>::init(IApu &apu, WaveformList const& waveList, ChannelState const& state) noexcept {
+void ChannelControl<ch>::init(IApu &apu, WaveformTable const& waveTable, ChannelState const& state) noexcept {
     ChannelState fakeLast = state;
     fakeLast.playing = !state.playing;
     fakeLast.envelope = ~state.envelope;
     fakeLast.panning = ~state.panning;
     fakeLast.timbre = ~state.timbre;
     fakeLast.frequency = ~state.frequency;
-    update(apu, waveList, fakeLast, state);
+    update(apu, waveTable, fakeLast, state);
 }
 
 template class ChannelControl<ChType::ch1>;

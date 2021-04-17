@@ -53,16 +53,16 @@ void InstrumentPreview::step(RuntimeContext const& rc) {
         mLastState = ChannelState(mCh);
         switch (mCh) {
             case ChType::ch1:
-                ChannelControl<ChType::ch1>::init(rc.apu, rc.waveList, mLastState);
+                ChannelControl<ChType::ch1>::init(rc.apu, rc.waveTable, mLastState);
                 break;
             case ChType::ch2:
-                ChannelControl<ChType::ch2>::init(rc.apu, rc.waveList, mLastState);
+                ChannelControl<ChType::ch2>::init(rc.apu, rc.waveTable, mLastState);
                 break;
             case ChType::ch3:
-                ChannelControl<ChType::ch3>::init(rc.apu, rc.waveList, mLastState);
+                ChannelControl<ChType::ch3>::init(rc.apu, rc.waveTable, mLastState);
                 break;
             case ChType::ch4:
-                ChannelControl<ChType::ch4>::init(rc.apu, rc.waveList, mLastState);
+                ChannelControl<ChType::ch4>::init(rc.apu, rc.waveTable, mLastState);
                 break;
         }
         state = mLastState;
@@ -87,16 +87,16 @@ void InstrumentPreview::step(RuntimeContext const& rc) {
 
     switch (mCh) {
         case ChType::ch1:
-            ChannelControl<ChType::ch1>::update(rc.apu, rc.waveList, mLastState, state);
+            ChannelControl<ChType::ch1>::update(rc.apu, rc.waveTable, mLastState, state);
             break;
         case ChType::ch2:
-            ChannelControl<ChType::ch2>::update(rc.apu, rc.waveList, mLastState, state);
+            ChannelControl<ChType::ch2>::update(rc.apu, rc.waveTable, mLastState, state);
             break;
         case ChType::ch3:
-            ChannelControl<ChType::ch3>::update(rc.apu, rc.waveList, mLastState, state);
+            ChannelControl<ChType::ch3>::update(rc.apu, rc.waveTable, mLastState, state);
             break;
         case ChType::ch4:
-            ChannelControl<ChType::ch4>::update(rc.apu, rc.waveList, mLastState, state);
+            ChannelControl<ChType::ch4>::update(rc.apu, rc.waveTable, mLastState, state);
             break;
     }
 

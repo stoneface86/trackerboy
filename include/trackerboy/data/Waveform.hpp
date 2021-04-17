@@ -46,6 +46,8 @@ public:
 
     Data& data() noexcept;
 
+    Data const& data() const noexcept;
+
     // convenience method, sets the waveform data from a string of hex nibbles
     void fromString(std::string const& hexstring);
 

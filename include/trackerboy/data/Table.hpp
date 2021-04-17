@@ -5,59 +5,44 @@
 #include "trackerboy/data/Instrument.hpp"
 #include "trackerboy/data/Waveform.hpp"
 
+#include <array>
 #include <cstddef>
 #include <memory>
-#include <set>
 #include <type_traits>
 #include <vector>
 
 namespace trackerboy {
 
 
-class DataListBase {
-
-    using DataVector = std::vector<std::shared_ptr<DataItem>>;
-    using IdSet = std::set<uint8_t>;
+class BaseTable {
 
 public:
-    static constexpr size_t MAX_SIZE = 256;
-
-    using Iterator = IdSet::const_iterator;
+    static constexpr size_t MAX_SIZE = 64;
 
 
-    virtual ~DataListBase() noexcept;
-
-    //
-    // Gets an iterator for all IDs in use by this list
-    //
-    Iterator begin() const noexcept;
+    virtual ~BaseTable() noexcept;
 
     void clear() noexcept;
 
-    Iterator end() const noexcept;
-
     //
-    // total count of items in the list
+    // total count of items in the table
     //
     size_t size() const noexcept;
-
-    //
-    // size of the item vector in use
-    //
-    size_t capacity() const noexcept;
 
     //
     // gets the next available id to insert/duplicate an item into
     //
     uint8_t nextAvailableId() const noexcept;
     
-    DataItem* insert();
+    DataItem& insert();
 
-    DataItem* insert(uint8_t id);
+    DataItem& insert(uint8_t id);
 
-    DataItem* duplicate(uint8_t id);
+    DataItem& duplicate(uint8_t id);
 
-    DataItem* get(uint8_t id) const;
+    DataItem const* get(uint8_t id) const;
+
+    DataItem* get(uint8_t id);
 
     std::shared_ptr<DataItem> getShared(uint8_t id) const;
 
@@ -65,7 +50,7 @@ public:
 
 protected:
     
-    DataListBase() noexcept;
+    BaseTable() noexcept;
 
     virtual std::shared_ptr<DataItem> createItem() = 0;
 
@@ -73,42 +58,53 @@ protected:
 
 private:
 
+    using DataType = std::array<std::shared_ptr<DataItem>, TABLE_SIZE>;
+    
+
+    void addId(uint8_t id);
+
+    void removeId(uint8_t id);
+
     void findNextId();
 
-    DataVector mData;
-    IdSet mIdsInUse;
+    DataType mData;
+    size_t mSize;
     uint8_t mNextId;
 };
 
 
 //
-// DataList class. Container for storing DataItems such that they are
-// accessible via their id.
+// Table class. Stores instrument or waveform data. Items are stored in a fixed size
+// array so that looking up via id is constant time.
 //
 template <class T>
-class DataList final : public DataListBase {
+class Table final : public BaseTable {
 
     static_assert(std::is_base_of<DataItem, T>::value, "T must inherit from DataItem");
 
 public:
 
-    DataList();
-    ~DataList();
+    Table();
+    ~Table();
 
     //
     // Gets a pointer to the item with the given index if it exists. If the
     // item does not exist, nullptr is returned. The pointer may be invalidated
     // after calling insert()
     //
-    T* operator[](uint8_t id) const;
+    T const* operator[](uint8_t id) const;
 
-    T* insert();
+    T* operator[](uint8_t id);
 
-    T* insert(uint8_t id);
+    T& insert();
 
-    T* duplicate(uint8_t id);
+    T& insert(uint8_t id);
 
-    T* get(uint8_t id) const;
+    T& duplicate(uint8_t id);
+
+    T const* get(uint8_t id) const;
+
+    T* get(uint8_t id);
 
     std::shared_ptr<T> getShared(uint8_t id) const;
 
@@ -121,7 +117,8 @@ protected:
 };
 
 // we will only use these template instantiations
-using InstrumentList = DataList<Instrument>;
-using WaveformList = DataList<Waveform>;
+
+using InstrumentTable = Table<Instrument>;
+using WaveformTable = Table<Waveform>;
 
 }

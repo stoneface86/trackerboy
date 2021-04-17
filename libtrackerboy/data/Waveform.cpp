@@ -28,6 +28,10 @@ Waveform::Data& Waveform::data() noexcept {
     return mData;
 }
 
+Waveform::Data const& Waveform::data() const noexcept {
+    return mData;
+}
+
 void Waveform::fromString(std::string const& hexstring) {
     for (size_t pos = 0, i = 0; pos < hexstring.size() && i != mData.size(); pos += 2, ++i) {
         std::string sub = hexstring.substr(pos, 2);

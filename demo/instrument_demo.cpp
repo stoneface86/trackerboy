@@ -14,21 +14,21 @@ int main() {
 
     Module mod;
 
-    auto &ilist = mod.instrumentList();
-    auto &wlist = mod.waveformList();
+    auto &ilist = mod.instrumentTable();
+    auto &wlist = mod.waveformTable();
     
     // sample instrument with a looping arp sequence
-    auto inst = ilist.insert();
-    inst->setEnvelope(0xF4);
-    inst->setEnvelopeEnable(true);
+    auto &inst = ilist.insert();
+    inst.setEnvelope(0xF4);
+    inst.setEnvelopeEnable(true);
     {
-        auto &seq = inst->sequence(Instrument::SEQUENCE_ARP);
+        auto &seq = inst.sequence(Instrument::SEQUENCE_ARP);
         auto &seqdata = seq.data();
         seqdata = { 0, 0, 7, 7, 4, 4, 11, 11 };
         seq.setLoop(0);
     }
     {
-        auto &seq = inst->sequence(Instrument::SEQUENCE_TIMBRE);
+        auto &seq = inst.sequence(Instrument::SEQUENCE_TIMBRE);
         auto &seqdata = seq.data();
         seqdata = { 0 };
         //seq.setLoop(0);

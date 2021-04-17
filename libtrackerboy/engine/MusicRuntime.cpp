@@ -47,16 +47,16 @@ void MusicRuntime::lock(RuntimeContext const& rc, ChType ch) {
         // reload current channel state
         switch (ch) {
             case ChType::ch1:
-                ChannelControl<ChType::ch1>::init(rc.apu, rc.waveList, mStates[0]);
+                ChannelControl<ChType::ch1>::init(rc.apu, rc.waveTable, mStates[0]);
                 break;
             case ChType::ch2:
-                ChannelControl<ChType::ch2>::init(rc.apu, rc.waveList, mStates[1]);
+                ChannelControl<ChType::ch2>::init(rc.apu, rc.waveTable, mStates[1]);
                 break;
             case ChType::ch3:
-                ChannelControl<ChType::ch3>::init(rc.apu, rc.waveList, mStates[2]);
+                ChannelControl<ChType::ch3>::init(rc.apu, rc.waveTable, mStates[2]);
                 break;
             case ChType::ch4:
-                ChannelControl<ChType::ch4>::init(rc.apu, rc.waveList, mStates[3]);
+                ChannelControl<ChType::ch4>::init(rc.apu, rc.waveTable, mStates[3]);
                 break;
         }
         // update lock bit for channel
@@ -93,10 +93,10 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
     }
     
     if (mFlags.test(FLAG_INIT)) {
-        ChannelControl<ChType::ch1>::init(rc.apu, rc.waveList, mStates[0]);
-        ChannelControl<ChType::ch2>::init(rc.apu, rc.waveList, mStates[1]);
-        ChannelControl<ChType::ch3>::init(rc.apu, rc.waveList, mStates[2]);
-        ChannelControl<ChType::ch4>::init(rc.apu, rc.waveList, mStates[3]);
+        ChannelControl<ChType::ch1>::init(rc.apu, rc.waveTable, mStates[0]);
+        ChannelControl<ChType::ch2>::init(rc.apu, rc.waveTable, mStates[1]);
+        ChannelControl<ChType::ch3>::init(rc.apu, rc.waveTable, mStates[2]);
+        ChannelControl<ChType::ch4>::init(rc.apu, rc.waveTable, mStates[3]);
 
         mFlags.reset(FLAG_INIT);
     }
@@ -186,7 +186,7 @@ void MusicRuntime::update(RuntimeContext const& rc) {
     if (!mFlags.test(+ch)) {
         // only write to registers if the channel is locked
         // unlocked channels have sfx playing on them or are being used for something else
-        ChannelControl<ch>::update(rc.apu, rc.waveList, mStates[+ch], state);
+        ChannelControl<ch>::update(rc.apu, rc.waveTable, mStates[+ch], state);
     }
     state.retrigger = false;
     // save the current state
