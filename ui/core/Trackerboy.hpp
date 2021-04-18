@@ -4,7 +4,7 @@
 #include "core/audio/Renderer.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/InstrumentListModel.hpp"
-#include "core/model/SongListModel.hpp"
+#include "core/model/OrderModel.hpp"
 #include "core/model/WaveListModel.hpp"
 #include "core/Config.hpp"
 #include "core/ColorTable.hpp"
@@ -41,7 +41,6 @@ struct Trackerboy {
     //
     InstrumentListModel instrumentModel;
     OrderModel orderModel;
-    SongListModel songModel;
     WaveListModel waveModel;
 
     //

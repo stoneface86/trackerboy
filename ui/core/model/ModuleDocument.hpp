@@ -59,11 +59,11 @@ public:
 
     // accessors for the underlying module data containers
 
+    trackerboy::Module& mod();
+
     trackerboy::InstrumentTable& instrumentTable();
 
-    trackerboy::WaveTable& waveTable();
-
-    std::vector<trackerboy::Song> &songs();
+    trackerboy::WaveformTable& waveformTable();
 
     QUndoStack& undoStack();
 

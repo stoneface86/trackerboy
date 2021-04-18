@@ -22,7 +22,7 @@ class TableForm : public QWidget {
     Q_OBJECT
 
 public:
-    TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString typeName, QWidget *parent = nullptr);
+    TableForm(BaseTableModel &model, QString typeName, QWidget *parent = nullptr);
     ~TableForm() = default;
 
     void setupMenu(QMenu &menu);
@@ -31,11 +31,20 @@ signals:
     void showEditor();
 
 private slots:
-    void viewCurrentChanged(const QModelIndex &current, const QModelIndex &prev);
+
+    void add();
+
+    void remove();
+
+    void duplicate();
+
+    void viewSelectChanged(const QItemSelection &selected, const QItemSelection &deselected);
 
     void viewContextMenu(const QPoint &pos);
 
-    void modelCurrentChanged(int index);
+    void nameEdited(QString const& text);
+
+    //void modelCurrentChanged(int index);
 
 private:
     Q_DISABLE_COPY(TableForm)
@@ -57,7 +66,6 @@ private:
     QAction mActionDuplicate;
     QAction mActionImport;
     QAction mActionExport;
-    QAction mActionEdit;
 
     
 

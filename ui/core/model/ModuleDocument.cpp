@@ -4,6 +4,8 @@
 #include <QFileInfo>
 #include <QThread>
 
+#include <fstream>
+
 template <bool tPermanent>
 ModuleDocument::EditContext<tPermanent>::EditContext(ModuleDocument &document) :
     mDocument(document)
@@ -42,10 +44,6 @@ void ModuleDocument::clear() {
     mModule.clear();
 
     clean();
-
-    // always start with 1 song
-    auto &songs = mModule.songs();
-    songs.emplace_back();
     
 }
 
@@ -53,16 +51,16 @@ bool ModuleDocument::isModified() const {
     return mModified;
 }
 
+trackerboy::Module& ModuleDocument::mod() {
+    return mModule;
+}
+
 trackerboy::InstrumentTable& ModuleDocument::instrumentTable() {
     return mModule.instrumentTable();
 }
 
-trackerboy::WaveTable& ModuleDocument::waveTable() {
-    return mModule.waveTable();
-}
-
-std::vector<trackerboy::Song>& ModuleDocument::songs() {
-    return mModule.songs();
+trackerboy::WaveformTable& ModuleDocument::waveformTable() {
+    return mModule.waveformTable();
 }
 
 QUndoStack& ModuleDocument::undoStack() {

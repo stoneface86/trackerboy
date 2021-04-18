@@ -20,12 +20,10 @@ include_directories(
 set(UI_SRC
     "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
-    "core/model/BaseModel.cpp"
     "core/model/BaseTableModel.cpp"
     "core/model/ModuleDocument.cpp"
     "core/model/InstrumentListModel.cpp"
     "core/model/OrderModel.cpp"
-    "core/model/SongListModel.cpp"
     "core/model/WaveListModel.cpp"
     "core/Config.cpp"
     "core/Miniaudio.cpp"
@@ -91,6 +89,25 @@ if (NOT DEBUG_BUILD)
     target_compile_definitions(trackerboy_ui PRIVATE QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
 endif ()
 
+#
+# test programs
+# These small programs are used to test specific parts of the UI instead of building the entire thing
+# Essentially unit tests, but without the automation
+#
+
+add_executable(test_TableForm ${GUI_TYPE} EXCLUDE_FROM_ALL 
+    "test/test_TableForm.cpp" 
+    "widgets/docks/TableForm.cpp" 
+    "core/model/BaseTableModel.cpp"
+    "core/model/InstrumentListModel.cpp"
+    "core/model/ModuleDocument.cpp"
+    "misc/IconManager.cpp"
+    "resources/icons.qrc"
+)
+target_link_libraries(test_TableForm PRIVATE
+    trackerboy
+    Qt5::Widgets
+)
 
 add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
 target_link_libraries(test_pattern_painter

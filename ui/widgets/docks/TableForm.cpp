@@ -8,7 +8,7 @@
 #include <QPainter>
 
 
-TableForm::TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString typeName, QWidget *parent) :
+TableForm::TableForm(BaseTableModel &model, QString typeName, QWidget *parent) :
     QWidget(parent),
     mModel(model),
     mLayout(),
@@ -45,10 +45,6 @@ TableForm::TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString
     mActionExport.setText(tr("Export"));
     mActionExport.setIcon(IconManager::getIcon(Icons::itemExport));
     mActionExport.setStatusTip(tr("Export %1 to a file").arg(typeName));
-    mActionEdit.setText(tr("Edit"));
-    mActionEdit.setIcon(IconManager::getIcon(Icons::itemEdit));
-    mActionEdit.setStatusTip(tr("Edit the current %1").arg(typeName));
-    mActionEdit.setShortcut(editorShortcut);
 
     setupMenu(mContextMenu);
 
@@ -57,38 +53,40 @@ TableForm::TableForm(BaseTableModel &model, QKeySequence editorShortcut, QString
     mToolbar.addAction(&mActionDuplicate);
     mToolbar.addAction(&mActionImport);
     mToolbar.addAction(&mActionExport);
-    mToolbar.addAction(&mActionEdit);
     mToolbar.setIconSize(QSize(16, 16));
 
     mActionRemove.setEnabled(false);
     mActionDuplicate.setEnabled(false);
-    mActionEdit.setEnabled(false);
     // disable these until we add support for them
     mActionImport.setEnabled(false);
     mActionExport.setEnabled(false);
 
     mListView.setWrapping(true);
     mListView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+    mListView.setResizeMode(QListView::Adjust);
     connect(&mListView, &QListView::customContextMenuRequested, this, &TableForm::viewContextMenu);
 
     mListView.setModel(&mModel);
     auto selectModel = mListView.selectionModel();
-    connect(selectModel, &QItemSelectionModel::currentChanged, this, &TableForm::viewCurrentChanged);
-    connect(&mModel, &BaseTableModel::currentIndexChanged, this, &TableForm::modelCurrentChanged);
-    connect(&mNameEdit, &QLineEdit::textEdited, &mModel, qOverload<const QString&>(&BaseTableModel::rename));
+    connect(selectModel, &QItemSelectionModel::selectionChanged, this, &TableForm::viewSelectChanged);
+    //connect(&mModel, &BaseTableModel::currentIndexChanged, this, &TableForm::modelCurrentChanged);
+    connect(&mNameEdit, &QLineEdit::textEdited, this, qOverload<const QString&>(&TableForm::nameEdited));
 
     // actions
-    connect(&mActionAdd, &QAction::triggered, &mModel, &BaseTableModel::add);
-    connect(&mActionRemove, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::remove));
-    connect(&mActionDuplicate, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::duplicate));
-    connect(&mActionEdit, &QAction::triggered, this, &TableForm::showEditor);
+    connect(&mActionAdd, &QAction::triggered, this, &TableForm::add);
+    connect(&mActionRemove, &QAction::triggered, this, &TableForm::remove);
+    connect(&mActionDuplicate, &QAction::triggered, this, &TableForm::duplicate);
+
+    //connect(&mActionRemove, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::remove));
+    //connect(&mActionDuplicate, &QAction::triggered, &mModel, qOverload<>(&BaseTableModel::duplicate));
+    //connect(&mActionEdit, &QAction::triggered, this, &TableForm::showEditor);
 
     // TODO: connect import action
     // TODO: connect export action
 
-    connect(&mModel, &BaseTableModel::addEnable, &mActionAdd, &QAction::setEnabled);
-    connect(&mModel, &BaseTableModel::duplicateEnable, &mActionDuplicate, &QAction::setEnabled);
-    connect(&mModel, &BaseTableModel::removeEnable, &mActionRemove, &QAction::setEnabled);
+    //connect(&mModel, &BaseTableModel::addEnable, &mActionAdd, &QAction::setEnabled);
+    //connect(&mModel, &BaseTableModel::duplicateEnable, &mActionDuplicate, &QAction::setEnabled);
+    //connect(&mModel, &BaseTableModel::removeEnable, &mActionRemove, &QAction::setEnabled);
 
 
     connect(&mListView, &QListView::doubleClicked, this,
@@ -106,27 +104,48 @@ void TableForm::setupMenu(QMenu &menu) {
     menu.addSeparator();
     menu.addAction(&mActionImport);
     menu.addAction(&mActionExport);
-    menu.addSeparator();
-    menu.addAction(&mActionEdit);
 }
 
-void TableForm::modelCurrentChanged(int index) {
+void TableForm::viewSelectChanged(const QItemSelection &selected, const QItemSelection &deselected) {
+    bool hasSelection = selected.size() > 0;
 
-    bool hasCurrent = index != -1;
-    mNameEdit.setEnabled(hasCurrent);
-    mActionEdit.setEnabled(hasCurrent);
+    mNameEdit.setEnabled(hasSelection);
+    mActionRemove.setEnabled(hasSelection);
+    mActionDuplicate.setEnabled(hasSelection && mModel.canDuplicate());
 
-    if (hasCurrent) {
-        mNameEdit.setText(mModel.name());
+    if (hasSelection) {
+        mNameEdit.setText(mModel.name(selected[0].topLeft().row()));
     } else {
         mNameEdit.clear();
     }
-    mListView.setCurrentIndex(mModel.index(index));
+    
 }
 
-void TableForm::viewCurrentChanged(const QModelIndex &current, const QModelIndex &prev) {
-    (void)prev; // we don't care about the previous index
-    mModel.select(current);
+void TableForm::add() {
+    mModel.add();
+    if (!mModel.canDuplicate()) {
+        mActionAdd.setEnabled(false);
+        mActionDuplicate.setEnabled(false);
+    }
+}
+
+void TableForm::remove() {
+    mModel.remove(mListView.currentIndex().row());
+    mActionAdd.setEnabled(true);
+    mActionDuplicate.setEnabled(mListView.selectionModel()->hasSelection());
+}
+
+void TableForm::duplicate() {
+    mModel.duplicate(mListView.currentIndex().row());
+    if (!mModel.canDuplicate()) {
+        mActionAdd.setEnabled(false);
+        mActionDuplicate.setEnabled(false);
+    }
+}
+
+
+void TableForm::nameEdited(QString const& text) {
+    mModel.rename(mListView.currentIndex().row(), text);
 }
 
 void TableForm::viewContextMenu(const QPoint &pos) {

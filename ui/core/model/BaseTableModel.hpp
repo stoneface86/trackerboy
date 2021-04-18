@@ -1,49 +1,58 @@
 #pragma once
 
-#include "core/model/BaseModel.hpp"
+#include "core/model/ModuleDocument.hpp"
 
 #include "trackerboy/data/Table.hpp"
 
+#include <QAbstractListModel>
+#include <QIcon>
 
 //
 // Base class for the WaveListModel and InstrumentListModel.
 //
-class BaseTableModel : public BaseModel {
+class BaseTableModel : public QAbstractListModel {
+
     Q_OBJECT
 
 public:
 
+    virtual ~BaseTableModel();
+
+    bool canDuplicate() const;
+
+    void reload();
+
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
-    // convert a table id to its model index
-    int idToModel(uint8_t id);
+    virtual QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
 
-    QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
+    // adds a new item, if there was no items prior then this one is selected
+    void add();
+    // removes the given item
+    void remove(int index);
 
-    virtual QString nameAt(int index) override;
+    void duplicate(int index);
+
+    QString name(int index);
+
+    void rename(int index, const QString &name);
 
 protected:
     BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table);
 
-    virtual void dataAdd() override;
+    virtual QIcon iconData(trackerboy::DataItem const& item) const = 0;
 
-    virtual void dataRemove(int row) override;
-
-    virtual void dataDuplicate(int row) override;
-
-    virtual QVariant iconData(const QModelIndex &index) const = 0;
-
-    virtual void dataRename(int index, const QString &name) override;
-
-    virtual bool canAdd() override;
-
-    virtual bool canRemove() override;
-
-    virtual int nextIndex() override;
-
+    ModuleDocument &mDocument;
     trackerboy::BaseTable &mBaseTable;
 
 private:
     Q_DISABLE_COPY(BaseTableModel)
 
+
+    void insertId(uint8_t id);
+
+
+    // maps a model index -> table index
+    std::vector<uint8_t> mItems;
+    int mNextModelIndex;
 };
