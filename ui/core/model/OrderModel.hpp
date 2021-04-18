@@ -13,9 +13,9 @@
 #include <vector>
 
 //
-// Model class for the current song's order. The song order is a "table"
-// with 4 columns (1 for each channel). Each row in the model is a pattern
-// in the song.
+// Model class for the song order editor. The song order is a "table"
+// with 4 columns being track ids (1 for each channel). Each row in the
+// model is a pattern in the song.
 //
 class OrderModel : public QAbstractTableModel {
 
@@ -25,6 +25,8 @@ public:
 
     explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
     ~OrderModel() = default;
+
+    void reload();
 
     uint8_t currentPattern();
 
@@ -39,11 +41,6 @@ public:
     void decrementSelection(QItemSelection const &selection);
     
     void select(int row, int track);
-    
-    //
-    // Change the model's order data. Should only be called by SongListModel.
-    //
-    void setOrder(std::vector<trackerboy::Order> *order);
 
     //
     // All items in the given selection are set to the given track id
@@ -135,14 +132,19 @@ private:
 
     // methods called by command classes
 
-    void cmdInsertRows(uint8_t row, uint8_t count, trackerboy::Order *rowdata = nullptr);
+    void cmdInsertRows(uint8_t row, uint8_t count, trackerboy::OrderRow *rowdata = nullptr);
 
     void cmdRemoveRows(uint8_t row, uint8_t count);
+
+    void cmdSwapRows(uint8_t from, uint8_t to);
+
+    
 
     ModuleDocument &mDocument;
     QColor mRowColor;
 
-    std::vector<trackerboy::Order> *mOrder;
+    trackerboy::Order &mOrder;
+    //std::vector<trackerboy::Order> *mOrder;
 
     uint8_t mCurrentRow;
     uint8_t mCurrentTrack;

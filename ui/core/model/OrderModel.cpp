@@ -34,7 +34,7 @@ private:
     void setCell(uint8_t value) {
         {
             auto ctx = mModel.mDocument.beginCommandEdit();
-            (*mModel.mOrder)[mPattern].tracks[mTrack] = value;
+            mModel.mOrder[mPattern][mTrack] = value;
         }
         auto cellIndex = mModel.createIndex(mPattern, mTrack, nullptr);
         emit mModel.dataChanged(cellIndex, cellIndex, { Qt::DisplayRole });
@@ -64,30 +64,17 @@ public:
     }
 
     void undo() override {
-        swap();
+        mModel.cmdSwapRows(mRowFrom, mRowTo);
         mModel.select(mRowFrom, mModel.mCurrentTrack);
     }
 
     void redo() override {
-        swap();
+        mModel.cmdSwapRows(mRowFrom, mRowTo);
         mModel.select(mRowTo, mModel.mCurrentTrack);
     }
 
 
 private:
-
-    void swap() {
-        auto iter = mModel.mOrder->begin();
-        {
-            auto ctx = mModel.mDocument.beginCommandEdit();
-            std::iter_swap(iter + mRowFrom, iter + mRowTo);
-        }
-        emit mModel.dataChanged(
-            mModel.createIndex(std::min(mRowFrom, mRowTo), 0, nullptr),
-            mModel.createIndex(std::max(mRowFrom, mRowTo), 3, nullptr),
-            { Qt::DisplayRole }
-        );
-    }
 
     OrderModel &mModel;
     uint8_t const mRowFrom; // row index we are moving from
@@ -128,10 +115,10 @@ public:
         mModel(model),
         mRow(row),
         mCount(count),
-        mRowData(new trackerboy::Order[count])
+        mRowData(new trackerboy::OrderRow[count])
     {
         // keep a copy of the rows we removed
-        std::copy_n(mModel.mOrder->begin() + row, count, mRowData.get());
+        std::copy_n(mModel.mOrder.data().begin() + row, count, mRowData.get());
     }
 
     void redo() override {
@@ -147,7 +134,7 @@ private:
     OrderModel &mModel;
     uint8_t const mRow;
     uint8_t const mCount;
-    std::unique_ptr<trackerboy::Order[]> mRowData;
+    std::unique_ptr<trackerboy::OrderRow[]> mRowData;
 };
 
 class OrderDuplicateCommand : public QUndoCommand {
@@ -161,7 +148,7 @@ public:
     }
 
     void redo() override {
-        auto toDuplicate = mModel.mOrder->at(mRow);
+        auto toDuplicate = mModel.mOrder[mRow];
         mModel.cmdInsertRows(mRow, 1, &toDuplicate);
     }
 
@@ -180,7 +167,7 @@ private:
 OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
     QAbstractTableModel(parent),
     mDocument(document),
-    mOrder(nullptr),
+    mOrder(document.mod().song().order()),
     mCurrentRow(0),
     mCurrentTrack(0),
     mCanSelect(true)
@@ -209,7 +196,7 @@ void OrderModel::select(int row, int track) {
 }
 
 void OrderModel::selectPattern(int pattern) {
-    Q_ASSERT(pattern >= 0 && pattern < mOrder->size());
+    Q_ASSERT(pattern >= 0 && pattern < mOrder.size());
     auto patternU8 = (uint8_t)pattern;
     if (mCurrentRow != patternU8) {
         doSelectPattern(patternU8);
@@ -224,9 +211,8 @@ void OrderModel::selectTrack(int track) {
     }
 }
 
-void OrderModel::setOrder(std::vector<trackerboy::Order> *order) {
+void OrderModel::reload() {
     beginResetModel();
-    mOrder = order;
     endResetModel();
     doSelectPattern(0);
     doSelectTrack(0);
@@ -250,25 +236,25 @@ int OrderModel::columnCount(const QModelIndex &parent) const {
 }
 
 QVariant OrderModel::data(const QModelIndex &index, int role) const {
-    if (mOrder != nullptr) {
-        switch (role) {
 
-            case Qt::DisplayRole: {
-                auto row = (*mOrder)[index.row()];
-                int id = row.tracks[index.column()];
-                return QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper();
-            }
-            case Qt::TextAlignmentRole:
-                return Qt::AlignCenter;
-            case Qt::BackgroundRole:
-                if (index.row() == mCurrentRow) {
-                    return mRowColor;
-                }
-                break;
-            default:
-                break;
+    switch (role) {
+
+        case Qt::DisplayRole: {
+            auto row = mOrder[(uint8_t)index.row()];
+            int id = (int)row[index.column()];
+            return QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper();
         }
+        case Qt::TextAlignmentRole:
+            return Qt::AlignCenter;
+        case Qt::BackgroundRole:
+            if (index.row() == mCurrentRow) {
+                return mRowColor;
+            }
+            break;
+        default:
+            break;
     }
+    
 
     return QVariant();
 }
@@ -300,7 +286,7 @@ QVariant OrderModel::headerData(int section, Qt::Orientation orientation, int ro
 
 int OrderModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
-    return mOrder == nullptr ? 0 : static_cast<int>(mOrder->size());
+    return (int)mOrder.size();
 }
 
 bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int role) {
@@ -308,7 +294,7 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
 
         bool ok;
         unsigned id = value.toString().toUInt(&ok, 16);
-        if (ok && id < trackerboy::Song::MAX_ORDERS) {
+        if (ok && id < trackerboy::MAX_PATTERNS) {
             auto row = index.row();
             auto track = index.column();
 
@@ -317,7 +303,7 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
                 (uint8_t)row,
                 (uint8_t)track,
                 (uint8_t)id, 
-                (*mOrder)[row].tracks[track]
+                mOrder[(uint8_t)row][track]
             );
             cmd->setText(tr("Set track in pattern #%1\nSet track").arg(row));
             mDocument.undoStack().push(cmd);
@@ -422,7 +408,7 @@ void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option
 
 template <OrderModel::ModifyMode mode>
 void OrderModel::modifyCell(QUndoStack &stack, uint8_t pattern, uint8_t track, uint8_t option) {
-    auto oldVal = (*mOrder)[pattern].tracks[track];
+    auto oldVal = mOrder[pattern][track];
     uint8_t newVal;
     if constexpr (mode == ModifyMode::inc) {
         newVal = (oldVal == 255) ? oldVal : oldVal + 1;
@@ -437,16 +423,20 @@ void OrderModel::modifyCell(QUndoStack &stack, uint8_t pattern, uint8_t track, u
 
 }
 
-void OrderModel::cmdInsertRows(uint8_t row, uint8_t count, trackerboy::Order *rowdata) {
+void OrderModel::cmdInsertRows(uint8_t row, uint8_t count, trackerboy::OrderRow *rowdata) {
     mCanSelect = false;
     beginInsertRows(QModelIndex(), row, row + count - 1);
     {
         auto ctx = mDocument.beginCommandEdit();
-        mOrder->insert(mOrder->cbegin() + row, count, { 0, 0, 0, 0 });
-        
+
+        auto &vec = mOrder.data();
+        auto dest = vec.begin() + row;
         if (rowdata != nullptr) {
-            std::copy_n(rowdata, count, mOrder->begin() + row);
+            vec.insert(dest, rowdata, rowdata + count);
+        } else {
+            vec.insert(dest, count, { 0, 0, 0, 0 });
         }
+        
     }
     endInsertRows();
     mCanSelect = true;
@@ -461,7 +451,7 @@ void OrderModel::cmdInsertRows(uint8_t row, uint8_t count, trackerboy::Order *ro
     emit canMoveUp(mCurrentRow != 0);
     emit canMoveDown(mCurrentRow != rows - 1);
     emit canRemove(true);
-    emit canInsert(rows != trackerboy::Song::MAX_ORDERS);
+    emit canInsert(rows != trackerboy::MAX_PATTERNS);
 }
 
 void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
@@ -471,9 +461,8 @@ void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
     mCanSelect = false;
     beginRemoveRows(QModelIndex(), row, rowEnd - 1);
     {
-        auto ctx = mDocument.beginEdit();
-        auto iter = mOrder->cbegin() + row;
-        mOrder->erase(iter, iter + count);
+        auto ctx = mDocument.beginCommandEdit();
+        mOrder.remove(row, count);
     }
     endRemoveRows();
     mCanSelect = true;
@@ -485,14 +474,28 @@ void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
         emit patternsChanged(); // redraw
         // enforce the current selection
         emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
-    
+
         emit canMoveUp(mCurrentRow != 0);
         emit canMoveDown(mCurrentRow != rows - 1);
     }
-    
+
     // we can always insert after a remove
     emit canInsert(true);
     emit canRemove(rows != 1);
+
+}
+
+void OrderModel::cmdSwapRows(uint8_t from, uint8_t to) {
+    {
+        auto ctx = mDocument.beginCommandEdit();
+        mOrder.swapPatterns(from, to);
+    }
+
+    auto fromIndex = createIndex(from, 0, nullptr);
+    auto toIndex = createIndex(to, 0, nullptr);
+
+    emit dataChanged(fromIndex, fromIndex, { Qt::DisplayRole });
+    emit dataChanged(toIndex, toIndex, { Qt::DisplayRole });
 }
 
 

@@ -109,6 +109,21 @@ target_link_libraries(test_TableForm PRIVATE
     Qt5::Widgets
 )
 
+add_executable(test_OrderWidget ${GUI_TYPE} EXCLUDE_FROM_ALL 
+    "test/test_OrderWidget.cpp" 
+    "widgets/docks/OrderWidget.cpp" 
+    "widgets/CustomSpinbox.cpp"
+    "core/model/OrderModel.cpp"
+    "core/model/ModuleDocument.cpp"
+    "misc/IconManager.cpp"
+    "misc/utils.cpp"
+    "resources/icons.qrc"
+)
+target_link_libraries(test_OrderWidget PRIVATE
+    trackerboy
+    Qt5::Widgets
+)
+
 add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
 target_link_libraries(test_pattern_painter
     trackerboy

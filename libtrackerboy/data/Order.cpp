@@ -28,7 +28,11 @@ size_t Order::size() const noexcept {
     return mTable.size();
 }
 
-std::vector<OrderRow> const& Order::data() noexcept {
+std::vector<OrderRow> const& Order::data() const noexcept {
+    return mTable;
+}
+
+std::vector<OrderRow>& Order::data() noexcept {
     return mTable;
 }
 
@@ -40,6 +44,14 @@ void Order::insert(OrderRow const& data) {
 void Order::insert(uint8_t before, OrderRow const& data) {
     assertCanInsert();
     mTable.insert(mTable.begin() + before, data);
+}
+
+void Order::insert(uint8_t before, OrderRow const *data, size_t count) {
+    auto newsize = mTable.size() + count;
+    if (newsize > MAX_SIZE) {
+        throw std::runtime_error("cannot insert: maximum number of patterns");
+    }
+    mTable.insert(mTable.begin() + before, data, data + count);
 }
 
 //
@@ -75,11 +87,19 @@ void Order::move(uint8_t from, uint8_t to) {
     moveElement(mTable, from, to);
 }
 
-void Order::remove(uint8_t pattern) {
-    if (mTable.size() == 1) {
-        throw std::runtime_error("cannot remove: Order must have at least 1 pattern");
+void Order::remove(uint8_t pattern, size_t count) {
+    if (count) {
+        if (mTable.size() <= count) {
+            throw std::runtime_error("cannot remove: Order must have at least 1 pattern");
+        }
+        auto iter = mTable.begin() + pattern;
+        mTable.erase(iter, iter + count);
     }
-    mTable.erase(mTable.begin() + pattern);
+}
+
+void Order::swapPatterns(uint8_t p1, uint8_t p2) {
+    auto begin = mTable.begin();
+    std::iter_swap(begin + p1, begin + p2);
 }
 
 void Order::setData(std::vector<OrderRow> &data) {
