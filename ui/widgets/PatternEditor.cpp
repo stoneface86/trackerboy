@@ -31,7 +31,7 @@
 
 
 
-PatternEditor::PatternEditor(PianoInput &input, SongListModel &model, QWidget *parent) :
+PatternEditor::PatternEditor(PianoInput &input, OrderModel &model, QWidget *parent) :
     QFrame(parent),
     mPianoIn(input),
     mLayout(),
@@ -136,10 +136,10 @@ PatternEditor::PatternEditor(PianoInput &input, SongListModel &model, QWidget *p
     connect(&mHScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorColumn);
     connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
-    connect(&model, &SongListModel::patternSizeChanged, this,
-        [this](int rows) {
-            mVScroll.setMaximum(rows - 1);
-        });
+    //connect(&model, &SongListModel::patternSizeChanged, this,
+    //    [this](int rows) {
+    //        mVScroll.setMaximum(rows - 1);
+    //    });
 
     connect(&mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, &PatternEditor::octaveChanged);
 

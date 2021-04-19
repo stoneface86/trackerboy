@@ -6,7 +6,7 @@
 #include "widgets/EnvelopeForm.hpp"
 #include "widgets/PianoWidget.hpp"
 
-#include "trackerboy/ChType.hpp"
+#include "trackerboy/trackerboy.hpp"
 
 #include <QComboBox>
 #include <QDialog>

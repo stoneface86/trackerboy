@@ -3,9 +3,7 @@
 
 #include "core/audio/RenderFrame.hpp"
 #include "core/audio/Ringbuffer.hpp"
-#include "core/model/InstrumentListModel.hpp"
-#include "core/model/SongListModel.hpp"
-#include "core/model/WaveListModel.hpp"
+#include "core/model/ModuleDocument.hpp"
 #include "core/Config.hpp"
 #include "core/Miniaudio.hpp"
 
@@ -13,7 +11,7 @@
 #include "trackerboy/data/Instrument.hpp"
 #include "trackerboy/data/Waveform.hpp"
 #include "trackerboy/engine/Engine.hpp"
-#include "trackerboy/engine/InstrumentRuntime.hpp"
+#include "trackerboy/InstrumentPreview.hpp"
 #include "trackerboy/Synth.hpp"
 #include "trackerboy/note.hpp"
 
@@ -47,10 +45,7 @@ public:
     Renderer(
         Miniaudio &miniaudio,
         Spinlock &spinlock,
-        ModuleDocument &document,
-        InstrumentListModel &instrumentModel,
-        SongListModel &songModel,
-        WaveListModel &waveModel
+        ModuleDocument &document
     );
     ~Renderer();
 
@@ -164,10 +159,6 @@ private:
     Miniaudio &mMiniaudio;
     Spinlock &mSpinlock;
 
-    InstrumentListModel &mInstrumentModel;
-    SongListModel &mSongModel;
-    WaveListModel &mWaveModel;
-
     QWaitCondition mIdleCondition;
     QMutex mMutex;
     std::unique_ptr<QThread> mBackgroundThread;
@@ -190,11 +181,12 @@ private:
     // renderering (synchronize access via spinlock)
     
     trackerboy::Synth mSynth;
+    trackerboy::GbApu mApu;
     trackerboy::RuntimeContext mRc;
     // read access to the current song, wave table and instrument table
     trackerboy::Engine mEngine;
     // has read access to an Instrument and wave table
-    trackerboy::InstrumentRuntime mIr;
+    trackerboy::InstrumentPreview mIp;
 
 
     PreviewState mPreviewState;
@@ -208,14 +200,10 @@ private:
     // outgoing sample buffer for GUI (callback writes, GUI reads)
     AudioRingbuffer mSampleReturnBuffer;
 
-    // the current frame buffer
-    int16_t *mFrameBuffer;
-    size_t mFrameBuffersize;
-
     size_t mSyncCounter;
     size_t mSyncPeriod;
 
-    trackerboy::Frame mCurrentEngineFrame;
+    trackerboy::Engine::Frame mCurrentEngineFrame;
     Ringbuffer<RenderFrame> mFrameReturnBuffer;
 
     bool mNewFrameSinceLastSync;

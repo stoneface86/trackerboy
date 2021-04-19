@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "core/model/SongListModel.hpp"
-
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QPushButton>
@@ -20,12 +18,11 @@ class SongPropertiesWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SongPropertiesWidget(SongListModel &model, QWidget *parent = nullptr);
+    explicit SongPropertiesWidget(QWidget *parent = nullptr);
     ~SongPropertiesWidget();
 
 
 private slots:
-    void onSongChanged(int index);
     void calculateTempo();
     void calculateActualTempo(int value = 0);
 
@@ -34,7 +31,6 @@ private slots:
 private:
     Q_DISABLE_COPY(SongPropertiesWidget)
 
-    SongListModel &mModel;
 
     QFormLayout mLayout;
         QSpinBox mRowsPerBeatSpin;

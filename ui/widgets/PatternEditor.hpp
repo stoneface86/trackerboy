@@ -47,7 +47,7 @@ public:
         QAction record;
     };
 
-    explicit PatternEditor(PianoInput &input, SongListModel &model, QWidget *parent = nullptr);
+    explicit PatternEditor(PianoInput &input, OrderModel &model, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
     PatternGrid& grid();

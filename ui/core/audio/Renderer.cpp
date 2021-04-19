@@ -20,16 +20,10 @@ static void logMaResult(ma_result result) {
 Renderer::Renderer(
     Miniaudio &miniaudio,
     Spinlock &spinlock,
-    ModuleDocument &document,
-    InstrumentListModel &instrumentModel,
-    SongListModel &songModel,
-    WaveListModel &waveModel
+    ModuleDocument &document
 ) :
     mMiniaudio(miniaudio),
     mSpinlock(spinlock),
-    mInstrumentModel(instrumentModel),
-    mSongModel(songModel),
-    mWaveModel(waveModel),
     mIdleCondition(),
     mMutex(),
     mBackgroundThread(nullptr),
@@ -44,17 +38,16 @@ Renderer::Renderer(
     mDeviceConfig(),
     mLastDeviceError(MA_SUCCESS),
     mSynth(44100),
-    mRc(mSynth.apu(), document.instrumentTable(), document.waveTable()),
-    mEngine(mRc),
-    mIr(mRc),
+    mApu(mSynth.apu()),
+    mRc(mApu, document.instrumentTable(), document.waveformTable()),
+    mEngine(mApu, document.mod()),
+    mIp(),
     mPreviewState(PreviewState::none),
     mPreviewChannel(trackerboy::ChType::ch1),
     mCallbackState(CallbackState::stopped),
     mStopCounter(0),
     mBuffer(),
     mSampleReturnBuffer(),
-    mFrameBuffer(nullptr),
-    mFrameBuffersize(0),
     mSyncCounter(0),
     mSyncPeriod(0),
     mCurrentEngineFrame(),
@@ -179,7 +172,6 @@ void Renderer::beginRender() {
     } else {
 
         mCallbackState = CallbackState::running;
-        mFrameBuffersize = 0;
         mSyncCounter = 0;
         mSync = false;
         mSamplesElapsed = 0;
@@ -194,7 +186,7 @@ void Renderer::beginRender() {
 void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
 
     mSpinlock.lock();
-    mEngine.play(*mSongModel.currentSong(), orderNo, rowNo);
+    mEngine.play(orderNo, rowNo);
     mSpinlock.unlock();
 
     QMutexLocker locker(&mMutex);
@@ -209,9 +201,9 @@ void Renderer::clearDiagnostics() {
 }
 
 void Renderer::play() {
-    if (mEnabled) {
-        playMusic(mSongModel.orderModel().currentPattern(), 0);
-    }
+    //if (mEnabled) {
+    //    playMusic(mSongModel.orderModel().currentPattern(), 0);
+    //}
 }
 
 void Renderer::playPattern() {
@@ -230,76 +222,76 @@ void Renderer::playFromStart() {
 
 
 void Renderer::previewInstrument(trackerboy::Note note) {
-    if (mEnabled) {
-        mSpinlock.lock();
-        switch (mPreviewState) {
-            case PreviewState::waveform:
-                resetPreview();
-                [[fallthrough]];
-            case PreviewState::none:
-            {
-                // set instrument runtime's instrument to the current one
-                auto inst = mInstrumentModel.instrument(mInstrumentModel.currentIndex());
-                mIr.setInstrument(*inst);
-                mPreviewState = PreviewState::instrument;
-                mPreviewChannel = static_cast<trackerboy::ChType>(inst->data().channel);
-            }
-            // unlock the channel for preview
-            mEngine.unlock(mPreviewChannel);
-            [[fallthrough]];
-            case PreviewState::instrument:
-                // update the current note
-                mIr.playNote(note);
-                break;
-        }
-        mSpinlock.unlock();
+    //if (mEnabled) {
+    //    mSpinlock.lock();
+    //    switch (mPreviewState) {
+    //        case PreviewState::waveform:
+    //            resetPreview();
+    //            [[fallthrough]];
+    //        case PreviewState::none:
+    //        {
+    //            // set instrument runtime's instrument to the current one
+    //            auto inst = mInstrumentModel.instrument(mInstrumentModel.currentIndex());
+    //            mIr.setInstrument(*inst);
+    //            mPreviewState = PreviewState::instrument;
+    //            mPreviewChannel = static_cast<trackerboy::ChType>(inst->data().channel);
+    //        }
+    //        // unlock the channel for preview
+    //        mEngine.unlock(mPreviewChannel);
+    //        [[fallthrough]];
+    //        case PreviewState::instrument:
+    //            // update the current note
+    //            mIr.playNote(note);
+    //            break;
+    //    }
+    //    mSpinlock.unlock();
 
-        beginRender();
-    }
+    //    beginRender();
+    //}
 }
 
 void Renderer::previewWaveform(trackerboy::Note note) {
 
-    if (mEnabled) {
-        // state changes
-        // instrument -> none -> waveform
+    //if (mEnabled) {
+    //    // state changes
+    //    // instrument -> none -> waveform
 
-        mSpinlock.lock();
-        switch (mPreviewState) {
-            case PreviewState::instrument:
-                resetPreview();
-                [[fallthrough]];
-            case PreviewState::none:
-                mPreviewState = PreviewState::waveform;
-                mPreviewChannel = trackerboy::ChType::ch3;
-                // unlock the channel, no longer effected by music
-                mEngine.unlock(trackerboy::ChType::ch3);
-                // middle panning for CH3
-                trackerboy::ChannelControl::writePanning(trackerboy::ChType::ch3, mRc, 0x11);
-                // set the waveram with the waveform we are previewing
-                trackerboy::ChannelControl::writeWaveram(mRc, *(mWaveModel.currentWaveform()));
-                // volume = 100%
-                mRc.apu.writeRegister(gbapu::Apu::REG_NR32, 0x20);
-                // retrigger
-                mRc.apu.writeRegister(gbapu::Apu::REG_NR34, 0x80);
+    //    mSpinlock.lock();
+    //    switch (mPreviewState) {
+    //        case PreviewState::instrument:
+    //            resetPreview();
+    //            [[fallthrough]];
+    //        case PreviewState::none:
+    //            mPreviewState = PreviewState::waveform;
+    //            mPreviewChannel = trackerboy::ChType::ch3;
+    //            // unlock the channel, no longer effected by music
+    //            mEngine.unlock(trackerboy::ChType::ch3);
+    //            // middle panning for CH3
+    //            trackerboy::ChannelControl::writePanning(trackerboy::ChType::ch3, mRc, 0x11);
+    //            // set the waveram with the waveform we are previewing
+    //            trackerboy::ChannelControl::writeWaveram(mRc, *(mWaveModel.currentWaveform()));
+    //            // volume = 100%
+    //            mRc.apu.writeRegister(gbapu::Apu::REG_NR32, 0x20);
+    //            // retrigger
+    //            mRc.apu.writeRegister(gbapu::Apu::REG_NR34, 0x80);
 
-                [[fallthrough]];
-            case PreviewState::waveform:
-                if (note > trackerboy::NOTE_LAST) {
-                    // should never happen, but clamp just in case
-                    note = trackerboy::NOTE_LAST;
-                }
-                trackerboy::ChannelControl::writeFrequency(
-                    trackerboy::ChType::ch3,
-                    mRc,
-                    trackerboy::NOTE_FREQ_TABLE[note]
-                );
-                break;
-        }
-        mSpinlock.unlock();
+    //            [[fallthrough]];
+    //        case PreviewState::waveform:
+    //            if (note > trackerboy::NOTE_LAST) {
+    //                // should never happen, but clamp just in case
+    //                note = trackerboy::NOTE_LAST;
+    //            }
+    //            trackerboy::ChannelControl::writeFrequency(
+    //                trackerboy::ChType::ch3,
+    //                mRc,
+    //                trackerboy::NOTE_FREQ_TABLE[note]
+    //            );
+    //            break;
+    //    }
+    //    mSpinlock.unlock();
 
-        beginRender();
-    }
+    //    beginRender();
+    //}
 }
 
 void Renderer::stopPreview() {
@@ -324,7 +316,6 @@ void Renderer::stopMusic() {
 
 void Renderer::resetPreview() {
     // lock the channel so it can be used for music
-    trackerboy::ChannelControl::writePanning(mPreviewChannel, mRc, 0);
     mEngine.lock(mPreviewChannel);
     mPreviewState = PreviewState::none;
 }
@@ -575,10 +566,11 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
 }
 
 void Renderer::render(AudioRingbuffer::Writer &writer) {
+    auto &apu = mSynth.apu();
     auto samplesToRender = writer.availableWrite();
     while (samplesToRender) {
 
-        if (mFrameBuffersize == 0) {
+        if (apu.availableSamples() == 0) {
             if (mCallbackState == CallbackState::stopping) {
                 break; // no more rendering at this point
             }
@@ -591,14 +583,14 @@ void Renderer::render(AudioRingbuffer::Writer &writer) {
                 mNewFrameSinceLastSync = true;
                 
                 // step the engine
-                trackerboy::Frame frame;
+                trackerboy::Engine::Frame frame;
                 mEngine.step(frame);
                 mCurrentEngineFrame = frame;
 
                 // step the instrument runtime if we are previewing an instrument
-                if (mPreviewState == PreviewState::instrument) {
-                    mIr.step();
-                }
+                //if (mPreviewState == PreviewState::instrument) {
+                //    mIr.step();
+                //}
 
                 // begin the stop countdown if the engine halted and we are not previewing anything
                 if (frame.halted && mPreviewState == PreviewState::none) {
@@ -608,19 +600,17 @@ void Renderer::render(AudioRingbuffer::Writer &writer) {
             }
 
             // synthesize the frame
-            mFrameBuffersize = mSynth.run();
-            mFrameBuffer = mSynth.buffer();
+            mSynth.run();
         }
 
         // write the synth buffer to the internal buffer
-        auto written = writer.fullWrite(mFrameBuffer, std::min(mFrameBuffersize, samplesToRender));
-
-        // adjust position in synth buffer
-        mFrameBuffersize -= written;
-        mFrameBuffer += written * 2;
+        size_t toWrite = samplesToRender;
+        auto out = writer.acquireWrite(toWrite);
+        apu.readSamples(out, toWrite);
+        writer.commitWrite(out, toWrite);
         
         // update loop counter
-        samplesToRender -= written;
+        samplesToRender -= toWrite;
 
 
     }

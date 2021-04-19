@@ -10,7 +10,7 @@
 #include "widgets/docks/ModulePropertiesWidget.hpp"
 #include "widgets/docks/OrderWidget.hpp"
 #include "widgets/docks/SongPropertiesWidget.hpp"
-#include "widgets/docks/SongWidget.hpp"
+//#include "widgets/docks/SongWidget.hpp"
 #include "widgets/docks/TableForm.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/visualizers/PeakMeter.hpp"
@@ -61,8 +61,8 @@ private slots:
 
     // dialog show slots (lazy loading)
     void showAudioDiag();
-    void showInstrumentEditor();
-    void showWaveEditor();
+    //void showInstrumentEditor();
+    //void showWaveEditor();
     void showConfigDialog();
 
     // statusbar
@@ -115,8 +115,8 @@ private:
     // dialogs
     AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;
-    InstrumentEditor *mInstrumentEditor;
-    WaveEditor *mWaveEditor;
+    //InstrumentEditor *mInstrumentEditor;
+    //WaveEditor *mWaveEditor;
     QFileDialog mModuleFileDialog;
 
 
@@ -124,8 +124,8 @@ private:
     QToolBar mToolbarFile;
     QToolBar mToolbarEdit;
     QToolBar mToolbarTracker;
-    QToolBar mToolbarSong;
-        QComboBox mSongCombo;
+    //QToolBar mToolbarSong;
+    //    QComboBox mSongCombo;
                 
 
 
@@ -136,8 +136,8 @@ private:
     QDockWidget mDockWaveforms;
         TableForm mWaveformWidget;
 
-    QDockWidget mDockSongs;
-        SongWidget mSongWidget;
+    //QDockWidget mDockSongs;
+    //    SongWidget mSongWidget;
 
     QDockWidget mDockSongProperties;
         SongPropertiesWidget mSongPropertiesWidget;
@@ -158,7 +158,7 @@ private:
                 AudioScope mLeftScope;
                 PeakMeter mPeakMeter;
                 AudioScope mRightScope;
-        PatternEditor mPatternEditor;
+        //PatternEditor mPatternEditor;
 
 
     // statusbar widgets
@@ -190,9 +190,9 @@ private:
     QAction *mActionEditRedo;
 
     // Song (created by SongWidget)
-    QMenu mMenuSong;
-    QAction mActionSongPrev;
-    QAction mActionSongNext;
+    //QMenu mMenuSong;
+    //QAction mActionSongPrev;
+    //QAction mActionSongNext;
 
     // Order (created by OrderWidget)
     QMenu mMenuOrder;

@@ -105,7 +105,7 @@ static std::optional<int> keyToHex(int const key) {
 }
 
 
-PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent) :
+PatternGrid::PatternGrid(OrderModel &model, PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
     mModel(model),
     mHeader(header),
@@ -128,10 +128,9 @@ PatternGrid::PatternGrid(SongListModel &model, PatternGridHeader &header, QWidge
     mVisibleRows(0)
 {
     
-    auto &orderModel = mModel.orderModel();
     connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternGrid::setCursorTrack);
     connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternGrid::setCursorPattern);
-    connect(&model, &SongListModel::currentIndexChanged, this, &PatternGrid::onSongChanged);
+    //connect(&model, &SongListModel::currentIndexChanged, this, &PatternGrid::onSongChanged);
     connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
         setPatterns(mCursorPattern);
         redraw();

@@ -11,6 +11,7 @@ int main(int argc, char *argv[]) {
     Spinlock lock;
     ModuleDocument doc(lock);
 
+    Q_INIT_RESOURCE(icons);
 
     InstrumentListModel model(doc);
     TableForm form(model, "wave");

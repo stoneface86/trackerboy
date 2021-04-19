@@ -29,14 +29,14 @@ set(UI_SRC
     "core/Miniaudio.cpp"
     "core/PianoInput.cpp"
     "core/samplerates.cpp"
-    "core/SyncWorker.cpp"
     "core/Trackerboy.cpp"
+    "core/SyncWorker.cpp"
 
     "forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"
-    "forms/InstrumentEditor.cpp"
+    #"forms/InstrumentEditor.cpp"
     "forms/MainWindow.cpp"
-    "forms/WaveEditor.cpp"
+    #"forms/WaveEditor.cpp"
     
     "misc/IconManager.cpp"
     "misc/SongActions.cpp"
@@ -52,23 +52,20 @@ set(UI_SRC
     "widgets/docks/ModulePropertiesWidget.cpp"
     "widgets/docks/OrderWidget.cpp"
     "widgets/docks/SongPropertiesWidget.cpp"
-    "widgets/docks/SongWidget.cpp"
+    #"widgets/docks/SongWidget.cpp"
     "widgets/docks/TableForm.cpp"
     "widgets/grid/layout.cpp"
-    "widgets/grid/PatternGrid.cpp"
-    "widgets/grid/PatternGridHeader.cpp"
-    "widgets/grid/PatternPainter.cpp"
+    #"widgets/grid/PatternGrid.cpp"
+    #"widgets/grid/PatternGridHeader.cpp"
+    #"widgets/grid/PatternPainter.cpp"
     "widgets/visualizers/AudioScope.cpp"
     "widgets/visualizers/PeakMeter.cpp"
     "widgets/visualizers/VolumeMeterAnimation.cpp"
     "widgets/CustomSpinBox.cpp"
     "widgets/EnvelopeForm.cpp"
-    "widgets/PatternEditor.cpp"
+    #"widgets/PatternEditor.cpp"
     "widgets/PianoWidget.cpp"
-    "widgets/WaveGraph.cpp"
-    
-    "main.cpp"
-    
+    #"widgets/WaveGraph.cpp"
 )
 
 if (MSVC)
@@ -76,15 +73,26 @@ if (MSVC)
     add_compile_options(/W4 /experimental:external /external:W0 /external:anglebrackets)
 endif ()
 
-
-add_executable(trackerboy_ui ${GUI_TYPE} ${UI_SRC} ${WINDOWS_APPICON_RC} )
-target_link_libraries(trackerboy_ui
+#
+# ui library
+#
+add_library(ui STATIC ${UI_SRC})
+target_link_libraries(ui PUBLIC 
     trackerboy
     miniaudio
     Qt5::Widgets
 )
+
+#
+# Target for the main ui, trackerboy_ui. We cannot use trackerboy as that name is used
+# for libtrackerboy. However, the resulting executable is named trackerboy, not trackerboy_ui
+#
+add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" ${WINDOWS_APPICON_RC})
+target_link_libraries(trackerboy_ui PRIVATE ui)
+# output executable is "trackerboy" and not "trackerboy_ui"
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
+# no info or debug output via qDebug for release builds
 if (NOT DEBUG_BUILD)
     target_compile_definitions(trackerboy_ui PRIVATE QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
 endif ()
@@ -95,37 +103,14 @@ endif ()
 # Essentially unit tests, but without the automation
 #
 
-add_executable(test_TableForm ${GUI_TYPE} EXCLUDE_FROM_ALL 
-    "test/test_TableForm.cpp" 
-    "widgets/docks/TableForm.cpp" 
-    "core/model/BaseTableModel.cpp"
-    "core/model/InstrumentListModel.cpp"
-    "core/model/ModuleDocument.cpp"
-    "misc/IconManager.cpp"
-    "resources/icons.qrc"
-)
-target_link_libraries(test_TableForm PRIVATE
-    trackerboy
-    Qt5::Widgets
-)
+add_executable(test_TableForm ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_TableForm.cpp")
+target_link_libraries(test_TableForm PRIVATE ui)
 
-add_executable(test_OrderWidget ${GUI_TYPE} EXCLUDE_FROM_ALL 
-    "test/test_OrderWidget.cpp" 
-    "widgets/docks/OrderWidget.cpp" 
-    "widgets/CustomSpinbox.cpp"
-    "core/model/OrderModel.cpp"
-    "core/model/ModuleDocument.cpp"
-    "misc/IconManager.cpp"
-    "misc/utils.cpp"
-    "resources/icons.qrc"
-)
-target_link_libraries(test_OrderWidget PRIVATE
-    trackerboy
-    Qt5::Widgets
-)
+add_executable(test_OrderWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_OrderWidget.cpp")
+target_link_libraries(test_OrderWidget PRIVATE ui)
 
-add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
-target_link_libraries(test_pattern_painter
-    trackerboy
-    Qt5::Widgets
-)
+#add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
+#target_link_libraries(test_pattern_painter
+#    trackerboy
+#    Qt5::Widgets
+#)

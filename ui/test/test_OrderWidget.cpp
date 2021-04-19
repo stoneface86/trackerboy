@@ -11,6 +11,8 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
 
+    Q_INIT_RESOURCE(icons);
+
     Spinlock lock;
     ModuleDocument doc(lock);
     OrderModel model(doc);

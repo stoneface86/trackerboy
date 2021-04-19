@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/SongListModel.hpp"
+#include "core/model/OrderModel.hpp"
 #include "core/ColorTable.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
@@ -28,7 +28,7 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(SongListModel &model, PatternGridHeader &header, QWidget *parent = nullptr);
+    explicit PatternGrid(OrderModel &model, PatternGridHeader &header, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
@@ -159,7 +159,7 @@ private:
     void setPatternRect();
 
 
-    SongListModel &mModel;
+    OrderModel &mModel;
     PatternGridHeader &mHeader;
     PatternPainter mPainter;
 

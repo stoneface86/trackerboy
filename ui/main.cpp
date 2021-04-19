@@ -78,6 +78,12 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("Trackerboy");
     QCoreApplication::setApplicationName("Trackerboy");
 
+    Q_INIT_RESOURCE(fonts);
+    Q_INIT_RESOURCE(icons);
+    Q_INIT_RESOURCE(images);
+
+
+
     // use a custom message handler for logging to file
     DEFAULT_MESSAGE_HANDLER = qInstallMessageHandler(messageHandler);
 

@@ -32,27 +32,27 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mErrorSinceLastConfig(false),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
-    mInstrumentEditor(nullptr),
-    mWaveEditor(nullptr),
+    //mInstrumentEditor(nullptr),
+    //mWaveEditor(nullptr),
     mModuleFileDialog(),
     mToolbarFile(),
     mToolbarEdit(),
     mToolbarTracker(),
-    mToolbarSong(),
-    mSongCombo(),
+    //mToolbarSong(),
+    //mSongCombo(),
     mDockInstruments(),
-    mInstrumentWidget(trackerboy.instrumentModel, tr("Ctrl+I"), tr("instrument")),
+    mInstrumentWidget(trackerboy.instrumentModel, tr("instrument")),
     mDockWaveforms(),
-    mWaveformWidget(trackerboy.waveModel, tr("Ctrl+W"), tr("wave")),
-    mDockSongs(),
-    mSongWidget(trackerboy.songModel),
+    mWaveformWidget(trackerboy.waveModel, tr("wave")),
+    //mDockSongs(),
+    //mSongWidget(trackerboy.songModel),
     mDockSongProperties(),
-    mSongPropertiesWidget(trackerboy.songModel),
+    mSongPropertiesWidget(),
     mDockModuleProperties(),
     mModulePropertiesWidget(),
     mDockOrders(),
-    mOrderWidget(trackerboy.songModel.orderModel()),
-    mPatternEditor(mPianoInput, mApp.songModel),
+    mOrderWidget(trackerboy.orderModel),
+    //mPatternEditor(mPianoInput, mApp.orderModel),
     mSyncWorker(trackerboy.renderer, mLeftScope, mRightScope)
 
 {
@@ -97,7 +97,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     } else {
         addDockWidget(Qt::LeftDockWidgetArea, &mDockInstruments);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveforms);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockSongs);
+        //addDockWidget(Qt::LeftDockWidgetArea, &mDockSongs);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
@@ -105,7 +105,7 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
         addToolBar(&mToolbarTracker);
-        addToolBar(&mToolbarSong);
+        //addToolBar(&mToolbarSong);
         restoreState(windowState);
     }
 
@@ -215,7 +215,7 @@ void MainWindow::onWindowResetLayout() {
     removeToolBar(&mToolbarFile);
     removeToolBar(&mToolbarEdit);
     removeToolBar(&mToolbarTracker);
-    removeToolBar(&mToolbarSong);
+    //removeToolBar(&mToolbarSong);
 
     mDockInstruments.setFloating(false);
     removeDockWidget(&mDockInstruments);
@@ -223,8 +223,8 @@ void MainWindow::onWindowResetLayout() {
     mDockWaveforms.setFloating(false);
     removeDockWidget(&mDockWaveforms);
 
-    mDockSongs.setFloating(false);
-    removeDockWidget(&mDockSongs);
+    //mDockSongs.setFloating(false);
+    //removeDockWidget(&mDockSongs);
 
     mDockSongProperties.setFloating(false);
     removeDockWidget(&mDockSongProperties);
@@ -317,7 +317,7 @@ OrderWidget QTableView QHeaderView::section {
         QString::number(appearance.font.pointSize())
         ));
 
-        mPatternEditor.setColors(appearance.colors);
+        //mPatternEditor.setColors(appearance.colors);
         mApp.orderModel.setRowColor(appearance.colors[+Color::row]);
     }
 
@@ -348,39 +348,39 @@ void MainWindow::showConfigDialog() {
     mConfigDialog->show();
 }
 
-void MainWindow::showInstrumentEditor() {
-    if (mInstrumentEditor == nullptr) {
-        mInstrumentEditor = new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, mPianoInput, this);
-
-        // allow the instrument editor to show the wave editor
-        connect(mInstrumentEditor, &InstrumentEditor::waveEditorRequested, this, &MainWindow::showWaveEditor);
-
-        auto &instPiano = mInstrumentEditor->piano();
-        connect(&instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
-        connect(&instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
-    }
-    mInstrumentEditor->show();
-}
-
-void MainWindow::showWaveEditor() {
-    if (mWaveEditor == nullptr) {
-        mWaveEditor = new WaveEditor(mApp.waveModel, mPianoInput, this);
-        auto &wavePiano = mWaveEditor->piano();
-        connect(&wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
-        connect(&wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
-    }
-    mWaveEditor->show();
-}
+//void MainWindow::showInstrumentEditor() {
+//    if (mInstrumentEditor == nullptr) {
+//        mInstrumentEditor = new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, mPianoInput, this);
+//
+//        // allow the instrument editor to show the wave editor
+//        connect(mInstrumentEditor, &InstrumentEditor::waveEditorRequested, this, &MainWindow::showWaveEditor);
+//
+//        auto &instPiano = mInstrumentEditor->piano();
+//        connect(&instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
+//        connect(&instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
+//    }
+//    mInstrumentEditor->show();
+//}
+//
+//void MainWindow::showWaveEditor() {
+//    if (mWaveEditor == nullptr) {
+//        mWaveEditor = new WaveEditor(mApp.waveModel, mPianoInput, this);
+//        auto &wavePiano = mWaveEditor->piano();
+//        connect(&wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
+//        connect(&wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
+//    }
+//    mWaveEditor->show();
+//}
 
 
 void MainWindow::statusSetInstrument(int index) {
-    int id = (index == -1) ? 0 : mApp.instrumentModel.instrument(index)->id();
-    mStatusInstrument.setText(QString("Instrument: %1").arg(id, 2, 16, QChar('0')));
+    //int id = (index == -1) ? 0 : mApp.instrumentModel.instrument(index)->id();
+    //mStatusInstrument.setText(QString("Instrument: %1").arg(id, 2, 16, QChar('0')));
 }
 
 void MainWindow::statusSetWaveform(int index) {
-    int id = (index == -1) ? 0 : mApp.waveModel.waveform(index)->id();
-    mStatusWaveform.setText(QString("Waveform: %1").arg(id, 2, 16, QChar('0')));
+    //int id = (index == -1) ? 0 : mApp.waveModel.waveform(index)->id();
+    //mStatusWaveform.setText(QString("Waveform: %1").arg(id, 2, 16, QChar('0')));
 }
 
 void MainWindow::statusSetOctave(int octave) {
@@ -392,8 +392,8 @@ void MainWindow::trackerPositionChanged(QPoint const pos) {
     auto pattern = pos.x();
     auto row = pos.y();
     
-    auto &grid = mPatternEditor.grid();
-    grid.setTrackerCursor(row, pattern);
+    //auto &grid = mPatternEditor.grid();
+    //grid.setTrackerCursor(row, pattern);
 
     mStatusPos.setText(QStringLiteral("%1 / %2").arg(pattern).arg(row));
 }
@@ -463,9 +463,9 @@ void MainWindow::setFilename(QString filename) {
 }
 
 void MainWindow::setModelsEnabled(bool enabled) {
-    mApp.instrumentModel.setEnabled(enabled);
-    mApp.songModel.setEnabled(enabled);
-    mApp.waveModel.setEnabled(enabled);
+    //mApp.instrumentModel.setEnabled(enabled);
+    //mApp.songModel.setEnabled(enabled);
+    //mApp.waveModel.setEnabled(enabled);
 }
 
 void MainWindow::setupUi() {
@@ -483,12 +483,12 @@ void MainWindow::setupUi() {
 
 
     mLayout.addLayout(&mVisLayout);
-    mLayout.addWidget(&mPatternEditor);
+    //mLayout.addWidget(&mPatternEditor);
     mMainWidget->setLayout(&mLayout);
 
     setCentralWidget(mMainWidget);
 
-    auto &patternActions = mPatternEditor.menuActions();
+    //auto &patternActions = mPatternEditor.menuActions();
 
     // ACTIONS ===============================================================
 
@@ -506,8 +506,8 @@ void MainWindow::setupUi() {
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
     mActionEditRedo->setShortcut(QKeySequence::Redo);
 
-    setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
-    setupAction(mActionSongNext, "&Next song", "Selects the next song in the list", Icons::next);
+    //setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
+    //setupAction(mActionSongNext, "&Next song", "Selects the next song in the list", Icons::next);
 
     setupAction(mActionTrackerPlay, "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
     setupAction(mActionTrackerRestart, "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
@@ -538,13 +538,13 @@ void MainWindow::setupUi() {
     mMenuEdit.addAction(mActionEditUndo);
     mMenuEdit.addAction(mActionEditRedo);
     mMenuEdit.addSeparator();
-    mPatternEditor.setupMenu(mMenuEdit);
+    //mPatternEditor.setupMenu(mMenuEdit);
 
-    mMenuSong.setTitle(tr("&Song"));
-    mSongWidget.setupMenu(mMenuSong);
-    mMenuSong.addSeparator();
-    mMenuSong.addAction(&mActionSongPrev);
-    mMenuSong.addAction(&mActionSongNext);
+    //mMenuSong.setTitle(tr("&Song"));
+    //mSongWidget.setupMenu(mMenuSong);
+    //mMenuSong.addSeparator();
+    //mMenuSong.addAction(&mActionSongPrev);
+    //mMenuSong.addAction(&mActionSongNext);
 
     mMenuOrder.setTitle(tr("&Order"));
     mOrderWidget.setupMenu(mMenuOrder);
@@ -561,14 +561,14 @@ void MainWindow::setupUi() {
     mMenuTracker.addAction(&mActionTrackerStop);
     mMenuTracker.addSeparator();
 
-    {
+    /*{
         auto &actions = mPatternEditor.trackerActions();
         mMenuTracker.addAction(&actions.play);
         mMenuTracker.addAction(&actions.restart);
         mMenuTracker.addAction(&actions.playRow);
         mMenuTracker.addAction(&actions.record);
 
-    }
+    }*/
 
     mMenuTracker.addSeparator();
     mMenuTracker.addAction(&mActionTrackerToggleChannel);
@@ -579,7 +579,7 @@ void MainWindow::setupUi() {
     mMenuWindowToolbars.addAction(mToolbarFile.toggleViewAction());
     mMenuWindowToolbars.addAction(mToolbarEdit.toggleViewAction());
     mMenuWindowToolbars.addAction(mToolbarTracker.toggleViewAction());
-    mMenuWindowToolbars.addAction(mToolbarSong.toggleViewAction());
+    //mMenuWindowToolbars.addAction(mToolbarSong.toggleViewAction());
 
     setupWindowMenu(mMenuWindow);
 
@@ -594,7 +594,7 @@ void MainWindow::setupUi() {
     auto menubar = menuBar();
     menubar->addMenu(&mMenuFile);
     menubar->addMenu(&mMenuEdit);
-    menubar->addMenu(&mMenuSong);
+    //menubar->addMenu(&mMenuSong);
     menubar->addMenu(&mMenuOrder);
     menubar->addMenu(&mMenuInstrument);
     menubar->addMenu(&mMenuWaveform);
@@ -621,9 +621,9 @@ void MainWindow::setupUi() {
     mToolbarEdit.addAction(mActionEditUndo);
     mToolbarEdit.addAction(mActionEditRedo);
     mToolbarEdit.addSeparator();
-    mToolbarEdit.addAction(&patternActions.cut);
+    /*mToolbarEdit.addAction(&patternActions.cut);
     mToolbarEdit.addAction(&patternActions.copy);
-    mToolbarEdit.addAction(&patternActions.paste);
+    mToolbarEdit.addAction(&patternActions.paste);*/
 
     mToolbarTracker.setWindowTitle(tr("Tracker"));
     mToolbarTracker.setIconSize(iconSize);
@@ -633,13 +633,13 @@ void MainWindow::setupUi() {
     mToolbarTracker.addAction(&mActionTrackerStop);
 
 
-    mToolbarSong.setWindowTitle(tr("Song"));
-    mToolbarSong.setIconSize(iconSize);
-    setObjectNameFromDeclared(mToolbarSong);
-    mToolbarSong.addAction(&mActionSongPrev);
-    mToolbarSong.addAction(&mActionSongNext);
-    mSongCombo.setModel(&mApp.songModel);
-    mToolbarSong.addWidget(&mSongCombo);
+    //mToolbarSong.setWindowTitle(tr("Song"));
+    //mToolbarSong.setIconSize(iconSize);
+    //setObjectNameFromDeclared(mToolbarSong);
+    //mToolbarSong.addAction(&mActionSongPrev);
+    //mToolbarSong.addAction(&mActionSongNext);
+    //mSongCombo.setModel(&mApp.songModel);
+    //mToolbarSong.addWidget(&mSongCombo);
 
     // DIALOGS ===============================================================
 
@@ -656,9 +656,10 @@ void MainWindow::setupUi() {
     mDockWaveforms.setWindowTitle(tr("Waveforms"));
     mDockWaveforms.setWidget(&mWaveformWidget);
 
-    setObjectNameFromDeclared(mDockSongs);
-    mDockSongs.setWindowTitle(tr("Songs"));
-    mDockSongs.setWidget(&mSongWidget);
+    //setObjectNameFromDeclared(mDockSongs);
+    //mDockSongs.setWindowTitle(tr("Songs"));
+    //mDockSongs.setWidget(&mSongWidget);
+    //mDockSongs.setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
     setObjectNameFromDeclared(mDockModuleProperties);
     mDockModuleProperties.setWindowTitle(tr("Module properties"));
@@ -670,7 +671,6 @@ void MainWindow::setupUi() {
 
     setObjectNameFromDeclared(mDockOrders);
     mDockOrders.setWindowTitle(tr("Song order"));
-    mDockSongs.setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
     mDockOrders.setWidget(&mOrderWidget);
 
     setObjectNameFromDeclared(mDockHistory);
@@ -722,20 +722,20 @@ void MainWindow::setupUi() {
 
 
     // song combobox in mSongToolbar
-    connect(&mSongCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mApp.songModel, qOverload<int>(&SongListModel::select));
-    connect(&mApp.songModel, &SongListModel::currentIndexChanged, &mSongCombo, &QComboBox::setCurrentIndex);
+    //connect(&mSongCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mApp.songModel, qOverload<int>(&SongListModel::select));
+    //connect(&mApp.songModel, &SongListModel::currentIndexChanged, &mSongCombo, &QComboBox::setCurrentIndex);
 
     // statusbar
 
-    connect(&mApp.instrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
-    connect(&mApp.waveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
+    //connect(&mApp.instrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
+    //connect(&mApp.waveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
 
     // showEditor signal to each editor's show slot
-    connect(&mInstrumentWidget, &TableForm::showEditor, this, &MainWindow::showInstrumentEditor);
-    connect(&mWaveformWidget, &TableForm::showEditor, this, &MainWindow::showWaveEditor);
+    //connect(&mInstrumentWidget, &TableForm::showEditor, this, &MainWindow::showInstrumentEditor);
+    //connect(&mWaveformWidget, &TableForm::showEditor, this, &MainWindow::showWaveEditor);
 
     // octave changes
-    connect(&mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
+    //connect(&mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
 
     // sync worker
     connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
@@ -795,14 +795,14 @@ void MainWindow::initState() {
     addToolBar(Qt::TopToolBarArea, &mToolbarTracker);
     mToolbarTracker.show();
 
-    addToolBar(Qt::TopToolBarArea, &mToolbarSong);
-    mToolbarSong.show();
+    //addToolBar(Qt::TopToolBarArea, &mToolbarSong);
+    //mToolbarSong.show();
 
     addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
-    tabifyDockWidget(&mDockSongProperties, &mDockSongs);
-    mDockSongs.show();
+    //tabifyDockWidget(&mDockSongProperties, &mDockSongs);
+    //mDockSongs.show();
     mDockSongProperties.show();
-    mDockSongProperties.raise();
+    //mDockSongProperties.raise();
 
     addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
     mDockModuleProperties.show();
@@ -845,7 +845,7 @@ void MainWindow::initState() {
 void MainWindow::setupWindowMenu(QMenu &menu) {
     menu.addAction(mDockInstruments.toggleViewAction());
     menu.addAction(mDockWaveforms.toggleViewAction());
-    menu.addAction(mDockSongs.toggleViewAction());
+    //menu.addAction(mDockSongs.toggleViewAction());
     menu.addAction(mDockSongProperties.toggleViewAction());
     menu.addAction(mDockModuleProperties.toggleViewAction());
     menu.addAction(mDockOrders.toggleViewAction());

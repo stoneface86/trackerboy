@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "trackerboy/engine/Frame.hpp"
+#include "trackerboy/engine/Engine.hpp"
 
 #include "gbapu.hpp"
 
@@ -21,7 +21,7 @@ struct RenderFrame {
     }
 
     // engine information
-    trackerboy::Frame engineFrame;
+    trackerboy::Engine::Frame engineFrame;
 
     // APU register dump
     gbapu::Registers registers;
