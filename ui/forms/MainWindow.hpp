@@ -5,26 +5,30 @@
 #include "core/SyncWorker.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
-#include "forms/InstrumentEditor.hpp"
-#include "forms/WaveEditor.hpp"
-#include "widgets/docks/ModulePropertiesWidget.hpp"
-#include "widgets/docks/OrderWidget.hpp"
-#include "widgets/docks/SongPropertiesWidget.hpp"
+//#include "forms/InstrumentEditor.hpp"
+//#include "forms/WaveEditor.hpp"
+//#include "widgets/docks/ModulePropertiesWidget.hpp"
+//#include "widgets/docks/OrderWidget.hpp"
+//#include "widgets/docks/SongPropertiesWidget.hpp"
 //#include "widgets/docks/SongWidget.hpp"
-#include "widgets/docks/TableForm.hpp"
-#include "widgets/visualizers/AudioScope.hpp"
-#include "widgets/visualizers/PeakMeter.hpp"
-#include "widgets/PatternEditor.hpp"
+//#include "widgets/docks/TableForm.hpp"
+//#include "widgets/visualizers/AudioScope.hpp"
+//#include "widgets/visualizers/PeakMeter.hpp"
+//#include "widgets/PatternEditor.hpp"
 
 #include <QComboBox>
 #include <QDockWidget>
 #include <QFileDialog>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMdiArea>
+#include <QMenu>
 #include <QMessageBox>
 #include <QTimer>
 #include <QToolBar>
 #include <QUndoView>
+#include <QSplitter>
+#include <QTreeView>
 
 //
 // Main form for the application
@@ -61,8 +65,6 @@ private slots:
 
     // dialog show slots (lazy loading)
     void showAudioDiag();
-    //void showInstrumentEditor();
-    //void showWaveEditor();
     void showConfigDialog();
 
     // statusbar
@@ -115,8 +117,6 @@ private:
     // dialogs
     AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;
-    //InstrumentEditor *mInstrumentEditor;
-    //WaveEditor *mWaveEditor;
     QFileDialog mModuleFileDialog;
 
 
@@ -124,41 +124,16 @@ private:
     QToolBar mToolbarFile;
     QToolBar mToolbarEdit;
     QToolBar mToolbarTracker;
-    //QToolBar mToolbarSong;
-    //    QComboBox mSongCombo;
-                
 
 
     // dock widgets
-    QDockWidget mDockInstruments;
-        TableForm mInstrumentWidget;
-
-    QDockWidget mDockWaveforms;
-        TableForm mWaveformWidget;
-
-    //QDockWidget mDockSongs;
-    //    SongWidget mSongWidget;
-
-    QDockWidget mDockSongProperties;
-        SongPropertiesWidget mSongPropertiesWidget;
-
-    QDockWidget mDockModuleProperties;
-        ModulePropertiesWidget mModulePropertiesWidget;
-
-    QDockWidget mDockOrders;
-        OrderWidget mOrderWidget;
-
-    QDockWidget mDockHistory;
-        QUndoView mUndoView;
+    //QDockWidget mDockHistory;
+    //    QUndoView mUndoView;
 
     // central widget (must be heap-alloc'd)
-    QWidget *mMainWidget;
-        QVBoxLayout mLayout;
-            QHBoxLayout mVisLayout;
-                AudioScope mLeftScope;
-                PeakMeter mPeakMeter;
-                AudioScope mRightScope;
-        //PatternEditor mPatternEditor;
+    QSplitter *mHSplitter;
+        QTreeView mBrowser;
+        QMdiArea mMdi;
 
 
     // statusbar widgets
@@ -222,7 +197,7 @@ private:
     QAction mActionHelpAboutQt;
     QAction mActionHelpAbout;
 
-    SyncWorker mSyncWorker;
-    QThread mSyncWorkerThread;
+    //SyncWorker mSyncWorker;
+    //QThread mSyncWorkerThread;
 
 };

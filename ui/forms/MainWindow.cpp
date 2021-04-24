@@ -18,6 +18,7 @@
 
 #include <array>
 
+
 #define setObjectNameFromDeclared(var) var.setObjectName(QStringLiteral(#var))
 #define connectActionToThis(action, slot) connect(&action, &QAction::triggered, this, &MainWindow::slot)
 
@@ -32,28 +33,10 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mErrorSinceLastConfig(false),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
-    //mInstrumentEditor(nullptr),
-    //mWaveEditor(nullptr),
     mModuleFileDialog(),
     mToolbarFile(),
     mToolbarEdit(),
-    mToolbarTracker(),
-    //mToolbarSong(),
-    //mSongCombo(),
-    mDockInstruments(),
-    mInstrumentWidget(trackerboy.instrumentModel, tr("instrument")),
-    mDockWaveforms(),
-    mWaveformWidget(trackerboy.waveModel, tr("wave")),
-    //mDockSongs(),
-    //mSongWidget(trackerboy.songModel),
-    mDockSongProperties(),
-    mSongPropertiesWidget(),
-    mDockModuleProperties(),
-    mModulePropertiesWidget(),
-    mDockOrders(),
-    mOrderWidget(trackerboy.orderModel),
-    //mPatternEditor(mPianoInput, mApp.orderModel),
-    mSyncWorker(trackerboy.renderer, mLeftScope, mRightScope)
+    mToolbarTracker()
 
 {
     setupUi();
@@ -95,29 +78,21 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         // default layout
         initState();
     } else {
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockInstruments);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveforms);
-        //addDockWidget(Qt::LeftDockWidgetArea, &mDockSongs);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockHistory);
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
         addToolBar(&mToolbarTracker);
-        //addToolBar(&mToolbarSong);
         restoreState(windowState);
     }
 
     // audio sync worker thread
-    mSyncWorker.moveToThread(&mSyncWorkerThread);
-    mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
-    mSyncWorkerThread.start();
+    //mSyncWorker.moveToThread(&mSyncWorkerThread);
+    //mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
+    //mSyncWorkerThread.start();
 }
 
 MainWindow::~MainWindow() {
-    mSyncWorkerThread.quit();
-    mSyncWorkerThread.wait();
+    //mSyncWorkerThread.quit();
+    //mSyncWorkerThread.wait();
 }
 
 QMenu* MainWindow::createPopupMenu() {
@@ -215,28 +190,6 @@ void MainWindow::onWindowResetLayout() {
     removeToolBar(&mToolbarFile);
     removeToolBar(&mToolbarEdit);
     removeToolBar(&mToolbarTracker);
-    //removeToolBar(&mToolbarSong);
-
-    mDockInstruments.setFloating(false);
-    removeDockWidget(&mDockInstruments);
-
-    mDockWaveforms.setFloating(false);
-    removeDockWidget(&mDockWaveforms);
-
-    //mDockSongs.setFloating(false);
-    //removeDockWidget(&mDockSongs);
-
-    mDockSongProperties.setFloating(false);
-    removeDockWidget(&mDockSongProperties);
-
-    mDockModuleProperties.setFloating(false);
-    removeDockWidget(&mDockModuleProperties);
-
-    mDockOrders.setFloating(false);
-    removeDockWidget(&mDockOrders);
-
-    mDockHistory.setFloating(false);
-    removeDockWidget(&mDockHistory);
 
     initState();
 }
@@ -248,9 +201,9 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
         auto samplesPerFrame = samplerate / 60;
-        mSyncWorker.setSamplesPerFrame(samplesPerFrame);
-        mLeftScope.setDuration(samplesPerFrame);
-        mRightScope.setDuration(samplesPerFrame);
+        //mSyncWorker.setSamplesPerFrame(samplesPerFrame);
+        //mLeftScope.setDuration(samplesPerFrame);
+        //mRightScope.setDuration(samplesPerFrame);
 
         mApp.renderer.setConfig(sound);
         mErrorSinceLastConfig = mApp.renderer.lastDeviceError() != MA_SUCCESS;
@@ -475,18 +428,28 @@ void MainWindow::setupUi() {
     // CENTRAL WIDGET ========================================================
 
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
-    mMainWidget = new QWidget(this);
+    mHSplitter = new QSplitter(Qt::Horizontal, this);
 
-    mVisLayout.addWidget(&mLeftScope);
-    mVisLayout.addWidget(&mPeakMeter);
-    mVisLayout.addWidget(&mRightScope);
+    mMdi.setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    mMdi.setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    mHSplitter->addWidget(&mBrowser);
+    mHSplitter->addWidget(&mMdi);
+
+    setCentralWidget(mHSplitter);
+
+    //mMainWidget = new QWidget(this);
+
+    //mVisLayout.addWidget(&mLeftScope);
+    //mVisLayout.addWidget(&mPeakMeter);
+    //mVisLayout.addWidget(&mRightScope);
 
 
-    mLayout.addLayout(&mVisLayout);
+    //mLayout.addLayout(&mVisLayout);
     //mLayout.addWidget(&mPatternEditor);
-    mMainWidget->setLayout(&mLayout);
+    //mMainWidget->setLayout(&mLayout);
 
-    setCentralWidget(mMainWidget);
+    //setCentralWidget(mMainWidget);
 
     //auto &patternActions = mPatternEditor.menuActions();
 
@@ -540,20 +503,14 @@ void MainWindow::setupUi() {
     mMenuEdit.addSeparator();
     //mPatternEditor.setupMenu(mMenuEdit);
 
-    //mMenuSong.setTitle(tr("&Song"));
-    //mSongWidget.setupMenu(mMenuSong);
-    //mMenuSong.addSeparator();
-    //mMenuSong.addAction(&mActionSongPrev);
-    //mMenuSong.addAction(&mActionSongNext);
-
     mMenuOrder.setTitle(tr("&Order"));
-    mOrderWidget.setupMenu(mMenuOrder);
+    //mOrderWidget.setupMenu(mMenuOrder);
 
     mMenuInstrument.setTitle(tr("&Instrument"));
-    mInstrumentWidget.setupMenu(mMenuInstrument);
+    //mInstrumentWidget.setupMenu(mMenuInstrument);
 
     mMenuWaveform.setTitle(tr("&Waveform"));
-    mWaveformWidget.setupMenu(mMenuWaveform);
+    //mWaveformWidget.setupMenu(mMenuWaveform);
 
     mMenuTracker.setTitle(tr("&Tracker"));
     mMenuTracker.addAction(&mActionTrackerPlay);
@@ -648,35 +605,6 @@ void MainWindow::setupUi() {
 
     // DOCKS =================================================================
 
-    setObjectNameFromDeclared(mDockInstruments);
-    mDockInstruments.setWindowTitle(tr("Instruments"));
-    mDockInstruments.setWidget(&mInstrumentWidget);
-
-    setObjectNameFromDeclared(mDockWaveforms);
-    mDockWaveforms.setWindowTitle(tr("Waveforms"));
-    mDockWaveforms.setWidget(&mWaveformWidget);
-
-    //setObjectNameFromDeclared(mDockSongs);
-    //mDockSongs.setWindowTitle(tr("Songs"));
-    //mDockSongs.setWidget(&mSongWidget);
-    //mDockSongs.setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-
-    setObjectNameFromDeclared(mDockModuleProperties);
-    mDockModuleProperties.setWindowTitle(tr("Module properties"));
-    mDockModuleProperties.setWidget(&mModulePropertiesWidget);
-
-    setObjectNameFromDeclared(mDockSongProperties);
-    mDockSongProperties.setWindowTitle(tr("Song properties"));
-    mDockSongProperties.setWidget(&mSongPropertiesWidget);
-
-    setObjectNameFromDeclared(mDockOrders);
-    mDockOrders.setWindowTitle(tr("Song order"));
-    mDockOrders.setWidget(&mOrderWidget);
-
-    setObjectNameFromDeclared(mDockHistory);
-    mDockHistory.setWindowTitle(tr("History"));
-    mDockHistory.setWidget(&mUndoView);
-    mUndoView.setStack(&undoStack);
     
 
     // STATUSBAR ==============================================================
@@ -738,9 +666,9 @@ void MainWindow::setupUi() {
     //connect(&mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
 
     // sync worker
-    connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
-    connect(&mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged);
-    connect(&mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText);
+    //connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
+    //connect(&mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged);
+    //connect(&mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText);
 
     connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
@@ -795,61 +723,9 @@ void MainWindow::initState() {
     addToolBar(Qt::TopToolBarArea, &mToolbarTracker);
     mToolbarTracker.show();
 
-    //addToolBar(Qt::TopToolBarArea, &mToolbarSong);
-    //mToolbarSong.show();
-
-    addDockWidget(Qt::LeftDockWidgetArea, &mDockSongProperties);
-    //tabifyDockWidget(&mDockSongProperties, &mDockSongs);
-    //mDockSongs.show();
-    mDockSongProperties.show();
-    //mDockSongProperties.raise();
-
-    addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleProperties);
-    mDockModuleProperties.show();
-
-    addDockWidget(Qt::LeftDockWidgetArea, &mDockOrders);
-    mDockOrders.show();
-
-    mDockHistory.setFloating(true);
-    mDockHistory.hide();
-
-    addDockWidget(Qt::RightDockWidgetArea, &mDockInstruments);
-    mDockInstruments.show();
-
-    addDockWidget(Qt::RightDockWidgetArea, &mDockWaveforms);
-    mDockWaveforms.show();
-
-    // resize
-
-    int const w = width();
-    int const h = height();
-
-    // song properties and module properties get the minimum, stretch orders
-    resizeDocks(
-        { &mDockSongProperties, &mDockModuleProperties, &mDockOrders },
-        { 1, 1, h },
-        Qt::Vertical
-    );
-
-    // give instruments more height
-    resizeDocks(
-        { &mDockInstruments, &mDockWaveforms },
-        { static_cast<int>(h * 0.75f), static_cast<int>(h * 0.25f) },
-        Qt::Vertical
-    );
-
-    resizeDocks({ &mDockSongProperties }, { 1 }, Qt::Horizontal);
-    resizeDocks({ &mDockInstruments }, { static_cast<int>((w - mDockOrders.width()) * 0.375f) }, Qt::Horizontal);
 }
 
 void MainWindow::setupWindowMenu(QMenu &menu) {
-    menu.addAction(mDockInstruments.toggleViewAction());
-    menu.addAction(mDockWaveforms.toggleViewAction());
-    //menu.addAction(mDockSongs.toggleViewAction());
-    menu.addAction(mDockSongProperties.toggleViewAction());
-    menu.addAction(mDockModuleProperties.toggleViewAction());
-    menu.addAction(mDockOrders.toggleViewAction());
-    menu.addAction(mDockHistory.toggleViewAction());
 
     menu.addSeparator();
     

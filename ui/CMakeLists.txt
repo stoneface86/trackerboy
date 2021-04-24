@@ -22,6 +22,7 @@ set(UI_SRC
     "core/audio/Ringbuffer.cpp"
     "core/model/BaseTableModel.cpp"
     "core/model/ModuleDocument.cpp"
+    "core/model/ModuleModel.cpp"
     "core/model/InstrumentListModel.cpp"
     "core/model/OrderModel.cpp"
     "core/model/WaveListModel.cpp"
