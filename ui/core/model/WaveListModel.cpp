@@ -1,9 +1,9 @@
 
 #include "core/model/WaveListModel.hpp"
-
+#include "core/model/ModuleDocument.hpp"
 
 WaveListModel::WaveListModel(ModuleDocument &document) :
-    BaseTableModel(document, document.waveformTable())
+    BaseTableModel(document, document.mod().waveformTable())
 {
 }
 

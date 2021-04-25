@@ -18,12 +18,9 @@ static void logMaResult(ma_result result) {
 
 
 Renderer::Renderer(
-    Miniaudio &miniaudio,
-    Spinlock &spinlock,
-    ModuleDocument &document
+    Miniaudio &miniaudio
 ) :
     mMiniaudio(miniaudio),
-    mSpinlock(spinlock),
     mIdleCondition(),
     mMutex(),
     mBackgroundThread(nullptr),
@@ -39,8 +36,8 @@ Renderer::Renderer(
     mLastDeviceError(MA_SUCCESS),
     mSynth(44100),
     mApu(mSynth.apu()),
-    mRc(mApu, document.instrumentTable(), document.waveformTable()),
-    mEngine(mApu, document.mod()),
+    //mRc(mApu, document.mod().instrumentTable(), document.mod().waveformTable()),
+    mEngine(mApu),
     mIp(),
     mPreviewState(PreviewState::none),
     mPreviewChannel(trackerboy::ChType::ch1),
@@ -185,12 +182,12 @@ void Renderer::beginRender() {
 
 void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
 
-    mSpinlock.lock();
+    /*mSpinlock.lock();
     mEngine.play(orderNo, rowNo);
     mSpinlock.unlock();
 
     QMutexLocker locker(&mMutex);
-    beginRender();
+    beginRender();*/
 }
 
 // SLOTS
@@ -296,20 +293,20 @@ void Renderer::previewWaveform(trackerboy::Note note) {
 
 void Renderer::stopPreview() {
     if (mEnabled) {
-        mSpinlock.lock();
+        /*mSpinlock.lock();
         if (mPreviewState != PreviewState::none) {
             resetPreview();
         }
-        mSpinlock.unlock();
+        mSpinlock.unlock();*/
     }
     
 }
 
 void Renderer::stopMusic() {
     if (mEnabled) {
-        mSpinlock.lock();
+        /*mSpinlock.lock();
         mEngine.halt();
-        mSpinlock.unlock();
+        mSpinlock.unlock();*/
     }
     
 }
@@ -438,6 +435,8 @@ void Renderer::deviceStopHandler(ma_device *device) {
 }
 
 void Renderer::handleAudio(int16_t *out, size_t frames) {
+
+    #if 0
     if (mCallbackState == CallbackState::stopped) {
         // do nothing, the background thread will stop the callback eventually
         return;
@@ -562,7 +561,7 @@ void Renderer::handleAudio(int16_t *out, size_t frames) {
     // update diagnostic counters
     mSamplesElapsed += (unsigned)frames;
     mBufferUsage = (unsigned)reader.availableRead();
-
+    #endif
 }
 
 void Renderer::render(AudioRingbuffer::Writer &writer) {

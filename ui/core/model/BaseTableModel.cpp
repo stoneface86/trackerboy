@@ -2,6 +2,8 @@
 #include "core/model/BaseTableModel.hpp"
 #include "misc/IconManager.hpp"
 
+#include "core/model/ModuleDocument.hpp"
+
 #include <QStringBuilder>
 
 BaseTableModel::BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table) :

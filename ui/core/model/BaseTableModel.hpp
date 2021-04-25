@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/model/ModuleDocument.hpp"
+class ModuleDocument;
 
 #include "trackerboy/data/Table.hpp"
 

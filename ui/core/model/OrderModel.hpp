@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/ModuleDocument.hpp"
+class ModuleDocument;
 
 #include "trackerboy/data/Order.hpp"
 
@@ -9,6 +9,7 @@
 #include <QColor>
 #include <QItemSelection>
 #include <QModelIndex>
+#include <QUndoStack>
 
 #include <vector>
 

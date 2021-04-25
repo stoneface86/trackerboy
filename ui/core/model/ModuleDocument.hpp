@@ -1,10 +1,15 @@
 
 #pragma once
 
+// forward declaration (model classes and the document depend on each other)
+class ModuleDocument;
+
 #include "core/Spinlock.hpp"
+#include "core/model/OrderModel.hpp"
+#include "core/model/InstrumentListModel.hpp"
+#include "core/model/WaveListModel.hpp"
 
 #include "trackerboy/data/Module.hpp"
-#include "trackerboy/engine/RuntimeContext.hpp"
 
 #include <QMutex>
 #include <QObject>
@@ -49,30 +54,33 @@ public:
         EditContext(ModuleDocument &document);
         ~EditContext();
 
-
     private:
         
         ModuleDocument &mDocument;
     };
 
-    ModuleDocument(Spinlock &spinlock, QObject *parent = nullptr);
+    ModuleDocument(QObject *parent = nullptr);
 
     // accessors for the underlying module data containers
 
     trackerboy::Module& mod();
 
-    trackerboy::InstrumentTable& instrumentTable();
-
-    trackerboy::WaveformTable& waveformTable();
-
     QUndoStack& undoStack();
+
+    // models
+
+    InstrumentListModel& instrumentModel() noexcept;
+
+    OrderModel& orderModel() noexcept;
+
+    WaveListModel& waveModel() noexcept;
 
     bool isModified() const;
 
     //
     // Clear the undo stack, if the stack was not clean the perma dirty flag is set
-    //
-    void abandonStack();
+    // Commented out since it is not being used and I don't know why it exists in the first place
+    //void abandonStack();
 
     //
     // Utility method constructs an edit context. markModified sets the perma
@@ -91,7 +99,7 @@ public:
     // saves the document to the current filename
     bool save(QString const& filename);
 
-    void makeDirty();
+    bool tryLock();
 
     void lock();
 
@@ -112,6 +120,8 @@ private slots:
 private:
     Q_DISABLE_COPY(ModuleDocument)
 
+    void makeDirty();
+    
     void clean();
 
     // permanent dirty flag. Not all edits to the document can be undone. When such
@@ -126,10 +136,14 @@ private:
     bool mModified;
     trackerboy::Module mModule;
 
-    //QMutex mMutex;
-
-    Spinlock &mSpinlock;
+    Spinlock mSpinlock;
     
     QUndoStack mUndoStack;
+
+    // models
+    InstrumentListModel mInstrumentModel;
+    OrderModel mOrderModel;
+    WaveListModel mWaveModel;
+
 
 };

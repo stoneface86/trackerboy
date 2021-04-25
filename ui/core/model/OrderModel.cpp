@@ -1,5 +1,6 @@
 
 #include "core/model/OrderModel.hpp"
+#include "core/model/ModuleDocument.hpp"
 
 #include <QColor>
 

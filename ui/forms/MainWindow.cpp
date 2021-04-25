@@ -127,7 +127,7 @@ void MainWindow::updateWindowTitle() {
 // action slots
 
 void MainWindow::onFileNew() {
-    if (maybeSave()) {
+    /*if (maybeSave()) {
         
         setModelsEnabled(false);
         mApp.document.clear();
@@ -135,42 +135,43 @@ void MainWindow::onFileNew() {
 
         setFilename("");
 
-    }
+    }*/
 }
 
 void MainWindow::onFileOpen() {
-    if (maybeSave()) {
-        mModuleFileDialog.setFileMode(QFileDialog::FileMode::ExistingFile);
-        mModuleFileDialog.setAcceptMode(QFileDialog::AcceptOpen);
-        mModuleFileDialog.setWindowTitle("Open");
-        if (mModuleFileDialog.exec() == QDialog::Accepted) {
-            QString filename = mModuleFileDialog.selectedFiles().first();
+    //if (maybeSave()) {
+    //    mModuleFileDialog.setFileMode(QFileDialog::FileMode::ExistingFile);
+    //    mModuleFileDialog.setAcceptMode(QFileDialog::AcceptOpen);
+    //    mModuleFileDialog.setWindowTitle("Open");
+    //    if (mModuleFileDialog.exec() == QDialog::Accepted) {
+    //        QString filename = mModuleFileDialog.selectedFiles().first();
 
-            // disable models
-            setModelsEnabled(false);
+    //        // disable models
+    //        setModelsEnabled(false);
 
-            auto error = mApp.document.open(filename);
+    //        auto error = mApp.document.open(filename);
 
-            // renable models
-            setModelsEnabled(true);
+    //        // renable models
+    //        setModelsEnabled(true);
 
-            if (error == trackerboy::FormatError::none) {
-                setFilename(filename);
-            }
-        }
-    }
+    //        if (error == trackerboy::FormatError::none) {
+    //            setFilename(filename);
+    //        }
+    //    }
+    //}
 }
 
 bool MainWindow::onFileSave() {
-    if (mFilename.isEmpty()) {
+    /*if (mFilename.isEmpty()) {
         return onFileSaveAs();
     } else {
         return mApp.document.save(mFilename);
-    }
+    }*/
+    return false;
 }
 
 bool MainWindow::onFileSaveAs() {
-    mModuleFileDialog.setFileMode(QFileDialog::FileMode::AnyFile);
+    /*mModuleFileDialog.setFileMode(QFileDialog::FileMode::AnyFile);
     mModuleFileDialog.setAcceptMode(QFileDialog::AcceptSave);
     mModuleFileDialog.setWindowTitle("Save As");
     if (mModuleFileDialog.exec() != QDialog::Accepted) {
@@ -181,7 +182,7 @@ bool MainWindow::onFileSaveAs() {
         setFilename(filename);
         return true;
     }
-
+    */
     return false;
 }
 
@@ -271,7 +272,7 @@ OrderWidget QTableView QHeaderView::section {
         ));
 
         //mPatternEditor.setColors(appearance.colors);
-        mApp.orderModel.setRowColor(appearance.colors[+Color::row]);
+        //mApp.orderModel.setRowColor(appearance.colors[+Color::row]);
     }
 
     if (categories.testFlag(Config::CategoryKeyboard)) {
@@ -381,9 +382,9 @@ void MainWindow::onAudioStop() {
 
 
 bool MainWindow::maybeSave() {
-    if (!mApp.document.isModified()) {
+    /*if (!mApp.document.isModified()) {
         return true;
-    }
+    }*/
 
     auto const result = QMessageBox::warning(
         this,
@@ -423,7 +424,7 @@ void MainWindow::setModelsEnabled(bool enabled) {
 
 void MainWindow::setupUi() {
 
-    auto &undoStack = mApp.document.undoStack();
+    //auto &undoStack = mApp.document.undoStack();
 
     // CENTRAL WIDGET ========================================================
 
@@ -462,12 +463,12 @@ void MainWindow::setupUi() {
     setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
     setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
 
-    mActionEditUndo = undoStack.createUndoAction(this);
+    /*mActionEditUndo = undoStack.createUndoAction(this);
     mActionEditUndo->setIcon(IconManager::getIcon(Icons::editUndo));
     mActionEditUndo->setShortcut(QKeySequence::Undo);
     mActionEditRedo = undoStack.createRedoAction(this);
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
-    mActionEditRedo->setShortcut(QKeySequence::Redo);
+    mActionEditRedo->setShortcut(QKeySequence::Redo);*/
 
     //setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
     //setupAction(mActionSongNext, "&Next song", "Selects the next song in the list", Icons::next);
@@ -498,9 +499,9 @@ void MainWindow::setupUi() {
     mMenuFile.addAction(&mActionFileQuit);
 
     mMenuEdit.setTitle(tr("&Edit"));
-    mMenuEdit.addAction(mActionEditUndo);
-    mMenuEdit.addAction(mActionEditRedo);
-    mMenuEdit.addSeparator();
+    //mMenuEdit.addAction(mActionEditUndo);
+    //mMenuEdit.addAction(mActionEditRedo);
+    //mMenuEdit.addSeparator();
     //mPatternEditor.setupMenu(mMenuEdit);
 
     mMenuOrder.setTitle(tr("&Order"));
@@ -575,8 +576,8 @@ void MainWindow::setupUi() {
     mToolbarEdit.setWindowTitle(tr("Edit"));
     mToolbarEdit.setIconSize(iconSize);
     setObjectNameFromDeclared(mToolbarEdit);
-    mToolbarEdit.addAction(mActionEditUndo);
-    mToolbarEdit.addAction(mActionEditRedo);
+    //mToolbarEdit.addAction(mActionEditUndo);
+    //mToolbarEdit.addAction(mActionEditRedo);
     mToolbarEdit.addSeparator();
     /*mToolbarEdit.addAction(&patternActions.cut);
     mToolbarEdit.addAction(&patternActions.copy);
@@ -626,7 +627,7 @@ void MainWindow::setupUi() {
 
     // CONNECTIONS ============================================================
 
-    connect(&mApp.document, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
+    //connect(&mApp.document, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
 
     // Actions
 

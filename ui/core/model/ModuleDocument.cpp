@@ -26,13 +26,16 @@ template class ModuleDocument::EditContext<false>;
 
 
 
-ModuleDocument::ModuleDocument(Spinlock &spinlock, QObject *parent) :
+ModuleDocument::ModuleDocument(QObject *parent) :
     QObject(parent),
     mPermaDirty(false),
     mModified(false),
     mModule(),
-    mSpinlock(spinlock),
-    mUndoStack()
+    mSpinlock(),
+    mUndoStack(),
+    mInstrumentModel(*this),
+    mOrderModel(*this),
+    mWaveModel(*this)
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
@@ -55,24 +58,16 @@ trackerboy::Module& ModuleDocument::mod() {
     return mModule;
 }
 
-trackerboy::InstrumentTable& ModuleDocument::instrumentTable() {
-    return mModule.instrumentTable();
-}
-
-trackerboy::WaveformTable& ModuleDocument::waveformTable() {
-    return mModule.waveformTable();
-}
-
 QUndoStack& ModuleDocument::undoStack() {
     return mUndoStack;
 }
 
-void ModuleDocument::abandonStack() {
-    if (!mUndoStack.isClean()) {
-        makeDirty();
-    }
-    mUndoStack.clear();
-}
+//void ModuleDocument::abandonStack() {
+//    if (!mUndoStack.isClean()) {
+//        makeDirty();
+//    }
+//    mUndoStack.clear();
+//}
 
 ModuleDocument::EditContext<true> ModuleDocument::beginEdit() {
     return { *this };
@@ -137,6 +132,10 @@ void ModuleDocument::clean() {
         emit modifiedChanged(false);
     }
     mUndoStack.setClean();
+}
+
+bool ModuleDocument::tryLock() {
+    return mSpinlock.tryLock();
 }
 
 void ModuleDocument::lock() {

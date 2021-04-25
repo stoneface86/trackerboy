@@ -42,11 +42,7 @@ public:
         unsigned bufferSize;
     };
 
-    Renderer(
-        Miniaudio &miniaudio,
-        Spinlock &spinlock,
-        ModuleDocument &document
-    );
+    Renderer(Miniaudio &miniaudio);
     ~Renderer();
 
     // DIAGNOSTICS ====
@@ -157,7 +153,7 @@ private:
     // class members ---------------------------------------------------------
 
     Miniaudio &mMiniaudio;
-    Spinlock &mSpinlock;
+    //Spinlock &mSpinlock;
 
     QWaitCondition mIdleCondition;
     QMutex mMutex;
@@ -182,7 +178,7 @@ private:
     
     trackerboy::Synth mSynth;
     trackerboy::GbApu mApu;
-    trackerboy::RuntimeContext mRc;
+    //trackerboy::RuntimeContext mRc;
     // read access to the current song, wave table and instrument table
     trackerboy::Engine mEngine;
     // has read access to an Instrument and wave table
