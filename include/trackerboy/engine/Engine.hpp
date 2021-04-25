@@ -57,7 +57,9 @@ public:
     };
 
 
-    Engine(IApu &apu, Module &mod);
+    Engine(IApu &apu, Module const* mod = nullptr);
+
+    void setModule(Module const* mod);
 
     void reset();
 
@@ -91,8 +93,9 @@ public:
 private:
 
     IApu &mApu;
-    Module &mModule;
-    RuntimeContext mRc;
+    //Module &mModule;
+    Module const* mModule;
+    std::optional<RuntimeContext> mRc;
     std::optional<MusicRuntime> mMusicContext;
 
     //TODO: sfx runtime

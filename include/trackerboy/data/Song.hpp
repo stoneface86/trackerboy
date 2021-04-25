@@ -58,12 +58,14 @@ public:
     Speed speed() const noexcept;
 
     Order& order() noexcept;
+    Order const& order() const noexcept;
 
     PatternMaster& patterns() noexcept;
+    PatternMaster const& patterns() const noexcept;
 
     Pattern getPattern(uint8_t orderNo);
 
-    TrackRow getRow(ChType ch, uint8_t order, uint16_t row);
+    TrackRow getRow(ChType ch, uint8_t order, uint16_t row) const;
 
     void setRowsPerBeat(uint8_t rowsPerBeat);
 

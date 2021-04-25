@@ -53,14 +53,16 @@ public:
 
     void clear();
 
-    uint16_t rowSize();
+    uint16_t rowSize() const noexcept;
 
-    size_t tracks(ChType ch);
-    size_t tracks();
+    size_t tracks(ChType ch) const noexcept;
+    size_t tracks() const noexcept;
 
     Data::iterator tracksBegin(ChType ch);
+    Data::const_iterator tracksBegin(ChType ch) const;
 
     Data::iterator tracksEnd(ChType ch);
+    Data::const_iterator tracksEnd(ChType ch) const;
 
     //
     // Utility method. Calls getTrack for all 4 channels and stores each track
@@ -72,7 +74,10 @@ public:
     // not exist yet, it will be created.
     Track& getTrack(ChType ch, uint8_t track);
 
-    
+    //
+    // similiar to getTrack, but returns nullptr if the track does not exist
+    //
+    Track const* getTrack(ChType ch, uint8_t track) const;
 
     // Removes a given track from the master
     void remove(ChType ch, uint8_t track);

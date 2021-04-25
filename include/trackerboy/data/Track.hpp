@@ -42,8 +42,10 @@ public:
     Track(uint16_t rows);
 
     TrackRow& operator[](uint16_t row);
+    TrackRow const& operator[](uint16_t row) const;
 
     Data::iterator begin();
+    Data::const_iterator begin() const;
 
     void clear(uint16_t rowStart, uint16_t rowEnd);
 
@@ -54,6 +56,7 @@ public:
     void clearNote(uint8_t row);
 
     Data::iterator end();
+    Data::const_iterator end() const;
 
     void setEffect(uint8_t row, uint8_t effectNo, EffectType effect, uint8_t param = 0);
 
@@ -65,7 +68,7 @@ public:
 
     void resize(uint16_t newSize);
 
-    uint16_t rowCount();
+    uint16_t rowCount() const;
 
 private:
 

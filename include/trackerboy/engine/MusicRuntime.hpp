@@ -25,7 +25,7 @@ namespace trackerboy {
 class MusicRuntime {
 
 public:
-    MusicRuntime(Song &song, uint8_t orderNo, uint8_t patternRow);
+    MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow);
 
     uint8_t currentOrder() const noexcept;
 
@@ -55,7 +55,7 @@ private:
 
     static constexpr size_t DEFAULT_FLAGS = 1 << FLAG_INIT;
 
-    Song &mSong;
+    Song const& mSong;
 
     uint8_t mOrderCounter;
     uint8_t mRowCounter;

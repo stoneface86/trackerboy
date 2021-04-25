@@ -16,6 +16,10 @@ OrderRow& Order::operator[](uint8_t pattern) {
     return mTable[pattern];
 }
 
+OrderRow const& Order::operator[](uint8_t pattern) const {
+    return mTable[pattern];
+}
+
 void Order::resize(size_t size) {
     if (size == 0) {
         throw std::runtime_error("order size must be nonzero");

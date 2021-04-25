@@ -31,7 +31,15 @@ TrackRow& Track::operator[](uint16_t row) {
     return mData[row];
 }
 
+TrackRow const& Track::operator[](uint16_t row) const {
+    return mData[row];
+}
+
 Track::Data::iterator Track::begin() {
+    return mData.begin();
+}
+
+Track::Data::const_iterator Track::begin() const {
     return mData.begin();
 }
 
@@ -66,6 +74,10 @@ void Track::clearNote(uint8_t rowNo) {
 }
 
 Track::Data::iterator Track::end() {
+    return mData.end();
+}
+
+Track::Data::const_iterator Track::end() const {
     return mData.end();
 }
 
@@ -110,7 +122,7 @@ void Track::resize(uint16_t newSize) {
     mData.resize(newSize);
 }
 
-uint16_t Track::rowCount() {
+uint16_t Track::rowCount() const {
     return mRowCounter;
 }
 

@@ -28,7 +28,7 @@ void PatternMaster::clear() {
     }
 }
 
-uint16_t PatternMaster::rowSize() {
+uint16_t PatternMaster::rowSize() const noexcept {
     return mRows;
 }
 
@@ -58,6 +58,17 @@ Track& PatternMaster::getTrack(ChType ch, uint8_t track) {
     //return Track(iter->second.begin(), iter->second.end());
 }
 
+Track const* PatternMaster::getTrack(ChType ch, uint8_t track) const {
+    auto &chMap = mMap[static_cast<size_t>(ch)];
+    auto iter = chMap.find(track);
+
+    if (iter == chMap.end()) {
+        return nullptr;
+    } else {
+        return &iter->second;
+    }
+}
+
 void PatternMaster::remove(ChType ch, uint8_t track) {
     //uint16_t trackIndex = trackId(ch, track);
     auto &chMap = mMap[static_cast<size_t>(ch)];
@@ -74,11 +85,11 @@ void PatternMaster::setRowSize(uint16_t newsize) {
     }
 }
 
-size_t PatternMaster::tracks(ChType ch) {
+size_t PatternMaster::tracks(ChType ch) const noexcept {
     return mMap[static_cast<size_t>(ch)].size();
 }
 
-size_t PatternMaster::tracks() {
+size_t PatternMaster::tracks() const noexcept {
     return mMap[+ChType::ch1].size() +
            mMap[+ChType::ch2].size() +
            mMap[+ChType::ch3].size() +
@@ -89,7 +100,15 @@ PatternMaster::Data::iterator PatternMaster::tracksBegin(ChType ch) {
     return mMap[static_cast<size_t>(ch)].begin();
 }
 
+PatternMaster::Data::const_iterator PatternMaster::tracksBegin(ChType ch) const {
+    return mMap[static_cast<size_t>(ch)].begin();
+}
+
 PatternMaster::Data::iterator PatternMaster::tracksEnd(ChType ch) {
+    return mMap[static_cast<size_t>(ch)].end();
+}
+
+PatternMaster::Data::const_iterator PatternMaster::tracksEnd(ChType ch) const {
     return mMap[static_cast<size_t>(ch)].end();
 }
 

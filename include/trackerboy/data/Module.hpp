@@ -62,16 +62,19 @@ public:
     uint8_t revision() const noexcept;
 
     Song& song() noexcept;
+    Song const& song() const noexcept;
 
     WaveformTable& waveformTable() noexcept;
+    WaveformTable const& waveformTable() const noexcept;
 
     InstrumentTable& instrumentTable() noexcept;
+    InstrumentTable const& instrumentTable() const noexcept;
 
     // File I/O
 
     FormatError deserialize(std::istream &stream) noexcept;
 
-    FormatError serialize(std::ostream &stream) noexcept;
+    FormatError serialize(std::ostream &stream) const noexcept;
 
     void setArtist(std::string const& artist) noexcept;
 

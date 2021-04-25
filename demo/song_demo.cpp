@@ -349,7 +349,7 @@ int main() {
     std::vector<int16_t> buffer;
     buffer.resize(synth.framesize() * 2);
 
-    Engine engine(apu, mod);
+    Engine engine(apu, &mod);
     engine.play(0, 0);
 
 

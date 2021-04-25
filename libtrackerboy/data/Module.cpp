@@ -69,11 +69,23 @@ Song& Module::song() noexcept {
     return mSong;
 }
 
+Song const& Module::song() const noexcept {
+    return mSong;
+}
+
 InstrumentTable& Module::instrumentTable() noexcept {
     return mInstrumentTable;
 }
 
+InstrumentTable const& Module::instrumentTable() const noexcept {
+    return mInstrumentTable;
+}
+
 WaveformTable& Module::waveformTable() noexcept {
+    return mWaveformTable;
+}
+
+WaveformTable const& Module::waveformTable() const noexcept {
     return mWaveformTable;
 }
 
@@ -551,7 +563,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
     }
 }
 
-FormatError Module::serialize(std::ostream &stream) noexcept {
+FormatError Module::serialize(std::ostream &stream) const noexcept {
     
 
     // setup the header

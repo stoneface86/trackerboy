@@ -17,6 +17,7 @@ public:
     Order();
 
     OrderRow& operator[](uint8_t pattern);
+    OrderRow const& operator[](uint8_t pattern) const;
 
     void resize(size_t size);
 

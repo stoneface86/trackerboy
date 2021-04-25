@@ -6,7 +6,7 @@
 
 namespace trackerboy {
 
-MusicRuntime::MusicRuntime(Song &song, uint8_t orderNo, uint8_t patternRow) :
+MusicRuntime::MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow) :
     mSong(song),
     mOrderCounter(orderNo),
     mRowCounter(patternRow),

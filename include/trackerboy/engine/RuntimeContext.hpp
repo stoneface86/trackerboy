@@ -35,11 +35,11 @@ namespace trackerboy {
 //
 struct RuntimeContext {
 
-    RuntimeContext(IApu &apu, InstrumentTable &instrumentTable, WaveformTable &waveTable);
+    RuntimeContext(IApu &apu, InstrumentTable const& instrumentTable, WaveformTable const& waveTable);
 
     IApu &apu;
-    InstrumentTable &instrumentTable;
-    WaveformTable &waveTable;
+    InstrumentTable const& instrumentTable;
+    WaveformTable const& waveTable;
 
 
 };
