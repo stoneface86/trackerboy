@@ -35,9 +35,9 @@ public:
 
     virtual int columnCount(QModelIndex const& parent = QModelIndex()) const override;
 
-    void addDocument(ModuleDocument *doc);
+    QModelIndex addDocument(ModuleDocument *doc);
 
-    void removeDocument(int index);
+    void removeDocument(ModuleDocument *doc);
     
 
 private:

@@ -3,6 +3,8 @@
 
 #include "core/Trackerboy.hpp"
 #include "core/SyncWorker.hpp"
+#include "core/model/ModuleDocument.hpp"
+#include "core/model/ModuleModel.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
 //#include "forms/InstrumentEditor.hpp"
@@ -18,7 +20,6 @@
 
 #include <QComboBox>
 #include <QDockWidget>
-#include <QFileDialog>
 #include <QLabel>
 #include <QMainWindow>
 #include <QMdiArea>
@@ -29,6 +30,8 @@
 #include <QUndoView>
 #include <QSplitter>
 #include <QTreeView>
+
+#include <vector>
 
 //
 // Main form for the application
@@ -78,6 +81,9 @@ private slots:
     void onAudioError();
     void onAudioStop();
 
+    void onSubWindowActivated(QMdiSubWindow *window);
+    void onDocumentClosed(ModuleDocument *doc);
+
 
 private:
     Q_DISABLE_COPY(MainWindow)
@@ -86,9 +92,7 @@ private:
 
     // To be called before loading a new document. Prompts user to save if the
     // current document is modified. Returns false if the user does not want to continue
-    bool maybeSave();
-
-    void setFilename(QString filename);
+    //bool maybeSave();
 
     // enable or disable all models
     void setModelsEnabled(bool enabled);
@@ -101,12 +105,15 @@ private:
 
     void settingsMessageBox(QMessageBox &msgbox);
 
+    void addDocument(ModuleDocument *doc);
+
     Trackerboy &mApp;
-    
-    
-    // file name of the currently open file or "Untitled" for a new file
-    QString mFilename;
-    QString mDocumentName;
+
+    // counter for how many times a new document has been created
+    unsigned mDocumentCounter;
+    ModuleDocument *mCurrentDocument;
+
+    ModuleModel mBrowserModel;
 
     bool mErrorSinceLastConfig;
     
@@ -117,7 +124,6 @@ private:
     // dialogs
     AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;
-    QFileDialog mModuleFileDialog;
 
 
     // toolbars
@@ -156,6 +162,7 @@ private:
     QAction mActionFileOpen;
     QAction mActionFileSave;
     QAction mActionFileSaveAs;
+    QAction mActionFileClose;
     QAction mActionFileConfig;
     QAction mActionFileQuit;
 

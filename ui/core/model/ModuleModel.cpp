@@ -1,6 +1,8 @@
 
 #include "core/model/ModuleModel.hpp"
 
+#include <QtDebug>
+
 #include <array>
 #include <type_traits>
 
@@ -84,14 +86,18 @@ ModuleModel::ModuleModel(QObject *parent) :
 
 
 Qt::ItemFlags ModuleModel::flags(QModelIndex const& index) const {
-    Qt::ItemFlags flags;
+    if (index.isValid()) {
+        Qt::ItemFlags flags = Qt::ItemIsEnabled;
 
-    ModelId id = index.internalId();
-    if (id.level() == 2) {
-        flags |= Qt::ItemIsSelectable;
+        ModelId id = index.internalId();
+        if (id.level() == 2) {
+            flags |= Qt::ItemIsSelectable;
+        }
+
+        return flags;
+    } else {
+        return Qt::NoItemFlags;
     }
-
-    return flags;
 }
 
 QVariant ModuleModel::data(QModelIndex const& index, int role) const {
@@ -101,8 +107,7 @@ QVariant ModuleModel::data(QModelIndex const& index, int role) const {
         switch (id.level()) {
             case 0:
                 if (role == Qt::DisplayRole) {
-                    // TODO: get the document's filename
-                    return tr("Module");
+                    return mDocuments[index.row()]->name();
                 }
                 break;
             case 1: 
@@ -112,14 +117,37 @@ QVariant ModuleModel::data(QModelIndex const& index, int role) const {
                     return tr(MODULE_NODE_NAMES[row]);
                 }
                 break;
-            case 2:
+            case 2: {
+                auto doc = mDocuments[id.documentIndex()];
+                switch (id.parent()) {
+                    case 0: {
+                        auto &model = doc->instrumentModel();
+                        return model.data(model.index(index.row()), role);
+                    }
+                    case 1:
+                        if (role == Qt::DisplayRole) {
+                            auto row = index.row();
+                            return tr("Pattern %1")
+                                .arg(row, 2, 16, QChar('0'));
+
+                        }
+                        break;
+                    case 2: {
+                        auto &model = doc->waveModel();
+                        return model.data(model.index(index.row()), role);
+                    }
+                    default:
+                        break;
+                }
+
                 break;
+            }
             default:
                 break;
         }
     }
 
-    return {};
+    return QVariant();
 }
 
 bool ModuleModel::hasChildren(QModelIndex const& index) const {
@@ -132,11 +160,11 @@ bool ModuleModel::hasChildren(QModelIndex const& index) const {
             case 1:
                 return index.row() != 3;
             default:
-                break;
+                return false;
         }
     }
 
-    return false;
+    return true;
 }
 
 QVariant ModuleModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -144,10 +172,14 @@ QVariant ModuleModel::headerData(int section, Qt::Orientation orientation, int r
     Q_UNUSED(orientation)
     Q_UNUSED(role)
     // no header data
-    return {};
+    return QVariant();
 }
 
 QModelIndex ModuleModel::index(int row, int column, QModelIndex const& parent) const {
+
+    if (row < 0 || row >= rowCount(parent) || column != 0) {
+        return QModelIndex();
+    }
 
     ModelId id;
 
@@ -162,13 +194,14 @@ QModelIndex ModuleModel::index(int row, int column, QModelIndex const& parent) c
                 id = ModelId(parentId.documentIndex(), (unsigned)parent.row());
                 break;
             default:
-                break;
+                // this should never happen (level 2 indices have no children, the ModelId is faulty)
+                return QModelIndex();
         }
 
 
     }
-    
-    return createIndex(row, column, id.data);
+
+    return createIndex(row, 0, id.data);
 
 }
 
@@ -200,9 +233,19 @@ int ModuleModel::rowCount(QModelIndex const& parent) const {
             case 0:
                 // every module has 4 items (instruments, order, waveforms and setings)
                 return 4;
-            case 1:
-                
-                return 0;
+            case 1: {
+                auto doc = mDocuments[parentId.documentIndex()];
+                switch (parent.row()) {
+                    case 0: // instruments
+                        return doc->instrumentModel().rowCount();
+                    case 1:
+                        return doc->orderModel().rowCount();
+                    case 2:
+                        return doc->waveModel().rowCount();
+                    default:
+                        return 0;
+                }
+            }
                 // TODO: get rowCount from associated models
                 /*switch (parent.row()) {
 
@@ -223,15 +266,24 @@ int ModuleModel::columnCount(QModelIndex const& parent) const {
     return 1;
 }
 
-void ModuleModel::addDocument(ModuleDocument *doc) {
+QModelIndex ModuleModel::addDocument(ModuleDocument *doc) {
     int row = mDocuments.size();
     beginInsertRows(QModelIndex(), row, row);
 
     mDocuments.push_back(doc);
 
     endInsertRows();
+
+    return createIndex(row, 0, ModelId().data);
 }
 
-void ModuleModel::removeDocument(int index) {
-    // TODO
+void ModuleModel::removeDocument(ModuleDocument *doc) {
+    auto row = mDocuments.indexOf(doc);
+    
+    if (row != -1) {
+
+        beginRemoveRows(QModelIndex(), row, row);
+        mDocuments.remove(row);
+        endRemoveRows();
+    }
 }

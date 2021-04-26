@@ -2,7 +2,6 @@
 #include "core/model/ModuleDocument.hpp"
 
 #include <QFileInfo>
-#include <QThread>
 
 #include <fstream>
 
@@ -35,11 +34,34 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mUndoStack(),
     mInstrumentModel(*this),
     mOrderModel(*this),
-    mWaveModel(*this)
+    mWaveModel(*this),
+    mLastError(trackerboy::FormatError::none),
+    mFilename(),
+    mFilepath()
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }
+
+ModuleDocument::ModuleDocument(QString const& path, QObject *parent) :
+    ModuleDocument(parent)
+{
+    std::ifstream in(path.toStdString(), std::ios::binary | std::ios::in);
+    if (in.good()) {
+        mLastError = mModule.deserialize(in);
+        if (mLastError == trackerboy::FormatError::none) {
+
+            updateFilename(path);
+
+            mInstrumentModel.reload();
+            mWaveModel.reload();
+            mOrderModel.reload();
+        }
+    }
+
+    in.close();
+}
+
 
 void ModuleDocument::clear() {
     
@@ -48,6 +70,22 @@ void ModuleDocument::clear() {
 
     clean();
     
+}
+
+trackerboy::FormatError ModuleDocument::lastError() {
+    return mLastError;
+}
+
+QString ModuleDocument::name() const noexcept {
+    return mFilename;
+}
+
+void ModuleDocument::setName(QString const& name) noexcept {
+    mFilename = name;
+}
+
+bool ModuleDocument::hasFile() const noexcept {
+    return !mFilepath.isEmpty();
 }
 
 bool ModuleDocument::isModified() const {
@@ -60,6 +98,18 @@ trackerboy::Module& ModuleDocument::mod() {
 
 QUndoStack& ModuleDocument::undoStack() {
     return mUndoStack;
+}
+
+InstrumentListModel& ModuleDocument::instrumentModel() noexcept {
+    return mInstrumentModel;
+}
+
+OrderModel& ModuleDocument::orderModel() noexcept {
+    return mOrderModel;
+}
+
+WaveListModel& ModuleDocument::waveModel() noexcept {
+    return mWaveModel;
 }
 
 //void ModuleDocument::abandonStack() {
@@ -77,22 +127,25 @@ ModuleDocument::EditContext<false> ModuleDocument::beginCommandEdit() {
     return { *this };
 }
 
-trackerboy::FormatError ModuleDocument::open(QString const& filename) {
-    trackerboy::FormatError error = trackerboy::FormatError::none;
-    std::ifstream in(filename.toStdString(), std::ios::binary | std::ios::in);
-    if (in.good()) {
-        error = mModule.deserialize(in);
-        if (error == trackerboy::FormatError::none) {
-            clean();
-        }
+bool ModuleDocument::save() {
+    if (mFilepath.isEmpty()) {
+        return false;
+    } else {
+        return doSave(mFilepath);
     }
-
-    in.close();
-    return error;
-    
 }
 
 bool ModuleDocument::save(QString const& filename) {
+    auto result = doSave(filename);
+    if (result) {
+        updateFilename(filename);
+    }
+
+    return result;
+   
+}
+
+bool ModuleDocument::doSave(QString const& filename) {
     bool success = false;
     std::ofstream out(filename.toStdString(), std::ios::binary | std::ios::out);
     if (out.good()) {
@@ -146,5 +199,10 @@ void ModuleDocument::unlock() {
     mSpinlock.unlock();
 }
 
+void ModuleDocument::updateFilename(QString const& path) {
+    mFilepath = path;
+    QFileInfo info(path);
+    mFilename = info.fileName();
+}
 
 

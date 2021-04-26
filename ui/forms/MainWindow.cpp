@@ -4,6 +4,7 @@
 #include "core/samplerates.hpp"
 #include "misc/IconManager.hpp"
 #include "misc/utils.hpp"
+#include "widgets/ModuleWindow.hpp"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -13,7 +14,7 @@
 #include <QScreen>
 #include <QMenuBar>
 #include <QStatusBar>
-
+#include <QMdiSubWindow>
 #include <QtDebug>
 
 #include <array>
@@ -28,12 +29,11 @@ constexpr int TOOLBAR_ICON_HEIGHT = 16;
 MainWindow::MainWindow(Trackerboy &trackerboy) :
     QMainWindow(),
     mApp(trackerboy),
-    mFilename(),
-    mDocumentName(),
+    mDocumentCounter(0),
+    mCurrentDocument(nullptr),
     mErrorSinceLastConfig(false),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
-    mModuleFileDialog(),
     mToolbarFile(),
     mToolbarEdit(),
     mToolbarTracker()
@@ -45,9 +45,6 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mApp.config.readSettings();
     // apply the read in configuration
     onConfigApplied(Config::CategoryAll);
-
-    // new documents have an empty string for a filename
-    setFilename("");
 
     setWindowIcon(IconManager::getAppIcon());
 
@@ -104,14 +101,14 @@ QMenu* MainWindow::createPopupMenu() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
-    if (maybeSave()) {
+    //if (maybeSave()) {
         QSettings settings;
         settings.setValue("geometry", saveGeometry());
         settings.setValue("windowState", saveState());
         evt->accept();
-    } else {
-        evt->ignore();
-    }
+    //} else {
+    //    evt->ignore();
+    //}
 }
 
 void MainWindow::showEvent(QShowEvent *evt) {
@@ -121,56 +118,50 @@ void MainWindow::showEvent(QShowEvent *evt) {
 // SLOTS ---------------------------------------------------------------------
 
 void MainWindow::updateWindowTitle() {
-    setWindowTitle(QStringLiteral("%1[*] - Trackerboy").arg(mDocumentName));
+    if (mCurrentDocument) {
+        setWindowTitle(QStringLiteral("%1[*] - Trackerboy").arg(mCurrentDocument->name()));
+    } else {
+        setWindowTitle(QStringLiteral("Trackerboy"));
+    }
 }
 
 // action slots
 
 void MainWindow::onFileNew() {
-    /*if (maybeSave()) {
-        
-        setModelsEnabled(false);
-        mApp.document.clear();
-        setModelsEnabled(true);
 
-        setFilename("");
+    ++mDocumentCounter;
+    auto doc = new ModuleDocument(this);
+    QString name = tr("Untitled %1").arg(mDocumentCounter);
+    doc->setName(name);
+    addDocument(doc);
 
-    }*/
 }
 
 void MainWindow::onFileOpen() {
-    //if (maybeSave()) {
-    //    mModuleFileDialog.setFileMode(QFileDialog::FileMode::ExistingFile);
-    //    mModuleFileDialog.setAcceptMode(QFileDialog::AcceptOpen);
-    //    mModuleFileDialog.setWindowTitle("Open");
-    //    if (mModuleFileDialog.exec() == QDialog::Accepted) {
-    //        QString filename = mModuleFileDialog.selectedFiles().first();
 
-    //        // disable models
-    //        setModelsEnabled(false);
+    auto doc = ModuleWindow::open(this);
+    if (doc) {
+        if (doc->lastError() == trackerboy::FormatError::none) {
+            addDocument(doc);
+        } else {
+            // TODO: report error to user
+            delete doc;
+        }
+    }
 
-    //        auto error = mApp.document.open(filename);
-
-    //        // renable models
-    //        setModelsEnabled(true);
-
-    //        if (error == trackerboy::FormatError::none) {
-    //            setFilename(filename);
-    //        }
-    //    }
-    //}
 }
 
 bool MainWindow::onFileSave() {
-    /*if (mFilename.isEmpty()) {
-        return onFileSaveAs();
+    return static_cast<ModuleWindow*>(mMdi.currentSubWindow()->widget())->save();
+    /*if (mCurrentDocument->hasFile()) {
+        return mCurrentDocument->save();
     } else {
-        return mApp.document.save(mFilename);
+        return onFileSaveAs();
     }*/
-    return false;
 }
 
 bool MainWindow::onFileSaveAs() {
+    return static_cast<ModuleWindow*>(mMdi.currentSubWindow()->widget())->saveAs();
     /*mModuleFileDialog.setFileMode(QFileDialog::FileMode::AnyFile);
     mModuleFileDialog.setAcceptMode(QFileDialog::AcceptSave);
     mModuleFileDialog.setWindowTitle("Save As");
@@ -178,12 +169,8 @@ bool MainWindow::onFileSaveAs() {
         return false;
     }
     QString filename = mModuleFileDialog.selectedFiles().first();
-    if (mApp.document.save(filename)) {
-        setFilename(filename);
-        return true;
-    }
-    */
-    return false;
+    auto result = mCurrentDocument->save(filename);
+    return result;*/
 }
 
 void MainWindow::onWindowResetLayout() {
@@ -302,30 +289,6 @@ void MainWindow::showConfigDialog() {
     mConfigDialog->show();
 }
 
-//void MainWindow::showInstrumentEditor() {
-//    if (mInstrumentEditor == nullptr) {
-//        mInstrumentEditor = new InstrumentEditor(mApp.instrumentModel, mApp.waveModel, mPianoInput, this);
-//
-//        // allow the instrument editor to show the wave editor
-//        connect(mInstrumentEditor, &InstrumentEditor::waveEditorRequested, this, &MainWindow::showWaveEditor);
-//
-//        auto &instPiano = mInstrumentEditor->piano();
-//        connect(&instPiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewInstrument);
-//        connect(&instPiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
-//    }
-//    mInstrumentEditor->show();
-//}
-//
-//void MainWindow::showWaveEditor() {
-//    if (mWaveEditor == nullptr) {
-//        mWaveEditor = new WaveEditor(mApp.waveModel, mPianoInput, this);
-//        auto &wavePiano = mWaveEditor->piano();
-//        connect(&wavePiano, &PianoWidget::keyDown, &mApp.renderer, &Renderer::previewWaveform);
-//        connect(&wavePiano, &PianoWidget::keyUp, &mApp.renderer, &Renderer::stopPreview);
-//    }
-//    mWaveEditor->show();
-//}
-
 
 void MainWindow::statusSetInstrument(int index) {
     //int id = (index == -1) ? 0 : mApp.instrumentModel.instrument(index)->id();
@@ -378,43 +341,66 @@ void MainWindow::onAudioStop() {
     }
 }
 
+void MainWindow::onSubWindowActivated(QMdiSubWindow *window) {
+    bool const hasWindow = window != nullptr;
+    mActionFileSave.setEnabled(hasWindow);
+    mActionFileSaveAs.setEnabled(hasWindow);
+    mActionFileClose.setEnabled(hasWindow);
+
+    auto doc = hasWindow
+        ? static_cast<ModuleWindow*>(window->widget())->document() 
+        : nullptr;
+
+    if (mCurrentDocument != doc) {
+        mCurrentDocument = doc;
+        updateWindowTitle();
+    }
+
+}
+
+void MainWindow::onDocumentClosed(ModuleDocument *doc) {
+    mBrowserModel.removeDocument(doc);
+    
+    // no longer using this document, delete it
+    delete doc;
+}
+
 // PRIVATE METHODS -----------------------------------------------------------
 
+void MainWindow::addDocument(ModuleDocument *doc) {
+    auto index = mBrowserModel.addDocument(doc);
+    mBrowser.expand(index);
 
-bool MainWindow::maybeSave() {
-    /*if (!mApp.document.isModified()) {
-        return true;
-    }*/
+    auto docWin = new ModuleWindow(doc);
+    connect(docWin, &ModuleWindow::documentClosed, this, &MainWindow::onDocumentClosed);
+    mMdi.addSubWindow(docWin);
+    docWin->show();
 
-    auto const result = QMessageBox::warning(
-        this,
-        tr("Trackerboy"),
-        tr("Save changes to \"%1\"?").arg(mDocumentName),
-        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
-        );
-
-    switch (result) {
-        case QMessageBox::Save:
-            return onFileSave();
-        case QMessageBox::Cancel:
-            return false;
-        default:
-            break;
-    }
-
-    return true;
 }
 
-void MainWindow::setFilename(QString filename) {
-    mFilename = filename;
-    if (filename.isEmpty()) {
-        mDocumentName = "Untitled";
-    } else {
-        QFileInfo info(filename);
-        mDocumentName = info.fileName();
-    }
-    updateWindowTitle();
-}
+//bool MainWindow::maybeSave() {
+//    /*if (!mApp.document.isModified()) {
+//        return true;
+//    }*/
+//
+//    auto const result = QMessageBox::warning(
+//        this,
+//        tr("Trackerboy"),
+//        tr("Save changes to \"%1\"?").arg(mDocumentName),
+//        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
+//        );
+//
+//    switch (result) {
+//        case QMessageBox::Save:
+//            return onFileSave();
+//        case QMessageBox::Cancel:
+//            return false;
+//        default:
+//            break;
+//    }
+//
+//    return true;
+//}
 
 void MainWindow::setModelsEnabled(bool enabled) {
     //mApp.instrumentModel.setEnabled(enabled);
@@ -433,6 +419,9 @@ void MainWindow::setupUi() {
 
     mMdi.setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     mMdi.setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
+    mBrowser.setModel(&mBrowserModel);
+    mBrowser.setHeaderHidden(true);
 
     mHSplitter->addWidget(&mBrowser);
     mHSplitter->addWidget(&mMdi);
@@ -460,6 +449,7 @@ void MainWindow::setupUi() {
     setupAction(mActionFileOpen, "&Open", "Open an existing module", Icons::fileOpen, QKeySequence::Open);
     setupAction(mActionFileSave, "&Save", "Save the module", Icons::fileSave, QKeySequence::Save);
     setupAction(mActionFileSaveAs, "Save &As...", "Save the module to a new file", QKeySequence::SaveAs);
+    setupAction(mActionFileClose, "Close", "Close the current module", QKeySequence::Close);
     setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
     setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
 
@@ -493,6 +483,7 @@ void MainWindow::setupUi() {
     mMenuFile.addAction(&mActionFileOpen);
     mMenuFile.addAction(&mActionFileSave);
     mMenuFile.addAction(&mActionFileSaveAs);
+    mMenuFile.addAction(&mActionFileClose);
     mMenuFile.addSeparator();
     mMenuFile.addAction(&mActionFileConfig);
     mMenuFile.addSeparator();
@@ -601,9 +592,6 @@ void MainWindow::setupUi() {
 
     // DIALOGS ===============================================================
 
-    mModuleFileDialog.setNameFilter(tr("Trackerboy Module (*.tbm)"));
-    mModuleFileDialog.setWindowModality(Qt::WindowModal);
-
     // DOCKS =================================================================
 
     
@@ -636,6 +624,7 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileOpen, onFileOpen);
     connectActionToThis(mActionFileSave, onFileSave);
     connectActionToThis(mActionFileSaveAs, onFileSaveAs);
+    connect(&mActionFileClose, &QAction::triggered, &mMdi, &QMdiArea::closeActiveSubWindow);
     connectActionToThis(mActionFileQuit, close);
     connectActionToThis(mActionWindowResetLayout, onWindowResetLayout);
 
@@ -675,7 +664,7 @@ void MainWindow::setupUi() {
     connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
     connect(&mApp.renderer, &Renderer::audioError, this, &MainWindow::onAudioError);
 
-
+    connect(&mMdi, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 }
 
 void MainWindow::initState() {

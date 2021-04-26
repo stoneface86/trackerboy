@@ -59,7 +59,17 @@ public:
         ModuleDocument &mDocument;
     };
 
-    ModuleDocument(QObject *parent = nullptr);
+    explicit ModuleDocument(QObject *parent = nullptr);
+    explicit ModuleDocument(QString const& path, QObject *parent = nullptr);
+
+
+    trackerboy::FormatError lastError();
+
+    QString name() const noexcept;
+
+    void setName(QString const& name) noexcept;
+
+    bool hasFile() const noexcept;
 
     // accessors for the underlying module data containers
 
@@ -94,9 +104,12 @@ public:
     //
     EditContext<false> beginCommandEdit();
 
-    trackerboy::FormatError open(QString const& filename);
+    //trackerboy::FormatError open(QString const& filename);
 
-    // saves the document to the current filename
+    // saves the document to the previously loaded/saved file
+    bool save();
+
+    // saves the document to the given filename and updates the document's path
     bool save(QString const& filename);
 
     bool tryLock();
@@ -124,6 +137,10 @@ private:
     
     void clean();
 
+    void updateFilename(QString const& path);
+
+    bool doSave(QString const& path);
+
     // permanent dirty flag. Not all edits to the document can be undone. When such
     // edit occurs, this flag is set to true. It is reset when the document is
     // saved or when the document is reset or loaded from disk.
@@ -145,5 +162,9 @@ private:
     OrderModel mOrderModel;
     WaveListModel mWaveModel;
 
+    trackerboy::FormatError mLastError;
+
+    QString mFilename;
+    QString mFilepath;
 
 };
