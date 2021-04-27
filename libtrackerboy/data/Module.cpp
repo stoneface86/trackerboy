@@ -23,7 +23,9 @@ Module::Module() noexcept :
     mTitle(),
     mArtist(),
     mCopyright(),
-    mComments()
+    mComments(),
+    mSystem(System::dmg),
+    mCustomFramerate(30)
 {
 }
 
@@ -39,6 +41,8 @@ void Module::clear() noexcept {
     mSong.reset();
     mInstrumentTable.clear();
     mWaveformTable.clear();
+    mSystem = System::dmg;
+    mCustomFramerate = 30;
 }
 
 std::string const& Module::artist() const noexcept {
@@ -89,6 +93,25 @@ WaveformTable const& Module::waveformTable() const noexcept {
     return mWaveformTable;
 }
 
+float Module::framerate() const noexcept {
+    switch (mSystem) {
+        case System::dmg:
+            return GB_FRAMERATE_DMG;
+        case System::sgb:
+            return GB_FRAMERATE_SGB;
+        default:
+            return (float)mCustomFramerate;
+    }
+}
+
+System Module::system() const noexcept {
+    return mSystem;
+}
+
+uint16_t Module::customFramerate() const noexcept {
+    return mCustomFramerate;
+}
+
 void Module::setArtist(std::string const& artist) noexcept {
     mArtist = artist;
 }
@@ -103,6 +126,19 @@ void Module::setTitle(std::string const& title) noexcept {
 
 void Module::setComments(std::string const& comments) noexcept {
     mComments = comments;
+}
+
+void Module::setFramerate(System system) noexcept {
+    mSystem = system;
+}
+
+void Module::setFramerate(uint16_t rate) {
+    if (rate == 0) {
+        throw std::invalid_argument("rate must be nonzero");
+    }
+
+    mSystem = System::custom;
+    mCustomFramerate = rate;
 }
 
 // ---- Serialization ----
@@ -412,6 +448,17 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
     mArtist = std::string(header.artist);
     mCopyright = std::string(header.copyright);
 
+    if (header.system <= +System::custom) {
+        mSystem = static_cast<System>(header.system);
+        if (mSystem == System::custom) {
+            auto framerate = correctEndian(header.customFramerate);
+            if (framerate == 0) {
+                return FormatError::invalid;
+            }
+            mCustomFramerate = framerate;
+        }
+    }
+
     mSong.reset();
     mInstrumentTable.clear();
     mWaveformTable.clear();
@@ -596,6 +643,11 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
 
     header.numberOfInstruments = correctEndian((uint16_t)mInstrumentTable.size());
     header.numberOfWaveforms = correctEndian((uint16_t)mWaveformTable.size());
+
+    header.system = +mSystem;
+    if (mSystem == System::custom) {
+        header.customFramerate = correctEndian(mCustomFramerate);
+    }
 
     #undef copyStringToFixed
 

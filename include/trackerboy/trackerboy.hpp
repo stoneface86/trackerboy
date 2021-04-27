@@ -34,7 +34,8 @@ namespace trackerboy {
 
 enum class System : uint8_t {
     dmg,
-    sgb
+    sgb,
+    custom
 };
 
 //
@@ -102,11 +103,17 @@ enum class Panning : uint8_t {
 //
 using Speed = uint8_t;
 
+static constexpr unsigned SPEED_FRACTION_BITS = 4;
+
 // minimum possible speed, 1.0 frames per row
-static constexpr Speed SPEED_MIN = 0x10;
+static constexpr Speed SPEED_MIN = (Speed)(1 << SPEED_FRACTION_BITS);
 
 // maximum possible speed, 15.0 frames per row
-static constexpr Speed SPEED_MAX = 0xF0;
+static constexpr Speed SPEED_MAX = (Speed)(~((1 << SPEED_FRACTION_BITS) - 1));
+
+constexpr float speedToFloat(Speed speed) {
+    return speed * (1.0f / (1 << SPEED_FRACTION_BITS));
+}
 
 constexpr size_t TABLE_SIZE = 64;
 constexpr size_t MAX_INSTRUMENTS = TABLE_SIZE;

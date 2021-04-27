@@ -61,6 +61,12 @@ public:
 
     uint8_t revision() const noexcept;
 
+    float framerate() const noexcept;
+
+    System system() const noexcept;
+
+    uint16_t customFramerate() const noexcept;
+
     Song& song() noexcept;
     Song const& song() const noexcept;
 
@@ -84,6 +90,9 @@ public:
 
     void setComments(std::string const& comments) noexcept;
 
+    void setFramerate(System system) noexcept;
+
+    void setFramerate(uint16_t rate);
 
 private:
 
@@ -102,6 +111,9 @@ private:
 
     // user comments/info about the module itself
     std::string mComments;
+
+    System mSystem;
+    uint16_t mCustomFramerate;
 };
 
 
