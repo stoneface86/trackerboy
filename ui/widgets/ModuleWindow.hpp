@@ -44,6 +44,11 @@ private:
 
     bool maybeSave();
 
+    //
+    // Writes any retained data within the UI to the module
+    //
+    void commit();
+
 
     QGridLayout mLayout;
     QTabWidget mTabs;

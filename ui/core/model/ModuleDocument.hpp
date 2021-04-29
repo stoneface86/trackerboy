@@ -85,6 +85,7 @@ public:
 
     WaveListModel& waveModel() noexcept;
 
+
     bool isModified() const;
 
     //
@@ -118,6 +119,7 @@ public:
 
     void unlock();
 
+
 signals:
     void modifiedChanged(bool value);
 
@@ -126,6 +128,8 @@ public slots:
     // Clears the document to the default state. Call this slot when creating a new document
     //
     void clear();
+    
+    void makeDirty();
 
 private slots:
     void onStackCleanChanged(bool clean);
@@ -133,7 +137,6 @@ private slots:
 private:
     Q_DISABLE_COPY(ModuleDocument)
 
-    void makeDirty();
     
     void clean();
 
@@ -166,5 +169,13 @@ private:
 
     QString mFilename;
     QString mFilepath;
+
+    // QString versions of the strings stored in the module
+    // (this way we don't have to keep converting to and from std::string)
+    QString mTitle;
+    QString mArtist;
+    QString mCopyright;
+
+    QString mComments;
 
 };

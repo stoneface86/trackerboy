@@ -149,6 +149,9 @@ bool ModuleDocument::doSave(QString const& filename) {
     bool success = false;
     std::ofstream out(filename.toStdString(), std::ios::binary | std::ios::out);
     if (out.good()) {
+        mInstrumentModel.commit();
+        mWaveModel.commit();
+
         success = mModule.serialize(out) == trackerboy::FormatError::none;
         if (success) {
             clean();

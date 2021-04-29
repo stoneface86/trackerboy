@@ -58,6 +58,7 @@ ModuleDocument* ModuleWindow::open(QWidget *parent) {
 
 bool ModuleWindow::save() {
     if (mDocument->hasFile()) {
+        commit();
         return mDocument->save();
     } else {
         return saveAs();
@@ -77,6 +78,7 @@ bool ModuleWindow::saveAs() {
         return false;
     }
 
+    commit();
     auto result = mDocument->save(path);
     if (result) {
         updateWindowTitle();
@@ -118,6 +120,10 @@ bool ModuleWindow::maybeSave() {
     }
 
     return true;
+}
+
+void ModuleWindow::commit() {
+    mTabSettings.commit();
 }
 
 void ModuleWindow::updateWindowTitle() {

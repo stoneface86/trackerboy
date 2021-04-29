@@ -6,11 +6,24 @@
 
 #include <QStringBuilder>
 
-BaseTableModel::BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table) :
+BaseTableModel::ModelData::ModelData(uint8_t id, QString name) :
+    id(id),
+    name(name)
+{
+}
+
+BaseTableModel::ModelData::ModelData(trackerboy::DataItem const& item) :
+    id(item.id()),
+    name(QString::fromStdString(item.name()))
+{
+}
+
+BaseTableModel::BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table, QString defaultName) :
     mDocument(document),
     mBaseTable(table),
     mItems(),
-    mNextModelIndex(0)
+    mDefaultName(defaultName),
+    mShouldCommit(false)
 {
 }
 
@@ -22,13 +35,25 @@ bool BaseTableModel::canDuplicate() const {
     return mBaseTable.size() != trackerboy::BaseTable::MAX_SIZE;
 }
 
+void BaseTableModel::commit() {
+    // set the names of all items in the table
+    if (mShouldCommit) {
+        for (auto &data : mItems) {
+            auto tableItem = mBaseTable.get(data.id);
+            tableItem->setName(data.name.toStdString());
+        }
+        mShouldCommit = false;
+    }
+}
+
 void BaseTableModel::reload() {
     beginResetModel();
 
     mItems.clear();
     for (uint8_t id = 0; id != trackerboy::BaseTable::MAX_SIZE; ++id) {
-        if (mBaseTable.get(id) != nullptr) {
-            mItems.push_back(id);
+        auto item = mBaseTable.get(id);
+        if (item != nullptr) {
+            mItems.emplace_back(*item);
         }
     }
 
@@ -37,29 +62,29 @@ void BaseTableModel::reload() {
 
 int BaseTableModel::rowCount(const QModelIndex &parent) const {
     (void)parent;
-    // row count is fixed by the maximum number of items in trackerboy::BaseTable
     return (int)mItems.size();
 }
 
 QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
-    if (role == Qt::DisplayRole) {
-        auto item = mBaseTable.get(mItems[index.row()]);
-        Q_ASSERT(item != nullptr);
-        // <id> - [name]
-        return QString::number(item->id(), 16).toUpper().rightJustified(2, '0') %
-            QStringLiteral(" - ") %
-            QString::fromStdString(item->name());
-    } else if (role == Qt::DecorationRole) {
-        auto item = mBaseTable.get(mItems[index.row()]);
-        return iconData(*item);
+    if (role == Qt::DisplayRole || role == Qt::DecorationRole) {
+
+        auto const& modelItem = mItems[index.row()];
+
+        if (role == Qt::DisplayRole) {
+            // <id> - [name]
+            return QString::number(modelItem.id, 16).toUpper().rightJustified(2, '0') %
+                QStringLiteral(" - ") % modelItem.name;
+        } else {
+            // decoration role
+            return iconData(modelItem.id);
+        }
     }
 
     return QVariant();
 }
 
 QString BaseTableModel::name(int index) {
-    auto item = mBaseTable.get(mItems[index]);
-    return QString::fromStdString(item->name());
+    return mItems[index].name;
 }
 
 void BaseTableModel::add() {
@@ -71,8 +96,8 @@ void BaseTableModel::add() {
         auto &item = mBaseTable.insert();
         id = item.id();
     }
-
-    insertId(id);
+    ModelData data(id, mDefaultName);
+    insertData(data);
 
 }
 
@@ -81,7 +106,7 @@ void BaseTableModel::remove(int index) {
     auto iter = mItems.begin() + index;
     {
         auto ctx = mDocument.beginEdit();
-        mBaseTable.remove(*iter);
+        mBaseTable.remove(iter->id);
     }
 
     mItems.erase(iter);
@@ -91,47 +116,51 @@ void BaseTableModel::remove(int index) {
 
 
 void BaseTableModel::duplicate(int index) {
-    
+
+    auto const& dataToCopy = mItems[index];
     uint8_t id;
     {
         auto ctx = mDocument.beginEdit();
-        id = mBaseTable.duplicate(mItems[index]).id();
+        id = mBaseTable.duplicate(dataToCopy.id).id();
     }
-    insertId(id);
+
+    ModelData data(id, dataToCopy.name);
+    insertData(data);
 
 }
 
 void BaseTableModel::rename(int index, const QString &name) {
+    mShouldCommit = true;
 
-    auto item = mBaseTable.get(mItems[index]);
-    Q_ASSERT(item != nullptr);
-
-    {
-        auto ctx = mDocument.beginEdit();
-        item->setName(name.toStdString());
-    }
+    mItems[index].name = name;
+    mDocument.makeDirty();
 
     auto index_ = createIndex(index, 0, nullptr);
     emit dataChanged(index_, index_, { Qt::DisplayRole });
 }
 
 
-void BaseTableModel::insertId(uint8_t id) {
+void BaseTableModel::insertData(ModelData const& data) {
+    mShouldCommit = true;
+
     auto itemCount = mItems.size();
-    if (itemCount == 0 || *mItems.rbegin() < id) {
+    if (itemCount == 0 || mItems.rbegin()->id < data.id) {
         // shortcut, put the id at the end
         beginInsertRows(QModelIndex(), itemCount, itemCount);
-        mItems.push_back(id);
+        mItems.push_back(data);
         endInsertRows();
 
     } else {
         // search and insert
         auto begin = mItems.begin();
-        auto iter = std::upper_bound(begin, mItems.end(), id);
+        auto iter = std::upper_bound(begin, mItems.end(), data.id,
+            [](uint8_t id, ModelData const& data) {
+                return id < data.id;
+            });
 
         int row = iter - begin;
         beginInsertRows(QModelIndex(), row, row);
-        mItems.insert(iter, id);
+        mItems.insert(iter, data);
         endInsertRows();
     }
 }

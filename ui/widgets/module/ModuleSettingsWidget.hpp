@@ -24,11 +24,13 @@ public:
 
     explicit ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent = nullptr);
 
+    void commit();
+
 private slots:
 
-    void calculateTempo();
+    //void calculateTempo();
 
-    void calculateActualTempo();
+    //void calculateActualTempo();
 
     void framerateButtonToggled(QAbstractButton *button, bool checked);
 
@@ -38,31 +40,32 @@ private:
 
     ModuleDocument &mDocument;
 
-    QGridLayout mLayout;
-        QGroupBox mInfoGroup;
-            QFormLayout mInfoLayout;
-                QLineEdit mTitleEdit;
-                QLineEdit mArtistEdit;
-                QLineEdit mCopyrightEdit;
-        QGroupBox mSongGroup;
-            QFormLayout mSongLayout;
-                QSpinBox mRowsPerBeatSpin;
-                QSpinBox mRowsPerMeasureSpin;
-                QGridLayout mSpeedLayout;
-                    QSpinBox mSpeedSpin;            // 0, 0
-                    QLineEdit mTempoActualEdit;     // 0, 1
-                    QSpinBox mTempoSpin;            // 1, 0
-                    QPushButton mTempoCalcButton;   // 1, 1    
-                QSpinBox mPatternSpin;
-                QSpinBox mRowsPerPatternSpin;
-        QGroupBox mEngineGroup;
-            QFormLayout mEngineLayout;
-                QVBoxLayout mFramerateChoiceLayout;
-                    QRadioButton mFramerateDmgRadio;
-                    QRadioButton mFramerateSgbRadio;
-                    QHBoxLayout mFramerateCustomLayout;
-                        QRadioButton mFramerateCustomRadio;
-                        QSpinBox mFramerateCustomSpin;
+    QVBoxLayout mLayout;
+        QHBoxLayout mSettingsLayout;
+            QGroupBox mInfoGroup;
+                QFormLayout mInfoLayout;
+                    QLineEdit mTitleEdit;
+                    QLineEdit mArtistEdit;
+                    QLineEdit mCopyrightEdit;
+                //QGroupBox mSongGroup;
+                //    QFormLayout mSongLayout;
+                //        QSpinBox mRowsPerBeatSpin;
+                //        QSpinBox mRowsPerMeasureSpin;
+                //        QGridLayout mSpeedLayout;
+                //            QSpinBox mSpeedSpin;            // 0, 0
+                //            QLineEdit mTempoActualEdit;     // 0, 1
+                //            QSpinBox mTempoSpin;            // 1, 0
+                //            QPushButton mTempoCalcButton;   // 1, 1    
+                //        QSpinBox mPatternSpin;
+                //        QSpinBox mRowsPerPatternSpin;
+            QGroupBox mEngineGroup;
+                QFormLayout mEngineLayout;
+                    QVBoxLayout mFramerateChoiceLayout;
+                        QRadioButton mFramerateDmgRadio;
+                        QRadioButton mFramerateSgbRadio;
+                        QHBoxLayout mFramerateCustomLayout;
+                            QRadioButton mFramerateCustomRadio;
+                            QSpinBox mFramerateCustomSpin;
         QGroupBox mCommentsGroup;
             QGridLayout mCommentsLayout;
                 QPlainTextEdit mCommentsEdit;

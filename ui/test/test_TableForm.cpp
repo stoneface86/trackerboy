@@ -8,8 +8,7 @@ int main(int argc, char *argv[]) {
 
     QApplication app(argc, argv);
 
-    Spinlock lock;
-    ModuleDocument doc(lock);
+    ModuleDocument doc;
 
     Q_INIT_RESOURCE(icons);
 

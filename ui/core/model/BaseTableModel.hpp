@@ -20,7 +20,12 @@ public:
 
     bool canDuplicate() const;
 
+    // resets the model
     void reload();
+
+    // commit all string data to the underlying data table. To be called
+    // before saving the module
+    void commit();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
@@ -38,9 +43,9 @@ public:
     void rename(int index, const QString &name);
 
 protected:
-    BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table);
+    BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table, QString defaultName);
 
-    virtual QIcon iconData(trackerboy::DataItem const& item) const = 0;
+    virtual QIcon iconData(uint8_t id) const = 0;
 
     ModuleDocument &mDocument;
     trackerboy::BaseTable &mBaseTable;
@@ -48,11 +53,26 @@ protected:
 private:
     Q_DISABLE_COPY(BaseTableModel)
 
+    // a QString copy of each name in table is stored in this model
+    // this way we don't have to convert to and from std::string when
+    // displaying/editing names. The conversion only occurs on reload
+    // and commit
+    struct ModelData {
 
-    void insertId(uint8_t id);
+        ModelData(uint8_t id, QString name);
+        explicit ModelData(trackerboy::DataItem const& item);
 
+        uint8_t id;
+        QString name;
+
+
+    };
+
+    void insertData(ModelData const& data);
 
     // maps a model index -> table index
-    std::vector<uint8_t> mItems;
-    int mNextModelIndex;
+    std::vector<ModelData> mItems;
+
+    QString const mDefaultName;
+    bool mShouldCommit;
 };

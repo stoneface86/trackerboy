@@ -53,7 +53,6 @@ protected:
     void showEvent(QShowEvent *evt) override;
 
 private slots:
-    void updateWindowTitle();
 
     // actions
     void onFileNew();

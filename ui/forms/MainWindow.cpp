@@ -81,6 +81,9 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         restoreState(windowState);
     }
 
+    // window title
+    setWindowTitle(tr("Trackerboy"));
+
     // audio sync worker thread
     //mSyncWorker.moveToThread(&mSyncWorkerThread);
     //mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
@@ -116,14 +119,6 @@ void MainWindow::showEvent(QShowEvent *evt) {
 }
 
 // SLOTS ---------------------------------------------------------------------
-
-void MainWindow::updateWindowTitle() {
-    if (mCurrentDocument) {
-        setWindowTitle(QStringLiteral("%1[*] - Trackerboy").arg(mCurrentDocument->name()));
-    } else {
-        setWindowTitle(QStringLiteral("Trackerboy"));
-    }
-}
 
 // action slots
 
@@ -353,7 +348,6 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *window) {
 
     if (mCurrentDocument != doc) {
         mCurrentDocument = doc;
-        updateWindowTitle();
     }
 
 }

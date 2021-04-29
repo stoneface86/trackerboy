@@ -5,22 +5,23 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     QWidget(parent),
     mDocument(doc),
     mLayout(),
+    mSettingsLayout(),
     mInfoGroup(tr("Information")),
     mInfoLayout(),
     mTitleEdit(),
     mArtistEdit(),
     mCopyrightEdit(),
-    mSongGroup(tr("Song settings")),
-    mSongLayout(),
-    mRowsPerBeatSpin(),
-    mRowsPerMeasureSpin(),
-    mSpeedLayout(),
-    mSpeedSpin(),
-    mTempoActualEdit(),
-    mTempoSpin(),
-    mTempoCalcButton(tr("Calculate speed")),
-    mPatternSpin(),
-    mRowsPerPatternSpin(),
+    //mSongGroup(tr("Song settings")),
+    //mSongLayout(),
+    //mRowsPerBeatSpin(),
+    //mRowsPerMeasureSpin(),
+    //mSpeedLayout(),
+    //mSpeedSpin(),
+    //mTempoActualEdit(),
+    //mTempoSpin(),
+    //mTempoCalcButton(tr("Calculate speed")),
+    //mPatternSpin(),
+    //mRowsPerPatternSpin(),
     mEngineGroup(tr("Engine settings")),
     mEngineLayout(),
     mFramerateChoiceLayout(),
@@ -42,20 +43,20 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     mInfoGroup.setLayout(&mInfoLayout);
 
 
-    mSongLayout.addRow(tr("Rows per beat"), &mRowsPerBeatSpin);
-    mSongLayout.addRow(tr("Rows per measure"), &mRowsPerMeasureSpin);
+    //mSongLayout.addRow(tr("Rows per beat"), &mRowsPerBeatSpin);
+    //mSongLayout.addRow(tr("Rows per measure"), &mRowsPerMeasureSpin);
 
-    mSpeedLayout.addWidget(&mSpeedSpin, 0, 0);
-    mSpeedLayout.addWidget(&mTempoActualEdit, 0, 1);
-    mSpeedLayout.addWidget(&mTempoSpin, 1, 0);
-    mSpeedLayout.addWidget(&mTempoCalcButton, 1, 1);
-    mSpeedLayout.setColumnStretch(0, 1);
-    mSpeedLayout.setColumnStretch(1, 1);
-    mSongLayout.addRow(tr("Speed"), &mSpeedLayout);
+    //mSpeedLayout.addWidget(&mSpeedSpin, 0, 0);
+    //mSpeedLayout.addWidget(&mTempoActualEdit, 0, 1);
+    //mSpeedLayout.addWidget(&mTempoSpin, 1, 0);
+    //mSpeedLayout.addWidget(&mTempoCalcButton, 1, 1);
+    //mSpeedLayout.setColumnStretch(0, 1);
+    //mSpeedLayout.setColumnStretch(1, 1);
+    //mSongLayout.addRow(tr("Speed"), &mSpeedLayout);
 
-    mSongLayout.addRow(tr("Patterns"), &mPatternSpin);
-    mSongLayout.addRow(tr("Rows"), &mRowsPerPatternSpin);
-    mSongGroup.setLayout(&mSongLayout);
+    //mSongLayout.addRow(tr("Patterns"), &mPatternSpin);
+    //mSongLayout.addRow(tr("Rows"), &mRowsPerPatternSpin);
+    //mSongGroup.setLayout(&mSongLayout);
 
 
     mFramerateCustomLayout.addWidget(&mFramerateCustomRadio);
@@ -66,16 +67,25 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     mFramerateChoiceLayout.addWidget(&mFramerateSgbRadio);
     mFramerateChoiceLayout.addLayout(&mFramerateCustomLayout);
 
+    mEngineLayout.setLabelAlignment(Qt::AlignTop | Qt::AlignLeft);
+    mEngineLayout.setFormAlignment(Qt::AlignTop | Qt::AlignLeft);
     mEngineLayout.addRow(tr("Framerate"), &mFramerateChoiceLayout);
+    // jank incoming (force top alignment on the label created by QFormLayout)
+    auto label = static_cast<QLabel*>(mEngineLayout.labelForField(&mFramerateChoiceLayout));
+    label->setAlignment(Qt::AlignTop);
     mEngineGroup.setLayout(&mEngineLayout);
+
+    mInfoGroup.setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    mEngineGroup.setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    mSettingsLayout.addWidget(&mInfoGroup);
+    mSettingsLayout.addWidget(&mEngineGroup);
+    mSettingsLayout.addStretch();
 
     mCommentsLayout.addWidget(&mCommentsEdit, 0, 0);
     mCommentsGroup.setLayout(&mCommentsLayout);
 
-    mLayout.addWidget(&mInfoGroup, 0, 0);
-    mLayout.addWidget(&mSongGroup, 1, 0);
-    mLayout.addWidget(&mEngineGroup, 2, 0);
-    mLayout.addWidget(&mCommentsGroup, 0, 1, 3, 1);
+    mLayout.addLayout(&mSettingsLayout);
+    mLayout.addWidget(&mCommentsGroup);
     
     setLayout(&mLayout);
 
@@ -89,7 +99,7 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     mArtistEdit.setMaxLength(32);
     mCopyrightEdit.setMaxLength(32);
 
-    mRowsPerBeatSpin.setRange(1, 255);
+    /*mRowsPerBeatSpin.setRange(1, 255);
     mRowsPerMeasureSpin.setRange(1, 255);
     mSpeedSpin.setRange(trackerboy::SPEED_MIN, trackerboy::SPEED_MAX);
     mSpeedSpin.setDisplayIntegerBase(16);
@@ -99,7 +109,7 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     mTempoSpin.setSuffix(" BPM");
     mTempoActualEdit.setReadOnly(true);
     mPatternSpin.setRange(1, trackerboy::MAX_PATTERNS);
-    mRowsPerPatternSpin.setRange(1, 256);
+    mRowsPerPatternSpin.setRange(1, 256);*/
 
     mFramerateCustomSpin.setValue(30);
     mFramerateCustomSpin.setRange(1, 1024);
@@ -107,14 +117,13 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
 
     // now load settings from the module
     auto const& mod = mDocument.mod();
-    //mTitleEdit.setText(QString::fromStdString(mod.title()));
 
-    auto &song = mod.song();
+    /*auto &song = mod.song();
     mRowsPerBeatSpin.setValue(song.rowsPerBeat());
     mRowsPerMeasureSpin.setValue(song.rowsPerMeasure());
     mSpeedSpin.setValue(song.speed());
     mPatternSpin.setValue((int)song.order().size());
-    mRowsPerPatternSpin.setValue(song.patterns().rowSize());
+    mRowsPerPatternSpin.setValue(song.patterns().rowSize());*/
 
     auto sys = mod.system();
     switch (sys) {
@@ -131,35 +140,45 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     }
     mFramerateCustomSpin.setEnabled(sys == trackerboy::System::custom);
 
-    calculateActualTempo();
+    //calculateActualTempo();
 
     // connections
 
-    connect(&mTempoCalcButton, &QPushButton::clicked, this, &ModuleSettingsWidget::calculateTempo);
+    /*connect(&mTempoCalcButton, &QPushButton::clicked, this, &ModuleSettingsWidget::calculateTempo);
     connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &mRowsPerMeasureSpin, &QSpinBox::setMinimum);
     connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::calculateActualTempo);
-    connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::calculateActualTempo);
+    connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::calculateActualTempo);*/
     connect(&mFramerateButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &ModuleSettingsWidget::framerateButtonToggled);
     connect(&mFramerateCustomSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::customFramerateSpinChanged);
+
+    mTitleEdit.setText(QString::fromStdString(mod.title()));
+    mArtistEdit.setText(QString::fromStdString(mod.artist()));
+    mCopyrightEdit.setText(QString::fromStdString(mod.copyright()));
+    mCommentsEdit.setPlainText(QString::fromStdString(mod.comments()));
+
+    connect(&mTitleEdit, &QLineEdit::textEdited, &doc, &ModuleDocument::makeDirty);
+    connect(&mArtistEdit, &QLineEdit::textEdited, &doc, &ModuleDocument::makeDirty);
+    connect(&mCopyrightEdit, &QLineEdit::textEdited, &doc, &ModuleDocument::makeDirty);
+    connect(&mCommentsEdit, &QPlainTextEdit::textChanged, &doc, &ModuleDocument::makeDirty);
 }
 
-void ModuleSettingsWidget::calculateTempo() {
-    // speed = (framerate * 60) / (tempo * rpb)
-
-    float speed = (mDocument.mod().framerate() * 60.0f) / (mTempoSpin.value() * mRowsPerBeatSpin.value());
-    // convert to fixed point
-    int speedFixed = std::clamp(static_cast<int>(roundf(speed * 16.0f)), (int)trackerboy::SPEED_MIN, (int)trackerboy::SPEED_MAX);
-    mSpeedSpin.setValue(speedFixed);
-
-}
-
-void ModuleSettingsWidget::calculateActualTempo() {
-    // tempo = (framerate * 60) / (speed * rpb)
-    // convert fixed point to floating point
-    float speed = trackerboy::speedToFloat((trackerboy::Speed)mSpeedSpin.value());
-    float tempo = (mDocument.mod().framerate() * 60.0f) / (speed * mRowsPerBeatSpin.value());
-    mTempoActualEdit.setText(QString("%1 BPM").arg(tempo, 0, 'f', 2));
-}
+//void ModuleSettingsWidget::calculateTempo() {
+//    // speed = (framerate * 60) / (tempo * rpb)
+//
+//    float speed = (mDocument.mod().framerate() * 60.0f) / (mTempoSpin.value() * mRowsPerBeatSpin.value());
+//    // convert to fixed point
+//    int speedFixed = std::clamp(static_cast<int>(roundf(speed * 16.0f)), (int)trackerboy::SPEED_MIN, (int)trackerboy::SPEED_MAX);
+//    mSpeedSpin.setValue(speedFixed);
+//
+//}
+//
+//void ModuleSettingsWidget::calculateActualTempo() {
+//    // tempo = (framerate * 60) / (speed * rpb)
+//    // convert fixed point to floating point
+//    float speed = trackerboy::speedToFloat((trackerboy::Speed)mSpeedSpin.value());
+//    float tempo = (mDocument.mod().framerate() * 60.0f) / (speed * mRowsPerBeatSpin.value());
+//    mTempoActualEdit.setText(QString("%1 BPM").arg(tempo, 0, 'f', 2));
+//}
 
 void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool checked) {
     if (checked) {
@@ -176,12 +195,22 @@ void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool 
             mod.setFramerate(sys);
         }
 
-        calculateActualTempo();
+        //calculateActualTempo();
     }
 }
 
 void ModuleSettingsWidget::customFramerateSpinChanged(int value) {
     auto ctx = mDocument.beginEdit();
     mDocument.mod().setFramerate((uint16_t)value);
-    calculateActualTempo();
+    //calculateActualTempo();
+}
+
+void ModuleSettingsWidget::commit() {
+    auto &mod = mDocument.mod();
+
+    mod.setTitle(mTitleEdit.text().toStdString());
+    mod.setArtist(mArtistEdit.text().toStdString());
+    mod.setCopyright(mCopyrightEdit.text().toStdString());
+    mod.setComments(mCommentsEdit.toPlainText().toStdString());
+
 }

@@ -5,13 +5,13 @@
 
 
 InstrumentListModel::InstrumentListModel(ModuleDocument &document) :
-    BaseTableModel(document, document.mod().instrumentTable())
+    BaseTableModel(document, document.mod().instrumentTable(), tr("New instrument"))
 {
 }
 
 
-QIcon InstrumentListModel::iconData(trackerboy::DataItem const& item) const {
-    auto ch = static_cast<trackerboy::Instrument const&>(item).channel();
+QIcon InstrumentListModel::iconData(uint8_t id) const {
+    auto ch = static_cast<trackerboy::Instrument*>(mBaseTable.get(id))->channel();
     Icons icons;
     switch (ch) {
         case trackerboy::ChType::ch1:
@@ -31,5 +31,4 @@ QIcon InstrumentListModel::iconData(trackerboy::DataItem const& item) const {
 
     return IconManager::getIcon(icons);
 }
-
 

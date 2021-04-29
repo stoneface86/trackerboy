@@ -18,7 +18,7 @@ public:
     InstrumentListModel(ModuleDocument &document);
 
 protected:
-    virtual QIcon iconData(trackerboy::DataItem const& item) const override;
+    virtual QIcon iconData(uint8_t id) const override;
 
 private:
     Q_DISABLE_COPY(InstrumentListModel)
