@@ -39,6 +39,7 @@ public:
 
     void removeDocument(ModuleDocument *doc);
     
+    QVector<ModuleDocument*> const& documents() const noexcept;
 
 private:
 

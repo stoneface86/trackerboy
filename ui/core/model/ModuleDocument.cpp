@@ -84,6 +84,10 @@ void ModuleDocument::setName(QString const& name) noexcept {
     mFilename = name;
 }
 
+QString ModuleDocument::filepath() const noexcept {
+    return mFilepath;
+}
+
 bool ModuleDocument::hasFile() const noexcept {
     return !mFilepath.isEmpty();
 }

@@ -69,6 +69,8 @@ public:
 
     void setName(QString const& name) noexcept;
 
+    QString filepath() const noexcept;
+
     bool hasFile() const noexcept;
 
     // accessors for the underlying module data containers
@@ -169,13 +171,5 @@ private:
 
     QString mFilename;
     QString mFilepath;
-
-    // QString versions of the strings stored in the module
-    // (this way we don't have to keep converting to and from std::string)
-    QString mTitle;
-    QString mArtist;
-    QString mCopyright;
-
-    QString mComments;
 
 };

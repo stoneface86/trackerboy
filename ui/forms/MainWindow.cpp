@@ -133,8 +133,38 @@ void MainWindow::onFileNew() {
 }
 
 void MainWindow::onFileOpen() {
+    auto path = QFileDialog::getOpenFileName(
+        this,
+        tr("Open module"),
+        "",
+        tr(ModuleWindow::MODULE_FILE_FILTER)
+    );
 
-    auto doc = ModuleWindow::open(this);
+    if (path.isEmpty()) {
+        return;
+    }
+
+    // make sure the document isn't already open
+    QFileInfo pathInfo(path);
+    for (auto doc : mBrowserModel.documents()) {
+        if (doc->hasFile()) {
+            QFileInfo docInfo(doc->filepath());
+            if (pathInfo == docInfo) {
+                for (auto win : mMdi.subWindowList()) {
+                    if (static_cast<ModuleWindow*>(win->widget())->document() == doc) {
+                        win->activateWindow();
+                        win->raise();
+                        win->setFocus();
+                        break;
+                    }
+                }
+                return; // document is already open, don't open it again
+            }
+        }
+    }
+
+    auto *doc = new ModuleDocument(path, this);
+
     if (doc) {
         if (doc->lastError() == trackerboy::FormatError::none) {
             addDocument(doc);

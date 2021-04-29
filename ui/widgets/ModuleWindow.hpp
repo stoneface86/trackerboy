@@ -26,7 +26,7 @@ public:
 
     bool saveAs();
 
-    static ModuleDocument* open(QWidget *parent);
+    static const char* MODULE_FILE_FILTER;
 
 protected:
 

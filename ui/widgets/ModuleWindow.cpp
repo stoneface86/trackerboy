@@ -5,7 +5,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
-static auto MODULE_FILTER = QT_TR_NOOP("Trackerboy module (*.tbm)");
+const char* ModuleWindow::MODULE_FILE_FILTER = QT_TR_NOOP("Trackerboy module (*.tbm)");
 
 
 ModuleWindow::ModuleWindow(ModuleDocument *doc, QWidget *parent) :
@@ -40,22 +40,6 @@ ModuleDocument* ModuleWindow::document() noexcept {
     return mDocument;
 }
 
-ModuleDocument* ModuleWindow::open(QWidget *parent) {
-    auto path = QFileDialog::getOpenFileName(
-        parent,
-        tr("Open module"),
-        "",
-        tr(MODULE_FILTER)
-    );
-
-    if (path.isEmpty()) {
-        return nullptr;
-    }
-    auto *doc = new ModuleDocument(path, parent);
-    return doc;
-
-}
-
 bool ModuleWindow::save() {
     if (mDocument->hasFile()) {
         commit();
@@ -71,7 +55,7 @@ bool ModuleWindow::saveAs() {
         this,
         tr("Save module"),
         "",
-        tr(MODULE_FILTER)
+        tr(MODULE_FILE_FILTER)
         );
 
     if (path.isEmpty()) {

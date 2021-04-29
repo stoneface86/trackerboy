@@ -283,3 +283,7 @@ void ModuleModel::removeDocument(ModuleDocument *doc) {
         endRemoveRows();
     }
 }
+
+QVector<ModuleDocument*> const& ModuleModel::documents() const noexcept {
+    return mDocuments;
+}
