@@ -246,12 +246,7 @@ int ModuleModel::rowCount(QModelIndex const& parent) const {
                         return 0;
                 }
             }
-                // TODO: get rowCount from associated models
-                /*switch (parent.row()) {
-
-                }
-                break;*/
-            case 2:
+            default:
                 // child data from models do not have children
                 return 0;
 
@@ -262,6 +257,7 @@ int ModuleModel::rowCount(QModelIndex const& parent) const {
 }
 
 int ModuleModel::columnCount(QModelIndex const& parent) const {
+    Q_UNUSED(parent)
     // always 1 column
     return 1;
 }

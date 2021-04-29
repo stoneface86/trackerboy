@@ -146,7 +146,7 @@ void BaseTableModel::insertData(ModelData const& data) {
     auto itemCount = mItems.size();
     if (itemCount == 0 || mItems.rbegin()->id < data.id) {
         // shortcut, put the id at the end
-        beginInsertRows(QModelIndex(), itemCount, itemCount);
+        beginInsertRows(QModelIndex(), (int)itemCount, (int)itemCount);
         mItems.push_back(data);
         endInsertRows();
 
@@ -158,7 +158,7 @@ void BaseTableModel::insertData(ModelData const& data) {
                 return id < data.id;
             });
 
-        int row = iter - begin;
+        int row = (int)(iter - begin);
         beginInsertRows(QModelIndex(), row, row);
         mItems.insert(iter, data);
         endInsertRows();

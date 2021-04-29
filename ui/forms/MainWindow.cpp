@@ -183,7 +183,7 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
-        auto samplesPerFrame = samplerate / 60;
+        //auto samplesPerFrame = samplerate / 60;
         //mSyncWorker.setSamplesPerFrame(samplesPerFrame);
         //mLeftScope.setDuration(samplesPerFrame);
         //mRightScope.setDuration(samplesPerFrame);

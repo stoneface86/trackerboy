@@ -107,6 +107,8 @@ void TableForm::setupMenu(QMenu &menu) {
 }
 
 void TableForm::viewSelectChanged(const QItemSelection &selected, const QItemSelection &deselected) {
+    Q_UNUSED(deselected)
+
     bool hasSelection = selected.size() > 0;
 
     mNameEdit.setEnabled(hasSelection);
