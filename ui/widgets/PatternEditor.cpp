@@ -31,7 +31,7 @@
 
 
 
-PatternEditor::PatternEditor(PianoInput &input, OrderModel &model, QWidget *parent) :
+PatternEditor::PatternEditor(PianoInput const& input, ModuleDocument &document, QWidget *parent) :
     QFrame(parent),
     mPianoIn(input),
     mLayout(),
@@ -45,10 +45,12 @@ PatternEditor::PatternEditor(PianoInput &input, OrderModel &model, QWidget *pare
     mLoopPatternCheck(tr("Loop pattern")),
     mFollowModeCheck(tr("Follow-mode")),
     mKeyRepeatCheck(tr("Key repetition")),
+    mEditorLayout(),
+    mOrderWidget(document.orderModel()),
     mGridFrame(),
     mGridLayout(),
     mGridHeader(),
-    mGrid(model, mGridHeader),
+    mGrid(document, mGridHeader),
     mHScroll(Qt::Horizontal),
     mVScroll(Qt::Vertical),
     mWheel(0),
@@ -86,10 +88,13 @@ PatternEditor::PatternEditor(PianoInput &input, OrderModel &model, QWidget *pare
     mGridFrame.setLayout(&mGridLayout);
     mGridFrame.setFrameStyle(QFrame::StyledPanel);
 
+    mEditorLayout.addWidget(&mOrderWidget);
+    mEditorLayout.addWidget(&mGridFrame, 1);
+
     mLayout.setMargin(0);
     mLayout.setSpacing(0);
     mLayout.addWidget(&mControls);
-    mLayout.addWidget(&mGridFrame, 1);
+    mLayout.addLayout(&mEditorLayout, 1);
     setLayout(&mLayout);
 
     mEditStepSpin.setRange(0, 256);

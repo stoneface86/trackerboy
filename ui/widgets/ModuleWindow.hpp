@@ -2,10 +2,14 @@
 #pragma once
 
 #include "core/model/ModuleDocument.hpp"
+#include "core/Trackerboy.hpp"
+#include "core/Config.hpp"
 #include "widgets/module/InstrumentsWidget.hpp"
 #include "widgets/module/ModuleSettingsWidget.hpp"
 #include "widgets/module/PatternsWidget.hpp"
 #include "widgets/module/WaveformsWidget.hpp"
+
+#include "widgets/PatternEditor.hpp"
 
 #include <QGridLayout>
 #include <QGroupBox>
@@ -18,7 +22,7 @@ class ModuleWindow : public QWidget {
 
 public:
 
-    explicit ModuleWindow(ModuleDocument *doc, QWidget *parent = nullptr);
+    explicit ModuleWindow(Trackerboy &app, ModuleDocument *doc, QWidget *parent = nullptr);
 
     ModuleDocument* document() noexcept;
 
@@ -28,15 +32,15 @@ public:
 
     static const char* MODULE_FILE_FILTER;
 
+public slots:
+    void applyConfiguration(Config::Categories categories);
+
 protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;
 
 signals:
     void documentClosed(ModuleDocument *document);
-
-protected:
-    ModuleDocument *mDocument;
 
 private:
 
@@ -49,11 +53,13 @@ private:
     //
     void commit();
 
+    Trackerboy &mApp;
+    ModuleDocument *mDocument;
 
     QGridLayout mLayout;
     QTabWidget mTabs;
         ModuleSettingsWidget mTabSettings;
-        PatternsWidget mTabPatterns;
+        PatternEditor mTabPatterns;
         InstrumentsWidget mTabInstruments;
         WaveformsWidget mTabWaveforms;
 

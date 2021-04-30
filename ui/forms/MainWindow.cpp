@@ -395,8 +395,12 @@ void MainWindow::addDocument(ModuleDocument *doc) {
     auto index = mBrowserModel.addDocument(doc);
     mBrowser.expand(index);
 
-    auto docWin = new ModuleWindow(doc);
+    auto docWin = new ModuleWindow(mApp, doc);
+    docWin->applyConfiguration(Config::CategoryAll);
     connect(docWin, &ModuleWindow::documentClosed, this, &MainWindow::onDocumentClosed);
+    if (mConfigDialog) {
+        connect(mConfigDialog, &ConfigDialog::applied, docWin, &ModuleWindow::applyConfiguration);
+    }
     mMdi.addSubWindow(docWin);
     docWin->show();
 

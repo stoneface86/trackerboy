@@ -59,7 +59,11 @@ static void messageHandler(QtMsgType type, QMessageLogContext const& context, QS
             break;
     }
 
-    stream << "] " << txt << Qt::endl;
+    // Qt::endl was added in 5.14 so we cannot use it (maintain compatibility with Qt 5.12 and up)
+    // instead we write a newline and flush the stream
+    //stream << "] " << txt << Qt::endl;
+    stream << "] " << txt << "\n";
+    stream.flush();
     
     DEFAULT_MESSAGE_HANDLER(type, context, txt);
 }

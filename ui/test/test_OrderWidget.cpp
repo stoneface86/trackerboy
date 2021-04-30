@@ -13,8 +13,7 @@ int main(int argc, char *argv[]) {
 
     Q_INIT_RESOURCE(icons);
 
-    Spinlock lock;
-    ModuleDocument doc(lock);
+    ModuleDocument doc;
     OrderModel model(doc);
     model.setRowColor(Qt::gray);
 

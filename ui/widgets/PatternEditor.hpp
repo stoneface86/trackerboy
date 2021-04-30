@@ -3,6 +3,7 @@
 
 #include "core/model/OrderModel.hpp"
 #include "core/PianoInput.hpp"
+#include "widgets/docks/OrderWidget.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 
@@ -47,7 +48,7 @@ public:
         QAction record;
     };
 
-    explicit PatternEditor(PianoInput &input, OrderModel &model, QWidget *parent = nullptr);
+    explicit PatternEditor(PianoInput const& input, ModuleDocument &document, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
     PatternGrid& grid();
@@ -103,7 +104,7 @@ private slots:
 private:
     Q_DISABLE_COPY(PatternEditor)
 
-    PianoInput &mPianoIn;
+    PianoInput const& mPianoIn;
 
     QVBoxLayout mLayout;
         QWidget mControls;
@@ -116,12 +117,14 @@ private:
                 QCheckBox mLoopPatternCheck;
                 QCheckBox mFollowModeCheck;
                 QCheckBox mKeyRepeatCheck;
-        QFrame mGridFrame;
-            QGridLayout mGridLayout;
-                PatternGridHeader mGridHeader;
-                PatternGrid mGrid;
-                QScrollBar mHScroll;
-                QScrollBar mVScroll;
+        QHBoxLayout mEditorLayout;
+            OrderWidget mOrderWidget;
+            QFrame mGridFrame;
+                QGridLayout mGridLayout;
+                    PatternGridHeader mGridHeader;
+                    PatternGrid mGrid;
+                    QScrollBar mHScroll;
+                    QScrollBar mVScroll;
 
     QMenu mContextMenu;
     QMenu mTransposeMenu;

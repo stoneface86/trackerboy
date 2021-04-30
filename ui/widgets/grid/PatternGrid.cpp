@@ -105,9 +105,9 @@ static std::optional<int> keyToHex(int const key) {
 }
 
 
-PatternGrid::PatternGrid(OrderModel &model, PatternGridHeader &header, QWidget *parent) :
+PatternGrid::PatternGrid(ModuleDocument &doc, PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
-    mModel(model),
+    mDocument(doc),
     mHeader(header),
     mPainter(font()),
     mRepaintImage(true),
@@ -119,7 +119,7 @@ PatternGrid::PatternGrid(OrderModel &model, PatternGridHeader &header, QWidget *
     mFollowMode(true),
     mOffset(0),
     mPatternPrev(),
-    mPatternCurr(mModel.currentSong()->getPattern(0)),
+    mPatternCurr(doc.mod().song().getPattern(0)),
     mPatternNext(),
     mPatternRect(),
     mSelecting(false),
@@ -128,14 +128,14 @@ PatternGrid::PatternGrid(OrderModel &model, PatternGridHeader &header, QWidget *
     mVisibleRows(0)
 {
     
+    auto &orderModel = mDocument.orderModel();
     connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternGrid::setCursorTrack);
     connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternGrid::setCursorPattern);
-    //connect(&model, &SongListModel::currentIndexChanged, this, &PatternGrid::onSongChanged);
     connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
         setPatterns(mCursorPattern);
         redraw();
         });
-    connect(&model, &SongListModel::patternSizeChanged, this,
+    /*connect(&model, &SongListModel::patternSizeChanged, this,
         [this](int rows) {
             if (mCursorRow >= rows) {
                 mCursorRow = rows - 1;
@@ -155,11 +155,11 @@ PatternGrid::PatternGrid(OrderModel &model, PatternGridHeader &header, QWidget *
         [this](int rpm) {
             mPainter.setSecondHighlight(rpm);
             redraw();
-        });
+        });*/
 
-    auto song = mModel.currentSong();
-    mPainter.setFirstHighlight(song->rowsPerBeat());
-    mPainter.setSecondHighlight(song->rowsPerMeasure());
+    auto &song = mDocument.mod().song();
+    mPainter.setFirstHighlight(song.rowsPerBeat());
+    mPainter.setSecondHighlight(song.rowsPerMeasure());
 
     setAutoFillBackground(true);
 
@@ -349,7 +349,7 @@ void PatternGrid::setCursorColumn(int column) {
     int track = mCursorCol / TRACK_COLUMNS;
     int newtrack = column / TRACK_COLUMNS;
     if (track != newtrack) {
-        mModel.orderModel().selectTrack(newtrack);
+        mDocument.orderModel().selectTrack(newtrack);
     }
 
     mCursorCol = column;
@@ -362,12 +362,12 @@ void PatternGrid::setCursorRow(int row) {
         return;
     }
 
-    auto song = mModel.currentSong();
+    auto &song = mDocument.mod().song();
 
     if (row < 0) {
         // go to the previous pattern or wrap around to the last one
         setCursorPattern(mCursorPattern == 0 
-                            ? static_cast<int>(song->orders().size()) - 1 
+                            ? static_cast<int>(song.order().size()) - 1 
                             : mCursorPattern - 1);
         int currCount = mPatternCurr.totalRows();
         mCursorRow = std::max(0, currCount + row);
@@ -378,7 +378,7 @@ void PatternGrid::setCursorRow(int row) {
     } else if (row >= static_cast<int>(mPatternCurr.totalRows())) {
         // go to the next pattern or wrap around to the first one
         int nextPattern = mCursorPattern + 1;
-        setCursorPattern(nextPattern == song->orders().size() ? 0 : nextPattern);
+        setCursorPattern(nextPattern == song.order().size() ? 0 : nextPattern);
         int currCount = mPatternCurr.totalRows();
         mCursorRow = std::min(currCount - 1, row - currCount);
         mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mPainter.cellHeight());
@@ -403,7 +403,7 @@ void PatternGrid::setCursorPattern(int pattern) {
     mCursorPattern = pattern;
 
     // update selected pattern in the model
-    mModel.orderModel().selectPattern(pattern);
+    mDocument.orderModel().selectPattern(pattern);
 
     // full repaint
     redraw();
@@ -646,38 +646,6 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
 // ======================================================= PRIVATE METHODS ===
 
-void PatternGrid::onSongChanged(int index) {
-    // -1 only occurs when the model is being reset
-    if (index != -1) {
-        if (mCursorRow != 0) {
-            mCursorRow = 0;
-            emit cursorRowChanged(0);
-        }
-
-        if (mCursorCol != 0) {
-            mCursorCol = 0;
-            emit cursorColumnChanged(0);
-        }
-        
-        // select the first pattern
-        setPatterns(0);
-        mCursorPattern = 0;
-
-        // update the rectangle
-        setPatternRect();
-
-        // set highlight intervals
-        auto song = mModel.currentSong();
-        mPainter.setFirstHighlight(song->rowsPerBeat());
-        mPainter.setSecondHighlight(song->rowsPerMeasure());
-
-        // redraw everything
-        redraw();
-
-
-    }
-}
-
 void PatternGrid::fontChanged() {
 
     mVisibleRows = getVisibleRows();
@@ -864,27 +832,27 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 
 void PatternGrid::setPatterns(int pattern) {
     Q_ASSERT(pattern >= 0 && pattern < 256);
-    auto song = mModel.currentSong();
+    auto &song = mDocument.mod().song();
 
     
     if (mSettingShowPreviews) {
         // get the previous pattern for preview
         if (pattern > 0) {
-            mPatternPrev.emplace(song->getPattern(static_cast<uint8_t>(pattern) - 1));
+            mPatternPrev.emplace(song.getPattern(static_cast<uint8_t>(pattern) - 1));
         } else {
             mPatternPrev.reset();
         }
         // get the next pattern for preview
         auto nextPattern = pattern + 1;
-        if (nextPattern < song->orders().size()) {
-            mPatternNext.emplace(song->getPattern(static_cast<uint8_t>(nextPattern)));
+        if (nextPattern < song.order().size()) {
+            mPatternNext.emplace(song.getPattern(static_cast<uint8_t>(nextPattern)));
         } else {
             mPatternNext.reset();
         }
     }
 
     // update the current pattern
-    mPatternCurr = song->getPattern(static_cast<uint8_t>(pattern));
+    mPatternCurr = song.getPattern(static_cast<uint8_t>(pattern));
 
     
 }

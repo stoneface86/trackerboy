@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/OrderModel.hpp"
+#include "core/model/ModuleDocument.hpp"
 #include "core/ColorTable.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
@@ -28,7 +28,7 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(OrderModel &model, PatternGridHeader &header, QWidget *parent = nullptr);
+    explicit PatternGrid(ModuleDocument &doc, PatternGridHeader &header, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
@@ -112,7 +112,7 @@ protected:
 
 private slots:
 
-    void onSongChanged(int index);
+    //void onSongChanged(int index);
 
 private:
     Q_DISABLE_COPY(PatternGrid)
@@ -159,7 +159,8 @@ private:
     void setPatternRect();
 
 
-    OrderModel &mModel;
+    //OrderModel &mModel;
+    ModuleDocument &mDocument;
     PatternGridHeader &mHeader;
     PatternPainter mPainter;
 

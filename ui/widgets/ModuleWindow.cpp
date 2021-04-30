@@ -8,15 +8,16 @@
 const char* ModuleWindow::MODULE_FILE_FILTER = QT_TR_NOOP("Trackerboy module (*.tbm)");
 
 
-ModuleWindow::ModuleWindow(ModuleDocument *doc, QWidget *parent) :
+ModuleWindow::ModuleWindow(Trackerboy &app, ModuleDocument *doc, QWidget *parent) :
     QWidget(parent),
+    mApp(app),
+    mDocument(doc),
     mLayout(),
     mTabs(),
     mTabSettings(*doc),
-    mTabPatterns(*doc),
+    mTabPatterns(app.config.keyboard().pianoInput, *doc),
     mTabInstruments(*doc),
-    mTabWaveforms(*doc),
-    mDocument(doc)
+    mTabWaveforms(*doc)
 {
 
     mTabs.addTab(&mTabSettings, tr("General settings"));
@@ -34,6 +35,14 @@ ModuleWindow::ModuleWindow(ModuleDocument *doc, QWidget *parent) :
 
     updateWindowTitle();
     connect(doc, &ModuleDocument::modifiedChanged, this, &QWidget::setWindowModified);
+}
+
+void ModuleWindow::applyConfiguration(Config::Categories categories) {
+    if (categories.testFlag(Config::CategoryAppearance)) {
+        auto &appearance = mApp.config.appearance();
+        mTabPatterns.setColors(appearance.colors);
+        mDocument->orderModel().setRowColor(appearance.colors[+Color::row]);
+    }
 }
 
 ModuleDocument* ModuleWindow::document() noexcept {
