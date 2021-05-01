@@ -5,7 +5,7 @@
 #include "core/Trackerboy.hpp"
 #include "core/Config.hpp"
 
-#include "widgets/docks/OrderWidget.hpp"
+#include "widgets/module/OrderEditor.hpp"
 #include "widgets/PatternEditor.hpp"
 
 #include <QGridLayout>
@@ -54,7 +54,7 @@ private:
     ModuleDocument *mDocument;
 
     QHBoxLayout mLayout;
-        OrderWidget mOrderWidget;
+        OrderEditor mOrderWidget;
         PatternEditor mPatternEditor;
 
 

@@ -1,5 +1,5 @@
 
-#include "widgets/ModuleWindow.hpp"
+#include "forms/ModuleWindow.hpp"
 
 #include <QCloseEvent>
 #include <QFileDialog>

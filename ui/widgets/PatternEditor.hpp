@@ -3,7 +3,6 @@
 
 #include "core/model/OrderModel.hpp"
 #include "core/PianoInput.hpp"
-#include "widgets/docks/OrderWidget.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 

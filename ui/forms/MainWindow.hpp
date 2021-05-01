@@ -7,19 +7,10 @@
 #include "core/model/ModuleModel.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
-//#include "forms/InstrumentEditor.hpp"
-//#include "forms/WaveEditor.hpp"
-//#include "widgets/docks/ModulePropertiesWidget.hpp"
-//#include "widgets/docks/OrderWidget.hpp"
-//#include "widgets/docks/SongPropertiesWidget.hpp"
-//#include "widgets/docks/SongWidget.hpp"
-//#include "widgets/docks/TableForm.hpp"
+#include "forms/ModuleWindow.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/visualizers/PeakMeter.hpp"
-#include "widgets/ModuleWindow.hpp"
-//#include "widgets/PatternEditor.hpp"
 
-#include <QComboBox>
 #include <QDockWidget>
 #include <QLabel>
 #include <QMainWindow>
@@ -31,8 +22,6 @@
 #include <QUndoView>
 #include <QSplitter>
 #include <QTreeView>
-
-#include <vector>
 
 //
 // Main form for the application

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/model/OrderModel.hpp"
-#include "misc/SongActions.hpp"
 #include "widgets/CustomSpinBox.hpp"
 
 #include <QAction>
@@ -19,14 +18,14 @@
 //
 // Composite widget for the order editor.
 //
-class OrderWidget : public QWidget {
+class OrderEditor : public QWidget {
 
     Q_OBJECT
 
 public:
 
-    OrderWidget(OrderModel &model, QWidget *parent = nullptr);
-    ~OrderWidget();
+    OrderEditor(OrderModel &model, QWidget *parent = nullptr);
+    ~OrderEditor();
 
     void setupMenu(QMenu &menu);
 
@@ -42,7 +41,7 @@ private slots:
     void tableViewContextMenu(QPoint pos);
 
 private:
-    Q_DISABLE_COPY(OrderWidget)
+    Q_DISABLE_COPY(OrderEditor)
 
     OrderModel &mModel;
 

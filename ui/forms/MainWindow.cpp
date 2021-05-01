@@ -4,7 +4,6 @@
 #include "core/samplerates.hpp"
 #include "misc/IconManager.hpp"
 #include "misc/utils.hpp"
-#include "widgets/ModuleWindow.hpp"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -235,7 +234,7 @@ AudioScope {
     color: %3;
 }
 
-OrderWidget QTableView {
+OrderEditor QTableView {
     background-color: %1;
     gridline-color: %2;
     color: %3;
@@ -244,7 +243,7 @@ OrderWidget QTableView {
     font-family: %5;
 }
 
-OrderWidget QTableView QTableCornerButton::section {
+OrderEditor QTableView QTableCornerButton::section {
     background-color: %1;
     border-right: 1px solid %2;
     border-bottom: 1px solid %2;
@@ -252,13 +251,13 @@ OrderWidget QTableView QTableCornerButton::section {
     border bottom: none;
 }
 
-OrderWidget QTableView QHeaderView {
+OrderEditor QTableView QHeaderView {
     background-color: %1;
     color: %3;
     font-family: %5;
 }
 
-OrderWidget QTableView QHeaderView::section {
+OrderEditor QTableView QHeaderView::section {
     background-color: %1;
     border-right: 1px solid %2;
     border-bottom: 1px solid %2;

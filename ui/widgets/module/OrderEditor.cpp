@@ -1,5 +1,5 @@
 
-#include "widgets/docks/OrderWidget.hpp"
+#include "widgets/module/OrderEditor.hpp"
 
 #include "misc/IconManager.hpp"
 #include "misc/utils.hpp"
@@ -9,7 +9,7 @@
 #include <QtDebug>
 
 
-OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
+OrderEditor::OrderEditor(OrderModel &model, QWidget *parent) :
     QWidget(parent),
     mModel(model),
     mIgnoreSelect(false),
@@ -85,8 +85,8 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     mOrderView.setModel(&model);
 
     auto selectionModel = mOrderView.selectionModel();
-    connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderWidget::currentChanged);
-    connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &OrderWidget::selectionChanged);
+    connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderEditor::currentChanged);
+    connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &OrderEditor::selectionChanged);
     connect(&model, &OrderModel::currentIndexChanged, this,
         [this](const QModelIndex &index) {
             if (!mIgnoreSelect) {
@@ -98,7 +98,7 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     selectionModel->select(model.index(0, 0), QItemSelectionModel::Select);
     
     mOrderView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-    connect(&mOrderView, &QTableView::customContextMenuRequested, this, &OrderWidget::tableViewContextMenu);
+    connect(&mOrderView, &QTableView::customContextMenuRequested, this, &OrderEditor::tableViewContextMenu);
     
     auto headerView = mOrderView.horizontalHeader();
     headerView->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
@@ -109,16 +109,16 @@ OrderWidget::OrderWidget(OrderModel &model, QWidget *parent) :
     verticalHeader->setMinimumSectionSize(-1);
     verticalHeader->setDefaultSectionSize(verticalHeader->minimumSectionSize());
 
-    connect(&mActionIncrement, &QAction::triggered, this, &OrderWidget::increment);
-    connect(&mActionDecrement, &QAction::triggered, this, &OrderWidget::decrement);
-    connect(&mSetButton, &QToolButton::clicked, this, &OrderWidget::set);
+    connect(&mActionIncrement, &QAction::triggered, this, &OrderEditor::increment);
+    connect(&mActionDecrement, &QAction::triggered, this, &OrderEditor::decrement);
+    connect(&mSetButton, &QToolButton::clicked, this, &OrderEditor::set);
 
 }
 
-OrderWidget::~OrderWidget() {
+OrderEditor::~OrderEditor() {
 }
 
-void OrderWidget::setupMenu(QMenu &menu) {
+void OrderEditor::setupMenu(QMenu &menu) {
     menu.addAction(&mActionInsert);
     menu.addAction(&mActionRemove);
     menu.addAction(&mActionDuplicate);
@@ -127,7 +127,7 @@ void OrderWidget::setupMenu(QMenu &menu) {
     menu.addAction(&mActionMoveDown);
 }
 
-void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
+void OrderEditor::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
     Q_UNUSED(prev);
 
     mIgnoreSelect = true;
@@ -135,7 +135,7 @@ void OrderWidget::currentChanged(QModelIndex const &current, QModelIndex const &
     mIgnoreSelect = false;
 }
 
-void OrderWidget::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) {
+void OrderEditor::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) {
     Q_UNUSED(selected);
     Q_UNUSED(deselected);
 
@@ -147,15 +147,15 @@ void OrderWidget::selectionChanged(const QItemSelection &selected, const QItemSe
     }
 }
 
-void OrderWidget::increment() {
+void OrderEditor::increment() {
     mModel.incrementSelection(mOrderView.selectionModel()->selection());
 }
 
-void OrderWidget::decrement() {
+void OrderEditor::decrement() {
     mModel.decrementSelection(mOrderView.selectionModel()->selection());
 }
 
-void OrderWidget::set() {
+void OrderEditor::set() {
     //bool ok;
     //unsigned id = mSetEdit.text().toUInt(&ok, 16);
 
@@ -167,7 +167,7 @@ void OrderWidget::set() {
     //}
 }
 
-void OrderWidget::tableViewContextMenu(QPoint pos) {
+void OrderEditor::tableViewContextMenu(QPoint pos) {
     mContextMenu.popup(mOrderView.viewport()->mapToGlobal(pos));
 }
 
