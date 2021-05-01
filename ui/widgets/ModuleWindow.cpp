@@ -13,21 +13,13 @@ ModuleWindow::ModuleWindow(Trackerboy &app, ModuleDocument *doc, QWidget *parent
     mApp(app),
     mDocument(doc),
     mLayout(),
-    mTabs(),
-    mTabSettings(*doc),
-    mTabPatterns(app.config.keyboard().pianoInput, *doc),
-    mTabInstruments(*doc),
-    mTabWaveforms(*doc)
+    mOrderWidget(doc->orderModel()),
+    mPatternEditor(app.config.keyboard().pianoInput, *doc)
 {
 
-    mTabs.addTab(&mTabSettings, tr("General settings"));
-    mTabs.addTab(&mTabPatterns, tr("Patterns"));
-    mTabs.addTab(&mTabInstruments, tr("Instruments"));
-    mTabs.addTab(&mTabWaveforms, tr("Waveforms"));
-
-
+    mLayout.addWidget(&mOrderWidget);
+    mLayout.addWidget(&mPatternEditor, 1);
     mLayout.setMargin(0);
-    mLayout.addWidget(&mTabs);
     setLayout(&mLayout);
 
 
@@ -40,7 +32,7 @@ ModuleWindow::ModuleWindow(Trackerboy &app, ModuleDocument *doc, QWidget *parent
 void ModuleWindow::applyConfiguration(Config::Categories categories) {
     if (categories.testFlag(Config::CategoryAppearance)) {
         auto &appearance = mApp.config.appearance();
-        mTabPatterns.setColors(appearance.colors);
+        mPatternEditor.setColors(appearance.colors);
         mDocument->orderModel().setRowColor(appearance.colors[+Color::row]);
     }
 }
@@ -116,7 +108,7 @@ bool ModuleWindow::maybeSave() {
 }
 
 void ModuleWindow::commit() {
-    mTabSettings.commit();
+    //mTabSettings.commit();
 }
 
 void ModuleWindow::updateWindowTitle() {

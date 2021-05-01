@@ -4,11 +4,8 @@
 #include "core/model/ModuleDocument.hpp"
 #include "core/Trackerboy.hpp"
 #include "core/Config.hpp"
-#include "widgets/module/InstrumentsWidget.hpp"
-#include "widgets/module/ModuleSettingsWidget.hpp"
-#include "widgets/module/PatternsWidget.hpp"
-#include "widgets/module/WaveformsWidget.hpp"
 
+#include "widgets/docks/OrderWidget.hpp"
 #include "widgets/PatternEditor.hpp"
 
 #include <QGridLayout>
@@ -56,12 +53,9 @@ private:
     Trackerboy &mApp;
     ModuleDocument *mDocument;
 
-    QGridLayout mLayout;
-    QTabWidget mTabs;
-        ModuleSettingsWidget mTabSettings;
-        PatternEditor mTabPatterns;
-        InstrumentsWidget mTabInstruments;
-        WaveformsWidget mTabWaveforms;
+    QHBoxLayout mLayout;
+        OrderWidget mOrderWidget;
+        PatternEditor mPatternEditor;
 
 
 

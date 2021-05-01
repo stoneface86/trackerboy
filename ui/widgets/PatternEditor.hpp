@@ -117,14 +117,12 @@ private:
                 QCheckBox mLoopPatternCheck;
                 QCheckBox mFollowModeCheck;
                 QCheckBox mKeyRepeatCheck;
-        QHBoxLayout mEditorLayout;
-            OrderWidget mOrderWidget;
-            QFrame mGridFrame;
-                QGridLayout mGridLayout;
-                    PatternGridHeader mGridHeader;
-                    PatternGrid mGrid;
-                    QScrollBar mHScroll;
-                    QScrollBar mVScroll;
+        QFrame mGridFrame;
+            QGridLayout mGridLayout;
+                PatternGridHeader mGridHeader;
+                PatternGrid mGrid;
+                QScrollBar mHScroll;
+                QScrollBar mVScroll;
 
     QMenu mContextMenu;
     QMenu mTransposeMenu;

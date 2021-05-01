@@ -14,8 +14,9 @@
 //#include "widgets/docks/SongPropertiesWidget.hpp"
 //#include "widgets/docks/SongWidget.hpp"
 //#include "widgets/docks/TableForm.hpp"
-//#include "widgets/visualizers/AudioScope.hpp"
-//#include "widgets/visualizers/PeakMeter.hpp"
+#include "widgets/visualizers/AudioScope.hpp"
+#include "widgets/visualizers/PeakMeter.hpp"
+#include "widgets/ModuleWindow.hpp"
 //#include "widgets/PatternEditor.hpp"
 
 #include <QComboBox>
@@ -70,10 +71,6 @@ private slots:
     void showConfigDialog();
 
     // statusbar
-    void statusSetInstrument(int index);
-    void statusSetWaveform(int index);
-    void statusSetOctave(int octave);
-
     void trackerPositionChanged(QPoint const pos);
 
     void onAudioStart();
@@ -83,18 +80,12 @@ private slots:
     void onSubWindowActivated(QMdiSubWindow *window);
     void onDocumentClosed(ModuleDocument *doc);
 
+    void updateWindowMenu();
 
 private:
     Q_DISABLE_COPY(MainWindow)
 
-    //static void setupAction(QAction &action, const char *text, const char *tooltip, QKeySequence const &seq = QKeySequence());
-
-    // To be called before loading a new document. Prompts user to save if the
-    // current document is modified. Returns false if the user does not want to continue
-    //bool maybeSave();
-
-    // enable or disable all models
-    void setModelsEnabled(bool enabled);
+    ModuleWindow* currentModuleWindow();
 
     void setupUi();
 
@@ -115,10 +106,6 @@ private:
     ModuleModel mBrowserModel;
 
     bool mErrorSinceLastConfig;
-    
-
-    // key bindings for the piano widgets + pattern editor
-    PianoInput mPianoInput;
 
     // dialogs
     AudioDiagDialog *mAudioDiag;
@@ -138,14 +125,17 @@ private:
     // central widget (must be heap-alloc'd)
     QSplitter *mHSplitter;
         QTreeView mBrowser;
-        QMdiArea mMdi;
+        QWidget mMainWidget;
+            QVBoxLayout mMainLayout;
+                QHBoxLayout mVisualizerLayout;
+                    AudioScope mLeftScope;
+                    PeakMeter mPeakMeter;
+                    AudioScope mRightScope;
+                QMdiArea mMdi;
 
 
     // statusbar widgets
     QLabel mStatusRenderer;
-    QLabel mStatusInstrument;
-    QLabel mStatusWaveform;
-    QLabel mStatusOctave;
     QLabel mStatusFramerate;
     QLabel mStatusSpeed;
     QLabel mStatusTempo;
@@ -162,6 +152,7 @@ private:
     QAction mActionFileSave;
     QAction mActionFileSaveAs;
     QAction mActionFileClose;
+    QAction mActionFileCloseAll;
     QAction mActionFileConfig;
     QAction mActionFileQuit;
 
@@ -169,20 +160,6 @@ private:
     QMenu mMenuEdit;
     QAction *mActionEditUndo;
     QAction *mActionEditRedo;
-
-    // Song (created by SongWidget)
-    //QMenu mMenuSong;
-    //QAction mActionSongPrev;
-    //QAction mActionSongNext;
-
-    // Order (created by OrderWidget)
-    QMenu mMenuOrder;
-
-    // Instrument (created by TableForm)
-    QMenu mMenuInstrument;
-
-    // Waveform (created by TableForm)
-    QMenu mMenuWaveform;
 
     // Tracker
     QMenu mMenuTracker;
@@ -196,6 +173,8 @@ private:
     QMenu mMenuWindow;
     QMenu mMenuWindowToolbars;
     QAction mActionWindowResetLayout;
+    QAction mActionWindowPrev;
+    QAction mActionWindowNext;
 
     // Help
     QMenu mMenuHelp;
@@ -203,7 +182,7 @@ private:
     QAction mActionHelpAboutQt;
     QAction mActionHelpAbout;
 
-    //SyncWorker mSyncWorker;
-    //QThread mSyncWorkerThread;
+    SyncWorker mSyncWorker;
+    QThread mSyncWorkerThread;
 
 };

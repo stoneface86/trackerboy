@@ -36,7 +36,9 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mConfigDialog(nullptr),
     mToolbarFile(),
     mToolbarEdit(),
-    mToolbarTracker()
+    mToolbarTracker(),
+    mSyncWorker(mApp.renderer, mLeftScope, mRightScope),
+    mSyncWorkerThread()
 
 {
     setupUi();
@@ -85,14 +87,14 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     setWindowTitle(tr("Trackerboy"));
 
     // audio sync worker thread
-    //mSyncWorker.moveToThread(&mSyncWorkerThread);
-    //mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
-    //mSyncWorkerThread.start();
+    mSyncWorker.moveToThread(&mSyncWorkerThread);
+    mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
+    mSyncWorkerThread.start();
 }
 
 MainWindow::~MainWindow() {
-    //mSyncWorkerThread.quit();
-    //mSyncWorkerThread.wait();
+    mSyncWorkerThread.quit();
+    mSyncWorkerThread.wait();
 }
 
 QMenu* MainWindow::createPopupMenu() {
@@ -104,14 +106,20 @@ QMenu* MainWindow::createPopupMenu() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
-    //if (maybeSave()) {
+
+    mMdi.closeAllSubWindows();
+
+    if (mMdi.currentSubWindow() == nullptr) {
+        // all modules closed, accept this event and close
         QSettings settings;
         settings.setValue("geometry", saveGeometry());
         settings.setValue("windowState", saveState());
         evt->accept();
-    //} else {
-    //    evt->ignore();
-    //}
+    } else {
+        // user canceled closing a document, ignore this event
+        evt->ignore();
+    }
+    
 }
 
 void MainWindow::showEvent(QShowEvent *evt) {
@@ -152,9 +160,7 @@ void MainWindow::onFileOpen() {
             if (pathInfo == docInfo) {
                 for (auto win : mMdi.subWindowList()) {
                     if (static_cast<ModuleWindow*>(win->widget())->document() == doc) {
-                        win->activateWindow();
-                        win->raise();
-                        win->setFocus();
+                        mMdi.setActiveSubWindow(win);
                         break;
                     }
                 }
@@ -177,25 +183,11 @@ void MainWindow::onFileOpen() {
 }
 
 bool MainWindow::onFileSave() {
-    return static_cast<ModuleWindow*>(mMdi.currentSubWindow()->widget())->save();
-    /*if (mCurrentDocument->hasFile()) {
-        return mCurrentDocument->save();
-    } else {
-        return onFileSaveAs();
-    }*/
+    return currentModuleWindow()->save();
 }
 
 bool MainWindow::onFileSaveAs() {
-    return static_cast<ModuleWindow*>(mMdi.currentSubWindow()->widget())->saveAs();
-    /*mModuleFileDialog.setFileMode(QFileDialog::FileMode::AnyFile);
-    mModuleFileDialog.setAcceptMode(QFileDialog::AcceptSave);
-    mModuleFileDialog.setWindowTitle("Save As");
-    if (mModuleFileDialog.exec() != QDialog::Accepted) {
-        return false;
-    }
-    QString filename = mModuleFileDialog.selectedFiles().first();
-    auto result = mCurrentDocument->save(filename);
-    return result;*/
+    return currentModuleWindow()->saveAs();
 }
 
 void MainWindow::onWindowResetLayout() {
@@ -213,10 +205,10 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
-        //auto samplesPerFrame = samplerate / 60;
-        //mSyncWorker.setSamplesPerFrame(samplesPerFrame);
-        //mLeftScope.setDuration(samplesPerFrame);
-        //mRightScope.setDuration(samplesPerFrame);
+        auto samplesPerFrame = samplerate / 60;
+        mSyncWorker.setSamplesPerFrame(samplesPerFrame);
+        mLeftScope.setDuration(samplesPerFrame);
+        mRightScope.setDuration(samplesPerFrame);
 
         mApp.renderer.setConfig(sound);
         mErrorSinceLastConfig = mApp.renderer.lastDeviceError() != MA_SUCCESS;
@@ -282,14 +274,11 @@ OrderWidget QTableView QHeaderView::section {
         appearance.font.family(),
         QString::number(appearance.font.pointSize())
         ));
-
-        //mPatternEditor.setColors(appearance.colors);
-        //mApp.orderModel.setRowColor(appearance.colors[+Color::row]);
     }
 
-    if (categories.testFlag(Config::CategoryKeyboard)) {
-        mPianoInput = mApp.config.keyboard().pianoInput;
-    }
+    //if (categories.testFlag(Config::CategoryKeyboard)) {
+    //    mPianoInput = mApp.config.keyboard().pianoInput;
+    //}
 
     mApp.config.writeSettings();
 }
@@ -309,31 +298,20 @@ void MainWindow::showConfigDialog() {
 
         // configuration changed, apply settings
         connect(mConfigDialog, &ConfigDialog::applied, this, &MainWindow::onConfigApplied);
+        for (auto subwin : mMdi.subWindowList()) {
+            auto win = static_cast<ModuleWindow*>(subwin->widget());
+            connect(mConfigDialog, &ConfigDialog::applied, win, &ModuleWindow::applyConfiguration);
+        }
     }
 
     mConfigDialog->show();
-}
-
-
-void MainWindow::statusSetInstrument(int index) {
-    //int id = (index == -1) ? 0 : mApp.instrumentModel.instrument(index)->id();
-    //mStatusInstrument.setText(QString("Instrument: %1").arg(id, 2, 16, QChar('0')));
-}
-
-void MainWindow::statusSetWaveform(int index) {
-    //int id = (index == -1) ? 0 : mApp.waveModel.waveform(index)->id();
-    //mStatusWaveform.setText(QString("Waveform: %1").arg(id, 2, 16, QChar('0')));
-}
-
-void MainWindow::statusSetOctave(int octave) {
-    mStatusOctave.setText(QString("Octave: %1").arg(octave));
-    mPianoInput.setOctave(octave);
 }
 
 void MainWindow::trackerPositionChanged(QPoint const pos) {
     auto pattern = pos.x();
     auto row = pos.y();
     
+    // TODO: update tracker position for the module being rendered
     //auto &grid = mPatternEditor.grid();
     //grid.setTrackerCursor(row, pattern);
 
@@ -371,6 +349,9 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *window) {
     mActionFileSave.setEnabled(hasWindow);
     mActionFileSaveAs.setEnabled(hasWindow);
     mActionFileClose.setEnabled(hasWindow);
+    mActionFileCloseAll.setEnabled(hasWindow);
+    mActionWindowNext.setEnabled(hasWindow);
+    mActionWindowPrev.setEnabled(hasWindow);
 
     auto doc = hasWindow
         ? static_cast<ModuleWindow*>(window->widget())->document() 
@@ -389,51 +370,65 @@ void MainWindow::onDocumentClosed(ModuleDocument *doc) {
     delete doc;
 }
 
+void MainWindow::updateWindowMenu() {
+    mMenuWindow.clear();
+    mMenuWindow.addMenu(&mMenuWindowToolbars);
+    mMenuWindow.addAction(&mActionWindowResetLayout);
+    mMenuWindow.addSeparator();
+    mMenuWindow.addAction(&mActionWindowPrev);
+    mMenuWindow.addAction(&mActionWindowNext);
+    
+    auto const windows = mMdi.subWindowList();
+    if (windows.size() > 0) {
+        mMenuWindow.addSeparator();
+
+        int i = 1;
+        for (auto window : windows) {
+
+            auto moduleWin = static_cast<ModuleWindow*>(window->widget());
+            
+            auto textFmt = (i < 9) ? "&%1 %2" : "%1 %2";
+            QString text = tr(textFmt).arg(i).arg(moduleWin->document()->name());
+
+            auto action = mMenuWindow.addAction(text, window, [this, window]() {
+                mMdi.setActiveSubWindow(window);
+                });
+            action->setCheckable(true);
+            action->setChecked(window == mMdi.activeSubWindow());
+
+
+            ++i;
+        }
+    }
+
+}
+
 // PRIVATE METHODS -----------------------------------------------------------
 
+ModuleWindow* MainWindow::currentModuleWindow() {
+    // static cast is used because all QMdiSubWindows in this application will have a ModuleWindow widget
+    // qobject_cast is unneccessary
+    return static_cast<ModuleWindow*>(mMdi.currentSubWindow()->widget());
+}
+
 void MainWindow::addDocument(ModuleDocument *doc) {
+    // add the document to the model
     auto index = mBrowserModel.addDocument(doc);
+    // expand the index of the newly added model
     mBrowser.expand(index);
 
+    // create an Mdi subwindow for this document
     auto docWin = new ModuleWindow(mApp, doc);
+    // apply configuration for the first time
     docWin->applyConfiguration(Config::CategoryAll);
     connect(docWin, &ModuleWindow::documentClosed, this, &MainWindow::onDocumentClosed);
     if (mConfigDialog) {
         connect(mConfigDialog, &ConfigDialog::applied, docWin, &ModuleWindow::applyConfiguration);
     }
+    // add it the MDI area and show it
     mMdi.addSubWindow(docWin);
     docWin->show();
 
-}
-
-//bool MainWindow::maybeSave() {
-//    /*if (!mApp.document.isModified()) {
-//        return true;
-//    }*/
-//
-//    auto const result = QMessageBox::warning(
-//        this,
-//        tr("Trackerboy"),
-//        tr("Save changes to \"%1\"?").arg(mDocumentName),
-//        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
-//        );
-//
-//    switch (result) {
-//        case QMessageBox::Save:
-//            return onFileSave();
-//        case QMessageBox::Cancel:
-//            return false;
-//        default:
-//            break;
-//    }
-//
-//    return true;
-//}
-
-void MainWindow::setModelsEnabled(bool enabled) {
-    //mApp.instrumentModel.setEnabled(enabled);
-    //mApp.songModel.setEnabled(enabled);
-    //mApp.waveModel.setEnabled(enabled);
 }
 
 void MainWindow::setupUi() {
@@ -447,29 +442,25 @@ void MainWindow::setupUi() {
 
     mMdi.setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     mMdi.setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    mMdi.setViewMode(QMdiArea::TabbedView);
 
     mBrowser.setModel(&mBrowserModel);
     mBrowser.setHeaderHidden(true);
 
+    mVisualizerLayout.addWidget(&mLeftScope);
+    mVisualizerLayout.addWidget(&mPeakMeter, 1);
+    mVisualizerLayout.addWidget(&mRightScope);
+
+    mMainLayout.addLayout(&mVisualizerLayout);
+    mMainLayout.addWidget(&mMdi, 1);
+    mMainLayout.setMargin(0);
+    mMainWidget.setLayout(&mMainLayout);
+
     mHSplitter->addWidget(&mBrowser);
-    mHSplitter->addWidget(&mMdi);
-
+    mHSplitter->addWidget(&mMainWidget);
+    mHSplitter->setStretchFactor(0, 0);
+    mHSplitter->setStretchFactor(1, 1);
     setCentralWidget(mHSplitter);
-
-    //mMainWidget = new QWidget(this);
-
-    //mVisLayout.addWidget(&mLeftScope);
-    //mVisLayout.addWidget(&mPeakMeter);
-    //mVisLayout.addWidget(&mRightScope);
-
-
-    //mLayout.addLayout(&mVisLayout);
-    //mLayout.addWidget(&mPatternEditor);
-    //mMainWidget->setLayout(&mLayout);
-
-    //setCentralWidget(mMainWidget);
-
-    //auto &patternActions = mPatternEditor.menuActions();
 
     // ACTIONS ===============================================================
 
@@ -478,6 +469,7 @@ void MainWindow::setupUi() {
     setupAction(mActionFileSave, "&Save", "Save the module", Icons::fileSave, QKeySequence::Save);
     setupAction(mActionFileSaveAs, "Save &As...", "Save the module to a new file", QKeySequence::SaveAs);
     setupAction(mActionFileClose, "Close", "Close the current module", QKeySequence::Close);
+    setupAction(mActionFileCloseAll, "Close All", "Closes all open modules");
     setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
     setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
 
@@ -488,9 +480,6 @@ void MainWindow::setupUi() {
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
     mActionEditRedo->setShortcut(QKeySequence::Redo);*/
 
-    //setupAction(mActionSongPrev, "&Previous song", "Selects the previous song in the list", Icons::previous);
-    //setupAction(mActionSongNext, "&Next song", "Selects the next song in the list", Icons::next);
-
     setupAction(mActionTrackerPlay, "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
     setupAction(mActionTrackerRestart, "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
     setupAction(mActionTrackerStop, "&Stop", "Stop playing", Icons::trackerStop);
@@ -498,10 +487,19 @@ void MainWindow::setupUi() {
     setupAction(mActionTrackerSolo, "Solo", "Solos the current track");
 
     setupAction(mActionWindowResetLayout, "Reset layout", "Rearranges all docks and toolbars to the default layout");
+    setupAction(mActionWindowPrev, "Pre&vious", "Move the focus to the previous module");
+    setupAction(mActionWindowNext, "Ne&xt", "Move the focus to the next module");
+
 
     setupAction(mActionAudioDiag, "Audio diagnostics...", "Shows the audio diagnostics dialog");
     setupAction(mActionHelpAbout, "&About", "About this program");
     setupAction(mActionHelpAboutQt, "About &Qt", "Shows information about Qt");
+
+    // default action states
+    mActionFileSave.setEnabled(false);
+    mActionFileSaveAs.setEnabled(false);
+    mActionFileClose.setEnabled(false);
+    mActionFileCloseAll.setEnabled(false);
 
     // MENUS ==============================================================
 
@@ -512,6 +510,7 @@ void MainWindow::setupUi() {
     mMenuFile.addAction(&mActionFileSave);
     mMenuFile.addAction(&mActionFileSaveAs);
     mMenuFile.addAction(&mActionFileClose);
+    mMenuFile.addAction(&mActionFileCloseAll);
     mMenuFile.addSeparator();
     mMenuFile.addAction(&mActionFileConfig);
     mMenuFile.addSeparator();
@@ -522,15 +521,6 @@ void MainWindow::setupUi() {
     //mMenuEdit.addAction(mActionEditRedo);
     //mMenuEdit.addSeparator();
     //mPatternEditor.setupMenu(mMenuEdit);
-
-    mMenuOrder.setTitle(tr("&Order"));
-    //mOrderWidget.setupMenu(mMenuOrder);
-
-    mMenuInstrument.setTitle(tr("&Instrument"));
-    //mInstrumentWidget.setupMenu(mMenuInstrument);
-
-    mMenuWaveform.setTitle(tr("&Waveform"));
-    //mWaveformWidget.setupMenu(mMenuWaveform);
 
     mMenuTracker.setTitle(tr("&Tracker"));
     mMenuTracker.addAction(&mActionTrackerPlay);
@@ -558,7 +548,7 @@ void MainWindow::setupUi() {
     mMenuWindowToolbars.addAction(mToolbarTracker.toggleViewAction());
     //mMenuWindowToolbars.addAction(mToolbarSong.toggleViewAction());
 
-    setupWindowMenu(mMenuWindow);
+    //setupWindowMenu(mMenuWindow);
 
     mMenuHelp.setTitle(tr("&Help"));
     mMenuHelp.addAction(&mActionAudioDiag);
@@ -571,10 +561,6 @@ void MainWindow::setupUi() {
     auto menubar = menuBar();
     menubar->addMenu(&mMenuFile);
     menubar->addMenu(&mMenuEdit);
-    //menubar->addMenu(&mMenuSong);
-    menubar->addMenu(&mMenuOrder);
-    menubar->addMenu(&mMenuInstrument);
-    menubar->addMenu(&mMenuWaveform);
     menubar->addMenu(&mMenuTracker);
     menubar->addMenu(&mMenuWindow);
     menubar->addMenu(&mMenuHelp);
@@ -609,17 +595,6 @@ void MainWindow::setupUi() {
     mToolbarTracker.addAction(&mActionTrackerRestart);
     mToolbarTracker.addAction(&mActionTrackerStop);
 
-
-    //mToolbarSong.setWindowTitle(tr("Song"));
-    //mToolbarSong.setIconSize(iconSize);
-    //setObjectNameFromDeclared(mToolbarSong);
-    //mToolbarSong.addAction(&mActionSongPrev);
-    //mToolbarSong.addAction(&mActionSongNext);
-    //mSongCombo.setModel(&mApp.songModel);
-    //mToolbarSong.addWidget(&mSongCombo);
-
-    // DIALOGS ===============================================================
-
     // DOCKS =================================================================
 
     
@@ -627,23 +602,20 @@ void MainWindow::setupUi() {
     // STATUSBAR ==============================================================
 
     auto statusbar = statusBar();
-    #define addLabelToStatusbar(var, text) var.setText(QStringLiteral(text)); statusbar->addPermanentWidget(&var)
     
-    addLabelToStatusbar(mStatusRenderer, "Ready");
-    addLabelToStatusbar(mStatusInstrument, "Instrument: 00");
-    addLabelToStatusbar(mStatusWaveform, "Waveform: 00");
-    addLabelToStatusbar(mStatusOctave, "Octave: 3");
-    addLabelToStatusbar(mStatusFramerate, "59.7 FPS");
-    addLabelToStatusbar(mStatusSpeed, "6.000 FPR");
-    addLabelToStatusbar(mStatusTempo, "150 BPM");
-    addLabelToStatusbar(mStatusElapsed, "00:00:00");
-    addLabelToStatusbar(mStatusPos, "00 / 00");
-    addLabelToStatusbar(mStatusSamplerate, "");
+    mStatusRenderer.setText(tr("Ready"));
+    statusbar->addPermanentWidget(&mStatusRenderer);
+    statusbar->addPermanentWidget(&mStatusFramerate);
+    statusbar->addPermanentWidget(&mStatusSpeed);
+    statusbar->addPermanentWidget(&mStatusTempo);
+    mStatusElapsed.setText(QStringLiteral("00:00:00"));
+    statusbar->addPermanentWidget(&mStatusElapsed);
+    mStatusPos.setText(QStringLiteral("00 / 00"));
+    statusbar->addPermanentWidget(&mStatusPos);
+    statusbar->addPermanentWidget(&mStatusSamplerate);
 
 
     // CONNECTIONS ============================================================
-
-    //connect(&mApp.document, &ModuleDocument::modifiedChanged, this, &QMainWindow::setWindowModified);
 
     // Actions
 
@@ -653,8 +625,12 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileSave, onFileSave);
     connectActionToThis(mActionFileSaveAs, onFileSaveAs);
     connect(&mActionFileClose, &QAction::triggered, &mMdi, &QMdiArea::closeActiveSubWindow);
+    connect(&mActionFileCloseAll, &QAction::triggered, &mMdi, &QMdiArea::closeAllSubWindows);
     connectActionToThis(mActionFileQuit, close);
     connectActionToThis(mActionWindowResetLayout, onWindowResetLayout);
+    connect(&mActionWindowPrev, &QAction::triggered, &mMdi, &QMdiArea::activatePreviousSubWindow);
+    connect(&mActionWindowNext, &QAction::triggered, &mMdi, &QMdiArea::activateNextSubWindow);
+
 
     connectActionToThis(mActionFileConfig, showConfigDialog);
     connect(&mActionTrackerPlay, &QAction::triggered, &mApp.renderer, &Renderer::play);
@@ -667,32 +643,18 @@ void MainWindow::setupUi() {
     QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);
 
 
-    // song combobox in mSongToolbar
-    //connect(&mSongCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mApp.songModel, qOverload<int>(&SongListModel::select));
-    //connect(&mApp.songModel, &SongListModel::currentIndexChanged, &mSongCombo, &QComboBox::setCurrentIndex);
-
-    // statusbar
-
-    //connect(&mApp.instrumentModel, &InstrumentListModel::currentIndexChanged, this, &MainWindow::statusSetInstrument);
-    //connect(&mApp.waveModel, &WaveListModel::currentIndexChanged, this, &MainWindow::statusSetWaveform);
-
-    // showEditor signal to each editor's show slot
-    //connect(&mInstrumentWidget, &TableForm::showEditor, this, &MainWindow::showInstrumentEditor);
-    //connect(&mWaveformWidget, &TableForm::showEditor, this, &MainWindow::showWaveEditor);
-
-    // octave changes
-    //connect(&mPatternEditor, &PatternEditor::octaveChanged, this, &MainWindow::statusSetOctave);
-
     // sync worker
-    //connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
-    //connect(&mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged);
-    //connect(&mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText);
+    connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
+    connect(&mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged);
+    connect(&mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText);
 
     connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
     connect(&mApp.renderer, &Renderer::audioError, this, &MainWindow::onAudioError);
 
     connect(&mMdi, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
+
+    connect(&mMenuWindow, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
 }
 
 void MainWindow::initState() {
