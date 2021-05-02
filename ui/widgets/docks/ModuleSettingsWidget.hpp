@@ -22,11 +22,21 @@ class ModuleSettingsWidget : public QWidget {
 
 public:
 
-    explicit ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent = nullptr);
+    explicit ModuleSettingsWidget(QWidget *parent = nullptr);
 
-    void commit();
+public slots:
+    void setDocument(ModuleDocument *doc);
 
 private slots:
+
+    void titleChanged(QString const& text);
+
+    void artistChanged(QString const& text);
+
+    void copyrightChanged(QString const& text);
+
+    void commentsChanged();
+
 
     //void calculateTempo();
 
@@ -38,7 +48,7 @@ private slots:
 
 private:
 
-    ModuleDocument &mDocument;
+    ModuleDocument *mDocument;
 
     QVBoxLayout mLayout;
         QHBoxLayout mSettingsLayout;
@@ -72,4 +82,5 @@ private:
 
 
     QButtonGroup mFramerateButtons;
+
 };

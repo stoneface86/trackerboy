@@ -29,7 +29,6 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     QMainWindow(),
     mApp(trackerboy),
     mDocumentCounter(0),
-    mCurrentDocument(nullptr),
     mErrorSinceLastConfig(false),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
@@ -79,6 +78,9 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
         addToolBar(&mToolbarTracker);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleSettings);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockInstrumentEditor);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveformEditor);
         restoreState(windowState);
     }
 
@@ -157,12 +159,7 @@ void MainWindow::onFileOpen() {
         if (doc->hasFile()) {
             QFileInfo docInfo(doc->filepath());
             if (pathInfo == docInfo) {
-                for (auto win : mMdi.subWindowList()) {
-                    if (static_cast<ModuleWindow*>(win->widget())->document() == doc) {
-                        mMdi.setActiveSubWindow(win);
-                        break;
-                    }
-                }
+                mMdi.setActiveSubWindow(doc->window());
                 return; // document is already open, don't open it again
             }
         }
@@ -356,23 +353,60 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *window) {
         ? static_cast<ModuleWindow*>(window->widget())->document() 
         : nullptr;
 
-    if (mCurrentDocument != doc) {
-        mCurrentDocument = doc;
-    }
+    mBrowserModel.setCurrentDocument(doc);
 
 }
 
 void MainWindow::onDocumentClosed(ModuleDocument *doc) {
     mBrowserModel.removeDocument(doc);
-    
+
     // no longer using this document, delete it
     delete doc;
 }
 
+void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
+    auto doc = mBrowserModel.documentAt(index);
+    mBrowserModel.setCurrentDocument(doc);
+    mMdi.setActiveSubWindow(doc->window());
+
+    QDockWidget *dockToActivate = nullptr;
+
+    // "open" the item according to its type
+    switch (mBrowserModel.itemAt(index)) {
+        case ModuleModel::ItemType::invalid:
+        case ModuleModel::ItemType::document:
+        case ModuleModel::ItemType::orders:
+            break;
+        case ModuleModel::ItemType::instrument:
+            // TODO: show the instrument editor with this instrument
+            [[fallthrough]];
+        case ModuleModel::ItemType::instruments:
+            dockToActivate = &mDockInstrumentEditor;
+            break;
+        case ModuleModel::ItemType::order:
+            // TODO: set the current pattern to this one
+            break;
+        case ModuleModel::ItemType::waveform:
+            // TODO: show the waveform editor with this instrument
+            [[fallthrough]];
+        case ModuleModel::ItemType::waveforms:
+            dockToActivate = &mDockWaveformEditor;
+            break;
+        case ModuleModel::ItemType::settings:
+            dockToActivate = &mDockModuleSettings;
+            break;
+    }
+
+    if (dockToActivate) {
+        dockToActivate->show();
+        dockToActivate->raise();
+        dockToActivate->activateWindow();
+    }
+}
+
 void MainWindow::updateWindowMenu() {
     mMenuWindow.clear();
-    mMenuWindow.addMenu(&mMenuWindowToolbars);
-    mMenuWindow.addAction(&mActionWindowResetLayout);
+    setupWindowMenu(mMenuWindow);
     mMenuWindow.addSeparator();
     mMenuWindow.addAction(&mActionWindowPrev);
     mMenuWindow.addAction(&mActionWindowNext);
@@ -425,9 +459,10 @@ void MainWindow::addDocument(ModuleDocument *doc) {
         connect(mConfigDialog, &ConfigDialog::applied, docWin, &ModuleWindow::applyConfiguration);
     }
     // add it the MDI area and show it
-    mMdi.addSubWindow(docWin);
+    auto subwin = mMdi.addSubWindow(docWin);
     docWin->show();
 
+    doc->setWindow(subwin);
 }
 
 void MainWindow::setupUi() {
@@ -445,6 +480,7 @@ void MainWindow::setupUi() {
 
     mBrowser.setModel(&mBrowserModel);
     mBrowser.setHeaderHidden(true);
+    mBrowser.setExpandsOnDoubleClick(false);
 
     mVisualizerLayout.addWidget(&mLeftScope);
     mVisualizerLayout.addWidget(&mPeakMeter, 1);
@@ -596,7 +632,15 @@ void MainWindow::setupUi() {
 
     // DOCKS =================================================================
 
+    setObjectNameFromDeclared(mDockModuleSettings);
+    mDockModuleSettings.setWindowTitle(tr("Module settings"));
+    mDockModuleSettings.setWidget(&mModuleSettingsWidget);
     
+    setObjectNameFromDeclared(mDockInstrumentEditor);
+    mDockInstrumentEditor.setWindowTitle(tr("Instrument editor"));
+    
+    setObjectNameFromDeclared(mDockWaveformEditor);
+    mDockWaveformEditor.setWindowTitle(tr("Waveform editor"));
 
     // STATUSBAR ==============================================================
 
@@ -654,37 +698,13 @@ void MainWindow::setupUi() {
     connect(&mMdi, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
     connect(&mMenuWindow, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
+
+    connect(&mBrowser, &QTreeView::doubleClicked, this, &MainWindow::onBrowserDoubleClick);
+    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mModuleSettingsWidget, &ModuleSettingsWidget::setDocument);
 }
 
 void MainWindow::initState() {
     // setup default layout
-    // +-------------------------------------------------------------------------------+
-    // | Toolbars                                                                      |
-    // +-------------------------------------------------------------------------------+
-    // |                   |                                   |                       |
-    // | Song properties   |        Visualizer                 | Instruments           |
-    // |       +           +-----------------------------------+                       |
-    // |     Songs         |        Pattern Editor             |                       |
-    // |                   |                                   |                       |
-    // +-------------------+                                   |                       |
-    // |                   |                                   |                       |
-    // | Module properties |                                   |                       |
-    // |                   |                                   |                       | 
-    // +-------------------+                                   |                       |
-    // |                   |                                   |                       |
-    // | Song Order        |                                   |                       |
-    // |                   |                                   |                       |
-    // |                   |                                   +-----------------------+
-    // |                   |                                   |                       |
-    // |                   |                                   | Waveforms             |
-    // |                   |                                   |                       |
-    // |                   |                                   |                       |
-    // |                   |                                   |                       |
-    // |                   |                                   |                       |
-    // +-------------------------------------------------------------------------------+
-    // Default locations for all dock widgets + toolbars
-    // The user can move these or hide these however they like
-    // This layout can be restored by invoking menu action Window | Reset Layout
 
     // setup corners, left and right get both corners
     setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
@@ -702,9 +722,24 @@ void MainWindow::initState() {
     addToolBar(Qt::TopToolBarArea, &mToolbarTracker);
     mToolbarTracker.show();
 
+    addDockWidget(Qt::RightDockWidgetArea, &mDockModuleSettings);
+    mDockModuleSettings.setFloating(true);
+    mDockModuleSettings.hide();
+
+    addDockWidget(Qt::RightDockWidgetArea, &mDockInstrumentEditor);
+    mDockInstrumentEditor.setFloating(true);
+    mDockInstrumentEditor.hide();
+
+    addDockWidget(Qt::RightDockWidgetArea, &mDockWaveformEditor);
+    mDockWaveformEditor.setFloating(true);
+    mDockWaveformEditor.hide();
 }
 
 void MainWindow::setupWindowMenu(QMenu &menu) {
+
+    menu.addAction(mDockModuleSettings.toggleViewAction());
+    menu.addAction(mDockInstrumentEditor.toggleViewAction());
+    menu.addAction(mDockWaveformEditor.toggleViewAction());
 
     menu.addSeparator();
     

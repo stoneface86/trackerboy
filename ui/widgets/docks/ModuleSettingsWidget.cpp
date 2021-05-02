@@ -1,9 +1,9 @@
 
-#include "widgets/module/ModuleSettingsWidget.hpp"
+#include "widgets/docks/ModuleSettingsWidget.hpp"
 
-ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent) :
+ModuleSettingsWidget::ModuleSettingsWidget(QWidget *parent) :
     QWidget(parent),
-    mDocument(doc),
+    mDocument(nullptr),
     mLayout(),
     mSettingsLayout(),
     mInfoGroup(tr("Information")),
@@ -115,9 +115,6 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     mFramerateCustomSpin.setRange(1, 1024);
     mFramerateCustomSpin.setSuffix(tr(" Hz"));
 
-    // now load settings from the module
-    auto const& mod = mDocument.mod();
-
     /*auto &song = mod.song();
     mRowsPerBeatSpin.setValue(song.rowsPerBeat());
     mRowsPerMeasureSpin.setValue(song.rowsPerMeasure());
@@ -125,20 +122,7 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     mPatternSpin.setValue((int)song.order().size());
     mRowsPerPatternSpin.setValue(song.patterns().rowSize());*/
 
-    auto sys = mod.system();
-    switch (sys) {
-        case trackerboy::System::dmg:
-            mFramerateDmgRadio.setChecked(true);
-            break;
-        case trackerboy::System::sgb:
-            mFramerateSgbRadio.setChecked(true);
-            break;
-        case trackerboy::System::custom:
-            mFramerateCustomRadio.setChecked(true);
-            mFramerateCustomSpin.setValue(mod.customFramerate());
-            break;
-    }
-    mFramerateCustomSpin.setEnabled(sys == trackerboy::System::custom);
+    
 
     //calculateActualTempo();
 
@@ -148,18 +132,16 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
     connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &mRowsPerMeasureSpin, &QSpinBox::setMinimum);
     connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::calculateActualTempo);
     connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::calculateActualTempo);*/
+    
     connect(&mFramerateButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &ModuleSettingsWidget::framerateButtonToggled);
     connect(&mFramerateCustomSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::customFramerateSpinChanged);
 
-    mTitleEdit.setText(QString::fromStdString(mod.title()));
-    mArtistEdit.setText(QString::fromStdString(mod.artist()));
-    mCopyrightEdit.setText(QString::fromStdString(mod.copyright()));
-    mCommentsEdit.setPlainText(QString::fromStdString(mod.comments()));
+    connect(&mTitleEdit, &QLineEdit::textEdited, this, &ModuleSettingsWidget::titleChanged);
+    connect(&mArtistEdit, &QLineEdit::textEdited, this, &ModuleSettingsWidget::artistChanged);
+    connect(&mCopyrightEdit, &QLineEdit::textEdited, this, &ModuleSettingsWidget::copyrightChanged);
+    connect(&mCommentsEdit, &QPlainTextEdit::textChanged, this, &ModuleSettingsWidget::commentsChanged);
 
-    connect(&mTitleEdit, &QLineEdit::textEdited, &doc, &ModuleDocument::makeDirty);
-    connect(&mArtistEdit, &QLineEdit::textEdited, &doc, &ModuleDocument::makeDirty);
-    connect(&mCopyrightEdit, &QLineEdit::textEdited, &doc, &ModuleDocument::makeDirty);
-    connect(&mCommentsEdit, &QPlainTextEdit::textChanged, &doc, &ModuleDocument::makeDirty);
+    setDocument(nullptr);
 }
 
 //void ModuleSettingsWidget::calculateTempo() {
@@ -180,15 +162,82 @@ ModuleSettingsWidget::ModuleSettingsWidget(ModuleDocument &doc, QWidget *parent)
 //    mTempoActualEdit.setText(QString("%1 BPM").arg(tempo, 0, 'f', 2));
 //}
 
+void ModuleSettingsWidget::titleChanged(QString const& text) {
+    if (mDocument) {
+        mDocument->setTitle(text);
+    }
+}
+
+void ModuleSettingsWidget::artistChanged(QString const& text) {
+    if (mDocument) {
+        mDocument->setArtist(text);
+    }
+}
+
+void ModuleSettingsWidget::copyrightChanged(QString const& text) {
+    if (mDocument) {
+        mDocument->setCopyright(text);
+    }
+}
+
+void ModuleSettingsWidget::commentsChanged() {
+    if (mDocument) {
+        mDocument->setComments(mCommentsEdit.toPlainText());
+    }
+}
+
+void ModuleSettingsWidget::setDocument(ModuleDocument *doc) {
+
+    bool const hasDocument = doc != nullptr;
+
+    mDocument = nullptr; // ignores any changes made from loading the current document
+    if (hasDocument) {
+
+        // now load settings from the module
+        auto const& mod = doc->mod();
+
+        mTitleEdit.setText(doc->title());
+        mArtistEdit.setText(doc->artist());
+        mCopyrightEdit.setText(doc->copyright());
+        mCommentsEdit.setPlainText(doc->comments());
+
+        auto sys = mod.system();
+        switch (sys) {
+            case trackerboy::System::dmg:
+                mFramerateDmgRadio.setChecked(true);
+                break;
+            case trackerboy::System::sgb:
+                mFramerateSgbRadio.setChecked(true);
+                break;
+            case trackerboy::System::custom:
+                mFramerateCustomRadio.setChecked(true);
+                break;
+        }
+        mFramerateCustomSpin.setValue(mod.customFramerate());
+        mFramerateCustomSpin.setEnabled(sys == trackerboy::System::custom);
+
+    } else {
+        mTitleEdit.clear();
+        mArtistEdit.clear();
+        mCopyrightEdit.clear();
+        mCommentsEdit.clear();
+        
+    }
+
+    mDocument = doc;
+    setEnabled(hasDocument);
+    
+}
+
 void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool checked) {
-    if (checked) {
+    if (mDocument && checked) {
         auto sys = static_cast<trackerboy::System>(mFramerateButtons.id(button));
 
         bool const isCustom = sys == trackerboy::System::custom;
         mFramerateCustomSpin.setEnabled(isCustom);
 
-        auto ctx = mDocument.beginEdit();
-        auto& mod = mDocument.mod();
+        auto ctx = mDocument->beginEdit();
+        auto& mod = mDocument->mod();
         if (isCustom) {
             mod.setFramerate((uint16_t)mFramerateCustomSpin.value());
         } else {
@@ -200,17 +249,9 @@ void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool 
 }
 
 void ModuleSettingsWidget::customFramerateSpinChanged(int value) {
-    auto ctx = mDocument.beginEdit();
-    mDocument.mod().setFramerate((uint16_t)value);
+    if (mDocument) {
+        auto ctx = mDocument->beginEdit();
+        mDocument->mod().setFramerate((uint16_t)value);
+    }
     //calculateActualTempo();
-}
-
-void ModuleSettingsWidget::commit() {
-    auto &mod = mDocument.mod();
-
-    mod.setTitle(mTitleEdit.text().toStdString());
-    mod.setArtist(mArtistEdit.text().toStdString());
-    mod.setCopyright(mCopyrightEdit.text().toStdString());
-    mod.setComments(mCommentsEdit.toPlainText().toStdString());
-
 }

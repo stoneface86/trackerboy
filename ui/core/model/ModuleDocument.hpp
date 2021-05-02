@@ -11,6 +11,7 @@ class ModuleDocument;
 
 #include "trackerboy/data/Module.hpp"
 
+#include <QMdiSubWindow>
 #include <QMutex>
 #include <QObject>
 #include <QThread>
@@ -121,6 +122,23 @@ public:
 
     void unlock();
 
+    QString title() const noexcept;
+    void setTitle(QString const& title);
+
+    QString artist() const noexcept;
+    void setArtist(QString const& artist);
+
+    QString copyright() const noexcept;
+    void setCopyright(QString const& copyright);
+
+    QString comments() const noexcept;
+    void setComments(QString const& comments);
+
+
+
+    void setWindow(QMdiSubWindow *window);
+
+    QMdiSubWindow* window() const noexcept;
 
 signals:
     void modifiedChanged(bool value);
@@ -172,4 +190,11 @@ private:
     QString mFilename;
     QString mFilepath;
 
+    // QString versions of strings in the module
+    QString mTitle;
+    QString mArtist;
+    QString mCopyright;
+    QString mComments;
+
+    QMdiSubWindow *mWindow;
 };

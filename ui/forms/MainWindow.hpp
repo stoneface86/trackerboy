@@ -8,6 +8,7 @@
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
 #include "forms/ModuleWindow.hpp"
+#include "widgets/docks/ModuleSettingsWidget.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/visualizers/PeakMeter.hpp"
 
@@ -69,6 +70,8 @@ private slots:
     void onSubWindowActivated(QMdiSubWindow *window);
     void onDocumentClosed(ModuleDocument *doc);
 
+    void onBrowserDoubleClick(QModelIndex const& index);
+
     void updateWindowMenu();
 
 private:
@@ -90,7 +93,6 @@ private:
 
     // counter for how many times a new document has been created
     unsigned mDocumentCounter;
-    ModuleDocument *mCurrentDocument;
 
     ModuleModel mBrowserModel;
 
@@ -108,6 +110,12 @@ private:
 
 
     // dock widgets
+    QDockWidget mDockModuleSettings;
+        ModuleSettingsWidget mModuleSettingsWidget;
+
+    QDockWidget mDockInstrumentEditor;
+
+    QDockWidget mDockWaveformEditor;
     //QDockWidget mDockHistory;
     //    QUndoView mUndoView;
 

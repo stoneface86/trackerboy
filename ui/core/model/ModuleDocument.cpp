@@ -37,7 +37,8 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mWaveModel(*this),
     mLastError(trackerboy::FormatError::none),
     mFilename(),
-    mFilepath()
+    mFilepath(),
+    mWindow(nullptr)
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
@@ -52,6 +53,11 @@ ModuleDocument::ModuleDocument(QString const& path, QObject *parent) :
         if (mLastError == trackerboy::FormatError::none) {
 
             updateFilename(path);
+
+            mTitle = QString::fromStdString(mModule.title());
+            mArtist = QString::fromStdString(mModule.artist());
+            mCopyright = QString::fromStdString(mModule.copyright());
+            mComments = QString::fromStdString(mModule.comments());
 
             mInstrumentModel.reload();
             mWaveModel.reload();
@@ -156,6 +162,11 @@ bool ModuleDocument::doSave(QString const& filename) {
         mInstrumentModel.commit();
         mWaveModel.commit();
 
+        mModule.setTitle(mTitle.toStdString());
+        mModule.setArtist(mArtist.toStdString());
+        mModule.setCopyright(mCopyright.toStdString());
+        mModule.setComments(mComments.toStdString());
+
         success = mModule.serialize(out) == trackerboy::FormatError::none;
         if (success) {
             clean();
@@ -212,4 +223,46 @@ void ModuleDocument::updateFilename(QString const& path) {
     mFilename = info.fileName();
 }
 
+void ModuleDocument::setWindow(QMdiSubWindow *window) {
+    mWindow = window;
+}
 
+QMdiSubWindow* ModuleDocument::window() const noexcept {
+    return mWindow;
+}
+
+QString ModuleDocument::title() const noexcept {
+    return mTitle;
+}
+
+QString ModuleDocument::artist() const noexcept {
+    return mArtist;
+}
+
+QString ModuleDocument::copyright() const noexcept {
+    return mCopyright;
+}
+
+QString ModuleDocument::comments() const noexcept {
+    return mComments;
+}
+
+void ModuleDocument::setTitle(QString const& title) {
+    mTitle = title;
+    makeDirty();
+}
+
+void ModuleDocument::setArtist(QString const& artist) {
+    mArtist = artist;
+    makeDirty();
+}
+
+void ModuleDocument::setCopyright(QString const& copyright) {
+    mCopyright = copyright;
+    makeDirty();
+}
+
+void ModuleDocument::setComments(QString const& comments) {
+    mComments = comments;
+    makeDirty();
+}

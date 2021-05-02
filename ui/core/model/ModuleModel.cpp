@@ -80,7 +80,8 @@ struct ModelId {
 
 ModuleModel::ModuleModel(QObject *parent) :
     QAbstractItemModel(parent),
-    mDocuments()
+    mDocuments(),
+    mCurrent(nullptr)
 {
 }
 
@@ -286,4 +287,70 @@ void ModuleModel::removeDocument(ModuleDocument *doc) {
 
 QVector<ModuleDocument*> const& ModuleModel::documents() const noexcept {
     return mDocuments;
+}
+
+void ModuleModel::setCurrentDocument(ModuleDocument *doc) {
+    if (mCurrent != doc) {
+        mCurrent = doc;
+        emit currentDocumentChanged(doc);
+    }
+}
+
+ModuleDocument* ModuleModel::currentDocument() const noexcept {
+    return mCurrent;
+}
+
+ModuleDocument* ModuleModel::documentAt(QModelIndex const& index) {
+    if (index.isValid()) {
+        ModelId id = index.internalId();
+        if (id.level() == 0) {
+            return mDocuments[index.row()];
+        } else {
+            return mDocuments[id.documentIndex()];
+        }
+    } else {
+        return nullptr;
+    }
+}
+
+ModuleModel::ItemType ModuleModel::itemAt(QModelIndex const& index) {
+    if (index.isValid()) {
+
+        ModelId id = index.internalId();
+
+        switch (id.level()) {
+            case 0:
+                return ItemType::document;
+            case 1:
+                switch (index.row()) {
+                    case 0:
+                        return ItemType::instruments;
+                    case 1:
+                        return ItemType::orders;
+                    case 2:
+                        return ItemType::waveforms;
+                    case 3:
+                        return ItemType::settings;
+                    default:
+                        break;
+                }
+            case 2:
+                switch (id.parent()) {
+                    case 0:
+                        return ItemType::instrument;
+                    case 1:
+                        return ItemType::order;
+                    case 2:
+                        return ItemType::waveform;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    return ItemType::invalid;
 }

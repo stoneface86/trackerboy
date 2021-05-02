@@ -17,7 +17,21 @@ class ModuleModel : public QAbstractItemModel {
 
 public:
 
+    enum class ItemType {
+        invalid,
+        document,
+        instruments,
+        orders,
+        waveforms,
+        instrument,
+        order,
+        waveform,
+        settings
+    };
+
     explicit ModuleModel(QObject *parent = nullptr);
+
+    // model implementation
 
     virtual Qt::ItemFlags flags(QModelIndex const& index) const override;
 
@@ -35,14 +49,27 @@ public:
 
     virtual int columnCount(QModelIndex const& parent = QModelIndex()) const override;
 
+    // document management
+
     QModelIndex addDocument(ModuleDocument *doc);
 
     void removeDocument(ModuleDocument *doc);
     
     QVector<ModuleDocument*> const& documents() const noexcept;
 
+    void setCurrentDocument(ModuleDocument *doc);
+
+    ModuleDocument* documentAt(QModelIndex const& index);
+
+    ItemType itemAt(QModelIndex const& index);
+
+    ModuleDocument* currentDocument() const noexcept;
+
+signals:
+    void currentDocumentChanged(ModuleDocument *doc);
+
 private:
 
-
     QVector<ModuleDocument*> mDocuments;
+    ModuleDocument *mCurrent;
 };
