@@ -86,14 +86,21 @@ void PatternMaster::setRowSize(uint16_t newsize) {
 }
 
 size_t PatternMaster::tracks(ChType ch) const noexcept {
-    return mMap[static_cast<size_t>(ch)].size();
+    size_t count = 0;
+    for (auto track : mMap[static_cast<size_t>(ch)]) {
+        if (track.second.rowCount() != 0) {
+            ++count;
+        }
+    }
+    return count;
 }
 
 size_t PatternMaster::tracks() const noexcept {
-    return mMap[+ChType::ch1].size() +
-           mMap[+ChType::ch2].size() +
-           mMap[+ChType::ch3].size() +
-           mMap[+ChType::ch4].size();
+    return tracks(ChType::ch1) + tracks(ChType::ch2) + tracks(ChType::ch3) + tracks(ChType::ch4);
+    //return mMap[+ChType::ch1].size() +
+    //       mMap[+ChType::ch2].size() +
+    //       mMap[+ChType::ch3].size() +
+    //       mMap[+ChType::ch4].size();
 }
 
 PatternMaster::Data::iterator PatternMaster::tracksBegin(ChType ch) {
