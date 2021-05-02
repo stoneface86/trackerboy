@@ -35,6 +35,8 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     mToolbarFile(),
     mToolbarEdit(),
     mToolbarTracker(),
+    mInstrumentEditor(trackerboy.config.keyboard().pianoInput),
+    mWaveEditor(trackerboy.config.keyboard().pianoInput),
     mSyncWorker(mApp.renderer, mLeftScope, mRightScope),
     mSyncWorkerThread()
 
@@ -638,9 +640,11 @@ void MainWindow::setupUi() {
     
     setObjectNameFromDeclared(mDockInstrumentEditor);
     mDockInstrumentEditor.setWindowTitle(tr("Instrument editor"));
+    mDockInstrumentEditor.setWidget(&mInstrumentEditor);
     
     setObjectNameFromDeclared(mDockWaveformEditor);
     mDockWaveformEditor.setWindowTitle(tr("Waveform editor"));
+    mDockWaveformEditor.setWidget(&mWaveEditor);
 
     // STATUSBAR ==============================================================
 

@@ -21,6 +21,7 @@ BaseTableModel::ModelData::ModelData(trackerboy::DataItem const& item) :
 BaseTableModel::BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table, QString defaultName) :
     mDocument(document),
     mBaseTable(table),
+    mCurrentIndex(-1),
     mItems(),
     mDefaultName(defaultName),
     mShouldCommit(false)
@@ -56,6 +57,11 @@ void BaseTableModel::reload() {
             mItems.emplace_back(*item);
         }
     }
+    if (mItems.size() > 0) {
+        mCurrentIndex = 0;
+    } else {
+        mCurrentIndex = -1;
+    }
 
     endResetModel();
 }
@@ -83,11 +89,19 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
     return QVariant();
 }
 
+int BaseTableModel::currentIndex() const noexcept {
+    return mCurrentIndex;
+}
+
+void BaseTableModel::setCurrentIndex(int index) {
+    mCurrentIndex = index;
+}
+
 QString BaseTableModel::name(int index) {
     return mItems[index].name;
 }
 
-void BaseTableModel::add() {
+int BaseTableModel::add() {
     Q_ASSERT(mBaseTable.size() < trackerboy::BaseTable::MAX_SIZE);
 
     uint8_t id;
@@ -97,7 +111,7 @@ void BaseTableModel::add() {
         id = item.id();
     }
     ModelData data(id, mDefaultName);
-    insertData(data);
+    return insertData(data);
 
 }
 
@@ -115,7 +129,7 @@ void BaseTableModel::remove(int index) {
 }
 
 
-void BaseTableModel::duplicate(int index) {
+int BaseTableModel::duplicate(int index) {
 
     auto const& dataToCopy = mItems[index];
     uint8_t id;
@@ -125,7 +139,7 @@ void BaseTableModel::duplicate(int index) {
     }
 
     ModelData data(id, dataToCopy.name);
-    insertData(data);
+    return insertData(data);
 
 }
 
@@ -140,7 +154,7 @@ void BaseTableModel::rename(int index, const QString &name) {
 }
 
 
-void BaseTableModel::insertData(ModelData const& data) {
+int BaseTableModel::insertData(ModelData const& data) {
     mShouldCommit = true;
 
     auto itemCount = mItems.size();
@@ -149,7 +163,7 @@ void BaseTableModel::insertData(ModelData const& data) {
         beginInsertRows(QModelIndex(), (int)itemCount, (int)itemCount);
         mItems.push_back(data);
         endInsertRows();
-
+        return (int)itemCount;
     } else {
         // search and insert
         auto begin = mItems.begin();
@@ -162,6 +176,8 @@ void BaseTableModel::insertData(ModelData const& data) {
         beginInsertRows(QModelIndex(), row, row);
         mItems.insert(iter, data);
         endInsertRows();
+
+        return row;
     }
 }
 

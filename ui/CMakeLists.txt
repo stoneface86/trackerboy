@@ -35,10 +35,8 @@ set(UI_SRC
 
     "forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"
-    #"forms/InstrumentEditor.cpp"
     "forms/MainWindow.cpp"
     "forms/ModuleWindow.cpp"
-    #"forms/WaveEditor.cpp"
     
     "misc/IconManager.cpp"
     "misc/utils.cpp"
@@ -51,7 +49,9 @@ set(UI_SRC
     "widgets/config/SoundConfigTab.cpp"
     "widgets/config/SoundQualityPreview.cpp"
     "widgets/docks/ModuleSettingsWidget.cpp"
-    "widgets/docks/TableForm.cpp"
+    "widgets/editors/BaseEditor.cpp"
+    "widgets/editors/InstrumentEditor.cpp"
+    "widgets/editors/WaveEditor.cpp"
     "widgets/grid/layout.cpp"
     "widgets/module/OrderEditor.cpp"
     "widgets/grid/PatternGrid.cpp"
@@ -64,6 +64,7 @@ set(UI_SRC
     "widgets/EnvelopeForm.cpp"
     "widgets/PatternEditor.cpp"
     "widgets/PianoWidget.cpp"
+    #"widgets/SequenceEditor.cpp"
     #"widgets/WaveGraph.cpp"
 )
 
@@ -102,11 +103,14 @@ endif ()
 # Essentially unit tests, but without the automation
 #
 
-add_executable(test_TableForm ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_TableForm.cpp")
-target_link_libraries(test_TableForm PRIVATE ui)
+add_executable(test_BaseEditor ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_BaseEditor.cpp")
+target_link_libraries(test_BaseEditor PRIVATE ui)
 
 add_executable(test_OrderWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_OrderWidget.cpp")
 target_link_libraries(test_OrderWidget PRIVATE ui)
+
+add_executable(test_PianoWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_PianoWidget.cpp")
+target_link_libraries(test_PianoWidget PRIVATE ui)
 
 #add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
 #target_link_libraries(test_pattern_painter

@@ -9,6 +9,8 @@
 #include "forms/ConfigDialog.hpp"
 #include "forms/ModuleWindow.hpp"
 #include "widgets/docks/ModuleSettingsWidget.hpp"
+#include "widgets/editors/InstrumentEditor.hpp"
+#include "widgets/editors/WaveEditor.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/visualizers/PeakMeter.hpp"
 
@@ -114,8 +116,11 @@ private:
         ModuleSettingsWidget mModuleSettingsWidget;
 
     QDockWidget mDockInstrumentEditor;
+        InstrumentEditor mInstrumentEditor;
 
     QDockWidget mDockWaveformEditor;
+        WaveEditor mWaveEditor;
+
     //QDockWidget mDockHistory;
     //    QUndoView mUndoView;
 

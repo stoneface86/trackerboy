@@ -2,6 +2,7 @@
 #include "widgets/PianoWidget.hpp"
 
 #include <QPainter>
+#include <QScrollBar>
 
 constexpr int KEYINDEX_NULL = -1;
 constexpr int N_OCTAVES = 7;
@@ -77,7 +78,7 @@ static const trackerboy::Note BLACKKEY_TO_NOTE[] = {
 std::optional<PianoWidget::Pixmaps> PianoWidget::mPixmaps;
 
 
-PianoWidget::PianoWidget(PianoInput &input, QWidget *parent) :
+PianoWidget::PianoWidget(PianoInput const& input, QWidget *parent) :
     QWidget(parent),
     mIsKeyDown(false),
     mNote(trackerboy::NOTE_C),
@@ -95,7 +96,6 @@ PianoWidget::PianoWidget(PianoInput &input, QWidget *parent) :
     }
     setFixedWidth(PIANO_WIDTH);
     setFixedHeight(PIANO_HEIGHT);
-
 }
 
 void PianoWidget::play(trackerboy::Note note) {
@@ -246,3 +246,4 @@ trackerboy::Note PianoWidget::getNoteFromMouse(int x, int y) {
 
     return static_cast<trackerboy::Note>(note);
 }
+

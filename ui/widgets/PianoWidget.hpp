@@ -21,7 +21,7 @@ class PianoWidget : public QWidget {
     Q_OBJECT
 
 public:
-    PianoWidget(PianoInput &input, QWidget *parent = nullptr);
+    PianoWidget(PianoInput const& input, QWidget *parent = nullptr);
 
     void play(trackerboy::Note note);
     void release();
@@ -59,7 +59,7 @@ private:
     bool mIsKeyDown;
     trackerboy::Note mNote;
 
-    PianoInput &mInput;
+    PianoInput const& mInput;
     int mLastKeyPressed;
 
 

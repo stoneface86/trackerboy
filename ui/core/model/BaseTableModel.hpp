@@ -31,16 +31,23 @@ public:
 
     virtual QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
 
+    int currentIndex() const noexcept;
+
     // adds a new item, if there was no items prior then this one is selected
-    void add();
+    int add();
     // removes the given item
     void remove(int index);
 
-    void duplicate(int index);
+    int duplicate(int index);
 
     QString name(int index);
 
     void rename(int index, const QString &name);
+
+public slots:
+
+    void setCurrentIndex(int index);
+
 
 protected:
     BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table, QString defaultName);
@@ -49,6 +56,8 @@ protected:
 
     ModuleDocument &mDocument;
     trackerboy::BaseTable &mBaseTable;
+
+    int mCurrentIndex;
 
 private:
     Q_DISABLE_COPY(BaseTableModel)
@@ -68,11 +77,13 @@ private:
 
     };
 
-    void insertData(ModelData const& data);
+    int insertData(ModelData const& data);
 
     // maps a model index -> table index
     std::vector<ModelData> mItems;
 
     QString const mDefaultName;
     bool mShouldCommit;
+
+    
 };
