@@ -101,10 +101,10 @@ MainWindow::~MainWindow() {
 }
 
 QMenu* MainWindow::createPopupMenu() {
-    // we can't return a reference to mMenuWindow as QMainWindow will delete it
+    // we can't return a reference to mMenuView as QMainWindow will delete it
     // a new menu must be created
     auto menu = new QMenu(this);
-    setupWindowMenu(*menu);
+    setupViewMenu(*menu);
     return menu;
 }
 
@@ -409,8 +409,6 @@ void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
 
 void MainWindow::updateWindowMenu() {
     mMenuWindow.clear();
-    setupWindowMenu(mMenuWindow);
-    mMenuWindow.addSeparator();
     mMenuWindow.addAction(&mActionWindowPrev);
     mMenuWindow.addAction(&mActionWindowNext);
     
@@ -516,6 +514,19 @@ void MainWindow::setupUi() {
     mActionEditRedo = undoGroup.createRedoAction(this);
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
     mActionEditRedo->setShortcut(QKeySequence::Redo);
+    setupAction(mActionEditCut, "Cu&t", "Cuts selected rows and puts it onto the clipboard", Icons::editCut, QKeySequence::Cut);
+    setupAction(mActionEditCopy, "&Copy", "Copies selected rows and puts it onto the clipboard", Icons::editCut, QKeySequence::Copy);
+    setupAction(mActionEditPaste, "&Paste", "Pastes clipboard contents at cursor", Icons::editPaste, QKeySequence::Paste);
+    setupAction(mActionEditPasteMix, "Paste Mi&x", "Mix clipboard contents", QStringLiteral("Shift+Ctrl+V"));
+    setupAction(mActionEditDelete, "&Delete", "Deletes selection", QKeySequence::Delete);
+    setupAction(mActionEditSelectAll, "&Select All", "Selects all rows in track/pattern", QKeySequence::SelectAll);
+    setupAction(mActionTransposeNoteIncrease, "Increase note", "Increases note(s) by 1 semitone");
+    setupAction(mActionTransposeNoteDecrease, "Decrease note", "Decreases note(s) by 1 semitone");
+    setupAction(mActionTransposeOctaveIncrease, "Increase octave", "Increases note(s) by 12 semitones");
+    setupAction(mActionTransposeOctaveDecrease, "Decrease octave", "Decreases note(s) by 12 semitones");
+    
+
+    setupAction(mActionViewResetLayout, "Reset layout", "Rearranges all docks and toolbars to the default layout");
 
     setupAction(mActionTrackerPlay, "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
     setupAction(mActionTrackerRestart, "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
@@ -523,10 +534,8 @@ void MainWindow::setupUi() {
     setupAction(mActionTrackerToggleChannel, "Toggle channel output", "Enables/disables sound output for the current track");
     setupAction(mActionTrackerSolo, "Solo", "Solos the current track");
 
-    setupAction(mActionWindowResetLayout, "Reset layout", "Rearranges all docks and toolbars to the default layout");
     setupAction(mActionWindowPrev, "Pre&vious", "Move the focus to the previous module");
     setupAction(mActionWindowNext, "Ne&xt", "Move the focus to the next module");
-
 
     setupAction(mActionAudioDiag, "Audio diagnostics...", "Shows the audio diagnostics dialog");
     setupAction(mActionHelpAbout, "&About", "About this program");
@@ -556,8 +565,28 @@ void MainWindow::setupUi() {
     mMenuEdit.setTitle(tr("&Edit"));
     mMenuEdit.addAction(mActionEditUndo);
     mMenuEdit.addAction(mActionEditRedo);
-    //mMenuEdit.addSeparator();
-    //mPatternEditor.setupMenu(mMenuEdit);
+    mMenuEdit.addSeparator();
+    mMenuEdit.addAction(&mActionEditCut);
+    mMenuEdit.addAction(&mActionEditCopy);
+    mMenuEdit.addAction(&mActionEditPaste);
+    mMenuEdit.addAction(&mActionEditPasteMix);
+    mMenuEdit.addAction(&mActionEditDelete);
+    mMenuEdit.addSeparator();
+    mMenuEdit.addAction(&mActionEditSelectAll);
+    mMenuEdit.addSeparator();
+        mMenuEditTranspose.setTitle(tr("Transpose"));
+        mMenuEditTranspose.addAction(&mActionTransposeNoteIncrease);
+        mMenuEditTranspose.addAction(&mActionTransposeNoteDecrease);
+        mMenuEditTranspose.addAction(&mActionTransposeOctaveIncrease);
+        mMenuEditTranspose.addAction(&mActionTransposeOctaveDecrease);
+    mMenuEdit.addMenu(&mMenuEditTranspose);    
+
+    mMenuView.setTitle(tr("&View"));
+    mMenuViewToolbars.setTitle(tr("&Toolbars"));
+    mMenuViewToolbars.addAction(mToolbarFile.toggleViewAction());
+    mMenuViewToolbars.addAction(mToolbarEdit.toggleViewAction());
+    mMenuViewToolbars.addAction(mToolbarTracker.toggleViewAction());
+    setupViewMenu(mMenuView);
 
     mMenuTracker.setTitle(tr("&Tracker"));
     mMenuTracker.addAction(&mActionTrackerPlay);
@@ -565,27 +594,10 @@ void MainWindow::setupUi() {
     mMenuTracker.addAction(&mActionTrackerStop);
     mMenuTracker.addSeparator();
 
-    /*{
-        auto &actions = mPatternEditor.trackerActions();
-        mMenuTracker.addAction(&actions.play);
-        mMenuTracker.addAction(&actions.restart);
-        mMenuTracker.addAction(&actions.playRow);
-        mMenuTracker.addAction(&actions.record);
-
-    }*/
-
-    mMenuTracker.addSeparator();
     mMenuTracker.addAction(&mActionTrackerToggleChannel);
     mMenuTracker.addAction(&mActionTrackerSolo);
 
     mMenuWindow.setTitle(tr("Wi&ndow"));
-    mMenuWindowToolbars.setTitle(tr("&Toolbars"));
-    mMenuWindowToolbars.addAction(mToolbarFile.toggleViewAction());
-    mMenuWindowToolbars.addAction(mToolbarEdit.toggleViewAction());
-    mMenuWindowToolbars.addAction(mToolbarTracker.toggleViewAction());
-    //mMenuWindowToolbars.addAction(mToolbarSong.toggleViewAction());
-
-    //setupWindowMenu(mMenuWindow);
 
     mMenuHelp.setTitle(tr("&Help"));
     mMenuHelp.addAction(&mActionAudioDiag);
@@ -598,6 +610,7 @@ void MainWindow::setupUi() {
     auto menubar = menuBar();
     menubar->addMenu(&mMenuFile);
     menubar->addMenu(&mMenuEdit);
+    menubar->addMenu(&mMenuView);
     menubar->addMenu(&mMenuTracker);
     menubar->addMenu(&mMenuWindow);
     menubar->addMenu(&mMenuHelp);
@@ -620,10 +633,10 @@ void MainWindow::setupUi() {
     setObjectNameFromDeclared(mToolbarEdit);
     mToolbarEdit.addAction(mActionEditUndo);
     mToolbarEdit.addAction(mActionEditRedo);
-    //mToolbarEdit.addSeparator();
-    /*mToolbarEdit.addAction(&patternActions.cut);
-    mToolbarEdit.addAction(&patternActions.copy);
-    mToolbarEdit.addAction(&patternActions.paste);*/
+    mToolbarEdit.addSeparator();
+    mToolbarEdit.addAction(&mActionEditCut);
+    mToolbarEdit.addAction(&mActionEditCopy);
+    mToolbarEdit.addAction(&mActionEditPaste);
 
     mToolbarTracker.setWindowTitle(tr("Tracker"));
     mToolbarTracker.setIconSize(iconSize);
@@ -674,7 +687,7 @@ void MainWindow::setupUi() {
     connect(&mActionFileClose, &QAction::triggered, &mMdi, &QMdiArea::closeActiveSubWindow);
     connect(&mActionFileCloseAll, &QAction::triggered, &mMdi, &QMdiArea::closeAllSubWindows);
     connectActionToThis(mActionFileQuit, close);
-    connectActionToThis(mActionWindowResetLayout, onWindowResetLayout);
+    connectActionToThis(mActionViewResetLayout, onWindowResetLayout);
     connect(&mActionWindowPrev, &QAction::triggered, &mMdi, &QMdiArea::activatePreviousSubWindow);
     connect(&mActionWindowNext, &QAction::triggered, &mMdi, &QMdiArea::activateNextSubWindow);
 
@@ -742,7 +755,7 @@ void MainWindow::initState() {
     mDockWaveformEditor.hide();
 }
 
-void MainWindow::setupWindowMenu(QMenu &menu) {
+void MainWindow::setupViewMenu(QMenu &menu) {
 
     menu.addAction(mDockModuleSettings.toggleViewAction());
     menu.addAction(mDockInstrumentEditor.toggleViewAction());
@@ -750,11 +763,11 @@ void MainWindow::setupWindowMenu(QMenu &menu) {
 
     menu.addSeparator();
     
-    menu.addMenu(&mMenuWindowToolbars);
+    menu.addMenu(&mMenuViewToolbars);
     
     menu.addSeparator();
     
-    menu.addAction(&mActionWindowResetLayout);
+    menu.addAction(&mActionViewResetLayout);
 }
 
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
@@ -767,9 +780,3 @@ void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
         showConfigDialog();
     }
 }
-
-//void MainWindow::setupAction(QAction &action, const char *text, const char *tooltip, QKeySequence const &seq) {
-//    action.setText(tr(text));
-//    action.setShortcut(seq);
-//    action.setStatusTip(tr(tooltip));
-//}

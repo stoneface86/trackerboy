@@ -85,7 +85,7 @@ private:
 
     void initState();
 
-    void setupWindowMenu(QMenu &menu);
+    void setupViewMenu(QMenu &menu);
 
     void settingsMessageBox(QMessageBox &msgbox);
 
@@ -158,10 +158,26 @@ private:
     QAction mActionFileConfig;
     QAction mActionFileQuit;
 
-    // Edit (created by PatternEditor)
+    // Edit
     QMenu mMenuEdit;
     QAction *mActionEditUndo;
     QAction *mActionEditRedo;
+    QAction mActionEditCut;
+    QAction mActionEditCopy;
+    QAction mActionEditPaste;
+    QAction mActionEditPasteMix;
+    QAction mActionEditDelete;
+    QAction mActionEditSelectAll;
+    QMenu mMenuEditTranspose;
+    QAction mActionTransposeNoteIncrease;
+    QAction mActionTransposeNoteDecrease;
+    QAction mActionTransposeOctaveIncrease;
+    QAction mActionTransposeOctaveDecrease;
+    
+    // View
+    QMenu mMenuView;
+    QMenu mMenuViewToolbars;
+    QAction mActionViewResetLayout;
 
     // Tracker
     QMenu mMenuTracker;
@@ -173,8 +189,6 @@ private:
 
     // Window
     QMenu mMenuWindow;
-    QMenu mMenuWindowToolbars;
-    QAction mActionWindowResetLayout;
     QAction mActionWindowPrev;
     QAction mActionWindowNext;
 
