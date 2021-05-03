@@ -2,6 +2,8 @@
 #include "widgets/editors/BaseEditor.hpp"
 #include "misc/IconManager.hpp"
 
+#include <QtDebug>
+
 BaseEditor::BaseEditor(PianoInput const& input, QString typeName, QWidget *parent) :
     QWidget(parent),
     mDocument(nullptr),
@@ -80,7 +82,7 @@ void BaseEditor::setDocument(ModuleDocument *document) {
         auto model = getModel(*document);
         mCombo.setModel(model);
         index = model->currentIndex();
-        
+        mCombo.setCurrentIndex(index);
     } else {
         mCombo.clear();
         mNameEdit.clear();
@@ -91,6 +93,10 @@ void BaseEditor::setDocument(ModuleDocument *document) {
 
     mSignalsEnabled = true;
     onIndexChanged(index);
+}
+
+void BaseEditor::openItem(int index) {
+    mCombo.setCurrentIndex(index);
 }
 
 QWidget& BaseEditor::editorWidget() {

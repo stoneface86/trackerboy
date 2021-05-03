@@ -23,6 +23,11 @@ public:
 public slots:
     void setDocument(ModuleDocument *document);
 
+    //
+    // Opens the item at the given index for editing
+    // 
+    void openItem(int index);
+
 protected:
 
     explicit BaseEditor(PianoInput const& input, QString typeName, QWidget *parent = nullptr);

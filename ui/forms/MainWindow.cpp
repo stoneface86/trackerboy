@@ -344,6 +344,7 @@ void MainWindow::onAudioStop() {
 
 void MainWindow::onSubWindowActivated(QMdiSubWindow *window) {
     bool const hasWindow = window != nullptr;
+
     mActionFileSave.setEnabled(hasWindow);
     mActionFileSaveAs.setEnabled(hasWindow);
     mActionFileClose.setEnabled(hasWindow);
@@ -380,16 +381,16 @@ void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
         case ModuleModel::ItemType::orders:
             break;
         case ModuleModel::ItemType::instrument:
-            // TODO: show the instrument editor with this instrument
+            mInstrumentEditor.openItem(index.row());
             [[fallthrough]];
         case ModuleModel::ItemType::instruments:
             dockToActivate = &mDockInstrumentEditor;
             break;
         case ModuleModel::ItemType::order:
-            // TODO: set the current pattern to this one
+            doc->orderModel().selectPattern(index.row());
             break;
         case ModuleModel::ItemType::waveform:
-            // TODO: show the waveform editor with this instrument
+            mWaveEditor.openItem(index.row());
             [[fallthrough]];
         case ModuleModel::ItemType::waveforms:
             dockToActivate = &mDockWaveformEditor;
@@ -705,6 +706,9 @@ void MainWindow::setupUi() {
 
     connect(&mBrowser, &QTreeView::doubleClicked, this, &MainWindow::onBrowserDoubleClick);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mModuleSettingsWidget, &ModuleSettingsWidget::setDocument);
+    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mInstrumentEditor, &InstrumentEditor::setDocument);
+    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mWaveEditor, &WaveEditor::setDocument);
+    
 }
 
 void MainWindow::initState() {

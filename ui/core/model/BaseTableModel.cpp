@@ -78,8 +78,9 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
 
         if (role == Qt::DisplayRole) {
             // <id> - [name]
-            return QString::number(modelItem.id, 16).toUpper().rightJustified(2, '0') %
+            QString str = QString::number(modelItem.id, 16).toUpper().rightJustified(2, '0') %
                 QStringLiteral(" - ") % modelItem.name;
+            return str;
         } else {
             // decoration role
             return iconData(modelItem.id);
