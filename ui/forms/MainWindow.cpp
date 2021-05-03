@@ -470,8 +470,6 @@ void MainWindow::addDocument(ModuleDocument *doc) {
 
 void MainWindow::setupUi() {
 
-    //auto &undoStack = mApp.document.undoStack();
-
     // CENTRAL WIDGET ========================================================
 
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
@@ -511,12 +509,13 @@ void MainWindow::setupUi() {
     setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
     setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
 
-    /*mActionEditUndo = undoStack.createUndoAction(this);
+    auto &undoGroup = mBrowserModel.undoGroup();
+    mActionEditUndo = undoGroup.createUndoAction(this);
     mActionEditUndo->setIcon(IconManager::getIcon(Icons::editUndo));
     mActionEditUndo->setShortcut(QKeySequence::Undo);
-    mActionEditRedo = undoStack.createRedoAction(this);
+    mActionEditRedo = undoGroup.createRedoAction(this);
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
-    mActionEditRedo->setShortcut(QKeySequence::Redo);*/
+    mActionEditRedo->setShortcut(QKeySequence::Redo);
 
     setupAction(mActionTrackerPlay, "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
     setupAction(mActionTrackerRestart, "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
@@ -555,8 +554,8 @@ void MainWindow::setupUi() {
     mMenuFile.addAction(&mActionFileQuit);
 
     mMenuEdit.setTitle(tr("&Edit"));
-    //mMenuEdit.addAction(mActionEditUndo);
-    //mMenuEdit.addAction(mActionEditRedo);
+    mMenuEdit.addAction(mActionEditUndo);
+    mMenuEdit.addAction(mActionEditRedo);
     //mMenuEdit.addSeparator();
     //mPatternEditor.setupMenu(mMenuEdit);
 
@@ -619,9 +618,9 @@ void MainWindow::setupUi() {
     mToolbarEdit.setWindowTitle(tr("Edit"));
     mToolbarEdit.setIconSize(iconSize);
     setObjectNameFromDeclared(mToolbarEdit);
-    //mToolbarEdit.addAction(mActionEditUndo);
-    //mToolbarEdit.addAction(mActionEditRedo);
-    mToolbarEdit.addSeparator();
+    mToolbarEdit.addAction(mActionEditUndo);
+    mToolbarEdit.addAction(mActionEditRedo);
+    //mToolbarEdit.addSeparator();
     /*mToolbarEdit.addAction(&patternActions.cut);
     mToolbarEdit.addAction(&patternActions.copy);
     mToolbarEdit.addAction(&patternActions.paste);*/

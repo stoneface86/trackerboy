@@ -268,6 +268,7 @@ QModelIndex ModuleModel::addDocument(ModuleDocument *doc) {
     beginInsertRows(QModelIndex(), row, row);
 
     mDocuments.push_back(doc);
+    mUndoGroup.addStack(&doc->undoStack());
 
     endInsertRows();
 
@@ -281,6 +282,7 @@ void ModuleModel::removeDocument(ModuleDocument *doc) {
 
         beginRemoveRows(QModelIndex(), row, row);
         mDocuments.remove(row);
+        mUndoGroup.removeStack(&doc->undoStack());
         endRemoveRows();
     }
 }
@@ -292,6 +294,9 @@ QVector<ModuleDocument*> const& ModuleModel::documents() const noexcept {
 void ModuleModel::setCurrentDocument(ModuleDocument *doc) {
     if (mCurrent != doc) {
         mCurrent = doc;
+        if (doc) {
+            mUndoGroup.setActiveStack(&doc->undoStack());
+        }
         emit currentDocumentChanged(doc);
     }
 }
@@ -353,4 +358,8 @@ ModuleModel::ItemType ModuleModel::itemAt(QModelIndex const& index) {
     }
 
     return ItemType::invalid;
+}
+
+QUndoGroup& ModuleModel::undoGroup() noexcept {
+    return mUndoGroup;
 }

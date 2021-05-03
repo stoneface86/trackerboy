@@ -4,9 +4,8 @@
 #include "core/model/ModuleDocument.hpp"
 
 #include <QAbstractItemModel>
+#include <QUndoGroup>
 #include <QVector>
-
-#include <variant>
 
 //
 // Model implementation to be used in a QTreeView. Shows all open modules
@@ -17,6 +16,9 @@ class ModuleModel : public QAbstractItemModel {
 
 public:
 
+    //
+    // enum for each item type in the model.
+    //
     enum class ItemType {
         invalid,
         document,
@@ -51,25 +53,62 @@ public:
 
     // document management
 
+    //
+    // Adds the document to the model. The Model does not take ownership of
+    // document. The document's undo stack is also added to the undo group.
+    //
     QModelIndex addDocument(ModuleDocument *doc);
 
+    //
+    // Removes the document from the model. The document's undo stack is
+    // also removed from the group.
+    //
     void removeDocument(ModuleDocument *doc);
     
+    //
+    // Gets the vector of documents added to this model.
+    //
     QVector<ModuleDocument*> const& documents() const noexcept;
 
+    //
+    // Set the current document. nullptr for no document.
+    //
     void setCurrentDocument(ModuleDocument *doc);
 
+    //
+    // Gets the document that belongs to the given model index. All items
+    // in the model have an associated document. nullptr is only returned
+    // when the index is invalid.
+    //
     ModuleDocument* documentAt(QModelIndex const& index);
 
+    //
+    // Gets the ItemType for the given model index.
+    //
     ItemType itemAt(QModelIndex const& index);
 
+    //
+    // Gets the current document set by setCurrentDocument
+    //
     ModuleDocument* currentDocument() const noexcept;
 
+    //
+    // Gets the QUndoGroup for the model. This group contains all QUndoStacks
+    // from every document in the model.
+    //
+    QUndoGroup& undoGroup() noexcept;
+
 signals:
+
+    //
+    // Signal emitted when the current document changes.
+    //
     void currentDocumentChanged(ModuleDocument *doc);
 
 private:
 
     QVector<ModuleDocument*> mDocuments;
     ModuleDocument *mCurrent;
+
+    QUndoGroup mUndoGroup;
 };
