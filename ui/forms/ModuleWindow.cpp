@@ -41,9 +41,16 @@ ModuleDocument* ModuleWindow::document() noexcept {
     return mDocument;
 }
 
+OrderEditor& ModuleWindow::orderEditor() noexcept {
+    return mOrderWidget;
+}
+
+PatternEditor& ModuleWindow::patternEditor() noexcept {
+    return mPatternEditor;
+}
+
 bool ModuleWindow::save() {
     if (mDocument->hasFile()) {
-        commit();
         return mDocument->save();
     } else {
         return saveAs();
@@ -63,7 +70,6 @@ bool ModuleWindow::saveAs() {
         return false;
     }
 
-    commit();
     auto result = mDocument->save(path);
     if (result) {
         updateWindowTitle();
@@ -105,10 +111,6 @@ bool ModuleWindow::maybeSave() {
     }
 
     return true;
-}
-
-void ModuleWindow::commit() {
-    //mTabSettings.commit();
 }
 
 void ModuleWindow::updateWindowTitle() {

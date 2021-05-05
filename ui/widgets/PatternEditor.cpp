@@ -281,3 +281,47 @@ void PatternEditor::vscrollAction(int action) {
             break;
     }
 }
+
+void PatternEditor::onCut() {
+
+}
+
+void PatternEditor::onCopy() {
+    
+}
+
+void PatternEditor::onPaste() {
+    
+}
+
+void PatternEditor::onPasteMix() {
+    
+}
+
+void PatternEditor::onDelete() {
+    
+}
+
+void PatternEditor::onSelectAll() {
+    
+}
+
+void PatternEditor::onIncreaseNote() {
+
+}
+
+void PatternEditor::onDecreaseNote() {
+
+}
+
+void PatternEditor::onIncreaseOctave() {
+
+}
+
+void PatternEditor::onDecreaseOctave() {
+
+}
+
+void PatternEditor::onReverse() {
+    
+}

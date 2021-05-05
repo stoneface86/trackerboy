@@ -23,6 +23,10 @@ public:
 
     ModuleDocument* document() noexcept;
 
+    OrderEditor& orderEditor() noexcept;
+
+    PatternEditor& patternEditor() noexcept;
+
     bool save();
 
     bool saveAs();
@@ -44,11 +48,6 @@ private:
     void updateWindowTitle();
 
     bool maybeSave();
-
-    //
-    // Writes any retained data within the UI to the module
-    //
-    void commit();
 
     Trackerboy &mApp;
     ModuleDocument *mDocument;

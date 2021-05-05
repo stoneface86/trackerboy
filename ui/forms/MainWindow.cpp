@@ -188,6 +188,47 @@ bool MainWindow::onFileSaveAs() {
     return currentModuleWindow()->saveAs();
 }
 
+void MainWindow::onEditCut() {
+    currentModuleWindow()->patternEditor().onCut();
+}
+
+void MainWindow::onEditCopy() {
+    currentModuleWindow()->patternEditor().onCopy();
+}
+
+void MainWindow::onEditPaste() {
+    currentModuleWindow()->patternEditor().onPaste();
+}
+
+void MainWindow::onEditPasteMix() {
+    currentModuleWindow()->patternEditor().onPasteMix();
+}
+
+void MainWindow::onEditDelete() {
+    currentModuleWindow()->patternEditor().onDelete();
+}
+
+void MainWindow::onEditSelectAll() {
+    currentModuleWindow()->patternEditor().onSelectAll();
+}
+
+void MainWindow::onTransposeIncreaseNote() {
+    currentModuleWindow()->patternEditor().onIncreaseNote();
+}
+
+void MainWindow::onTransposeDecreaseNote() {
+    currentModuleWindow()->patternEditor().onDecreaseNote();
+}
+
+void MainWindow::onTransposeIncreaseOctave() {
+    currentModuleWindow()->patternEditor().onIncreaseOctave();
+}
+
+void MainWindow::onTransposeDecreaseOctave() {
+    currentModuleWindow()->patternEditor().onDecreaseOctave();
+}
+
+
 void MainWindow::onWindowResetLayout() {
     // remove everything
     removeToolBar(&mToolbarFile);
@@ -686,19 +727,36 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileSaveAs, onFileSaveAs);
     connect(&mActionFileClose, &QAction::triggered, &mMdi, &QMdiArea::closeActiveSubWindow);
     connect(&mActionFileCloseAll, &QAction::triggered, &mMdi, &QMdiArea::closeAllSubWindows);
+    connectActionToThis(mActionFileConfig, showConfigDialog);
     connectActionToThis(mActionFileQuit, close);
+
+    // edit
+    connectActionToThis(mActionEditCut, onEditCut);
+    connectActionToThis(mActionEditCopy, onEditCopy);
+    connectActionToThis(mActionEditPaste, onEditPaste);
+    connectActionToThis(mActionEditPasteMix, onEditPasteMix);
+    connectActionToThis(mActionEditDelete, onEditCut);
+    connectActionToThis(mActionEditSelectAll, onEditCut);
+    connectActionToThis(mActionTransposeNoteIncrease, onTransposeIncreaseNote);
+    connectActionToThis(mActionTransposeNoteDecrease, onTransposeDecreaseNote);
+    connectActionToThis(mActionTransposeOctaveIncrease, onTransposeIncreaseOctave);
+    connectActionToThis(mActionTransposeOctaveDecrease, onTransposeDecreaseOctave);
+    
+    // view
     connectActionToThis(mActionViewResetLayout, onWindowResetLayout);
+
+    // window
     connect(&mActionWindowPrev, &QAction::triggered, &mMdi, &QMdiArea::activatePreviousSubWindow);
     connect(&mActionWindowNext, &QAction::triggered, &mMdi, &QMdiArea::activateNextSubWindow);
 
-
-    connectActionToThis(mActionFileConfig, showConfigDialog);
+    // tracker
     connect(&mActionTrackerPlay, &QAction::triggered, &mApp.renderer, &Renderer::play);
     //connect(&mActionTrackerPlayPattern, &QAction::triggered, &mApp.renderer, &Renderer::playPattern);
     //connect(&mActionTrackerPlayStart, &QAction::triggered, &mApp.renderer, &Renderer::playFromStart);
     //connect(&mActionTrackerPlayCursor, &QAction::triggered, &mApp.renderer, &Renderer::playFromCursor);
     connect(&mActionTrackerStop, &QAction::triggered, &mApp.renderer, &Renderer::stopMusic);
 
+    // help
     connectActionToThis(mActionAudioDiag, showAudioDiag);
     QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);
 

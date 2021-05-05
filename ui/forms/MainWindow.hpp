@@ -53,6 +53,17 @@ private slots:
     bool onFileSave();
     bool onFileSaveAs();
 
+    void onEditCut();
+    void onEditCopy();
+    void onEditPaste();
+    void onEditPasteMix();
+    void onEditDelete();
+    void onEditSelectAll();
+    void onTransposeIncreaseNote();
+    void onTransposeDecreaseNote();
+    void onTransposeIncreaseOctave();
+    void onTransposeDecreaseOctave();
+    
     void onWindowResetLayout();
 
     // config changes

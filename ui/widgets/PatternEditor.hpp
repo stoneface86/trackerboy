@@ -63,29 +63,29 @@ public:
 signals:
     void octaveChanged(int octave);
 
-//public slots:
+public slots:
 
-    //void onCut();
+    void onCut();
 
-    //void onCopy();
+    void onCopy();
 
-    //void onPaste();
+    void onPaste();
 
-    //void onPasteMix();
+    void onPasteMix();
 
-    //void onDelete();
+    void onDelete();
 
-    //void onSelectAll();
+    void onSelectAll();
 
-    //void onIncreaseNote();
+    void onIncreaseNote();
 
-    //void onDecreaseNote();
+    void onDecreaseNote();
 
-    //void onIncreaseOctave();
+    void onIncreaseOctave();
 
-    //void onDecreaseOctave();
+    void onDecreaseOctave();
 
-    //void onReverse();
+    void onReverse();
 
 protected:
 
