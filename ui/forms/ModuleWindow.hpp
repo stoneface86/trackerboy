@@ -40,6 +40,8 @@ protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;
 
+    virtual void showEvent(QShowEvent *evt) override;
+
 signals:
     void documentClosed(ModuleDocument *document);
 

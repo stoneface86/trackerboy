@@ -117,6 +117,7 @@ void BaseEditor::onIndexChanged(int index) {
                 mNameEdit.clear();
             }
             mNameEdit.setEnabled(hasIndex);
+            mPiano.setEnabled(hasIndex);
             mActionRemove.setEnabled(hasIndex);
             mActionDuplicate.setEnabled(model->canDuplicate() && hasIndex);
         }

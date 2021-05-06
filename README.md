@@ -25,22 +25,23 @@ My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
 v0.2.0 is in progress and will be the first "functional" version of trackerboy. This version
 will feature a usable pattern editor.
 
-### Pattern Editor Demo
-![Pattern Editor Demo](/.github/pattern_editor_demo.gif)
+### UI redo
+The UI is being redesigned to be less cluttered than the old one, as well as adding MDI support
+![Pattern Editor Demo](/.github/newui.png)
 
 The library is (almost) finished and the UI is being worked on now.
 
 Here is a general list of what needs to be completed:
- * ~~Instrument editor~~
- * ~~Wave editor~~
+ * Instrument/Wave editor
  * Pattern editor / Tracker grid (In progress)
- * Visualizers: Oscilloscopes and volume meters (master and one for each channel)
- * Instruments rewrite. Similar to FamiTracker's
+ * Export to WAV
 
  Post-release features:
  * Sound effects
  * MIDI support
  * Export to .asm (pattern compilation)
+   * Compile to [tbengine](https://github.com/stoneface86/tbengine) format
+   * Compile to pokemon engine (experimental)
  * Export to .gbs
  * Import from famitracker (tool to convert .ftm -> .tbm)
 

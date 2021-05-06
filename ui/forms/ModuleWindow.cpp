@@ -88,6 +88,12 @@ void ModuleWindow::closeEvent(QCloseEvent *evt) {
     
 }
 
+void ModuleWindow::showEvent(QShowEvent *evt) {
+    // focus on the pattern editor when the window is activated
+    mPatternEditor.setFocus();
+    evt->accept();
+}
+
 bool ModuleWindow::maybeSave() {
 
     if (!mDocument->isModified()) {

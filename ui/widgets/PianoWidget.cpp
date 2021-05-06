@@ -75,6 +75,8 @@ static const trackerboy::Note BLACKKEY_TO_NOTE[] = {
     trackerboy::NOTE_Bb  // A#
 };
 
+constexpr QColor DISABLED_COLOR(128, 128, 128);
+
 std::optional<PianoWidget::Pixmaps> PianoWidget::mPixmaps;
 
 
@@ -204,6 +206,11 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
 
     if (mIsKeyDown && keyInfo.isBlack) {
         painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, pixmaps.blackKeyDown);
+    }
+
+    if (!isEnabled()) {
+        painter.setCompositionMode(QPainter::CompositionMode_Plus);
+        painter.fillRect(rect(), DISABLED_COLOR);
     }
 
 }
