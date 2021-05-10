@@ -98,6 +98,10 @@ void BaseTableModel::setCurrentIndex(int index) {
     mCurrentIndex = index;
 }
 
+uint8_t BaseTableModel::id(int index) {
+    return mItems[index].id;
+}
+
 QString BaseTableModel::name(int index) {
     return mItems[index].name;
 }

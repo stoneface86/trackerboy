@@ -8,13 +8,13 @@
 const char* ModuleWindow::MODULE_FILE_FILTER = QT_TR_NOOP("Trackerboy module (*.tbm)");
 
 
-ModuleWindow::ModuleWindow(Trackerboy &app, ModuleDocument *doc, QWidget *parent) :
+ModuleWindow::ModuleWindow(Config &config, ModuleDocument *doc, QWidget *parent) :
     QWidget(parent),
-    mApp(app),
+    mConfig(config),
     mDocument(doc),
     mLayout(),
     mOrderWidget(doc->orderModel()),
-    mPatternEditor(app.config.keyboard().pianoInput, *doc)
+    mPatternEditor(config.keyboard().pianoInput, *doc)
 {
 
     mLayout.addWidget(&mOrderWidget);
@@ -31,7 +31,7 @@ ModuleWindow::ModuleWindow(Trackerboy &app, ModuleDocument *doc, QWidget *parent
 
 void ModuleWindow::applyConfiguration(Config::Categories categories) {
     if (categories.testFlag(Config::CategoryAppearance)) {
-        auto &appearance = mApp.config.appearance();
+        auto &appearance = mConfig.appearance();
         mPatternEditor.setColors(appearance.colors);
         mDocument->orderModel().setRowColor(appearance.colors[+Color::row]);
     }

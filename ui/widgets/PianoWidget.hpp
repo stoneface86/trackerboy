@@ -27,7 +27,7 @@ public:
     void release();
 
 signals:
-    void keyDown(trackerboy::Note note);
+    void keyDown(quint8 note);
     void keyUp();
 
 

@@ -42,6 +42,8 @@ public:
 
     QString name(int index);
 
+    uint8_t id(int index);
+
     void rename(int index, const QString &name);
 
 public slots:

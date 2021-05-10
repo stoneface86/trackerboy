@@ -42,32 +42,26 @@ public:
         unsigned bufferSize;
     };
 
-    Renderer(Miniaudio &miniaudio);
+    Renderer(QObject *parent = nullptr);
     ~Renderer();
 
     // DIAGNOSTICS ====
 
     Diagnostics diagnostics();
 
-    ma_device const& device() const;
+    ma_device const& device();
 
-    AudioRingbuffer::Reader returnBuffer();
+    ModuleDocument* document();
 
-    Ringbuffer<RenderFrame>::Reader frameReturnBuffer();
+    //ModuleDocument* documentPlayingMusic();
+
+    bool isEnabled();
 
     bool isRunning();
 
     ma_result lastDeviceError();
 
-    void setConfig(Config::Sound const& config);
-
-    void playMusic(uint8_t orderNo, uint8_t rowNo);
-    
-    // row preview (just the track)
-    //void preview(trackerboy::TrackRow const& row);
-
-    // row preview (all channels)
-    //void preview(trackerboy::PatternRow const& row);
+    void setConfig(Miniaudio &miniaudio, Config::Sound const& config);
 
 signals:
 
@@ -81,34 +75,53 @@ signals:
     //
     void audioStopped();
 
-    void audioSync();
-
     //
     // An error occurred during audio playback.
     //
     void audioError();
 
+    //
+    // emitted when a new frame is rendererd
+    //
+    void frameSync();
+
 public slots:
 
     void clearDiagnostics();
 
-    void stopMusic();
+    // to be called periodically when the audioStarted signal was emitted.
+    // connect this slot to MainWindow's update timer timeout signal
+    void render();
+
+    //void stopMusic();
 
     // instrument preview
-    void previewInstrument(trackerboy::Note note);
+    void previewInstrument(quint8 note);
 
     // waveform preview
-    void previewWaveform(trackerboy::Note note);
+    void previewWaveform(quint8 note);
 
-    void play();
+    //void play();
 
-    void playPattern();
+    //void playPattern();
 
-    void playFromCursor();
+    //void playFromCursor();
 
-    void playFromStart();
+    //
+    // Begin playing the song from the beginning
+    //
+    //void playFromStart();
 
+    //
+    // Stop previewing an instrument, waveform or row.
+    //
     void stopPreview();
+    
+    //
+    // Set the document to render. Any ongoing renders will use the old
+    // document until stopped. All new renders will use this document
+    //
+    void setDocument(ModuleDocument *doc);
 
 private:
     Q_DISABLE_COPY(Renderer)
@@ -119,17 +132,22 @@ private:
         instrument
     };
 
-    enum class CallbackState {
-        running,
-        stopping,
-        stopped
+    enum class State {
+        running,    // render samples
+        stopping,   // no longing synthesizing, transitions to stopped when the buffer empties
+        stopped     // no longer renderering anything, do nothing when render is called
     };
+
 
     // utility function for preview slots
     void resetPreview();
 
+
     // device management -----------------------------------------------------
 
+    //
+    // Destroys the current device if initialized
+    //
     void closeDevice();
 
     //
@@ -138,44 +156,35 @@ private:
     //
     void beginRender();
 
-    // thread main functions -------------------------------------------------
-
-    static void backgroundThreadRun(Renderer *renderer);
-    void handleBackground();
-
-    static void audioThreadRun(ma_device *device, void *out, const void *in, ma_uint32 frames);
-    void handleAudio(int16_t *out, size_t frames);
+    static void deviceDataHandler(ma_device *device, void *out, const void *in, ma_uint32 frames);
+    void _deviceDataHandler(int16_t *out, size_t frames);
 
     static void deviceStopHandler(ma_device *device);
-
-    void render(AudioRingbuffer::Writer &writer);
+    void _deviceStopHandler();
 
     // class members ---------------------------------------------------------
 
-    Miniaudio &mMiniaudio;
-    //Spinlock &mSpinlock;
-
-    QWaitCondition mIdleCondition;
     QMutex mMutex;
-    std::unique_ptr<QThread> mBackgroundThread;
 
-    // enable flag, if true then the renderer will output sound when requested
-    // otherwise it will do nothing. Renderer is enabled when setConfig successfully
-    // initializes the configured device. It is disabled when an error occurs during
-    // render or when initialization fails.
-    bool mEnabled;
-    bool mRunning;              // is the audio callback thread active?
-    bool mStopBackground;       // flag to stop the background thread
-    bool mStopDevice;           // flag to stop the callback thread
-    bool mAborted;              // true if the render was aborted due to device error
-    std::atomic_bool mSync;
-    std::atomic_bool mCancelStop;
-    std::optional<ma_device> mDevice;
+    // the current document
+    ModuleDocument *mDocument;
+
     ma_device_config mDeviceConfig;
+    std::optional<ma_device> mDevice;
+
+    // playback buffer
+    // written by the gui, read from the callback
+    AudioRingbuffer mBuffer;
+
+    // return buffer or the "played out" buffer
+    // this buffer contains audio that has already been sent to the speakers
+    // written by the callback and is to be read by the GUI for visualizers
+    //AudioRingbuffer mReturnBuffer;
+
     ma_result mLastDeviceError;
 
-    // renderering (synchronize access via spinlock)
-    
+    bool mEnabled;
+
     trackerboy::Synth mSynth;
     trackerboy::GbApu mApu;
     //trackerboy::RuntimeContext mRc;
@@ -188,24 +197,14 @@ private:
     PreviewState mPreviewState;
     trackerboy::ChType mPreviewChannel;
 
-    CallbackState mCallbackState;
-    int mStopCounter;
-    
-    // internal sample buffer (callback reads + writes)
-    AudioRingbuffer mBuffer;
-    // outgoing sample buffer for GUI (callback writes, GUI reads)
-    AudioRingbuffer mSampleReturnBuffer;
-
-    size_t mSyncCounter;
-    size_t mSyncPeriod;
-
     trackerboy::Engine::Frame mCurrentEngineFrame;
-    Ringbuffer<RenderFrame> mFrameReturnBuffer;
 
-    bool mNewFrameSinceLastSync;
+    State mState;
+    int mStopCounter;
 
-    // diagnostics
-    std::atomic_uint mLockFails;
+    // callback flags
+
+    std::atomic_bool mDraining;
     std::atomic_uint mUnderruns;
     std::atomic_uint mSamplesElapsed;
     std::atomic_uint mBufferUsage;

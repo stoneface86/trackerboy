@@ -23,7 +23,7 @@ SyncWorker::SyncWorker(Renderer &renderer, AudioScope &leftScope, AudioScope &ri
     connect(this, &SyncWorker::updateScopes, &mRightScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
     connect(&renderer, &Renderer::audioStarted, this, &SyncWorker::onAudioStart, Qt::QueuedConnection);
     connect(&renderer, &Renderer::audioStopped, this, &SyncWorker::onAudioStop, Qt::QueuedConnection);
-    connect(&renderer, &Renderer::audioSync, this, &SyncWorker::onAudioSync, Qt::QueuedConnection);
+    connect(&renderer, &Renderer::frameSync, this, &SyncWorker::onFrameSync, Qt::QueuedConnection);
 }
 
 void SyncWorker::setSamplesPerFrame(size_t samples) {
@@ -42,8 +42,8 @@ void SyncWorker::onAudioStart() {
 void SyncWorker::onAudioStop() {
     // ignore any pending reads on the return buffer
     // as we are no longer processing them
-    mRenderer.returnBuffer().flush();
-    mRenderer.frameReturnBuffer().flush();
+    //mRenderer.returnBuffer().flush();
+    //mRenderer.frameReturnBuffer().flush();
 
     // clear peaks
     setPeaks(0, 0);
@@ -55,66 +55,70 @@ void SyncWorker::onAudioStop() {
     emit updateScopes();
 }
 
-void SyncWorker::onAudioSync() {
-    QMutexLocker locker(&mMutex);
-
-    // check for any new frames
-    auto frameReturn = mRenderer.frameReturnBuffer();
-    size_t toRead = 1;
-    auto rframe = frameReturn.acquireRead(toRead);
-    if (toRead) {
-        // new frame, process it
-
-        // check if the player position changed
-        if (mLastFrame.engineFrame.order != rframe->engineFrame.order ||
-            mLastFrame.engineFrame.row != rframe->engineFrame.row) {
-            emit positionChanged({ rframe->engineFrame.order, rframe->engineFrame.row });
-        }
-
-        // check if the speed changed
-        auto speed = rframe->engineFrame.speed;
-        if (mLastFrame.engineFrame.speed != speed) {
-            float speedF = (speed >> 4) + ((speed & 0xF) * (1.0f / 16.0f));
-            emit speedChanged(tr("%1 FPR").arg(speedF, 0, 'f', 3));
-        }
-
-        mLastFrame = *rframe;
-    }
-    frameReturn.commitRead(rframe, toRead);
-
-    auto returnBuffer = mRenderer.returnBuffer();
-    auto avail = returnBuffer.availableRead();
-    auto frameCount = avail / mSamplesPerFrame;
-    if (frameCount) {
-        if (frameCount > 1) {
-            // skip these frames
-            returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
-        }
-        // read the frame
-        returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
-
-        // determine peak amplitudes for each channel
-        int16_t peakLeft = 0;
-        int16_t peakRight = 0;
-        auto samplePtr = mSampleBuffer.get();
-        for (size_t i = 0; i != mSamplesPerFrame; ++i) {
-            auto sampleLeft = (int16_t)abs(*samplePtr++);
-            auto sampleRight = (int16_t)abs(*samplePtr++);
-            peakLeft = std::max(sampleLeft, peakLeft);
-            peakRight = std::max(sampleRight, peakRight);
-        }
-        setPeaks(peakLeft, peakRight);
-
-        // send to visualizers
-        mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
-        mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
-
-        // calls AudioScope::update via event queue (cannot call directly as this thread is not the GUI thread)
-        emit updateScopes();
-
-    }
+void SyncWorker::onFrameSync() {
 
 }
+
+// void SyncWorker::onAudioSync() {
+//     QMutexLocker locker(&mMutex);
+
+//     // check for any new frames
+//     auto frameReturn = mRenderer.frameReturnBuffer();
+//     size_t toRead = 1;
+//     auto rframe = frameReturn.acquireRead(toRead);
+//     if (toRead) {
+//         // new frame, process it
+
+//         // check if the player position changed
+//         if (mLastFrame.engineFrame.order != rframe->engineFrame.order ||
+//             mLastFrame.engineFrame.row != rframe->engineFrame.row) {
+//             emit positionChanged({ rframe->engineFrame.order, rframe->engineFrame.row });
+//         }
+
+//         // check if the speed changed
+//         auto speed = rframe->engineFrame.speed;
+//         if (mLastFrame.engineFrame.speed != speed) {
+//             float speedF = (speed >> 4) + ((speed & 0xF) * (1.0f / 16.0f));
+//             emit speedChanged(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+//         }
+
+//         mLastFrame = *rframe;
+//     }
+//     frameReturn.commitRead(rframe, toRead);
+
+//     auto returnBuffer = mRenderer.returnBuffer();
+//     auto avail = returnBuffer.availableRead();
+//     auto frameCount = avail / mSamplesPerFrame;
+//     if (frameCount) {
+//         if (frameCount > 1) {
+//             // skip these frames
+//             returnBuffer.seekRead((frameCount - 1) * mSamplesPerFrame);
+//         }
+//         // read the frame
+//         returnBuffer.fullRead(mSampleBuffer.get(), mSamplesPerFrame);
+
+//         // determine peak amplitudes for each channel
+//         int16_t peakLeft = 0;
+//         int16_t peakRight = 0;
+//         auto samplePtr = mSampleBuffer.get();
+//         for (size_t i = 0; i != mSamplesPerFrame; ++i) {
+//             auto sampleLeft = (int16_t)abs(*samplePtr++);
+//             auto sampleRight = (int16_t)abs(*samplePtr++);
+//             peakLeft = std::max(sampleLeft, peakLeft);
+//             peakRight = std::max(sampleRight, peakRight);
+//         }
+//         setPeaks(peakLeft, peakRight);
+
+//         // send to visualizers
+//         mLeftScope.render(mSampleBuffer.get(), mSamplesPerFrame);
+//         mRightScope.render(mSampleBuffer.get() + 1, mSamplesPerFrame);
+
+//         // calls AudioScope::update via event queue (cannot call directly as this thread is not the GUI thread)
+//         emit updateScopes();
+
+//     }
+
+// }
 
 
 void SyncWorker::setPeaks(int16_t peakLeft, int16_t peakRight) {

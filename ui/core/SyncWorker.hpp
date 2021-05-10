@@ -35,7 +35,7 @@ signals:
 public slots:
     void onAudioStop();
     void onAudioStart();
-    void onAudioSync();
+    void onFrameSync();
 
 private:
     Q_DISABLE_COPY(SyncWorker)

@@ -21,30 +21,34 @@
 
 #define setObjectNameFromDeclared(var) var.setObjectName(QStringLiteral(#var))
 #define connectActionToThis(action, slot) connect(&action, &QAction::triggered, this, &MainWindow::slot)
+#define connectThis(obj, slot, thisslot) connect(obj, slot, this, &std::remove_pointer_t<decltype(this)>::thisslot)
 
 constexpr int TOOLBAR_ICON_WIDTH = 16;
 constexpr int TOOLBAR_ICON_HEIGHT = 16;
 
-MainWindow::MainWindow(Trackerboy &trackerboy) :
+MainWindow::MainWindow(Miniaudio &miniaudio) :
     QMainWindow(),
-    mApp(trackerboy),
+    mMiniaudio(miniaudio),
+    mConfig(miniaudio),
     mDocumentCounter(0),
     mErrorSinceLastConfig(false),
+    mUpdateTimerThread(),
+    mUpdateTimer(),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
     mToolbarFile(),
     mToolbarEdit(),
     mToolbarTracker(),
-    mInstrumentEditor(trackerboy.config.keyboard().pianoInput),
-    mWaveEditor(trackerboy.config.keyboard().pianoInput),
-    mSyncWorker(mApp.renderer, mLeftScope, mRightScope),
+    mInstrumentEditor(mConfig.keyboard().pianoInput),
+    mWaveEditor(mConfig.keyboard().pianoInput),
+    mSyncWorker(mRenderer, mLeftScope, mRightScope),
     mSyncWorkerThread()
 
 {
     setupUi();
 
     // read in application configuration
-    mApp.config.readSettings();
+    mConfig.readSettings();
     // apply the read in configuration
     onConfigApplied(Config::CategoryAll);
 
@@ -89,15 +93,35 @@ MainWindow::MainWindow(Trackerboy &trackerboy) :
     // window title
     setWindowTitle(tr("Trackerboy"));
 
+    // timer thread
+    mUpdateTimer.moveToThread(&mUpdateTimerThread);
+    // millisecond-resolution is needed for updating sound buffers on time
+    mUpdateTimer.setTimerType(Qt::PreciseTimer);
+    mUpdateTimer.setInterval(10);
+    mUpdateTimerThread.setObjectName(QStringLiteral("update timer thread"));
+    mUpdateTimerThread.start();
+
     // audio sync worker thread
     mSyncWorker.moveToThread(&mSyncWorkerThread);
     mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
     mSyncWorkerThread.start();
+
+    // render thread
+    mRenderer.moveToThread(&mRenderThread);
+    connect(&mUpdateTimer, &QTimer::timeout, &mRenderer, &Renderer::render);
+    mRenderThread.setObjectName(QStringLiteral("renderer thread"));
+    mRenderThread.start();
 }
 
 MainWindow::~MainWindow() {
     mSyncWorkerThread.quit();
     mSyncWorkerThread.wait();
+
+    mUpdateTimerThread.quit();
+    mUpdateTimerThread.wait();
+
+    mRenderThread.quit();
+    mRenderThread.wait();
 }
 
 QMenu* MainWindow::createPopupMenu() {
@@ -240,7 +264,7 @@ void MainWindow::onWindowResetLayout() {
 
 void MainWindow::onConfigApplied(Config::Categories categories) {
     if (categories.testFlag(Config::CategorySound)) {
-        auto &sound = mApp.config.sound();
+        auto &sound = mConfig.sound();
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
@@ -249,8 +273,8 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         mLeftScope.setDuration(samplesPerFrame);
         mRightScope.setDuration(samplesPerFrame);
 
-        mApp.renderer.setConfig(sound);
-        mErrorSinceLastConfig = mApp.renderer.lastDeviceError() != MA_SUCCESS;
+        mRenderer.setConfig(mMiniaudio, sound);
+        mErrorSinceLastConfig = mRenderer.lastDeviceError() != MA_SUCCESS;
         if (isVisible() && mErrorSinceLastConfig) {
             QMessageBox msgbox(this);
             msgbox.setIcon(QMessageBox::Critical);
@@ -261,7 +285,7 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
-        auto &appearance = mApp.config.appearance();
+        auto &appearance = mConfig.appearance();
 
         setStyleSheet(QStringLiteral(R"stylesheet(
 PatternEditor PatternGrid {
@@ -316,15 +340,15 @@ OrderEditor QTableView QHeaderView::section {
     }
 
     //if (categories.testFlag(Config::CategoryKeyboard)) {
-    //    mPianoInput = mApp.config.keyboard().pianoInput;
+    //    mPianoInput = mConfig.keyboard().pianoInput;
     //}
 
-    mApp.config.writeSettings();
+    mConfig.writeSettings();
 }
 
 void MainWindow::showAudioDiag() {
     if (mAudioDiag == nullptr) {
-        mAudioDiag = new AudioDiagDialog(mApp.renderer, this);
+        mAudioDiag = new AudioDiagDialog(mRenderer, this);
     }
 
     mAudioDiag->show();
@@ -332,7 +356,7 @@ void MainWindow::showAudioDiag() {
 
 void MainWindow::showConfigDialog() {
     if (mConfigDialog == nullptr) {
-        mConfigDialog = new ConfigDialog(mApp.config, this);
+        mConfigDialog = new ConfigDialog(mConfig, this);
         mConfigDialog->resetControls();
 
         // configuration changed, apply settings
@@ -350,9 +374,10 @@ void MainWindow::trackerPositionChanged(QPoint const pos) {
     auto pattern = pos.x();
     auto row = pos.y();
     
-    // TODO: update tracker position for the module being rendered
-    //auto &grid = mPatternEditor.grid();
-    //grid.setTrackerCursor(row, pattern);
+    // auto doc = mRenderer.documentPlayingMusic();
+    // if (doc) {
+    //     static_cast<ModuleWindow*>(doc->window()->widget())->patternEditor().grid().setTrackerCursor(row, pattern);
+    // }
 
     mStatusPos.setText(QStringLiteral("%1 / %2").arg(pattern).arg(row));
 }
@@ -404,6 +429,9 @@ void MainWindow::onSubWindowActivated(QMdiSubWindow *window) {
 void MainWindow::onDocumentClosed(ModuleDocument *doc) {
     mBrowserModel.removeDocument(doc);
 
+    if (mRenderer.document() == doc) {
+    }
+
     // no longer using this document, delete it
     delete doc;
 }
@@ -446,6 +474,15 @@ void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
         dockToActivate->raise();
         dockToActivate->activateWindow();
     }
+}
+
+void MainWindow::wavePianoDown(trackerboy::Note note) {
+}
+
+void MainWindow::pianoUp() {
+}
+
+void MainWindow::instrumentPianoDown(trackerboy::Note note) {
 }
 
 void MainWindow::updateWindowMenu() {
@@ -493,7 +530,7 @@ void MainWindow::addDocument(ModuleDocument *doc) {
     mBrowser.expand(index);
 
     // create an Mdi subwindow for this document
-    auto docWin = new ModuleWindow(mApp, doc);
+    auto docWin = new ModuleWindow(mConfig, doc);
     // apply configuration for the first time
     docWin->applyConfiguration(Config::CategoryAll);
     connect(docWin, &ModuleWindow::documentClosed, this, &MainWindow::onDocumentClosed);
@@ -750,25 +787,37 @@ void MainWindow::setupUi() {
     connect(&mActionWindowNext, &QAction::triggered, &mMdi, &QMdiArea::activateNextSubWindow);
 
     // tracker
-    connect(&mActionTrackerPlay, &QAction::triggered, &mApp.renderer, &Renderer::play);
-    //connect(&mActionTrackerPlayPattern, &QAction::triggered, &mApp.renderer, &Renderer::playPattern);
-    //connect(&mActionTrackerPlayStart, &QAction::triggered, &mApp.renderer, &Renderer::playFromStart);
-    //connect(&mActionTrackerPlayCursor, &QAction::triggered, &mApp.renderer, &Renderer::playFromCursor);
-    connect(&mActionTrackerStop, &QAction::triggered, &mApp.renderer, &Renderer::stopMusic);
+    //connect(&mActionTrackerPlay, &QAction::triggered, &mRenderer, &Renderer::play);
+    //connect(&mActionTrackerPlayPattern, &QAction::triggered, &mRenderer, &Renderer::playPattern);
+    //connect(&mActionTrackerPlayStart, &QAction::triggered, &mRenderer, &Renderer::playFromStart);
+    //connect(&mActionTrackerPlayCursor, &QAction::triggered, &mRenderer, &Renderer::playFromCursor);
+    //connect(&mActionTrackerStop, &QAction::triggered, &mRenderer, &Renderer::stopMusic);
 
     // help
     connectActionToThis(mActionAudioDiag, showAudioDiag);
     QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);
 
+    // editors
+    {
+        auto &piano = mInstrumentEditor.piano();
+        connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewInstrument);
+        connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview);
+    }
+
+    {
+        auto &piano = mWaveEditor.piano();
+        connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewWaveform);
+        connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview);
+    }
 
     // sync worker
     connect(&mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks);
     connect(&mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged);
     connect(&mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText);
 
-    connect(&mApp.renderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
-    connect(&mApp.renderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
-    connect(&mApp.renderer, &Renderer::audioError, this, &MainWindow::onAudioError);
+    connect(&mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
+    connect(&mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
+    connect(&mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
 
     connect(&mMdi, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
@@ -778,7 +827,15 @@ void MainWindow::setupUi() {
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mModuleSettingsWidget, &ModuleSettingsWidget::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mInstrumentEditor, &InstrumentEditor::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mWaveEditor, &WaveEditor::setDocument);
+    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mRenderer, &Renderer::setDocument);
     
+
+    connect(&mRenderer, &Renderer::audioStarted, &mUpdateTimer, qOverload<>(&QTimer::start));
+    connect(&mRenderer, &Renderer::audioStopped, &mUpdateTimer, &QTimer::stop);
+    connect(&mRenderer, &Renderer::audioError, &mUpdateTimer, &QTimer::stop);
+    connect(&mUpdateTimer, &QTimer::timeout, &mRenderer, &Renderer::render);
+    
+
 }
 
 void MainWindow::initState() {

@@ -32,3 +32,11 @@ QIcon InstrumentListModel::iconData(uint8_t id) const {
     return IconManager::getIcon(icons);
 }
 
+std::shared_ptr<trackerboy::Instrument> InstrumentListModel::currentInstrument() {
+    if (mCurrentIndex == -1) {
+        return nullptr;
+    } else {
+        return static_cast<trackerboy::InstrumentTable&>(mBaseTable).getShared(id(mCurrentIndex));
+    }
+}
+

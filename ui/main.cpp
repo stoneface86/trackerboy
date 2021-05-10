@@ -94,17 +94,17 @@ int main(int argc, char *argv[]) {
     // add the default font for the pattern editor
     QFontDatabase::addApplicationFont(":/CascadiaMono.ttf");
 
-    std::unique_ptr<Trackerboy> trackerboy(new Trackerboy());
+    std::unique_ptr<Miniaudio> miniaudio(new Miniaudio());
     
     // initialize audio
-    auto result = trackerboy->miniaudio.init();
+    auto result = miniaudio->init();
     if (result != MA_SUCCESS) {
         qCritical() << "could not initialize miniaudio:" << ma_result_description(result);
         return EXIT_MINIAUDIO;
     }
 
 
-    std::unique_ptr<MainWindow> win(new MainWindow(*trackerboy));
+    std::unique_ptr<MainWindow> win(new MainWindow(*miniaudio));
     win->show();
 
     #ifndef QT_NO_INFO_OUTPUT

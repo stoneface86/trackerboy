@@ -13,3 +13,10 @@ QIcon WaveListModel::iconData(uint8_t id) const {
     return QIcon();
 }
 
+trackerboy::Waveform* WaveListModel::currentWaveform() {
+    if (mCurrentIndex == -1) {
+        return nullptr;
+    } else {
+        return static_cast<trackerboy::WaveformTable&>(mBaseTable)[id(mCurrentIndex)];
+    }
+}

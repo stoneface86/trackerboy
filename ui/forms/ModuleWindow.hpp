@@ -19,7 +19,7 @@ class ModuleWindow : public QWidget {
 
 public:
 
-    explicit ModuleWindow(Trackerboy &app, ModuleDocument *doc, QWidget *parent = nullptr);
+    explicit ModuleWindow(Config &config, ModuleDocument *doc, QWidget *parent = nullptr);
 
     ModuleDocument* document() noexcept;
 
@@ -51,7 +51,7 @@ private:
 
     bool maybeSave();
 
-    Trackerboy &mApp;
+    Config &mConfig;
     ModuleDocument *mDocument;
 
     QHBoxLayout mLayout;

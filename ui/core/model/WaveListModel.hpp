@@ -15,6 +15,8 @@ class WaveListModel : public BaseTableModel {
 
 public:
     WaveListModel(ModuleDocument &document);
+
+    trackerboy::Waveform* currentWaveform();
     
 protected:
     virtual QIcon iconData(uint8_t id) const override;

@@ -70,6 +70,10 @@ BaseEditor::BaseEditor(PianoInput const& input, QString typeName, QWidget *paren
     setEnabled(false);
 }
 
+PianoWidget& BaseEditor::piano() {
+    return mPiano;
+}
+
 void BaseEditor::setDocument(ModuleDocument *document) {
     mSignalsEnabled = false;
 

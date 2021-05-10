@@ -19,8 +19,10 @@ class BaseEditor : public QWidget {
 
 public:
 
+    PianoWidget& piano();
 
 public slots:
+    
     void setDocument(ModuleDocument *document);
 
     //
@@ -33,6 +35,7 @@ protected:
     explicit BaseEditor(PianoInput const& input, QString typeName, QWidget *parent = nullptr);
 
     QWidget& editorWidget();
+
 
     virtual BaseTableModel* getModel(ModuleDocument &doc) = 0;
 

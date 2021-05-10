@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "core/Trackerboy.hpp"
 #include "core/SyncWorker.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/ModuleModel.hpp"
@@ -34,7 +33,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(Trackerboy &trackerboy);
+    explicit MainWindow(Miniaudio &miniaudio);
     ~MainWindow();
 
     QMenu* createPopupMenu() override;
@@ -85,6 +84,11 @@ private slots:
 
     void onBrowserDoubleClick(QModelIndex const& index);
 
+    // instrument / waveform preview via PianoWidget
+    void wavePianoDown(trackerboy::Note note);
+    void instrumentPianoDown(trackerboy::Note note);
+    void pianoUp();
+
     void updateWindowMenu();
 
 private:
@@ -102,7 +106,10 @@ private:
 
     void addDocument(ModuleDocument *doc);
 
-    Trackerboy &mApp;
+    //Trackerboy &mApp;
+    Miniaudio &mMiniaudio;
+    Config mConfig;
+
 
     // counter for how many times a new document has been created
     unsigned mDocumentCounter;
@@ -209,7 +216,16 @@ private:
     QAction mActionHelpAboutQt;
     QAction mActionHelpAbout;
 
+    // workers / threading
+
+    Renderer mRenderer;
+    QThread mRenderThread;
+    
     SyncWorker mSyncWorker;
     QThread mSyncWorkerThread;
+
+    QTimer mUpdateTimer;
+    QThread mUpdateTimerThread;
+
 
 };

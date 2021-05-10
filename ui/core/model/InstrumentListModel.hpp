@@ -17,6 +17,8 @@ class InstrumentListModel : public BaseTableModel {
 public:
     InstrumentListModel(ModuleDocument &document);
 
+    std::shared_ptr<trackerboy::Instrument> currentInstrument();
+
 protected:
     virtual QIcon iconData(uint8_t id) const override;
 

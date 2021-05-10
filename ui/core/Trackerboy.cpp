@@ -5,8 +5,6 @@
 Trackerboy::Trackerboy() :
     miniaudio(),
     config(miniaudio),
-    renderer(
-        miniaudio
-    )
+    renderer()
 {
 }
