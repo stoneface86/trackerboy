@@ -84,11 +84,6 @@ private slots:
 
     void onBrowserDoubleClick(QModelIndex const& index);
 
-    // instrument / waveform preview via PianoWidget
-    void wavePianoDown(trackerboy::Note note);
-    void instrumentPianoDown(trackerboy::Note note);
-    void pianoUp();
-
     void updateWindowMenu();
 
 private:

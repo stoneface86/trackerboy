@@ -1,5 +1,6 @@
 
 #include "trackerboy/engine/Engine.hpp"
+#include "trackerboy/engine/ChannelControl.hpp"
 
 #include <stdexcept>
 
@@ -60,10 +61,13 @@ void Engine::halt() {
 void Engine::lock(ChType ch) {
     if (mMusicContext) {
         mMusicContext->lock(*mRc, ch);
+    } else {
+        clearChannel(ch);
     }
 }
 
 void Engine::unlock(ChType ch) {
+    clearChannel(ch);
     if (mMusicContext) {
         mMusicContext->unlock(*mRc, ch);
     }
@@ -90,6 +94,26 @@ void Engine::step(Frame &frame) {
 
     // increment timestamp for next frame
     ++mTime;
+}
+
+void Engine::clearChannel(ChType ch) {
+    // clear the channel (all registers + panning get zero'd)
+
+    switch (ch) {
+        case ChType::ch1:
+            ChannelControl<ChType::ch1>::clear(mApu);
+            break;
+        case ChType::ch2:
+            ChannelControl<ChType::ch2>::clear(mApu);
+            break;
+        case ChType::ch3:
+            ChannelControl<ChType::ch3>::clear(mApu);
+            break;
+        case ChType::ch4:
+            ChannelControl<ChType::ch4>::clear(mApu);
+            break;
+    }
+    
 }
 
 

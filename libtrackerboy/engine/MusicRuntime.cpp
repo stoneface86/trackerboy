@@ -65,26 +65,7 @@ void MusicRuntime::lock(RuntimeContext const& rc, ChType ch) {
 }
 
 void MusicRuntime::unlock(RuntimeContext const& rc, ChType ch) {
-    // do nothing if channel is already unlocked
-    if (!mFlags.test(+ch)) {
-        // clear the channel (all registers + panning get zero'd)
-        switch (ch) {
-            case ChType::ch1:
-                ChannelControl<ChType::ch1>::clear(rc.apu);
-                break;
-            case ChType::ch2:
-                ChannelControl<ChType::ch2>::clear(rc.apu);
-                break;
-            case ChType::ch3:
-                ChannelControl<ChType::ch3>::clear(rc.apu);
-                break;
-            case ChType::ch4:
-                ChannelControl<ChType::ch4>::clear(rc.apu);
-                break;
-        }
-        // update the lock bit for channel
-        mFlags.set(+ch);
-    }
+    mFlags.set(+ch);
 }
 
 bool MusicRuntime::step(RuntimeContext const& rc) {

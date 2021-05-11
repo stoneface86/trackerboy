@@ -36,15 +36,12 @@ Renderer::Renderer(QObject *parent) :
     mPreviewChannel(trackerboy::ChType::ch1),
     mState(State::stopped),
     mStopCounter(0),
+    mPlaybackDelay(0),
     mDraining(false),
     mUnderruns(0u),
     mSamplesElapsed(0u),
     mBufferUsage(0u)
 {
-    // mBackgroundThread.reset(QThread::create(&Renderer::backgroundThreadRun, this));
-    // mBackgroundThread->start();
-
-    // mFrameReturnBuffer.init(4);
 
     mDeviceConfig = ma_device_config_init(ma_device_type_playback);
     // always 16-bit stereo format
@@ -62,7 +59,6 @@ Renderer::~Renderer() {
 Renderer::Diagnostics Renderer::diagnostics() {
     QMutexLocker locker(&mMutex);
     return {
-        0,
         mUnderruns.load(),
         mSamplesElapsed.load(),
         mBufferUsage.load(),
@@ -80,14 +76,6 @@ ModuleDocument* Renderer::document() {
     return mDocument;
 }
 
-// AudioRingbuffer::Reader Renderer::returnBuffer() {
-//     return mSampleReturnBuffer.reader();
-// }
-
-// Ringbuffer<RenderFrame>::Reader Renderer::frameReturnBuffer() {
-//     return mFrameReturnBuffer.reader();
-// }
-
 bool Renderer::isRunning() {
     QMutexLocker locker(&mMutex);
     return mState != State::stopped;
@@ -96,6 +84,11 @@ bool Renderer::isRunning() {
 bool Renderer::isEnabled() {
     QMutexLocker locker(&mMutex);
     return mEnabled;
+}
+
+trackerboy::Engine::Frame Renderer::currentFrame() {
+    QMutexLocker locker(&mMutex);
+    return mCurrentEngineFrame;
 }
 
 ma_result Renderer::lastDeviceError() {
@@ -151,11 +144,7 @@ void Renderer::closeDevice() {
 void Renderer::beginRender() {
     if (mState == State::stopped) {
         mBuffer.reset();
-        // auto writer = mBuffer.writer();
-        // size_t toWrite = writer.availableWrite();
-        // auto dataPtr = writer.acquireWrite(toWrite);
-        // std::fill_n(dataPtr, toWrite * 2, (int16_t)0);
-        // writer.commitWrite(dataPtr, toWrite);
+        mPlaybackDelay = mBuffer.size();
         mLastDeviceError = ma_device_start(&*mDevice);
         if (mLastDeviceError != MA_SUCCESS) {
             emit audioError();
@@ -167,9 +156,6 @@ void Renderer::beginRender() {
     mDraining = false;
     mState = State::running;
     mStopCounter = 0;
-    mMutex.unlock();
-    render();
-    mMutex.lock();
 }
 
 
@@ -182,7 +168,9 @@ void Renderer::clearDiagnostics() {
 
 
 void Renderer::setDocument(ModuleDocument *doc) {
+    QMutexLocker locker(&mMutex);
     mDocument = doc;
+
 }
 
 // void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
@@ -219,26 +207,26 @@ void Renderer::setDocument(ModuleDocument *doc) {
 void Renderer::previewInstrument(quint8 note) {
     QMutexLocker locker(&mMutex);
     if (mEnabled) {
-       switch (mPreviewState) {
-           case PreviewState::waveform:
-               resetPreview();
-               [[fallthrough]];
-           case PreviewState::none:
-           {
-               // set instrument preview's instrument to the current one
-               auto inst = mDocument->instrumentModel().currentInstrument();
-               mPreviewChannel = inst->channel();
-               mIp.setInstrument(std::move(inst));
-               mPreviewState = PreviewState::instrument;
-           }
-           // unlock the channel for preview
-           mEngine.unlock(mPreviewChannel);
-           [[fallthrough]];
-           case PreviewState::instrument:
-               // update the current note
-               mIp.play(note);
-               break;
-       }
+        switch (mPreviewState) {
+            case PreviewState::waveform:
+                resetPreview();
+                [[fallthrough]];
+            case PreviewState::none:
+                {
+                    // set instrument preview's instrument to the current one
+                    auto inst = mDocument->instrumentModel().currentInstrument();
+                    mPreviewChannel = inst->channel();
+                    mIp.setInstrument(std::move(inst));
+                }
+                mPreviewState = PreviewState::instrument;
+                // unlock the channel for preview
+                mEngine.unlock(mPreviewChannel);
+                [[fallthrough]];
+            case PreviewState::instrument:
+                // update the current note
+                mIp.play(note);
+                break;
+        }
 
        beginRender();
     }
@@ -276,7 +264,7 @@ void Renderer::previewWaveform(quint8 note) {
             case PreviewState::waveform:
                 // already previewing, just update the frequency
                 mApu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
-                mApu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq >> 8));
+                mApu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
                 break;
         }
 
@@ -431,6 +419,8 @@ void Renderer::_deviceStopHandler() {
 }
 
 void Renderer::deviceDataHandler(ma_device *device, void *out, const void *in, ma_uint32 frames) {
+    Q_UNUSED(in)
+
     static_cast<Renderer*>(device->pUserData)->_deviceDataHandler(
         static_cast<int16_t*>(out),
         (size_t)frames
@@ -438,6 +428,13 @@ void Renderer::deviceDataHandler(ma_device *device, void *out, const void *in, m
 }
 
 void Renderer::_deviceDataHandler(int16_t *out, size_t frames) {
+
+    if (mPlaybackDelay) {
+        auto samples = std::min(mPlaybackDelay, frames);
+        frames -= samples;
+        out += samples * 2;
+        mPlaybackDelay -= samples;
+    }
 
     auto reader = mBuffer.reader();
 

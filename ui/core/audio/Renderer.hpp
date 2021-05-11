@@ -35,7 +35,6 @@ class Renderer : public QObject {
 public:
 
     struct Diagnostics {
-        unsigned lockFails;
         unsigned underruns;
         unsigned elapsed;
         unsigned bufferUsage;
@@ -58,6 +57,8 @@ public:
     bool isEnabled();
 
     bool isRunning();
+
+    trackerboy::Engine::Frame currentFrame();
 
     ma_result lastDeviceError();
 
@@ -176,11 +177,6 @@ private:
     // written by the gui, read from the callback
     AudioRingbuffer mBuffer;
 
-    // return buffer or the "played out" buffer
-    // this buffer contains audio that has already been sent to the speakers
-    // written by the callback and is to be read by the GUI for visualizers
-    //AudioRingbuffer mReturnBuffer;
-
     ma_result mLastDeviceError;
 
     bool mEnabled;
@@ -204,9 +200,19 @@ private:
 
     // callback flags
 
+    // when starting playback, delay by this number of samples
+    // silence is played during this delay, which gives the renderer time
+    // to fill the buffer
+    size_t mPlaybackDelay;
+    // ignores underruns when true, used when mState = State::stopping and we
+    // are "draining" the buffer or letting it empty completely
     std::atomic_bool mDraining;
+    // counter of underruns that have occurred. An underrun occurs when the
+    // buffer does not have enough samples for the device.
     std::atomic_uint mUnderruns;
+    // counter of total samples played out. This value is reset on every render.
     std::atomic_uint mSamplesElapsed;
+    // buffer utilization at start of data callback
     std::atomic_uint mBufferUsage;
 
 };

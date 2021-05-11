@@ -97,7 +97,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mUpdateTimer.moveToThread(&mUpdateTimerThread);
     // millisecond-resolution is needed for updating sound buffers on time
     mUpdateTimer.setTimerType(Qt::PreciseTimer);
-    mUpdateTimer.setInterval(10);
+    mUpdateTimer.setInterval(5);
     mUpdateTimerThread.setObjectName(QStringLiteral("update timer thread"));
     mUpdateTimerThread.start();
 
@@ -474,15 +474,6 @@ void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
         dockToActivate->raise();
         dockToActivate->activateWindow();
     }
-}
-
-void MainWindow::wavePianoDown(trackerboy::Note note) {
-}
-
-void MainWindow::pianoUp() {
-}
-
-void MainWindow::instrumentPianoDown(trackerboy::Note note) {
 }
 
 void MainWindow::updateWindowMenu() {

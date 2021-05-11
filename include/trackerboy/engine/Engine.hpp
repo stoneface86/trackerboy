@@ -92,6 +92,8 @@ public:
 
 private:
 
+    void clearChannel(ChType ch);
+
     IApu &mApu;
     //Module &mModule;
     Module const* mModule;

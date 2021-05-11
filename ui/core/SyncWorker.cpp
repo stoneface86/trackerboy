@@ -56,7 +56,23 @@ void SyncWorker::onAudioStop() {
 }
 
 void SyncWorker::onFrameSync() {
+    QMutexLocker locker(&mMutex);
 
+    auto frame = mRenderer.currentFrame();
+    // check if the player position changed
+    if (mLastFrame.engineFrame.order != frame.order ||
+        mLastFrame.engineFrame.row != frame.row) {
+        emit positionChanged({ frame.order, frame.row });
+    }
+
+    // check if the speed changed
+    auto speed = frame.speed;
+    if (mLastFrame.engineFrame.speed != speed) {
+        float speedF = (speed >> 4) + ((speed & 0xF) * (1.0f / 16.0f));
+        emit speedChanged(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+    }
+
+    mLastFrame.engineFrame = frame;
 }
 
 // void SyncWorker::onAudioSync() {

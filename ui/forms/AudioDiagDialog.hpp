@@ -46,7 +46,6 @@ private:
     QVBoxLayout mLayout;
         QGroupBox mRenderGroup;
             QFormLayout mRenderLayout;
-                QLabel mLockFailsLabel;
                 QLabel mUnderrunLabel;
                 QLabel mBufferLabel;
                 QLabel mStatusLabel;
