@@ -448,11 +448,6 @@ void OrderModel::cmdInsertRows(uint8_t row, uint8_t count, trackerboy::OrderRow 
     }
     // enforce the current selection
     emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
-
-    emit canMoveUp(mCurrentRow != 0);
-    emit canMoveDown(mCurrentRow != rows - 1);
-    emit canRemove(true);
-    emit canInsert(rows != trackerboy::MAX_PATTERNS);
 }
 
 void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
@@ -475,14 +470,7 @@ void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
         emit patternsChanged(); // redraw
         // enforce the current selection
         emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
-
-        emit canMoveUp(mCurrentRow != 0);
-        emit canMoveDown(mCurrentRow != rows - 1);
     }
-
-    // we can always insert after a remove
-    emit canInsert(true);
-    emit canRemove(rows != 1);
 
 }
 
@@ -514,8 +502,6 @@ void OrderModel::doSelectPattern(uint8_t pattern) {
     emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
     emit currentPatternChanged(pattern);
 
-    emit canMoveUp(pattern != 0);
-    emit canMoveDown(pattern != rowCount() - 1);
 }
 
 void OrderModel::doSelectTrack(uint8_t track) {
@@ -533,4 +519,20 @@ void OrderModel::doSelectTrack(uint8_t track) {
 
     emit currentIndexChanged(createIndex(mCurrentRow, mCurrentTrack, nullptr));
     emit currentTrackChanged(track);
+}
+
+bool OrderModel::canInsert() {
+    return rowCount() < trackerboy::MAX_PATTERNS;
+}
+
+bool OrderModel::canRemove() {
+    return rowCount() > 1;
+}
+
+bool OrderModel::canMoveUp() {
+    return mCurrentRow != 0;
+}
+
+bool OrderModel::canMoveDown() {
+    return mCurrentRow != rowCount() - 1;
 }

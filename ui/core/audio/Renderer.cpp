@@ -23,6 +23,7 @@ Renderer::Renderer(QObject *parent) :
     QObject(parent),
     mMutex(),
     mDocument(nullptr),
+    mMusicDocument(nullptr),
     mDeviceConfig(),
     mDevice(),
     mBuffer(),
@@ -74,6 +75,11 @@ ma_device const& Renderer::device() {
 ModuleDocument* Renderer::document() {
     QMutexLocker locker(&mMutex);
     return mDocument;
+}
+
+ModuleDocument* Renderer::documentPlayingMusic() {
+    QMutexLocker locker(&mMutex);
+    return mMusicDocument;
 }
 
 bool Renderer::isRunning() {

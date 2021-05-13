@@ -21,6 +21,7 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QToolBar>
+#include <QTabBar>
 #include <QUndoView>
 #include <QSplitter>
 #include <QTreeView>
@@ -146,6 +147,7 @@ private:
                     AudioScope mLeftScope;
                     PeakMeter mPeakMeter;
                     AudioScope mRightScope;
+                QTabBar mTabs;
                 QMdiArea mMdi;
 
 

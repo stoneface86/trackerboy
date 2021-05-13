@@ -13,7 +13,7 @@ ModuleWindow::ModuleWindow(Config &config, ModuleDocument *doc, QWidget *parent)
     mConfig(config),
     mDocument(doc),
     mLayout(),
-    mOrderWidget(doc->orderModel()),
+    mOrderWidget(),
     mPatternEditor(config.keyboard().pianoInput, *doc)
 {
 

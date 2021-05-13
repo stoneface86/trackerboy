@@ -533,6 +533,8 @@ void MainWindow::addDocument(ModuleDocument *doc) {
     docWin->show();
 
     doc->setWindow(subwin);
+
+    mTabs.addTab(doc->name());
 }
 
 void MainWindow::setupUi() {
@@ -555,6 +557,7 @@ void MainWindow::setupUi() {
     mVisualizerLayout.addWidget(&mRightScope);
 
     mMainLayout.addLayout(&mVisualizerLayout);
+    mMainLayout.addWidget(&mTabs);
     mMainLayout.addWidget(&mMdi, 1);
     mMainLayout.setMargin(0);
     mMainWidget.setLayout(&mMainLayout);

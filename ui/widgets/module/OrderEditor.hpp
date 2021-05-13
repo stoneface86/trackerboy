@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/model/OrderModel.hpp"
+#include "core/model/ModuleDocument.hpp"
 #include "widgets/CustomSpinBox.hpp"
 
 #include <QAction>
@@ -24,12 +24,22 @@ class OrderEditor : public QWidget {
 
 public:
 
-    OrderEditor(OrderModel &model, QWidget *parent = nullptr);
+    OrderEditor(QWidget *parent = nullptr);
     ~OrderEditor();
 
     void setupMenu(QMenu &menu);
 
+public slots:
+
+    void setDocument(ModuleDocument *document);
+
 private slots:
+
+    void insert();
+    void remove();
+    void duplicate();
+    void moveUp();
+    void moveDown();
 
     void currentChanged(QModelIndex const &current, QModelIndex const &prev);
     void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
@@ -43,7 +53,9 @@ private slots:
 private:
     Q_DISABLE_COPY(OrderEditor)
 
-    OrderModel &mModel;
+    void updateActions();
+
+    OrderModel *mModel;
 
     bool mIgnoreSelect;
 
@@ -63,7 +75,6 @@ private:
             CustomSpinBox mSetSpin;
             QToolButton mSetButton;
         QTableView mOrderView;
-        
 
 
 };

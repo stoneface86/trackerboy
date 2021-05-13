@@ -68,6 +68,11 @@ public:
 
     //bool removeRows(int row, int count, QModelIndex const &parent = QModelIndex()) override;
 
+    bool canInsert();
+    bool canRemove();
+    bool canMoveUp();
+    bool canMoveDown();
+
 signals:
     // the selected pattern has changed
     void currentPatternChanged(int pattern);
@@ -78,14 +83,7 @@ signals:
     // same as the above signals but as a QModelIndex
     void currentIndexChanged(const QModelIndex &index);
 
-    
     void patternsChanged();
-
-    // connect these signals to QAction::setEnabled
-    void canInsert(bool state);
-    void canRemove(bool state);
-    void canMoveUp(bool state);
-    void canMoveDown(bool state);
 
 public slots:
     void insert();

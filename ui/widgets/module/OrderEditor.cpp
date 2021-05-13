@@ -9,9 +9,9 @@
 #include <QtDebug>
 
 
-OrderEditor::OrderEditor(OrderModel &model, QWidget *parent) :
+OrderEditor::OrderEditor(QWidget *parent) :
     QWidget(parent),
-    mModel(model),
+    mModel(nullptr),
     mIgnoreSelect(false),
     mContextMenu(),
     mLayout(),
@@ -62,40 +62,20 @@ OrderEditor::OrderEditor(OrderModel &model, QWidget *parent) :
     setupAction(mActionIncrement, "Increment selection", "Increments all selected cells by 1", Icons::increment);
     setupAction(mActionDecrement, "Decrement selection", "Decrements all selected cells by 1", Icons::decrement);
 
-    connect(&mActionInsert, &QAction::triggered, &model, &OrderModel::insert);
-    connect(&model, &OrderModel::canInsert, &mActionInsert, &QAction::setEnabled);
-
-    connect(&mActionRemove, &QAction::triggered, &model, &OrderModel::remove);
-    connect(&model, &OrderModel::canRemove, &mActionRemove, &QAction::setEnabled);
-
-    connect(&mActionDuplicate, &QAction::triggered, &model, &OrderModel::duplicate);
-    connect(&model, &OrderModel::canInsert, &mActionDuplicate, &QAction::setEnabled);
-
-    
-    connect(&mActionMoveUp, &QAction::triggered, &model, &OrderModel::moveUp);
-    connect(&model, &OrderModel::canMoveUp, &mActionMoveUp, &QAction::setEnabled);
-
-   
-    connect(&mActionMoveDown, &QAction::triggered, &model, &OrderModel::moveDown);
-    connect(&model, &OrderModel::canMoveDown, &mActionMoveDown, &QAction::setEnabled);
+    connect(&mActionInsert, &QAction::triggered, this, &OrderEditor::insert);
+    connect(&mActionRemove, &QAction::triggered, this, &OrderEditor::remove);
+    connect(&mActionDuplicate, &QAction::triggered, this, &OrderEditor::duplicate);
+    connect(&mActionMoveUp, &QAction::triggered, this, &OrderEditor::moveUp);
+    connect(&mActionMoveDown, &QAction::triggered, this, &OrderEditor::moveDown);
 
     // menu
     setupMenu(mContextMenu);
 
-    mOrderView.setModel(&model);
-
-    auto selectionModel = mOrderView.selectionModel();
-    connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderEditor::currentChanged);
-    connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &OrderEditor::selectionChanged);
-    connect(&model, &OrderModel::currentIndexChanged, this,
-        [this](const QModelIndex &index) {
-            if (!mIgnoreSelect) {
-                mOrderView.selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
-            }
-        });
+    
+    
 
     // initialize selection
-    selectionModel->select(model.index(0, 0), QItemSelectionModel::Select);
+    //selectionModel->select(model.index(0, 0), QItemSelectionModel::Select);
     
     mOrderView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(&mOrderView, &QTableView::customContextMenuRequested, this, &OrderEditor::tableViewContextMenu);
@@ -113,6 +93,7 @@ OrderEditor::OrderEditor(OrderModel &model, QWidget *parent) :
     connect(&mActionDecrement, &QAction::triggered, this, &OrderEditor::decrement);
     connect(&mSetButton, &QToolButton::clicked, this, &OrderEditor::set);
 
+    setEnabled(false);
 }
 
 OrderEditor::~OrderEditor() {
@@ -127,47 +108,112 @@ void OrderEditor::setupMenu(QMenu &menu) {
     menu.addAction(&mActionMoveDown);
 }
 
+void OrderEditor::setDocument(ModuleDocument *doc) {
+
+    // disconnect all signals with the model
+    if (mModel != nullptr) {
+        mModel->disconnect(this);
+    }
+
+    bool const enabled = doc != nullptr;
+    
+
+
+    if (enabled) {
+        mModel = &doc->orderModel();
+        mOrderView.setModel(mModel);
+        connect(mModel, &OrderModel::currentIndexChanged, this,
+        [this](const QModelIndex &index) {
+            if (!mIgnoreSelect) {
+                mOrderView.selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
+            }
+        });
+
+        auto selectionModel = mOrderView.selectionModel();
+        connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderEditor::currentChanged);
+        connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &OrderEditor::selectionChanged);
+    } else {
+        mModel = nullptr;
+        mOrderView.setModel(nullptr);
+    }
+
+    setEnabled(enabled);
+    
+}
+
 void OrderEditor::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
     Q_UNUSED(prev);
 
-    mIgnoreSelect = true;
-    mModel.select(current.row(), current.column());
-    mIgnoreSelect = false;
+    if (mModel) {
+        mIgnoreSelect = true;
+        mModel->select(current.row(), current.column());
+        mIgnoreSelect = false;
+    }
 }
 
 void OrderEditor::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) {
     Q_UNUSED(selected);
     Q_UNUSED(deselected);
 
-    // this slot is just for preventing the user from deselecting
-    auto model = mOrderView.selectionModel();
-    if (!model->hasSelection()) {
-        // user deselected everything, force selection of the current index
-        model->select(mOrderView.currentIndex(), QItemSelectionModel::Select);
+    if (mModel) {
+        // this slot is just for preventing the user from deselecting
+        auto model = mOrderView.selectionModel();
+        if (!model->hasSelection()) {
+            // user deselected everything, force selection of the current index
+            model->select(mOrderView.currentIndex(), QItemSelectionModel::Select);
+        }
     }
 }
 
 void OrderEditor::increment() {
-    mModel.incrementSelection(mOrderView.selectionModel()->selection());
+    mModel->incrementSelection(mOrderView.selectionModel()->selection());
 }
 
 void OrderEditor::decrement() {
-    mModel.decrementSelection(mOrderView.selectionModel()->selection());
+    mModel->decrementSelection(mOrderView.selectionModel()->selection());
 }
 
 void OrderEditor::set() {
-    //bool ok;
-    //unsigned id = mSetEdit.text().toUInt(&ok, 16);
-
-    //if (ok) {
-        mModel.setSelection(
-            mOrderView.selectionModel()->selection(),
-            static_cast<uint8_t>(mSetSpin.value())
-            );
-    //}
+    mModel->setSelection(
+        mOrderView.selectionModel()->selection(),
+        static_cast<uint8_t>(mSetSpin.value())
+        );
 }
 
 void OrderEditor::tableViewContextMenu(QPoint pos) {
     mContextMenu.popup(mOrderView.viewport()->mapToGlobal(pos));
 }
 
+void OrderEditor::insert() {
+    mModel->insert();
+    updateActions();
+}
+
+void OrderEditor::remove() {
+    mModel->remove();
+    updateActions();
+}
+
+void OrderEditor::duplicate() {
+    mModel->duplicate();
+    updateActions();
+}
+
+void OrderEditor::moveUp() {
+    mModel->moveUp();
+    updateActions();
+}
+
+void OrderEditor::moveDown() {
+    mModel->moveDown();
+    updateActions();
+}
+
+void OrderEditor::updateActions() {
+    bool canInsert = mModel->canInsert();
+    mActionInsert.setEnabled(canInsert);
+    mActionDuplicate.setEnabled(canInsert);
+    mActionRemove.setEnabled(mModel->canRemove());
+    mActionMoveUp.setEnabled(mModel->canMoveUp());
+    mActionMoveDown.setEnabled(mModel->canMoveDown());
+}

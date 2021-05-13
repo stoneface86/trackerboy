@@ -52,7 +52,7 @@ public:
 
     ModuleDocument* document();
 
-    //ModuleDocument* documentPlayingMusic();
+    ModuleDocument* documentPlayingMusic();
 
     bool isEnabled();
 
@@ -169,6 +169,7 @@ private:
 
     // the current document
     ModuleDocument *mDocument;
+    ModuleDocument *mMusicDocument;
 
     ma_device_config mDeviceConfig;
     std::optional<ma_device> mDevice;
