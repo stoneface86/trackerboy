@@ -1,5 +1,5 @@
 
-#include "widgets/module/OrderEditor.hpp"
+#include "widgets/OrderEditor.hpp"
 
 #include "misc/IconManager.hpp"
 #include "misc/utils.hpp"

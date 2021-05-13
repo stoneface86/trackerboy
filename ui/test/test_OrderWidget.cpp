@@ -1,7 +1,7 @@
 
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/OrderModel.hpp"
-#include "widgets/module/OrderEditor.hpp""
+#include "widgets/OrderEditor.hpp"
 
 
 #include <QApplication>
