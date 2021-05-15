@@ -9,12 +9,12 @@ template <bool tPermanent>
 ModuleDocument::EditContext<tPermanent>::EditContext(ModuleDocument &document) :
     mDocument(document)
 {
-    mDocument.mSpinlock.lock();
+    mDocument.mMutex.lock();
 }
 
 template <bool tPermanent>
 ModuleDocument::EditContext<tPermanent>::~EditContext() {
-    mDocument.mSpinlock.unlock();
+    mDocument.mMutex.unlock();
     if constexpr (tPermanent) {
         mDocument.makeDirty();
     }
@@ -41,7 +41,7 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mPermaDirty(false),
     mModified(false),
     mModule(),
-    mSpinlock(),
+    mMutex(),
     mUndoStack(),
     mInstrumentModel(*this),
     mOrderModel(*this),
@@ -216,16 +216,13 @@ void ModuleDocument::clean() {
     mUndoStack.setClean();
 }
 
-bool ModuleDocument::tryLock() {
-    return mSpinlock.tryLock();
-}
 
 void ModuleDocument::lock() {
-    mSpinlock.lock();
+    mMutex.lock();
 }
 
 void ModuleDocument::unlock() {
-    mSpinlock.unlock();
+    mMutex.unlock();
 }
 
 void ModuleDocument::updateFilename(QString const& path) {

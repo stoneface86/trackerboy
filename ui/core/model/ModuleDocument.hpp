@@ -4,7 +4,6 @@
 // forward declaration (model classes and the document depend on each other)
 class ModuleDocument;
 
-#include "core/Spinlock.hpp"
 #include "core/model/OrderModel.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/WaveListModel.hpp"
@@ -132,8 +131,6 @@ public:
     // saves the document to the given filename and updates the document's path
     bool save(QString const& filename);
 
-    bool tryLock();
-
     void lock();
 
     void unlock();
@@ -188,7 +185,7 @@ private:
     bool mModified;
     trackerboy::Module mModule;
 
-    Spinlock mSpinlock;
+    QMutex mMutex;
     
     QUndoStack mUndoStack;
 

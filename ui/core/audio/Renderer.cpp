@@ -174,9 +174,11 @@ void Renderer::clearDiagnostics() {
 
 
 void Renderer::setDocument(ModuleDocument *doc) {
-    QMutexLocker locker(&mMutex);
+    mMutex.lock();
     mDocument = doc;
+    mMutex.unlock();
 
+    stopPreview();
 }
 
 // void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
@@ -218,12 +220,14 @@ void Renderer::previewInstrument(quint8 note) {
                 resetPreview();
                 [[fallthrough]];
             case PreviewState::none:
+                mDocument->lock();
                 {
                     // set instrument preview's instrument to the current one
                     auto inst = mDocument->instrumentModel().currentInstrument();
                     mPreviewChannel = inst->channel();
                     mIp.setInstrument(std::move(inst));
                 }
+                mDocument->unlock();
                 mPreviewState = PreviewState::instrument;
                 // unlock the channel for preview
                 mEngine.unlock(mPreviewChannel);
@@ -262,9 +266,11 @@ void Renderer::previewWaveform(quint8 note) {
 
                 trackerboy::ChannelState state(trackerboy::ChType::ch3);
                 state.playing = true;
-                state.envelope = mDocument->waveModel().currentWaveform()->id();
                 state.frequency = freq;
+                mDocument->lock();
+                state.envelope = mDocument->waveModel().currentWaveform()->id();
                 trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(mApu, mDocument->mod().waveformTable(), state);
+                mDocument->unlock();
                 break;
             }
             case PreviewState::waveform:
@@ -363,13 +369,18 @@ void Renderer::render() {
                 } else {
                     newFrame = true;
 
+                    // the engine and previewer have read access to the module
+
                     // step engine/previewer
                     mEngine.step(mCurrentEngineFrame);
 
                     if (mPreviewState == PreviewState::instrument) {
+
+                        mDocument->lock();
                         auto &mod = mDocument->mod();
                         trackerboy::RuntimeContext rc(mApu, mod.instrumentTable(), mod.waveformTable());
                         mIp.step(rc);
+                        mDocument->unlock();
                     }
 
                     if (mCurrentEngineFrame.halted && mPreviewState == PreviewState::none) {
