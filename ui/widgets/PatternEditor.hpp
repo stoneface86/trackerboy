@@ -106,6 +106,7 @@ private:
     Q_DISABLE_COPY(PatternEditor)
 
     PianoInput const& mPianoIn;
+    ModuleDocument *mDocument;
 
     QVBoxLayout mLayout;
         QWidget mControls;

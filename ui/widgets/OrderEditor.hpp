@@ -55,7 +55,7 @@ private:
 
     void updateActions();
 
-    OrderModel *mModel;
+    ModuleDocument *mDocument;
 
     bool mIgnoreSelect;
 

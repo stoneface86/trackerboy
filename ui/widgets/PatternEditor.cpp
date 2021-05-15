@@ -34,6 +34,7 @@
 PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     QFrame(parent),
     mPianoIn(input),
+    mDocument(nullptr),
     mLayout(),
     mControls(),
     mControlsLayout(),
@@ -283,7 +284,33 @@ void PatternEditor::vscrollAction(int action) {
 }
 
 void PatternEditor::setDocument(ModuleDocument *doc) {
+    if (mDocument != nullptr) {
+        // save state to document
+        auto &state = mDocument->state();
+        state.recording = mGrid.isRecording();
+        state.octave = mOctaveSpin.value();
+        state.editStep = mEditStepSpin.value();
+        state.loopPattern = mLoopPatternCheck.isChecked();
+        state.followMode = mFollowModeCheck.isChecked();
+        state.keyRepetition = mKeyRepeatCheck.isChecked();
+        state.cursorRow = mGrid.row();
+        state.cursorColumn = mGrid.column();
+    }
+
+    mDocument = doc;
     mGrid.setDocument(doc);
+    if (doc) {
+        // restore state from document
+        auto const& state = doc->state();
+        mOctaveSpin.setValue(state.octave);
+        mEditStepSpin.setValue(state.editStep);
+        mLoopPatternCheck.setChecked(state.loopPattern);
+        mFollowModeCheck.setChecked(state.followMode);
+        mKeyRepeatCheck.setChecked(state.keyRepetition);
+        mTrackerActions.record.setChecked(state.recording);
+        mGrid.setCursorRow(state.cursorRow);
+        mGrid.setCursorColumn(state.cursorColumn);
+    }
 }
 
 void PatternEditor::onCut() {

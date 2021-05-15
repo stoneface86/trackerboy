@@ -11,7 +11,7 @@
 
 OrderEditor::OrderEditor(QWidget *parent) :
     QWidget(parent),
-    mModel(nullptr),
+    mDocument(nullptr),
     mIgnoreSelect(false),
     mContextMenu(),
     mLayout(),
@@ -105,18 +105,20 @@ void OrderEditor::setupMenu(QMenu &menu) {
 void OrderEditor::setDocument(ModuleDocument *doc) {
 
     // disconnect all signals with the model
-    if (mModel != nullptr) {
-        mModel->disconnect(this);
+    if (mDocument != nullptr) {
+        mDocument->state().orderSetSpinbox = mSetSpin.value();
+        mDocument->orderModel().disconnect(this);
     }
 
     bool const enabled = doc != nullptr;
     
 
+    mDocument = doc;
 
     if (enabled) {
-        mModel = &doc->orderModel();
-        mOrderView.setModel(mModel);
-        connect(mModel, &OrderModel::currentIndexChanged, this,
+        auto &model = doc->orderModel();
+        mOrderView.setModel(&model);
+        connect(&model, &OrderModel::currentIndexChanged, this,
         [this](const QModelIndex &index) {
             if (!mIgnoreSelect) {
                 mOrderView.selectionModel()->setCurrentIndex(index, QItemSelectionModel::ClearAndSelect);
@@ -126,9 +128,11 @@ void OrderEditor::setDocument(ModuleDocument *doc) {
         auto selectionModel = mOrderView.selectionModel();
         connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderEditor::currentChanged);
         connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &OrderEditor::selectionChanged);
-        selectionModel->select(mModel->currentIndex(), QItemSelectionModel::Select);
+        selectionModel->select(model.currentIndex(), QItemSelectionModel::Select);
+
+        // restore ui state
+        mSetSpin.setValue(doc->state().orderSetSpinbox);
     } else {
-        mModel = nullptr;
         mOrderView.setModel(nullptr);
     }
 
@@ -139,9 +143,9 @@ void OrderEditor::setDocument(ModuleDocument *doc) {
 void OrderEditor::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
     Q_UNUSED(prev);
 
-    if (mModel) {
+    if (mDocument) {
         mIgnoreSelect = true;
-        mModel->select(current.row(), current.column());
+        mDocument->orderModel().select(current.row(), current.column());
         mIgnoreSelect = false;
     }
 }
@@ -150,7 +154,7 @@ void OrderEditor::selectionChanged(const QItemSelection &selected, const QItemSe
     Q_UNUSED(selected);
     Q_UNUSED(deselected);
 
-    if (mModel) {
+    if (mDocument) {
         // this slot is just for preventing the user from deselecting
         auto model = mOrderView.selectionModel();
         if (!model->hasSelection()) {
@@ -161,15 +165,15 @@ void OrderEditor::selectionChanged(const QItemSelection &selected, const QItemSe
 }
 
 void OrderEditor::increment() {
-    mModel->incrementSelection(mOrderView.selectionModel()->selection());
+    mDocument->orderModel().incrementSelection(mOrderView.selectionModel()->selection());
 }
 
 void OrderEditor::decrement() {
-    mModel->decrementSelection(mOrderView.selectionModel()->selection());
+    mDocument->orderModel().decrementSelection(mOrderView.selectionModel()->selection());
 }
 
 void OrderEditor::set() {
-    mModel->setSelection(
+    mDocument->orderModel().setSelection(
         mOrderView.selectionModel()->selection(),
         static_cast<uint8_t>(mSetSpin.value())
         );
@@ -180,35 +184,36 @@ void OrderEditor::tableViewContextMenu(QPoint pos) {
 }
 
 void OrderEditor::insert() {
-    mModel->insert();
+    mDocument->orderModel().insert();
     updateActions();
 }
 
 void OrderEditor::remove() {
-    mModel->remove();
+    mDocument->orderModel().remove();
     updateActions();
 }
 
 void OrderEditor::duplicate() {
-    mModel->duplicate();
+    mDocument->orderModel().duplicate();
     updateActions();
 }
 
 void OrderEditor::moveUp() {
-    mModel->moveUp();
+    mDocument->orderModel().moveUp();
     updateActions();
 }
 
 void OrderEditor::moveDown() {
-    mModel->moveDown();
+    mDocument->orderModel().moveDown();
     updateActions();
 }
 
 void OrderEditor::updateActions() {
-    bool canInsert = mModel->canInsert();
+    auto &model = mDocument->orderModel();
+    bool canInsert = model.canInsert();
     mActionInsert.setEnabled(canInsert);
     mActionDuplicate.setEnabled(canInsert);
-    mActionRemove.setEnabled(mModel->canRemove());
-    mActionMoveUp.setEnabled(mModel->canMoveUp());
-    mActionMoveDown.setEnabled(mModel->canMoveDown());
+    mActionRemove.setEnabled(model.canRemove());
+    mActionMoveUp.setEnabled(model.canMoveUp());
+    mActionMoveDown.setEnabled(model.canMoveDown());
 }

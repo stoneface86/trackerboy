@@ -59,6 +59,23 @@ public:
         ModuleDocument &mDocument;
     };
 
+    struct WidgetState {
+        // value for OrderEditor's spinbox
+        int orderSetSpinbox;
+
+        bool recording;
+        int octave;
+        int editStep;
+        bool loopPattern;
+        bool followMode;
+        bool keyRepetition;
+        int cursorRow;
+        int cursorColumn;
+
+        WidgetState();
+
+    };
+
     explicit ModuleDocument(QObject *parent = nullptr);
     explicit ModuleDocument(QString const& path, QObject *parent = nullptr);
 
@@ -133,6 +150,8 @@ public:
     QString comments() const noexcept;
     void setComments(QString const& comments);
 
+    WidgetState& state();
+
 signals:
     void modifiedChanged(bool value);
 
@@ -188,4 +207,6 @@ private:
     QString mArtist;
     QString mCopyright;
     QString mComments;
+
+    WidgetState mState;
 };

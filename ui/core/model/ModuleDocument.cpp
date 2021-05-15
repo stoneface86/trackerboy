@@ -23,7 +23,18 @@ ModuleDocument::EditContext<tPermanent>::~EditContext() {
 template class ModuleDocument::EditContext<true>;
 template class ModuleDocument::EditContext<false>;
 
-
+ModuleDocument::WidgetState::WidgetState() :
+    orderSetSpinbox(0),
+    recording(false),
+    octave(4),
+    editStep(0),
+    loopPattern(false),
+    followMode(true),
+    keyRepetition(true),
+    cursorRow(0),
+    cursorColumn(0)
+{
+}
 
 ModuleDocument::ModuleDocument(QObject *parent) :
     QObject(parent),
@@ -37,7 +48,8 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mWaveModel(*this),
     mLastError(trackerboy::FormatError::none),
     mFilename(),
-    mFilepath()
+    mFilepath(),
+    mState()
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
@@ -256,4 +268,8 @@ void ModuleDocument::setCopyright(QString const& copyright) {
 void ModuleDocument::setComments(QString const& comments) {
     mComments = comments;
     makeDirty();
+}
+
+ModuleDocument::WidgetState& ModuleDocument::state() {
+    return mState;
 }
