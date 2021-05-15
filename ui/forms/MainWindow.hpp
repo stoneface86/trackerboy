@@ -6,14 +6,16 @@
 #include "core/model/ModuleModel.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
-#include "forms/ModuleWindow.hpp"
 #include "widgets/docks/ModuleSettingsWidget.hpp"
 #include "widgets/editors/InstrumentEditor.hpp"
 #include "widgets/editors/WaveEditor.hpp"
+#include "widgets/OrderEditor.hpp"
+#include "widgets/PatternEditor.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/visualizers/PeakMeter.hpp"
 
 #include <QDockWidget>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QMainWindow>
 #include <QMdiArea>

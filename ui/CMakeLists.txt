@@ -36,7 +36,6 @@ set(UI_SRC
     "forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"
     "forms/MainWindow.cpp"
-    "forms/ModuleWindow.cpp"
     
     "misc/IconManager.cpp"
     "misc/utils.cpp"

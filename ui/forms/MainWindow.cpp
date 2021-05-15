@@ -18,6 +18,7 @@
 
 #include <array>
 
+static const char* MODULE_FILE_FILTER = QT_TR_NOOP("Trackerboy module (*.tbm)");
 
 #define setObjectNameFromDeclared(var) var.setObjectName(QStringLiteral(#var))
 #define connectActionToThis(action, slot) connect(&action, &QAction::triggered, this, &MainWindow::slot)
@@ -175,7 +176,7 @@ void MainWindow::onFileOpen() {
         this,
         tr("Open module"),
         "",
-        tr(ModuleWindow::MODULE_FILE_FILTER)
+        tr(MODULE_FILE_FILTER)
     );
 
     if (path.isEmpty()) {
@@ -550,7 +551,7 @@ bool MainWindow::saveDocumentAs(ModuleDocument *doc) {
         this,
         tr("Save module"),
         "",
-        tr(ModuleWindow::MODULE_FILE_FILTER)
+        tr(MODULE_FILE_FILTER)
         );
 
     if (path.isEmpty()) {

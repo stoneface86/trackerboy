@@ -11,7 +11,6 @@ class ModuleDocument;
 
 #include "trackerboy/data/Module.hpp"
 
-#include <QMdiSubWindow>
 #include <QMutex>
 #include <QObject>
 #include <QThread>
@@ -134,12 +133,6 @@ public:
     QString comments() const noexcept;
     void setComments(QString const& comments);
 
-
-
-    void setWindow(QMdiSubWindow *window);
-
-    QMdiSubWindow* window() const noexcept;
-
 signals:
     void modifiedChanged(bool value);
 
@@ -195,6 +188,4 @@ private:
     QString mArtist;
     QString mCopyright;
     QString mComments;
-
-    QMdiSubWindow *mWindow;
 };

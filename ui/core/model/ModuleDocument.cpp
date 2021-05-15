@@ -37,8 +37,7 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mWaveModel(*this),
     mLastError(trackerboy::FormatError::none),
     mFilename(),
-    mFilepath(),
-    mWindow(nullptr)
+    mFilepath()
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
@@ -221,14 +220,6 @@ void ModuleDocument::updateFilename(QString const& path) {
     mFilepath = path;
     QFileInfo info(path);
     mFilename = info.fileName();
-}
-
-void ModuleDocument::setWindow(QMdiSubWindow *window) {
-    mWindow = window;
-}
-
-QMdiSubWindow* ModuleDocument::window() const noexcept {
-    return mWindow;
 }
 
 QString ModuleDocument::title() const noexcept {
