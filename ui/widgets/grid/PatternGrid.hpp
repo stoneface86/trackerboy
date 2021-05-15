@@ -74,6 +74,8 @@ signals:
     // emitted when the user changes the current row via keyboard, scroll wheel or mouse
     void cursorRowChanged(int row);
 
+    void patternRowsChanged(int count);
+
 public slots:
 
     void setCursorTrack(int track);
@@ -127,13 +129,6 @@ private:
     void getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol);
 
     //
-    // Paints rows using the given painter. Row indices range form 0 to mVisibleRows.
-    // Row 0 is the first visible row on the widget.
-    // 0 <= rowStart < rowEnd <= mVisibleRows
-    //
-    void paintRows(QPainter &painter, int rowStart, int rowEnd);
-
-    //
     // Scrolls displayed rows and paints new ones. If rows >= mVisibleRows then
     // no scrolling will occur and the entire display will be repainted
     //
@@ -150,13 +145,6 @@ private:
     ModuleDocument *mDocument;
     PatternGridHeader &mHeader;
     PatternPainter mPainter;
-
-    // display image, rows get painted here when needed as opposed to every
-    // paintEvent
-    //QPixmap mDisplay;
-
-    // if true all rows will be redrawn on next paint event
-    //bool mRepaintImage;
 
     int mCursorRow;
     int mCursorCol;

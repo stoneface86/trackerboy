@@ -138,6 +138,10 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     connect(&mHScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorColumn);
     connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
+    connect(&mGrid, &PatternGrid::patternRowsChanged, this,
+        [this](int rows) {
+            mVScroll.setMaximum(rows - 1);
+        });
     //connect(&model, &SongListModel::patternSizeChanged, this,
     //    [this](int rows) {
     //        mVScroll.setMaximum(rows - 1);
