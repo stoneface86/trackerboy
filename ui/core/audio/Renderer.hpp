@@ -64,6 +64,8 @@ public:
 
     void setConfig(Miniaudio &miniaudio, Config::Sound const& config);
 
+    void playMusic(uint8_t pattern, uint8_t row);
+
 signals:
 
     //
@@ -102,7 +104,7 @@ public slots:
     // waveform preview
     void previewWaveform(quint8 note);
 
-    //void play();
+    void play();
 
     //void playPattern();
 
@@ -117,12 +119,21 @@ public slots:
     // Stop previewing an instrument, waveform or row.
     //
     void stopPreview();
+
+    void stopMusic();
+
+    void forceStop();
     
     //
     // Set the document to render. Any ongoing renders will use the old
     // document until stopped. All new renders will use this document
     //
     void setDocument(ModuleDocument *doc);
+
+    //
+    // stops all renders with the given document
+    //
+    void removeDocument(ModuleDocument *doc);
 
 private:
     Q_DISABLE_COPY(Renderer)
@@ -143,6 +154,7 @@ private:
     // utility function for preview slots
     void resetPreview();
 
+    void setMusicDocument();
 
     // device management -----------------------------------------------------
 
@@ -156,6 +168,8 @@ private:
     // callback thread is already running, the stop countdown is cancelled
     //
     void beginRender();
+
+    void stopRender(QMutexLocker &locker);
 
     static void deviceDataHandler(ma_device *device, void *out, const void *in, ma_uint32 frames);
     void _deviceDataHandler(int16_t *out, size_t frames);

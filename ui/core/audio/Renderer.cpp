@@ -164,6 +164,17 @@ void Renderer::beginRender() {
     mStopCounter = 0;
 }
 
+void Renderer::stopRender(QMutexLocker &locker) {
+    mState = State::stopped;
+    auto device = &*mDevice;
+
+    locker.unlock();
+    ma_device_stop(device);
+    locker.relock();
+
+    emit audioStopped();
+}
+
 
 
 // SLOTS
@@ -181,21 +192,22 @@ void Renderer::setDocument(ModuleDocument *doc) {
     stopPreview();
 }
 
-// void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
+void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
+    QMutexLocker locker(&mMutex);
+    mDocument->lock();
+    setMusicDocument();
+    mEngine.play(orderNo, rowNo);
+    mDocument->unlock();
+    
+    beginRender();
 
-//     /*mSpinlock.lock();
-//     mEngine.play(orderNo, rowNo);
-//     mSpinlock.unlock();
+}
 
-//     QMutexLocker locker(&mMutex);
-//     beginRender();*/
-// }
-
-// void Renderer::play() {
-//     //if (mEnabled) {
-//     //    playMusic(mSongModel.orderModel().currentPattern(), 0);
-//     //}
-// }
+void Renderer::play() {
+    if (mEnabled) {
+       playMusic(mDocument->orderModel().currentPattern(), 0);
+    }
+}
 
 // void Renderer::playPattern() {
 //     // TODO: Engine needs functionality for looping a single pattern
@@ -295,25 +307,47 @@ void Renderer::stopPreview() {
     
 }
 
-// void Renderer::stopMusic() {
-//     if (mEnabled) {
-//         /*mSpinlock.lock();
-//         mEngine.halt();
-//         mSpinlock.unlock();*/
-//     }
-    
-// }
+void Renderer::stopMusic() {
+    QMutexLocker locker(&mMutex);
+    if (mEnabled) {
+        mEngine.halt();
+    }
+
+}
 
 // void Renderer::stopAll() {
 //     stopPreview();
 //     stopMusic();
 // }
 
+void Renderer::forceStop() {
+    QMutexLocker locker(&mMutex);
+    stopRender(locker);
+}
+
 void Renderer::resetPreview() {
     // lock the channel so it can be used for music
     mEngine.lock(mPreviewChannel);
     mIp.setInstrument(nullptr);
     mPreviewState = PreviewState::none;
+}
+
+void Renderer::setMusicDocument() {
+    if (mMusicDocument != mDocument) {
+        mMusicDocument = mDocument;
+        mEngine.setModule(&mDocument->mod());
+    }
+}
+
+void Renderer::removeDocument(ModuleDocument *doc) {
+    QMutexLocker locker(&mMutex);
+    if (mMusicDocument == doc) {
+        if (!mCurrentEngineFrame.halted && mState != State::stopped) {
+            stopRender(locker);
+        }
+        mEngine.setModule(nullptr);
+        mMusicDocument = nullptr;
+    }
 }
 
 // this is the number of frames to output before stopping playback
@@ -340,14 +374,7 @@ void Renderer::render() {
         if (mState == State::stopping) {
             if (writer.availableWrite() == mBuffer.size()) {
                 // the buffer has been drained, stop the callback
-                mState = State::stopped;
-                auto device = &*mDevice;
-
-                locker.unlock();
-                ma_device_stop(device);
-                locker.relock();
-
-                emit audioStopped();
+                stopRender(locker);
             }
             return;
 
@@ -372,7 +399,11 @@ void Renderer::render() {
                     // the engine and previewer have read access to the module
 
                     // step engine/previewer
-                    mEngine.step(mCurrentEngineFrame);
+                    if (mMusicDocument) {
+                        mMusicDocument->lock();
+                        mEngine.step(mCurrentEngineFrame);
+                        mMusicDocument->unlock();
+                    }
 
                     if (mPreviewState == PreviewState::instrument) {
 

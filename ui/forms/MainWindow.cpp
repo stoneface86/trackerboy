@@ -375,10 +375,9 @@ void MainWindow::trackerPositionChanged(QPoint const pos) {
     auto pattern = pos.x();
     auto row = pos.y();
     
-    // auto doc = mRenderer.documentPlayingMusic();
-    // if (doc) {
-    //     static_cast<ModuleWindow*>(doc->window()->widget())->patternEditor().grid().setTrackerCursor(row, pattern);
-    // }
+    if (mBrowserModel.currentDocument() == mRenderer.documentPlayingMusic()) {
+        mPatternEditor.grid().setTrackerCursor(row, pattern);
+    }
 
     mStatusPos.setText(QStringLiteral("%1 / %2").arg(pattern).arg(row));
 }
@@ -433,10 +432,9 @@ void MainWindow::onTabChanged(int tabIndex) {
 }
 
 void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
-    auto doc = mBrowserModel.documentAt(index);
-    mBrowserModel.setCurrentDocument(doc);
-    //mMdi.setActiveSubWindow(doc->window());
-    mTabs.setCurrentIndex(index.row());
+
+    auto tabIndex = mBrowserModel.documentIndex(index);
+    mTabs.setCurrentIndex(tabIndex);
 
     QDockWidget *dockToActivate = nullptr;
 
@@ -453,7 +451,7 @@ void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
             dockToActivate = &mDockInstrumentEditor;
             break;
         case ModuleModel::ItemType::order:
-            doc->orderModel().selectPattern(index.row());
+            mBrowserModel.documents()[tabIndex]->orderModel().selectPattern(index.row());
             break;
         case ModuleModel::ItemType::waveform:
             mWaveEditor.openItem(index.row());
@@ -605,6 +603,7 @@ bool MainWindow::closeDocument(ModuleDocument *doc) {
     mTabs.removeTab(tabIndex);
 
     // TODO: renderer needs to know about the document being removed
+    mRenderer.removeDocument(doc);
     // if (mRenderer.document() == doc) {
     // }
 
@@ -855,11 +854,11 @@ void MainWindow::setupUi() {
     //connect(&mActionWindowNext, &QAction::triggered, &mMdi, &QMdiArea::activateNextSubWindow);
 
     // tracker
-    //connect(&mActionTrackerPlay, &QAction::triggered, &mRenderer, &Renderer::play);
+    connect(&mActionTrackerPlay, &QAction::triggered, &mRenderer, &Renderer::play);
     //connect(&mActionTrackerPlayPattern, &QAction::triggered, &mRenderer, &Renderer::playPattern);
     //connect(&mActionTrackerPlayStart, &QAction::triggered, &mRenderer, &Renderer::playFromStart);
     //connect(&mActionTrackerPlayCursor, &QAction::triggered, &mRenderer, &Renderer::playFromCursor);
-    //connect(&mActionTrackerStop, &QAction::triggered, &mRenderer, &Renderer::stopMusic);
+    connect(&mActionTrackerStop, &QAction::triggered, &mRenderer, &Renderer::stopMusic);
 
     // help
     connectActionToThis(mActionAudioDiag, showAudioDiag);

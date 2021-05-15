@@ -71,18 +71,16 @@ public:
     QVector<ModuleDocument*> const& documents() const noexcept;
 
     //
-    // Set the current document. nullptr for no document.
+    // Set the current document. -1 for no document
     //
-    void setCurrentDocument(ModuleDocument *doc);
-
     void setCurrentDocument(int index);
 
     //
-    // Gets the document that belongs to the given model index. All items
-    // in the model have an associated document. nullptr is only returned
+    // Gets the index of the document that belongs to the given model index.
+    // All items in the model have an associated document. -1 is only returned
     // when the index is invalid.
     //
-    ModuleDocument* documentAt(QModelIndex const& index);
+    int documentIndex(QModelIndex const& index);
 
     //
     // Gets the ItemType for the given model index.

@@ -291,7 +291,14 @@ QVector<ModuleDocument*> const& ModuleModel::documents() const noexcept {
     return mDocuments;
 }
 
-void ModuleModel::setCurrentDocument(ModuleDocument *doc) {
+void ModuleModel::setCurrentDocument(int index) {
+    ModuleDocument *doc;
+    if (index == -1) {
+        doc = nullptr;
+    } else {
+        doc = mDocuments[index];
+    }
+
     if (mCurrent != doc) {
         mCurrent = doc;
         if (doc) {
@@ -301,28 +308,20 @@ void ModuleModel::setCurrentDocument(ModuleDocument *doc) {
     }
 }
 
-void ModuleModel::setCurrentDocument(int index) {
-    if (index == -1) {
-        setCurrentDocument(nullptr);
-    } else {
-        setCurrentDocument(mDocuments[index]);
-    }
-}
-
 ModuleDocument* ModuleModel::currentDocument() const noexcept {
     return mCurrent;
 }
 
-ModuleDocument* ModuleModel::documentAt(QModelIndex const& index) {
+int ModuleModel::documentIndex(QModelIndex const& index) {
     if (index.isValid()) {
         ModelId id = index.internalId();
         if (id.level() == 0) {
-            return mDocuments[index.row()];
+            return index.row();
         } else {
-            return mDocuments[id.documentIndex()];
+            return id.documentIndex();
         }
     } else {
-        return nullptr;
+        return -1;
     }
 }
 
