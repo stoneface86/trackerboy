@@ -50,21 +50,15 @@ private slots:
     // actions
     void onFileNew();
     void onFileOpen();
-    bool onFileSave();
-    bool onFileSaveAs();
-
-    void onEditCut();
-    void onEditCopy();
-    void onEditPaste();
-    void onEditPasteMix();
-    void onEditDelete();
-    void onEditSelectAll();
-    void onTransposeIncreaseNote();
-    void onTransposeDecreaseNote();
-    void onTransposeIncreaseOctave();
-    void onTransposeDecreaseOctave();
+    void onFileSave();
+    void onFileSaveAs();
+    void onFileClose();
+    void onFileCloseAll();
     
-    void onWindowResetLayout();
+    void onViewResetLayout();
+
+    void onWindowNext();
+    void onWindowPrevious();
 
     // config changes
     void onConfigApplied(Config::Categories categories);
@@ -80,17 +74,16 @@ private slots:
     void onAudioError();
     void onAudioStop();
 
-    void onSubWindowActivated(QMdiSubWindow *window);
-    void onDocumentClosed(ModuleDocument *doc);
+    void onTabChanged(int tabIndex);
 
     void onBrowserDoubleClick(QModelIndex const& index);
+
+    void onDocumentModified(bool modified);
 
     void updateWindowMenu();
 
 private:
     Q_DISABLE_COPY(MainWindow)
-
-    ModuleWindow* currentModuleWindow();
 
     void setupUi();
 
@@ -100,7 +93,17 @@ private:
 
     void settingsMessageBox(QMessageBox &msgbox);
 
+    // document management
+
     void addDocument(ModuleDocument *doc);
+
+    bool saveDocument(ModuleDocument *doc);
+
+    bool saveDocumentAs(ModuleDocument *doc);
+
+    bool closeDocument(ModuleDocument *doc);
+
+    void updateWindowTitle();
 
     //Trackerboy &mApp;
     Miniaudio &mMiniaudio;
@@ -148,7 +151,9 @@ private:
                     PeakMeter mPeakMeter;
                     AudioScope mRightScope;
                 QTabBar mTabs;
-                QMdiArea mMdi;
+                QHBoxLayout mEditorLayout;
+                    OrderEditor mOrderEditor;
+                    PatternEditor mPatternEditor;
 
 
     // statusbar widgets

@@ -41,6 +41,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mToolbarTracker(),
     mInstrumentEditor(mConfig.keyboard().pianoInput),
     mWaveEditor(mConfig.keyboard().pianoInput),
+    mPatternEditor(mConfig.keyboard().pianoInput),
     mSyncWorker(mRenderer, mLeftScope, mRightScope),
     mSyncWorkerThread()
 
@@ -134,9 +135,11 @@ QMenu* MainWindow::createPopupMenu() {
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
 
-    mMdi.closeAllSubWindows();
+    //mMdi.closeAllSubWindows();
 
-    if (mMdi.currentSubWindow() == nullptr) {
+    onFileCloseAll();
+
+    if (mTabs.currentIndex() == -1) {
         // all modules closed, accept this event and close
         QSettings settings;
         settings.setValue("geometry", saveGeometry());
@@ -181,14 +184,17 @@ void MainWindow::onFileOpen() {
 
     // make sure the document isn't already open
     QFileInfo pathInfo(path);
+    int docIndex = 0;
     for (auto doc : mBrowserModel.documents()) {
         if (doc->hasFile()) {
             QFileInfo docInfo(doc->filepath());
             if (pathInfo == docInfo) {
-                mMdi.setActiveSubWindow(doc->window());
+                mTabs.setCurrentIndex(docIndex);
                 return; // document is already open, don't open it again
             }
         }
+
+        ++docIndex;
     }
 
     auto *doc = new ModuleDocument(path, this);
@@ -204,62 +210,54 @@ void MainWindow::onFileOpen() {
 
 }
 
-bool MainWindow::onFileSave() {
-    return currentModuleWindow()->save();
+void MainWindow::onFileSave() {
+    saveDocument(mBrowserModel.currentDocument());
 }
 
-bool MainWindow::onFileSaveAs() {
-    return currentModuleWindow()->saveAs();
+void MainWindow::onFileSaveAs() {
+    saveDocumentAs(mBrowserModel.currentDocument());
 }
 
-void MainWindow::onEditCut() {
-    currentModuleWindow()->patternEditor().onCut();
+void MainWindow::onFileClose() {
+    closeDocument(mBrowserModel.currentDocument());
 }
 
-void MainWindow::onEditCopy() {
-    currentModuleWindow()->patternEditor().onCopy();
+void MainWindow::onFileCloseAll() {
+    auto &docs = mBrowserModel.documents();
+    auto numberToClose = docs.size();
+    int indexToClose = 0;
+
+    for (int i = 0; i < numberToClose; ++i) {
+        if (!closeDocument(docs[indexToClose])) {
+            // user did not close this document, skip it
+            indexToClose++;
+        }
+    }
 }
 
-void MainWindow::onEditPaste() {
-    currentModuleWindow()->patternEditor().onPaste();
-}
-
-void MainWindow::onEditPasteMix() {
-    currentModuleWindow()->patternEditor().onPasteMix();
-}
-
-void MainWindow::onEditDelete() {
-    currentModuleWindow()->patternEditor().onDelete();
-}
-
-void MainWindow::onEditSelectAll() {
-    currentModuleWindow()->patternEditor().onSelectAll();
-}
-
-void MainWindow::onTransposeIncreaseNote() {
-    currentModuleWindow()->patternEditor().onIncreaseNote();
-}
-
-void MainWindow::onTransposeDecreaseNote() {
-    currentModuleWindow()->patternEditor().onDecreaseNote();
-}
-
-void MainWindow::onTransposeIncreaseOctave() {
-    currentModuleWindow()->patternEditor().onIncreaseOctave();
-}
-
-void MainWindow::onTransposeDecreaseOctave() {
-    currentModuleWindow()->patternEditor().onDecreaseOctave();
-}
-
-
-void MainWindow::onWindowResetLayout() {
+void MainWindow::onViewResetLayout() {
     // remove everything
     removeToolBar(&mToolbarFile);
     removeToolBar(&mToolbarEdit);
     removeToolBar(&mToolbarTracker);
 
     initState();
+}
+
+void MainWindow::onWindowPrevious() {
+    int index = mTabs.currentIndex() - 1;
+    if (index < 0) {
+        index = mTabs.count() - 1;
+    }
+    mTabs.setCurrentIndex(index);
+}
+
+void MainWindow::onWindowNext() {
+    int index = mTabs.currentIndex() + 1;
+    if (index >= mTabs.count()) {
+        index = 0;
+    }
+    mTabs.setCurrentIndex(index);
 }
 
 void MainWindow::onConfigApplied(Config::Categories categories) {
@@ -337,6 +335,8 @@ OrderEditor QTableView QHeaderView::section {
         appearance.font.family(),
         QString::number(appearance.font.pointSize())
         ));
+
+        mPatternEditor.setColors(appearance.colors);
     }
 
     //if (categories.testFlag(Config::CategoryKeyboard)) {
@@ -361,10 +361,10 @@ void MainWindow::showConfigDialog() {
 
         // configuration changed, apply settings
         connect(mConfigDialog, &ConfigDialog::applied, this, &MainWindow::onConfigApplied);
-        for (auto subwin : mMdi.subWindowList()) {
-            auto win = static_cast<ModuleWindow*>(subwin->widget());
-            connect(mConfigDialog, &ConfigDialog::applied, win, &ModuleWindow::applyConfiguration);
-        }
+        // for (auto subwin : mMdi.subWindowList()) {
+        //     auto win = static_cast<ModuleWindow*>(subwin->widget());
+        //     connect(mConfigDialog, &ConfigDialog::applied, win, &ModuleWindow::applyConfiguration);
+        // }
     }
 
     mConfigDialog->show();
@@ -408,38 +408,34 @@ void MainWindow::onAudioStop() {
     }
 }
 
-void MainWindow::onSubWindowActivated(QMdiSubWindow *window) {
-    bool const hasWindow = window != nullptr;
+void MainWindow::onTabChanged(int tabIndex) {
+    mBrowserModel.setCurrentDocument(tabIndex);
+    bool const hasDocument = tabIndex != -1;
 
-    mActionFileSave.setEnabled(hasWindow);
-    mActionFileSaveAs.setEnabled(hasWindow);
-    mActionFileClose.setEnabled(hasWindow);
-    mActionFileCloseAll.setEnabled(hasWindow);
-    mActionWindowNext.setEnabled(hasWindow);
-    mActionWindowPrev.setEnabled(hasWindow);
+    mActionFileSave.setEnabled(hasDocument);
+    mActionFileSaveAs.setEnabled(hasDocument);
+    mActionFileClose.setEnabled(hasDocument);
+    mActionFileCloseAll.setEnabled(hasDocument);
+    mActionWindowNext.setEnabled(hasDocument);
+    mActionWindowPrev.setEnabled(hasDocument);
 
-    auto doc = hasWindow
-        ? static_cast<ModuleWindow*>(window->widget())->document() 
-        : nullptr;
+    mOrderEditor.setVisible(hasDocument);
+    mPatternEditor.setVisible(hasDocument);
+    mTabs.setVisible(hasDocument);
 
-    mBrowserModel.setCurrentDocument(doc);
-
-}
-
-void MainWindow::onDocumentClosed(ModuleDocument *doc) {
-    mBrowserModel.removeDocument(doc);
-
-    if (mRenderer.document() == doc) {
+    if (hasDocument) {
+        mPatternEditor.setFocus();
     }
 
-    // no longer using this document, delete it
-    delete doc;
+    updateWindowTitle();
+
 }
 
 void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
     auto doc = mBrowserModel.documentAt(index);
     mBrowserModel.setCurrentDocument(doc);
-    mMdi.setActiveSubWindow(doc->window());
+    //mMdi.setActiveSubWindow(doc->window());
+    mTabs.setCurrentIndex(index.row());
 
     QDockWidget *dockToActivate = nullptr;
 
@@ -476,29 +472,47 @@ void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
     }
 }
 
+void MainWindow::onDocumentModified(bool modified) {
+    auto doc = qobject_cast<ModuleDocument*>(sender());
+    int index = mBrowserModel.documents().indexOf(doc);
+
+    // this happens when the document is being destroyed for some reason
+    if (index == -1) {
+        return;
+    }
+
+    if (modified) {
+        mTabs.setTabText(index, QStringLiteral("%1*").arg(doc->name()));
+    } else {
+        mTabs.setTabText(index, doc->name());
+    }
+
+    if (index == mTabs.currentIndex()) {
+        updateWindowTitle();
+    }
+}
+
 void MainWindow::updateWindowMenu() {
     mMenuWindow.clear();
     mMenuWindow.addAction(&mActionWindowPrev);
     mMenuWindow.addAction(&mActionWindowNext);
     
-    auto const windows = mMdi.subWindowList();
-    if (windows.size() > 0) {
+    auto const& documents = mBrowserModel.documents();
+    if (documents.size() > 0) {
         mMenuWindow.addSeparator();
 
         int i = 1;
-        for (auto window : windows) {
-
-            auto moduleWin = static_cast<ModuleWindow*>(window->widget());
+        int const current = mTabs.currentIndex() + 1;
+        for (auto doc : documents) {
             
             auto textFmt = (i < 9) ? "&%1 %2" : "%1 %2";
-            QString text = tr(textFmt).arg(i).arg(moduleWin->document()->name());
+            QString text = tr(textFmt).arg(i).arg(doc->name());
 
-            auto action = mMenuWindow.addAction(text, window, [this, window]() {
-                mMdi.setActiveSubWindow(window);
+            auto action = mMenuWindow.addAction(text, this, [this, i]() {
+                mTabs.setCurrentIndex(i - 1);
                 });
             action->setCheckable(true);
-            action->setChecked(window == mMdi.activeSubWindow());
-
+            action->setChecked(i == current);
 
             ++i;
         }
@@ -508,11 +522,6 @@ void MainWindow::updateWindowMenu() {
 
 // PRIVATE METHODS -----------------------------------------------------------
 
-ModuleWindow* MainWindow::currentModuleWindow() {
-    // static cast is used because all QMdiSubWindows in this application will have a ModuleWindow widget
-    // qobject_cast is unneccessary
-    return static_cast<ModuleWindow*>(mMdi.currentSubWindow()->widget());
-}
 
 void MainWindow::addDocument(ModuleDocument *doc) {
     // add the document to the model
@@ -520,21 +529,89 @@ void MainWindow::addDocument(ModuleDocument *doc) {
     // expand the index of the newly added model
     mBrowser.expand(index);
 
-    // create an Mdi subwindow for this document
-    auto docWin = new ModuleWindow(mConfig, doc);
-    // apply configuration for the first time
-    docWin->applyConfiguration(Config::CategoryAll);
-    connect(docWin, &ModuleWindow::documentClosed, this, &MainWindow::onDocumentClosed);
-    if (mConfigDialog) {
-        connect(mConfigDialog, &ConfigDialog::applied, docWin, &ModuleWindow::applyConfiguration);
+    connect(doc, &ModuleDocument::modifiedChanged, this, &MainWindow::onDocumentModified);
+
+    auto tabindex = mTabs.addTab(doc->name());
+    mTabs.setCurrentIndex(tabindex);
+}
+
+bool MainWindow::saveDocument(ModuleDocument *doc) {
+    if (doc->hasFile()) {
+        // save the document to its file
+        return doc->save();
+    } else {
+        // no associated file, do save as instead
+        return saveDocumentAs(doc);
     }
-    // add it the MDI area and show it
-    auto subwin = mMdi.addSubWindow(docWin);
-    docWin->show();
+}
 
-    doc->setWindow(subwin);
+bool MainWindow::saveDocumentAs(ModuleDocument *doc) {
+    auto path = QFileDialog::getSaveFileName(
+        this,
+        tr("Save module"),
+        "",
+        tr(ModuleWindow::MODULE_FILE_FILTER)
+        );
 
-    mTabs.addTab(doc->name());
+    if (path.isEmpty()) {
+        return false;
+    }
+
+    auto result = doc->save(path);
+    if (result) {
+        // the document has a new name, update the tab text and window title
+        int index = mBrowserModel.documents().indexOf(doc);
+        if (index != -1) {
+            // update tab text
+            mTabs.setTabText(index, doc->name());
+            if (index == mTabs.currentIndex()) {
+                // update window title if this tab is the current one
+                // (should always be but we'll check anyways)
+                updateWindowTitle();
+            }
+        }
+    }
+    return result;
+}
+
+bool MainWindow::closeDocument(ModuleDocument *doc) {
+    if (doc->isModified()) {
+        // prompt the user if they want to save any changes
+        auto const result = QMessageBox::warning(
+            this,
+            tr("Trackerboy"),
+            tr("Save changes to %1?").arg(doc->name()),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
+        );
+
+        switch (result) {
+            case QMessageBox::Save:
+                if (!saveDocument(doc)) {
+                    // save failed, do not close document
+                    return false;
+                }
+                break;
+            case QMessageBox::Cancel:
+                // user cancelled, do not close document
+                return false;
+            default:
+                break;
+        }
+    }
+
+    auto tabIndex = mBrowserModel.documents().indexOf(doc);
+    mBrowserModel.removeDocument(doc);
+    mTabs.removeTab(tabIndex);
+
+    // TODO: renderer needs to know about the document being removed
+    // if (mRenderer.document() == doc) {
+    // }
+
+    // no longer using this document, delete it
+    delete doc;
+
+    // the document was closed, return true
+    return true;
 }
 
 void MainWindow::setupUi() {
@@ -544,9 +621,7 @@ void MainWindow::setupUi() {
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
     mHSplitter = new QSplitter(Qt::Horizontal, this);
 
-    mMdi.setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    mMdi.setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    mMdi.setViewMode(QMdiArea::TabbedView);
+    mTabs.setDocumentMode(true);
 
     mBrowser.setModel(&mBrowserModel);
     mBrowser.setHeaderHidden(true);
@@ -556,9 +631,13 @@ void MainWindow::setupUi() {
     mVisualizerLayout.addWidget(&mPeakMeter, 1);
     mVisualizerLayout.addWidget(&mRightScope);
 
+    mEditorLayout.addWidget(&mOrderEditor);
+    mEditorLayout.addWidget(&mPatternEditor, 1);
+    mEditorLayout.setMargin(0);
+
     mMainLayout.addLayout(&mVisualizerLayout);
     mMainLayout.addWidget(&mTabs);
-    mMainLayout.addWidget(&mMdi, 1);
+    mMainLayout.addLayout(&mEditorLayout, 1);
     mMainLayout.setMargin(0);
     mMainWidget.setLayout(&mMainLayout);
 
@@ -567,6 +646,10 @@ void MainWindow::setupUi() {
     mHSplitter->setStretchFactor(0, 0);
     mHSplitter->setStretchFactor(1, 1);
     setCentralWidget(mHSplitter);
+
+    mTabs.setVisible(false);
+    mOrderEditor.setVisible(false);
+    mPatternEditor.setVisible(false);
 
     // ACTIONS ===============================================================
 
@@ -756,29 +839,19 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileOpen, onFileOpen);
     connectActionToThis(mActionFileSave, onFileSave);
     connectActionToThis(mActionFileSaveAs, onFileSaveAs);
-    connect(&mActionFileClose, &QAction::triggered, &mMdi, &QMdiArea::closeActiveSubWindow);
-    connect(&mActionFileCloseAll, &QAction::triggered, &mMdi, &QMdiArea::closeAllSubWindows);
+    connectActionToThis(mActionFileClose, onFileClose);
+    connectActionToThis(mActionFileCloseAll, onFileCloseAll);
     connectActionToThis(mActionFileConfig, showConfigDialog);
     connectActionToThis(mActionFileQuit, close);
-
-    // edit
-    connectActionToThis(mActionEditCut, onEditCut);
-    connectActionToThis(mActionEditCopy, onEditCopy);
-    connectActionToThis(mActionEditPaste, onEditPaste);
-    connectActionToThis(mActionEditPasteMix, onEditPasteMix);
-    connectActionToThis(mActionEditDelete, onEditCut);
-    connectActionToThis(mActionEditSelectAll, onEditCut);
-    connectActionToThis(mActionTransposeNoteIncrease, onTransposeIncreaseNote);
-    connectActionToThis(mActionTransposeNoteDecrease, onTransposeDecreaseNote);
-    connectActionToThis(mActionTransposeOctaveIncrease, onTransposeIncreaseOctave);
-    connectActionToThis(mActionTransposeOctaveDecrease, onTransposeDecreaseOctave);
     
     // view
-    connectActionToThis(mActionViewResetLayout, onWindowResetLayout);
+    connectActionToThis(mActionViewResetLayout, onViewResetLayout);
 
     // window
-    connect(&mActionWindowPrev, &QAction::triggered, &mMdi, &QMdiArea::activatePreviousSubWindow);
-    connect(&mActionWindowNext, &QAction::triggered, &mMdi, &QMdiArea::activateNextSubWindow);
+    connectActionToThis(mActionWindowPrev, onWindowPrevious);
+    connectActionToThis(mActionWindowNext, onWindowNext);
+    //connect(&mActionWindowPrev, &QAction::triggered, &mMdi, &QMdiArea::activatePreviousSubWindow);
+    //connect(&mActionWindowNext, &QAction::triggered, &mMdi, &QMdiArea::activateNextSubWindow);
 
     // tracker
     //connect(&mActionTrackerPlay, &QAction::triggered, &mRenderer, &Renderer::play);
@@ -813,7 +886,7 @@ void MainWindow::setupUi() {
     connect(&mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
     connect(&mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
 
-    connect(&mMdi, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
+    //connect(&mMdi, &QMdiArea::subWindowActivated, this, &MainWindow::onSubWindowActivated);
 
     connect(&mMenuWindow, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
 
@@ -822,6 +895,8 @@ void MainWindow::setupUi() {
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mInstrumentEditor, &InstrumentEditor::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mWaveEditor, &WaveEditor::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mRenderer, &Renderer::setDocument);
+    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mOrderEditor, &OrderEditor::setDocument);
+    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mPatternEditor, &PatternEditor::setDocument);
     
 
     connect(&mRenderer, &Renderer::audioStarted, &mUpdateTimer, qOverload<>(&QTimer::start));
@@ -829,6 +904,7 @@ void MainWindow::setupUi() {
     connect(&mRenderer, &Renderer::audioError, &mUpdateTimer, &QTimer::stop);
     connect(&mUpdateTimer, &QTimer::timeout, &mRenderer, &Renderer::render);
     
+    connectThis(&mTabs, &QTabBar::currentChanged, onTabChanged);
 
 }
 
@@ -887,5 +963,14 @@ void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
 
     if (msgbox.clickedButton() == settingsBtn) {
         showConfigDialog();
+    }
+}
+
+void MainWindow::updateWindowTitle() {
+    int current = mTabs.currentIndex();
+    if (current != -1) {
+        setWindowTitle(tr("%1 - Trackerboy").arg(mTabs.tabText(current)));
+    } else {
+        setWindowTitle(tr("Trackerboy"));
     }
 }

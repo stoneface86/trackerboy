@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+#define REQUIRE_DOCUMENT() if (Q_UNLIKELY(mDocument == nullptr)) return
+
 using namespace PatternConstants;
 
 // The TODO list
@@ -105,21 +107,20 @@ static std::optional<int> keyToHex(int const key) {
 }
 
 
-PatternGrid::PatternGrid(ModuleDocument &doc, PatternGridHeader &header, QWidget *parent) :
+PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
-    mDocument(doc),
+    mDocument(nullptr),
     mHeader(header),
     mPainter(font()),
-    mRepaintImage(true),
+    //mRepaintImage(true),
     mCursorRow(0),
     mCursorCol(0),
     mCursorPattern(0),
     mTrackerRow(0),
     mTrackerPattern(0),
     mFollowMode(true),
-    mOffset(0),
     mPatternPrev(),
-    mPatternCurr(doc.mod().song().getPattern(0)),
+    mPatternCurr(),
     mPatternNext(),
     mPatternRect(),
     mSelecting(false),
@@ -127,50 +128,12 @@ PatternGrid::PatternGrid(ModuleDocument &doc, PatternGridHeader &header, QWidget
     mSettingShowPreviews(true),
     mVisibleRows(0)
 {
-    
-    auto &orderModel = mDocument.orderModel();
-    connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternGrid::setCursorTrack);
-    connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternGrid::setCursorPattern);
-    connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
-        setPatterns(mCursorPattern);
-        redraw();
-        });
-    /*connect(&model, &SongListModel::patternSizeChanged, this,
-        [this](int rows) {
-            if (mCursorRow >= rows) {
-                mCursorRow = rows - 1;
-                emit cursorRowChanged(mCursorRow);
-            }
-            setPatterns(mCursorPattern);
-            setPatternRect();
-            redraw();
-        });
-
-    connect(&model, &SongListModel::rowsPerBeatChanged, this,
-        [this](int rpb) {
-            mPainter.setFirstHighlight(rpb);
-            redraw();
-        });
-    connect(&model, &SongListModel::rowsPerMeasureChanged, this,
-        [this](int rpm) {
-            mPainter.setSecondHighlight(rpm);
-            redraw();
-        });*/
-
-    auto &song = mDocument.mod().song();
-    mPainter.setFirstHighlight(song.rowsPerBeat());
-    mPainter.setSecondHighlight(song.rowsPerMeasure());
 
     setAutoFillBackground(true);
 
     // first time initialization
     fontChanged();
 
-}
-
-void PatternGrid::redraw() {
-    mRepaintImage = true;
-    update();
 }
 
 int PatternGrid::row() const {
@@ -205,30 +168,34 @@ void PatternGrid::setColors(ColorTable const& colors) {
     setPalette(pal);
 
     // new colors, redraw everything
-    redraw();
+    update();
 }
 
 void PatternGrid::setPreviewEnable(bool previews) {
     if (previews != mSettingShowPreviews) {
         mSettingShowPreviews = previews;
-        setPatterns(mCursorPattern);
-        if (!previews) {
-            mPatternPrev.reset();
-            mPatternNext.reset();
-        }
+        if (mDocument) {
+            setPatterns(mCursorPattern);
+            if (!previews) {
+                mPatternPrev.reset();
+                mPatternNext.reset();
+            }
 
-        redraw();
+            update();
+        }
     }
 }
 
 void PatternGrid::setShowFlats(bool showFlats) {
     if (showFlats != mPainter.flats()) {
         mPainter.setFlats(showFlats);
-        redraw();
+        update();
     }
 }
 
 void PatternGrid::setTrackerCursor(int row, int pattern) {
+    REQUIRE_DOCUMENT();
+
     if (mTrackerPattern != pattern) {
         mTrackerPattern = pattern;
         if (mFollowMode) {
@@ -324,6 +291,58 @@ bool PatternGrid::processKeyPress(PianoInput const& input, int const key) {
     return validKey;
 }
 
+void PatternGrid::setDocument(ModuleDocument *doc) {
+    if (mDocument) {
+        mDocument->orderModel().disconnect(this);
+    }
+
+
+    mDocument = doc;
+
+    if (doc) {
+        auto &orderModel = doc->orderModel();
+        connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternGrid::setCursorTrack);
+        connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternGrid::setCursorPattern);
+        connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
+            setPatterns(mCursorPattern);
+            update();
+        });
+        /*connect(&model, &SongListModel::patternSizeChanged, this,
+            [this](int rows) {
+                if (mCursorRow >= rows) {
+                    mCursorRow = rows - 1;
+                    emit cursorRowChanged(mCursorRow);
+                }
+                setPatterns(mCursorPattern);
+                setPatternRect();
+                redraw();
+            });
+
+        connect(&model, &SongListModel::rowsPerBeatChanged, this,
+            [this](int rpb) {
+                mPainter.setFirstHighlight(rpb);
+                redraw();
+            });
+        connect(&model, &SongListModel::rowsPerMeasureChanged, this,
+            [this](int rpm) {
+                mPainter.setSecondHighlight(rpm);
+                redraw();
+            });*/
+
+        auto &song = mDocument->mod().song();
+        mPainter.setFirstHighlight(song.rowsPerBeat());
+        mPainter.setSecondHighlight(song.rowsPerMeasure());
+        setPatterns(orderModel.currentPattern());
+        
+    } else {
+        mPatternPrev.reset();
+        mPatternCurr.reset();
+        mPatternNext.reset();
+    }
+
+    update();
+}
+
 // ================================================================= SLOTS ===
 
 void PatternGrid::moveCursorRow(int amount) {
@@ -349,12 +368,12 @@ void PatternGrid::setCursorColumn(int column) {
     int track = mCursorCol / TRACK_COLUMNS;
     int newtrack = column / TRACK_COLUMNS;
     if (track != newtrack) {
-        mDocument.orderModel().selectTrack(newtrack);
+        mDocument->orderModel().selectTrack(newtrack);
     }
 
     mCursorCol = column;
-    update();
     emit cursorColumnChanged(mCursorCol);
+    update();
 }
 
 void PatternGrid::setCursorRow(int row) {
@@ -362,34 +381,29 @@ void PatternGrid::setCursorRow(int row) {
         return;
     }
 
-    auto &song = mDocument.mod().song();
+    auto &song = mDocument->mod().song();
 
     if (row < 0) {
         // go to the previous pattern or wrap around to the last one
         setCursorPattern(mCursorPattern == 0 
                             ? static_cast<int>(song.order().size()) - 1 
                             : mCursorPattern - 1);
-        int currCount = mPatternCurr.totalRows();
+        int currCount = mPatternCurr->totalRows();
         mCursorRow = std::max(0, currCount + row);
         mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mPainter.cellHeight());
-
-        mRepaintImage = true;
-        update();
-    } else if (row >= static_cast<int>(mPatternCurr.totalRows())) {
+    } else if (row >= static_cast<int>(mPatternCurr->totalRows())) {
         // go to the next pattern or wrap around to the first one
         int nextPattern = mCursorPattern + 1;
         setCursorPattern(nextPattern == song.order().size() ? 0 : nextPattern);
-        int currCount = mPatternCurr.totalRows();
+        int currCount = mPatternCurr->totalRows();
         mCursorRow = std::min(currCount - 1, row - currCount);
         mPatternRect.moveTop(((mVisibleRows / 2) - mCursorRow) * mPainter.cellHeight());
-
-        mRepaintImage = true;
-        update();
     } else {
-        scroll(row - mCursorRow);
+        mCursorRow = row;
     }
 
     emit cursorRowChanged(mCursorRow);
+    update();
 }
 
 void PatternGrid::setCursorPattern(int pattern) {
@@ -399,14 +413,13 @@ void PatternGrid::setCursorPattern(int pattern) {
 
     setPatterns(pattern);
 
-    mCursorRow = std::min(mCursorRow, static_cast<int>(mPatternCurr.totalRows()));
+    mCursorRow = std::min(mCursorRow, static_cast<int>(mPatternCurr->totalRows()));
     mCursorPattern = pattern;
 
     // update selected pattern in the model
-    mDocument.orderModel().selectPattern(pattern);
+    mDocument->orderModel().selectPattern(pattern);
 
-    // full repaint
-    redraw();
+    update();
 }
 
 void PatternGrid::setCursorTrack(int track) {
@@ -432,21 +445,10 @@ void PatternGrid::changeEvent(QEvent *evt) {
 void PatternGrid::paintEvent(QPaintEvent *evt) {
     Q_UNUSED(evt);
     
+    REQUIRE_DOCUMENT();
+
     QPainter painter(this);
 
-
-    if (mRepaintImage) {
-        //qDebug() << "Full repaint";
-
-        mDisplay.fill(Qt::transparent);
-
-        QPainter displayPainter(&mDisplay);
-        displayPainter.setFont(font());
-
-        paintRows(displayPainter, 0, mVisibleRows);
-
-        mRepaintImage = false;
-    }
 
     auto const h = height();
     //auto const w = width();
@@ -473,11 +475,6 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     painter.drawLine(0, center + cellHeight - 1, w, center + cellHeight - 1);*/
 
 
-    // the grid is centered so translate everything else by the x offset
-    if (mOffset > 0) {
-        painter.translate(QPoint(mOffset, 0));
-    }
-
     // [2] row background
     //mPainter.drawPixmap(mPainter.rownoWidth(), 0, mBackgroundPixmap);
 
@@ -491,34 +488,34 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     mPainter.drawCursor(painter, centerRow, mCursorCol);
 
     // [6] text
-    if (mSettingShowPreviews) {
-        // previews are drawn at 50% opacity
-        // we paint the portion of the text that contains previews at 50%,
-        // where the current pattern is drawn at 100%
+    // if (mSettingShowPreviews) {
+    //     // previews are drawn at 50% opacity
+    //     // we paint the portion of the text that contains previews at 50%,
+    //     // where the current pattern is drawn at 100%
 
-        int heightPrev = std::max(0, mPatternRect.top());
-        int heightCurr = mDisplay.height() - heightPrev;
+    //     int heightPrev = std::max(0, mPatternRect.top());
+    //     int heightCurr = mDisplay.height() - heightPrev;
 
-        int yNext = mPatternRect.bottom();
+    //     int yNext = mPatternRect.bottom();
 
-        painter.setOpacity(0.5);
-        if (heightPrev) {
-            // previous pattern
-            painter.drawPixmap(0, 0, mDisplay, 0, 0, -1, heightPrev);
-        }
+    //     painter.setOpacity(0.5);
+    //     if (heightPrev) {
+    //         // previous pattern
+    //         painter.drawPixmap(0, 0, mDisplay, 0, 0, -1, heightPrev);
+    //     }
 
-        if (yNext < mDisplay.height()) {
-            // next pattern
-            int heightNext = mDisplay.height() - yNext;
-            painter.drawPixmap(0, yNext, mDisplay, 0, yNext, -1, heightNext);
-            heightCurr -= heightNext;
-        }
+    //     if (yNext < mDisplay.height()) {
+    //         // next pattern
+    //         int heightNext = mDisplay.height() - yNext;
+    //         painter.drawPixmap(0, yNext, mDisplay, 0, yNext, -1, heightNext);
+    //         heightCurr -= heightNext;
+    //     }
         
-        painter.setOpacity(1.0);
-        painter.drawPixmap(0, heightPrev, mDisplay, 0, heightPrev, -1, heightCurr);
-    } else {
-        painter.drawPixmap(0, 0, mDisplay);
-    }
+    //     painter.setOpacity(1.0);
+    //     painter.drawPixmap(0, heightPrev, mDisplay, 0, heightPrev, -1, heightCurr);
+    // } else {
+    //     painter.drawPixmap(0, 0, mDisplay);
+    // }
 
     // [7] lines
     mPainter.drawLines(painter, h);
@@ -528,74 +525,76 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
 void PatternGrid::resizeEvent(QResizeEvent *evt) {
 
-    auto oldSize = evt->oldSize();
-    auto newSize = evt->size();
+    // REQUIRE_DOCUMENT();
 
-    if (newSize.height() != oldSize.height()) {
-        auto oldVisible = mVisibleRows;
-        mVisibleRows = getVisibleRows();
+    // auto oldSize = evt->oldSize();
+    // auto newSize = evt->size();
 
-        if (mVisibleRows != oldVisible) {
-            // the number of rows visible onscreen has changed
+    // if (newSize.height() != oldSize.height()) {
+    //     auto oldVisible = mVisibleRows;
+    //     mVisibleRows = getVisibleRows();
 
-            auto const cellHeight = mPainter.cellHeight();
-            unsigned centerOld = oldVisible / 2;
-            unsigned centerNew = mVisibleRows / 2;
-            if (mVisibleRows < oldVisible) {
-                // less rows visible, crop the old image
-                mDisplay = mDisplay.copy(0, (centerOld - centerNew) * cellHeight, mDisplay.width(), mVisibleRows * cellHeight);
-            } else {
-                // more rows to display, enlarge and paint new rows
+    //     if (mVisibleRows != oldVisible) {
+    //         // the number of rows visible onscreen has changed
 
-
-                // example: resizing results in 9 rows visible instead of 3
-                // mVisibleRows (old): 3
-                // mVisibleRows (new): 9
-                // newCenter = 9 / 2 = 4
-                // centerRow = 3 / 2 = 1
-
-                // 0
-                // 1
-                // 2
-                // ------- <- newCenter - centerRow
-                // 3 0
-                // 4 1
-                // 5 2
-                // ------- <- newCenter - centerRow + mVisibleRows (old)
-                // 6
-                // 7
-                // 8
-
-                // draw the old image at row#3
-                // draw new rows 0-3
-                // draw new rows 6-9
-
-                unsigned oldStart = (centerNew - centerOld);
-
-                QPixmap newDisplay(mDisplay.width(), mVisibleRows * cellHeight);
-                newDisplay.fill(Qt::transparent);
-                QPainter painter(&newDisplay);
-                painter.setFont(font());
-
-                paintRows(painter, 0, oldStart);
-                painter.drawPixmap(0, oldStart * cellHeight, mDisplay);
-                paintRows(painter, oldStart + oldVisible, mVisibleRows);
+    //         auto const cellHeight = mPainter.cellHeight();
+    //         unsigned centerOld = oldVisible / 2;
+    //         unsigned centerNew = mVisibleRows / 2;
+    //         if (mVisibleRows < oldVisible) {
+    //             // less rows visible, crop the old image
+    //             mDisplay = mDisplay.copy(0, (centerOld - centerNew) * cellHeight, mDisplay.width(), mVisibleRows * cellHeight);
+    //         } else {
+    //             // more rows to display, enlarge and paint new rows
 
 
-                painter.end();
+    //             // example: resizing results in 9 rows visible instead of 3
+    //             // mVisibleRows (old): 3
+    //             // mVisibleRows (new): 9
+    //             // newCenter = 9 / 2 = 4
+    //             // centerRow = 3 / 2 = 1
 
-                mDisplay = newDisplay;
-            }
-            setPatternRect();
+    //             // 0
+    //             // 1
+    //             // 2
+    //             // ------- <- newCenter - centerRow
+    //             // 3 0
+    //             // 4 1
+    //             // 5 2
+    //             // ------- <- newCenter - centerRow + mVisibleRows (old)
+    //             // 6
+    //             // 7
+    //             // 8
 
-        }
-    }
+    //             // draw the old image at row#3
+    //             // draw new rows 0-3
+    //             // draw new rows 6-9
 
-    if (newSize.width() != oldSize.width()) {
-        // determine x offset for centering
-        calcOffset();
-        mHeader.setOffset(mOffset);
-    }
+    //             unsigned oldStart = (centerNew - centerOld);
+
+    //             QPixmap newDisplay(mDisplay.width(), mVisibleRows * cellHeight);
+    //             newDisplay.fill(Qt::transparent);
+    //             QPainter painter(&newDisplay);
+    //             painter.setFont(font());
+
+    //             paintRows(painter, 0, oldStart);
+    //             painter.drawPixmap(0, oldStart * cellHeight, mDisplay);
+    //             paintRows(painter, oldStart + oldVisible, mVisibleRows);
+
+
+    //             painter.end();
+
+    //             mDisplay = newDisplay;
+    //         }
+    //         setPatternRect();
+
+    //     }
+    // }
+
+    // if (newSize.width() != oldSize.width()) {
+    //     // determine x offset for centering
+    //     calcOffset();
+    //     mHeader.setOffset(mOffset);
+    // }
 
     
 }
@@ -626,10 +625,6 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
         int mx = evt->x(), my = evt->y();
 
-        // translate
-        mx -= mOffset;
-            
-
         if (mPatternRect.contains(mx, my)) {
             unsigned row, column;
             mx -= mPainter.rownoWidth();
@@ -651,75 +646,10 @@ void PatternGrid::fontChanged() {
     mVisibleRows = getVisibleRows();
     setPatternRect();
 
-
-    // repaint rows on next repaint
-    mRepaintImage = true;
-
-    // resize image
     auto const rownoWidth = mPainter.rownoWidth();
     auto const trackWidth = mPainter.trackWidth();
-
-    mDisplay = QPixmap((trackWidth * 4) + rownoWidth, mVisibleRows * mPainter.cellHeight());
-    calcOffset();
-
-    // let the header know about these changes
-    mHeader.setOffset(mOffset);
     mHeader.setWidths(rownoWidth, trackWidth);
 }
-
-void PatternGrid::calcOffset() {
-    auto displayRect = mDisplay.rect();
-    displayRect.moveCenter(rect().center());
-    mOffset = displayRect.left();
-}
-
-void PatternGrid::scroll(int rows) {
-    if (rows == 0) {
-        // nothing to do
-        return;
-    }
-
-    auto const cellHeight = mPainter.cellHeight();
-    mPatternRect.translate(0, -rows * cellHeight);
-    unsigned distance = abs(rows);
-    mCursorRow += rows;
-
-    if (distance >= mVisibleRows) {
-        // no need to scroll, repaint the entire thing
-        mRepaintImage = true;
-
-    } else {
-        int rowStart;
-        int rowEnd;
-
-        if (rows < 0) {
-            // scrolling upwards
-            rowStart = 0;
-            rowEnd = distance;
-        } else {
-            // scrolling downwards
-            rowStart = mVisibleRows - distance;
-            rowEnd = mVisibleRows;
-        }
-
-        mDisplay.scroll(0, -rows * cellHeight, mDisplay.rect());
-
-        QPainter painter(&mDisplay);
-        painter.setFont(font());
-
-        // erase the old rows
-        auto mode = painter.compositionMode();
-        painter.setCompositionMode(QPainter::CompositionMode_Source);
-        painter.fillRect(0, rowStart * cellHeight, mDisplay.width(), distance * cellHeight, Qt::transparent);
-
-        // paint the new rows
-        painter.setCompositionMode(mode);
-        paintRows(painter, rowStart, rowEnd);
-        painter.end();
-    }
-    update();
-}
-
 
 void PatternGrid::getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol) {
     int cell = x / mPainter.cellWidth();
@@ -797,14 +727,14 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
     }
 
     // at this point rowAdjusted is >= 0
-    int const patternSize = mPatternCurr.totalRows();
+    int const patternSize = mPatternCurr->totalRows();
 
     if (rowAdjusted < patternSize) {
         int rowsToPaint = std::min(remainder, patternSize - rowAdjusted);
         remainder -= rowsToPaint;
 
         for (; rowsToPaint--; ) {
-            ypos = mPainter.drawRow(painter, mPatternCurr[static_cast<uint16_t>(rowAdjusted)], rowAdjusted, ypos);
+            ypos = mPainter.drawRow(painter, (*mPatternCurr)[static_cast<uint16_t>(rowAdjusted)], rowAdjusted, ypos);
             rowAdjusted++;
         }
 
@@ -832,7 +762,7 @@ void PatternGrid::paintRows(QPainter &painter, int rowStart, int rowEnd) {
 
 void PatternGrid::setPatterns(int pattern) {
     Q_ASSERT(pattern >= 0 && pattern < 256);
-    auto &song = mDocument.mod().song();
+    auto &song = mDocument->mod().song();
 
     
     if (mSettingShowPreviews) {
@@ -852,16 +782,18 @@ void PatternGrid::setPatterns(int pattern) {
     }
 
     // update the current pattern
-    mPatternCurr = song.getPattern(static_cast<uint8_t>(pattern));
+    mPatternCurr.emplace(song.getPattern(static_cast<uint8_t>(pattern)));
 
     
 }
 
 void PatternGrid::setPatternRect() {
+    REQUIRE_DOCUMENT();
+
     auto const cellHeight = mPainter.cellHeight();
 
     mPatternRect.setX(mPainter.rownoWidth());
     mPatternRect.setY(((mVisibleRows / 2) - mCursorRow) * cellHeight);
     mPatternRect.setWidth(mPainter.trackWidth() * 4);
-    mPatternRect.setHeight(cellHeight * mPatternCurr.totalRows());
+    mPatternRect.setHeight(cellHeight * mPatternCurr->totalRows());
 }

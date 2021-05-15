@@ -31,6 +31,8 @@ public:
 
     uint8_t currentPattern();
 
+    QModelIndex currentIndex();
+
     //
     // All track ids in the given selection are incremented by 1
     //

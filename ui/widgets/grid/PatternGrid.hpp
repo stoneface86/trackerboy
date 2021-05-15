@@ -28,19 +28,10 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(ModuleDocument &doc, PatternGridHeader &header, QWidget *parent = nullptr);
+    explicit PatternGrid(PatternGridHeader &header, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
-
-    //
-    // force a full redraw of the pattern
-    //
-    void redraw();
-
-    //void redrawRow();
-
-    //void redrawRow(int start, int end);
 
     //
     // Returns the current row of the cursor
@@ -73,6 +64,8 @@ public:
     bool processKeyPress(PianoInput const& input, int const key);
 
     void processKeyRelease(int const key);
+
+    void setDocument(ModuleDocument *document);
 
 signals:
 
@@ -124,11 +117,6 @@ private:
     void fontChanged();
 
     //
-    // Calculate x offset, mOffset, for centering the grid within the widget
-    //
-    void calcOffset();
-
-    //
     // Calculates the number of rows we can draw on this widget
     //
     unsigned getVisibleRows();
@@ -149,7 +137,7 @@ private:
     // Scrolls displayed rows and paints new ones. If rows >= mVisibleRows then
     // no scrolling will occur and the entire display will be repainted
     //
-    void scroll(int rows);
+    //void scroll(int rows);
 
     //
     // Get pattern data for the given pattern index
@@ -159,17 +147,16 @@ private:
     void setPatternRect();
 
 
-    //OrderModel &mModel;
-    ModuleDocument &mDocument;
+    ModuleDocument *mDocument;
     PatternGridHeader &mHeader;
     PatternPainter mPainter;
 
     // display image, rows get painted here when needed as opposed to every
     // paintEvent
-    QPixmap mDisplay;
+    //QPixmap mDisplay;
 
     // if true all rows will be redrawn on next paint event
-    bool mRepaintImage;
+    //bool mRepaintImage;
 
     int mCursorRow;
     int mCursorCol;
@@ -179,10 +166,8 @@ private:
     int mTrackerPattern;
     bool mFollowMode;
 
-    int mOffset;
-
     std::optional<trackerboy::Pattern> mPatternPrev;
-    trackerboy::Pattern mPatternCurr;
+    std::optional<trackerboy::Pattern> mPatternCurr;
     std::optional<trackerboy::Pattern> mPatternNext;
 
     // rectangle of the current rendered pattern

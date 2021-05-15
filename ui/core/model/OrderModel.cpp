@@ -179,6 +179,10 @@ uint8_t OrderModel::currentPattern() {
     return mCurrentRow;
 }
 
+QModelIndex OrderModel::currentIndex() {
+    return createIndex(mCurrentRow, mCurrentTrack, nullptr);
+}
+
 void OrderModel::incrementSelection(QItemSelection const &selection) {
     modifySelection<ModifyMode::inc>(selection);
     emit patternsChanged();

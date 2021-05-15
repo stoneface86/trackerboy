@@ -301,6 +301,14 @@ void ModuleModel::setCurrentDocument(ModuleDocument *doc) {
     }
 }
 
+void ModuleModel::setCurrentDocument(int index) {
+    if (index == -1) {
+        setCurrentDocument(nullptr);
+    } else {
+        setCurrentDocument(mDocuments[index]);
+    }
+}
+
 ModuleDocument* ModuleModel::currentDocument() const noexcept {
     return mCurrent;
 }

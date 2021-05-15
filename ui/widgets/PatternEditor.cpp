@@ -31,7 +31,7 @@
 
 
 
-PatternEditor::PatternEditor(PianoInput const& input, ModuleDocument &document, QWidget *parent) :
+PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     QFrame(parent),
     mPianoIn(input),
     mLayout(),
@@ -48,7 +48,7 @@ PatternEditor::PatternEditor(PianoInput const& input, ModuleDocument &document, 
     mGridFrame(),
     mGridLayout(),
     mGridHeader(),
-    mGrid(document, mGridHeader),
+    mGrid(mGridHeader),
     mHScroll(Qt::Horizontal),
     mVScroll(Qt::Vertical),
     mWheel(0),
@@ -280,6 +280,10 @@ void PatternEditor::vscrollAction(int action) {
         default:
             break;
     }
+}
+
+void PatternEditor::setDocument(ModuleDocument *doc) {
+    mGrid.setDocument(doc);
 }
 
 void PatternEditor::onCut() {

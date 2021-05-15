@@ -71,12 +71,6 @@ OrderEditor::OrderEditor(QWidget *parent) :
     // menu
     setupMenu(mContextMenu);
 
-    
-    
-
-    // initialize selection
-    //selectionModel->select(model.index(0, 0), QItemSelectionModel::Select);
-    
     mOrderView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(&mOrderView, &QTableView::customContextMenuRequested, this, &OrderEditor::tableViewContextMenu);
     
@@ -132,6 +126,7 @@ void OrderEditor::setDocument(ModuleDocument *doc) {
         auto selectionModel = mOrderView.selectionModel();
         connect(selectionModel, &QItemSelectionModel::currentChanged, this, &OrderEditor::currentChanged);
         connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &OrderEditor::selectionChanged);
+        selectionModel->select(mModel->currentIndex(), QItemSelectionModel::Select);
     } else {
         mModel = nullptr;
         mOrderView.setModel(nullptr);

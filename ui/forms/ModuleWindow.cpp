@@ -14,7 +14,7 @@ ModuleWindow::ModuleWindow(Config &config, ModuleDocument *doc, QWidget *parent)
     mDocument(doc),
     mLayout(),
     mOrderWidget(),
-    mPatternEditor(config.keyboard().pianoInput, *doc)
+    mPatternEditor(config.keyboard().pianoInput)
 {
 
     mLayout.addWidget(&mOrderWidget);

@@ -75,6 +75,8 @@ public:
     //
     void setCurrentDocument(ModuleDocument *doc);
 
+    void setCurrentDocument(int index);
+
     //
     // Gets the document that belongs to the given model index. All items
     // in the model have an associated document. nullptr is only returned

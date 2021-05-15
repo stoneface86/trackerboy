@@ -47,7 +47,7 @@ public:
         QAction record;
     };
 
-    explicit PatternEditor(PianoInput const& input, ModuleDocument &document, QWidget *parent = nullptr);
+    explicit PatternEditor(PianoInput const& input, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
     PatternGrid& grid();
@@ -64,6 +64,8 @@ signals:
     void octaveChanged(int octave);
 
 public slots:
+
+    void setDocument(ModuleDocument *doc);
 
     void onCut();
 
