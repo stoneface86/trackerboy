@@ -118,7 +118,12 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     mSelecting(false),
     mEditMode(false),
     mSettingShowPreviews(true),
-    mVisibleRows(0)
+    mVisibleRows(0),
+    mHasSelection(false),
+    mSelectionStartX(0),
+    mSelectionStartY(0),
+    mSelectionEndX(0),
+    mSelectionEndY(0)
 {
 
     setAutoFillBackground(true);
@@ -459,9 +464,47 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // 7. lines
 
     // [2] row background
-    // TODO!
+    {
+        int rowsToDraw = mVisibleRows;
+        int relativeRowIndex = mCursorRow - centerRow;
+        int ypos = 0;
+        int rowMin = mPatternPrev ? -((int)mPatternPrev->totalRows()) : 0;
+        int rowMax = mPatternCurr->totalRows();
+        if (mPatternNext) {
+            rowMax += mPatternNext->totalRows();
+        }
+
+        if (relativeRowIndex < rowMin) {
+            auto rowsToSkip = rowMin - relativeRowIndex;
+            ypos += rowHeight * rowsToSkip;
+            rowsToDraw -= rowsToSkip;
+            relativeRowIndex = rowMin;
+        }
+
+        rowsToDraw = std::min(rowsToDraw, rowMax - relativeRowIndex);
+
+        mPainter.drawBackground(painter, ypos, relativeRowIndex, rowsToDraw);
+
+    }
 
     // [3] current row
+    if (!mFollowMode) {
+        // draw the tracker player position
+
+        int trackerRow = -1;
+        if (mTrackerPattern == mCursorPattern) {
+            trackerRow = mTrackerRow - (mCursorRow - centerRow);
+        } else if (mPatternPrev && mTrackerPattern == mCursorPattern - 1) {
+            trackerRow = (centerRow - mCursorRow) - (mPatternPrev->totalRows() - mTrackerRow);
+        } else if (mPatternNext && mTrackerPattern == mCursorPattern + 1) {
+            trackerRow = (centerRow - mCursorRow) + mPatternCurr->totalRows() + mTrackerRow;
+        }
+
+
+        if (trackerRow > 0 && trackerRow < (int)mVisibleRows && trackerRow != (int)centerRow) {
+            mPainter.drawRowBackground(painter, PatternPainter::ROW_PLAYER, trackerRow);
+        }
+    }
     mPainter.drawRowBackground(painter, mEditMode ? PatternPainter::ROW_EDIT : PatternPainter::ROW_CURRENT, centerRow);
 
     // [4] selection
@@ -561,7 +604,18 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
     Q_UNUSED(evt);
     //int mx = evt->x();
     //int my = evt->y();
-
+    if (mSelecting) {
+        
+        unsigned row, column;
+        getCursorFromMouse(evt->x(), evt->y(), row, column);
+        update();
+        if (!mHasSelection || row != mSelectionEndY || column != mSelectionEndX) {
+            mHasSelection = true;
+            mSelectionEndX = column;
+            mSelectionEndY = row;
+            update();
+        }
+    }
 
 }
 
@@ -569,14 +623,16 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
 
         mSelecting = true;
-
+        getCursorFromMouse(evt->x(), evt->y(), mSelectionStartY, mSelectionStartX);
+        mSelectionEndX = mSelectionStartX;
+        mSelectionEndY = mSelectionEndY;
     }
 }
 
 void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
     if (evt->button() == Qt::LeftButton) {
-
+        mSelecting = false;
         int mx = evt->x(), my = evt->y();
 
         if (mPatternRect.contains(mx, my)) {

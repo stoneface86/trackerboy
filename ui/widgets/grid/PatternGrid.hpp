@@ -171,6 +171,12 @@ private:
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
 
+    bool mHasSelection;
+    unsigned mSelectionStartX;
+    unsigned mSelectionStartY;
+
+    unsigned mSelectionEndX;
+    unsigned mSelectionEndY;
 
 };
 

@@ -191,6 +191,15 @@ void PatternPainter::drawRowBackground(QPainter &painter, RowType type, int row)
     painter.drawLine(mRownoWidth, bottom, lineEnd, bottom);
 }
 
+void PatternPainter::drawBackground(QPainter &painter, int ypos, int rowStart, int rows) {
+    int rowno = rowStart;
+    for (int i = 0; i < rows; ++i) {
+        painter.fillRect(mRownoWidth, ypos, mPatternWidth, mCellHeight, mBackgroundColors[highlightIndex(rowno)]);
+        ypos += mCellHeight;
+        ++rowno;
+    }
+}
+
 void PatternPainter::drawCursor(QPainter &painter, int row, int column) {
     // the width of the cursor is always 1 character unless it is over a note column, then it is 3
     int cursorWidth = ((column % TRACK_COLUMNS) == COLUMN_NOTE ? 3 : 1) * mCellWidth + 2;

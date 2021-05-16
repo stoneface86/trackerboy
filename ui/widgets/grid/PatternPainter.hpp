@@ -54,6 +54,7 @@ public:
     // drawing functions
 
     //void drawBackground(QPainter &painter, int rowStart, int rows);
+    void drawBackground(QPainter &painter, int ypos, int rowStart, int rows);
 
     void drawRowBackground(QPainter &painter, RowType type, int row);
 
@@ -91,8 +92,6 @@ public:
     // use when editing
     void drawColumn(QPainter &painter, trackerboy::PatternRow const& data, int col, int ypos);
 
-    void eraseColumn(QPainter &painter, int column, int ypos);
-
 private:
 
     int highlightIndex(int rowno);
@@ -123,13 +122,5 @@ private:
 
     std::array<QColor, 3> mRowColors;
 
-
-    
-    
-    
-    
-
-
-    
 
 };
