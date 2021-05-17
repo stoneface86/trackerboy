@@ -32,7 +32,9 @@ ModuleDocument::WidgetState::WidgetState() :
     followMode(true),
     keyRepetition(true),
     cursorRow(0),
-    cursorColumn(0)
+    cursorColumn(0),
+    autoInstrument(true),
+    autoInstrumentIndex(-1)
 {
 }
 
@@ -45,6 +47,7 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mUndoStack(),
     mInstrumentModel(*this),
     mOrderModel(*this),
+    mSongModel(*this),
     mWaveModel(*this),
     mLastError(trackerboy::FormatError::none),
     mFilename(),
@@ -127,6 +130,10 @@ InstrumentListModel& ModuleDocument::instrumentModel() noexcept {
 
 OrderModel& ModuleDocument::orderModel() noexcept {
     return mOrderModel;
+}
+
+SongModel& ModuleDocument::songModel() noexcept {
+    return mSongModel;
 }
 
 WaveListModel& ModuleDocument::waveModel() noexcept {

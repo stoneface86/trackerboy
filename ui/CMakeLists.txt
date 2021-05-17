@@ -25,6 +25,7 @@ set(UI_SRC
     "core/model/ModuleModel.cpp"
     "core/model/InstrumentListModel.cpp"
     "core/model/OrderModel.cpp"
+    "core/model/SongModel.cpp"
     "core/model/WaveListModel.cpp"
     "core/Config.cpp"
     "core/Miniaudio.cpp"

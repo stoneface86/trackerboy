@@ -4,8 +4,9 @@
 // forward declaration (model classes and the document depend on each other)
 class ModuleDocument;
 
-#include "core/model/OrderModel.hpp"
 #include "core/model/InstrumentListModel.hpp"
+#include "core/model/OrderModel.hpp"
+#include "core/model/SongModel.hpp"
 #include "core/model/WaveListModel.hpp"
 
 #include "trackerboy/data/Module.hpp"
@@ -24,14 +25,16 @@ class ModuleDocument;
 // There are two threads that access the document:
 //  * The GUI thread    (read/write)
 //  * The render thread (read-only)
-// When accessing the document, the document's spinlock should be locked so that
+// When accessing the document, the document's mutex should be locked so that
 // the render thread does not read while the gui thread (ie the user) modifies
 // data. Only the gui thread modifies the document, so locking is not necessary
 // when the gui is reading.
 //
 // Any class that modifies the document's data outside of this class (ie Model classes)
 // should lock the document when making changes. Use the beginEdit() to get an edit context
-// object that will automatically lock and unlock the spinlock.
+// object that will automatically lock and unlock the spinlock. If your edit can
+// be undone, use beginCommandEdit() instead and add your QUndoCommand to this
+// document's undo stack (accessible via the undoStack() method).
 //
 class ModuleDocument : public QObject {
 
@@ -41,7 +44,7 @@ public:
 
     //
     // Utility class when editing the document. On construction, the document's
-    // spinlock is locked and then unlocked on destruction. Changes being made 
+    // mutex is locked and then unlocked on destruction. Changes being made 
     // to the document should occur during the scope of an EditContext. This way
     // the locking and unlocking of the spinlock is managed by the context's
     // lifetime.
@@ -70,6 +73,9 @@ public:
         bool keyRepetition;
         int cursorRow;
         int cursorColumn;
+
+        bool autoInstrument;
+        int autoInstrumentIndex;
 
         WidgetState();
 
@@ -100,6 +106,8 @@ public:
     InstrumentListModel& instrumentModel() noexcept;
 
     OrderModel& orderModel() noexcept;
+
+    SongModel& songModel() noexcept;
 
     WaveListModel& waveModel() noexcept;
 
@@ -192,6 +200,7 @@ private:
     // models
     InstrumentListModel mInstrumentModel;
     OrderModel mOrderModel;
+    SongModel mSongModel;
     WaveListModel mWaveModel;
 
     trackerboy::FormatError mLastError;

@@ -11,17 +11,6 @@ ModuleSettingsWidget::ModuleSettingsWidget(QWidget *parent) :
     mTitleEdit(),
     mArtistEdit(),
     mCopyrightEdit(),
-    //mSongGroup(tr("Song settings")),
-    //mSongLayout(),
-    //mRowsPerBeatSpin(),
-    //mRowsPerMeasureSpin(),
-    //mSpeedLayout(),
-    //mSpeedSpin(),
-    //mTempoActualEdit(),
-    //mTempoSpin(),
-    //mTempoCalcButton(tr("Calculate speed")),
-    //mPatternSpin(),
-    //mRowsPerPatternSpin(),
     mEngineGroup(tr("Engine settings")),
     mEngineLayout(),
     mFramerateChoiceLayout(),
@@ -41,22 +30,6 @@ ModuleSettingsWidget::ModuleSettingsWidget(QWidget *parent) :
     mInfoLayout.addRow(tr("Artist:"), &mArtistEdit);
     mInfoLayout.addRow(tr("Copyright:"), &mCopyrightEdit);
     mInfoGroup.setLayout(&mInfoLayout);
-
-
-    //mSongLayout.addRow(tr("Rows per beat"), &mRowsPerBeatSpin);
-    //mSongLayout.addRow(tr("Rows per measure"), &mRowsPerMeasureSpin);
-
-    //mSpeedLayout.addWidget(&mSpeedSpin, 0, 0);
-    //mSpeedLayout.addWidget(&mTempoActualEdit, 0, 1);
-    //mSpeedLayout.addWidget(&mTempoSpin, 1, 0);
-    //mSpeedLayout.addWidget(&mTempoCalcButton, 1, 1);
-    //mSpeedLayout.setColumnStretch(0, 1);
-    //mSpeedLayout.setColumnStretch(1, 1);
-    //mSongLayout.addRow(tr("Speed"), &mSpeedLayout);
-
-    //mSongLayout.addRow(tr("Patterns"), &mPatternSpin);
-    //mSongLayout.addRow(tr("Rows"), &mRowsPerPatternSpin);
-    //mSongGroup.setLayout(&mSongLayout);
 
 
     mFramerateCustomLayout.addWidget(&mFramerateCustomRadio);
@@ -99,39 +72,11 @@ ModuleSettingsWidget::ModuleSettingsWidget(QWidget *parent) :
     mArtistEdit.setMaxLength(32);
     mCopyrightEdit.setMaxLength(32);
 
-    /*mRowsPerBeatSpin.setRange(1, 255);
-    mRowsPerMeasureSpin.setRange(1, 255);
-    mSpeedSpin.setRange(trackerboy::SPEED_MIN, trackerboy::SPEED_MAX);
-    mSpeedSpin.setDisplayIntegerBase(16);
-    mSpeedSpin.setPrefix("0x");
-    mTempoSpin.setRange(1, 10000);
-    mTempoSpin.setValue(150);
-    mTempoSpin.setSuffix(" BPM");
-    mTempoActualEdit.setReadOnly(true);
-    mPatternSpin.setRange(1, trackerboy::MAX_PATTERNS);
-    mRowsPerPatternSpin.setRange(1, 256);*/
-
     mFramerateCustomSpin.setValue(30);
     mFramerateCustomSpin.setRange(1, 1024);
     mFramerateCustomSpin.setSuffix(tr(" Hz"));
 
-    /*auto &song = mod.song();
-    mRowsPerBeatSpin.setValue(song.rowsPerBeat());
-    mRowsPerMeasureSpin.setValue(song.rowsPerMeasure());
-    mSpeedSpin.setValue(song.speed());
-    mPatternSpin.setValue((int)song.order().size());
-    mRowsPerPatternSpin.setValue(song.patterns().rowSize());*/
-
-    
-
-    //calculateActualTempo();
-
     // connections
-
-    /*connect(&mTempoCalcButton, &QPushButton::clicked, this, &ModuleSettingsWidget::calculateTempo);
-    connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &mRowsPerMeasureSpin, &QSpinBox::setMinimum);
-    connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::calculateActualTempo);
-    connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::calculateActualTempo);*/
     
     connect(&mFramerateButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &ModuleSettingsWidget::framerateButtonToggled);
     connect(&mFramerateCustomSpin, qOverload<int>(&QSpinBox::valueChanged), this, &ModuleSettingsWidget::customFramerateSpinChanged);
@@ -144,23 +89,6 @@ ModuleSettingsWidget::ModuleSettingsWidget(QWidget *parent) :
     setDocument(nullptr);
 }
 
-//void ModuleSettingsWidget::calculateTempo() {
-//    // speed = (framerate * 60) / (tempo * rpb)
-//
-//    float speed = (mDocument.mod().framerate() * 60.0f) / (mTempoSpin.value() * mRowsPerBeatSpin.value());
-//    // convert to fixed point
-//    int speedFixed = std::clamp(static_cast<int>(roundf(speed * 16.0f)), (int)trackerboy::SPEED_MIN, (int)trackerboy::SPEED_MAX);
-//    mSpeedSpin.setValue(speedFixed);
-//
-//}
-//
-//void ModuleSettingsWidget::calculateActualTempo() {
-//    // tempo = (framerate * 60) / (speed * rpb)
-//    // convert fixed point to floating point
-//    float speed = trackerboy::speedToFloat((trackerboy::Speed)mSpeedSpin.value());
-//    float tempo = (mDocument.mod().framerate() * 60.0f) / (speed * mRowsPerBeatSpin.value());
-//    mTempoActualEdit.setText(QString("%1 BPM").arg(tempo, 0, 'f', 2));
-//}
 
 void ModuleSettingsWidget::titleChanged(QString const& text) {
     if (mDocument) {

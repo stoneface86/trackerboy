@@ -5,16 +5,23 @@
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
+#include "widgets/CustomSpinBox.hpp"
 
 
 #include <QCheckBox>
+#include <QComboBox>
+#include <QFormLayout>
 #include <QFrame>
+#include <QGroupBox>
 #include <QGridLayout>
 #include <QLabel>
 #include <QMenu>
 #include <QScrollBar>
 #include <QSpinBox>
 #include <QToolBar>
+
+#include <array>
+#include <optional>
 
 
 class PatternEditor : public QFrame {
@@ -102,7 +109,21 @@ private slots:
     void hscrollAction(int action);
     void vscrollAction(int action);
 
+    void speedChanged(int value);
+    void tempoChanged(int value);
+
+    void enableAutoInstrument(bool enabled);
+    void setAutoInstrument(int index);
+
+    void updatePatternsSpin(QModelIndex const& index, int first, int last);
+
+    void updateTempoLabel();
+
 private:
+
+    void setTempoLabel(float tempo);
+    float calcActualTempo(float speed);
+
     Q_DISABLE_COPY(PatternEditor)
 
     PianoInput const& mPianoIn;
@@ -110,15 +131,44 @@ private:
 
     QVBoxLayout mLayout;
         QWidget mControls;
-            QHBoxLayout mControlsLayout;
-                QToolBar mToolbar;
-                QLabel mOctaveLabel;
-                QSpinBox mOctaveSpin;
-                QLabel mEditStepLabel;
-                QSpinBox mEditStepSpin;
-                QCheckBox mLoopPatternCheck;
-                QCheckBox mFollowModeCheck;
-                QCheckBox mKeyRepeatCheck;
+            QVBoxLayout mControlsLayout;
+                QHBoxLayout mToolbarLayout;
+                    QToolBar mToolbar;
+                    QLabel mOctaveLabel;
+                    QSpinBox mOctaveSpin;
+                    QLabel mEditStepLabel;
+                    QSpinBox mEditStepSpin;
+                    QCheckBox mLoopPatternCheck;
+                    QCheckBox mFollowModeCheck;
+                    QCheckBox mKeyRepeatCheck;
+                QGridLayout mSettingsLayout;
+                    // row 0
+                    QLabel mRowsPerBeatLabel;
+                    QSpinBox mRowsPerBeatSpin;
+                    //
+                    QLabel mSpeedLabel;
+                    CustomSpinBox mSpeedSpin;
+                    QLabel mSpeedActualLabel;
+                    //
+                    QLabel mPatternsLabel;
+                    QSpinBox mPatternsSpin;
+                    //
+                    QComboBox mInstrumentCombo;
+
+                    // row 1
+                    QLabel mRowsPerMeasureLabel;
+                    QSpinBox mRowsPerMeasureSpin;
+                    //
+                    QLabel mTempoLabel;
+                    QSpinBox mTempoSpin;
+                    QLabel mTempoActualLabel;
+                    //
+                    QLabel mPatternSizeLabel;
+                    QSpinBox mPatternSizeSpin;
+                    //
+                    QCheckBox mSetInstrumentCheck;
+
+                    std::array<QFrame, 3> mLines;
         QFrame mGridFrame;
             QGridLayout mGridLayout;
                 PatternGridHeader mGridHeader;
@@ -137,4 +187,7 @@ private:
 
     int mPreviewKey;
 
+    bool mSpeedLock;
+
+    std::optional<uint8_t> mInstrument;
 };

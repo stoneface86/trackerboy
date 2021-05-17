@@ -7,12 +7,88 @@
 #include <QFontDatabase>
 #include <QPainter>
 #include <QtDebug>
+#include <QUndoCommand>
 
 #include <algorithm>
 
 #define REQUIRE_DOCUMENT() if (Q_UNLIKELY(mDocument == nullptr)) return
 
 using namespace PatternConstants;
+
+
+// struct PatternLocation {
+//     uint8_t pattern;
+//     uint8_t row;
+//     uint8_t channel;
+// };
+
+// class PatternEditCellCommand : public QUndoCommand {
+
+// public:
+//     PatternEditCellCommand(
+//         ModuleDocument *doc,
+//         uint8_t pattern,
+//         uint8_t row,
+//         uint8_t channel,
+//         ColumnType column,
+//         uint8_t value
+//     ) :
+//         mDocument(doc),
+//         mPattern(pattern),
+//         mRow(row),
+//         mChannel(channel),
+//         mColumn(column),
+//         mValue(value)
+//     {
+//     }
+
+//     virtual void redo() override {
+//         switch (mColumn) {
+//             case COLUMN_NOTE
+//         }
+//     }
+
+//     virtual void undo() override {
+
+//     }
+
+// private:
+//     ModuleDocument *mDocument;
+//     uint8_t mPattern;
+//     uint8_t mRow;
+//     uint8_t mChannel;
+//     ColumnType mColumn;
+//     uint8_t mValue;
+//     uint8_t mOldValue;
+
+// };
+
+// class PatternEditNoteCommand : public QUndoCommand {
+
+// public:
+//     PatternEditNoteCommand(ModuleDocument *doc, PatternLocation location, uint8_t note) :
+//         QUndoCommand(),
+//         mDocument(doc),
+//         mLocation(location),
+//         mNewNote(note)
+//     {
+//         doc->mod().song().getRow(static_cast<trackerboy::ChType>(location.channel), location.pattern, location.row).queryNote();
+//     }
+
+//     virtual void redo() override {
+//         auto ctx = mDocument->beginCommandEdit();
+//         auto &row = mDocument->mod().song().patterns().getTrack()
+//     }
+
+
+// private:
+//     ModuleDocument *mDocument;
+//     PatternLocation mLocation;
+//     uint8_t mNewNote;
+//     std::optional<uint8_t> mOldNote;
+
+// };
+
 
 // The TODO list
 //
@@ -291,6 +367,7 @@ bool PatternGrid::processKeyPress(PianoInput const& input, int const key) {
 void PatternGrid::setDocument(ModuleDocument *doc) {
     if (mDocument) {
         mDocument->orderModel().disconnect(this);
+        mDocument->songModel().disconnect(this);
     }
 
 
@@ -304,7 +381,9 @@ void PatternGrid::setDocument(ModuleDocument *doc) {
             setPatterns(mCursorPattern);
             update();
         });
-        /*connect(&model, &SongListModel::patternSizeChanged, this,
+
+        auto &songModel = doc->songModel();
+        connect(&songModel, &SongModel::patternSizeChanged, this,
             [this](int rows) {
                 if (mCursorRow >= rows) {
                     mCursorRow = rows - 1;
@@ -312,23 +391,22 @@ void PatternGrid::setDocument(ModuleDocument *doc) {
                 }
                 setPatterns(mCursorPattern);
                 setPatternRect();
-                redraw();
+                update();
             });
 
-        connect(&model, &SongListModel::rowsPerBeatChanged, this,
+        connect(&songModel, &SongModel::rowsPerBeatChanged, this,
             [this](int rpb) {
                 mPainter.setFirstHighlight(rpb);
-                redraw();
+                update();
             });
-        connect(&model, &SongListModel::rowsPerMeasureChanged, this,
+        connect(&songModel, &SongModel::rowsPerMeasureChanged, this,
             [this](int rpm) {
                 mPainter.setSecondHighlight(rpm);
-                redraw();
-            });*/
+                update();
+            });
 
-        auto &song = mDocument->mod().song();
-        mPainter.setFirstHighlight(song.rowsPerBeat());
-        mPainter.setSecondHighlight(song.rowsPerMeasure());
+        mPainter.setFirstHighlight(songModel.rowsPerBeat());
+        mPainter.setSecondHighlight(songModel.rowsPerMeasure());
         setPatterns(orderModel.currentPattern());
         setPatternRect();
     } else {
