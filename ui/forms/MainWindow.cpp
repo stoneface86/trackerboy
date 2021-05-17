@@ -526,7 +526,7 @@ void MainWindow::addDocument(ModuleDocument *doc) {
     // add the document to the model
     auto index = mBrowserModel.addDocument(doc);
     // expand the index of the newly added model
-    mBrowser.expand(index);
+    mBrowser.expandRecursively(index);
 
     connect(doc, &ModuleDocument::modifiedChanged, this, &MainWindow::onDocumentModified);
 

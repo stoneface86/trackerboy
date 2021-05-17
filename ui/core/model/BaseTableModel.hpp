@@ -18,6 +18,8 @@ public:
 
     virtual ~BaseTableModel();
 
+    ModuleDocument& document();
+
     bool canDuplicate() const;
 
     // resets the model

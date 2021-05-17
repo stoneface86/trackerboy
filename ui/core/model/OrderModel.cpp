@@ -175,6 +175,10 @@ OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
 {
 }
 
+ModuleDocument& OrderModel::document() {
+    return mDocument;
+}
+
 uint8_t OrderModel::currentPattern() {
     return mCurrentRow;
 }

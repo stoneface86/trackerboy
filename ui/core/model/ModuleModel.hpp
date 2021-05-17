@@ -7,6 +7,8 @@
 #include <QUndoGroup>
 #include <QVector>
 
+#include <tuple>
+
 //
 // Model implementation to be used in a QTreeView. Shows all open modules
 //
@@ -105,7 +107,29 @@ signals:
     //
     void currentDocumentChanged(ModuleDocument *doc);
 
+
 private:
+
+    // context data for a child node: the document it belongs to and
+    // the row (0 = instrument, 1 = song order, 2 = waveforms)
+    using ChildModelContext = std::tuple<ModuleDocument*, int>;
+
+    // insertChildRows and removeChildRows are slots but we cannot mark
+    // them as such since they are templated
+
+    template <class tModel>
+    void insertChildRows(QModelIndex const& index, int first, int last);
+    void _insertChildRows(ChildModelContext ctx, int first, int last);
+
+    template <class tModel>
+    void removeChildRows(QModelIndex const& index, int first, int last);
+    void _removeChildRows(ChildModelContext ctx, int first, int last);
+
+    template <class T>
+    ChildModelContext getChildNode(QObject *sender);
+
+    template <class tModel>
+    void connectChildModel(tModel &model);
 
     QVector<ModuleDocument*> mDocuments;
     ModuleDocument *mCurrent;

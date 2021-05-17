@@ -272,6 +272,10 @@ QModelIndex ModuleModel::addDocument(ModuleDocument *doc) {
 
     endInsertRows();
 
+    connectChildModel(doc->orderModel());
+    connectChildModel(doc->instrumentModel());
+    connectChildModel(doc->waveModel());
+
     return createIndex(row, 0, ModelId().data);
 }
 
@@ -284,6 +288,10 @@ void ModuleModel::removeDocument(ModuleDocument *doc) {
         mDocuments.remove(row);
         mUndoGroup.removeStack(&doc->undoStack());
         endRemoveRows();
+
+        doc->orderModel().disconnect(this);
+        doc->instrumentModel().disconnect(this);
+        doc->waveModel().disconnect(this);
     }
 }
 
@@ -370,3 +378,62 @@ ModuleModel::ItemType ModuleModel::itemAt(QModelIndex const& index) {
 QUndoGroup& ModuleModel::undoGroup() noexcept {
     return mUndoGroup;
 }
+
+// the following methods forward any row insertions/removals from child models
+// to this model. jank level: mild
+
+template <class T>
+void ModuleModel::connectChildModel(T &model) {
+    connect(&model, &T::rowsInserted, this, &ModuleModel::insertChildRows<T>);
+    // we use the aboutToBeRemoved signal so that the rowCount from the child
+    // model has not been modified yet (if it was then an assert in Qt's source
+    // will fail)
+    connect(&model, &T::rowsAboutToBeRemoved, this, &ModuleModel::removeChildRows<T>);
+}
+
+template <class T>
+void ModuleModel::insertChildRows(QModelIndex const& index, int first, int last) {
+    Q_UNUSED(index)
+    _insertChildRows(getChildNode<T>(sender()), first, last);
+}
+
+void ModuleModel::_insertChildRows(ChildModelContext ctx, int first, int last) {
+    ModelId id((unsigned)mDocuments.indexOf(std::get<0>(ctx)));
+    beginInsertRows(createIndex(std::get<1>(ctx), 0, id.data), first, last);
+    endInsertRows();
+}
+
+template <class T>
+void ModuleModel::removeChildRows(QModelIndex const& index, int first, int last) {
+    Q_UNUSED(index)
+    _removeChildRows(getChildNode<T>(sender()), first, last);
+}
+
+void ModuleModel::_removeChildRows(ChildModelContext ctx, int first, int last) {
+    ModelId id((unsigned)mDocuments.indexOf(std::get<0>(ctx)));
+    beginRemoveRows(createIndex(std::get<1>(ctx), 0, id.data), first, last);
+    endRemoveRows();
+}
+
+template <class T>
+ModuleModel::ChildModelContext ModuleModel::getChildNode(QObject *sender) {
+    if constexpr (std::is_same<T, InstrumentListModel>::value) {
+        return {
+            &(static_cast<InstrumentListModel*>(sender)->document()),
+            0
+        };
+    } else if constexpr (std::is_same<T, OrderModel>::value) {
+        return {
+            &(static_cast<OrderModel*>(sender)->document()),
+            1
+        };
+    } else if constexpr (std::is_same<T, WaveListModel>::value) {
+        return {
+            &(static_cast<WaveListModel*>(sender)->document()),
+            2
+        };
+    } else {
+        static_assert(false, "invalid model type!");
+    }
+}
+

@@ -27,6 +27,8 @@ public:
     explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
     ~OrderModel() = default;
 
+    ModuleDocument& document();
+
     void reload();
 
     uint8_t currentPattern();

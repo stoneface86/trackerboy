@@ -32,6 +32,10 @@ BaseTableModel::~BaseTableModel() {
 
 }
 
+ModuleDocument& BaseTableModel::document() {
+    return mDocument;
+}
+
 bool BaseTableModel::canDuplicate() const {
     return mBaseTable.size() != trackerboy::BaseTable::MAX_SIZE;
 }
