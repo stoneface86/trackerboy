@@ -25,8 +25,9 @@
 #include <optional>
 
 //
-// Class handles all sound renderering. Sound is either sent to the
-// configured device set in Config or is written to file (export, not implemented yet)
+// Class handles all sound renderering. Sound is sent to the
+// configured device set in Config. Unless otherwise stated, functions in
+// this class are to be called in the same thread the object lives in.
 //
 class Renderer : public QObject {
 
@@ -46,25 +47,60 @@ public:
 
     // DIAGNOSTICS ====
 
+    //
+    // Retrieves the current diagnostic state. Function is thread-safe
+    //
     Diagnostics diagnostics();
 
+    //
+    // Gets the current device. Not thread-safe, the referenced ma_device
+    // struct can change if setConfig is called. References are used since a 
+    // copy of the device would be expensive (sizeof(ma_device) is about 22000!)
+    //
     ma_device const& device();
 
+    //
+    // Gets the current document. Function is thread-safe
+    //
     ModuleDocument* document();
 
+    //
+    // Gets the current document that is playing music. nullptr if not
+    // playing music. Function is thread-safe.
+    //
     ModuleDocument* documentPlayingMusic();
 
+    //
+    // Determines whether the renderer is enabled. The renderer is enabled if
+    // the sound device was successfully configured. The renderer is disabled
+    // if an audio error occurs during render. Function is thread-safe.
+    //
     bool isEnabled();
 
+    //
+    // Determines if the renderer is renderering sound. Function is thread-safe.
+    //
     bool isRunning();
 
+    //
+    // Gets a copy of the current engine frame. Function is thread-safe
+    //
     trackerboy::Engine::Frame currentFrame();
 
+    //
+    // Gets the last device error that occurred from device configuration or
+    // error during render. MA_SUCCESS is returned on no error. Function is
+    // thread-safe.
+    //
     ma_result lastDeviceError();
 
+    //
+    // Configures the output device with the given Sound config. If device
+    // cannot be configured, the renderer is disabled. Function is thread-safe.
+    //
     void setConfig(Miniaudio &miniaudio, Config::Sound const& config);
 
-    void playMusic(uint8_t pattern, uint8_t row);
+    
 
 signals:
 
@@ -150,6 +186,8 @@ private:
         stopped     // no longer renderering anything, do nothing when render is called
     };
 
+    // sets up the engine to play starting at the given pattern and row
+    void playMusic(uint8_t pattern, uint8_t row);
 
     // utility function for preview slots
     void resetPreview();
@@ -169,7 +207,12 @@ private:
     //
     void beginRender();
 
+    //
+    // Immediately stops the render without letting the buffer drain.
+    //
     void stopRender(QMutexLocker &locker);
+
+    // device callback functions
 
     static void deviceDataHandler(ma_device *device, void *out, const void *in, ma_uint32 frames);
     void _deviceDataHandler(int16_t *out, size_t frames);

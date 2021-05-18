@@ -150,14 +150,15 @@ void Renderer::closeDevice() {
 void Renderer::beginRender() {
     if (mState == State::stopped) {
         mBuffer.reset();
+        mSamplesElapsed = 0;
         mPlaybackDelay = mBuffer.size();
         mLastDeviceError = ma_device_start(&*mDevice);
         if (mLastDeviceError != MA_SUCCESS) {
+            logMaResult(mLastDeviceError);
             emit audioError();
             return;
         }
         emit audioStarted();
-        mSamplesElapsed = 0;
     }
     mDraining = false;
     mState = State::running;
@@ -322,7 +323,9 @@ void Renderer::stopMusic() {
 
 void Renderer::forceStop() {
     QMutexLocker locker(&mMutex);
-    stopRender(locker);
+    if (mState != State::stopped) {
+        stopRender(locker);
+    }
 }
 
 void Renderer::resetPreview() {
@@ -343,6 +346,8 @@ void Renderer::removeDocument(ModuleDocument *doc) {
     QMutexLocker locker(&mMutex);
     if (mMusicDocument == doc) {
         if (!mCurrentEngineFrame.halted && mState != State::stopped) {
+            // we are currently renderering this document, stop immediately
+            // since doc will no longer exist after this function
             stopRender(locker);
         }
         mEngine.setModule(nullptr);
@@ -397,11 +402,17 @@ void Renderer::render() {
                     newFrame = true;
 
                     // the engine and previewer have read access to the module
+                    // so their corresponding documents must be locked when
+                    // stepping
 
                     // step engine/previewer
                     if (mMusicDocument) {
                         mMusicDocument->lock();
-                        mEngine.step(mCurrentEngineFrame);
+                    }
+
+                    mEngine.step(mCurrentEngineFrame);
+
+                    if (mMusicDocument) {
                         mMusicDocument->unlock();
                     }
 
