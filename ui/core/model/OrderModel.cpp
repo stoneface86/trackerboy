@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+static QColor ROW_COLOR;
+
 //
 // Command that changes a single track id in the order list. 
 //
@@ -233,8 +235,7 @@ void OrderModel::setSelection(QItemSelection const &selection, uint8_t id) {
 }
 
 void OrderModel::setRowColor(QColor const& color) {
-    mRowColor = color;
-    emit dataChanged(createIndex(mCurrentRow, 0, nullptr), createIndex(mCurrentRow, 3, nullptr), { Qt::BackgroundRole });
+    ROW_COLOR = color;
 }
 
 // model implementation
@@ -257,7 +258,7 @@ QVariant OrderModel::data(const QModelIndex &index, int role) const {
             return Qt::AlignCenter;
         case Qt::BackgroundRole:
             if (index.row() == mCurrentRow) {
-                return mRowColor;
+                return ROW_COLOR;
             }
             break;
         default:
@@ -287,7 +288,7 @@ QVariant OrderModel::headerData(int section, Qt::Orientation orientation, int ro
         return Qt::AlignCenter;
     } else if (role == Qt::BackgroundRole) {
         if (orientation == Qt::Vertical && section == mCurrentRow) {
-            return mRowColor;
+            return ROW_COLOR;
         }
     }
     return QVariant();

@@ -52,7 +52,10 @@ public:
     //
     void setSelection(QItemSelection const &selection, uint8_t id);
 
-    void setRowColor(QColor const& color);
+    //
+    // Sets the row color used by all models.
+    //
+    static void setRowColor(QColor const& color);
 
     // model implementation
 
@@ -141,10 +144,8 @@ private:
 
     void cmdSwapRows(uint8_t from, uint8_t to);
 
-    
 
     ModuleDocument &mDocument;
-    QColor mRowColor;
 
     trackerboy::Order &mOrder;
     //std::vector<trackerboy::Order> *mOrder;

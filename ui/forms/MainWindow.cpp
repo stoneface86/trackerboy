@@ -342,6 +342,7 @@ OrderEditor QTableView QHeaderView::section {
         ));
 
         mPatternEditor.setColors(appearance.colors);
+        OrderModel::setRowColor(appearance.colors[+Color::row]);
     }
 
     //if (categories.testFlag(Config::CategoryKeyboard)) {
