@@ -193,20 +193,21 @@ void Renderer::setDocument(ModuleDocument *doc) {
     stopPreview();
 }
 
-void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
-    QMutexLocker locker(&mMutex);
-    mDocument->lock();
-    setMusicDocument();
-    mEngine.play(orderNo, rowNo);
-    mDocument->unlock();
-    
-    beginRender();
 
-}
 
 void Renderer::play() {
+    QMutexLocker locker(&mMutex);
+
     if (mEnabled) {
        playMusic(mDocument->orderModel().currentPattern(), 0);
+    }
+}
+
+void Renderer::playAtStart() {
+    QMutexLocker locker(&mMutex);
+
+    if (mEnabled) {
+        playMusic(0, 0);
     }
 }
 
@@ -216,12 +217,6 @@ void Renderer::play() {
 
 // void Renderer::playFromCursor() {
 //     // TODO: we need a way to get the cursor row from the PatternEditor
-// }
-
-// void Renderer::playFromStart() {
-//     if (mEnabled) {
-//         playMusic(0, 0);
-//     }
 // }
 
 
@@ -323,9 +318,25 @@ void Renderer::stopMusic() {
 
 void Renderer::forceStop() {
     QMutexLocker locker(&mMutex);
-    if (mState != State::stopped) {
-        stopRender(locker);
+    if (mEnabled) {
+        if (mState != State::stopped) {
+            resetPreview();
+            mEngine.halt();
+            stopRender(locker);
+        }
     }
+}
+
+void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
+    mDocument->lock();
+    setMusicDocument();
+    mEngine.play(orderNo, rowNo);
+    // unlock disabled channels
+    setChannelOutput(mMusicDocument->channelOutput());
+    mDocument->unlock();
+    
+    beginRender();
+
 }
 
 void Renderer::resetPreview() {
@@ -337,8 +348,12 @@ void Renderer::resetPreview() {
 
 void Renderer::setMusicDocument() {
     if (mMusicDocument != mDocument) {
+        if (mMusicDocument) {
+            mMusicDocument->disconnect(this);
+        }
         mMusicDocument = mDocument;
         mEngine.setModule(&mDocument->mod());
+        connect(mMusicDocument, &ModuleDocument::channelOutputChanged, this, &Renderer::setChannelOutput);
     }
 }
 
@@ -352,6 +367,22 @@ void Renderer::removeDocument(ModuleDocument *doc) {
         }
         mEngine.setModule(nullptr);
         mMusicDocument = nullptr;
+    }
+}
+
+void Renderer::setChannelOutput(ModuleDocument::OutputFlags flags) {
+    // locking the mutex is not required because this method is only called
+    // via queued signal-slot mechanism or is locked prior to the call
+    int flag = ModuleDocument::CH1;
+    for (int i = 0; i < 4; ++i) {
+        auto ch = static_cast<trackerboy::ChType>(i);
+        if (flags.testFlag((ModuleDocument::OutputFlag)(flag))) {
+            mEngine.lock(ch);
+        } else {
+            // channel is disabled, keep unlocked
+            mEngine.unlock(ch);
+        }
+        flag <<= 1;
     }
 }
 

@@ -208,6 +208,7 @@ private:
     QAction mActionTrackerStop;
     QAction mActionTrackerToggleChannel;
     QAction mActionTrackerSolo;
+    QAction mActionTrackerKill;
 
     // Window
     QMenu mMenuWindow;

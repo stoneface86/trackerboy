@@ -390,6 +390,7 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
 
     mDocument = doc;
     mGrid.setDocument(doc);
+    mGridHeader.setDocument(doc);
     if (doc) {
         // restore state from document
         auto const& state = doc->state();

@@ -52,7 +52,8 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mLastError(trackerboy::FormatError::none),
     mFilename(),
     mFilepath(),
-    mState()
+    mState(),
+    mChannelEnables(CH1 | CH2 | CH3 | CH4)
 {
     clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
@@ -276,4 +277,15 @@ void ModuleDocument::setComments(QString const& comments) {
 
 ModuleDocument::WidgetState& ModuleDocument::state() {
     return mState;
+}
+
+ModuleDocument::OutputFlags ModuleDocument::channelOutput() {
+    return mChannelEnables;
+}
+
+void ModuleDocument::setChannelOutput(OutputFlags flags) {
+    if (flags != mChannelEnables) {
+        mChannelEnables = flags;
+        emit channelOutputChanged(flags);
+    }
 }

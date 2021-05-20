@@ -61,6 +61,21 @@ public:
         ModuleDocument &mDocument;
     };
 
+    //
+    // These flags determine which channels are enabled for music playback
+    // Typically used for solo'ing a channel by disabling all channels except
+    // for one.
+    //
+    enum OutputFlag {
+        AllOff = 0x0,
+        CH1 = 0x1,
+        CH2 = 0x2,
+        CH3 = 0x4,
+        CH4 = 0x8,
+        AllOn = CH1 | CH2 | CH3 | CH4
+    };
+    Q_DECLARE_FLAGS(OutputFlags, OutputFlag);
+
     struct WidgetState {
         // value for OrderEditor's spinbox
         int orderSetSpinbox;
@@ -157,8 +172,12 @@ public:
 
     WidgetState& state();
 
+    OutputFlags channelOutput();
+
 signals:
     void modifiedChanged(bool value);
+
+    void channelOutputChanged(OutputFlags flags);
 
 public slots:
     //
@@ -167,6 +186,8 @@ public slots:
     void clear();
     
     void makeDirty();
+
+    void setChannelOutput(OutputFlags flags);
 
 private slots:
     void onStackCleanChanged(bool clean);
@@ -214,5 +235,11 @@ private:
     QString mCopyright;
     QString mComments;
 
+    // bitmap for channels that are outputting sound.
+    OutputFlags mChannelEnables;
+
     WidgetState mState;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(ModuleDocument::OutputFlags)
+Q_DECLARE_METATYPE(ModuleDocument::OutputFlags)

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/ColorTable.hpp"
+#include "core/model/ModuleDocument.hpp"
 
 #include <QBitmap>
 #include <QPixmap>
@@ -16,6 +17,8 @@ public:
     PatternGridHeader(QWidget *parent = nullptr);
 
     void setColors(ColorTable const& colorTable);
+
+    void setDocument(ModuleDocument *doc);
 
     void setWidths(int rownoWidth, int trackWidth);
 
@@ -52,6 +55,7 @@ private:
 
     void setTrackHover(int hover);
 
+    ModuleDocument *mDocument;
 
     int mOffset;
     int mRownoWidth;
@@ -62,6 +66,7 @@ private:
 
     // header stuff
     int mTrackHover;
-    int mTrackFlags;
+
+    ModuleDocument::OutputFlags mTrackFlags;
 
 };

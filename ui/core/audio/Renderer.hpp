@@ -142,20 +142,20 @@ public slots:
 
     void play();
 
+    void playAtStart();
+
     //void playPattern();
 
     //void playFromCursor();
-
-    //
-    // Begin playing the song from the beginning
-    //
-    //void playFromStart();
 
     //
     // Stop previewing an instrument, waveform or row.
     //
     void stopPreview();
 
+    //
+    // Stops music playback by halting the engine
+    //
     void stopMusic();
 
     void forceStop();
@@ -170,6 +170,13 @@ public slots:
     // stops all renders with the given document
     //
     void removeDocument(ModuleDocument *doc);
+
+private slots:
+
+    //
+    // Enables/Disables channel output for music playback
+    //
+    void setChannelOutput(ModuleDocument::OutputFlags flags);
 
 private:
     Q_DISABLE_COPY(Renderer)

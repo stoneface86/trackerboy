@@ -7,12 +7,13 @@
 
 PatternGridHeader::PatternGridHeader(QWidget *parent) :
     QWidget(parent),
+    mDocument(nullptr),
     mHeaderFont(QStringLiteral(":/images/gridHeaderFont.bmp")),
     mOffset(0),
     mRownoWidth(0),
     mTrackWidth(0),
     mTrackHover(HOVER_NONE),
-    mTrackFlags(0)
+    mTrackFlags(ModuleDocument::AllOn)
 {
     setFixedHeight(HEIGHT);
     setAutoFillBackground(true);
@@ -30,6 +31,14 @@ void PatternGridHeader::setColors(ColorTable const& colorTable) {
     setPalette(pal);
 
     update();
+}
+
+void PatternGridHeader::setDocument(ModuleDocument *doc) {
+    mDocument = doc;
+    if (doc) {
+        mTrackFlags = doc->channelOutput();
+        update();
+    }
 }
 
 void PatternGridHeader::setWidths(int rownoWidth, int trackWidth) {
@@ -64,7 +73,7 @@ void PatternGridHeader::paintEvent(QPaintEvent *evt) {
     int xpos = mRownoWidth;
     auto &disabledColor = pal.color(COLOR_DISABLED);
     for (int i = 0; i != 4; ++i) {
-        if (!!(mTrackFlags & (1 << i))) {
+        if (!(mTrackFlags & (1 << i))) {
             painter.fillRect(xpos, 0, mTrackWidth, HEIGHT, disabledColor);
         }
         xpos += mTrackWidth;
@@ -114,13 +123,14 @@ void PatternGridHeader::leaveEvent(QEvent *evt) {
 void PatternGridHeader::mouseDoubleClickEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton && mTrackHover != HOVER_NONE) {
 
-        if (mTrackFlags == 0xF) {
+        if (mTrackFlags == 0) {
             // unsolo
-            mTrackFlags = 0;
+            mTrackFlags = ModuleDocument::AllOn;
         } else {
             // solo
-            mTrackFlags = (~(1 << mTrackHover)) & 0xF;
+            mTrackFlags = (ModuleDocument::OutputFlag)(1 << mTrackHover);
         }
+        mDocument->setChannelOutput(mTrackFlags);
 
         update();
     }
@@ -145,7 +155,8 @@ void PatternGridHeader::mouseMoveEvent(QMouseEvent *evt) {
 void PatternGridHeader::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton && mTrackHover != HOVER_NONE) {
         // user clicked on a track header either to mute or unmute the channel
-        mTrackFlags ^= 1 << mTrackHover;
+        mTrackFlags ^= (ModuleDocument::OutputFlag)(1 << mTrackHover);
+        mDocument->setChannelOutput(mTrackFlags);
         update();
     }
 }

@@ -86,7 +86,8 @@ int main(int argc, char *argv[]) {
     Q_INIT_RESOURCE(icons);
     Q_INIT_RESOURCE(images);
 
-
+    // register types for signals
+    qRegisterMetaType<ModuleDocument::OutputFlags>("OutputFlags");
 
     // use a custom message handler for logging to file
     DEFAULT_MESSAGE_HANDLER = qInstallMessageHandler(messageHandler);

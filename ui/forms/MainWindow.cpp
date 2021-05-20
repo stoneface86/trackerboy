@@ -687,6 +687,7 @@ void MainWindow::setupUi() {
     setupAction(mActionTrackerStop, "&Stop", "Stop playing", Icons::trackerStop);
     setupAction(mActionTrackerToggleChannel, "Toggle channel output", "Enables/disables sound output for the current track");
     setupAction(mActionTrackerSolo, "Solo", "Solos the current track");
+    setupAction(mActionTrackerKill, "&Kill sound", "Immediately stops sound output", QKeySequence(Qt::Key_F12));
 
     setupAction(mActionWindowPrev, "Pre&vious", "Move the focus to the previous module");
     setupAction(mActionWindowNext, "Ne&xt", "Move the focus to the next module");
@@ -750,6 +751,10 @@ void MainWindow::setupUi() {
 
     mMenuTracker.addAction(&mActionTrackerToggleChannel);
     mMenuTracker.addAction(&mActionTrackerSolo);
+
+    mMenuTracker.addSeparator();
+
+    mMenuTracker.addAction(&mActionTrackerKill);
 
     mMenuWindow.setTitle(tr("Wi&ndow"));
 
@@ -851,11 +856,10 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionWindowNext, onWindowNext);
 
     // tracker
-    connect(&mActionTrackerPlay, &QAction::triggered, &mRenderer, &Renderer::play);
-    //connect(&mActionTrackerPlayPattern, &QAction::triggered, &mRenderer, &Renderer::playPattern);
-    //connect(&mActionTrackerPlayStart, &QAction::triggered, &mRenderer, &Renderer::playFromStart);
-    //connect(&mActionTrackerPlayCursor, &QAction::triggered, &mRenderer, &Renderer::playFromCursor);
-    connect(&mActionTrackerStop, &QAction::triggered, &mRenderer, &Renderer::stopMusic);
+    connect(&mActionTrackerPlay, &QAction::triggered, &mRenderer, &Renderer::play, Qt::QueuedConnection);
+    connect(&mActionTrackerRestart, &QAction::triggered, &mRenderer, &Renderer::playAtStart, Qt::QueuedConnection);
+    connect(&mActionTrackerStop, &QAction::triggered, &mRenderer, &Renderer::stopMusic, Qt::QueuedConnection);
+    connect(&mActionTrackerKill, &QAction::triggered, &mRenderer, &Renderer::forceStop, Qt::QueuedConnection);
 
     // help
     connectActionToThis(mActionAudioDiag, showAudioDiag);
