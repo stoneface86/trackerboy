@@ -223,14 +223,11 @@ private:
 
     // workers / threading
 
-    Renderer mRenderer;
+    Renderer *mRenderer;
     QThread mRenderThread;
     
-    SyncWorker mSyncWorker;
+    SyncWorker *mSyncWorker;
     QThread mSyncWorkerThread;
-
-    QTimer mUpdateTimer;
-    QThread mUpdateTimerThread;
 
 
 };

@@ -6,6 +6,7 @@
 
 #include <QDeadlineTimer>
 #include <QMutexLocker>
+#include <QTimerEvent>
 #include <QtDebug>
 
 #include <algorithm>
@@ -18,6 +19,14 @@ static void logMaResult(ma_result result) {
     qCritical() << LOG_PREFIX << result << ":" << ma_result_description(result);
 }
 
+constexpr int NO_TIMER = -1;
+
+// fixed 5 ms refresh rate, eventually the user will be able to configure this setting
+constexpr int TIMER_INTERVAL = 5;
+
+// if Q_ASSERT(isThreadSafe()) fails you are calling a slot from a different
+// thread, do not do this! Call via signal-slot connection or QMetaObject::invokeMethod
+
 
 Renderer::Renderer(QObject *parent) :
     QObject(parent),
@@ -26,9 +35,11 @@ Renderer::Renderer(QObject *parent) :
     mMusicDocument(nullptr),
     mDeviceConfig(),
     mDevice(),
+    mTimerId(NO_TIMER),
     mBuffer(),
     mLastDeviceError(MA_SUCCESS),
     mEnabled(false),
+    mRunning(false),
     mSynth(44100),
     mApu(mSynth.apu()),
     mEngine(mApu, nullptr),
@@ -41,7 +52,8 @@ Renderer::Renderer(QObject *parent) :
     mDraining(false),
     mUnderruns(0u),
     mSamplesElapsed(0u),
-    mBufferUsage(0u)
+    mBufferUsage(0u),
+    mBufferSize(0u)
 {
 
     mDeviceConfig = ma_device_config_init(ma_device_type_playback);
@@ -58,17 +70,17 @@ Renderer::~Renderer() {
 }
 
 Renderer::Diagnostics Renderer::diagnostics() {
-    QMutexLocker locker(&mMutex);
+    // no synchronization needed since all these values are atomic
     return {
         mUnderruns.load(),
         mSamplesElapsed.load(),
         mBufferUsage.load(),
-        (unsigned)mBuffer.size()
+        mBufferSize.load()
     };
 }
 
 ma_device const& Renderer::device() {
-    QMutexLocker locker(&mMutex);
+    // This function is not thread-safe (and will never be) and needs to go away
     return *mDevice;
 }
 
@@ -84,7 +96,7 @@ ModuleDocument* Renderer::documentPlayingMusic() {
 
 bool Renderer::isRunning() {
     QMutexLocker locker(&mMutex);
-    return mState != State::stopped;
+    return mRunning;
 }
 
 bool Renderer::isEnabled() {
@@ -103,38 +115,56 @@ ma_result Renderer::lastDeviceError() {
 }
 
 void Renderer::setConfig(Miniaudio &miniaudio, Config::Sound const &soundConfig) {
-    QMutexLocker locker(&mMutex);
-    closeDevice();
 
-    auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
+    if (isThreadSafe()) {
 
-    // update device config
-    mDeviceConfig.playback.pDeviceID = miniaudio.deviceId(soundConfig.deviceIndex);
-    mDeviceConfig.periodSizeInFrames = (unsigned)(soundConfig.period * SAMPLERATE / 1000);
-    mDeviceConfig.sampleRate = SAMPLERATE;
+        closeDevice();
 
-    // initialize device with settings
-    mDevice.emplace();
-    mLastDeviceError = ma_device_init(miniaudio.context(), &mDeviceConfig, &mDevice.value());
-    mEnabled = mLastDeviceError == MA_SUCCESS;
-    if (mEnabled) {
-        mBuffer.init((size_t)(soundConfig.latency * SAMPLERATE / 1000));
-        //mSampleReturnBuffer.init(SAMPLERATE);
+        auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
 
-        //mSyncPeriod = mDevice.value().playback.internalPeriodSizeInFrames;
+        // update device config
+        mDeviceConfig.playback.pDeviceID = miniaudio.deviceId(soundConfig.deviceIndex);
+        mDeviceConfig.periodSizeInFrames = (unsigned)(soundConfig.period * SAMPLERATE / 1000);
+        mDeviceConfig.sampleRate = SAMPLERATE;
 
-        // update the synthesizer
-        mSynth.setSamplingRate(SAMPLERATE);
-        mSynth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
-        mSynth.setupBuffers();
-
-        if (mState != State::stopped) {
-            // the callback was running before we applied the config, restart it
-            ma_device_start(&mDevice.value());
+        // initialize device with settings
+        mDevice.emplace();
+        auto error = ma_device_init(miniaudio.context(), &mDeviceConfig, &mDevice.value());
+        {
+            QMutexLocker locker(&mMutex);
+            mLastDeviceError = error;
+            mEnabled = error == MA_SUCCESS;
         }
+
+        if (mEnabled) {
+            mBuffer.init((size_t)(soundConfig.latency * SAMPLERATE / 1000));
+            // cache this for diagnostics
+            mBufferSize = (unsigned)mBuffer.size();
+
+
+            // update the synthesizer
+            mSynth.setSamplingRate(SAMPLERATE);
+            mSynth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
+            mSynth.setupBuffers();
+
+            if (mState != State::stopped) {
+                // the callback was running before we applied the config, restart it
+                ma_device_start(&mDevice.value());
+                //killTimer(mTimerId);
+                //mTimerId = startTimer(5, Qt::PreciseTimer);
+            }
+        } else {
+            qCritical() << LOG_PREFIX << "failed to initialize the configured device";
+            logMaResult(mLastDeviceError);
+        }
+
     } else {
-        qCritical() << LOG_PREFIX << "failed to initialize the configured device";
-        logMaResult(mLastDeviceError);
+
+        // called from a different thread, reinvoke in the renderer's thread
+        QMetaObject::invokeMethod(this, [this, &miniaudio, &soundConfig]() {
+            setConfig(miniaudio, soundConfig);
+        }, Qt::BlockingQueuedConnection);
+
     }
 
 }
@@ -149,36 +179,56 @@ void Renderer::closeDevice() {
 
 void Renderer::beginRender() {
     if (mState == State::stopped) {
+        // begin a new render
         mBuffer.reset();
         mSamplesElapsed = 0;
+        // delay playback by the buffer size
+        // silence will play out for the entire buffer duration
         mPlaybackDelay = mBuffer.size();
-        mLastDeviceError = ma_device_start(&*mDevice);
-        if (mLastDeviceError != MA_SUCCESS) {
+        auto error = ma_device_start(&*mDevice);
+        bool running = error == MA_SUCCESS;
+
+        mMutex.lock();
+        mLastDeviceError = error;
+        mRunning = running;
+        mMutex.unlock();
+
+        if (!running) {
             logMaResult(mLastDeviceError);
             emit audioError();
             return;
         }
+
         emit audioStarted();
+        mTimerId = startTimer(TIMER_INTERVAL, Qt::PreciseTimer);
     }
+
+    // reset state to running
     mDraining = false;
     mState = State::running;
     mStopCounter = 0;
 }
 
-void Renderer::stopRender(QMutexLocker &locker) {
+void Renderer::stopRender() {
     mState = State::stopped;
     auto device = &*mDevice;
 
-    locker.unlock();
+    mMutex.lock();
+    mRunning = false;
+    mMutex.unlock();
+
     ma_device_stop(device);
-    locker.relock();
 
     emit audioStopped();
+    // kill the timer, we are no longer rendering
+    killTimer(mTimerId);
+    mTimerId = NO_TIMER;
 }
 
 
 
 // SLOTS
+// thread-safety is implied unless the slot was called directly from another thread
 
 void Renderer::clearDiagnostics() {
     mUnderruns = 0;
@@ -186,6 +236,8 @@ void Renderer::clearDiagnostics() {
 
 
 void Renderer::setDocument(ModuleDocument *doc) {
+    Q_ASSERT(isThreadSafe());
+
     mMutex.lock();
     mDocument = doc;
     mMutex.unlock();
@@ -196,7 +248,7 @@ void Renderer::setDocument(ModuleDocument *doc) {
 
 
 void Renderer::play() {
-    QMutexLocker locker(&mMutex);
+    Q_ASSERT(isThreadSafe());
 
     if (mEnabled) {
        playMusic(mDocument->orderModel().currentPattern(), 0);
@@ -204,7 +256,7 @@ void Renderer::play() {
 }
 
 void Renderer::playAtStart() {
-    QMutexLocker locker(&mMutex);
+    Q_ASSERT(isThreadSafe());
 
     if (mEnabled) {
         playMusic(0, 0);
@@ -221,7 +273,8 @@ void Renderer::playAtStart() {
 
 
 void Renderer::previewInstrument(quint8 note) {
-    QMutexLocker locker(&mMutex);
+    Q_ASSERT(isThreadSafe());
+
     if (mEnabled) {
         switch (mPreviewState) {
             case PreviewState::waveform:
@@ -251,7 +304,8 @@ void Renderer::previewInstrument(quint8 note) {
 }
 
 void Renderer::previewWaveform(quint8 note) {
-    QMutexLocker locker(&mMutex);
+    //QMutexLocker locker(&mMutex);
+    Q_ASSERT(isThreadSafe());
     if (mEnabled) {
         // state changes
         // instrument -> none -> waveform
@@ -293,7 +347,7 @@ void Renderer::previewWaveform(quint8 note) {
 }
 
 void Renderer::stopPreview() {
-    QMutexLocker locker(&mMutex);
+    Q_ASSERT(isThreadSafe());
 
     if (mEnabled) {
         if (mPreviewState != PreviewState::none) {
@@ -304,7 +358,8 @@ void Renderer::stopPreview() {
 }
 
 void Renderer::stopMusic() {
-    QMutexLocker locker(&mMutex);
+    Q_ASSERT(isThreadSafe());
+
     if (mEnabled) {
         mEngine.halt();
     }
@@ -317,14 +372,19 @@ void Renderer::stopMusic() {
 // }
 
 void Renderer::forceStop() {
-    QMutexLocker locker(&mMutex);
+    Q_ASSERT(isThreadSafe());
+
     if (mEnabled) {
         if (mState != State::stopped) {
             resetPreview();
             mEngine.halt();
-            stopRender(locker);
+            stopRender();
         }
     }
+}
+
+bool Renderer::isThreadSafe() {
+    return thread() == QThread::currentThread();
 }
 
 void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
@@ -351,22 +411,46 @@ void Renderer::setMusicDocument() {
         if (mMusicDocument) {
             mMusicDocument->disconnect(this);
         }
+
+        mMutex.lock();
         mMusicDocument = mDocument;
+        mMutex.unlock();
+
         mEngine.setModule(&mDocument->mod());
         connect(mMusicDocument, &ModuleDocument::channelOutputChanged, this, &Renderer::setChannelOutput);
     }
 }
 
 void Renderer::removeDocument(ModuleDocument *doc) {
-    QMutexLocker locker(&mMutex);
-    if (mMusicDocument == doc) {
-        if (!mCurrentEngineFrame.halted && mState != State::stopped) {
-            // we are currently renderering this document, stop immediately
-            // since doc will no longer exist after this function
-            stopRender(locker);
+    //QMutexLocker locker(&mMutex);
+
+    if (isThreadSafe()) {
+        if (mMusicDocument == doc) {
+            if (!mCurrentEngineFrame.halted && mState != State::stopped) {
+                // we are currently renderering this document, stop immediately
+                // since doc will no longer exist after this function
+                stopRender();
+            }
+            mEngine.setModule(nullptr);
+
+            mMutex.lock();
+            mMusicDocument = nullptr;
+            mMutex.unlock();
         }
-        mEngine.setModule(nullptr);
-        mMusicDocument = nullptr;
+    } else {
+        QMetaObject::invokeMethod(
+            this, 
+            [this, doc]() {
+                removeDocument(doc);
+            },
+            Qt::BlockingQueuedConnection
+        );
+    }
+}
+
+void Renderer::timerEvent(QTimerEvent *evt) {
+    if (evt->timerId() == mTimerId) {
+        render();
     }
 }
 
@@ -392,11 +476,13 @@ void Renderer::setChannelOutput(ModuleDocument::OutputFlags flags) {
 constexpr int STOP_FRAMES = 5;
 
 void Renderer::render() {
-    QMutexLocker locker(&mMutex);
+    //QMutexLocker locker(&mMutex);
 
     if (mState == State::stopped) {
         return;
     }
+
+    auto frame = mCurrentEngineFrame;
 
     auto writer = mBuffer.writer();
     auto framesToRender = writer.availableWrite();
@@ -410,7 +496,7 @@ void Renderer::render() {
         if (mState == State::stopping) {
             if (writer.availableWrite() == mBuffer.size()) {
                 // the buffer has been drained, stop the callback
-                stopRender(locker);
+                stopRender();
             }
             return;
 
@@ -441,7 +527,7 @@ void Renderer::render() {
                         mMusicDocument->lock();
                     }
 
-                    mEngine.step(mCurrentEngineFrame);
+                    mEngine.step(frame);
 
                     if (mMusicDocument) {
                         mMusicDocument->unlock();
@@ -456,7 +542,7 @@ void Renderer::render() {
                         mDocument->unlock();
                     }
 
-                    if (mCurrentEngineFrame.halted && mPreviewState == PreviewState::none) {
+                    if (frame.halted && mPreviewState == PreviewState::none) {
                         // no longer doing anything, start the stop counter
                         mStopCounter = STOP_FRAMES;
                     }
@@ -479,6 +565,9 @@ void Renderer::render() {
     }
 
     if (newFrame) {
+        mMutex.lock();
+        mCurrentEngineFrame = frame;
+        mMutex.unlock();
         emit frameSync();
     }
 
@@ -502,6 +591,8 @@ void Renderer::_deviceStopHandler() {
     QMutexLocker locker(&mMutex);
 
     if (mState != State::stopped) {
+        // TODO: test this!
+
         // we didn't stop the callback explicitly, a device error has occurred
         mState = State::stopped;
         emit audioError();
