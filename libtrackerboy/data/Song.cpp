@@ -91,6 +91,11 @@ Pattern Song::getPattern(uint8_t orderNo) {
     );
 }
 
+TrackRow& Song::getRow(ChType ch, uint8_t order, uint16_t row) {
+    auto &track = mMaster.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
+    return track[row];
+}
+
 TrackRow Song::getRow(ChType ch, uint8_t order, uint16_t row) const {
     auto track = mMaster.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
     if (track) {

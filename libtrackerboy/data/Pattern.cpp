@@ -33,14 +33,12 @@ unsigned Pattern::totalRows() {
 
                 // check for effects Bxx, C00 or D00
                 for (int i = 0; i != TrackRow::MAX_EFFECTS; ++i) {
-                    if (!!(iter->flags & (TrackRow::COLUMN_EFFECT1 << i))) {
-                        auto effect = iter->effects[i];
-                        if (effect.type == EffectType::patternGoto || 
-                            effect.type == EffectType::patternHalt || 
-                            effect.type == EffectType::patternSkip) {
-                            // these effects stop this pattern short, return the count here
-                            return mRowCount;
-                        }
+                    auto effect = iter->effects[i];
+                    if (effect.type == EffectType::patternGoto || 
+                        effect.type == EffectType::patternHalt || 
+                        effect.type == EffectType::patternSkip) {
+                        // these effects stop this pattern short, return the count here
+                        return mRowCount;
                     }
                 }
 

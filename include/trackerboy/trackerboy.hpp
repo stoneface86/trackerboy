@@ -52,14 +52,16 @@ enum class EffectType : uint8_t {
 
     // A * indicates the effect is continuous and must be turned off (ie 400)
 
-    // pattern effect (bits 6-7 = 00)
+    noEffect = 0,
+
+    // pattern effect
     patternGoto,                            //   Bxx begin playing given pattern immediately
     patternHalt,                            //   C00 stop playing
     patternSkip,                            //   D00 begin playing next pattern immediately
     setTempo,                               //   Fxx set the tempo
     sfx,                                    // * Txx play sound effect
 
-    // track effect (bits 6-7 = 01)
+    // track effect
 
     setEnvelope,                            //   Exx set the persistent envelope/wave id setting
     setTimbre,                              //   Vxx set persistent duty/wave volume setting
@@ -70,7 +72,7 @@ enum class EffectType : uint8_t {
     lock,                                   //   L00 (lock) stop the sound effect on the current channel
 
 
-    // frequency effect (bits 6-7 = 10)
+    // frequency effect
     arpeggio,                               // * 0xy arpeggio with semi tones x and y
     pitchUp,                                // * 1xx pitch slide up
     pitchDown,                              // * 2xx pitch slide down

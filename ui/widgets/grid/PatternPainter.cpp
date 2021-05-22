@@ -240,29 +240,30 @@ int PatternPainter::drawRow(
     for (int track = 0; track != 4; ++track) {
         auto &trackdata = rowdata[track];
 
-        if (!!(trackdata.flags & trackerboy::TrackRow::COLUMN_NOTE)) {
-            drawNote(painter, trackdata.note, xpos, ypos);
+        auto note = trackdata.queryNote();
+        if (note) {
+            drawNote(painter, *note, xpos, ypos);
         } else {
             drawNone(painter, 3, xpos, ypos);
         }
 
 
         xpos += (TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH] - TRACK_COLUMN_MAP[COLUMN_NOTE]) * mCellWidth;
-        if (!!(trackdata.flags & trackerboy::TrackRow::COLUMN_INST)) {
-            uint8_t inst = trackdata.instrumentId;
+        auto instrument = trackdata.queryInstrument();
+        if (instrument) {
             painter.setPen(mColorInstrument);
-            drawCell(painter, HEX_TABLE[inst >> 4], xpos, ypos);
-            drawCell(painter, HEX_TABLE[inst & 0xF], xpos + mCellWidth, ypos);
+            drawCell(painter, HEX_TABLE[*instrument >> 4], xpos, ypos);
+            drawCell(painter, HEX_TABLE[*instrument & 0xF], xpos + mCellWidth, ypos);
             painter.setPen(fgpen);
         } else {
             drawNone(painter, 2, xpos, ypos);
         }
 
         xpos += (TRACK_COLUMN_MAP[COLUMN_EFFECT1_TYPE] - TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH]) * mCellWidth;
-        int effectFlag = trackerboy::TrackRow::COLUMN_EFFECT1;
+
         for (int effect = 0; effect < trackerboy::TrackRow::MAX_EFFECTS; ++effect) {
-            if (!!(trackdata.flags & effectFlag)) {
-                auto effectdata = trackdata.effects[effect];
+            auto effectdata = trackdata.effects[effect];
+            if (effectdata.type != trackerboy::EffectType::noEffect) {
                 painter.setPen(mColorEffect);
 
                 drawCell(painter, effectTypeToChar(effectdata.type), xpos, ypos);
@@ -279,7 +280,6 @@ int PatternPainter::drawRow(
             }
 
             xpos += mCellWidth;
-            effectFlag <<= 1;
 
         }
 

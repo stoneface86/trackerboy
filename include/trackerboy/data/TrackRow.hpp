@@ -42,35 +42,16 @@ struct Effect {
 
 struct TrackRow {
 
-    enum Columns {
-        COLUMN_NOTE = 0x1,
-        COLUMN_INST = 0x2,
-        COLUMN_EFFECT1 = 0x4,
-        COLUMN_EFFECT2 = 0x8,
-        COLUMN_EFFECT3 = 0x10,
-        COLUMN_EFFECTS = COLUMN_EFFECT1 | COLUMN_EFFECT2 | COLUMN_EFFECT3
-    };
-
-    static constexpr uint8_t EFFECT1 = 0;
-    static constexpr uint8_t EFFECT2 = 1;
-    static constexpr uint8_t EFFECT3 = 2;
-
     static constexpr uint8_t MAX_EFFECTS = 3;
 
-    //
-    // Bit 0: if set, column 1 is set (note)
-    // Bit 1: if set, column 2 is set (instrument)
-    // Bit 2: if set, column 3 is set (effect1)
-    // Bit 3: if set, column 4 is set (effect2)
-    // Bit 4: if set, column 5 is set (effect3)
-    // Bits 5-7: Unused
-    //
-    uint8_t flags;
-
     // Column 1 - Note
+    // nonzero value is the note index plus 1
+    // a zero indicates the column has no note set
     uint8_t note;
 
     // Column 2 - Instrument
+    // same as notes, nonzero values is instrument id plus 1
+    // zero has no instrument set
     uint8_t instrumentId;
 
     // Column 3 - Effect 1
@@ -83,6 +64,10 @@ struct TrackRow {
     std::optional<uint8_t> queryInstrument() const noexcept;
     
     std::optional<Effect> queryEffect(size_t effectNo) const noexcept;
+
+    void setNote(std::optional<uint8_t> note);
+
+    void setInstrument(std::optional<uint8_t> instrument);
 
 };
 

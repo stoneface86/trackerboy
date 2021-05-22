@@ -719,7 +719,7 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
                         // iterate all rows in this track
                         uint8_t rowno = 0;
                         for (auto &row : pair->second) {
-                            if (row.flags) {
+                            if (!row.isEmpty()) {
                                 RowFormat rowFormat;
                                 rowFormat.rowno = rowno;
                                 rowFormat.rowdata = row;
