@@ -109,7 +109,8 @@ public:
 
     //
     // Configures the output device with the given Sound config. If device
-    // cannot be configured, the renderer is disabled.
+    // cannot be configured, the renderer is disabled. This function must
+    // be called from the GUI thread.
     //
     // Note: Function is thread-safe
     //
@@ -270,6 +271,8 @@ private:
     ma_result mLastDeviceError;
     bool mEnabled;
     bool mRunning;
+
+    int mPeriod;
 
     trackerboy::Synth mSynth;
     trackerboy::GbApu mApu;

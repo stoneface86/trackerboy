@@ -49,8 +49,8 @@ public:
     struct Sound {
         int deviceIndex;
         unsigned samplerateIndex;   // index of the current samplerate
-        double latency;             // latency, or internal buffer size, in milliseconds
-        double period;              // period, in milliseconds
+        int latency;                // latency, or internal buffer size, in milliseconds
+        int period;                 // period, in milliseconds
         int quality;                // synthesizer quality setting
     };
 

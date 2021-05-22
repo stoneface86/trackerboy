@@ -7,7 +7,7 @@
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
-#include <QDoubleSpinBox>
+#include <QSpinBox>
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
@@ -38,7 +38,7 @@ private slots:
 private:
     Q_DISABLE_COPY(SoundConfigTab)
 
-    void setupTimeSpinbox(QDoubleSpinBox &spin);
+    void setupTimeSpinbox(QSpinBox &spin);
 
     Config &mConfig;
 
@@ -51,9 +51,9 @@ private:
                     QPushButton mRescanButton;
                 QFormLayout mDeviceFormLayout;
                     QLabel mLatencyLabel;
-                    QDoubleSpinBox mLatencySpin;
+                    QSpinBox mLatencySpin;
                     QLabel mPeriodLabel;
-                    QDoubleSpinBox mPeriodSpin;
+                    QSpinBox mPeriodSpin;
                     QLabel mSamplerateLabel;
                     QComboBox mSamplerateCombo;
         QGroupBox mQualityGroup;

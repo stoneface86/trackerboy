@@ -4,6 +4,7 @@
 
 #include "trackerboy/engine/ChannelControl.hpp"
 
+#include <QApplication>
 #include <QDeadlineTimer>
 #include <QMutexLocker>
 #include <QTimerEvent>
@@ -21,9 +22,6 @@ static void logMaResult(ma_result result) {
 
 constexpr int NO_TIMER = -1;
 
-// fixed 5 ms refresh rate, eventually the user will be able to configure this setting
-constexpr int TIMER_INTERVAL = 5;
-
 // if Q_ASSERT(isThreadSafe()) fails you are calling a slot from a different
 // thread, do not do this! Call via signal-slot connection or QMetaObject::invokeMethod
 
@@ -40,6 +38,7 @@ Renderer::Renderer(QObject *parent) :
     mLastDeviceError(MA_SUCCESS),
     mEnabled(false),
     mRunning(false),
+    mPeriod(5),
     mSynth(44100),
     mApu(mSynth.apu()),
     mEngine(mApu, nullptr),
@@ -116,31 +115,37 @@ ma_result Renderer::lastDeviceError() {
 
 void Renderer::setConfig(Miniaudio &miniaudio, Config::Sound const &soundConfig) {
 
-    if (isThreadSafe()) {
+    // assert that the GUI thread is calling this
+    // for some reason, miniaudio fails to init a device when called from another thread
+    Q_ASSERT(QThread::currentThread() == QApplication::instance()->thread());
 
-        closeDevice();
+    mMutex.lock();
+    mRunning = false;
+    mMutex.unlock();
+    closeDevice();
 
-        auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
+    auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
 
-        // update device config
-        mDeviceConfig.playback.pDeviceID = miniaudio.deviceId(soundConfig.deviceIndex);
-        mDeviceConfig.periodSizeInFrames = (unsigned)(soundConfig.period * SAMPLERATE / 1000);
-        mDeviceConfig.sampleRate = SAMPLERATE;
+    // update device config
+    mDeviceConfig.playback.pDeviceID = miniaudio.deviceId(soundConfig.deviceIndex);
+    mDeviceConfig.sampleRate = SAMPLERATE;
 
-        // initialize device with settings
-        mDevice.emplace();
-        auto error = ma_device_init(miniaudio.context(), &mDeviceConfig, &mDevice.value());
-        {
-            QMutexLocker locker(&mMutex);
-            mLastDeviceError = error;
-            mEnabled = error == MA_SUCCESS;
-        }
+    // initialize device with settings
+    mDevice.emplace();
+    auto error = ma_device_init(miniaudio.context(), &mDeviceConfig, &mDevice.value());
+    {
+        QMutexLocker locker(&mMutex);
+        mLastDeviceError = error;
+        mEnabled = error == MA_SUCCESS;
+    }
 
-        if (mEnabled) {
+    if (mEnabled) {
+
+        QMetaObject::invokeMethod(this, [this, &soundConfig, SAMPLERATE]() {
             mBuffer.init((size_t)(soundConfig.latency * SAMPLERATE / 1000));
             // cache this for diagnostics
             mBufferSize = (unsigned)mBuffer.size();
-
+            mPeriod = soundConfig.period;
 
             // update the synthesizer
             mSynth.setSamplingRate(SAMPLERATE);
@@ -150,22 +155,15 @@ void Renderer::setConfig(Miniaudio &miniaudio, Config::Sound const &soundConfig)
             if (mState != State::stopped) {
                 // the callback was running before we applied the config, restart it
                 ma_device_start(&mDevice.value());
-                //killTimer(mTimerId);
-                //mTimerId = startTimer(5, Qt::PreciseTimer);
+                killTimer(mTimerId);
+                mTimerId = startTimer(mPeriod, Qt::PreciseTimer);
             }
-        } else {
-            qCritical() << LOG_PREFIX << "failed to initialize the configured device";
-            logMaResult(mLastDeviceError);
-        }
-
-    } else {
-
-        // called from a different thread, reinvoke in the renderer's thread
-        QMetaObject::invokeMethod(this, [this, &miniaudio, &soundConfig]() {
-            setConfig(miniaudio, soundConfig);
         }, Qt::BlockingQueuedConnection);
-
+    } else {
+        qCritical() << LOG_PREFIX << "failed to initialize the configured device";
+        logMaResult(mLastDeviceError);
     }
+
 
 }
 
@@ -200,7 +198,7 @@ void Renderer::beginRender() {
         }
 
         emit audioStarted();
-        mTimerId = startTimer(TIMER_INTERVAL, Qt::PreciseTimer);
+        mTimerId = startTimer(mPeriod, Qt::PreciseTimer);
     }
 
     // reset state to running
@@ -210,6 +208,7 @@ void Renderer::beginRender() {
 }
 
 void Renderer::stopRender() {
+
     mState = State::stopped;
     auto device = &*mDevice;
 
@@ -590,8 +589,7 @@ void Renderer::deviceStopHandler(ma_device *device) {
 void Renderer::_deviceStopHandler() {
     QMutexLocker locker(&mMutex);
 
-    if (mState != State::stopped) {
-        // TODO: test this!
+    if (mRunning) {
 
         // we didn't stop the callback explicitly, a device error has occurred
         mState = State::stopped;

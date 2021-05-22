@@ -51,8 +51,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
 
     // read in application configuration
     mConfig.readSettings();
-    // apply the read in configuration
-    onConfigApplied(Config::CategoryAll);
+    
 
     setWindowIcon(IconManager::getAppIcon());
 
@@ -106,6 +105,9 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     connect(&mRenderThread, &QThread::finished, mRenderer, &Renderer::deleteLater);
     mRenderThread.setObjectName(QStringLiteral("renderer thread"));
     mRenderThread.start();
+
+    // apply the read in configuration
+    onConfigApplied(Config::CategoryAll);
 }
 
 MainWindow::~MainWindow() {

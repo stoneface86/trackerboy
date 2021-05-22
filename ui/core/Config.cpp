@@ -9,8 +9,8 @@
 namespace {
 
 constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
-constexpr double DEFAULT_PERIOD = 10.0;
-constexpr double DEFAULT_LATENCY = 30.0;
+constexpr int DEFAULT_PERIOD = 5;
+constexpr int DEFAULT_LATENCY = 40;
 constexpr int DEFAULT_QUALITY = static_cast<int>(gbapu::Apu::Quality::medium);
 
 Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
@@ -151,8 +151,8 @@ void Config::readSettings() {
     }
 
     mSound.samplerateIndex = settings.value("samplerateIndex", DEFAULT_SAMPLERATE_INDEX).toUInt();
-    mSound.latency = settings.value("latency", DEFAULT_LATENCY).toReal();
-    mSound.period = settings.value("period", DEFAULT_PERIOD).toReal();
+    mSound.latency = settings.value("latency", DEFAULT_LATENCY).toInt();
+    mSound.period = settings.value("period", DEFAULT_PERIOD).toInt();
     mSound.quality = settings.value("quality", DEFAULT_QUALITY).toInt();
 
     settings.endGroup(); // sound

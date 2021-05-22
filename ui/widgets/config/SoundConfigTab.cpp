@@ -19,7 +19,7 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mBackendLabel(),
     mRescanButton(tr("Rescan device list")),
     mDeviceFormLayout(),
-    mLatencyLabel(tr("Latency")),
+    mLatencyLabel(tr("Buffer size")),
     mLatencySpin(),
     mPeriodLabel(tr("Period")),
     mPeriodSpin(),
@@ -79,12 +79,12 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     }
 
     setupTimeSpinbox(mLatencySpin);
-    mLatencySpin.setMaximum(2000.0);
-    mLatencySpin.setValue(30.0);
+    mLatencySpin.setMaximum(2000);
+    mLatencySpin.setValue(40);
 
     setupTimeSpinbox(mPeriodSpin);
-    mPeriodSpin.setMaximum(500.0);
-    mPeriodSpin.setValue(10.0);
+    mPeriodSpin.setMaximum(500);
+    mPeriodSpin.setValue(5);
 
     mLowQualityRadio.setToolTip(tr("Linear interpolation on all channels"));
     mMedQualityRadio.setToolTip(tr("Sinc interpolation on channels 1 and 2, linear interpolation on channels 3 and 4."));
@@ -97,16 +97,15 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     // any changes made by the user will mark this tab as "dirty"
     connect(&mSamplerateCombo, QOverload<int>::of(&QComboBox::activated), this, &SoundConfigTab::setDirty);
     connect(&mDeviceCombo, QOverload<int>::of(&QComboBox::activated), this, &SoundConfigTab::setDirty);
-    connect(&mLatencySpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
-    connect(&mPeriodSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
+    connect(&mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
+    connect(&mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
     connect(&mQualityButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &SoundConfigTab::qualityRadioToggled);
     connect(&mRescanButton, &QPushButton::clicked, this, &SoundConfigTab::rescan);
 }
 
-void SoundConfigTab::setupTimeSpinbox(QDoubleSpinBox &spin) {
+void SoundConfigTab::setupTimeSpinbox(QSpinBox &spin) {
     spin.setSuffix(tr(" ms"));
-    spin.setDecimals(2);
-    spin.setMinimum(1.0);
+    spin.setMinimum(1);
 }
 
 void SoundConfigTab::apply(Config::Sound &soundConfig) {
