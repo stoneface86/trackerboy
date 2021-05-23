@@ -39,9 +39,9 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mToolbarFile(),
     mToolbarEdit(),
     mToolbarTracker(),
-    mInstrumentEditor(mConfig.keyboard().pianoInput),
-    mWaveEditor(mConfig.keyboard().pianoInput),
-    mPatternEditor(mConfig.keyboard().pianoInput),
+    mInstrumentEditor(mPianoInput),
+    mWaveEditor(mPianoInput),
+    mPatternEditor(mPianoInput),
     mRenderer(new Renderer),
     mRenderThread(),
     mSyncWorker(new SyncWorker(*mRenderer, mLeftScope, mRightScope)),
@@ -340,9 +340,9 @@ OrderEditor QTableView QHeaderView::section {
         OrderModel::setRowColor(appearance.colors[+Color::row]);
     }
 
-    //if (categories.testFlag(Config::CategoryKeyboard)) {
-    //    mPianoInput = mConfig.keyboard().pianoInput;
-    //}
+    if (categories.testFlag(Config::CategoryKeyboard)) {
+        mPianoInput = mConfig.keyboard().pianoInput;
+    }
 
     mConfig.writeSettings();
 }
@@ -873,6 +873,10 @@ void MainWindow::setupUi() {
         connect(&piano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform, Qt::QueuedConnection);
         connect(&piano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview, Qt::QueuedConnection);
     }
+
+    connect(&mPatternEditor, &PatternEditor::octaveChanged, this, [this](int octave){ 
+        mPianoInput.setOctave(octave); 
+    });
 
     // sync worker
     connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);

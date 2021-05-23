@@ -69,6 +69,11 @@ struct TrackRow {
 
     void setInstrument(std::optional<uint8_t> instrument);
 
+    // converts a note or instrument optional to its value stored in this struct
+    static constexpr uint8_t convertColumn(std::optional<uint8_t> value) {
+        return value.value_or((uint8_t)-1) + 1;
+    }
+
 };
 
 #pragma pack(pop)

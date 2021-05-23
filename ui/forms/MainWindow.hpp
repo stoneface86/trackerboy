@@ -111,6 +111,8 @@ private:
     Miniaudio &mMiniaudio;
     Config mConfig;
 
+    PianoInput mPianoInput;
+
 
     // counter for how many times a new document has been created
     unsigned mDocumentCounter;

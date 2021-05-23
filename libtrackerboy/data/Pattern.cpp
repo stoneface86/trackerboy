@@ -20,6 +20,31 @@ PatternRow Pattern::operator[](uint16_t row) {
     };
 }
 
+TrackRow& Pattern::getTrackRow(ChType ch, uint16_t row) {
+    Track *track;
+    switch (ch) {
+        case ChType::ch1:
+            track = mTrack1;
+            break;
+        case ChType::ch2:
+            track = mTrack2;
+            break;
+        case ChType::ch3:
+            track = mTrack3;
+            break;
+        case ChType::ch4:
+            track = mTrack4;
+            break;
+    }
+    return track->operator[](row);
+}
+
+TrackRow const& Pattern::getTrackRow(ChType ch, uint16_t row) const {
+    return const_cast<TrackRow const&>(
+        const_cast<Pattern*>(this)->getTrackRow(ch, row)
+        );
+}
+
 unsigned Pattern::totalRows() {
     if (mRowCount == 0) {
 

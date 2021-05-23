@@ -141,6 +141,10 @@ private:
 
     void setPatternRect();
 
+    // edits
+
+    void setNote(trackerboy::Note note);
+
 
     ModuleDocument *mDocument;
     PatternGridHeader &mHeader;
@@ -178,5 +182,8 @@ private:
     unsigned mSelectionEndX;
     unsigned mSelectionEndY;
 
+    // command classes
+    friend class PatternEditNoteCommand;
+    friend class PatternEditCommand;
 };
 
