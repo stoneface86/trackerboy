@@ -6,6 +6,7 @@ class ModuleDocument;
 
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/OrderModel.hpp"
+#include "core/model/PatternModel.hpp"
 #include "core/model/SongModel.hpp"
 #include "core/model/WaveListModel.hpp"
 
@@ -122,6 +123,8 @@ public:
 
     OrderModel& orderModel() noexcept;
 
+    PatternModel& patternModel() noexcept;
+
     SongModel& songModel() noexcept;
 
     WaveListModel& waveModel() noexcept;
@@ -221,6 +224,7 @@ private:
     // models
     InstrumentListModel mInstrumentModel;
     OrderModel mOrderModel;
+    PatternModel mPatternModel;
     SongModel mSongModel;
     WaveListModel mWaveModel;
 

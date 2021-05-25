@@ -47,6 +47,7 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mUndoStack(),
     mInstrumentModel(*this),
     mOrderModel(*this),
+    mPatternModel(*this),
     mSongModel(*this),
     mWaveModel(*this),
     mLastError(trackerboy::FormatError::none),
@@ -131,6 +132,10 @@ InstrumentListModel& ModuleDocument::instrumentModel() noexcept {
 
 OrderModel& ModuleDocument::orderModel() noexcept {
     return mOrderModel;
+}
+
+PatternModel& ModuleDocument::patternModel() noexcept {
+    return mPatternModel;
 }
 
 SongModel& ModuleDocument::songModel() noexcept {
