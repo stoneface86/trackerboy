@@ -22,7 +22,6 @@ constexpr Effect NULL_EFFECT = { EffectType::noEffect, 0 };
 }
 
 Track::Track(uint16_t rows) :
-    mRowCounter(0),
     mData(rows)
 {
 }
@@ -48,9 +47,6 @@ void Track::clear(uint16_t rowStart, uint16_t rowEnd) {
     uint16_t size = std::min(static_cast<uint16_t>(mData.size()), rowEnd);
     auto iter = mData.begin() + rowStart;
     for (uint16_t i = rowStart; i < size; ++i) {
-        if (!iter->isEmpty()) {
-            --mRowCounter; // if this row was set, decrement the counter
-        }
         *iter++ = NULL_ROW;
     }
 }
@@ -60,21 +56,18 @@ void Track::clearEffect(uint8_t rowNo, uint8_t effectNo) {
 
     auto &row = mData[rowNo];
     row.effects[effectNo] = NULL_EFFECT;
-    decrementCounterIfEmpty(row);
 
 }
 
 void Track::clearInstrument(uint8_t rowNo) {
     auto &row = mData[rowNo];
     row.setInstrument({});
-    decrementCounterIfEmpty(row);
 
 }
 
 void Track::clearNote(uint8_t rowNo) {
     auto &row = mData[rowNo];
     row.setNote({});
-    decrementCounterIfEmpty(row);
 }
 
 Track::Data::iterator Track::end() {
@@ -94,7 +87,6 @@ void Track::setEffect(uint8_t rowNo, uint8_t effectNo, EffectType effect, uint8_
     }
 
     auto &row = mData[rowNo];
-    incrementCounterIfEmpty(row);
     auto &effectSt = row.effects[effectNo];
     effectSt.type = effect;
     effectSt.param = param;
@@ -102,32 +94,17 @@ void Track::setEffect(uint8_t rowNo, uint8_t effectNo, EffectType effect, uint8_
 
 void Track::setInstrument(uint8_t rowNo, uint8_t instrumentId) {
     auto &row = mData[rowNo];
-    incrementCounterIfEmpty(row);
     row.setInstrument(instrumentId);
 }
 
 void Track::setNote(uint8_t rowNo, uint8_t note) {
     auto &row = mData[rowNo];
-    incrementCounterIfEmpty(row);
     row.setNote(note);
 }
 
 void Track::replace(uint8_t rowNo, TrackRow &row) {
-    auto &rowToReplace = mData[rowNo];
-    if (rowToReplace.isEmpty()) {
-        // row was empty
-        if (!row.isEmpty()) {
-            // non-empty row will replace this one, increment counter
-            ++mRowCounter;
-        }
-    } else {
-        // row was non-empty
-        if (row.isEmpty()) {
-            // empty row will replace this one, decrement counter
-            --mRowCounter;
-        }
-    }
-    rowToReplace = row;
+    // TODO: this function is now useless, remove it
+    mData[rowNo] = row;
 }
 
 void Track::resize(uint16_t newSize) {
@@ -135,19 +112,13 @@ void Track::resize(uint16_t newSize) {
 }
 
 uint16_t Track::rowCount() const {
-    return mRowCounter;
-}
-
-void Track::decrementCounterIfEmpty(TrackRow const& row) {
-    if (row.isEmpty()) {
-        --mRowCounter;
+    uint16_t count = 0;
+    for (auto &row : mData) {
+        if (!row.isEmpty()) {
+            ++count;
+        }
     }
-}
-
-void Track::incrementCounterIfEmpty(TrackRow const& row) {
-    if (row.isEmpty()) {
-        ++mRowCounter;
-    }
+    return count;
 }
 
 

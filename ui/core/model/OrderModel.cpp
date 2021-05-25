@@ -225,8 +225,8 @@ void OrderModel::selectTrack(int track) {
 void OrderModel::reload() {
     beginResetModel();
     endResetModel();
-    doSelectPattern(0);
-    doSelectTrack(0);
+    //doSelectPattern(0);
+    //doSelectTrack(0);
 }
 
 void OrderModel::setSelection(QItemSelection const &selection, uint8_t id) {

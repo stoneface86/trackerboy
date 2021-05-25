@@ -72,10 +72,6 @@ public:
 
 private:
 
-    void decrementCounterIfEmpty(TrackRow const& row);
-    void incrementCounterIfEmpty(TrackRow const& row);
-
-    uint16_t mRowCounter; // how many rows are set
     Data mData;
 
 };
