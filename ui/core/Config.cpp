@@ -55,7 +55,10 @@ Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
     Qt::Key_M,
     Qt::Key_Comma,
     Qt::Key_Period,
-    Qt::Key_Slash           // A
+    Qt::Key_Slash,          // A
+    Qt::Key_unknown,
+    Qt::Key_unknown,
+    Qt::Key_QuoteLeft      // note cut
 };
 
 }

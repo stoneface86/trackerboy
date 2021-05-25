@@ -35,9 +35,14 @@ void PianoInput::unbind(int semitoneOffset) {
 std::optional<trackerboy::Note> PianoInput::keyToNote(int key) const {
 
     if (mBindingLookup.contains(key)) {
-        int note = mOctave * 12 + mBindingLookup[key];
-        if (note <= trackerboy::NOTE_LAST) {
-            return static_cast<trackerboy::Note>(note);
+        auto offset = mBindingLookup[key];
+        if (offset == NOTE_CUT_BINDING) {
+            return trackerboy::NOTE_CUT;
+        } else {
+            int note = mOctave * 12 + offset;
+            if (note <= trackerboy::NOTE_LAST) {
+                return static_cast<trackerboy::Note>(note);
+            }
         }
     }
 

@@ -35,8 +35,9 @@ public:
     // A S D F G H J K L ; ' \  => ... C#0 D#0 ... F#0 G#0 A#0 ... C#1 D#1 ... ...
     // Z X C V B N M , . /      => C-0 D-0 E-0 F-0 G-0 A-0 B-0 C-1 D-1 E-1
 
-    // 3 octaves of bindings
-    static constexpr int TOTAL_BINDINGS = 36;
+    // 3 octaves of bindings + note cut
+    static constexpr int TOTAL_BINDINGS = 37;
+    static constexpr int NOTE_CUT_BINDING = TOTAL_BINDINGS - 1;
 
     using Bindings = std::array<int, TOTAL_BINDINGS>;
 
