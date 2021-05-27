@@ -21,15 +21,26 @@ public:
 
     explicit PatternModel(ModuleDocument &doc, QObject *parent = nullptr);
 
-    std::optional<trackerboy::PatternRow> getRow(int index);
+    void reload();
+
+    trackerboy::Pattern* previousPattern();
+
+    trackerboy::Pattern& currentPattern();
+
+    trackerboy::Pattern* nextPattern();
 
     int cursorRow() const;
 
     int cursorColumn() const;
 
-    //int track() const;
+    int trackerCursorRow() const;
+    int trackerCursorPattern() const;
 
     bool isRecording() const;
+
+    bool isFollowing() const;
+
+    bool isPlaying() const;
 
     void setTrackerCursor(int row, int pattern);
     void setPlaying(bool playing);
@@ -52,6 +63,8 @@ public slots:
     void setCursorColumn(int column);
 
     void setRecord(bool recording);
+
+    void setFollowing(bool following);
 
     void setPreviewEnable(bool previews);
 

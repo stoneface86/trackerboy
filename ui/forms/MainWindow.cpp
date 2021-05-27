@@ -370,8 +370,9 @@ void MainWindow::trackerPositionChanged(QPoint const pos) {
     auto pattern = pos.x();
     auto row = pos.y();
     
-    if (mBrowserModel.currentDocument() == mRenderer->documentPlayingMusic()) {
-        mPatternEditor.grid().setTrackerCursor(row, pattern);
+    auto doc = mBrowserModel.currentDocument();
+    if (doc == mRenderer->documentPlayingMusic()) {
+        doc->patternModel().setTrackerCursor(row, pattern);
     }
 
     mStatusPos.setText(QStringLiteral("%1 / %2").arg(pattern).arg(row));
@@ -379,6 +380,10 @@ void MainWindow::trackerPositionChanged(QPoint const pos) {
 
 void MainWindow::onAudioStart() {
     mStatusRenderer.setText(tr("Playing"));
+    auto doc = mRenderer->documentPlayingMusic();
+    if (doc) {
+        doc->patternModel().setPlaying(true);
+    }
 }
 
 void MainWindow::onAudioError() {
@@ -395,11 +400,17 @@ void MainWindow::onAudioError() {
         settingsMessageBox(msgbox);
 
     }
+    onAudioStop();
 }
 
 void MainWindow::onAudioStop() {
     if (!mErrorSinceLastConfig) {
         mStatusRenderer.setText(tr("Ready"));
+    }
+
+    auto doc = mRenderer->documentPlayingMusic();
+    if (doc) {
+        doc->patternModel().setPlaying(false);
     }
 }
 

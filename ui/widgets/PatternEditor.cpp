@@ -179,22 +179,6 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mTransposeMenu.addAction(&mActions.octaveIncrease);
     mTransposeMenu.addAction(&mActions.octaveDecrease);
 
-    connect(&mTrackerActions.record, &QAction::toggled, &mGrid, &PatternGrid::setRecord);
-
-    connect(&mGrid, &PatternGrid::cursorRowChanged, &mVScroll, &QScrollBar::setValue);
-    connect(&mVScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorRow);
-    connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
-
-    connect(&mGrid, &PatternGrid::cursorColumnChanged, &mHScroll, &QScrollBar::setValue);
-    connect(&mHScroll, &QScrollBar::valueChanged, &mGrid, &PatternGrid::setCursorColumn);
-    connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
-
-    connect(&mGrid, &PatternGrid::patternRowsChanged, this,
-        [this](int rows) {
-            mVScroll.setMaximum(rows - 1);
-        });
-
-
     connect(&mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, &PatternEditor::octaveChanged);
 
     mOctaveSpin.setValue(4);
@@ -202,7 +186,22 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mKeyRepeatCheck.setCheckState(Qt::Checked);
     mSetInstrumentCheck.setChecked(true);
 
-    connect(&mFollowModeCheck, &QCheckBox::stateChanged, &mGrid, &PatternGrid::setFollowMode);
+    connect(&mTrackerActions.record, &QAction::toggled, this,
+        [this](bool checked) {
+            mDocument->patternModel().setRecord(checked);
+        });
+
+    connect(&mVScroll, &QScrollBar::valueChanged, this,
+        [this](int value) {
+            mDocument->patternModel().setCursorRow(value);
+        });
+    connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
+
+    connect(&mHScroll, &QScrollBar::valueChanged, this,
+        [this](int value) {
+            mDocument->patternModel().setCursorColumn(value);
+        });
+    connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
     mRowsPerBeatSpin.setRange(1, 255);
     mRowsPerMeasureSpin.setRange(1, 255);
@@ -268,27 +267,28 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     
     int const key = evt->key();
     
+    auto &patternModel = mDocument->patternModel();
     
     // navigation keys / non-edit keys
     // these keys also ignore the key repetition setting (they always repeat)
     switch (key) {
         case Qt::Key_Left:
-            mGrid.moveCursorColumn(-1);
+            patternModel.moveCursorColumn(-1);
             return;
         case Qt::Key_Right:
-            mGrid.moveCursorColumn(1);
+            patternModel.moveCursorColumn(1);
             return;
         case Qt::Key_Up:
-            mGrid.moveCursorRow(-1);
+            patternModel.moveCursorRow(-1);
             return;
         case Qt::Key_Down:
-            mGrid.moveCursorRow(1);
+            patternModel.moveCursorRow(1);
             return;
         case Qt::Key_PageDown:
-            mGrid.moveCursorRow(mPageStep);
+            patternModel.moveCursorRow(mPageStep);
             return;
         case Qt::Key_PageUp:
-            mGrid.moveCursorRow(-mPageStep);
+            patternModel.moveCursorRow(-mPageStep);
             return;
         case Qt::Key_Space:
             mTrackerActions.record.toggle();
@@ -301,7 +301,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     }
 
     if (mGrid.processKeyPress(mPianoIn, key)) {
-        mGrid.moveCursorRow(mEditStepSpin.value());
+        patternModel.moveCursorRow(mEditStepSpin.value());
         
     } else {
         // invalid key or edit mode is off, let QWidget handle it
@@ -329,7 +329,7 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
     }
 
     if (amount) {
-        mGrid.moveCursorRow(amount);
+        mDocument->patternModel().moveCursorRow(amount);
     }
 
     evt->accept();
@@ -338,10 +338,10 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
 void PatternEditor::hscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mGrid.moveCursorColumn(1);
+            mDocument->patternModel().moveCursorColumn(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mGrid.moveCursorColumn(-1);
+            mDocument->patternModel().moveCursorColumn(-1);
             break;
         default:
             break;
@@ -351,10 +351,10 @@ void PatternEditor::hscrollAction(int action) {
 void PatternEditor::vscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mGrid.moveCursorRow(1);
+            mDocument->patternModel().moveCursorRow(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mGrid.moveCursorRow(-1);
+            mDocument->patternModel().moveCursorRow(-1);
             break;
         default:
             break;
@@ -365,14 +365,11 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
     if (mDocument != nullptr) {
         // save state to document
         auto &state = mDocument->state();
-        state.recording = mGrid.isRecording();
         state.octave = mOctaveSpin.value();
         state.editStep = mEditStepSpin.value();
         state.loopPattern = mLoopPatternCheck.isChecked();
         state.followMode = mFollowModeCheck.isChecked();
         state.keyRepetition = mKeyRepeatCheck.isChecked();
-        state.cursorRow = mGrid.row();
-        state.cursorColumn = mGrid.column();
         state.autoInstrument = mSetInstrumentCheck.isChecked();
         state.autoInstrumentIndex = mInstrumentCombo.currentIndex();
 
@@ -386,6 +383,13 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         mSpeedSpin.disconnect(&songModel);
         mPatternSizeSpin.disconnect(&songModel);
 
+        auto &patternModel = mDocument->patternModel();
+        patternModel.disconnect(this);
+        patternModel.disconnect(&mTrackerActions.record);
+        patternModel.disconnect(&mVScroll);
+        patternModel.disconnect(&mHScroll);
+        patternModel.disconnect(&mFollowModeCheck);
+        
     }
 
     mDocument = doc;
@@ -399,9 +403,6 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         mLoopPatternCheck.setChecked(state.loopPattern);
         mFollowModeCheck.setChecked(state.followMode);
         mKeyRepeatCheck.setChecked(state.keyRepetition);
-        mTrackerActions.record.setChecked(state.recording);
-        mGrid.setCursorRow(state.cursorRow);
-        mGrid.setCursorColumn(state.cursorColumn);
         mSetInstrumentCheck.setChecked(state.autoInstrument);
         mInstrumentCombo.setModel(&doc->instrumentModel());
         mInstrumentCombo.setCurrentIndex(state.autoInstrumentIndex);
@@ -423,6 +424,24 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         connect(&mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerMeasure);
         connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setSpeed);
         connect(&mPatternSizeSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setPatternSize);
+    
+        auto &patternModel = doc->patternModel();
+        mTrackerActions.record.setChecked(patternModel.isRecording());
+        connect(&patternModel, &PatternModel::recordingChanged, &mTrackerActions.record, &QAction::setChecked);
+        connect(&patternModel, &PatternModel::cursorRowChanged, &mVScroll, &QScrollBar::setValue);
+        connect(&patternModel, &PatternModel::cursorColumnChanged, &mHScroll, &QScrollBar::setValue);
+        
+        mVScroll.setMaximum((int)patternModel.currentPattern().totalRows() - 1);
+        mVScroll.setValue(patternModel.cursorRow());
+        mHScroll.setValue(patternModel.cursorColumn());
+        connect(&patternModel, &PatternModel::patternSizeChanged, this,
+            [this](int rows) {
+                mVScroll.setMaximum(rows - 1);
+            });
+
+        mFollowModeCheck.setChecked(patternModel.isFollowing());
+        connect(&mFollowModeCheck, &QCheckBox::toggled, &patternModel, &PatternModel::setFollowing);
+
     }
 }
 

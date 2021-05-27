@@ -22,36 +22,27 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     auto &orderModel = doc.orderModel();
     connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternModel::setCursorPattern);
     connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternModel::setCursorTrack);
+    connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
+        setCursorPattern(mDocument.orderModel().currentPattern());
+    });
 }
 
-std::optional<trackerboy::PatternRow> PatternModel::getRow(int index) {
-    if (index < 0) {
-        // negative index is the previous pattern
-        if (mPatternPrev) {
-            // adjust index to the previous pattern
-            index += (int)mPatternPrev->totalRows();
-            if (index > 0) {
-                // return row data from the previous pattern
-                return mPatternPrev->operator[]((uint16_t)index);
-            }
-        }
-    } else {
-        auto rows = (int)mPatternCurr.totalRows();
-        if (index < rows) {
-            // current pattern
-            return mPatternCurr[(uint16_t)index];
-        } else if (mPatternNext) {
-            // next pattern
-            index -= rows;
-            if (index < mPatternNext->totalRows()) {
-                return mPatternNext->operator[]((uint16_t)index);
-            }
+void PatternModel::reload() {
+    // patternCurr was invalidated
+    mPatternCurr = mDocument.mod().song().getPattern(0);
+    setCursorPattern(0);
+}
 
-        }
+trackerboy::Pattern* PatternModel::previousPattern() {
+    return mPatternPrev ? &*mPatternPrev : nullptr;
+}
 
-    }
+trackerboy::Pattern& PatternModel::currentPattern() {
+    return mPatternCurr;
+}
 
-    return {};
+trackerboy::Pattern* PatternModel::nextPattern() {
+    return mPatternNext ? &*mPatternNext : nullptr;
 }
 
 int PatternModel::cursorRow() const {
@@ -62,12 +53,24 @@ int PatternModel::cursorColumn() const {
     return mCursorColumn;
 }
 
-// int PatternModel::track() const {
-//     return mCursorColumn / COLUMNS_PER_TRACK;
-// }
+int PatternModel::trackerCursorRow() const {
+    return mTrackerRow;
+}
+
+int PatternModel::trackerCursorPattern() const {
+    return mTrackerPattern;
+}
 
 bool PatternModel::isRecording() const {
     return mRecording;
+}
+
+bool PatternModel::isFollowing() const {
+    return mFollowing;
+}
+
+bool PatternModel::isPlaying() const {
+    return mPlaying;
 }
 
 // slots -------------------------------
@@ -150,9 +153,9 @@ void PatternModel::setCursorPattern(int pattern) {
     }
 
     // update the current pattern
-    auto oldsize = mPatternCurr.totalRows();
+    auto oldsize = (int)mPatternCurr.totalRows();
     mPatternCurr = song.getPattern((uint8_t)pattern);
-    auto newsize = mPatternCurr.totalRows();
+    auto newsize = (int)mPatternCurr.totalRows();
 
     if (oldsize != newsize) {
         emit patternSizeChanged(newsize);
@@ -186,6 +189,10 @@ void PatternModel::setTrackerCursor(int row, int pattern) {
     if (changed) {
         emit trackerCursorChanged(row, pattern);
     }
+}
+
+void PatternModel::setFollowing(bool following) {
+    mFollowing = following;
 }
 
 void PatternModel::setPlaying(bool playing) {

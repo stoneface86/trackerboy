@@ -34,59 +34,22 @@ public:
     // Settings
 
     //
-    // Returns the current row of the cursor
-    //
-    int row() const;
-
-    int column() const;
-
-    PatternConstants::ColumnType columnType() const;
-
-    int channel() const;
-
-    bool isRecording() const;
-
-    void setRecord(bool record);
-
-    //
     // set color scheme, grid is redrawn afterwards
     //
     void setColors(ColorTable const& colors);
 
     // show pattern data for the previous and next patterns
-    void setPreviewEnable(bool previews);
+    //void setPreviewEnable(bool previews);
 
     // if true then flats will be shown instead of sharps
     void setShowFlats(bool showFlats);
 
-    void setTrackerCursor(int row, int pattern);
 
     bool processKeyPress(PianoInput const& input, int const key);
 
     void processKeyRelease(int const key);
 
     void setDocument(ModuleDocument *document);
-
-signals:
-
-    void cursorColumnChanged(int column);
-
-    // emitted when the user changes the current row via keyboard, scroll wheel or mouse
-    void cursorRowChanged(int row);
-
-    void patternRowsChanged(int count);
-
-public slots:
-
-    void setCursorTrack(int track);
-    void setCursorColumn(int column);
-    void setCursorRow(int row);
-    void setCursorPattern(int pattern);
-
-    void setFollowMode(bool follow);
-
-    void moveCursorRow(int amount);
-    void moveCursorColumn(int amount);
 
 
 protected:
@@ -106,8 +69,9 @@ protected:
     void resizeEvent(QResizeEvent *evt) override;
 
 private slots:
-
-    //void onSongChanged(int index);
+    void updateCursorRow();
+    void updateAll();
+    void setPlaying(bool playing);
 
 private:
     Q_DISABLE_COPY(PatternGrid)
@@ -128,52 +92,20 @@ private:
     //
     void getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol);
 
-    //
-    // Scrolls displayed rows and paints new ones. If rows >= mVisibleRows then
-    // no scrolling will occur and the entire display will be repainted
-    //
-    //void scroll(int rows);
-
-    //
-    // Get pattern data for the given pattern index
-    //
-    void setPatterns(int pattern);
-
-    void setPatternRect();
-
-    // edits
-
-    void setNote(trackerboy::Note note);
-
+    void calculateTrackerRow();
 
     ModuleDocument *mDocument;
     PatternGridHeader &mHeader;
     PatternPainter mPainter;
 
-    int mCursorRow;
-    int mCursorCol;
-    int mCursorPattern;    // the current pattern
-
-    int mTrackerRow;       // current row of the renderer
-    int mTrackerPattern;
-    bool mFollowMode;
-
-    std::optional<trackerboy::Pattern> mPatternPrev;
-    std::optional<trackerboy::Pattern> mPatternCurr;
-    std::optional<trackerboy::Pattern> mPatternNext;
-
-    // rectangle of the current rendered pattern
-    QRect mPatternRect;
-
     bool mSelecting;
-
-    bool mEditMode;
-
-    // settings
-    bool mSettingShowPreviews;
 
     unsigned mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
+
+    // cached value of the tracker player position
+    // saved here so we don't have to calculate it every paint event
+    std::optional<int> mTrackerRow;
 
     bool mHasSelection;
     unsigned mSelectionStartX;
@@ -181,9 +113,5 @@ private:
 
     unsigned mSelectionEndX;
     unsigned mSelectionEndY;
-
-    // command classes
-    friend class PatternEditNoteCommand;
-    friend class PatternEditCommand;
 };
 

@@ -183,10 +183,6 @@ signals:
     void channelOutputChanged(OutputFlags flags);
 
 public slots:
-    //
-    // Clears the document to the default state. Call this slot when creating a new document
-    //
-    void clear();
     
     void makeDirty();
 

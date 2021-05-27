@@ -56,7 +56,6 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mState(),
     mChannelEnables(CH1 | CH2 | CH3 | CH4)
 {
-    clear();
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }
 
@@ -78,20 +77,11 @@ ModuleDocument::ModuleDocument(QString const& path, QObject *parent) :
             mInstrumentModel.reload();
             mWaveModel.reload();
             mOrderModel.reload();
+            mPatternModel.reload();
         }
     }
 
     in.close();
-}
-
-
-void ModuleDocument::clear() {
-    
-    mUndoStack.clear();
-    mModule.clear();
-
-    clean();
-    
 }
 
 trackerboy::FormatError ModuleDocument::lastError() {

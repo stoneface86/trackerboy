@@ -45,4 +45,6 @@ extern uint8_t TRACK_CELL_MAP[TRACK_CELLS];
 // converts a cell index -> column index
 extern uint8_t TRACK_COLUMN_MAP[TRACK_COLUMNS];
 
+extern uint8_t TRACK_COLUMN_TO_DATA_COLUMN[TRACK_COLUMNS];
+
 }
