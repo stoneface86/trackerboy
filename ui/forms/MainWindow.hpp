@@ -84,6 +84,8 @@ private slots:
 
     void updateWindowMenu();
 
+    void closeTab(int index);
+
 private:
     Q_DISABLE_COPY(MainWindow)
 

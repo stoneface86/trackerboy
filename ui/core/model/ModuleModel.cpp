@@ -2,6 +2,7 @@
 #include "core/model/ModuleModel.hpp"
 
 #include <QtDebug>
+#include <QElapsedTimer>
 
 #include <array>
 #include <type_traits>
@@ -312,7 +313,14 @@ void ModuleModel::setCurrentDocument(int index) {
         if (doc) {
             mUndoGroup.setActiveStack(&doc->undoStack());
         }
+        // emitting this signal triggers a "document-switch"
+        // benchmark this for usability reasons
+        // if it's too high then the user experience will suffer, switching
+        // tabs should be instantaneous
+        QElapsedTimer timer;
+        timer.start();
         emit currentDocumentChanged(doc);
+        qDebug() << "Document switched in" << timer.elapsed() << "milliseconds";
     }
 }
 
@@ -377,6 +385,18 @@ ModuleModel::ItemType ModuleModel::itemAt(QModelIndex const& index) {
 
 QUndoGroup& ModuleModel::undoGroup() noexcept {
     return mUndoGroup;
+}
+
+void ModuleModel::moveDocument(int from, int to) {
+    beginMoveRows(
+        QModelIndex(),
+        from,
+        from,
+        QModelIndex(),
+        from < to ? to + 1 : to
+    );
+    mDocuments.move(from, to);
+    endMoveRows();
 }
 
 // the following methods forward any row insertions/removals from child models

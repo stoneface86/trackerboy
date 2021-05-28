@@ -525,6 +525,10 @@ void MainWindow::updateWindowMenu() {
 
 }
 
+void MainWindow::closeTab(int index) {
+    closeDocument(mBrowserModel.documents()[index]);
+}
+
 // PRIVATE METHODS -----------------------------------------------------------
 
 
@@ -628,6 +632,8 @@ void MainWindow::setupUi() {
     mHSplitter = new QSplitter(Qt::Horizontal, this);
 
     mTabs.setDocumentMode(true);
+    mTabs.setTabsClosable(true);
+    mTabs.setMovable(true);
 
     mBrowser.setModel(&mBrowserModel);
     mBrowser.setHeaderHidden(true);
@@ -914,6 +920,8 @@ void MainWindow::setupUi() {
     //connect(&mRenderer, &Renderer::audioError, &mUpdateTimer, &QTimer::stop, Qt::QueuedConnection);
     
     connectThis(&mTabs, &QTabBar::currentChanged, onTabChanged);
+    connectThis(&mTabs, &QTabBar::tabCloseRequested, closeTab);
+    connect(&mTabs, &QTabBar::tabMoved, &mBrowserModel, &ModuleModel::moveDocument);
 
 }
 

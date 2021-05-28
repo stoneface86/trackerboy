@@ -100,6 +100,12 @@ public:
     //
     QUndoGroup& undoGroup() noexcept;
 
+    //
+    // Moves the given document located at the from index and puts it the to
+    // index.
+    //
+    void moveDocument(int from, int to);
+
 signals:
 
     //
