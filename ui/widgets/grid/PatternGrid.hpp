@@ -51,6 +51,9 @@ public:
 
     void setDocument(ModuleDocument *document);
 
+signals:
+    void previewNote(quint8 note);
+    void stopNotePreview();
 
 protected:
 
@@ -116,5 +119,7 @@ private:
 
     unsigned mSelectionEndX;
     unsigned mSelectionEndY;
+
+    int mPreviewKey;
 };
 

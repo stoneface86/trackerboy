@@ -861,6 +861,8 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileConfig, showConfigDialog);
     connectActionToThis(mActionFileQuit, close);
     
+    connect(&mActionEditDelete, &QAction::triggered, &mPatternEditor, &PatternEditor::onDelete);
+
     // view
     connectActionToThis(mActionViewResetLayout, onViewResetLayout);
 

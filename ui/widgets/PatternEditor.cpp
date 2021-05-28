@@ -250,8 +250,7 @@ void PatternEditor::setColors(ColorTable const& colors) {
 }
 
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {
-    
-    
+
     int const key = evt->key();
     
     auto &patternModel = mDocument->patternModel();
@@ -288,8 +287,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     }
 
     if (mGrid.processKeyPress(mPianoIn, key)) {
-        patternModel.moveCursorRow(mEditStepSpin.value());
-        
+        stepDown();
     } else {
         // invalid key or edit mode is off, let QWidget handle it
         QWidget::keyPressEvent(evt);
@@ -443,7 +441,8 @@ void PatternEditor::onPasteMix() {
 }
 
 void PatternEditor::onDelete() {
-    
+    mDocument->patternModel().deleteSelection();
+    stepDown();
 }
 
 void PatternEditor::onSelectAll() {
@@ -542,5 +541,12 @@ void PatternEditor::setAutoInstrument(int index) {
         mInstrument = 0;
     } else {
         mInstrument = mDocument->instrumentModel().id(index);
+    }
+}
+
+void PatternEditor::stepDown() {
+    auto &patternModel = mDocument->patternModel();
+    if (patternModel.isRecording()) {
+        patternModel.moveCursorRow(mEditStepSpin.value());
     }
 }

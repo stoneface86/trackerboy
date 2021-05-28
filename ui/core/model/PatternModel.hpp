@@ -19,6 +19,29 @@ class PatternModel : public QObject {
 
 public:
 
+    enum ColumnType {
+        COLUMN_NOTE,
+
+        // high is the upper nibble (bits 4-7)
+        // low is the lower nibble (bits 0-3)
+
+        COLUMN_INSTRUMENT_HIGH,
+        COLUMN_INSTRUMENT_LOW,
+
+        COLUMN_EFFECT1_TYPE,
+        COLUMN_EFFECT1_ARG_HIGH,
+        COLUMN_EFFECT1_ARG_LOW,
+
+        COLUMN_EFFECT2_TYPE,
+        COLUMN_EFFECT2_ARG_HIGH,
+        COLUMN_EFFECT2_ARG_LOW,
+
+        COLUMN_EFFECT3_TYPE,
+        COLUMN_EFFECT3_ARG_HIGH,
+        COLUMN_EFFECT3_ARG_LOW
+
+    };
+
     explicit PatternModel(ModuleDocument &doc, QObject *parent = nullptr);
 
     void reload();
@@ -33,6 +56,8 @@ public:
 
     int cursorColumn() const;
 
+    ColumnType columnType() const;
+
     int trackerCursorRow() const;
     int trackerCursorPattern() const;
 
@@ -45,6 +70,21 @@ public:
     void setTrackerCursor(int row, int pattern);
     void setPlaying(bool playing);
 
+
+    // editing
+
+    //
+    // sets the note for the current track at the cursor row. An empty optional
+    // deletes the note set.
+    //
+    void setNote(std::optional<uint8_t> note);
+    void setInstrument(std::optional<uint8_t> nibble);
+    void setEffectType(trackerboy::EffectType type);
+    void setEffectParam(uint8_t nibble);
+
+    // deletes selection or the cursor if no selection is present
+    void deleteSelection();
+
 signals:
     void cursorColumnChanged(int column);
     void cursorRowChanged(int row);
@@ -53,6 +93,8 @@ signals:
     void trackerCursorChanged(int row, int pattern);
     void playingChanged(bool playing);
     void recordingChanged(bool recording);
+
+    void dataChanged();
 
 public slots:
 
@@ -74,9 +116,15 @@ private slots:
     void setCursorTrack(int track);
 
 private:
+    friend class PatternEditColumnCmd;
+    friend struct ColumnEditHelper;
+
+    Q_DISABLE_COPY(PatternModel)
 
     void setPatterns(int pattern);
     void setPreviewPatterns(int pattern);
+
+    int cursorEffectNo();
 
     ModuleDocument &mDocument;
 

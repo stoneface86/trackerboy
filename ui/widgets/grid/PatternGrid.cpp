@@ -15,42 +15,7 @@
 
 using namespace PatternConstants;
 
-static uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
-    if (highNibble) {
-        return (value & 0x0F) | (nibble << 4);
-    } else {
-        return (value & 0xF0) | (nibble);
-    }
-}
 
-
-static void copyFromPattern(trackerboy::Pattern const& src, uint16_t rowno, int start, int count, char *dest) {
-    int channel = start / sizeof(trackerboy::TrackRow);
-    int offset = start % sizeof(trackerboy::TrackRow);
-    while (count) {
-        auto const& rowdata = src.getTrackRow(static_cast<trackerboy::ChType>(channel), rowno);
-        auto toCopy = std::min(count, (int)sizeof(trackerboy::TrackRow) - offset);
-        std::copy_n(reinterpret_cast<const char*>(&rowdata) + offset, toCopy, dest);
-        dest += toCopy;
-        offset = 0;
-        ++channel;
-        count -= toCopy;
-    }
-}
-
-static void copyToPattern(const char* src, uint16_t rowno, int colFrom, int count, trackerboy::Pattern &dest) {
-    int channel = colFrom / sizeof(trackerboy::TrackRow);
-    int offset = colFrom % sizeof(trackerboy::TrackRow);
-    while (count) {
-        auto &rowdata = dest.getTrackRow(static_cast<trackerboy::ChType>(channel), rowno);
-        auto toCopy = std::min(count, (int)sizeof(trackerboy::TrackRow) - offset);
-        std::copy_n(src, toCopy, reinterpret_cast<char*>(&rowdata) + offset);
-        src += toCopy;
-        offset = 0;
-        ++channel;
-        count -= toCopy;
-    }
-}
 
 
 
@@ -329,6 +294,8 @@ static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
             return trackerboy::EffectType::noteSlideUp;
         case Qt::Key_R:
             return trackerboy::EffectType::noteSlideDown;
+        case Qt::Key_Delete:
+            return trackerboy::EffectType::noEffect;
         default:
             return std::nullopt;
     }
@@ -356,7 +323,8 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     mSelectionStartX(0),
     mSelectionStartY(0),
     mSelectionEndX(0),
-    mSelectionEndY(0)
+    mSelectionEndY(0),
+    mPreviewKey(Qt::Key_unknown)
 {
 
     setAutoFillBackground(true);
@@ -390,134 +358,71 @@ void PatternGrid::setShowFlats(bool showFlats) {
 bool PatternGrid::processKeyPress(PianoInput const& input, int const key) {
     bool validKey = false;
 
-    #if 0
-    PatternEditCommand *cmd = nullptr;
+    auto &patternModel = mDocument->patternModel();
 
-    auto const coltype = static_cast<ColumnType>(mCursorCol % TRACK_COLUMNS);
-    auto const track = mCursorCol / TRACK_COLUMNS;
-
-    switch (coltype) {
-        case PatternConstants::COLUMN_NOTE: {
+    switch (patternModel.columnType()) {
+        case PatternModel::COLUMN_NOTE: {
             auto note = input.keyToNote(key);
-            if (note) {
-                // TODO: preview the note
-                //mPreviewKey = key;
-                //emit previewNote(*note);
-                // set it in the grid
-                if (mEditMode) {
-                    // set note
-                    int dataCol = track * sizeof(trackerboy::TrackRow);
-                    cmd = new PatternEditCommand(*this, (uint8_t)mCursorPattern, QRect(dataCol, mCursorRow, 1, 1));
-                    cmd->newData()[0] = trackerboy::TrackRow::convertColumn(note);
-                    cmd->setText(tr("edit note"));
-                }
 
+            if (note) {
+                if (*note != trackerboy::NOTE_CUT) {
+                    qDebug() << "Preview note: " << *note;
+                    mPreviewKey = key;
+                    emit previewNote(*note);
+                }
+                patternModel.setNote(note);
                 validKey = true;
             }
+
             break;
         }
-        case PatternConstants::COLUMN_EFFECT1_TYPE:
-        case PatternConstants::COLUMN_EFFECT2_TYPE:
-        case PatternConstants::COLUMN_EFFECT3_TYPE:
+        case PatternModel::COLUMN_EFFECT1_TYPE:
+        case PatternModel::COLUMN_EFFECT2_TYPE:
+        case PatternModel::COLUMN_EFFECT3_TYPE:
         {
             // check if the key pressed is a valid effect type
             auto effectType = keyToEffectType(key);
             if (effectType) {
-                // shortcut for converting the column type to its corresponding effect number
-                // assert that we can do this
-                static_assert(PatternConstants::COLUMN_EFFECT1_TYPE / 3 - 1 == 0);
-                static_assert(PatternConstants::COLUMN_EFFECT2_TYPE / 3 - 1 == 1);
-                static_assert(PatternConstants::COLUMN_EFFECT3_TYPE / 3 - 1 == 2);
-
-                if (mEditMode) {
-                    // edit effect type
-                    int effectNo = coltype / 3 - 1;
-                    int dataCol = track * sizeof(trackerboy::TrackRow) + 2 + (effectNo * 2);
-                    cmd = new PatternEditCommand(*this, (uint8_t)mCursorPattern, QRect(dataCol, mCursorRow, 1, 1));
-                    cmd->newData()[0] = static_cast<char>(*effectType);
-                    cmd->setUpdatePatterns(true);
-                    cmd->setText(tr("Set effect type"));
-                }
-
+                patternModel.setEffectType(*effectType);
                 validKey = true;
             }
-        }
             break;
-        case PatternConstants::COLUMN_INSTRUMENT_HIGH:
-        case PatternConstants::COLUMN_INSTRUMENT_LOW: {
+        }
+        case PatternModel::COLUMN_INSTRUMENT_HIGH:
+        case PatternModel::COLUMN_INSTRUMENT_LOW: {
             auto hex = keyToHex(key);
             if (hex) {
-                if (mEditMode) {
-                    // get the current instrument value
-                    uint8_t instrument = mPatternCurr->operator[](
-                        (uint16_t)mCursorRow
-                    )[track].queryInstrument().value_or((uint8_t)0);
-                    instrument = replaceNibble(instrument, *hex, coltype == PatternConstants::COLUMN_INSTRUMENT_HIGH);
-                    
-                    if (instrument >= trackerboy::MAX_INSTRUMENTS) {
-                        // ignore this key if we go over the maximum possible instrument id
-                        break;
-                    }
-
-                    int dataCol = (track * sizeof(trackerboy::TrackRow)) + 1;
-                    cmd = new PatternEditCommand(*this, (uint8_t)mCursorPattern, QRect(dataCol, mCursorRow, 1, 1));
-                    cmd->newData()[0] = (char)trackerboy::TrackRow::convertColumn(instrument);
-                    cmd->setText(tr("set instrument"));
-                
-                }
+                patternModel.setInstrument(hex);
                 validKey = true;
             }
             break;
         }
-        case PatternConstants::COLUMN_EFFECT1_ARG_HIGH:
-        case PatternConstants::COLUMN_EFFECT1_ARG_LOW:
-        case PatternConstants::COLUMN_EFFECT2_ARG_HIGH:
-        case PatternConstants::COLUMN_EFFECT2_ARG_LOW:
-        case PatternConstants::COLUMN_EFFECT3_ARG_HIGH:
-        case PatternConstants::COLUMN_EFFECT3_ARG_LOW:
+        case PatternModel::COLUMN_EFFECT1_ARG_HIGH:
+        case PatternModel::COLUMN_EFFECT1_ARG_LOW:
+        case PatternModel::COLUMN_EFFECT2_ARG_HIGH:
+        case PatternModel::COLUMN_EFFECT2_ARG_LOW:
+        case PatternModel::COLUMN_EFFECT3_ARG_HIGH:
+        case PatternModel::COLUMN_EFFECT3_ARG_LOW:
         {
-
-
             // check if the key pressed is a hex number
             auto hex = keyToHex(key);
             if (hex) {
-                if (mEditMode) {
-                    // edit instrument/effect arg
-                    int coltypeAdj = coltype - 3;
-                    int effectNo = coltypeAdj / 3;
-                    int nibbleIndex = coltypeAdj % 3;
-                    uint8_t arg = mPatternCurr->operator[](
-                        (uint16_t)mCursorRow
-                    )[track].effects[effectNo].param;
-                    arg = replaceNibble(arg, *hex, nibbleIndex == 1);
-
-                    int dataCol = track * sizeof(trackerboy::TrackRow) + 3 + (effectNo * 2);
-                    cmd = new PatternEditCommand(*this, (uint8_t)mCursorPattern, QRect(dataCol, mCursorRow, 1, 1));
-                    cmd->newData()[0] = (char)arg;
-                    cmd->setText(tr("set effect parameter"));
-                }
-
+                patternModel.setEffectParam(*hex);
                 validKey = true;
             }
+            
         }
         break;
     }
-
-
-    if (cmd) {
-        mDocument->undoStack().push(cmd);
-    }
-
-    #endif
 
     return validKey;
 }
 
 void PatternGrid::processKeyRelease(int const key) {
-    Q_UNUSED(key)
-    // if (key == mPreviewKey) {
-    //     emit stopNotePreview();
-    // }
+    if (key == mPreviewKey) {
+        mPreviewKey = Qt::Key_unknown;
+        emit stopNotePreview();
+    }
 }
 
 void PatternGrid::setDocument(ModuleDocument *doc) {
@@ -545,9 +450,11 @@ void PatternGrid::setDocument(ModuleDocument *doc) {
         // these changes require a full redraw
         connect(&patternModel, &PatternModel::cursorRowChanged, this, &PatternGrid::updateAll);
         connect(&patternModel, &PatternModel::patternsChanged, this, &PatternGrid::updateAll);
+        connect(&patternModel, &PatternModel::dataChanged, this, &PatternGrid::updateAll);
         // these we only need to redraw the cursor row
         connect(&patternModel, &PatternModel::cursorColumnChanged, this, &PatternGrid::updateCursorRow);
         connect(&patternModel, &PatternModel::recordingChanged, this, &PatternGrid::updateCursorRow);
+        
 
         connect(&patternModel, &PatternModel::trackerCursorChanged, this, &PatternGrid::calculateTrackerRow);
         connect(&patternModel, &PatternModel::playingChanged, this, &PatternGrid::setPlaying);

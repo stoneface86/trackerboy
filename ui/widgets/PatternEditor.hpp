@@ -125,6 +125,8 @@ private:
     void setTempoLabel(float tempo);
     float calcActualTempo(float speed);
 
+    void stepDown();
+
     Q_DISABLE_COPY(PatternEditor)
 
     PianoInput const& mPianoIn;
