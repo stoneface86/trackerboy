@@ -532,28 +532,9 @@ void PatternGrid::setDocument(ModuleDocument *doc) {
     if (doc) {
 
         auto &songModel = doc->songModel();
-        // TODO: PatternModel needs to handle this
-        // connect(&songModel, &SongModel::patternSizeChanged, this,
-        //     [this](int rows) {
-        //         if (mCursorRow >= rows) {
-        //             mCursorRow = rows - 1;
-        //             emit cursorRowChanged(mCursorRow);
-        //         }
-        //         setPatterns(mCursorPattern);
-        //         setPatternRect();
-        //         update();
-        //     });
 
-        connect(&songModel, &SongModel::rowsPerBeatChanged, this,
-            [this](int rpb) {
-                mPainter.setFirstHighlight(rpb);
-                update();
-            });
-        connect(&songModel, &SongModel::rowsPerMeasureChanged, this,
-            [this](int rpm) {
-                mPainter.setSecondHighlight(rpm);
-                update();
-            });
+        connect(&songModel, &SongModel::rowsPerBeatChanged, this, &PatternGrid::setFirstHighlight);
+        connect(&songModel, &SongModel::rowsPerMeasureChanged, this, &PatternGrid::setSecondHighlight);
 
         mPainter.setFirstHighlight(songModel.rowsPerBeat());
         mPainter.setSecondHighlight(songModel.rowsPerMeasure());
@@ -794,6 +775,16 @@ void PatternGrid::setPlaying(bool playing) {
         mTrackerRow.reset();
         update();
     }
+}
+
+void PatternGrid::setFirstHighlight(int highlight) {
+    mPainter.setFirstHighlight(highlight);
+    update();
+}
+
+void PatternGrid::setSecondHighlight(int highlight) {
+    mPainter.setSecondHighlight(highlight);
+    update();
 }
 
 void PatternGrid::fontChanged() {

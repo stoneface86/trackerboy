@@ -30,7 +30,6 @@
 // +----------------------------------+--+
 
 
-
 PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     QFrame(parent),
     mPianoIn(input),
@@ -186,22 +185,7 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mKeyRepeatCheck.setCheckState(Qt::Checked);
     mSetInstrumentCheck.setChecked(true);
 
-    connect(&mTrackerActions.record, &QAction::toggled, this,
-        [this](bool checked) {
-            mDocument->patternModel().setRecord(checked);
-        });
-
-    connect(&mVScroll, &QScrollBar::valueChanged, this,
-        [this](int value) {
-            mDocument->patternModel().setCursorRow(value);
-        });
-    connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
-
-    connect(&mHScroll, &QScrollBar::valueChanged, this,
-        [this](int value) {
-            mDocument->patternModel().setCursorColumn(value);
-        });
-    connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
+    
 
     mRowsPerBeatSpin.setRange(1, 255);
     mRowsPerMeasureSpin.setRange(1, 255);
@@ -216,6 +200,9 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
 
     mSpeedActualLabel.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mTempoActualLabel.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
+    connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
     // a change in the rows per peat setting requires a recalculation in the actual tempo label
     connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), this, &PatternEditor::updateTempoLabel);
@@ -373,23 +360,11 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         state.autoInstrument = mSetInstrumentCheck.isChecked();
         state.autoInstrumentIndex = mInstrumentCombo.currentIndex();
 
-        auto &orderModel = mDocument->orderModel();
-        orderModel.disconnect(this);
-        mPatternsSpin.disconnect(&orderModel);
+        for (auto const& conn : mConnections) {
+            disconnect(conn);
+        }
+        mConnections.clear();
 
-        auto &songModel = mDocument->songModel();
-        mRowsPerBeatSpin.disconnect(&songModel);
-        mRowsPerMeasureSpin.disconnect(&songModel);
-        mSpeedSpin.disconnect(&songModel);
-        mPatternSizeSpin.disconnect(&songModel);
-
-        auto &patternModel = mDocument->patternModel();
-        patternModel.disconnect(this);
-        patternModel.disconnect(&mTrackerActions.record);
-        patternModel.disconnect(&mVScroll);
-        patternModel.disconnect(&mHScroll);
-        patternModel.disconnect(&mFollowModeCheck);
-        
     }
 
     mDocument = doc;
@@ -410,9 +385,9 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         auto &orderModel = doc->orderModel();
         mPatternsSpin.setValue(orderModel.rowCount());
         
-        connect(&orderModel, &OrderModel::rowsInserted, this, &PatternEditor::updatePatternsSpin);
-        connect(&orderModel, &OrderModel::rowsRemoved, this, &PatternEditor::updatePatternsSpin);
-        connect(&mPatternsSpin, qOverload<int>(&QSpinBox::valueChanged), &orderModel, &OrderModel::setPatternCount);
+        mConnections.append(connect(&orderModel, &OrderModel::rowsInserted, this, &PatternEditor::updatePatternsSpin));
+        mConnections.append(connect(&orderModel, &OrderModel::rowsRemoved, this, &PatternEditor::updatePatternsSpin));
+        mConnections.append(connect(&mPatternsSpin, qOverload<int>(&QSpinBox::valueChanged), &orderModel, &OrderModel::setPatternCount));
         
 
         auto &songModel = doc->songModel();
@@ -420,27 +395,33 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         mRowsPerMeasureSpin.setValue(songModel.rowsPerMeasure());
         mSpeedSpin.setValue(songModel.speed());
         mPatternSizeSpin.setValue(songModel.patternSize());
-        connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerBeat);
-        connect(&mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerMeasure);
-        connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setSpeed);
-        connect(&mPatternSizeSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setPatternSize);
+        mConnections.append(connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerBeat));
+        mConnections.append(connect(&mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerMeasure));
+        mConnections.append(connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setSpeed));
+        mConnections.append(connect(&mPatternSizeSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setPatternSize));
     
         auto &patternModel = doc->patternModel();
         mTrackerActions.record.setChecked(patternModel.isRecording());
-        connect(&patternModel, &PatternModel::recordingChanged, &mTrackerActions.record, &QAction::setChecked);
-        connect(&patternModel, &PatternModel::cursorRowChanged, &mVScroll, &QScrollBar::setValue);
-        connect(&patternModel, &PatternModel::cursorColumnChanged, &mHScroll, &QScrollBar::setValue);
+        mConnections.append(connect(&mTrackerActions.record, &QAction::toggled, &patternModel, &PatternModel::setRecord));
+        mConnections.append(connect(&patternModel, &PatternModel::recordingChanged, &mTrackerActions.record, &QAction::setChecked));
         
+        // scrollbars
         mVScroll.setMaximum((int)patternModel.currentPattern().totalRows() - 1);
         mVScroll.setValue(patternModel.cursorRow());
         mHScroll.setValue(patternModel.cursorColumn());
-        connect(&patternModel, &PatternModel::patternSizeChanged, this,
+        mConnections.append(connect(&patternModel, &PatternModel::cursorRowChanged, &mVScroll, &QScrollBar::setValue));
+        mConnections.append(connect(&mVScroll, &QScrollBar::valueChanged, &patternModel, &PatternModel::setCursorRow));
+        
+        mConnections.append(connect(&patternModel, &PatternModel::cursorColumnChanged, &mHScroll, &QScrollBar::setValue));
+        mConnections.append(connect(&mHScroll, &QScrollBar::valueChanged, &patternModel, &PatternModel::setCursorColumn));
+
+        mConnections.append(connect(&patternModel, &PatternModel::patternSizeChanged, this,
             [this](int rows) {
                 mVScroll.setMaximum(rows - 1);
-            });
+            }));
 
         mFollowModeCheck.setChecked(patternModel.isFollowing());
-        connect(&mFollowModeCheck, &QCheckBox::toggled, &patternModel, &PatternModel::setFollowing);
+        mConnections.append(connect(&mFollowModeCheck, &QCheckBox::toggled, &patternModel, &PatternModel::setFollowing));
 
     }
 }

@@ -75,12 +75,14 @@ private slots:
 
 private:
 
+    void setPatterns(int pattern);
     void setPreviewPatterns(int pattern);
 
     ModuleDocument &mDocument;
 
     int mCursorRow;
     int mCursorColumn;
+    int mCursorPattern;
 
     bool mRecording;
     bool mFollowing;

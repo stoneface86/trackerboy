@@ -73,6 +73,9 @@ private slots:
     void updateAll();
     void setPlaying(bool playing);
 
+    void setFirstHighlight(int highlight);
+    void setSecondHighlight(int highlight);
+
 private:
     Q_DISABLE_COPY(PatternGrid)
 

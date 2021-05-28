@@ -8,6 +8,7 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     mDocument(doc),
     mCursorRow(0),
     mCursorColumn(0),
+    mCursorPattern(0),
     mRecording(false),
     mFollowing(true),
     mPlaying(false),
@@ -23,8 +24,18 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternModel::setCursorPattern);
     connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternModel::setCursorTrack);
     connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
-        setCursorPattern(mDocument.orderModel().currentPattern());
+        setPatterns(mCursorPattern);
     });
+
+    auto &songModel = doc.songModel();
+    connect(&songModel, &SongModel::patternSizeChanged, this,
+        [this](int rows) {
+            if (mCursorRow >= rows) {
+                mCursorRow = rows - 1;
+                emit cursorRowChanged(mCursorRow);
+            }
+            setPatterns(mCursorPattern);
+        });
 }
 
 void PatternModel::reload() {
@@ -88,7 +99,6 @@ void PatternModel::setCursorRow(int row) {
         return;
     }
 
-    //auto &song = mDocument->mod().song();
     auto &orderModel = mDocument.orderModel();
     auto const pattern = orderModel.currentPattern();
 
@@ -145,48 +155,32 @@ void PatternModel::setCursorTrack(int track) {
 }
 
 void PatternModel::setCursorPattern(int pattern) {
-    auto &song = mDocument.mod().song();
 
-    
-    if (mShowPreviews) {
-        setPreviewPatterns(pattern);
+    if (mCursorPattern == pattern) {
+        return;
     }
 
-    // update the current pattern
-    auto oldsize = (int)mPatternCurr.totalRows();
-    mPatternCurr = song.getPattern((uint8_t)pattern);
-    auto newsize = (int)mPatternCurr.totalRows();
+    setPatterns(pattern);
+    mCursorPattern = pattern;
 
-    if (oldsize != newsize) {
-        emit patternSizeChanged(newsize);
-    }
-
-    emit patternsChanged();
-
-    if (mCursorRow >= newsize) {
-        mCursorRow = newsize - 1;
-        emit cursorRowChanged(mCursorRow);
-    }
 }
 
 void PatternModel::setTrackerCursor(int row, int pattern) {
     bool changed = false;
     if (mTrackerPattern != pattern) {
         mTrackerPattern = pattern;
-        if (mFollowing) {
-            setCursorPattern(pattern);
-        }
         changed = true;
     }
     if (mTrackerRow != row) {
         mTrackerRow = row;
-        if (mFollowing) {
-            setCursorRow(row);
-        }
         changed = true;
     }
 
     if (changed) {
+        if (mFollowing) {
+            mDocument.orderModel().selectPattern(pattern);
+            setCursorRow(row);
+        }
         emit trackerCursorChanged(row, pattern);
     }
 }
@@ -219,6 +213,33 @@ void PatternModel::setPreviewEnable(bool enable) {
             mPatternNext.reset();
         }
         emit patternsChanged();
+    }
+}
+
+void PatternModel::setPatterns(int pattern) {
+    if (mShowPreviews) {
+        setPreviewPatterns(pattern);
+    }
+    auto &song = mDocument.mod().song();
+
+    if (mShowPreviews) {
+        setPreviewPatterns(pattern);
+    }
+
+    // update the current pattern
+    auto oldsize = (int)mPatternCurr.totalRows();
+    mPatternCurr = song.getPattern((uint8_t)pattern);
+    auto newsize = (int)mPatternCurr.totalRows();
+
+    if (oldsize != newsize) {
+        emit patternSizeChanged(newsize);
+    }
+
+    emit patternsChanged();
+
+    if (mCursorRow >= newsize) {
+        mCursorRow = newsize - 1;
+        emit cursorRowChanged(mCursorRow);
     }
 }
 

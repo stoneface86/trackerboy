@@ -220,8 +220,8 @@ private:
     // models
     InstrumentListModel mInstrumentModel;
     OrderModel mOrderModel;
-    PatternModel mPatternModel;
     SongModel mSongModel;
+    PatternModel mPatternModel;
     WaveListModel mWaveModel;
 
     trackerboy::FormatError mLastError;

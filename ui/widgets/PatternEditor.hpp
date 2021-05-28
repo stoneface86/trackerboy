@@ -19,6 +19,7 @@
 #include <QScrollBar>
 #include <QSpinBox>
 #include <QToolBar>
+#include <QVector>
 
 #include <array>
 #include <optional>
@@ -190,4 +191,13 @@ private:
     bool mSpeedLock;
 
     std::optional<uint8_t> mInstrument;
+
+    //
+    // Vector of connections for the current document, makes disconnecting
+    // easy when switching documents
+    //
+    // make this an array later, the number of connections is static
+    // a vector is used for convenience
+    //
+    QVector<QMetaObject::Connection> mConnections;
 };
