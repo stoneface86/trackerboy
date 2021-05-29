@@ -72,12 +72,15 @@ public:
 
 
     // editing
+    // unless specified, these functions use the current cursor position for
+    // editing.
 
     //
     // sets the note for the current track at the cursor row. An empty optional
-    // deletes the note set.
+    // deletes the note set. If an instrument is provided, it will be set along
+    // with the note
     //
-    void setNote(std::optional<uint8_t> note);
+    void setNote(std::optional<uint8_t> note, std::optional<uint8_t> instrument);
     void setInstrument(std::optional<uint8_t> nibble);
     void setEffectType(trackerboy::EffectType type);
     void setEffectParam(uint8_t nibble);
@@ -88,13 +91,17 @@ public:
 signals:
     void cursorColumnChanged(int column);
     void cursorRowChanged(int row);
-    void patternsChanged();
+    //void patternsChanged();
     void patternSizeChanged(int rows);
     void trackerCursorChanged(int row, int pattern);
     void playingChanged(bool playing);
     void recordingChanged(bool recording);
 
-    void dataChanged();
+    //
+    // emitted when a change has been made to the current pattern and should
+    // be redrawn.
+    //
+    void invalidated();
 
 public slots:
 
@@ -116,8 +123,8 @@ private slots:
     void setCursorTrack(int track);
 
 private:
-    friend class PatternEditColumnCmd;
-    friend struct ColumnEditHelper;
+
+    friend class TrackEditCmd;
 
     Q_DISABLE_COPY(PatternModel)
 
@@ -125,6 +132,10 @@ private:
     void setPreviewPatterns(int pattern);
 
     int cursorEffectNo();
+
+    trackerboy::TrackRow const& cursorTrackRow();
+
+    void invalidate(int pattern, bool updatePatterns);
 
     ModuleDocument &mDocument;
 

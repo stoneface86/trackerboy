@@ -45,7 +45,7 @@ public:
     void setShowFlats(bool showFlats);
 
 
-    bool processKeyPress(PianoInput const& input, int const key);
+    bool processKeyPress(PianoInput const& input, int const key, std::optional<uint8_t> instrument);
 
     void processKeyRelease(int const key);
 

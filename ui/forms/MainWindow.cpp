@@ -88,6 +88,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
         addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleSettings);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockInstrumentEditor);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveformEditor);
+        addDockWidget(Qt::LeftDockWidgetArea, &mDockHistory);
         restoreState(windowState);
     }
 
@@ -681,17 +682,6 @@ void MainWindow::setupUi() {
     mActionEditRedo = undoGroup.createRedoAction(this);
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
     mActionEditRedo->setShortcut(QKeySequence::Redo);
-    setupAction(mActionEditCut, "Cu&t", "Cuts selected rows and puts it onto the clipboard", Icons::editCut, QKeySequence::Cut);
-    setupAction(mActionEditCopy, "&Copy", "Copies selected rows and puts it onto the clipboard", Icons::editCut, QKeySequence::Copy);
-    setupAction(mActionEditPaste, "&Paste", "Pastes clipboard contents at cursor", Icons::editPaste, QKeySequence::Paste);
-    setupAction(mActionEditPasteMix, "Paste Mi&x", "Mix clipboard contents", QStringLiteral("Shift+Ctrl+V"));
-    setupAction(mActionEditDelete, "&Delete", "Deletes selection", QKeySequence::Delete);
-    setupAction(mActionEditSelectAll, "&Select All", "Selects all rows in track/pattern", QKeySequence::SelectAll);
-    setupAction(mActionTransposeNoteIncrease, "Increase note", "Increases note(s) by 1 semitone");
-    setupAction(mActionTransposeNoteDecrease, "Decrease note", "Decreases note(s) by 1 semitone");
-    setupAction(mActionTransposeOctaveIncrease, "Increase octave", "Increases note(s) by 12 semitones");
-    setupAction(mActionTransposeOctaveDecrease, "Decrease octave", "Decreases note(s) by 12 semitones");
-    
 
     setupAction(mActionViewResetLayout, "Reset layout", "Rearranges all docks and toolbars to the default layout");
 
@@ -734,20 +724,21 @@ void MainWindow::setupUi() {
     mMenuEdit.addAction(mActionEditUndo);
     mMenuEdit.addAction(mActionEditRedo);
     mMenuEdit.addSeparator();
-    mMenuEdit.addAction(&mActionEditCut);
-    mMenuEdit.addAction(&mActionEditCopy);
-    mMenuEdit.addAction(&mActionEditPaste);
-    mMenuEdit.addAction(&mActionEditPasteMix);
-    mMenuEdit.addAction(&mActionEditDelete);
-    mMenuEdit.addSeparator();
-    mMenuEdit.addAction(&mActionEditSelectAll);
-    mMenuEdit.addSeparator();
-        mMenuEditTranspose.setTitle(tr("Transpose"));
-        mMenuEditTranspose.addAction(&mActionTransposeNoteIncrease);
-        mMenuEditTranspose.addAction(&mActionTransposeNoteDecrease);
-        mMenuEditTranspose.addAction(&mActionTransposeOctaveIncrease);
-        mMenuEditTranspose.addAction(&mActionTransposeOctaveDecrease);
-    mMenuEdit.addMenu(&mMenuEditTranspose);    
+    mPatternEditor.setupMenu(mMenuEdit);
+    // mMenuEdit.addAction(&patternActions.cut]);
+    // mMenuEdit.addAction(&patternActions.copy);
+    // mMenuEdit.addAction(&patternActions.paste);
+    // mMenuEdit.addAction(&patternActions.pasteMix);
+    // mMenuEdit.addAction(&patternActions.delete_);
+    // mMenuEdit.addSeparator();
+    // mMenuEdit.addAction(&mActionEditSelectAll);
+    // mMenuEdit.addSeparator();
+    //     mMenuEditTranspose.setTitle(tr("Transpose"));
+    //     mMenuEditTranspose.addAction(&mActionTransposeNoteIncrease);
+    //     mMenuEditTranspose.addAction(&mActionTransposeNoteDecrease);
+    //     mMenuEditTranspose.addAction(&mActionTransposeOctaveIncrease);
+    //     mMenuEditTranspose.addAction(&mActionTransposeOctaveDecrease);
+    // mMenuEdit.addMenu(&mMenuEditTranspose);    
 
     mMenuView.setTitle(tr("&View"));
     mMenuViewToolbars.setTitle(tr("&Toolbars"));
@@ -806,9 +797,10 @@ void MainWindow::setupUi() {
     mToolbarEdit.addAction(mActionEditUndo);
     mToolbarEdit.addAction(mActionEditRedo);
     mToolbarEdit.addSeparator();
-    mToolbarEdit.addAction(&mActionEditCut);
-    mToolbarEdit.addAction(&mActionEditCopy);
-    mToolbarEdit.addAction(&mActionEditPaste);
+    auto &patternActions = mPatternEditor.menuActions();
+    mToolbarEdit.addAction(&patternActions.cut);
+    mToolbarEdit.addAction(&patternActions.copy);
+    mToolbarEdit.addAction(&patternActions.paste);
 
     mToolbarTracker.setWindowTitle(tr("Tracker"));
     mToolbarTracker.setIconSize(iconSize);
@@ -830,6 +822,11 @@ void MainWindow::setupUi() {
     setObjectNameFromDeclared(mDockWaveformEditor);
     mDockWaveformEditor.setWindowTitle(tr("Waveform editor"));
     mDockWaveformEditor.setWidget(&mWaveEditor);
+
+    setObjectNameFromDeclared(mDockHistory);
+    mDockHistory.setWindowTitle(tr("History"));
+    mDockHistory.setWidget(&mUndoView);
+    mUndoView.setGroup(&undoGroup);
 
     // STATUSBAR ==============================================================
 
@@ -860,8 +857,6 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileCloseAll, onFileCloseAll);
     connectActionToThis(mActionFileConfig, showConfigDialog);
     connectActionToThis(mActionFileQuit, close);
-    
-    connect(&mActionEditDelete, &QAction::triggered, &mPatternEditor, &PatternEditor::onDelete);
 
     // view
     connectActionToThis(mActionViewResetLayout, onViewResetLayout);
@@ -957,6 +952,10 @@ void MainWindow::initState() {
     addDockWidget(Qt::RightDockWidgetArea, &mDockWaveformEditor);
     mDockWaveformEditor.setFloating(true);
     mDockWaveformEditor.hide();
+
+    addDockWidget(Qt::RightDockWidgetArea, &mDockHistory);
+    mDockHistory.setFloating(true);
+    mDockHistory.hide();
 }
 
 void MainWindow::setupViewMenu(QMenu &menu) {
@@ -964,6 +963,7 @@ void MainWindow::setupViewMenu(QMenu &menu) {
     menu.addAction(mDockModuleSettings.toggleViewAction());
     menu.addAction(mDockInstrumentEditor.toggleViewAction());
     menu.addAction(mDockWaveformEditor.toggleViewAction());
+    menu.addAction(mDockHistory.toggleViewAction());
 
     menu.addSeparator();
     

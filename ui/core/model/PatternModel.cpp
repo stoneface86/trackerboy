@@ -218,7 +218,7 @@ void PatternModel::setPreviewEnable(bool enable) {
             mPatternPrev.reset();
             mPatternNext.reset();
         }
-        emit patternsChanged();
+        emit invalidated();
     }
 }
 
@@ -241,7 +241,7 @@ void PatternModel::setPatterns(int pattern) {
         emit patternSizeChanged(newsize);
     }
 
-    emit patternsChanged();
+    emit invalidated();
 
     if (mCursorRow >= newsize) {
         mCursorRow = newsize - 1;
@@ -270,6 +270,34 @@ int PatternModel::cursorEffectNo() {
     return (columnType() - COLUMN_EFFECT1_TYPE) / 3;
 }
 
+void PatternModel::invalidate(int pattern, bool updatePatterns) {
+
+    // check if the pattern being invalidated is accessible
+    bool isInvalid = (mCursorPattern == pattern) ||
+                     (mPatternPrev && pattern == mCursorPattern - 1) ||
+                     (mPatternNext && pattern == mCursorPattern + 1);
+
+    if (isInvalid) {
+        // pattern is now invalid, either reset the pattern accessors
+        // or send the invalidated signal
+        if (updatePatterns) {
+            // reset pattern accessors and invalidate
+            setPatterns(mCursorPattern);
+        } else {
+            // views just need to redraw
+            emit invalidated();
+        }
+    }
+
+}
+
+trackerboy::TrackRow const& PatternModel::cursorTrackRow() {
+    return mPatternCurr.getTrackRow(
+        static_cast<trackerboy::ChType>(mCursorColumn / COLUMNS_PER_TRACK),
+        (uint16_t)mCursorRow
+    );
+}
+
 // editing ====================================================================
 
 static uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
@@ -281,6 +309,8 @@ static uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
 }
 
 static constexpr bool effectTypeRequiresUpdate(trackerboy::EffectType type) {
+    // these effects shorten the length of a pattern which when set/removed
+    // will require a recount
     return type == trackerboy::EffectType::patternHalt ||
            type == trackerboy::EffectType::patternSkip ||
            type == trackerboy::EffectType::patternGoto;
@@ -315,33 +345,25 @@ static constexpr bool effectTypeRequiresUpdate(trackerboy::EffectType type) {
 //     }
 // }
 
-//
-// Command for editing a single column, ie setting a note, instrument, etc
-//
-class PatternEditColumnCmd : public QUndoCommand {
+class TrackEditCmd : public QUndoCommand {
+
+protected:
+    PatternModel &mModel;
+    uint8_t const mTrack;
+    uint8_t const mPattern;
+    uint8_t const mRow;
+    uint8_t const mNewData;
+    uint8_t const mOldData;
 
 public:
-
-    enum DataColumn {
-        Note = offsetof(trackerboy::TrackRow, note),
-        Instrument = offsetof(trackerboy::TrackRow, instrumentId),
-        EffectType = offsetof(trackerboy::TrackRow, note)
-    };
-
-    PatternEditColumnCmd(
-        PatternModel &model,
-        uint8_t newData,
-        uint8_t oldData,
-        uint8_t offset,
-        bool updatePatterns = false
-    ) :
+    TrackEditCmd(PatternModel &model, uint8_t dataNew, uint8_t dataOld, QUndoCommand *parent = nullptr) :
+        QUndoCommand(parent),
         mModel(model),
-        mNewData(newData),
-        mOldData(oldData),
+        mTrack((uint8_t)(model.mCursorColumn / PatternModel::COLUMNS_PER_TRACK)),
         mPattern((uint8_t)model.mCursorPattern),
         mRow((uint8_t)model.mCursorRow),
-        mOffset(offset),
-        mUpdatePatterns(updatePatterns)
+        mNewData(dataNew),
+        mOldData(dataOld)
     {
     }
 
@@ -353,91 +375,179 @@ public:
         setData(mOldData);
     }
 
-
-private:
-
-    void setData(uint8_t data) {
-
-        auto track = mOffset / sizeof(trackerboy::TrackRow);
-        auto offsetInTrack = mOffset % sizeof(trackerboy::TrackRow);
-        auto &rowdata = mModel.mDocument.mod().song().getRow(
-            static_cast<trackerboy::ChType>(track),
+protected:
+    trackerboy::TrackRow& getRow() {
+        return mModel.mDocument.mod().song().getRow(
+            static_cast<trackerboy::ChType>(mTrack),
             mPattern,
-            mRow
+            (uint16_t)mRow
         );
-
-        {
-            auto ctx = mModel.mDocument.beginCommandEdit();
-            reinterpret_cast<uint8_t*>(&rowdata)[offsetInTrack] = data;
-        }
-
-        if (mUpdatePatterns) {
-            mModel.setPatterns(mModel.mCursorPattern);
-        } else {
-            emit mModel.dataChanged();
-        }
     }
 
-    PatternModel &mModel;
-    uint8_t const mNewData;
-    uint8_t const mOldData;
-    uint8_t const mPattern;
-    uint8_t const mRow;
-    uint8_t const mOffset;
-    bool const mUpdatePatterns;
+    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) = 0;
+
+private:
+    void setData(uint8_t data) {
+        auto &rowdata = mModel.mDocument.mod().song().getRow(
+            static_cast<trackerboy::ChType>(mTrack),
+            mPattern,
+            (uint16_t)mRow
+        );
+
+        bool update;
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            update = edit(rowdata, data);
+        }
+
+        mModel.invalidate(mPattern, update);
+
+    }
 
 };
 
-struct ColumnEditHelper {
+class NoteEditCmd : public TrackEditCmd {
 
-    ColumnEditHelper(PatternModel &model, size_t offset) :
-        track((uint8_t)model.mCursorColumn / PatternModel::COLUMNS_PER_TRACK),
-        offset(track * sizeof(trackerboy::TrackRow) + offset),
-        rowdata(model.mPatternCurr.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)model.mCursorRow))
+    using TrackEditCmd::TrackEditCmd;
+
+protected:
+    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
+        rowdata.note = data;
+        return false;
+    }
+};
+
+class InstrumentEditCmd : public TrackEditCmd {
+
+    using TrackEditCmd::TrackEditCmd;
+
+protected:
+    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
+        rowdata.instrumentId = data;
+        return false;
+    }
+
+};
+
+class EffectEditCmd : public TrackEditCmd {
+
+public:
+    EffectEditCmd(PatternModel &model, uint8_t effectNo, uint8_t newData, uint8_t oldData, QUndoCommand *parent = nullptr) :
+        TrackEditCmd(model, newData, oldData, parent),
+        mEffectNo(effectNo)
     {
     }
 
-    uint8_t track;
-    uint8_t offset;
-    trackerboy::TrackRow const& rowdata;
+protected:
+    uint8_t const mEffectNo;
 };
 
-void PatternModel::setNote(std::optional<uint8_t> note) {
-    if (mRecording) {
-        ColumnEditHelper helper(*this, offsetof(trackerboy::TrackRow, note));
-        auto oldnote = helper.rowdata.queryNote();
-        if (oldnote != note) {
-            auto cmd = new PatternEditColumnCmd(
-                *this,
-                trackerboy::TrackRow::convertColumn(note),
-                trackerboy::TrackRow::convertColumn(oldnote),
-                helper.offset
-            );
+class EffectTypeEditCmd : public EffectEditCmd {
 
+    using EffectEditCmd::EffectEditCmd;
+
+protected:
+    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
+        auto &effect = rowdata.effects[mEffectNo];
+        auto oldtype = effect.type;
+        auto type = static_cast<trackerboy::EffectType>(data);
+        effect.type = type;
+        return effectTypeRequiresUpdate(type) || effectTypeRequiresUpdate(oldtype);
+    }
+
+};
+
+class EffectParamEditCmd : public EffectEditCmd {
+
+    using EffectEditCmd::EffectEditCmd;
+
+protected:
+    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
+        rowdata.effects[mEffectNo].param = data;
+        return false;
+    }
+
+};
+
+
+void PatternModel::setNote(std::optional<uint8_t> note, std::optional<uint8_t> instrument) {
+    if (mRecording) {
+        
+        auto &rowdata = cursorTrackRow();
+        auto oldNote = rowdata.queryNote();
+        auto oldInstrument = rowdata.queryInstrument();
+
+        auto const editNote = oldNote != note;
+        // edit the instrument if the instrument has a value and the it does not equal the current instrument
+        auto const editInstrument = instrument && oldInstrument != instrument;
+        int editCount = editNote + editInstrument;
+        if (editCount) {
+            QUndoCommand *parent = nullptr;
+            QUndoCommand *cmd = nullptr;
+
+            if (editCount == 2) {
+                parent = new QUndoCommand;
+            }
+
+            if (editNote) {
+                cmd = new NoteEditCmd(
+                    *this,
+                    trackerboy::TrackRow::convertColumn(note),
+                    trackerboy::TrackRow::convertColumn(oldNote),
+                    parent
+                );
+            }
+
+            if (editInstrument) {
+                cmd = new InstrumentEditCmd(
+                    *this,
+                    trackerboy::TrackRow::convertColumn(instrument),
+                    trackerboy::TrackRow::convertColumn(oldInstrument),
+                    parent
+                );
+            }
+
+            if (parent) {
+                cmd = parent;
+            }
+
+            if (note) {
+                cmd->setText(tr("Note entry")); // todo: put the pattern, row, and track in this text
+            } else {
+                cmd->setText(tr("Clear note"));
+            }
             mDocument.undoStack().push(cmd);
+
+            
         }
+
     }
 }
 
 void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
     if (mRecording) {
-        ColumnEditHelper helper(*this, offsetof(trackerboy::TrackRow, instrumentId));
-
-        auto oldInstrument = helper.rowdata.queryInstrument();
+        auto &rowdata = cursorTrackRow();
+        auto oldInstrument = rowdata.queryInstrument();
         std::optional<uint8_t> newInstrument;
         if (nibble) {
             bool const highNibble = columnType() == COLUMN_INSTRUMENT_HIGH;
             newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
+            if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
+                return;
+            }
         }
 
         if (newInstrument != oldInstrument) {
-            auto cmd = new PatternEditColumnCmd(
+            auto cmd = new InstrumentEditCmd(
                 *this,
                 trackerboy::TrackRow::convertColumn(newInstrument),
-                trackerboy::TrackRow::convertColumn(oldInstrument),
-                helper.offset
+                trackerboy::TrackRow::convertColumn(oldInstrument)
             );
-
+            if (newInstrument) {
+                cmd->setText(tr("set instrument"));
+            } else {
+                cmd->setText(tr("clear instrument"));
+            }
             mDocument.undoStack().push(cmd);
         }
 
@@ -447,17 +557,38 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
 void PatternModel::setEffectType(trackerboy::EffectType type) {
     if (mRecording) {
         auto effectNo = cursorEffectNo();
-        ColumnEditHelper helper(*this, offsetof(trackerboy::TrackRow, effects) + (effectNo * sizeof(trackerboy::Effect)));
-
-        auto& oldEffect = helper.rowdata.effects[effectNo];
-        if (oldEffect.type != type) {
-            mDocument.undoStack().push(new PatternEditColumnCmd(
+        auto &rowdata = cursorTrackRow();
+        auto &effect = rowdata.effects[effectNo];
+        if (effect.type != type) {
+            auto cmd = new EffectTypeEditCmd(
                 *this,
-                (uint8_t)type,
-                (uint8_t)oldEffect.type,
-                helper.offset,
-                effectTypeRequiresUpdate(type) || effectTypeRequiresUpdate(oldEffect.type)
-            ));
+                (uint8_t)effectNo,
+                static_cast<uint8_t>(type),
+                static_cast<uint8_t>(effect.type)
+            );
+
+            auto &stack = mDocument.undoStack();
+            if (type == trackerboy::EffectType::noEffect) {
+
+                static auto CLEAR_EFFECT_STR = QT_TR_NOOP("clear effect");
+
+                // we also need to clear the parameter
+                if (effect.param != 0) {
+                    stack.beginMacro(tr(CLEAR_EFFECT_STR));
+                    stack.push(cmd);
+                    stack.push(new EffectParamEditCmd(
+                        *this, (uint8_t)effectNo, 0, effect.param
+                    ));
+                    stack.endMacro();
+                } else {
+                    cmd->setText(tr(CLEAR_EFFECT_STR));
+                    stack.push(cmd);
+                }
+                
+            } else {
+                cmd->setText(tr("set effect type"));
+                stack.push(cmd);
+            }
         }
     }
 }
@@ -465,9 +596,9 @@ void PatternModel::setEffectType(trackerboy::EffectType type) {
 void PatternModel::setEffectParam(uint8_t nibble) {
     if (mRecording) {
         auto effectNo = cursorEffectNo();
-        ColumnEditHelper helper(*this, offsetof(trackerboy::TrackRow, effects) + 1 + (effectNo * sizeof(trackerboy::Effect)));
+        auto &rowdata = cursorTrackRow();
 
-        auto &oldEffect = helper.rowdata.effects[effectNo];
+        auto &oldEffect = rowdata.effects[effectNo];
         if (oldEffect.type != trackerboy::EffectType::noEffect) {
             auto coltype = columnType();
             bool isHighNibble = coltype == COLUMN_EFFECT1_ARG_HIGH ||
@@ -475,12 +606,14 @@ void PatternModel::setEffectParam(uint8_t nibble) {
                                 coltype == COLUMN_EFFECT3_ARG_HIGH;
             auto newParam = replaceNibble(oldEffect.param, nibble, isHighNibble);
             if (newParam != oldEffect.param) {
-                mDocument.undoStack().push(new PatternEditColumnCmd(
+                auto cmd = new EffectParamEditCmd(
                     *this,
+                    (uint8_t)effectNo,
                     newParam,
-                    oldEffect.param,
-                    helper.offset
-                ));
+                    oldEffect.param
+                );
+                cmd->setText(tr("edit effect parameter"));
+                mDocument.undoStack().push(cmd);
             }
         }
         
@@ -495,7 +628,7 @@ void PatternModel::deleteSelection() {
     //} else {
         switch (columnType()) {
             case COLUMN_NOTE:
-                setNote({});
+                setNote({}, {});
                 break;
             case COLUMN_INSTRUMENT_HIGH:
             case COLUMN_INSTRUMENT_LOW:

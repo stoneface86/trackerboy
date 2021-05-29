@@ -144,8 +144,8 @@ private:
     QDockWidget mDockWaveformEditor;
         WaveEditor mWaveEditor;
 
-    //QDockWidget mDockHistory;
-    //    QUndoView mUndoView;
+    QDockWidget mDockHistory;
+        QUndoView mUndoView;
 
     // central widget (must be heap-alloc'd)
     QSplitter *mHSplitter;
@@ -188,17 +188,6 @@ private:
     QMenu mMenuEdit;
     QAction *mActionEditUndo;
     QAction *mActionEditRedo;
-    QAction mActionEditCut;
-    QAction mActionEditCopy;
-    QAction mActionEditPaste;
-    QAction mActionEditPasteMix;
-    QAction mActionEditDelete;
-    QAction mActionEditSelectAll;
-    QMenu mMenuEditTranspose;
-    QAction mActionTransposeNoteIncrease;
-    QAction mActionTransposeNoteDecrease;
-    QAction mActionTransposeOctaveIncrease;
-    QAction mActionTransposeOctaveDecrease;
     
     // View
     QMenu mMenuView;

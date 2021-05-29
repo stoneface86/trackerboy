@@ -355,7 +355,7 @@ void PatternGrid::setShowFlats(bool showFlats) {
 }
 
 
-bool PatternGrid::processKeyPress(PianoInput const& input, int const key) {
+bool PatternGrid::processKeyPress(PianoInput const& input, int const key, std::optional<uint8_t> instrument) {
     bool validKey = false;
 
     auto &patternModel = mDocument->patternModel();
@@ -370,7 +370,7 @@ bool PatternGrid::processKeyPress(PianoInput const& input, int const key) {
                     mPreviewKey = key;
                     emit previewNote(*note);
                 }
-                patternModel.setNote(note);
+                patternModel.setNote(note, instrument);
                 validKey = true;
             }
 
@@ -449,8 +449,7 @@ void PatternGrid::setDocument(ModuleDocument *doc) {
         auto &patternModel = doc->patternModel();
         // these changes require a full redraw
         connect(&patternModel, &PatternModel::cursorRowChanged, this, &PatternGrid::updateAll);
-        connect(&patternModel, &PatternModel::patternsChanged, this, &PatternGrid::updateAll);
-        connect(&patternModel, &PatternModel::dataChanged, this, &PatternGrid::updateAll);
+        connect(&patternModel, &PatternModel::invalidated, this, &PatternGrid::updateAll);
         // these we only need to redraw the cursor row
         connect(&patternModel, &PatternModel::cursorColumnChanged, this, &PatternGrid::updateCursorRow);
         connect(&patternModel, &PatternModel::recordingChanged, this, &PatternGrid::updateCursorRow);

@@ -27,7 +27,7 @@ ModuleDocument::WidgetState::WidgetState() :
     orderSetSpinbox(0),
     recording(false),
     octave(4),
-    editStep(0),
+    editStep(1),
     loopPattern(false),
     followMode(true),
     keyRepetition(true),

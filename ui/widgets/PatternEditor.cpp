@@ -72,7 +72,8 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mVScroll(Qt::Vertical),
     mWheel(0),
     mPageStep(4),
-    mSpeedLock(false)
+    mSpeedLock(false),
+    mInstrument(0)
 {
 
     //setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -145,6 +146,7 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     setLayout(&mLayout);
 
     mEditStepSpin.setRange(0, 256);
+    mEditStepSpin.setValue(1);
     mOctaveSpin.setRange(2, 8);
 
     setupAction(mTrackerActions.play, "Play at cursor", "Play from the cursor", Icons::patternPlay);
@@ -201,6 +203,22 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mSpeedActualLabel.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mTempoActualLabel.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
+    // connections
+
+    connect(&mActions.cut, &QAction::triggered, this, &PatternEditor::onCut);
+    connect(&mActions.copy, &QAction::triggered, this, &PatternEditor::onCopy);
+    connect(&mActions.paste, &QAction::triggered, this, &PatternEditor::onPaste);
+    connect(&mActions.pasteMix, &QAction::triggered, this, &PatternEditor::onPasteMix);
+    connect(&mActions.delete_, &QAction::triggered, this, &PatternEditor::onDelete);
+    connect(&mActions.selectAll, &QAction::triggered, this, &PatternEditor::onSelectAll);
+    connect(&mActions.noteIncrease, &QAction::triggered, this, &PatternEditor::onIncreaseNote);
+    connect(&mActions.noteDecrease, &QAction::triggered, this, &PatternEditor::onDecreaseNote);
+    connect(&mActions.octaveIncrease, &QAction::triggered, this, &PatternEditor::onIncreaseOctave);
+    connect(&mActions.octaveDecrease, &QAction::triggered, this, &PatternEditor::onDecreaseOctave);
+    connect(&mActions.reverse, &QAction::triggered, this, &PatternEditor::onReverse);
+    
+    
+
     connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
     connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
@@ -251,6 +269,11 @@ void PatternEditor::setColors(ColorTable const& colors) {
 
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {
 
+    // ignore this event if CTRL is present (conflicts with shortcuts)
+    if (evt->modifiers().testFlag(Qt::ControlModifier)) {
+        QWidget::keyPressEvent(evt);
+        return;
+    }
     int const key = evt->key();
     
     auto &patternModel = mDocument->patternModel();
@@ -286,7 +309,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         return; // key repetition disabled, ignore this event
     }
 
-    if (mGrid.processKeyPress(mPianoIn, key)) {
+    if (mGrid.processKeyPress(mPianoIn, key, mInstrument)) {
         stepDown();
     } else {
         // invalid key or edit mode is off, let QWidget handle it
