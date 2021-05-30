@@ -250,66 +250,7 @@ using namespace PatternConstants;
 //
 // The first 4 cells of the grid are reserved for the row numbers, and are not selectable
 
-static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
-    switch (key) {
-        case Qt::Key_B:
-            return trackerboy::EffectType::patternGoto;
-        case Qt::Key_C:
-            return trackerboy::EffectType::patternHalt;
-        case Qt::Key_D:
-            return trackerboy::EffectType::patternSkip;
-        case Qt::Key_F:
-            return trackerboy::EffectType::setTempo;
-        case Qt::Key_T:
-            return trackerboy::EffectType::sfx;
-        case Qt::Key_E:
-            return trackerboy::EffectType::setEnvelope;
-        case Qt::Key_V:
-            return trackerboy::EffectType::setTimbre;
-        case Qt::Key_I:
-            return trackerboy::EffectType::setPanning;
-        case Qt::Key_H:
-            return trackerboy::EffectType::setSweep;
-        case Qt::Key_S:
-            return trackerboy::EffectType::delayedCut;
-        case Qt::Key_G:
-            return trackerboy::EffectType::delayedNote;
-        case Qt::Key_L:
-            return trackerboy::EffectType::lock;
-        case Qt::Key_0:
-            return trackerboy::EffectType::arpeggio;
-        case Qt::Key_1:
-            return trackerboy::EffectType::pitchUp;
-        case Qt::Key_2:
-            return trackerboy::EffectType::pitchDown;
-        case Qt::Key_3:
-            return trackerboy::EffectType::autoPortamento;
-        case Qt::Key_4:
-            return trackerboy::EffectType::vibrato;
-        case Qt::Key_5:
-            return trackerboy::EffectType::vibratoDelay;
-        case Qt::Key_P:
-            return trackerboy::EffectType::tuning;
-        case Qt::Key_Q:
-            return trackerboy::EffectType::noteSlideUp;
-        case Qt::Key_R:
-            return trackerboy::EffectType::noteSlideDown;
-        case Qt::Key_Delete:
-            return trackerboy::EffectType::noEffect;
-        default:
-            return std::nullopt;
-    }
-}
 
-static std::optional<uint8_t> keyToHex(int const key) {
-    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
-        return (uint8_t)(key - Qt::Key_0);
-    } else if (key >= Qt::Key_A && key <= Qt::Key_F) {
-        return (uint8_t)(key - Qt::Key_A + 0xA);
-    } else {
-        return std::nullopt;
-    }
-}
 
 
 PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
@@ -324,7 +265,7 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     mSelectionStartY(0),
     mSelectionEndX(0),
     mSelectionEndY(0),
-    mPreviewKey(Qt::Key_unknown)
+    mEditorFocus(false)
 {
 
     setAutoFillBackground(true);
@@ -354,74 +295,10 @@ void PatternGrid::setShowFlats(bool showFlats) {
     }
 }
 
-
-bool PatternGrid::processKeyPress(PianoInput const& input, int const key, std::optional<uint8_t> instrument) {
-    bool validKey = false;
-
-    auto &patternModel = mDocument->patternModel();
-
-    switch (patternModel.columnType()) {
-        case PatternModel::COLUMN_NOTE: {
-            auto note = input.keyToNote(key);
-
-            if (note) {
-                if (*note != trackerboy::NOTE_CUT) {
-                    qDebug() << "Preview note: " << *note;
-                    mPreviewKey = key;
-                    emit previewNote(*note);
-                }
-                patternModel.setNote(note, instrument);
-                validKey = true;
-            }
-
-            break;
-        }
-        case PatternModel::COLUMN_EFFECT1_TYPE:
-        case PatternModel::COLUMN_EFFECT2_TYPE:
-        case PatternModel::COLUMN_EFFECT3_TYPE:
-        {
-            // check if the key pressed is a valid effect type
-            auto effectType = keyToEffectType(key);
-            if (effectType) {
-                patternModel.setEffectType(*effectType);
-                validKey = true;
-            }
-            break;
-        }
-        case PatternModel::COLUMN_INSTRUMENT_HIGH:
-        case PatternModel::COLUMN_INSTRUMENT_LOW: {
-            auto hex = keyToHex(key);
-            if (hex) {
-                patternModel.setInstrument(hex);
-                validKey = true;
-            }
-            break;
-        }
-        case PatternModel::COLUMN_EFFECT1_ARG_HIGH:
-        case PatternModel::COLUMN_EFFECT1_ARG_LOW:
-        case PatternModel::COLUMN_EFFECT2_ARG_HIGH:
-        case PatternModel::COLUMN_EFFECT2_ARG_LOW:
-        case PatternModel::COLUMN_EFFECT3_ARG_HIGH:
-        case PatternModel::COLUMN_EFFECT3_ARG_LOW:
-        {
-            // check if the key pressed is a hex number
-            auto hex = keyToHex(key);
-            if (hex) {
-                patternModel.setEffectParam(*hex);
-                validKey = true;
-            }
-            
-        }
-        break;
-    }
-
-    return validKey;
-}
-
-void PatternGrid::processKeyRelease(int const key) {
-    if (key == mPreviewKey) {
-        mPreviewKey = Qt::Key_unknown;
-        emit stopNotePreview();
+void PatternGrid::setEditorFocus(bool focus) {
+    if (mEditorFocus != focus) {
+        mEditorFocus = focus;
+        updateCursorRow();
     }
 }
 
@@ -530,7 +407,9 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     if (mTrackerRow) {
         mPainter.drawRowBackground(painter, PatternPainter::ROW_PLAYER, *mTrackerRow);
     }
-    mPainter.drawRowBackground(painter, patternModel.isRecording() ? PatternPainter::ROW_EDIT : PatternPainter::ROW_CURRENT, centerRow);
+    if (mEditorFocus) {
+        mPainter.drawRowBackground(painter, patternModel.isRecording() ? PatternPainter::ROW_EDIT : PatternPainter::ROW_CURRENT, centerRow);
+    }
 
     // [4] selection
     // TODO!

@@ -7,7 +7,66 @@
 #include <QGridLayout>
 #include <QtDebug>
 
+static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
+    switch (key) {
+        case Qt::Key_B:
+            return trackerboy::EffectType::patternGoto;
+        case Qt::Key_C:
+            return trackerboy::EffectType::patternHalt;
+        case Qt::Key_D:
+            return trackerboy::EffectType::patternSkip;
+        case Qt::Key_F:
+            return trackerboy::EffectType::setTempo;
+        case Qt::Key_T:
+            return trackerboy::EffectType::sfx;
+        case Qt::Key_E:
+            return trackerboy::EffectType::setEnvelope;
+        case Qt::Key_V:
+            return trackerboy::EffectType::setTimbre;
+        case Qt::Key_I:
+            return trackerboy::EffectType::setPanning;
+        case Qt::Key_H:
+            return trackerboy::EffectType::setSweep;
+        case Qt::Key_S:
+            return trackerboy::EffectType::delayedCut;
+        case Qt::Key_G:
+            return trackerboy::EffectType::delayedNote;
+        case Qt::Key_L:
+            return trackerboy::EffectType::lock;
+        case Qt::Key_0:
+            return trackerboy::EffectType::arpeggio;
+        case Qt::Key_1:
+            return trackerboy::EffectType::pitchUp;
+        case Qt::Key_2:
+            return trackerboy::EffectType::pitchDown;
+        case Qt::Key_3:
+            return trackerboy::EffectType::autoPortamento;
+        case Qt::Key_4:
+            return trackerboy::EffectType::vibrato;
+        case Qt::Key_5:
+            return trackerboy::EffectType::vibratoDelay;
+        case Qt::Key_P:
+            return trackerboy::EffectType::tuning;
+        case Qt::Key_Q:
+            return trackerboy::EffectType::noteSlideUp;
+        case Qt::Key_R:
+            return trackerboy::EffectType::noteSlideDown;
+        case Qt::Key_Delete:
+            return trackerboy::EffectType::noEffect;
+        default:
+            return std::nullopt;
+    }
+}
 
+static std::optional<uint8_t> keyToHex(int const key) {
+    if (key >= Qt::Key_0 && key <= Qt::Key_9) {
+        return (uint8_t)(key - Qt::Key_0);
+    } else if (key >= Qt::Key_A && key <= Qt::Key_F) {
+        return (uint8_t)(key - Qt::Key_A + 0xA);
+    } else {
+        return std::nullopt;
+    }
+}
 
 // PatternEditor is just a composite widget containing the grid, header and
 // two scrollbars. (PatternGrid does most of the work)
@@ -232,6 +291,30 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     connect(&mSetInstrumentCheck, &QCheckBox::stateChanged, this, &PatternEditor::enableAutoInstrument);
     connect(&mInstrumentCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &PatternEditor::setAutoInstrument);
 
+    // tab order
+    setTabOrder(&mOctaveSpin, &mEditStepSpin);
+    setTabOrder(&mEditStepSpin, &mLoopPatternCheck);
+    setTabOrder(&mLoopPatternCheck, &mFollowModeCheck);
+    setTabOrder(&mFollowModeCheck, &mKeyRepeatCheck);
+    setTabOrder(&mKeyRepeatCheck, &mRowsPerBeatSpin);
+    setTabOrder(&mRowsPerBeatSpin, &mSpeedSpin);
+    setTabOrder(&mSpeedSpin, &mPatternsSpin);
+    setTabOrder(&mPatternsSpin, &mInstrumentCombo);
+    setTabOrder(&mInstrumentCombo, &mRowsPerMeasureSpin);
+    setTabOrder(&mRowsPerMeasureSpin, &mTempoSpin);
+    setTabOrder(&mTempoSpin, &mPatternSizeSpin);
+    setTabOrder(&mPatternSizeSpin, &mSetInstrumentCheck);
+    
+    // buddies
+    mOctaveLabel.setBuddy(&mOctaveSpin);
+    mEditStepLabel.setBuddy(&mEditStepSpin);
+    mRowsPerBeatLabel.setBuddy(&mRowsPerBeatSpin);
+    mSpeedLabel.setBuddy(&mSpeedSpin);
+    mPatternsLabel.setBuddy(&mPatternsSpin);
+    mRowsPerMeasureLabel.setBuddy(&mRowsPerMeasureSpin);
+    mTempoLabel.setBuddy(&mTempoSpin);
+    mPatternSizeLabel.setBuddy(&mPatternSizeSpin);
+
 }
 
 PatternGrid& PatternEditor::grid() {
@@ -267,31 +350,91 @@ void PatternEditor::setColors(ColorTable const& colors) {
     mGrid.setColors(colors);
 }
 
+bool PatternEditor::event(QEvent *evt)  {
+    if (evt->type() == QEvent::KeyPress) {
+        auto keyEvt = static_cast<QKeyEvent*>(evt);
+        auto key = keyEvt->key();
+
+        // intercept tabs for pattern navigation
+        if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
+            // intercept tab presses
+            int amount = PatternModel::COLUMNS_PER_TRACK;
+            if (key == Qt::Key_Backtab) {
+                amount = -amount;
+            }
+            mDocument->patternModel().moveCursorColumn(amount);
+            return true;
+        }
+    }
+
+    return QWidget::event(evt);
+}
+
+void PatternEditor::focusInEvent(QFocusEvent *evt) {
+    Q_UNUSED(evt)
+    mGrid.setEditorFocus(true);
+}
+
+void PatternEditor::focusOutEvent(QFocusEvent *evt) {
+    Q_UNUSED(evt)
+    mGrid.setEditorFocus(false);
+}
+
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {
 
-    // ignore this event if CTRL is present (conflicts with shortcuts)
-    if (evt->modifiers().testFlag(Qt::ControlModifier)) {
-        QWidget::keyPressEvent(evt);
-        return;
-    }
+    auto const modifiers = evt->modifiers();
     int const key = evt->key();
+
+    auto const controlDown = modifiers.testFlag(Qt::ControlModifier);
     
     auto &patternModel = mDocument->patternModel();
+    auto &orderModel = mDocument->orderModel();
+
+    // Up/Down/Left/Right - move cursor by 1
+    // PgUp/PgDn - move cursor by page step
+    // Ctrl+Up/Ctrl+Down - select current instrument
+    // Ctrl+Left/Ctrl+Right - select current pattern
+    // Tab/Shift-Tab - move cursor to next/previous track
+    // Space - toggles record mode
+    // Numpad / * - decrease or increase octave
     
     // navigation keys / non-edit keys
     // these keys also ignore the key repetition setting (they always repeat)
     switch (key) {
         case Qt::Key_Left:
-            patternModel.moveCursorColumn(-1);
+            if (controlDown) {
+                orderModel.selectPattern(orderModel.currentPattern() - 1);
+            } else {
+                patternModel.moveCursorColumn(-1);
+
+            }
             return;
         case Qt::Key_Right:
-            patternModel.moveCursorColumn(1);
+            if (controlDown) {
+                orderModel.selectPattern(orderModel.currentPattern() + 1);
+            } else {
+                patternModel.moveCursorColumn(1);
+            }
             return;
         case Qt::Key_Up:
-            patternModel.moveCursorRow(-1);
+            if (controlDown) {
+                auto index = mInstrumentCombo.currentIndex();
+                if (++index < mInstrumentCombo.count()) {
+                    mInstrumentCombo.setCurrentIndex(index);
+                }
+            } else {
+                patternModel.moveCursorRow(-1);
+            }
             return;
         case Qt::Key_Down:
-            patternModel.moveCursorRow(1);
+            if (controlDown) {
+                auto index = mInstrumentCombo.currentIndex();
+                if (index > 0) {
+                    mInstrumentCombo.setCurrentIndex(index - 1);
+                }
+            } else {
+                patternModel.moveCursorRow(1);
+            }
             return;
         case Qt::Key_PageDown:
             patternModel.moveCursorRow(mPageStep);
@@ -302,6 +445,18 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         case Qt::Key_Space:
             mTrackerActions.record.toggle();
             return;
+        case Qt::Key_Asterisk:
+            if (modifiers.testFlag(Qt::KeypadModifier)) {
+                mOctaveSpin.setValue(mOctaveSpin.value() + 1);
+                return;
+            }
+            break;
+        case Qt::Key_Slash:
+            if (modifiers.testFlag(Qt::KeypadModifier)) {
+                mOctaveSpin.setValue(mOctaveSpin.value() - 1);
+                return;
+            }
+            break;
     }
 
     if (evt->isAutoRepeat() && !mKeyRepeatCheck.isChecked()) {
@@ -309,7 +464,69 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         return; // key repetition disabled, ignore this event
     }
 
-    if (mGrid.processKeyPress(mPianoIn, key, mInstrument)) {
+    // ignore this event if CTRL is present (conflicts with shortcuts)
+    if (controlDown) {
+        QWidget::keyPressEvent(evt);
+        return;
+    }
+
+    bool validKey = false;
+
+    switch (patternModel.columnType()) {
+        case PatternModel::COLUMN_NOTE: {
+            auto note = mPianoIn.keyToNote(key);
+
+            if (note) {
+                if (*note != trackerboy::NOTE_CUT) {
+                    mPreviewKey = key;
+                    emit previewNote(*note);
+                }
+                patternModel.setNote(note, mInstrument);
+                validKey = true;
+            }
+
+            break;
+        }
+        case PatternModel::COLUMN_EFFECT1_TYPE:
+        case PatternModel::COLUMN_EFFECT2_TYPE:
+        case PatternModel::COLUMN_EFFECT3_TYPE:
+        {
+            // check if the key pressed is a valid effect type
+            auto effectType = keyToEffectType(key);
+            if (effectType) {
+                patternModel.setEffectType(*effectType);
+                validKey = true;
+            }
+            break;
+        }
+        case PatternModel::COLUMN_INSTRUMENT_HIGH:
+        case PatternModel::COLUMN_INSTRUMENT_LOW: {
+            auto hex = keyToHex(key);
+            if (hex) {
+                patternModel.setInstrument(hex);
+                validKey = true;
+            }
+            break;
+        }
+        case PatternModel::COLUMN_EFFECT1_ARG_HIGH:
+        case PatternModel::COLUMN_EFFECT1_ARG_LOW:
+        case PatternModel::COLUMN_EFFECT2_ARG_HIGH:
+        case PatternModel::COLUMN_EFFECT2_ARG_LOW:
+        case PatternModel::COLUMN_EFFECT3_ARG_HIGH:
+        case PatternModel::COLUMN_EFFECT3_ARG_LOW:
+        {
+            // check if the key pressed is a hex number
+            auto hex = keyToHex(key);
+            if (hex) {
+                patternModel.setEffectParam(*hex);
+                validKey = true;
+            }
+            
+        }
+        break;
+    }
+
+    if (validKey) {
         stepDown();
     } else {
         // invalid key or edit mode is off, let QWidget handle it
@@ -320,7 +537,8 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
 
 void PatternEditor::keyReleaseEvent(QKeyEvent *evt) {
     if (evt->key() == mPreviewKey) {
-        // TODO: stop preview
+        mPreviewKey = Qt::Key_unknown;
+        emit stopNotePreview();
     }
 }
 

@@ -7,7 +7,6 @@
 #include "widgets/grid/PatternGridHeader.hpp"
 #include "widgets/CustomSpinBox.hpp"
 
-
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFormLayout>
@@ -68,8 +67,14 @@ public:
 
     void setColors(ColorTable const& colors);
 
+    virtual bool event(QEvent *evt) override;
+
 signals:
     void octaveChanged(int octave);
+
+    void previewNote(quint8 note);
+
+    void stopNotePreview();
 
 public slots:
 
@@ -99,11 +104,15 @@ public slots:
 
 protected:
 
-    void keyPressEvent(QKeyEvent *evt) override;
+    virtual void focusInEvent(QFocusEvent *evt) override;
 
-    void keyReleaseEvent(QKeyEvent *evt) override;
+    virtual void focusOutEvent(QFocusEvent *evt) override;
 
-    void wheelEvent(QWheelEvent *evt) override;
+    virtual void keyPressEvent(QKeyEvent *evt) override;
+
+    virtual void keyReleaseEvent(QKeyEvent *evt) override;
+
+    virtual void wheelEvent(QWheelEvent *evt) override;
 
 private slots:
 

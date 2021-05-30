@@ -207,7 +207,12 @@ void OrderModel::select(int row, int track) {
 }
 
 void OrderModel::selectPattern(int pattern) {
-    Q_ASSERT(pattern >= 0 && pattern < mOrder.size());
+    auto rows = rowCount();
+    if (pattern < 0) {
+        pattern = rows - 1;
+    } else if (pattern >= rows) {
+        pattern = 0;
+    }
     auto patternU8 = (uint8_t)pattern;
     if (mCurrentRow != patternU8) {
         doSelectPattern(patternU8);

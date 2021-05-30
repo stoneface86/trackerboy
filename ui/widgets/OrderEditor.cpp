@@ -71,6 +71,7 @@ OrderEditor::OrderEditor(QWidget *parent) :
     // menu
     setupMenu(mContextMenu);
 
+    mOrderView.setTabKeyNavigation(false);
     mOrderView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(&mOrderView, &QTableView::customContextMenuRequested, this, &OrderEditor::tableViewContextMenu);
     

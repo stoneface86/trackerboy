@@ -44,16 +44,9 @@ public:
     // if true then flats will be shown instead of sharps
     void setShowFlats(bool showFlats);
 
-
-    bool processKeyPress(PianoInput const& input, int const key, std::optional<uint8_t> instrument);
-
-    void processKeyRelease(int const key);
-
     void setDocument(ModuleDocument *document);
 
-signals:
-    void previewNote(quint8 note);
-    void stopNotePreview();
+    void setEditorFocus(bool focus);
 
 protected:
 
@@ -113,13 +106,13 @@ private:
     // saved here so we don't have to calculate it every paint event
     std::optional<int> mTrackerRow;
 
+    bool mEditorFocus;
+
     bool mHasSelection;
     unsigned mSelectionStartX;
     unsigned mSelectionStartY;
 
     unsigned mSelectionEndX;
     unsigned mSelectionEndY;
-
-    int mPreviewKey;
 };
 
