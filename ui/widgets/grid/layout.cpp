@@ -56,19 +56,29 @@ uint8_t TRACK_CELL_MAP[] = {
     COLUMN_EFFECT3_ARG_LOW // spacing
 };
 
-uint8_t TRACK_COLUMN_TO_DATA_COLUMN[] = {
-    0,      // TrackRow::note
-    1,      // TrackRow::instrumentId
+uint8_t TRACK_CELL_TO_DATA_COLUMN[] = {
+    0,    // spacing
+    0,
+    0,
+    0,
+
+    1, // spacing
     1,
-    2,      // TrackRow::effects[0].type
-    3,      // TrackRow::effects[0].param
+    1,
+
+    2, // spacing
+    2,
+    2,
+    2,
+    3, // spacing
     3,
+    3,
+    3,
+    4, // spacing
     4,
-    5,
-    5,
-    6,
-    7,
-    7
+    4,
+    4,
+    4 // spacing
 };
 
 }

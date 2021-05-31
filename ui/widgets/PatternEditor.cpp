@@ -315,6 +315,7 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mTempoLabel.setBuddy(&mTempoSpin);
     mPatternSizeLabel.setBuddy(&mPatternSizeSpin);
 
+    setDocument(nullptr);
 }
 
 PatternGrid& PatternEditor::grid() {
@@ -386,12 +387,13 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     int const key = evt->key();
 
     auto const controlDown = modifiers.testFlag(Qt::ControlModifier);
+    auto const shiftDown = modifiers.testFlag(Qt::ShiftModifier);
     
     auto &patternModel = mDocument->patternModel();
     auto &orderModel = mDocument->orderModel();
 
-    // Up/Down/Left/Right - move cursor by 1
-    // PgUp/PgDn - move cursor by page step
+    // Up/Down/Left/Right - move cursor by 1 (also selects if shift is down)
+    // PgUp/PgDn - move cursor by page step (also selects if shift is down)
     // Ctrl+Up/Ctrl+Down - select current instrument
     // Ctrl+Left/Ctrl+Right - select current pattern
     // Tab/Shift-Tab - move cursor to next/previous track
@@ -405,7 +407,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             if (controlDown) {
                 orderModel.selectPattern(orderModel.currentPattern() - 1);
             } else {
-                patternModel.moveCursorColumn(-1);
+                patternModel.moveCursorColumn(-1, shiftDown);
 
             }
             return;
@@ -413,7 +415,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             if (controlDown) {
                 orderModel.selectPattern(orderModel.currentPattern() + 1);
             } else {
-                patternModel.moveCursorColumn(1);
+                patternModel.moveCursorColumn(1, shiftDown);
             }
             return;
         case Qt::Key_Up:
@@ -423,7 +425,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
                     mInstrumentCombo.setCurrentIndex(index);
                 }
             } else {
-                patternModel.moveCursorRow(-1);
+                patternModel.moveCursorRow(-1, shiftDown);
             }
             return;
         case Qt::Key_Down:
@@ -433,14 +435,14 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
                     mInstrumentCombo.setCurrentIndex(index - 1);
                 }
             } else {
-                patternModel.moveCursorRow(1);
+                patternModel.moveCursorRow(1, shiftDown);
             }
             return;
         case Qt::Key_PageDown:
-            patternModel.moveCursorRow(mPageStep);
+            patternModel.moveCursorRow(mPageStep, shiftDown);
             return;
         case Qt::Key_PageUp:
-            patternModel.moveCursorRow(-mPageStep);
+            patternModel.moveCursorRow(-mPageStep, shiftDown);
             return;
         case Qt::Key_Space:
             mTrackerActions.record.toggle();
@@ -606,10 +608,11 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
 
     }
 
+    auto const hasDocument = doc != nullptr;
     mDocument = doc;
     mGrid.setDocument(doc);
     mGridHeader.setDocument(doc);
-    if (doc) {
+    if (hasDocument) {
         // restore state from document
         auto const& state = doc->state();
         mOctaveSpin.setValue(state.octave);
@@ -662,7 +665,28 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         mFollowModeCheck.setChecked(patternModel.isFollowing());
         mConnections.append(connect(&mFollowModeCheck, &QCheckBox::toggled, &patternModel, &PatternModel::setFollowing));
 
+        // mConnections.append(connect(&patternModel, &PatternModel::selectionChanged, this,
+        //     [this]() {
+        //         bool hasSelection = static_cast<PatternModel*>(sender())->hasSelection();
+        //         mActions.copy.setEnabled(hasSelection);
+        //         mActions.cut.setEnabled(hasSelection);
+        //     }));
     }
+
+    mActions.copy.setEnabled(hasDocument);
+    mActions.cut.setEnabled(hasDocument);
+    mActions.paste.setEnabled(hasDocument /*&& hasPaste()*/);
+    mActions.pasteMix.setEnabled(hasDocument /*&& hasPaste()*/);
+    mActions.delete_.setEnabled(hasDocument);
+    mActions.selectAll.setEnabled(hasDocument);
+    mTransposeMenu.setEnabled(hasDocument);
+    mActions.noteDecrease.setEnabled(hasDocument);
+    mActions.noteIncrease.setEnabled(hasDocument);
+    mActions.octaveDecrease.setEnabled(hasDocument);
+    mActions.octaveIncrease.setEnabled(hasDocument);
+    mActions.reverse.setEnabled(hasDocument);
+    
+
 }
 
 void PatternEditor::onCut() {
@@ -687,7 +711,7 @@ void PatternEditor::onDelete() {
 }
 
 void PatternEditor::onSelectAll() {
-    
+    mDocument->patternModel().selectAll();
 }
 
 void PatternEditor::onIncreaseNote() {

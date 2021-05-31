@@ -7,6 +7,7 @@ class ModuleDocument;
 #include "trackerboy/data/Pattern.hpp"
 
 #include <QObject>
+#include <QRect>
 
 #include <optional>
 
@@ -42,9 +43,19 @@ public:
 
     };
 
+    enum SelectType {
+        SELECT_NOTE,
+        SELECT_INSTRUMENT,
+        SELECT_EFFECT1,
+        SELECT_EFFECT2,
+        SELECT_EFFECT3
+    };
+
     explicit PatternModel(ModuleDocument &doc, QObject *parent = nullptr);
 
     void reload();
+
+    // Data Access ============================================================
 
     trackerboy::Pattern* previousPattern();
 
@@ -52,11 +63,15 @@ public:
 
     trackerboy::Pattern* nextPattern();
 
+    // Properties =============================================================
+
     int cursorRow() const;
 
     int cursorColumn() const;
 
     ColumnType columnType() const;
+
+    SelectType selectType() const;
 
     int trackerCursorRow() const;
     int trackerCursorPattern() const;
@@ -70,8 +85,49 @@ public:
     void setTrackerCursor(int row, int pattern);
     void setPlaying(bool playing);
 
+    // Selection ==============================================================
 
-    // editing
+    //
+    // Returns true if there is a selection set, false otherwise.
+    //
+    bool hasSelection() const;
+
+    //
+    // Gets the current selection. QRect is used to model the selection area.
+    // The x-coordinate of the rectangle is the data column and the y-coordinate
+    // is the row. The returned rect is normalized, or the top-left corner is
+    // less than the bottom-right. If there is no selection the returned rect
+    // is null (ie QRect::isNull() returns true). 
+    //
+    QRect selection() const;
+
+    //
+    // Sets the selection. If nothing is selected, then the item at the given
+    // point is selected. If there is a selection, then the end point is set
+    // to the given point.
+    //
+    void setSelection(QPoint const point);
+
+    //
+    // Calls setSelection with the current cursor position.
+    //
+    void selectCursor();
+
+    //
+    // Selects entire the entire track or the entire pattern. The track is
+    // selected first. If the function is called again with the track selected
+    // then the entire pattern is selected. Therefore, repeatedly calling this
+    // function will alternate between selecting the track and pattern.
+    //
+    void selectAll();
+
+    //
+    // Removes the current selection
+    //
+    void deselect();
+
+    // Editing ================================================================
+
     // unless specified, these functions use the current cursor position for
     // editing.
 
@@ -97,6 +153,8 @@ signals:
     void playingChanged(bool playing);
     void recordingChanged(bool recording);
 
+    void selectionChanged();
+
     //
     // emitted when a change has been made to the current pattern and should
     // be redrawn.
@@ -105,8 +163,8 @@ signals:
 
 public slots:
 
-    void moveCursorRow(int amount);
-    void moveCursorColumn(int amount);
+    void moveCursorRow(int amount, bool select = false);
+    void moveCursorColumn(int amount, bool select = false);
 
     void setCursorRow(int row);
     void setCursorColumn(int column);
@@ -155,6 +213,9 @@ private:
     trackerboy::Pattern mPatternCurr;
     std::optional<trackerboy::Pattern> mPatternNext;
 
+    bool mHasSelection;
+    QRect mSelection;
+
 public:
 
     // constants
@@ -163,6 +224,8 @@ public:
 
     static constexpr auto COLUMNS = COLUMNS_PER_TRACK * 4;
 
+    static constexpr auto SELECTS_PER_TRACK = 5;
+    static constexpr auto SELECTS = SELECTS_PER_TRACK * 4;
 
 };
 

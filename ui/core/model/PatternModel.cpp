@@ -4,6 +4,7 @@
 #include "core/model/ModuleDocument.hpp"
 
 #include <QUndoCommand>
+#include <QtDebug>
 
 PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     QObject(parent),
@@ -19,7 +20,9 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     mTrackerPattern(0),
     mPatternPrev(),
     mPatternCurr(doc.mod().song().getPattern(0)),
-    mPatternNext()
+    mPatternNext(),
+    mHasSelection(false),
+    mSelection()
 {
     // OrderModel must be initialized first in order for this to work!
     auto &orderModel = doc.orderModel();
@@ -70,6 +73,26 @@ PatternModel::ColumnType PatternModel::columnType() const {
     return static_cast<ColumnType>(mCursorColumn % COLUMNS_PER_TRACK);
 }
 
+PatternModel::SelectType PatternModel::selectType() const {
+    switch (columnType()) {
+        case COLUMN_NOTE:
+            return SELECT_NOTE;
+        case COLUMN_INSTRUMENT_HIGH:
+        case COLUMN_INSTRUMENT_LOW:
+            return SELECT_INSTRUMENT;
+        case COLUMN_EFFECT1_TYPE:
+        case COLUMN_EFFECT1_ARG_HIGH:
+        case COLUMN_EFFECT1_ARG_LOW:
+            return SELECT_EFFECT1;
+        case COLUMN_EFFECT2_TYPE:
+        case COLUMN_EFFECT2_ARG_HIGH:
+        case COLUMN_EFFECT2_ARG_LOW:
+            return SELECT_EFFECT2;
+        default:
+            return SELECT_EFFECT3;
+    }
+}
+
 int PatternModel::trackerCursorRow() const {
     return mTrackerRow;
 }
@@ -90,14 +113,116 @@ bool PatternModel::isPlaying() const {
     return mPlaying;
 }
 
-// slots -------------------------------
-
-void PatternModel::moveCursorRow(int amount) {
-    setCursorRow(mCursorRow + amount);
+bool PatternModel::hasSelection() const {
+    return mHasSelection;
 }
 
-void PatternModel::moveCursorColumn(int amount) {
+QRect PatternModel::selection() const {
+    if (mHasSelection) {
+        // selection start is the topLeft, end is bottomRight
+        // alter the rectangle such that the topLeft is < bottomRight in both dimensions
+        auto x1 = mSelection.left();
+        auto x2 = mSelection.right();
+        auto y1 = mSelection.top();
+        auto y2 = mSelection.bottom();
+        if (x1 > x2) {
+            std::swap(x1, x2);
+        }
+        if (y1 > y2) {
+            std::swap(y1, y2);
+        }
+        return {
+            QPoint(x1, y1),
+            QPoint(x2 + 1, y2 + 1)
+        };
+    } else {
+        return {};
+    }
+}
+
+// there is some weirdness with QRect but keep this in mind:
+// mSelection keeps the starting coordinate in QRect::topLeft()
+// and keeps the ending coordinate in QRect::bottomRight()
+
+void PatternModel::setSelection(QPoint const point) {
+    if (mHasSelection) {
+        if (point != mSelection.bottomRight()) {
+            mSelection.setBottomRight(point);
+            emit selectionChanged();
+        }
+    } else {
+        mHasSelection = true;
+        // no selection, start with just the given point selected
+        mSelection = QRect(point, point);
+        emit selectionChanged();
+    }
+}
+
+void PatternModel::selectCursor() {
+    auto track = mCursorColumn / COLUMNS_PER_TRACK;
+    auto select = selectType();
+    setSelection({track * SELECTS_PER_TRACK + select, mCursorRow});
+}
+
+void PatternModel::selectAll() {
+    // check if the entire track is selected
+    auto const lastRow = (int)mPatternCurr.totalRows() - 1;
+    if (mHasSelection) {
+        auto normalized = selection();
+        // is an entire track and only an entire track selected?
+        if (normalized.top() == 0 && (normalized.left() % SELECTS_PER_TRACK) == 0 &&
+            normalized.bottom() == lastRow + 1 &&
+            (normalized.right() % SELECTS_PER_TRACK) == 0 &&
+            normalized.width() == SELECTS_PER_TRACK + 1) {
+                // yes, select all instead
+                mHasSelection = true;
+                mSelection.setTopLeft({0, 0});
+                mSelection.setBottomRight({SELECTS - 1, lastRow});
+                emit selectionChanged();
+                return;
+            }
+    }
+
+    // select track
+    auto selectStart = mCursorColumn / COLUMNS_PER_TRACK * SELECTS_PER_TRACK;
+    mSelection.setTopLeft({selectStart, 0});
+    mSelection.setBottomRight({selectStart + SELECTS_PER_TRACK - 1, lastRow});
+    mHasSelection = true;
+    emit selectionChanged();
+}
+
+void PatternModel::deselect() {
+    if (mHasSelection) {
+        mHasSelection = false;
+        mSelection = QRect();
+        emit selectionChanged();
+    }
+}
+
+// slots -------------------------------
+
+void PatternModel::moveCursorRow(int amount, bool select) {
+    if (select) {
+        selectCursor();
+    } else {
+        deselect();
+    }
+    setCursorRow(mCursorRow + amount);
+    if (select) {
+        selectCursor();
+    }
+}
+
+void PatternModel::moveCursorColumn(int amount, bool select) {
+    if (select) {
+        selectCursor();
+    } else {
+        deselect();
+    }
     setCursorColumn(mCursorColumn + amount);
+    if (select) {
+        selectCursor();
+    }
 }
 
 void PatternModel::setCursorRow(int row) {
@@ -168,6 +293,7 @@ void PatternModel::setCursorPattern(int pattern) {
 
     setPatterns(pattern);
     mCursorPattern = pattern;
+    deselect();
 
 }
 

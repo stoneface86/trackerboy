@@ -5,6 +5,7 @@
 #include "trackerboy/note.hpp"
 
 #include <QFontMetrics>
+#include <QtDebug>
 
 using namespace PatternConstants;
 
@@ -160,6 +161,7 @@ void PatternPainter::setColors(ColorTable const& colors) {
     mColorInstrument = colors[+Color::instrument];
     mColorEffect = colors[+Color::effectType];
     mColorSelection = colors[+Color::selection];
+    mColorSelection.setAlpha(200);
     mColorCursor = colors[+Color::cursor];
     mColorCursor.setAlpha(128);
     mColorLine = colors[+Color::line];
@@ -287,6 +289,68 @@ int PatternPainter::drawRow(
     }
 
     return ypos - 1 + mCellHeight;
+}
+
+
+void PatternPainter::drawSelection(QPainter &painter, QRect const rect) {
+    //auto normal = rect.normalized();
+    int x1;
+    {
+        auto const columnInTrack = rect.x() % TRACK_DATA_COLUMNS;
+        auto const track = rect.x() / TRACK_DATA_COLUMNS;
+        int cell;
+        switch (columnInTrack) {
+            case 0:
+                cell = TRACK_COLUMN_MAP[COLUMN_NOTE] - 1;
+                break;
+            case 1:
+                cell = TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH];
+                break;
+            case 2:
+                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT1_TYPE];
+                break;
+            case 3:
+                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT2_TYPE];
+                break;
+            default:
+                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT3_TYPE];
+                break;
+        }
+        x1 = mRownoWidth + (mCellWidth * ((track * TRACK_CELLS) + cell));
+    }
+    int x2;
+    {
+        auto right = rect.right() - 1;
+        auto const columnInTrack = right % TRACK_DATA_COLUMNS;
+        auto const track = right / TRACK_DATA_COLUMNS;
+        int cell;
+        switch (columnInTrack) {
+            case 0:
+                cell = TRACK_COLUMN_MAP[COLUMN_NOTE] + 3;
+                break;
+            case 1:
+                cell = TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH] + 2;
+                break;
+            case 2:
+                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT1_TYPE] + 3;
+                break;
+            case 3:
+                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT2_TYPE] + 3;
+                break;
+            default:
+                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT3_TYPE] + 4;
+                break;
+        }
+        x2 = mRownoWidth + (mCellWidth * ((track * TRACK_CELLS) + cell));
+    }
+    int ypos = rect.y() * mCellHeight;
+    int width = x2 - x1;
+    int height = (rect.height() - 1) * mCellHeight;
+    painter.fillRect(x1, ypos, width, height, mColorSelection);
+    
+    //painter.setPen(mColorSelection);
+    //painter.drawRect(x1, ypos, width - 1, height - 1);
+
 }
 
 void PatternPainter::drawColumn(QPainter &painter, trackerboy::PatternRow const& data, int cell, int ypos) {

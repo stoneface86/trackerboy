@@ -74,6 +74,11 @@ public:
                 int rowno, 
                 int ypos
                 );
+    
+    //
+    // Draws the selection rectangle
+    //
+    void drawSelection(QPainter &painter, QRect const rect);
 
     //
     // Paints "nothing" or "." for the cell(s)

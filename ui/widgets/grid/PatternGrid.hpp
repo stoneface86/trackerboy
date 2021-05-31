@@ -86,10 +86,15 @@ private:
     //
     unsigned getVisibleRows();
 
-    //
-    // Converts translated mouse coordinates on the grid to a row and column coordinate
-    //
-    void getCursorFromMouse(int x, int y, unsigned &outRow, unsigned &outCol);
+    int mouseToRow(int const mouseY);
+
+    int mouseToCell(int const mouseX);
+
+    int mouseToColumn(int const mouseX);
+
+    bool rowIsValid(int row);
+
+    QPoint coordsClamped(QPoint const coords);
 
     void calculateTrackerRow();
 
@@ -108,11 +113,17 @@ private:
 
     bool mEditorFocus;
 
-    bool mHasSelection;
-    unsigned mSelectionStartX;
-    unsigned mSelectionStartY;
+    // user must move this amount of pixels to begin selecting
+    static constexpr auto SELECTION_DEAD_ZONE = 4;
 
-    unsigned mSelectionEndX;
-    unsigned mSelectionEndY;
+    bool mMouseLeftDown;
+
+    QPoint mSelectionStartMouse;
+    // grid coordinates of the selection being made by the user
+    // if both are set, then the user has made a valid selection
+    std::optional<QPoint> mSelectionStartCoords;
+    std::optional<QPoint> mSelectionEndCoords;
+    bool mSelectingRows;
+
 };
 
