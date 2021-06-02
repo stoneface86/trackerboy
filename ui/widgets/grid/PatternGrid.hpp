@@ -52,6 +52,12 @@ protected:
 
     void changeEvent(QEvent *evt) override;
 
+    virtual void dragEnterEvent(QDragEnterEvent *evt) override;
+
+    virtual void dragMoveEvent(QDragMoveEvent *evt) override;
+
+    virtual void dropEvent(QDropEvent *evt) override;
+
     void leaveEvent(QEvent *evt) override;
 
     void mouseMoveEvent(QMouseEvent *evt) override;
@@ -116,14 +122,23 @@ private:
     // user must move this amount of pixels to begin selecting
     static constexpr auto SELECTION_DEAD_ZONE = 4;
 
-    bool mMouseLeftDown;
+    enum class MouseOperation {
+        nothing,            // do nothing
+        selectingRows,      // selecting whole rows
+        beginSelecting,     // selecting data
+        selecting,
+        dragging            // drag n drop
+    };
 
-    QPoint mSelectionStartMouse;
+    QPoint mMousePos;
     // grid coordinates of the selection being made by the user
     // if both are set, then the user has made a valid selection
-    std::optional<QPoint> mSelectionStartCoords;
-    std::optional<QPoint> mSelectionEndCoords;
-    bool mSelectingRows;
+    QPoint mSelectionStartCoords;
+    QPoint mSelectionEndCoords;
+
+    QRect mDragDest;
+
+    MouseOperation mMouseOp;
 
 };
 

@@ -20,6 +20,9 @@ class PatternModel : public QObject {
 
 public:
 
+    //
+    // enum for editable columns
+    //
     enum ColumnType {
         COLUMN_NOTE,
 
@@ -43,12 +46,15 @@ public:
 
     };
 
+    //
+    // Selectable columns
+    //
     enum SelectType {
-        SELECT_NOTE,
-        SELECT_INSTRUMENT,
-        SELECT_EFFECT1,
-        SELECT_EFFECT2,
-        SELECT_EFFECT3
+        SelectNote,
+        SelectInstrument,
+        SelectEffect1,
+        SelectEffect2,
+        SelectEffect3
     };
 
     explicit PatternModel(ModuleDocument &doc, QObject *parent = nullptr);
@@ -121,6 +127,8 @@ public:
     //
     void selectAll();
 
+    void selectRow(int row);
+
     //
     // Removes the current selection
     //
@@ -183,6 +191,7 @@ private slots:
 private:
 
     friend class TrackEditCmd;
+    friend class DeleteSelectionCmd;
 
     Q_DISABLE_COPY(PatternModel)
 
@@ -194,6 +203,8 @@ private:
     trackerboy::TrackRow const& cursorTrackRow();
 
     void invalidate(int pattern, bool updatePatterns);
+
+    bool selectionDataIsEmpty();
 
     ModuleDocument &mDocument;
 

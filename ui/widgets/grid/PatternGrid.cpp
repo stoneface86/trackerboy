@@ -4,7 +4,10 @@
 
 #include "trackerboy/note.hpp"
 
+#include <QApplication>
+#include <QDrag>
 #include <QFontDatabase>
+#include <QMimeData>
 #include <QPainter>
 #include <QtDebug>
 #include <QUndoCommand>
@@ -15,9 +18,11 @@
 
 using namespace PatternConstants;
 
-
-
-
+//
+// MIME type for drag n drop. The data that gets passed to QMimeData is a copy
+// of PatternChunk's internal buffer (converted to QByteArray)
+//
+constexpr auto MIME_TYPE = "application/trackerboy";
 
 // Philisophy note
 // should undo'ing modify the cursor? Is the cursor considered document state?
@@ -32,226 +37,12 @@ using namespace PatternConstants;
 // We'll leave the cursor unchanged on undo for now (since that's easiest to 
 // program ;) )
 
-//
-// Pattern edit command. An edit to a pattern is a region of data that replaces
-// a previous region of data. All edits to a pattern will use this class.
-//
-// class PatternEditCommand : public QUndoCommand {
-
-
-// public:
-
-//     PatternEditCommand(PatternGrid &grid, uint8_t pattern, QRect location) :
-//         mGrid(grid),
-//         mNewData(),
-//         mOldData(),
-//         mPattern(pattern),
-//         mLocation(location),
-//         mUpdatePatterns(false)
-//     {
-//         auto size = mLocation.width() * mLocation.height();
-//         mNewData.fill('\0', size);
-//         mOldData.fill('\0', size);
-
-//         // pilfer the current data for undos
-//         int const col = mLocation.left();
-//         int const rowEnd = mLocation.bottom() + 1;
-//         int const columnsToCopy = mLocation.width();
-//         auto olddata = mOldData.data();
-//         auto patternData = mGrid.mDocument->mod().song().getPattern(mPattern);
-
-//         for (int row = mLocation.top(); row < rowEnd; ++row) {
-//             copyFromPattern(patternData, (uint16_t)row, col, columnsToCopy, olddata);
-//             olddata += columnsToCopy;
-//         }
-//     }
-
-//     QByteArray oldData() const {
-//         return mOldData;
-//     }
-
-//     QByteArray& newData() {
-//         return mNewData;
-//     }
-
-//     void setUpdatePatterns(bool update) {
-//         mUpdatePatterns = update;
-//     }
-
-
-//     virtual void redo() override {
-//         setRegion(mNewData);
-//     }
-
-//     virtual void undo() override {
-//         setRegion(mOldData);
-//     }
-
-// private:
-
-//     void setRegion(QByteArray const& data) {
-//         {
-//             auto ctx = mGrid.mDocument->beginCommandEdit();
-
-//             int const rowEnd = mLocation.bottom() + 1;
-//             int const colsToCopy = mLocation.width();
-//             int col = mLocation.left();
-
-//             auto pattern = mGrid.mDocument->mod().song().getPattern(mPattern);
-
-//             auto dataptr = data.data();
-//             for (int row = mLocation.top(); row < rowEnd; ++row) {
-//                 copyToPattern(dataptr, (uint16_t)row, col, colsToCopy, pattern);
-//                 dataptr += colsToCopy;
-//             }
-//         }
-
-//         if (mUpdatePatterns) {
-//             mGrid.setPatterns(mPattern);
-//         }
-//         mGrid.update();
-
-//     }
-
-//     PatternGrid &mGrid;
-//     QByteArray mNewData;
-//     QByteArray mOldData;
-//     uint8_t const mPattern;
-//     QRect const mLocation; // location of the region being edited
-//     bool mUpdatePatterns;
-// };
-
-//
-// Command for editing a single column, ie setting a note, instrument, etc
-//
-// class PatternEditColumnCommand : public QUndoCommand {
-
-// public:
-
-//     enum DataColumn {
-//         Note = offsetof(trackerboy::TrackRow, note),
-//         Instrument = offsetof(trackerboy::TrackRow, instrumentId),
-//         EffectType = offsetof(trackerboy::TrackRow, note)
-//     };
-
-//     PatternEditColumnCommand(
-//         PatternGrid &grid,
-//         uint8_t newData,
-//         uint8_t oldData,
-//         uint8_t pattern,
-//         uint8_t track,
-//         uint8_t row,
-//         uint8_t offset
-//     ) :
-//         mGrid(grid),
-//         mNewData(newData),
-//         mOldData(oldData),
-//         mPattern(pattern),
-//         mRow(row),
-//         mTrack(track),
-//         mOffset(offset)
-//     {
-//     }
-
-//     virtual void redo() override {
-//         setData(mNewData);
-//     }
-
-//     virtual void undo() override {
-//         setData(mOldData);
-//     }
-
-//     static PatternEditColumnCommand* setNoteCmd(PatternGrid &grid, std::optional<uint8_t> note) {
-//         PatternEditColumnCommand *cmd = nullptr;
-
-//         // get the rowdata
-//         auto ch = grid.mCursorCol / TRACK_COLUMNS;
-//         auto const& rowdata = grid.mDocument->mod().song().getRow(static_cast<trackerboy::ChType>(ch), grid.mCursorPattern, grid.mCursorRow);
-
-//         auto old = rowdata.queryNote();
-//         if (old != note) {
-//             // new data != old data, create a command
-//             cmd = new PatternEditColumnCommand(
-//                 grid,
-//                 trackerboy::TrackRow::convertColumn(note),
-//                 trackerboy::TrackRow::convertColumn(old),
-//                 grid.mCursorPattern,
-//                 grid.mCursorRow,
-//                 ch * sizeof(trackerboy::TrackRow) + offsetof(trackerboy::TrackRow, note)
-//                 );
-//             if (note) {
-//                 cmd->setText(PatternGrid::tr("set note"));
-//             } else {
-//                 cmd->setText(PatternGrid::tr("clear note"));
-//             }
-//         }
-
-//         return cmd;
-    
-//     }
-
-
-// private:
-
-//     void setData(uint8_t data) {
-
-//         auto &rowdata = mGrid.mDocument->mod().song().getRow(
-//             static_cast<trackerboy::ChType>(mTrack),
-//             mPattern,
-//             mRow
-//         );
-
-//         {
-//             auto ctx = mGrid.mDocument->beginCommandEdit();
-//             reinterpret_cast<uint8_t*>(&rowdata)[mOffset] = data;
-//         }
-
-//         if (mUpdatePatterns) {
-//             mGrid.setPatterns(mGrid.mCursorPattern);
-//         }
-//         mGrid.update();
-//     }
-
-//     PatternGrid &mGrid;
-//     uint8_t const mNewData;
-//     uint8_t const mOldData;
-//     uint8_t const mPattern;
-//     uint8_t const mRow;
-//     uint8_t const mTrack;
-//     uint8_t const mOffset;
-//     bool const mUpdatePatterns;
-
-// };
-
-
-
-// The TODO list
-//
-// 1. (Low priority) When the widget's width is too small to fit everything, we will need to translate
-//    everything so that the current track being edited is visible. (Currently just gets clipped)
-// 2. Selection
-//    a. User should be able to select cells via the mouse
-//    b. User can drag this selection to a new track (move)
-// 3. Edit actions
-//    a. Cut/Copy/Paste/Paste Mix
-//    b. Transpose
-// 4. Keyboard controls
-//    a. Note key presses - edits the note column, also previews the instrument via the renderer
-//    b. Shift + Arrow keys - selects cells relative to cursor
-//    c. Alt+Left/Alt+Right - move cursor column to previous/next track
-//    d. Ctrl+Left/Ctrl+Right - selects previous/next pattern
-//    e. Ctrl+Up/Ctrl+Down - selects previous/next instrument
-// 5. Editing - editing a cell requires a redraw of the cell (erase the cell and then draw the new one)
-
 
 // A cell is a single character on the grid, columns are 1 or more cells. A
 // cell with a space is used as spacing, and the adjacent column is selected if
 // the user clicks on it.
 //
 // The first 4 cells of the grid are reserved for the row numbers, and are not selectable
-
-
-
 
 PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     QWidget(parent),
@@ -261,13 +52,12 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     mSelecting(false),
     mVisibleRows(0),
     mEditorFocus(false),
-    mMouseLeftDown(false),
-    mSelectionStartMouse(),
+    mMousePos(),
     mSelectionStartCoords(),
     mSelectionEndCoords(),
-    mSelectingRows(false)
+    mMouseOp(MouseOperation::nothing)
 {
-
+    setAcceptDrops(true);
     setAutoFillBackground(true);
 
     // first time initialization
@@ -348,6 +138,22 @@ void PatternGrid::changeEvent(QEvent *evt) {
     if (evt->type() == QEvent::FontChange) {
         mPainter.setFont(font());
         fontChanged();
+    }
+}
+
+void PatternGrid::dragEnterEvent(QDragEnterEvent *evt) {
+    if (evt->mimeData()->hasFormat(MIME_TYPE)) {
+        evt->acceptProposedAction();
+    }
+}
+
+void PatternGrid::dragMoveEvent(QDragMoveEvent *evt) {
+
+}
+
+void PatternGrid::dropEvent(QDropEvent *evt) {
+    if (evt->source() == this && evt->proposedAction() == Qt::MoveAction) {
+        evt->acceptProposedAction();
     }
 }
 
@@ -478,6 +284,12 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // [7] lines
     mPainter.drawLines(painter, h);
 
+    if (mMouseOp == MouseOperation::dragging) {
+        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        painter.setPen(Qt::white);
+        painter.drawRect(mDragDest);
+    }
+
 }
 
 void PatternGrid::resizeEvent(QResizeEvent *evt) {
@@ -498,39 +310,58 @@ void PatternGrid::leaveEvent(QEvent *evt) {
 }
 
 void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
-    if (mMouseLeftDown) {
+    if (!evt->buttons().testFlag(Qt::LeftButton)) {
+        return;
+    }
 
-        auto &patternModel = mDocument->patternModel();
-        auto pos = evt->pos();
+    auto &patternModel = mDocument->patternModel();
+    auto pos = evt->pos();
 
-        if (mSelectingRows) {
+    switch (mMouseOp) {
+
+        case MouseOperation::nothing:
+            break;
+        case MouseOperation::selectingRows: {
             int row = mouseToRow(pos.y());
             if (rowIsValid(row)) {
-                patternModel.setSelection(QPoint(PatternModel::SELECTS - 1, row));
+                patternModel.selectRow(row);
             }
-
-        } else if (mSelectionStartCoords) {
-            if (!mSelectionEndCoords) {
-                auto diff = pos - mSelectionStartMouse;
-                if (abs(diff.x()) >= SELECTION_DEAD_ZONE ||
-                    abs(diff.y()) >= SELECTION_DEAD_ZONE) {
-                    
-                    //mSelectionEndCoords = mSelectionStartCoords;
-                    mDocument->patternModel().setSelection(*mSelectionStartCoords);
-
-                } else {
-                    // do not begin selecting until the user moves out of the dead zone
-                    return;
-                }
+            break;
+        }
+        case MouseOperation::beginSelecting: {
+            if ((pos - mMousePos).manhattanLength() > SELECTION_DEAD_ZONE) {
+                patternModel.setSelection(mSelectionStartCoords);
+                mMouseOp = MouseOperation::selecting;
+            } else {
+                break;
             }
-
+        }
+        [[fallthrough]];
+        case MouseOperation::selecting: {
             // update end coordinate for selection
             QPoint coords(
                 mouseToColumn(pos.x()),
                 mouseToRow(pos.y())
             );
             mSelectionEndCoords = coordsClamped(coords);
-            mDocument->patternModel().setSelection(*mSelectionEndCoords);
+            mDocument->patternModel().setSelection(mSelectionEndCoords);
+            break;
+        }
+        case MouseOperation::dragging: {
+            if ((pos - mMousePos).manhattanLength() < QApplication::startDragDistance()) {
+                break;
+            }
+
+            QDrag *drag = new QDrag(this);
+            // put the pattern data into QMimeData
+            auto mimeData = new QMimeData;
+            mimeData->setData(MIME_TYPE, QByteArray());
+            drag->setMimeData(mimeData);
+
+            auto dropAction = drag->exec();
+            
+            
+            break;
         }
 
     }
@@ -539,32 +370,43 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
 
 void PatternGrid::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
-        // the left mouse button is down
-        mMouseLeftDown = true;
 
         auto &patternModel = mDocument->patternModel();
-        patternModel.deselect();
         
-        mSelectionStartMouse = evt->pos();
-        mSelectionStartCoords.reset();
-        mSelectionEndCoords.reset();
         
-        if (mSelectionStartMouse.x() < mPainter.rownoWidth()) {
+        mMousePos = evt->pos();
+
+        if (mMousePos.x() < mPainter.rownoWidth()) {
             // select whole rows instead of cells
-            int row = mouseToRow(mSelectionStartMouse.y());
+            patternModel.deselect();
+            int row = mouseToRow(mMousePos.y());
             if (rowIsValid(row)) {
-                mSelectingRows = true;
-                patternModel.setSelection(QPoint(0, row));
-                patternModel.setSelection(QPoint(PatternModel::SELECTS - 1, row));
+                mMouseOp = MouseOperation::selectingRows;
+                patternModel.selectRow(row);
             }
         } else {
-            mSelectingRows = false;
+
+            if (patternModel.hasSelection()) {
+                // check if the mouse is within the selection rectangle
+                auto selection = patternModel.selection();
+                selection.translate(QPoint(0, -patternModel.cursorRow() + (int)(mVisibleRows / 2)));
+                selection = mPainter.selectionRectangle(selection);
+                if (selection.contains(mMousePos)) {
+                    mMouseOp = MouseOperation::dragging;
+                    mDragDest = selection;
+                    return;
+                }
+            }
+
+            patternModel.deselect();
+
             // now convert the mouse coordinates to a coordinate on the grid
-            int column = mouseToColumn(mSelectionStartMouse.x());
+            int column = mouseToColumn(mMousePos.x());
             if (column >= 0 && column < PatternModel::SELECTS) {
-                int row = mouseToRow(mSelectionStartMouse.y());
+                int row = mouseToRow(mMousePos.y());
                 if (rowIsValid(row)) {
-                    mSelectionStartCoords.emplace(column, row);
+                    mSelectionStartCoords = QPoint(column, row);
+                    mMouseOp = MouseOperation::beginSelecting;
                 }
             }
         }
@@ -575,15 +417,16 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
 void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
     if (evt->button() == Qt::LeftButton) {
-        mMouseLeftDown = false;
 
         // if the user did not select anything, move the cursor to the starting coordinate
-        if (!mSelectionEndCoords && mSelectionStartCoords) {
+        if (mMouseOp == MouseOperation::beginSelecting || mMouseOp == MouseOperation::dragging) {
             auto &patternModel = mDocument->patternModel();
-            patternModel.setCursorColumn(mouseToCell(mSelectionStartMouse.x()));
-            patternModel.setCursorRow(mouseToRow(mSelectionStartMouse.y()));
+            patternModel.deselect();
+            patternModel.setCursorColumn(mouseToCell(mMousePos.x()));
+            patternModel.setCursorRow(mouseToRow(mMousePos.y()));
         }
 
+        mMouseOp = MouseOperation::nothing;
     }
 }
 

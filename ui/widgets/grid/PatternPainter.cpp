@@ -291,13 +291,11 @@ int PatternPainter::drawRow(
     return ypos - 1 + mCellHeight;
 }
 
-
-void PatternPainter::drawSelection(QPainter &painter, QRect const rect) {
-    //auto normal = rect.normalized();
+QRect PatternPainter::selectionRectangle(QRect const selection) {
     int x1;
     {
-        auto const columnInTrack = rect.x() % TRACK_DATA_COLUMNS;
-        auto const track = rect.x() / TRACK_DATA_COLUMNS;
+        auto const columnInTrack = selection.x() % TRACK_DATA_COLUMNS;
+        auto const track = selection.x() / TRACK_DATA_COLUMNS;
         int cell;
         switch (columnInTrack) {
             case 0:
@@ -320,7 +318,7 @@ void PatternPainter::drawSelection(QPainter &painter, QRect const rect) {
     }
     int x2;
     {
-        auto right = rect.right() - 1;
+        auto right = selection.right() - 1;
         auto const columnInTrack = right % TRACK_DATA_COLUMNS;
         auto const track = right / TRACK_DATA_COLUMNS;
         int cell;
@@ -343,10 +341,14 @@ void PatternPainter::drawSelection(QPainter &painter, QRect const rect) {
         }
         x2 = mRownoWidth + (mCellWidth * ((track * TRACK_CELLS) + cell));
     }
-    int ypos = rect.y() * mCellHeight;
-    int width = x2 - x1;
-    int height = (rect.height() - 1) * mCellHeight;
-    painter.fillRect(x1, ypos, width, height, mColorSelection);
+
+    return {x1, selection.y() * mCellHeight, x2 - x1, (selection.height() - 1) * mCellHeight};
+}
+
+
+void PatternPainter::drawSelection(QPainter &painter, QRect const rect) {
+
+    painter.fillRect(selectionRectangle(rect), mColorSelection);
     
     //painter.setPen(mColorSelection);
     //painter.drawRect(x1, ypos, width - 1, height - 1);

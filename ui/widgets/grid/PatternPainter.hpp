@@ -35,6 +35,8 @@ public:
 
     bool flats() const;
 
+    QRect selectionRectangle(QRect const selection);
+
     // --
 
     int columnLocation(int column) const;

@@ -78,5 +78,7 @@ struct TrackRow {
 
 #pragma pack(pop)
 
+constexpr Effect NO_EFFECT = { EffectType::noEffect, 0 };
+
 
 }

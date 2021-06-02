@@ -706,8 +706,11 @@ void PatternEditor::onPasteMix() {
 }
 
 void PatternEditor::onDelete() {
+
     mDocument->patternModel().deleteSelection();
-    stepDown();
+    if (!mDocument->patternModel().hasSelection()) {
+        stepDown();
+    }
 }
 
 void PatternEditor::onSelectAll() {
