@@ -158,7 +158,7 @@ class PatternChunk {
         SelectionMeta smeta(selection);
         auto rowLength = smeta.patternRowLength();
 
-        char *dest, *src;
+        char *dest = nullptr, *src = nullptr;
 
         if (saving) {
             mData.reset(new char[rowLength * smeta.rows()]);
@@ -423,6 +423,14 @@ void PatternModel::deselect() {
         mSelection = QRect();
         emit selectionChanged();
     }
+}
+
+QString PatternModel::exportSelection() {
+    return {};
+}
+
+void PatternModel::importSelection(QString const& str) {
+    Q_UNUSED(str)
 }
 
 // slots -------------------------------
@@ -837,23 +845,15 @@ protected:
 };
 
 
+class SelectionCmd : public QUndoCommand {
 
-
-
-
-
-
-
-class DeleteSelectionCmd : public QUndoCommand {
-
+protected:
     PatternModel &mModel;
     uint8_t mPattern;
     QRect mSelection;
     PatternChunk mChunk;
 
-public:
-
-    DeleteSelectionCmd(PatternModel &model) :
+    explicit SelectionCmd(PatternModel &model) :
         mModel(model),
         mPattern((uint8_t)model.mCursorPattern),
         mSelection(model.selection()),
@@ -862,12 +862,32 @@ public:
         mChunk.save(model.mPatternCurr, mSelection);
     }
 
+    void restore(bool update) {
+        auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            mChunk.restore(pattern, mSelection);
+        }
+
+        mModel.invalidate(mPattern, update);
+    }
+
+};
+
+class DeleteSelectionCmd : public SelectionCmd {
+
+public:
+
+    DeleteSelectionCmd(PatternModel &model) :
+        SelectionCmd(model)
+    {
+    }
+
     virtual void redo() override {
         {
             auto ctx = mModel.mDocument.beginCommandEdit();
             // clear all set data in the selection
             SelectionMeta smeta(mSelection);
-            qDebug() << smeta.patternRowLength();
             auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
 
             for (auto track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
@@ -902,15 +922,123 @@ public:
     }
 
     virtual void undo() override {
-        auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
-        {
-            auto ctx = mModel.mDocument.beginCommandEdit();
-            mChunk.restore(pattern, mSelection);
-        }
-
-        mModel.invalidate(mPattern, true);
+        restore(true);
     }
 
+
+};
+
+class TransposeCmd : public SelectionCmd {
+
+    int8_t mTransposeAmount; // semitones to transpose all notes by
+
+public:
+
+    explicit TransposeCmd(PatternModel &model, int8_t transposeAmount) :
+        SelectionCmd(model),
+        mTransposeAmount(transposeAmount)
+    {
+    }
+
+    virtual void redo() override {
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            SelectionMeta smeta(mSelection);
+            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+
+            for (auto track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
+                auto tmeta = smeta.getTrackMeta(track);
+                if (!tmeta.hasColumn<PatternModel::SelectNote>()) {
+                    continue;
+                }
+
+                for (auto row = smeta.rowStart(); row < smeta.rowEnd(); ++row) {
+                    auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
+                    rowdata.transpose(mTransposeAmount);
+                }
+            }
+        }
+
+        mModel.invalidate(mPattern, false);
+    }
+
+    virtual void undo() override {
+        restore(false);
+    }
+
+};
+
+// reverse applies to a selection, but we do not inherit SelectionCmd, as its
+// redo/undo actions are the same (no need to save a chunk of the selection)
+class ReverseCmd : public QUndoCommand {
+
+    PatternModel &mModel;
+    QRect mSelection;
+    uint8_t mPattern;
+
+public:
+
+    explicit ReverseCmd(PatternModel &model) :
+        mModel(model),
+        mSelection(model.selection()),
+        mPattern((uint8_t)model.mCursorPattern)
+    {
+    }
+
+    virtual void redo() override {
+        reverse();
+    }
+
+    virtual void undo() override {
+        // same as redo() since reversing is an involutory function
+        reverse();
+    }
+
+private:
+
+    void reverse() {
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            SelectionMeta smeta(mSelection);
+            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+
+            auto midpoint = smeta.rowStart() + (smeta.rows() / 2);
+            for (auto track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
+                auto tmeta = smeta.getTrackMeta(track);
+
+                int lastRow = smeta.rowEnd() - 1;
+                for (auto row = smeta.rowStart(); row < midpoint; ++row) {
+                    auto &first = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
+                    auto &last = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)lastRow);
+
+                    // inefficient, but works
+
+                    if (tmeta.hasColumn<PatternModel::SelectNote>()) {
+                        std::swap(first.note, last.note);
+                    }
+
+                    if (tmeta.hasColumn<PatternModel::SelectInstrument>()) {
+                        std::swap(first.instrumentId, last.instrumentId);
+                    }
+
+                    if (tmeta.hasColumn<PatternModel::SelectEffect1>()) {
+                        std::swap(first.effects[0], last.effects[0]);
+                    }
+
+                    if (tmeta.hasColumn<PatternModel::SelectEffect2>()) {
+                        std::swap(first.effects[1], last.effects[1]);
+                    }
+
+                    if (tmeta.hasColumn<PatternModel::SelectEffect3>()) {
+                        std::swap(first.effects[2], last.effects[2]);
+                    }
+
+                    --lastRow;
+                }
+            }
+        }
+        mModel.invalidate(mPattern, true);
+    }
 
 };
 
@@ -1090,4 +1218,38 @@ void PatternModel::deleteSelection() {
         }
     }
     
+}
+
+void PatternModel::transpose(int amount) {
+
+    if (amount) { // a transpose of 0 does nothing
+        if (hasSelection()) {
+            auto cmd = new TransposeCmd(*this, (int8_t)amount);
+            cmd->setText(tr("transpose selection"));
+            mDocument.undoStack().push(cmd);
+        } else {
+            auto &rowdata = cursorTrackRow();
+            auto rowcopy = rowdata;
+            rowcopy.transpose(amount);
+            // if the transpose resulted in a change, create and push an edit command
+            if (rowcopy.note != rowdata.note) {
+                auto cmd = new NoteEditCmd(*this, rowcopy.note, rowdata.note);
+                cmd->setText(tr("transpose note"));
+                mDocument.undoStack().push(cmd);
+            }
+
+        }
+    }
+}
+
+void PatternModel::reverse() {
+    if (hasSelection()) {
+        SelectionMeta meta(selection());
+
+        if (meta.rows() > 1) {
+            auto cmd = new ReverseCmd(*this);
+            cmd->setText("reverse");
+            mDocument.undoStack().push(cmd);
+        }
+    }
 }

@@ -4,6 +4,10 @@
 #include "misc/utils.hpp"
 #include "widgets/grid/layout.hpp"
 
+#include <QDialogButtonBox>
+#include <QClipboard>
+#include <QDialog>
+#include <QGuiApplication>
 #include <QGridLayout>
 #include <QtDebug>
 
@@ -227,17 +231,19 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     setupAction(mActions.pasteMix, "Paste &Mix", "Pastes contents at the cursor, merging with existing rows", tr("Ctrl+M"));
     setupAction(mActions.delete_, "&Delete", "Deletes selection", QKeySequence::Delete);
     setupAction(mActions.selectAll, "&Select All", "Selects entire track/pattern", QKeySequence::SelectAll);
-    setupAction(mActions.noteIncrease, "Increase note", "Increases note/notes by 1 step");
     setupAction(mActions.noteDecrease, "Decrease note", "Decreases note/notes by 1 step");
-    setupAction(mActions.octaveIncrease, "Increase octave", "Increases note/notes by 12 steps");
+    setupAction(mActions.noteIncrease, "Increase note", "Increases note/notes by 1 step");
     setupAction(mActions.octaveDecrease, "Decrease octave", "Decreases note/notes by 12 steps");
-    setupAction(mActions.reverse, "&Reverse", "Reverses selected rows");
+    setupAction(mActions.octaveIncrease, "Increase octave", "Increases note/notes by 12 steps");
+    setupAction(mActions.transpose, "Custom...", "Transpose by a custom amount", tr("Ctrl+T"));
+    setupAction(mActions.reverse, "&Reverse", "Reverses selected rows", tr("Ctrl+R"));
 
     mTransposeMenu.setTitle(tr("&Transpose"));
-    mTransposeMenu.addAction(&mActions.noteIncrease);
     mTransposeMenu.addAction(&mActions.noteDecrease);
-    mTransposeMenu.addAction(&mActions.octaveIncrease);
+    mTransposeMenu.addAction(&mActions.noteIncrease);
     mTransposeMenu.addAction(&mActions.octaveDecrease);
+    mTransposeMenu.addAction(&mActions.octaveIncrease);
+    mTransposeMenu.addAction(&mActions.transpose);
 
     connect(&mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, &PatternEditor::octaveChanged);
 
@@ -274,6 +280,7 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     connect(&mActions.noteDecrease, &QAction::triggered, this, &PatternEditor::onDecreaseNote);
     connect(&mActions.octaveIncrease, &QAction::triggered, this, &PatternEditor::onIncreaseOctave);
     connect(&mActions.octaveDecrease, &QAction::triggered, this, &PatternEditor::onDecreaseOctave);
+    connect(&mActions.transpose, &QAction::triggered, this, &PatternEditor::onTranspose);
     connect(&mActions.reverse, &QAction::triggered, this, &PatternEditor::onReverse);
     
     
@@ -665,12 +672,13 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         mFollowModeCheck.setChecked(patternModel.isFollowing());
         mConnections.append(connect(&mFollowModeCheck, &QCheckBox::toggled, &patternModel, &PatternModel::setFollowing));
 
-        // mConnections.append(connect(&patternModel, &PatternModel::selectionChanged, this,
-        //     [this]() {
-        //         bool hasSelection = static_cast<PatternModel*>(sender())->hasSelection();
-        //         mActions.copy.setEnabled(hasSelection);
-        //         mActions.cut.setEnabled(hasSelection);
-        //     }));
+        mConnections.append(connect(&patternModel, &PatternModel::selectionChanged, this,
+            [this]() {
+                bool hasSelection = static_cast<PatternModel*>(sender())->hasSelection();
+                mActions.copy.setEnabled(hasSelection);
+                mActions.cut.setEnabled(hasSelection);
+                mActions.reverse.setEnabled(hasSelection);
+            }));
     }
 
     mActions.copy.setEnabled(hasDocument);
@@ -690,11 +698,13 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
 }
 
 void PatternEditor::onCut() {
-
+    onCopy();
+    mDocument->patternModel().deleteSelection();
 }
 
 void PatternEditor::onCopy() {
-    
+    auto clipboard = QGuiApplication::clipboard();
+    clipboard->setText(mDocument->patternModel().exportSelection());
 }
 
 void PatternEditor::onPaste() {
@@ -718,23 +728,48 @@ void PatternEditor::onSelectAll() {
 }
 
 void PatternEditor::onIncreaseNote() {
-
+    mDocument->patternModel().transpose(1);
 }
 
 void PatternEditor::onDecreaseNote() {
-
+    mDocument->patternModel().transpose(-1);
 }
 
 void PatternEditor::onIncreaseOctave() {
-
+    mDocument->patternModel().transpose(12);
 }
 
 void PatternEditor::onDecreaseOctave() {
+    mDocument->patternModel().transpose(-12);
+}
 
+void PatternEditor::onTranspose() {
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Transpose"));
+
+    QVBoxLayout layout;
+        QLabel label(tr("Enter transpose amount (semitones):"));
+        QSpinBox transposeSpin;
+        QDialogButtonBox buttons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    
+    layout.addWidget(&label);
+    layout.addWidget(&transposeSpin);
+    layout.addWidget(&buttons);
+    layout.setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
+    dialog.setLayout(&layout);
+
+    transposeSpin.setRange(-trackerboy::NOTE_LAST, trackerboy::NOTE_LAST);
+
+    connect(&buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        mDocument->patternModel().transpose(transposeSpin.value());
+    }
 }
 
 void PatternEditor::onReverse() {
-    
+    mDocument->patternModel().reverse();
 }
 
 

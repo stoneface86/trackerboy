@@ -1,7 +1,9 @@
 
 #include "trackerboy/data/TrackRow.hpp"
+#include "trackerboy/note.hpp"
 
 #include <cassert>
+#include <algorithm>
 
 namespace trackerboy {
 
@@ -44,6 +46,13 @@ void TrackRow::setNote(std::optional<uint8_t> note_) {
 
 void TrackRow::setInstrument(std::optional<uint8_t> instrument) {
     instrumentId = instrument.value_or((uint8_t)-1) + 1;
+}
+
+void TrackRow::transpose(int amount) {
+    auto _note = queryNote();
+    if (_note && *_note != NOTE_CUT) {
+        setNote((uint8_t)std::clamp(*_note + amount, 0, (int)NOTE_LAST));
+    }
 }
 
 }

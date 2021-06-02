@@ -43,6 +43,7 @@ public:
         QAction noteDecrease;
         QAction octaveIncrease;
         QAction octaveDecrease;
+        QAction transpose;
         QAction reverse;
 
     };
@@ -99,6 +100,8 @@ public slots:
     void onIncreaseOctave();
 
     void onDecreaseOctave();
+
+    void onTranspose();
 
     void onReverse();
 

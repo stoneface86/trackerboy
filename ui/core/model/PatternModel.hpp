@@ -139,6 +139,13 @@ public:
     //
     void deselect();
 
+    //
+    // exports selected pattern data to a string (to put on the clipboard)
+    //
+    QString exportSelection();
+
+    void importSelection(QString const& str);
+
     // Editing ================================================================
 
     // unless specified, these functions use the current cursor position for
@@ -156,6 +163,12 @@ public:
 
     // deletes selection or the cursor if no selection is present
     void deleteSelection();
+
+    // transpose the current note or selection by the given number of semitones
+    void transpose(int amount);
+
+    // reverses rows in a selection
+    void reverse();
 
 signals:
     void cursorColumnChanged(int column);
@@ -194,8 +207,12 @@ private slots:
 
 private:
 
+    // QUndoCommand command classes
     friend class TrackEditCmd;
+    friend class SelectionCmd;
     friend class DeleteSelectionCmd;
+    friend class TransposeCmd;
+    friend class ReverseCmd;
 
     Q_DISABLE_COPY(PatternModel)
 
