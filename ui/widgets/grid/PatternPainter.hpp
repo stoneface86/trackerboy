@@ -55,7 +55,6 @@ public:
 
     // drawing functions
 
-    //void drawBackground(QPainter &painter, int rowStart, int rows);
     void drawBackground(QPainter &painter, int ypos, int rowStart, int rows);
 
     void drawRowBackground(QPainter &painter, RowType type, int row);
@@ -64,14 +63,11 @@ public:
 
     void drawLines(QPainter &painter, int height);
 
-    //void drawSelection(QPainter &painter, int xpos, int ypos, )
-
     //
     // Paints the full row, including the row number, at the given y-position. Returns the
     // y-position of the next row
     //
     int drawRow(QPainter &textPainter,
-                //QPainter &bgPainter,
                 trackerboy::PatternRow const& rowdata, 
                 int rowno, 
                 int ypos
@@ -92,12 +88,8 @@ public:
     //
     void drawNote(QPainter &painter, uint8_t note, int xpos, int ypos);
 
-
     // low-level draw function. Draws a single character cell at the given x and y position
     void drawCell(QPainter &painter, char cell, int xpos, int ypos);
-
-    // use when editing
-    void drawColumn(QPainter &painter, trackerboy::PatternRow const& data, int col, int ypos);
 
 private:
 

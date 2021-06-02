@@ -1,6 +1,7 @@
 
 #include "widgets/grid/PatternPainter.hpp"
 #include "widgets/grid/layout.hpp"
+#include "core/model/PatternModel.hpp"
 
 #include "trackerboy/note.hpp"
 
@@ -79,7 +80,35 @@ static char effectTypeToChar(trackerboy::EffectType et) {
     }
 }
 
+static const char* NOTE_STR_SHARP[] = {
+    "C-",
+    "C#",
+    "D-",
+    "D#",
+    "E-",
+    "F-",
+    "F#",
+    "G-",
+    "G#",
+    "A-",
+    "A#",
+    "B-"
+};
 
+static const char* NOTE_STR_FLAT[] = {
+    "C-",
+    "Db",
+    "D-",
+    "Eb",
+    "E-",
+    "F-",
+    "Gb",
+    "G-",
+    "Ab",
+    "A-",
+    "Bb",
+    "B-"
+};
 
 PatternPainter::PatternPainter(QFont const& font) :
     mHighlightInterval1(0),
@@ -204,7 +233,7 @@ void PatternPainter::drawBackground(QPainter &painter, int ypos, int rowStart, i
 
 void PatternPainter::drawCursor(QPainter &painter, int row, int column) {
     // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-    int cursorWidth = ((column % TRACK_COLUMNS) == COLUMN_NOTE ? 3 : 1) * mCellWidth + 2;
+    int cursorWidth = ((column % TRACK_COLUMNS) == PatternModel::ColumnNote ? 3 : 1) * mCellWidth + 2;
     int cursorPos = columnLocation(column) - 1;
 
     int ypos = row * mCellHeight;
@@ -238,7 +267,7 @@ int PatternPainter::drawRow(
 
     painter.setPen(fgpen);
     painter.drawText(mCellWidth, ypos, mCellWidth * 2, mCellHeight, Qt::AlignBottom, QString("%1").arg(rowno, 2, 16, QLatin1Char('0')).toUpper());
-    int xpos = (TRACK_COLUMN_MAP[COLUMN_NOTE] + ROWNO_CELLS) * mCellWidth;
+    int xpos = (TRACK_COLUMN_MAP[PatternModel::ColumnNote] + ROWNO_CELLS) * mCellWidth;
     for (int track = 0; track != 4; ++track) {
         auto &trackdata = rowdata[track];
 
@@ -250,7 +279,7 @@ int PatternPainter::drawRow(
         }
 
 
-        xpos += (TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH] - TRACK_COLUMN_MAP[COLUMN_NOTE]) * mCellWidth;
+        xpos += (TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh] - TRACK_COLUMN_MAP[PatternModel::ColumnNote]) * mCellWidth;
         auto instrument = trackdata.queryInstrument();
         if (instrument) {
             painter.setPen(mColorInstrument);
@@ -261,7 +290,7 @@ int PatternPainter::drawRow(
             drawNone(painter, 2, xpos, ypos);
         }
 
-        xpos += (TRACK_COLUMN_MAP[COLUMN_EFFECT1_TYPE] - TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH]) * mCellWidth;
+        xpos += (TRACK_COLUMN_MAP[PatternModel::ColumnEffect1Type] - TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh]) * mCellWidth;
 
         for (int effect = 0; effect < trackerboy::TrackRow::MAX_EFFECTS; ++effect) {
             auto effectdata = trackdata.effects[effect];
@@ -299,19 +328,19 @@ QRect PatternPainter::selectionRectangle(QRect const selection) {
         int cell;
         switch (columnInTrack) {
             case 0:
-                cell = TRACK_COLUMN_MAP[COLUMN_NOTE] - 1;
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnNote] - 1;
                 break;
             case 1:
-                cell = TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH];
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh];
                 break;
             case 2:
-                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT1_TYPE];
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect1Type];
                 break;
             case 3:
-                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT2_TYPE];
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect2Type];
                 break;
             default:
-                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT3_TYPE];
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect3Type];
                 break;
         }
         x1 = mRownoWidth + (mCellWidth * ((track * TRACK_CELLS) + cell));
@@ -324,19 +353,19 @@ QRect PatternPainter::selectionRectangle(QRect const selection) {
         int cell;
         switch (columnInTrack) {
             case 0:
-                cell = TRACK_COLUMN_MAP[COLUMN_NOTE] + 3;
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnNote] + 3;
                 break;
             case 1:
-                cell = TRACK_COLUMN_MAP[COLUMN_INSTRUMENT_HIGH] + 2;
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh] + 2;
                 break;
             case 2:
-                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT1_TYPE] + 3;
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect1Type] + 3;
                 break;
             case 3:
-                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT2_TYPE] + 3;
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect2Type] + 3;
                 break;
             default:
-                cell = TRACK_COLUMN_MAP[COLUMN_EFFECT3_TYPE] + 4;
+                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect3Type] + 4;
                 break;
         }
         x2 = mRownoWidth + (mCellWidth * ((track * TRACK_CELLS) + cell));
@@ -355,59 +384,7 @@ void PatternPainter::drawSelection(QPainter &painter, QRect const rect) {
 
 }
 
-void PatternPainter::drawColumn(QPainter &painter, trackerboy::PatternRow const& data, int cell, int ypos) {
-    Q_UNUSED(painter);
-    Q_UNUSED(data);
-    Q_UNUSED(cell);
-    Q_UNUSED(ypos);
-    
-    //int track = cell / TRACK_CELLS;
-    //
-    //auto col = static_cast<ColumnType>(TRACK_CELL_MAP[cell % TRACK_CELLS]);
-    //int xpos = mRownoWidth + mTrackWidth;
-
-    //
-    //auto &trackrow = data[track];
-
-    //bool note;
-    //switch (col) {
-    //    case COLUMN_NOTE:
-    //        note = true;
-    //        break;
-    //}
-}
-
 void PatternPainter::drawNote(QPainter &painter, uint8_t note, int xpos, int ypos) {
-
-    const char* NOTE_STR_SHARP[] = {
-        "C-",
-        "C#",
-        "D-",
-        "D#",
-        "E-",
-        "F-",
-        "F#",
-        "G-",
-        "G#",
-        "A-",
-        "A#",
-        "B-"
-    };
-
-    const char* NOTE_STR_FLAT[] = {
-        "C-",
-        "Db",
-        "D-",
-        "Eb",
-        "E-",
-        "F-",
-        "Gb",
-        "G-",
-        "Ab",
-        "A-",
-        "Bb",
-        "B-"
-    };
 
     if (note == trackerboy::NOTE_CUT) {
         painter.setBrush(QBrush(painter.pen().color()));

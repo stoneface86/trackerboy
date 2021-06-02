@@ -292,18 +292,18 @@ PatternModel::ColumnType PatternModel::columnType() const {
 
 PatternModel::SelectType PatternModel::selectType() const {
     switch (columnType()) {
-        case COLUMN_NOTE:
+        case ColumnNote:
             return SelectNote;
-        case COLUMN_INSTRUMENT_HIGH:
-        case COLUMN_INSTRUMENT_LOW:
+        case ColumnInstrumentHigh:
+        case ColumnInstrumentLow:
             return SelectInstrument;
-        case COLUMN_EFFECT1_TYPE:
-        case COLUMN_EFFECT1_ARG_HIGH:
-        case COLUMN_EFFECT1_ARG_LOW:
+        case ColumnEffect1Type:
+        case ColumnEffect1ArgHigh:
+        case ColumnEffect1ArgLow:
             return SelectEffect1;
-        case COLUMN_EFFECT2_TYPE:
-        case COLUMN_EFFECT2_ARG_HIGH:
-        case COLUMN_EFFECT2_ARG_LOW:
+        case ColumnEffect2Type:
+        case ColumnEffect2ArgHigh:
+        case ColumnEffect2ArgLow:
             return SelectEffect2;
         default:
             return SelectEffect3;
@@ -619,7 +619,7 @@ void PatternModel::setPreviewPatterns(int pattern) {
 }
 
 int PatternModel::cursorEffectNo() {
-    return (columnType() - COLUMN_EFFECT1_TYPE) / 3;
+    return (columnType() - ColumnEffect1Type) / 3;
 }
 
 void PatternModel::invalidate(int pattern, bool updatePatterns) {
@@ -975,7 +975,7 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
         auto oldInstrument = rowdata.queryInstrument();
         std::optional<uint8_t> newInstrument;
         if (nibble) {
-            bool const highNibble = columnType() == COLUMN_INSTRUMENT_HIGH;
+            bool const highNibble = columnType() == ColumnInstrumentHigh;
             newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
             if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
                 return;
@@ -1046,9 +1046,9 @@ void PatternModel::setEffectParam(uint8_t nibble) {
         auto &oldEffect = rowdata.effects[effectNo];
         if (oldEffect.type != trackerboy::EffectType::noEffect) {
             auto coltype = columnType();
-            bool isHighNibble = coltype == COLUMN_EFFECT1_ARG_HIGH ||
-                                coltype == COLUMN_EFFECT2_ARG_HIGH ||
-                                coltype == COLUMN_EFFECT3_ARG_HIGH;
+            bool isHighNibble = coltype == ColumnEffect1ArgHigh ||
+                                coltype == ColumnEffect2ArgHigh ||
+                                coltype == ColumnEffect3ArgHigh;
             auto newParam = replaceNibble(oldEffect.param, nibble, isHighNibble);
             if (newParam != oldEffect.param) {
                 auto cmd = new EffectParamEditCmd(
@@ -1076,11 +1076,11 @@ void PatternModel::deleteSelection() {
         }
     } else {
         switch (columnType()) {
-            case COLUMN_NOTE:
+            case ColumnNote:
                 setNote({}, {});
                 break;
-            case COLUMN_INSTRUMENT_HIGH:
-            case COLUMN_INSTRUMENT_LOW:
+            case ColumnInstrumentHigh:
+            case ColumnInstrumentLow:
                 setInstrument({});
                 break;
             default:

@@ -24,25 +24,25 @@ public:
     // enum for editable columns
     //
     enum ColumnType {
-        COLUMN_NOTE,
+        ColumnNote,
 
         // high is the upper nibble (bits 4-7)
         // low is the lower nibble (bits 0-3)
 
-        COLUMN_INSTRUMENT_HIGH,
-        COLUMN_INSTRUMENT_LOW,
+        ColumnInstrumentHigh,
+        ColumnInstrumentLow,
 
-        COLUMN_EFFECT1_TYPE,
-        COLUMN_EFFECT1_ARG_HIGH,
-        COLUMN_EFFECT1_ARG_LOW,
+        ColumnEffect1Type,
+        ColumnEffect1ArgHigh,
+        ColumnEffect1ArgLow,
 
-        COLUMN_EFFECT2_TYPE,
-        COLUMN_EFFECT2_ARG_HIGH,
-        COLUMN_EFFECT2_ARG_LOW,
+        ColumnEffect2Type,
+        ColumnEffect2ArgHigh,
+        ColumnEffect2ArgLow,
 
-        COLUMN_EFFECT3_TYPE,
-        COLUMN_EFFECT3_ARG_HIGH,
-        COLUMN_EFFECT3_ARG_LOW
+        ColumnEffect3Type,
+        ColumnEffect3ArgHigh,
+        ColumnEffect3ArgLow,
 
     };
 
@@ -62,6 +62,8 @@ public:
     void reload();
 
     // Data Access ============================================================
+
+    // TODO: should probably make these const
 
     trackerboy::Pattern* previousPattern();
 
@@ -127,6 +129,9 @@ public:
     //
     void selectAll();
 
+    //
+    // Selects the entire row
+    //
     void selectRow(int row);
 
     //
@@ -155,7 +160,6 @@ public:
 signals:
     void cursorColumnChanged(int column);
     void cursorRowChanged(int row);
-    //void patternsChanged();
     void patternSizeChanged(int rows);
     void trackerCursorChanged(int row, int pattern);
     void playingChanged(bool playing);

@@ -8,29 +8,6 @@
 
 namespace PatternConstants {
 
-enum ColumnType {
-    COLUMN_NOTE,
-
-    // high is the upper nibble (bits 4-7)
-    // low is the lower nibble (bits 0-3)
-
-    COLUMN_INSTRUMENT_HIGH,
-    COLUMN_INSTRUMENT_LOW,
-
-    COLUMN_EFFECT1_TYPE,
-    COLUMN_EFFECT1_ARG_HIGH,
-    COLUMN_EFFECT1_ARG_LOW,
-
-    COLUMN_EFFECT2_TYPE,
-    COLUMN_EFFECT2_ARG_HIGH,
-    COLUMN_EFFECT2_ARG_LOW,
-
-    COLUMN_EFFECT3_TYPE,
-    COLUMN_EFFECT3_ARG_HIGH,
-    COLUMN_EFFECT3_ARG_LOW
-
-};
-
 constexpr int ROWNO_CELLS = 4; // 4 cells for row numbers
 
 constexpr int TRACK_CELLS = 20;

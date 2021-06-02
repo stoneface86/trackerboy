@@ -164,6 +164,10 @@ void PianoWidget::mouseReleaseEvent(QMouseEvent *event) {
 
 void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
 
+    if (!event->buttons().testFlag(Qt::LeftButton)) {
+        return;
+    }
+
     int x = event->x();
     int y = event->y();
     if (rect().contains(x, y)) {
@@ -174,8 +178,6 @@ void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
     } else {
         release();
     }
-
-
 
 }
 

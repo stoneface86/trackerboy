@@ -475,7 +475,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     bool validKey = false;
 
     switch (patternModel.columnType()) {
-        case PatternModel::COLUMN_NOTE: {
+        case PatternModel::ColumnNote: {
             auto note = mPianoIn.keyToNote(key);
 
             if (note) {
@@ -489,9 +489,9 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
 
             break;
         }
-        case PatternModel::COLUMN_EFFECT1_TYPE:
-        case PatternModel::COLUMN_EFFECT2_TYPE:
-        case PatternModel::COLUMN_EFFECT3_TYPE:
+        case PatternModel::ColumnEffect1Type:
+        case PatternModel::ColumnEffect2Type:
+        case PatternModel::ColumnEffect3Type:
         {
             // check if the key pressed is a valid effect type
             auto effectType = keyToEffectType(key);
@@ -501,8 +501,8 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             }
             break;
         }
-        case PatternModel::COLUMN_INSTRUMENT_HIGH:
-        case PatternModel::COLUMN_INSTRUMENT_LOW: {
+        case PatternModel::ColumnInstrumentHigh:
+        case PatternModel::ColumnInstrumentLow: {
             auto hex = keyToHex(key);
             if (hex) {
                 patternModel.setInstrument(hex);
@@ -510,12 +510,12 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             }
             break;
         }
-        case PatternModel::COLUMN_EFFECT1_ARG_HIGH:
-        case PatternModel::COLUMN_EFFECT1_ARG_LOW:
-        case PatternModel::COLUMN_EFFECT2_ARG_HIGH:
-        case PatternModel::COLUMN_EFFECT2_ARG_LOW:
-        case PatternModel::COLUMN_EFFECT3_ARG_HIGH:
-        case PatternModel::COLUMN_EFFECT3_ARG_LOW:
+        case PatternModel::ColumnEffect1ArgHigh:
+        case PatternModel::ColumnEffect1ArgLow:
+        case PatternModel::ColumnEffect2ArgHigh:
+        case PatternModel::ColumnEffect2ArgLow:
+        case PatternModel::ColumnEffect3ArgHigh:
+        case PatternModel::ColumnEffect3ArgLow:
         {
             // check if the key pressed is a hex number
             auto hex = keyToHex(key);

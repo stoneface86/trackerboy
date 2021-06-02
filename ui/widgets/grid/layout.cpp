@@ -1,6 +1,8 @@
 
 #include "widgets/grid/layout.hpp"
 
+#include "core/model/PatternModel.hpp"
+
 namespace PatternConstants {
 
 // New Track layout (always 3 effects)
@@ -18,42 +20,42 @@ uint8_t TRACK_COLUMN_MAP[] = {
     1,  // +PatternColumn::note
     5,  // +PatternColumn::instrumentHigh
     6,  // +PatternColumn::instrumentLow
-    8,  // COLUMN_EFFECT1_TYPE
-    9,  // COLUMN_EFFECT1_ARG_HIGH
-    10, // COLUMN_EFFECT1_ARG_LOW
-    12, // COLUMN_EFFECT2_TYPE
-    13, // COLUMN_EFFECT2_ARG_HIGH
-    14, // COLUMN_EFFECT2_ARG_LOW
-    16, // COLUMN_EFFECT3_TYPE
-    17, // COLUMN_EFFECT3_ARG_HIGH
-    18  // COLUMN_EFFECT3_ARG_LOW
+    8,  // PatternModel::ColumnEffect1Type
+    9,  // PatternModel::ColumnEffect1ArgHigh
+    10, // PatternModel::ColumnEffect1ArgLow
+    12, // PatternModel::ColumnEffect2Type
+    13, // PatternModel::ColumnEffect2ArgHigh
+    14, // PatternModel::ColumnEffect2ArgLow
+    16, // PatternModel::ColumnEffect3Type
+    17, // PatternModel::ColumnEffect3ArgHigh
+    18  // PatternModel::ColumnEffect3ArgLow
 
 };
 
 // converts a cell index -> column index
 uint8_t TRACK_CELL_MAP[] = {
-    COLUMN_NOTE,    // spacing
-    COLUMN_NOTE,
-    COLUMN_NOTE,
-    COLUMN_NOTE,
+    PatternModel::ColumnNote,    // spacing
+    PatternModel::ColumnNote,
+    PatternModel::ColumnNote,
+    PatternModel::ColumnNote,
 
-    COLUMN_INSTRUMENT_HIGH, // spacing
-    COLUMN_INSTRUMENT_HIGH,
-    COLUMN_INSTRUMENT_LOW,
+    PatternModel::ColumnInstrumentHigh, // spacing
+    PatternModel::ColumnInstrumentHigh,
+    PatternModel::ColumnInstrumentLow,
 
-    COLUMN_EFFECT1_TYPE, // spacing
-    COLUMN_EFFECT1_TYPE,
-    COLUMN_EFFECT1_ARG_HIGH,
-    COLUMN_EFFECT1_ARG_LOW,
-    COLUMN_EFFECT2_TYPE, // spacing
-    COLUMN_EFFECT2_TYPE,
-    COLUMN_EFFECT2_ARG_HIGH,
-    COLUMN_EFFECT2_ARG_LOW,
-    COLUMN_EFFECT3_TYPE, // spacing
-    COLUMN_EFFECT3_TYPE,
-    COLUMN_EFFECT3_ARG_HIGH,
-    COLUMN_EFFECT3_ARG_LOW,
-    COLUMN_EFFECT3_ARG_LOW // spacing
+    PatternModel::ColumnEffect1Type, // spacing
+    PatternModel::ColumnEffect1Type,
+    PatternModel::ColumnEffect1ArgHigh,
+    PatternModel::ColumnEffect1ArgLow,
+    PatternModel::ColumnEffect2Type, // spacing
+    PatternModel::ColumnEffect2Type,
+    PatternModel::ColumnEffect2ArgHigh,
+    PatternModel::ColumnEffect2ArgLow,
+    PatternModel::ColumnEffect3Type, // spacing
+    PatternModel::ColumnEffect3Type,
+    PatternModel::ColumnEffect3ArgHigh,
+    PatternModel::ColumnEffect3ArgLow,
+    PatternModel::ColumnEffect3ArgLow // spacing
 };
 
 uint8_t TRACK_CELL_TO_DATA_COLUMN[] = {
