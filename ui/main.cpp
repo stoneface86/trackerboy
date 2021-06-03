@@ -1,5 +1,4 @@
 
-#include "core/Trackerboy.hpp"
 #include "forms/MainWindow.hpp"
 
 #include <QApplication>

@@ -34,7 +34,6 @@ set(UI_SRC
     "core/PatternSelection.cpp"
     "core/PianoInput.cpp"
     "core/samplerates.cpp"
-    "core/Trackerboy.cpp"
     "core/SyncWorker.cpp"
 
     "forms/AudioDiagDialog.cpp"
