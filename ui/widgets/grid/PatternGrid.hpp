@@ -75,6 +75,8 @@ private slots:
     void updateAll();
     void setPlaying(bool playing);
 
+    void updateCursor(PatternModel::CursorChangeFlags flags);
+
     void setFirstHighlight(int highlight);
     void setSecondHighlight(int highlight);
 
@@ -94,13 +96,11 @@ private:
 
     int mouseToRow(int const mouseY);
 
-    int mouseToCell(int const mouseX);
-
-    int mouseToColumn(int const mouseX);
+    PatternCursor mouseToCursor(QPoint const pos);
 
     bool rowIsValid(int row);
 
-    QPoint coordsClamped(QPoint const coords);
+    void clampCursor(PatternCursor &cursor);
 
     void calculateTrackerRow();
 
@@ -133,8 +133,8 @@ private:
     QPoint mMousePos;
     // grid coordinates of the selection being made by the user
     // if both are set, then the user has made a valid selection
-    QPoint mSelectionStartCoords;
-    QPoint mSelectionEndCoords;
+    PatternCursor mSelectionStart;
+    PatternCursor mSelectionEnd;
 
     QRect mDragDest;
 

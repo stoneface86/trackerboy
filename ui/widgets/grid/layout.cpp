@@ -1,7 +1,7 @@
 
 #include "widgets/grid/layout.hpp"
 
-#include "core/model/PatternModel.hpp"
+#include "core/PatternCursor.hpp"
 
 namespace PatternConstants {
 
@@ -20,42 +20,42 @@ uint8_t TRACK_COLUMN_MAP[] = {
     1,  // +PatternColumn::note
     5,  // +PatternColumn::instrumentHigh
     6,  // +PatternColumn::instrumentLow
-    8,  // PatternModel::ColumnEffect1Type
-    9,  // PatternModel::ColumnEffect1ArgHigh
-    10, // PatternModel::ColumnEffect1ArgLow
-    12, // PatternModel::ColumnEffect2Type
-    13, // PatternModel::ColumnEffect2ArgHigh
-    14, // PatternModel::ColumnEffect2ArgLow
-    16, // PatternModel::ColumnEffect3Type
-    17, // PatternModel::ColumnEffect3ArgHigh
-    18  // PatternModel::ColumnEffect3ArgLow
+    8,  // PatternCursor::ColumnEffect1Type
+    9,  // PatternCursor::ColumnEffect1ArgHigh
+    10, // PatternCursor::ColumnEffect1ArgLow
+    12, // PatternCursor::ColumnEffect2Type
+    13, // PatternCursor::ColumnEffect2ArgHigh
+    14, // PatternCursor::ColumnEffect2ArgLow
+    16, // PatternCursor::ColumnEffect3Type
+    17, // PatternCursor::ColumnEffect3ArgHigh
+    18  // PatternCursor::ColumnEffect3ArgLow
 
 };
 
 // converts a cell index -> column index
 uint8_t TRACK_CELL_MAP[] = {
-    PatternModel::ColumnNote,    // spacing
-    PatternModel::ColumnNote,
-    PatternModel::ColumnNote,
-    PatternModel::ColumnNote,
+    PatternCursor::ColumnNote,    // spacing
+    PatternCursor::ColumnNote,
+    PatternCursor::ColumnNote,
+    PatternCursor::ColumnNote,
 
-    PatternModel::ColumnInstrumentHigh, // spacing
-    PatternModel::ColumnInstrumentHigh,
-    PatternModel::ColumnInstrumentLow,
+    PatternCursor::ColumnInstrumentHigh, // spacing
+    PatternCursor::ColumnInstrumentHigh,
+    PatternCursor::ColumnInstrumentLow,
 
-    PatternModel::ColumnEffect1Type, // spacing
-    PatternModel::ColumnEffect1Type,
-    PatternModel::ColumnEffect1ArgHigh,
-    PatternModel::ColumnEffect1ArgLow,
-    PatternModel::ColumnEffect2Type, // spacing
-    PatternModel::ColumnEffect2Type,
-    PatternModel::ColumnEffect2ArgHigh,
-    PatternModel::ColumnEffect2ArgLow,
-    PatternModel::ColumnEffect3Type, // spacing
-    PatternModel::ColumnEffect3Type,
-    PatternModel::ColumnEffect3ArgHigh,
-    PatternModel::ColumnEffect3ArgLow,
-    PatternModel::ColumnEffect3ArgLow // spacing
+    PatternCursor::ColumnEffect1Type, // spacing
+    PatternCursor::ColumnEffect1Type,
+    PatternCursor::ColumnEffect1ArgHigh,
+    PatternCursor::ColumnEffect1ArgLow,
+    PatternCursor::ColumnEffect2Type, // spacing
+    PatternCursor::ColumnEffect2Type,
+    PatternCursor::ColumnEffect2ArgHigh,
+    PatternCursor::ColumnEffect2ArgLow,
+    PatternCursor::ColumnEffect3Type, // spacing
+    PatternCursor::ColumnEffect3Type,
+    PatternCursor::ColumnEffect3ArgHigh,
+    PatternCursor::ColumnEffect3ArgLow,
+    PatternCursor::ColumnEffect3ArgLow // spacing
 };
 
 uint8_t TRACK_CELL_TO_DATA_COLUMN[] = {

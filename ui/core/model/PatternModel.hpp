@@ -3,6 +3,9 @@
 
 class ModuleDocument;
 
+#include "core/PatternCursor.hpp"
+#include "core/PatternSelection.hpp"
+
 #include "trackerboy/data/PatternRow.hpp"
 #include "trackerboy/data/Pattern.hpp"
 
@@ -20,42 +23,20 @@ class PatternModel : public QObject {
 
 public:
 
-    //
-    // enum for editable columns
-    //
-    enum ColumnType {
-        ColumnNote,
+    enum CursorChangeFlag {
+        CursorRowChanged = 0x1,
+        CursorColumnChanged = 0x2,
+        CursorTrackChanged = 0x4,
+        CursorUnchanged = 0x0
+    };
+    Q_DECLARE_FLAGS(CursorChangeFlags, CursorChangeFlag);
 
-        // high is the upper nibble (bits 4-7)
-        // low is the lower nibble (bits 0-3)
-
-        ColumnInstrumentHigh,
-        ColumnInstrumentLow,
-
-        ColumnEffect1Type,
-        ColumnEffect1ArgHigh,
-        ColumnEffect1ArgLow,
-
-        ColumnEffect2Type,
-        ColumnEffect2ArgHigh,
-        ColumnEffect2ArgLow,
-
-        ColumnEffect3Type,
-        ColumnEffect3ArgHigh,
-        ColumnEffect3ArgLow,
-
+    enum SelectMode {
+        SelectionKeep,      // the current selection will be kept
+        SelectionModify,    // the current selection will be modified
+        SelectionRemove     // the current selection will be deselected
     };
 
-    //
-    // Selectable columns
-    //
-    enum SelectType {
-        SelectNote,
-        SelectInstrument,
-        SelectEffect1,
-        SelectEffect2,
-        SelectEffect3
-    };
 
     explicit PatternModel(ModuleDocument &doc, QObject *parent = nullptr);
 
@@ -77,9 +58,11 @@ public:
 
     int cursorColumn() const;
 
-    ColumnType columnType() const;
+    int cursorTrack() const;
 
-    SelectType selectType() const;
+    PatternCursor cursor() const;
+
+    PatternSelection::SelectType selectType() const;
 
     int trackerCursorRow() const;
     int trackerCursorPattern() const;
@@ -101,20 +84,16 @@ public:
     bool hasSelection() const;
 
     //
-    // Gets the current selection. QRect is used to model the selection area.
-    // The x-coordinate of the rectangle is the data column and the y-coordinate
-    // is the row. The returned rect is normalized, or the top-left corner is
-    // less than the bottom-right. If there is no selection the returned rect
-    // is null (ie QRect::isNull() returns true). 
+    // Gets the current selection.
     //
-    QRect selection() const;
+    PatternSelection selection() const;
 
     //
     // Sets the selection. If nothing is selected, then the item at the given
     // point is selected. If there is a selection, then the end point is set
     // to the given point.
     //
-    void setSelection(QPoint const point);
+    void setSelection(PatternCursor pos);
 
     //
     // Calls setSelection with the current cursor position.
@@ -171,8 +150,8 @@ public:
     void reverse();
 
 signals:
-    void cursorColumnChanged(int column);
-    void cursorRowChanged(int row);
+    void cursorChanged(CursorChangeFlags flags);
+
     void patternSizeChanged(int rows);
     void trackerCursorChanged(int row, int pattern);
     void playingChanged(bool playing);
@@ -188,11 +167,15 @@ signals:
 
 public slots:
 
-    void moveCursorRow(int amount, bool select = false);
-    void moveCursorColumn(int amount, bool select = false);
+    void moveCursorRow(int amount, SelectMode mode = SelectionKeep);
+    void moveCursorColumn(int amount, SelectMode mode = SelectionKeep);
+    void moveCursorTrack(int amount);
 
     void setCursorRow(int row);
     void setCursorColumn(int column);
+    void setCursorTrack(int track);
+
+    void setCursor(PatternCursor const cursor);
 
     void setRecord(bool recording);
 
@@ -203,7 +186,6 @@ public slots:
 private slots:
     // connected to OrderModel's patternChanged signal
     void setCursorPattern(int pattern);
-    void setCursorTrack(int track);
 
 private:
 
@@ -216,8 +198,15 @@ private:
 
     Q_DISABLE_COPY(PatternModel)
 
-    void setPatterns(int pattern);
+    void setCursorRowImpl(int row, CursorChangeFlags &flags);
+    void setCursorColumnImpl(int col, CursorChangeFlags &flags);
+    void setCursorTrackImpl(int track, CursorChangeFlags &flags);
+    void setCursorPatternImpl(int pattern, CursorChangeFlags &flags);
+
+    void setPatterns(int pattern, CursorChangeFlags &flags);
     void setPreviewPatterns(int pattern);
+
+    void emitIfChanged(CursorChangeFlags flags);
 
     int cursorEffectNo();
 
@@ -229,8 +218,7 @@ private:
 
     ModuleDocument &mDocument;
 
-    int mCursorRow;
-    int mCursorColumn;
+    PatternCursor mCursor;
     int mCursorPattern;
 
     bool mRecording;
@@ -246,18 +234,8 @@ private:
     std::optional<trackerboy::Pattern> mPatternNext;
 
     bool mHasSelection;
-    QRect mSelection;
-
-public:
-
-    // constants
-
-    static constexpr auto COLUMNS_PER_TRACK = 12;
-
-    static constexpr auto COLUMNS = COLUMNS_PER_TRACK * 4;
-
-    static constexpr auto SELECTS_PER_TRACK = 5;
-    static constexpr auto SELECTS = SELECTS_PER_TRACK * 4;
+    PatternSelection mSelection;
 
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(PatternModel::CursorChangeFlags);

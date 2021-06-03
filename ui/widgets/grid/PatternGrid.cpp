@@ -53,8 +53,8 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     mVisibleRows(0),
     mEditorFocus(false),
     mMousePos(),
-    mSelectionStartCoords(),
-    mSelectionEndCoords(),
+    mSelectionStart(),
+    mSelectionEnd(),
     mMouseOp(MouseOperation::nothing)
 {
     setAcceptDrops(true);
@@ -114,12 +114,11 @@ void PatternGrid::setDocument(ModuleDocument *doc) {
         calculateTrackerRow();
 
         auto &patternModel = doc->patternModel();
+        connect(&patternModel, &PatternModel::cursorChanged, this, &PatternGrid::updateCursor);
         // these changes require a full redraw
-        connect(&patternModel, &PatternModel::cursorRowChanged, this, &PatternGrid::updateAll);
         connect(&patternModel, &PatternModel::invalidated, this, &PatternGrid::updateAll);
         connect(&patternModel, &PatternModel::selectionChanged, this, &PatternGrid::updateAll);
         // these we only need to redraw the cursor row
-        connect(&patternModel, &PatternModel::cursorColumnChanged, this, &PatternGrid::updateCursorRow);
         connect(&patternModel, &PatternModel::recordingChanged, this, &PatternGrid::updateCursorRow);
         
 
@@ -148,7 +147,7 @@ void PatternGrid::dragEnterEvent(QDragEnterEvent *evt) {
 }
 
 void PatternGrid::dragMoveEvent(QDragMoveEvent *evt) {
-
+    Q_UNUSED(evt)
 }
 
 void PatternGrid::dropEvent(QDropEvent *evt) {
@@ -172,7 +171,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     unsigned const centerRow = mVisibleRows / 2;
 
     auto &patternModel = mDocument->patternModel();
-    auto const cursorRow = patternModel.cursorRow();
+    auto const cursor = patternModel.cursor();
     auto patternPrev = patternModel.previousPattern();
     auto patternCurr = patternModel.currentPattern();
     auto patternNext = patternModel.nextPattern();
@@ -193,7 +192,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // [2] row background
     {
         int rowsToDraw = mVisibleRows;
-        int relativeRowIndex = cursorRow - centerRow;
+        int relativeRowIndex = cursor.row - centerRow;
         int ypos = 0;
         int rowMin = -rowsInPrevious;
         int rowMax = rowsInCurrent + rowsInNext;
@@ -222,18 +221,18 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // [4] selection
     if (patternModel.hasSelection()) {
         auto selection = patternModel.selection();
-        selection.translate(QPoint(0, -cursorRow + (int)centerRow));
+        selection.translate(-cursor.row + (int)centerRow);
         mPainter.drawSelection(painter, selection);
     }
 
     // [5] cursor
-    mPainter.drawCursor(painter, centerRow, patternModel.cursorColumn());
+    mPainter.drawCursor(painter, PatternCursor(centerRow, cursor.column, cursor.track));
 
     // [6] text
     {
         int rowYpos = 0;
         int rowsToDraw = mVisibleRows;
-        int relativeRowIndex = cursorRow - centerRow;
+        int relativeRowIndex = cursor.row - centerRow;
 
         if (relativeRowIndex < 0) {
             // a negative row index means we draw from the previous pattern
@@ -330,23 +329,19 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
         }
         case MouseOperation::beginSelecting: {
             if ((pos - mMousePos).manhattanLength() > SELECTION_DEAD_ZONE) {
-                patternModel.setSelection(mSelectionStartCoords);
+                patternModel.setSelection(mSelectionStart);
                 mMouseOp = MouseOperation::selecting;
             } else {
                 break;
             }
         }
         [[fallthrough]];
-        case MouseOperation::selecting: {
+        case MouseOperation::selecting:
             // update end coordinate for selection
-            QPoint coords(
-                mouseToColumn(pos.x()),
-                mouseToRow(pos.y())
-            );
-            mSelectionEndCoords = coordsClamped(coords);
-            mDocument->patternModel().setSelection(mSelectionEndCoords);
+            mSelectionEnd = mouseToCursor(pos);
+            clampCursor(mSelectionEnd);
+            mDocument->patternModel().setSelection(mSelectionEnd);
             break;
-        }
         case MouseOperation::dragging: {
             if ((pos - mMousePos).manhattanLength() < QApplication::startDragDistance()) {
                 break;
@@ -358,7 +353,7 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
             mimeData->setData(MIME_TYPE, QByteArray());
             drag->setMimeData(mimeData);
 
-            auto dropAction = drag->exec();
+            /*auto dropAction = */drag->exec();
             
             
             break;
@@ -389,11 +384,11 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
             if (patternModel.hasSelection()) {
                 // check if the mouse is within the selection rectangle
                 auto selection = patternModel.selection();
-                selection.translate(QPoint(0, -patternModel.cursorRow() + (int)(mVisibleRows / 2)));
-                selection = mPainter.selectionRectangle(selection);
-                if (selection.contains(mMousePos)) {
+                selection.translate(-patternModel.cursorRow() + (int)(mVisibleRows / 2));
+                auto selectionRect = mPainter.selectionRectangle(selection);
+                if (selectionRect.contains(mMousePos)) {
                     mMouseOp = MouseOperation::dragging;
-                    mDragDest = selection;
+                    mDragDest = selectionRect;
                     return;
                 }
             }
@@ -401,13 +396,10 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
             patternModel.deselect();
 
             // now convert the mouse coordinates to a coordinate on the grid
-            int column = mouseToColumn(mMousePos.x());
-            if (column >= 0 && column < PatternModel::SELECTS) {
-                int row = mouseToRow(mMousePos.y());
-                if (rowIsValid(row)) {
-                    mSelectionStartCoords = QPoint(column, row);
-                    mMouseOp = MouseOperation::beginSelecting;
-                }
+            auto cursor = mouseToCursor(mMousePos);
+            if (cursor.isValid() && rowIsValid(cursor.row)) {
+                mSelectionStart = cursor;
+                mMouseOp = MouseOperation::beginSelecting;
             }
         }
 
@@ -419,11 +411,10 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
 
         // if the user did not select anything, move the cursor to the starting coordinate
-        if (mMouseOp == MouseOperation::beginSelecting || mMouseOp == MouseOperation::dragging) {
+        if (mMouseOp == MouseOperation::beginSelecting) {
             auto &patternModel = mDocument->patternModel();
             patternModel.deselect();
-            patternModel.setCursorColumn(mouseToCell(mMousePos.x()));
-            patternModel.setCursorRow(mouseToRow(mMousePos.y()));
+            patternModel.setCursor(mSelectionStart);
         }
 
         mMouseOp = MouseOperation::nothing;
@@ -431,6 +422,14 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 }
 
 // ======================================================= PRIVATE METHODS ===
+
+void PatternGrid::updateCursor(PatternModel::CursorChangeFlags flags) {
+    if (flags.testFlag(PatternModel::CursorRowChanged)) {
+        updateAll();
+    } else {
+        updateCursorRow();
+    }
+}
 
 void PatternGrid::updateCursorRow() {
     auto cellHeight = mPainter.cellHeight();
@@ -474,43 +473,40 @@ int PatternGrid::mouseToRow(int const mouseY) {
     return mDocument->patternModel().cursorRow() + (mouseY / mPainter.cellHeight() - ((int)mVisibleRows / 2));
 }
 
-int PatternGrid::mouseToCell(int const mouseX) {
-    int cell = (mouseX - mPainter.rownoWidth()) / mPainter.cellWidth();
-    if (cell < 0) {
-        return -1;
+PatternCursor PatternGrid::mouseToCursor(QPoint const pos) {
+    auto x = pos.x() - mPainter.rownoWidth();
+    int col, track;
+    if (x < 0) {
+        col = -1;
+        track = -1;
+    } else {
+        auto cell = x / mPainter.cellWidth();
+        track = cell / TRACK_CELLS;
+        cell %= TRACK_CELLS;
+        col = TRACK_CELL_MAP[cell];
+
     }
-    int track = cell / TRACK_CELLS;
-    cell = cell % TRACK_CELLS;
-    return (track * TRACK_COLUMNS) + TRACK_CELL_MAP[cell];
+
+    return {
+        mouseToRow(pos.y()),
+        col,
+        track
+    };
 }
-
-int PatternGrid::mouseToColumn(int const mouseX) {
-    int cell = (mouseX - mPainter.rownoWidth()) / mPainter.cellWidth();
-    if (cell < 0) {
-        return -1;
-    }
-    int track = cell / TRACK_CELLS;
-    cell = cell % TRACK_CELLS;
-
-    return (track * PatternModel::SELECTS_PER_TRACK) + TRACK_CELL_TO_DATA_COLUMN[cell];
-}
-
-// bool PatternGrid::coordsValid(QPoint const coords) {
-//     return coords.x() >= 0 &&
-//            coords.x() < (PatternModel::COLUMNS_PER_TRACK * 4) &&
-//            coords.y() >= 0 &&
-//            coords.y() < (int)mDocument->patternModel().currentPattern().totalRows();
-// }
 
 bool PatternGrid::rowIsValid(int row) {
     return row >= 0 && row < (int)mDocument->patternModel().currentPattern().totalRows();
 }
 
-QPoint PatternGrid::coordsClamped(QPoint const coords) {
-    return {
-        std::clamp(coords.x(), 0, PatternModel::SELECTS - 1),
-        std::clamp(coords.y(), 0, (int)mDocument->patternModel().currentPattern().totalRows() - 1)
-    };
+void PatternGrid::clampCursor(PatternCursor &cursor) {
+    cursor.row = std::clamp(cursor.row, 0, (int)mDocument->patternModel().currentPattern().totalRows() - 1);
+    if (cursor.track >= PatternCursor::MAX_TRACKS) {
+        cursor.track = PatternCursor::MAX_TRACKS - 1;
+        cursor.column = PatternCursor::MAX_COLUMNS - 1;
+    } else if (cursor.track < 0) {
+        cursor.track = 0;
+        cursor.column = 0;
+    }
 }
 
 unsigned PatternGrid::getVisibleRows() {

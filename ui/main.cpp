@@ -88,6 +88,7 @@ int main(int argc, char *argv[]) {
 
     // register types for signals
     qRegisterMetaType<ModuleDocument::OutputFlags>("OutputFlags");
+    qRegisterMetaType<PatternModel::CursorChangeFlags>("CursorChangeFlags");
 
     // use a custom message handler for logging to file
     DEFAULT_MESSAGE_HANDLER = qInstallMessageHandler(messageHandler);

@@ -2,6 +2,8 @@
 #pragma once
 
 #include "core/ColorTable.hpp"
+#include "core/PatternCursor.hpp"
+#include "core/PatternSelection.hpp"
 
 #include "trackerboy/data/PatternRow.hpp"
 
@@ -35,13 +37,7 @@ public:
 
     bool flats() const;
 
-    QRect selectionRectangle(QRect const selection);
-
-    // --
-
-    int columnLocation(int column) const;
-
-    // --
+    QRect selectionRectangle(PatternSelection const& selection);
 
     void setColors(ColorTable const& colors);
 
@@ -59,7 +55,7 @@ public:
 
     void drawRowBackground(QPainter &painter, RowType type, int row);
 
-    void drawCursor(QPainter &painter, int row, int column);
+    void drawCursor(QPainter &painter, PatternCursor cursor);
 
     void drawLines(QPainter &painter, int height);
 
@@ -76,7 +72,7 @@ public:
     //
     // Draws the selection rectangle
     //
-    void drawSelection(QPainter &painter, QRect const rect);
+    void drawSelection(QPainter &painter, PatternSelection const& selection);
 
     //
     // Paints "nothing" or "." for the cell(s)

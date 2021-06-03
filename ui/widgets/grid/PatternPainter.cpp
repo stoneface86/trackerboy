@@ -204,13 +204,6 @@ void PatternPainter::setColors(ColorTable const& colors) {
 
 }
 
-
-int PatternPainter::columnLocation(int column) const {
-    int track = column / TRACK_COLUMNS;
-    int coltype = column % TRACK_COLUMNS;
-    return track * mTrackWidth + TRACK_COLUMN_MAP[coltype] * mCellWidth + mRownoWidth;
-}
-
 void PatternPainter::drawRowBackground(QPainter &painter, RowType type, int row) {
     auto ypos = row * mCellHeight;
     auto const& color = mRowColors[type];
@@ -231,12 +224,12 @@ void PatternPainter::drawBackground(QPainter &painter, int ypos, int rowStart, i
     }
 }
 
-void PatternPainter::drawCursor(QPainter &painter, int row, int column) {
+void PatternPainter::drawCursor(QPainter &painter, PatternCursor cursor) {
     // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-    int cursorWidth = ((column % TRACK_COLUMNS) == PatternModel::ColumnNote ? 3 : 1) * mCellWidth + 2;
-    int cursorPos = columnLocation(column) - 1;
+    int cursorWidth = (cursor.column == PatternCursor::ColumnNote ? 3 : 1) * mCellWidth + 2;
+    int cursorPos = (cursor.track * mTrackWidth) + (TRACK_COLUMN_MAP[cursor.column] * mCellWidth) + mRownoWidth - 1;
 
-    int ypos = row * mCellHeight;
+    int ypos = cursor.row * mCellHeight;
     painter.fillRect(cursorPos, ypos, cursorWidth, mCellHeight, mColorCursor);
     painter.setPen(mColorCursor);
     painter.drawRect(cursorPos, ypos, cursorWidth - 1, mCellHeight - 1);
@@ -267,7 +260,7 @@ int PatternPainter::drawRow(
 
     painter.setPen(fgpen);
     painter.drawText(mCellWidth, ypos, mCellWidth * 2, mCellHeight, Qt::AlignBottom, QString("%1").arg(rowno, 2, 16, QLatin1Char('0')).toUpper());
-    int xpos = (TRACK_COLUMN_MAP[PatternModel::ColumnNote] + ROWNO_CELLS) * mCellWidth;
+    int xpos = (TRACK_COLUMN_MAP[PatternCursor::ColumnNote] + ROWNO_CELLS) * mCellWidth;
     for (int track = 0; track != 4; ++track) {
         auto &trackdata = rowdata[track];
 
@@ -279,7 +272,7 @@ int PatternPainter::drawRow(
         }
 
 
-        xpos += (TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh] - TRACK_COLUMN_MAP[PatternModel::ColumnNote]) * mCellWidth;
+        xpos += (TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh] - TRACK_COLUMN_MAP[PatternCursor::ColumnNote]) * mCellWidth;
         auto instrument = trackdata.queryInstrument();
         if (instrument) {
             painter.setPen(mColorInstrument);
@@ -290,7 +283,7 @@ int PatternPainter::drawRow(
             drawNone(painter, 2, xpos, ypos);
         }
 
-        xpos += (TRACK_COLUMN_MAP[PatternModel::ColumnEffect1Type] - TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh]) * mCellWidth;
+        xpos += (TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type] - TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh]) * mCellWidth;
 
         for (int effect = 0; effect < trackerboy::TrackRow::MAX_EFFECTS; ++effect) {
             auto effectdata = trackdata.effects[effect];
@@ -320,64 +313,60 @@ int PatternPainter::drawRow(
     return ypos - 1 + mCellHeight;
 }
 
-QRect PatternPainter::selectionRectangle(QRect const selection) {
+QRect PatternPainter::selectionRectangle(PatternSelection const& selection) {
+    auto iter = selection.iterator();
     int x1;
     {
-        auto const columnInTrack = selection.x() % TRACK_DATA_COLUMNS;
-        auto const track = selection.x() / TRACK_DATA_COLUMNS;
         int cell;
-        switch (columnInTrack) {
-            case 0:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnNote] - 1;
+        switch (iter.columnStart()) {
+            case PatternSelection::SelectNote:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnNote] - 1;
                 break;
-            case 1:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh];
+            case PatternSelection::SelectInstrument:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh];
                 break;
-            case 2:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect1Type];
+            case PatternSelection::SelectEffect1:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type];
                 break;
-            case 3:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect2Type];
+            case PatternSelection::SelectEffect2:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type];
                 break;
             default:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect3Type];
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect3Type];
                 break;
         }
-        x1 = mRownoWidth + (mCellWidth * ((track * TRACK_CELLS) + cell));
+        x1 = mRownoWidth + (mCellWidth * ((iter.trackStart() * TRACK_CELLS) + cell));
     }
     int x2;
     {
-        auto right = selection.right() - 1;
-        auto const columnInTrack = right % TRACK_DATA_COLUMNS;
-        auto const track = right / TRACK_DATA_COLUMNS;
         int cell;
-        switch (columnInTrack) {
-            case 0:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnNote] + 3;
+        switch (iter.columnEnd()) {
+            case PatternSelection::SelectNote:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnNote] + 3;
                 break;
-            case 1:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnInstrumentHigh] + 2;
+            case PatternSelection::SelectInstrument:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh] + 2;
                 break;
-            case 2:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect1Type] + 3;
+            case PatternSelection::SelectEffect1:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type] + 3;
                 break;
-            case 3:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect2Type] + 3;
+            case PatternSelection::SelectEffect2:
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type] + 3;
                 break;
             default:
-                cell = TRACK_COLUMN_MAP[PatternModel::ColumnEffect3Type] + 4;
+                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect3Type] + 4;
                 break;
         }
-        x2 = mRownoWidth + (mCellWidth * ((track * TRACK_CELLS) + cell));
+        x2 = mRownoWidth + (mCellWidth * ((iter.trackEnd() * TRACK_CELLS) + cell));
     }
 
-    return {x1, selection.y() * mCellHeight, x2 - x1, (selection.height() - 1) * mCellHeight};
+    return {x1, iter.rowStart() * mCellHeight, x2 - x1, iter.rows() * mCellHeight};
 }
 
 
-void PatternPainter::drawSelection(QPainter &painter, QRect const rect) {
-
-    painter.fillRect(selectionRectangle(rect), mColorSelection);
+void PatternPainter::drawSelection(QPainter &painter, PatternSelection const& selection) {
+    qDebug() << selection;
+    painter.fillRect(selectionRectangle(selection), mColorSelection);
     
     //painter.setPen(mColorSelection);
     //painter.drawRect(x1, ypos, width - 1, height - 1);

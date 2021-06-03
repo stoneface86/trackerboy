@@ -1,6 +1,6 @@
 
+#include "core/clipboard/PatternClip.hpp"
 #include "core/model/PatternModel.hpp"
-
 #include "core/model/ModuleDocument.hpp"
 
 #include <QUndoCommand>
@@ -9,225 +9,10 @@
 #include <algorithm>
 #include <memory>
 
-
-static constexpr size_t columnToOffset(int column) {
-    switch (column) {
-        case PatternModel::SelectNote:
-            return offsetof(trackerboy::TrackRow, note);
-        case PatternModel::SelectInstrument:
-            return offsetof(trackerboy::TrackRow, instrumentId);
-        case PatternModel::SelectEffect1:
-            return offsetof(trackerboy::TrackRow, effects) + sizeof(trackerboy::Effect) * 0;
-        case PatternModel::SelectEffect2:
-            return offsetof(trackerboy::TrackRow, effects) + sizeof(trackerboy::Effect) * 1;
-        default:
-            return offsetof(trackerboy::TrackRow, effects) + sizeof(trackerboy::Effect) * 2;
-    }
-}
-
-class SelectedTrackMeta {
-
-    int mColumnStart;
-    int mColumnEnd;
-
-public:
-
-    constexpr SelectedTrackMeta(int start, int end) :
-        mColumnStart(start),
-        mColumnEnd(end)
-    {
-    }
-
-    constexpr int columnStart() const {
-        return mColumnStart;
-    }
-
-    constexpr int columnEnd() const {
-        return mColumnEnd;
-    }
-
-    size_t length() const {
-        size_t offset = columnToOffset(mColumnStart);
-        if (mColumnEnd % PatternModel::SELECTS_PER_TRACK == 0) {
-            return sizeof(trackerboy::TrackRow) - offset;
-        } else {
-            return columnToOffset(mColumnEnd) - offset;
-        }
-    }
-
-    template <PatternModel::SelectType column>
-    bool hasColumn() {
-        return column >= mColumnStart && column <= mColumnEnd;
-    }
-
-};
-
-class SelectionMeta {
-
-    int mRowStart;
-    int mRowEnd;
-    int mColumnStart;
-    int mColumnEnd;
-    int mTrackStart;
-    int mTrackEnd;
-
-
-public:
-    
-
-    explicit SelectionMeta(QRect rect) :
-        mRowStart(rect.top()),
-        mRowEnd(rect.bottom()),
-        mColumnStart(rect.left()),
-        mColumnEnd(rect.right()),
-        mTrackStart(rect.left() / PatternModel::SELECTS_PER_TRACK),
-        mTrackEnd((rect.right() - 1) / PatternModel::SELECTS_PER_TRACK + 1)
-    {
-    }
-
-    size_t patternRowOffset() const {
-        return (sizeof(trackerboy::TrackRow) * mTrackStart) + columnToOffset(mColumnStart % PatternModel::SELECTS_PER_TRACK);
-    }
-
-    size_t patternRowLength() const {
-        size_t length = sizeof(trackerboy::TrackRow) * (mTrackEnd - mTrackStart - 1);
-        if (mColumnEnd % PatternModel::SELECTS_PER_TRACK == 0) {
-            length += sizeof(trackerboy::TrackRow);
-        } else {
-            length += columnToOffset(mColumnEnd % PatternModel::SELECTS_PER_TRACK);
-        }
-        return length - columnToOffset(mColumnStart % PatternModel::SELECTS_PER_TRACK);
-    }
-
-    constexpr int rowStart() const {
-        return mRowStart;
-    }
-
-    constexpr int rowEnd() const {
-        return mRowEnd;
-    }
-
-    constexpr int rows() const {
-        return mRowEnd - mRowStart;
-    }
-
-    constexpr int trackStart() const {
-        return mTrackStart;
-    }
-
-    constexpr int trackEnd() const {
-        return mTrackEnd;
-    }
-
-    SelectedTrackMeta getTrackMeta(int track) {
-        int start;
-        int end;
-
-        if (track == mTrackStart) {
-            start = mColumnStart % PatternModel::SELECTS_PER_TRACK;
-        } else {
-            start = 0;
-        }
-
-        if (track == mTrackEnd - 1) {
-            end = (mColumnEnd - 1) % PatternModel::SELECTS_PER_TRACK;
-            end++;
-        } else {
-            end = PatternModel::SELECTS_PER_TRACK - 1;
-        }
-
-        return { start, end };
-
-    }
-
-
-};
-
-//
-// Container class for a chunk of pattern data that can be saved/restored from
-// a given selection.
-//
-class PatternChunk {
-
-    std::unique_ptr<char[]> mData;
-
-    //
-    // Moves data from chunk to pattern (saving = false) or pattern to chunk (saving = true)
-    //
-    void move(trackerboy::Pattern &pattern, QRect selection, bool saving) {
-        SelectionMeta smeta(selection);
-        auto rowLength = smeta.patternRowLength();
-
-        char *dest = nullptr, *src = nullptr;
-
-        if (saving) {
-            mData.reset(new char[rowLength * smeta.rows()]);
-        }
-
-        // for saving, the destination is the chunk, and the source is the pattern
-        // for restoring, the destination is the pattern and the source is the chunk
-        char* &patternPtr = (saving) ? src : dest;
-        char* &chunkPtr = (saving) ? dest : src;
-        
-        char *buf = mData.get();
-        for (int track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
-
-            auto tmeta = smeta.getTrackMeta(track);
-            auto offset = columnToOffset(tmeta.columnStart());
-            auto length = tmeta.length();
-            // with this assertion passing, we will never read or write past
-            // the bounds of a TrackRow
-            Q_ASSERT(offset + length <= sizeof(trackerboy::TrackRow));
-
-            chunkPtr = buf;
-            for (int row = smeta.rowStart(); row < smeta.rowEnd(); ++row) {
-                auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                patternPtr = reinterpret_cast<char*>(&rowdata) + offset;
-                std::copy_n(src, length, dest);
-                
-                chunkPtr += rowLength;
-            }
-
-            // advance to next track
-            buf += length;
-
-        }
-    }
-
-public:
-    explicit PatternChunk() :
-        mData()
-    {
-
-    }
-
-    //
-    // Restores a previously saved chunk to the given pattern. 
-    //
-    void restore(trackerboy::Pattern &dest, QRect selection) {
-        if (!mData) {
-            return;
-        }
-        move(dest, selection, false);
-    }
-
-    //
-    // Saves the selected data from the given pattern
-    //
-    void save(trackerboy::Pattern const& src, QRect selection) {
-        // remove const for src, but we can gurantee that it will not be
-        // modified since we are saving
-        move(const_cast<trackerboy::Pattern&>(src), selection, true);
-    }
-
-};
-
-
 PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     QObject(parent),
     mDocument(doc),
-    mCursorRow(0),
-    mCursorColumn(0),
+    mCursor(),
     mCursorPattern(0),
     mRecording(false),
     mFollowing(true),
@@ -246,17 +31,21 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternModel::setCursorPattern);
     connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternModel::setCursorTrack);
     connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
-        setPatterns(mCursorPattern);
+        CursorChangeFlags flags = CursorUnchanged;
+        setPatterns(mCursorPattern, flags);
+        emitIfChanged(flags);
     });
 
     auto &songModel = doc.songModel();
     connect(&songModel, &SongModel::patternSizeChanged, this,
         [this](int rows) {
-            if (mCursorRow >= rows) {
-                mCursorRow = rows - 1;
-                emit cursorRowChanged(mCursorRow);
+            CursorChangeFlags flags = CursorUnchanged;
+            if (mCursor.row >= rows) {
+                mCursor.row = rows - 1;
+                flags |= CursorRowChanged;
             }
-            setPatterns(mCursorPattern);
+            setPatterns(mCursorPattern, flags);
+            emitIfChanged(flags);
         });
 }
 
@@ -278,36 +67,20 @@ trackerboy::Pattern* PatternModel::nextPattern() {
     return mPatternNext ? &*mPatternNext : nullptr;
 }
 
+PatternCursor PatternModel::cursor() const {
+    return mCursor;
+}
+
 int PatternModel::cursorRow() const {
-    return mCursorRow;
+    return mCursor.row;
 }
 
 int PatternModel::cursorColumn() const {
-    return mCursorColumn;
+    return mCursor.column;
 }
 
-PatternModel::ColumnType PatternModel::columnType() const {
-    return static_cast<ColumnType>(mCursorColumn % COLUMNS_PER_TRACK);
-}
-
-PatternModel::SelectType PatternModel::selectType() const {
-    switch (columnType()) {
-        case ColumnNote:
-            return SelectNote;
-        case ColumnInstrumentHigh:
-        case ColumnInstrumentLow:
-            return SelectInstrument;
-        case ColumnEffect1Type:
-        case ColumnEffect1ArgHigh:
-        case ColumnEffect1ArgLow:
-            return SelectEffect1;
-        case ColumnEffect2Type:
-        case ColumnEffect2ArgHigh:
-        case ColumnEffect2ArgLow:
-            return SelectEffect2;
-        default:
-            return SelectEffect3;
-    }
+int PatternModel::cursorTrack() const {
+    return mCursor.track;
 }
 
 int PatternModel::trackerCursorRow() const {
@@ -334,93 +107,70 @@ bool PatternModel::hasSelection() const {
     return mHasSelection;
 }
 
-QRect PatternModel::selection() const {
-    if (mHasSelection) {
-        // selection start is the topLeft, end is bottomRight
-        // alter the rectangle such that the topLeft is < bottomRight in both dimensions
-        auto x1 = mSelection.left();
-        auto x2 = mSelection.right();
-        auto y1 = mSelection.top();
-        auto y2 = mSelection.bottom();
-        if (x1 > x2) {
-            std::swap(x1, x2);
-        }
-        if (y1 > y2) {
-            std::swap(y1, y2);
-        }
-        return {
-            QPoint(x1, y1),
-            QPoint(x2 + 1, y2 + 1)
-        };
-    } else {
-        return {};
-    }
+PatternSelection PatternModel::selection() const {
+    return mSelection;
 }
 
-// there is some weirdness with QRect but keep this in mind:
-// mSelection keeps the starting coordinate in QRect::topLeft()
-// and keeps the ending coordinate in QRect::bottomRight()
-
-void PatternModel::setSelection(QPoint const point) {
+void PatternModel::setSelection(PatternCursor pos) {
+    pos.column = PatternSelection::selectColumn(pos.column);
     if (mHasSelection) {
-        if (point != mSelection.bottomRight()) {
-            mSelection.setBottomRight(point);
+        if (pos != mSelection.end()) {
+            mSelection.setEnd(pos);
             emit selectionChanged();
         }
     } else {
         mHasSelection = true;
         // no selection, start with just the given point selected
-        mSelection = QRect(point, point);
+        mSelection = PatternSelection(pos, pos);
         emit selectionChanged();
     }
 }
 
 void PatternModel::selectCursor() {
-    auto track = mCursorColumn / COLUMNS_PER_TRACK;
-    auto select = selectType();
-    setSelection({track * SELECTS_PER_TRACK + select, mCursorRow});
+    setSelection(mCursor);
 }
 
 void PatternModel::selectAll() {
     // check if the entire track is selected
     auto const lastRow = (int)mPatternCurr.totalRows() - 1;
     if (mHasSelection) {
-        auto normalized = selection();
-        // is an entire track and only an entire track selected?
-        if (normalized.top() == 0 && (normalized.left() % SELECTS_PER_TRACK) == 0 &&
-            normalized.bottom() == lastRow + 1 &&
-            (normalized.right() % SELECTS_PER_TRACK) == 0 &&
-            normalized.width() == SELECTS_PER_TRACK + 1) {
-                // yes, select all instead
-                mHasSelection = true;
-                mSelection.setTopLeft({0, 0});
-                mSelection.setBottomRight({SELECTS - 1, lastRow});
-                emit selectionChanged();
-                return;
-            }
+        auto iter = mSelection.iterator();
+        if (
+            iter.rowStart() == 0 && iter.rowEnd() == lastRow &&
+            iter.trackStart() == iter.trackEnd() &&
+            iter.columnStart() == 0 && iter.columnEnd() == PatternSelection::MAX_SELECTS - 1
+        ) {
+            // yes, select all instead
+            mHasSelection = true;
+            mSelection.setStart({0, 0, 0});
+            mSelection.setEnd(PatternCursor(lastRow, PatternSelection::MAX_SELECTS - 1, 3));
+            emit selectionChanged();
+            return;
+        }
+    } else {
+        mHasSelection = true;
     }
 
     // select track
-    auto selectStart = mCursorColumn / COLUMNS_PER_TRACK * SELECTS_PER_TRACK;
-    mSelection.setTopLeft({selectStart, 0});
-    mSelection.setBottomRight({selectStart + SELECTS_PER_TRACK - 1, lastRow});
-    mHasSelection = true;
+    mSelection.setStart(PatternCursor(0, 0, mCursor.track));
+    mSelection.setEnd(PatternCursor(lastRow, PatternSelection::MAX_SELECTS - 1, mCursor.track));
     emit selectionChanged();
 }
 
 void PatternModel::selectRow(int row) {
     if (row >= 0 && row < (int)mPatternCurr.totalRows()) {
         if (!mHasSelection) {
-            setSelection({0, row});
+            mHasSelection = true;
+            mSelection.setStart(PatternCursor(row, 0, 0));
         }
-        setSelection({ SELECTS - 1, row});
+        mSelection.setEnd(PatternCursor(row, PatternSelection::MAX_SELECTS - 1, PatternCursor::MAX_TRACKS - 1));
+        emit selectionChanged();
     }
 }
 
 void PatternModel::deselect() {
     if (mHasSelection) {
         mHasSelection = false;
-        mSelection = QRect();
         emit selectionChanged();
     }
 }
@@ -435,100 +185,154 @@ void PatternModel::importSelection(QString const& str) {
 
 // slots -------------------------------
 
-void PatternModel::moveCursorRow(int amount, bool select) {
-    if (select) {
+void PatternModel::moveCursorRow(int amount, SelectMode mode) {
+    if (mode == SelectionModify) {
         selectCursor();
-    } else {
+    } else if (mode == SelectionRemove) {
         deselect();
     }
-    setCursorRow(mCursorRow + amount);
-    if (select) {
+    setCursorRow(mCursor.row + amount);
+    if (mode == SelectionModify) {
         selectCursor();
     }
 }
 
-void PatternModel::moveCursorColumn(int amount, bool select) {
-    if (select) {
+void PatternModel::moveCursorColumn(int amount, SelectMode mode) {
+    if (mode == SelectionModify) {
         selectCursor();
-    } else {
+    } else if (mode == SelectionRemove) {
         deselect();
     }
-    setCursorColumn(mCursorColumn + amount);
-    if (select) {
+    setCursorColumn(mCursor.column + amount);
+    if (mode == SelectionModify) {
         selectCursor();
     }
+}
+
+void PatternModel::moveCursorTrack(int amount) {
+    setCursorTrack(mCursor.track + amount);
 }
 
 void PatternModel::setCursorRow(int row) {
-    if (mCursorRow == row) {
+    CursorChangeFlags flags = CursorUnchanged;
+    setCursorRowImpl(row, flags);
+    emitIfChanged(flags);
+}
+void PatternModel::setCursorRowImpl(int row, CursorChangeFlags &flags) {
+    if (row == mCursor.row) {
         return;
     }
 
     auto &orderModel = mDocument.orderModel();
-    auto const pattern = orderModel.currentPattern();
 
+    int oldRow = mCursor.row;
+    int newRow;
     if (row < 0) {
         // go to the previous pattern or wrap around to the last one
-        orderModel.selectPattern(pattern == 0 ? orderModel.rowCount() - 1 : pattern - 1);
-        mCursorRow = std::max(0, (int)mPatternCurr.totalRows() + row);
+        int prevPattern;
+        if (mCursorPattern == 0) {
+            prevPattern = orderModel.rowCount() - 1;
+        } else {
+            prevPattern = mCursorPattern - 1;
+        }
+        setCursorPatternImpl(prevPattern, flags);
+        newRow = std::max(0, (int)mPatternCurr.totalRows() + row);
 
     } else if (row >= (int)mPatternCurr.totalRows()) {
         // go to the next pattern or wrap around to the first one
         row -= mPatternCurr.totalRows();
-        auto nextPattern = pattern + 1;
+        auto nextPattern = mCursorPattern + 1;
         if (nextPattern == orderModel.rowCount()) {
             nextPattern = 0;
         }
-        orderModel.selectPattern(nextPattern);
-        mCursorRow = std::min((int)mPatternCurr.totalRows() - 1, row);
+        setCursorPatternImpl(nextPattern, flags);
+        newRow = std::min((int)mPatternCurr.totalRows() - 1, row);
     } else {
-        mCursorRow = row;
+        newRow = row;
     }
 
-    emit cursorRowChanged(mCursorRow);
+    if (newRow != oldRow) {
+        mCursor.row = newRow;
+        flags |= CursorRowChanged;
+    }
 }
 
 void PatternModel::setCursorColumn(int column) {
-    if (mCursorColumn == column) {
+    CursorChangeFlags flags = CursorUnchanged;
+    setCursorColumnImpl(column, flags);
+    emitIfChanged(flags);
+}
+
+void PatternModel::setCursorColumnImpl(int column, CursorChangeFlags &flags) {
+    if (column == mCursor.column) {
         return;
     }
 
     if (column < 0) {
-        column = COLUMNS - (-column % COLUMNS);
-    } else if (column >= COLUMNS) {
-        column = column % COLUMNS;
+        column = -column;
+        auto tracks = 1 + (column / PatternCursor::MAX_COLUMNS);
+        column = PatternCursor::MAX_COLUMNS - (column % PatternCursor::MAX_COLUMNS);
+        setCursorTrackImpl(mCursor.track - tracks, flags);
+    } else if (column >= PatternCursor::MAX_COLUMNS) {
+        auto tracks = column / PatternCursor::MAX_COLUMNS;
+        column = column % PatternCursor::MAX_COLUMNS;
+        setCursorTrackImpl(mCursor.track + tracks, flags);
     }
 
-    int track = mCursorColumn / COLUMNS_PER_TRACK;
-    int newtrack = column / COLUMNS_PER_TRACK;
-    if (track != newtrack) {
-        mDocument.orderModel().selectTrack(newtrack);
+    if (mCursor.column != column) {
+        mCursor.column = column;
+        flags |= CursorColumnChanged;
     }
 
-    mCursorColumn = column;
-    emit cursorColumnChanged(mCursorColumn);
 }
 
 void PatternModel::setCursorTrack(int track) {
-    Q_ASSERT(track >= 0 && track < 4);
+    CursorChangeFlags flags = CursorUnchanged;
+    setCursorTrackImpl(track, flags);
+    emitIfChanged(flags);
+}
 
-    auto col = track * COLUMNS_PER_TRACK;
-    if (mCursorColumn != col) {
-        mCursorColumn = col;
-        emit cursorColumnChanged(col);
+void PatternModel::setCursorTrackImpl(int track, CursorChangeFlags &flags) {
+    if (mCursor.track == track) {
+        return;
     }
+
+    if (track < 0) {
+        track = PatternCursor::MAX_TRACKS - (-track % PatternCursor::MAX_TRACKS);
+    } else if (track > 3) {
+        track %= PatternCursor::MAX_TRACKS;
+    }
+
+    if (track != mCursor.track) {
+        mCursor.track = track;
+        flags |= CursorTrackChanged;
+    }
+}
+
+void PatternModel::setCursor(PatternCursor const cursor) {
+    CursorChangeFlags flags = CursorUnchanged;
+    setCursorRowImpl(cursor.row, flags);
+    setCursorColumnImpl(cursor.column, flags);
+    setCursorTrackImpl(cursor.track, flags);
+    emitIfChanged(flags);
 }
 
 void PatternModel::setCursorPattern(int pattern) {
 
+    CursorChangeFlags flags = CursorUnchanged;
+    setCursorPatternImpl(pattern, flags);
+    emitIfChanged(flags);
+}
+
+void PatternModel::setCursorPatternImpl(int pattern, CursorChangeFlags &flags) {
     if (mCursorPattern == pattern) {
         return;
     }
 
-    setPatterns(pattern);
     mCursorPattern = pattern;
+    mDocument.orderModel().selectPattern(pattern);
+    setPatterns(pattern, flags);
     deselect();
-
 }
 
 void PatternModel::setTrackerCursor(int row, int pattern) {
@@ -582,7 +386,7 @@ void PatternModel::setPreviewEnable(bool enable) {
     }
 }
 
-void PatternModel::setPatterns(int pattern) {
+void PatternModel::setPatterns(int pattern, CursorChangeFlags &flags) {
     if (mShowPreviews) {
         setPreviewPatterns(pattern);
     }
@@ -603,9 +407,15 @@ void PatternModel::setPatterns(int pattern) {
 
     emit invalidated();
 
-    if (mCursorRow >= newsize) {
-        mCursorRow = newsize - 1;
-        emit cursorRowChanged(mCursorRow);
+    if (mCursor.row >= newsize) {
+        mCursor.row = newsize - 1;
+        flags |= CursorRowChanged;
+    }
+}
+
+void PatternModel::emitIfChanged(CursorChangeFlags flags) {
+    if (flags) {
+        emit cursorChanged(flags);
     }
 }
 
@@ -627,7 +437,7 @@ void PatternModel::setPreviewPatterns(int pattern) {
 }
 
 int PatternModel::cursorEffectNo() {
-    return (columnType() - ColumnEffect1Type) / 3;
+    return (mCursor.column - PatternCursor::ColumnEffect1Type) / 3;
 }
 
 void PatternModel::invalidate(int pattern, bool updatePatterns) {
@@ -642,7 +452,9 @@ void PatternModel::invalidate(int pattern, bool updatePatterns) {
         // or send the invalidated signal
         if (updatePatterns) {
             // reset pattern accessors and invalidate
-            setPatterns(mCursorPattern);
+            CursorChangeFlags flags = CursorUnchanged;
+            setPatterns(mCursorPattern, flags);
+            emitIfChanged(flags);
         } else {
             // views just need to redraw
             emit invalidated();
@@ -653,37 +465,37 @@ void PatternModel::invalidate(int pattern, bool updatePatterns) {
 
 bool PatternModel::selectionDataIsEmpty() {
     if (mHasSelection) {
-        SelectionMeta smeta(selection());
+        auto iter = mSelection.iterator();
 
-        for (auto track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
-            auto tmeta = smeta.getTrackMeta(track);
-            for (auto row = smeta.rowStart(); row < smeta.rowEnd(); ++row) {
+        for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
+            auto tmeta = iter.getTrackMeta(track);
+            for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
                 auto const& rowdata = mPatternCurr.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                if (tmeta.hasColumn<PatternModel::SelectNote>()) {
+                if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
                     if (rowdata.queryNote()) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternModel::SelectInstrument>()) {
+                if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
                     if (rowdata.queryInstrument()) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternModel::SelectEffect1>()) {
+                if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
                     if (rowdata.queryEffect(0)) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternModel::SelectEffect2>()) {
+                if (tmeta.hasColumn<PatternSelection::SelectEffect2>()) {
                     if (rowdata.queryEffect(1)) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternModel::SelectEffect3>()) {
+                if (tmeta.hasColumn<PatternSelection::SelectEffect3>()) {
                     if (rowdata.queryEffect(2)) {
                         return false;
                     }
@@ -697,8 +509,8 @@ bool PatternModel::selectionDataIsEmpty() {
 
 trackerboy::TrackRow const& PatternModel::cursorTrackRow() {
     return mPatternCurr.getTrackRow(
-        static_cast<trackerboy::ChType>(mCursorColumn / COLUMNS_PER_TRACK),
-        (uint16_t)mCursorRow
+        static_cast<trackerboy::ChType>(mCursor.track),
+        (uint16_t)mCursor.row
     );
 }
 
@@ -734,9 +546,9 @@ public:
     TrackEditCmd(PatternModel &model, uint8_t dataNew, uint8_t dataOld, QUndoCommand *parent = nullptr) :
         QUndoCommand(parent),
         mModel(model),
-        mTrack((uint8_t)(model.mCursorColumn / PatternModel::COLUMNS_PER_TRACK)),
+        mTrack((uint8_t)(model.mCursor.track)),
         mPattern((uint8_t)model.mCursorPattern),
-        mRow((uint8_t)model.mCursorRow),
+        mRow((uint8_t)model.mCursor.row),
         mNewData(dataNew),
         mOldData(dataOld)
     {
@@ -850,23 +662,21 @@ class SelectionCmd : public QUndoCommand {
 protected:
     PatternModel &mModel;
     uint8_t mPattern;
-    QRect mSelection;
-    PatternChunk mChunk;
+    PatternClip mClip;
 
     explicit SelectionCmd(PatternModel &model) :
         mModel(model),
         mPattern((uint8_t)model.mCursorPattern),
-        mSelection(model.selection()),
-        mChunk()
+        mClip()
     {
-        mChunk.save(model.mPatternCurr, mSelection);
+        mClip.save(model.mPatternCurr, model.mSelection);
     }
 
     void restore(bool update) {
         auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
         {
             auto ctx = mModel.mDocument.beginCommandEdit();
-            mChunk.restore(pattern, mSelection);
+            mClip.restore(pattern);
         }
 
         mModel.invalidate(mPattern, update);
@@ -887,30 +697,30 @@ public:
         {
             auto ctx = mModel.mDocument.beginCommandEdit();
             // clear all set data in the selection
-            SelectionMeta smeta(mSelection);
+            auto iter = mClip.selection().iterator();
             auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
 
-            for (auto track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
-                auto tmeta = smeta.getTrackMeta(track);
-                for (auto row = smeta.rowStart(); row < smeta.rowEnd(); ++row) {
+            for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
+                auto tmeta = iter.getTrackMeta(track);
+                for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
                     auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                    if (tmeta.hasColumn<PatternModel::SelectNote>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
                         rowdata.note = 0;
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectInstrument>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
                         rowdata.instrumentId = 0;
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectEffect1>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
                         rowdata.effects[0] = trackerboy::NO_EFFECT;
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectEffect2>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectEffect2>()) {
                         rowdata.effects[1] = trackerboy::NO_EFFECT;
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectEffect3>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectEffect3>()) {
                         rowdata.effects[2] = trackerboy::NO_EFFECT;
                     }
                 }
@@ -943,16 +753,16 @@ public:
     virtual void redo() override {
         {
             auto ctx = mModel.mDocument.beginCommandEdit();
-            SelectionMeta smeta(mSelection);
+            auto iter = mClip.selection().iterator();
             auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
 
-            for (auto track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
-                auto tmeta = smeta.getTrackMeta(track);
-                if (!tmeta.hasColumn<PatternModel::SelectNote>()) {
+            for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
+                auto tmeta = iter.getTrackMeta(track);
+                if (!tmeta.hasColumn<PatternSelection::SelectNote>()) {
                     continue;
                 }
 
-                for (auto row = smeta.rowStart(); row < smeta.rowEnd(); ++row) {
+                for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
                     auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
                     rowdata.transpose(mTransposeAmount);
                 }
@@ -973,14 +783,14 @@ public:
 class ReverseCmd : public QUndoCommand {
 
     PatternModel &mModel;
-    QRect mSelection;
+    PatternSelection mSelection;
     uint8_t mPattern;
 
 public:
 
     explicit ReverseCmd(PatternModel &model) :
         mModel(model),
-        mSelection(model.selection()),
+        mSelection(model.mSelection),
         mPattern((uint8_t)model.mCursorPattern)
     {
     }
@@ -999,37 +809,37 @@ private:
     void reverse() {
         {
             auto ctx = mModel.mDocument.beginCommandEdit();
-            SelectionMeta smeta(mSelection);
+            auto iter = mSelection.iterator();
             auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
 
-            auto midpoint = smeta.rowStart() + (smeta.rows() / 2);
-            for (auto track = smeta.trackStart(); track < smeta.trackEnd(); ++track) {
-                auto tmeta = smeta.getTrackMeta(track);
+            auto midpoint = iter.rowStart() + (iter.rows() / 2);
+            for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
+                auto tmeta = iter.getTrackMeta(track);
 
-                int lastRow = smeta.rowEnd() - 1;
-                for (auto row = smeta.rowStart(); row < midpoint; ++row) {
+                int lastRow = iter.rowEnd();
+                for (auto row = iter.rowStart(); row < midpoint; ++row) {
                     auto &first = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
                     auto &last = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)lastRow);
 
                     // inefficient, but works
 
-                    if (tmeta.hasColumn<PatternModel::SelectNote>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
                         std::swap(first.note, last.note);
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectInstrument>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
                         std::swap(first.instrumentId, last.instrumentId);
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectEffect1>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
                         std::swap(first.effects[0], last.effects[0]);
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectEffect2>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectEffect2>()) {
                         std::swap(first.effects[1], last.effects[1]);
                     }
 
-                    if (tmeta.hasColumn<PatternModel::SelectEffect3>()) {
+                    if (tmeta.hasColumn<PatternSelection::SelectEffect3>()) {
                         std::swap(first.effects[2], last.effects[2]);
                     }
 
@@ -1103,7 +913,7 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
         auto oldInstrument = rowdata.queryInstrument();
         std::optional<uint8_t> newInstrument;
         if (nibble) {
-            bool const highNibble = columnType() == ColumnInstrumentHigh;
+            bool const highNibble = mCursor.column == PatternCursor::ColumnInstrumentHigh;
             newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
             if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
                 return;
@@ -1173,10 +983,9 @@ void PatternModel::setEffectParam(uint8_t nibble) {
 
         auto &oldEffect = rowdata.effects[effectNo];
         if (oldEffect.type != trackerboy::EffectType::noEffect) {
-            auto coltype = columnType();
-            bool isHighNibble = coltype == ColumnEffect1ArgHigh ||
-                                coltype == ColumnEffect2ArgHigh ||
-                                coltype == ColumnEffect3ArgHigh;
+            bool isHighNibble = mCursor.column == PatternCursor::ColumnEffect1ArgHigh ||
+                                mCursor.column == PatternCursor::ColumnEffect2ArgHigh ||
+                                mCursor.column == PatternCursor::ColumnEffect3ArgHigh;
             auto newParam = replaceNibble(oldEffect.param, nibble, isHighNibble);
             if (newParam != oldEffect.param) {
                 auto cmd = new EffectParamEditCmd(
@@ -1203,12 +1012,12 @@ void PatternModel::deleteSelection() {
             mDocument.undoStack().push(cmd);
         }
     } else {
-        switch (columnType()) {
-            case ColumnNote:
+        switch (mCursor.column) {
+            case PatternCursor::ColumnNote:
                 setNote({}, {});
                 break;
-            case ColumnInstrumentHigh:
-            case ColumnInstrumentLow:
+            case PatternCursor::ColumnInstrumentHigh:
+            case PatternCursor::ColumnInstrumentLow:
                 setInstrument({});
                 break;
             default:
@@ -1244,9 +1053,9 @@ void PatternModel::transpose(int amount) {
 
 void PatternModel::reverse() {
     if (hasSelection()) {
-        SelectionMeta meta(selection());
+        auto iter = mSelection.iterator();
 
-        if (meta.rows() > 1) {
+        if (iter.rows() > 1) {
             auto cmd = new ReverseCmd(*this);
             cmd->setText("reverse");
             mDocument.undoStack().push(cmd);

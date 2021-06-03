@@ -122,6 +122,9 @@ private slots:
     void hscrollAction(int action);
     void vscrollAction(int action);
 
+    void updateScrollbars(PatternModel::CursorChangeFlags flags);
+    void setCursorFromHScroll(int value);
+
     void speedChanged(int value);
     void tempoChanged(int value);
 
@@ -131,6 +134,8 @@ private slots:
     void updatePatternsSpin(QModelIndex const& index, int first, int last);
 
     void updateTempoLabel();
+
+    void parseClipboard();
 
 private:
 
@@ -203,6 +208,7 @@ private:
     int mPreviewKey;
 
     bool mSpeedLock;
+    bool mScrollLock;
 
     std::optional<uint8_t> mInstrument;
 

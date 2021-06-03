@@ -20,6 +20,7 @@ include_directories(
 set(UI_SRC
     "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
+    "core/clipboard/PatternClip.cpp"
     "core/model/BaseTableModel.cpp"
     "core/model/InstrumentListModel.cpp"
     "core/model/ModuleDocument.cpp"
@@ -30,6 +31,7 @@ set(UI_SRC
     "core/model/WaveListModel.cpp"
     "core/Config.cpp"
     "core/Miniaudio.cpp"
+    "core/PatternSelection.cpp"
     "core/PianoInput.cpp"
     "core/samplerates.cpp"
     "core/Trackerboy.cpp"
