@@ -1062,3 +1062,7 @@ void PatternModel::reverse() {
         }
     }
 }
+
+void PatternModel::moveSelection(PatternCursor pos) {
+    // TODO: implement this after copy/paste
+}

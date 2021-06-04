@@ -1,4 +1,5 @@
 
+#include "core/clipboard/PatternClip.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/layout.hpp"
 
@@ -18,11 +19,6 @@
 
 using namespace PatternConstants;
 
-//
-// MIME type for drag n drop. The data that gets passed to QMimeData is a copy
-// of PatternChunk's internal buffer (converted to QByteArray)
-//
-constexpr auto MIME_TYPE = "application/trackerboy";
 
 // Philisophy note
 // should undo'ing modify the cursor? Is the cursor considered document state?
@@ -55,6 +51,9 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
     mMousePos(),
     mSelectionStart(),
     mSelectionEnd(),
+    mHasDrag(false),
+    mDragPos(),
+    mDragRow(0),
     mMouseOp(MouseOperation::nothing)
 {
     setAcceptDrops(true);
@@ -141,17 +140,41 @@ void PatternGrid::changeEvent(QEvent *evt) {
 }
 
 void PatternGrid::dragEnterEvent(QDragEnterEvent *evt) {
-    if (evt->mimeData()->hasFormat(MIME_TYPE)) {
+    if (evt->source() == this && evt->proposedAction() == Qt::MoveAction) {
+       // only accepts drags from this application (internal moves) 
+        
         evt->acceptProposedAction();
+        mHasDrag = true;
+        update();
     }
 }
 
-void PatternGrid::dragMoveEvent(QDragMoveEvent *evt) {
+void PatternGrid::dragLeaveEvent(QDragLeaveEvent *evt) {
     Q_UNUSED(evt)
+    mHasDrag = false;
+    update();
+}
+
+void PatternGrid::dragMoveEvent(QDragMoveEvent *evt) {
+
+    auto pos = evt->pos();
+
+    auto cursor = mouseToCursor(pos);
+    cursor.column = std::clamp(cursor.column, 0, PatternCursor::MAX_COLUMNS - 1);
+    cursor.track = std::clamp(cursor.track, 0, PatternCursor::MAX_TRACKS - 1);
+    cursor.column = PatternSelection::selectColumn(cursor.column);
+    if (cursor != mDragPos) {
+        mDragPos = cursor;
+        
+        update();
+    }
+
+
 }
 
 void PatternGrid::dropEvent(QDropEvent *evt) {
-    if (evt->source() == this && evt->proposedAction() == Qt::MoveAction) {
+    if (evt->proposedAction() == Qt::MoveAction) {
+        qDebug() << "dropped";
         evt->acceptProposedAction();
     }
 }
@@ -283,10 +306,16 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     // [7] lines
     mPainter.drawLines(painter, h);
 
-    if (mMouseOp == MouseOperation::dragging) {
-        painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    if (mHasDrag) {
+        auto selection = patternModel.selection();
+        selection.moveTo(mDragPos);
+        selection.translate((int)centerRow - cursor.row - mDragRow);
+        selection.clampRows(centerRow - cursor.row, rowsInCurrent - 1 - cursor.row + centerRow);
+        auto rect = mPainter.selectionRectangle(selection);
+
         painter.setPen(Qt::white);
-        painter.drawRect(mDragDest);
+        painter.setCompositionMode(QPainter::RasterOp_SourceXorDestination);
+        painter.drawRect(rect);
     }
 
 }
@@ -348,13 +377,21 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
             }
 
             QDrag *drag = new QDrag(this);
-            // put the pattern data into QMimeData
+            // empty mimeData (dragging results in an internal move)
             auto mimeData = new QMimeData;
-            mimeData->setData(MIME_TYPE, QByteArray());
             drag->setMimeData(mimeData);
 
-            /*auto dropAction = */drag->exec();
-            
+            drag->exec();
+            if (mHasDrag) {
+                // do the move
+                auto cursor = mDragPos;
+                cursor.row -= mDragRow;
+                mDocument->patternModel().moveSelection(cursor);
+
+                mHasDrag = false;
+                update();
+            }
+            mMouseOp = MouseOperation::nothing;
             
             break;
         }
@@ -380,26 +417,26 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
                 patternModel.selectRow(row);
             }
         } else {
-
-            if (patternModel.hasSelection()) {
-                // check if the mouse is within the selection rectangle
-                auto selection = patternModel.selection();
-                selection.translate(-patternModel.cursorRow() + (int)(mVisibleRows / 2));
-                auto selectionRect = mPainter.selectionRectangle(selection);
-                if (selectionRect.contains(mMousePos)) {
-                    mMouseOp = MouseOperation::dragging;
-                    mDragDest = selectionRect;
-                    return;
-                }
-            }
-
-            patternModel.deselect();
-
             // now convert the mouse coordinates to a coordinate on the grid
             auto cursor = mouseToCursor(mMousePos);
             if (cursor.isValid() && rowIsValid(cursor.row)) {
                 mSelectionStart = cursor;
+
+                if (patternModel.hasSelection()) {
+                    // check if the mouse is within the selection rectangle
+                    auto selection = patternModel.selection();
+                    auto selectCursor = cursor;
+                    selectCursor.column = PatternSelection::selectColumn(selectCursor.column);
+                    if (selection.contains(selectCursor)) {
+                        mMouseOp = MouseOperation::dragging;
+                        mDragRow = cursor.row - selection.iterator().rowStart();
+                        return;
+                    }
+                }
+
+                patternModel.deselect();
                 mMouseOp = MouseOperation::beginSelecting;
+
             }
         }
 
@@ -411,7 +448,7 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
 
         // if the user did not select anything, move the cursor to the starting coordinate
-        if (mMouseOp == MouseOperation::beginSelecting) {
+        if (mMouseOp == MouseOperation::beginSelecting || mMouseOp == MouseOperation::dragging) {
             auto &patternModel = mDocument->patternModel();
             patternModel.deselect();
             patternModel.setCursor(mSelectionStart);

@@ -149,6 +149,9 @@ public:
     // reverses rows in a selection
     void reverse();
 
+    // moves the selected data to a new position
+    void moveSelection(PatternCursor pos);
+
 signals:
     void cursorChanged(CursorChangeFlags flags);
 

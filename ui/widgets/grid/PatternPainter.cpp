@@ -365,7 +365,6 @@ QRect PatternPainter::selectionRectangle(PatternSelection const& selection) {
 
 
 void PatternPainter::drawSelection(QPainter &painter, PatternSelection const& selection) {
-    qDebug() << selection;
     painter.fillRect(selectionRectangle(selection), mColorSelection);
     
     //painter.setPen(mColorSelection);

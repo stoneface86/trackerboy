@@ -101,6 +101,63 @@ void PatternSelection::translate(int rows) {
     mEnd.row += rows;
 }
 
+void PatternSelection::clampRows(int min, int max) {
+    mStart.row = std::clamp(mStart.row, min, max);
+    mEnd.row = std::clamp(mEnd.row, min, max);
+}
+
+static bool isEffect(int select) {
+    return select >= PatternSelection::SelectEffect1;
+}
+
+
+void PatternSelection::moveTo(PatternCursor cursor) {
+    auto iter = iterator();
+    // normalize the selection coordinates
+    mStart = iter.mStart;
+    mEnd = iter.mEnd;
+
+    // move to row
+    mStart.row = cursor.row;
+    mEnd.row = cursor.row + iter.rows() - 1;
+
+    // if the selection is just effects, we can move it to another effect column
+    // otherwise we can only move by tracks
+    if (iter.trackStart() == iter.trackEnd()) {
+        // within the same track
+        if (isEffect(iter.columnStart())) {
+            // only effects are selected, move by column
+            auto start = std::max((int)SelectEffect1, cursor.column);
+            int end = start + iter.columnEnd() - iter.columnStart();
+            if (end > SelectEffect3) {
+                start -= end - SelectEffect3;
+                end = SelectEffect3;
+            } 
+                mStart.column = start;
+                mEnd.column = end;
+        }
+    }
+
+    // move to track
+    auto start = cursor.track;
+    auto end = cursor.track + iter.trackEnd() - iter.trackStart();
+    if (end >= PatternCursor::MAX_TRACKS) {
+        start -= end - PatternCursor::MAX_TRACKS + 1;
+        end = PatternCursor::MAX_TRACKS - 1;
+    }
+    mStart.track = start;
+    mEnd.track = end;
+}
+
+bool PatternSelection::contains(PatternCursor cursor) {
+    auto iter = iterator();
+    auto start = iter.trackStart() * MAX_SELECTS + iter.columnStart();
+    auto end = iter.trackEnd() * MAX_SELECTS + iter.columnEnd();
+    auto cursorColumn = cursor.track * MAX_SELECTS + cursor.column;
+    return cursor.row >= iter.rowStart() && cursor.row <= iter.rowEnd() &&
+           cursorColumn >= start && cursorColumn <= end;
+}
+
 #ifndef QT_NO_DEBUG
 
 QDebug operator<<(QDebug debug, PatternSelection const& selection) {

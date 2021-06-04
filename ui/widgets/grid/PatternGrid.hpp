@@ -54,6 +54,8 @@ protected:
 
     virtual void dragEnterEvent(QDragEnterEvent *evt) override;
 
+    virtual void dragLeaveEvent(QDragLeaveEvent *evt) override;
+
     virtual void dragMoveEvent(QDragMoveEvent *evt) override;
 
     virtual void dropEvent(QDropEvent *evt) override;
@@ -136,7 +138,10 @@ private:
     PatternCursor mSelectionStart;
     PatternCursor mSelectionEnd;
 
-    QRect mDragDest;
+    bool mHasDrag;
+    PatternCursor mDragPos;
+    // the row, relative to the current selection, in which the user started dragging from
+    int mDragRow;
 
     MouseOperation mMouseOp;
 

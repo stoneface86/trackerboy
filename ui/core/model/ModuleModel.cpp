@@ -435,25 +435,26 @@ void ModuleModel::_removeChildRows(ChildModelContext ctx, int first, int last) {
     endRemoveRows();
 }
 
-template <class T>
-ModuleModel::ChildModelContext ModuleModel::getChildNode(QObject *sender) {
-    if constexpr (std::is_same<T, InstrumentListModel>::value) {
-        return {
-            &(static_cast<InstrumentListModel*>(sender)->document()),
-            0
-        };
-    } else if constexpr (std::is_same<T, OrderModel>::value) {
-        return {
-            &(static_cast<OrderModel*>(sender)->document()),
-            1
-        };
-    } else if constexpr (std::is_same<T, WaveListModel>::value) {
-        return {
-            &(static_cast<WaveListModel*>(sender)->document()),
-            2
-        };
-    } else {
-        static_assert(false, "invalid model type!");
-    }
+template <>
+ModuleModel::ChildModelContext ModuleModel::getChildNode<InstrumentListModel>(QObject *sender) {
+    return {
+        &(static_cast<InstrumentListModel*>(sender)->document()),
+        0
+    };
 }
 
+template <>
+ModuleModel::ChildModelContext ModuleModel::getChildNode<OrderModel>(QObject *sender) {
+    return {
+        &(static_cast<OrderModel*>(sender)->document()),
+        1
+    };
+}
+
+template <>
+ModuleModel::ChildModelContext ModuleModel::getChildNode<WaveListModel>(QObject *sender) {
+    return {
+        &(static_cast<WaveListModel*>(sender)->document()),
+        2
+    };
+}

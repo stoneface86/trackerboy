@@ -133,7 +133,23 @@ public:
     //
     static SelectType selectColumn(int column);
 
+    //
+    // Translates the selection by the given number of rows. Each coordinate's
+    // row is added by the given rows parameter
+    //
     void translate(int rows);
+
+    void clampRows(int min, int max);
+
+    //
+    // Moves the selection to start at the given cursor position
+    //
+    void moveTo(PatternCursor cursor);
+
+    //
+    // Determine if the given cursor is within this selection
+    //
+    bool contains(PatternCursor cursor);
 
 private:
 
