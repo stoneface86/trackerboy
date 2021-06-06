@@ -41,6 +41,10 @@ public:
         bool showPreviews;      // if true, pattern previews will be rendered
     };
 
+    struct General {
+        unsigned historyLimit;  // number of actions in the undo history, 0 for infinite
+    };
+
     struct Keyboard {
 
         PianoInput pianoInput;
@@ -71,6 +75,8 @@ public:
 
     Appearance const& appearance();
 
+    General const& general();
+
     Keyboard const& keyboard();
 
     Sound const& sound();
@@ -85,6 +91,7 @@ private:
     Miniaudio &mMiniaudio;
     
     Appearance mAppearance;
+    General mGeneral;
     Keyboard mKeyboard;
     Sound mSound;
 

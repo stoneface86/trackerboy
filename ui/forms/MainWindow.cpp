@@ -543,6 +543,8 @@ void MainWindow::addDocument(ModuleDocument *doc) {
 
     auto tabindex = mTabs.addTab(doc->name());
     mTabs.setCurrentIndex(tabindex);
+
+    doc->undoStack().setUndoLimit((int)mConfig.general().historyLimit);
 }
 
 bool MainWindow::saveDocument(ModuleDocument *doc) {

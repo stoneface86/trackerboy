@@ -12,6 +12,7 @@ constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
 constexpr int DEFAULT_PERIOD = 5;
 constexpr int DEFAULT_LATENCY = 40;
 constexpr int DEFAULT_QUALITY = static_cast<int>(gbapu::Apu::Quality::medium);
+constexpr unsigned DEFAULT_HISTORY_LIMIT = 64;
 
 Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
 
@@ -76,6 +77,10 @@ Config::Appearance const& Config::appearance() {
     return mAppearance;
 }
 
+Config::General const& Config::general() {
+    return mGeneral;
+}
+
 Config::Keyboard const& Config::keyboard() {
     return mKeyboard;
 }
@@ -120,6 +125,10 @@ void Config::readSettings() {
     mAppearance.showPreviews = settings.value("showPreviews", true).toBool();
 
     settings.endGroup(); // appearance
+
+    settings.beginGroup(QStringLiteral("general"));
+    mGeneral.historyLimit = settings.value(QStringLiteral("historyLimit"), DEFAULT_HISTORY_LIMIT).toUInt();
+    settings.endGroup(); // general
 
     settings.beginGroup(QStringLiteral("keyboard"));
 
@@ -184,6 +193,10 @@ void Config::writeSettings() {
     settings.endArray();
     settings.setValue("showFlats", mAppearance.showFlats);
     settings.setValue("showPreviews", mAppearance.showPreviews);
+    settings.endGroup();
+
+    settings.beginGroup(QStringLiteral("general"));
+    settings.setValue("historyLimit", mGeneral.historyLimit);
     settings.endGroup();
 
     settings.beginGroup("keyboard");
