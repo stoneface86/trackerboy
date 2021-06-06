@@ -70,6 +70,8 @@ public:
 
     uint16_t rowCount() const;
 
+    unsigned size() const;
+
 private:
 
     Data mData;

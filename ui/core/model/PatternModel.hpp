@@ -3,6 +3,7 @@
 
 class ModuleDocument;
 
+#include "core/clipboard/PatternClip.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 
@@ -119,11 +120,9 @@ public:
     void deselect();
 
     //
-    // exports selected pattern data to a string (to put on the clipboard)
+    // Gets a clip of the current selection or the cursor if there is no selection
     //
-    QString exportSelection();
-
-    void importSelection(QString const& str);
+    PatternClip clip();
 
     // Editing ================================================================
 
@@ -151,6 +150,8 @@ public:
 
     // moves the selected data to a new position
     void moveSelection(PatternCursor pos);
+
+    void paste(PatternClip const& clip, bool mix);
 
 signals:
     void cursorChanged(CursorChangeFlags flags);
@@ -196,6 +197,7 @@ private:
     friend class TrackEditCmd;
     friend class SelectionCmd;
     friend class DeleteSelectionCmd;
+    friend class PasteCmd;
     friend class TransposeCmd;
     friend class ReverseCmd;
 

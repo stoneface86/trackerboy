@@ -137,6 +137,7 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mPageStep(4),
     mSpeedLock(false),
     mScrollLock(false),
+    mClipboard(),
     mInstrument(0)
 {
 
@@ -323,9 +324,9 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mTempoLabel.setBuddy(&mTempoSpin);
     mPatternSizeLabel.setBuddy(&mPatternSizeSpin);
 
-    connect(QGuiApplication::clipboard(), &QClipboard::dataChanged, this, &PatternEditor::parseClipboard);
-
     setDocument(nullptr);
+
+    mClipboard.hasClip();
 }
 
 PatternGrid& PatternEditor::grid() {
@@ -682,8 +683,8 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
 
     mActions.copy.setEnabled(hasDocument);
     mActions.cut.setEnabled(hasDocument);
-    mActions.paste.setEnabled(hasDocument /*&& hasPaste()*/);
-    mActions.pasteMix.setEnabled(hasDocument /*&& hasPaste()*/);
+    mActions.paste.setEnabled(hasDocument);
+    mActions.pasteMix.setEnabled(hasDocument);
     mActions.delete_.setEnabled(hasDocument);
     mActions.selectAll.setEnabled(hasDocument);
     mTransposeMenu.setEnabled(hasDocument);
@@ -702,16 +703,23 @@ void PatternEditor::onCut() {
 }
 
 void PatternEditor::onCopy() {
-    auto clipboard = QGuiApplication::clipboard();
-    clipboard->setText(mDocument->patternModel().exportSelection());
+    auto clip = mDocument->patternModel().clip();
+    mClipboard.setClip(clip);
 }
 
 void PatternEditor::onPaste() {
-    
+    paste(false);
 }
 
 void PatternEditor::onPasteMix() {
-    
+    paste(true);
+}
+
+void PatternEditor::paste(bool mix) {
+    if (mClipboard.hasClip()) {
+        auto &clip = mClipboard.clip();
+        mDocument->patternModel().paste(clip, mix);
+    }
 }
 
 void PatternEditor::onDelete() {
@@ -851,10 +859,6 @@ void PatternEditor::stepDown() {
     if (patternModel.isRecording()) {
         patternModel.moveCursorRow(mEditStepSpin.value());
     }
-}
-
-void PatternEditor::parseClipboard() {
-    qDebug() << "clipboard set";
 }
 
 void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {

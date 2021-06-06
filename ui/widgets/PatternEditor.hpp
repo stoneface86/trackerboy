@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/clipboard/PatternClipboard.hpp"
 #include "core/model/OrderModel.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGrid.hpp"
@@ -135,9 +136,9 @@ private slots:
 
     void updateTempoLabel();
 
-    void parseClipboard();
-
 private:
+
+    void paste(bool mix);
 
     void setTempoLabel(float tempo);
     float calcActualTempo(float speed);
@@ -209,6 +210,8 @@ private:
 
     bool mSpeedLock;
     bool mScrollLock;
+
+    PatternClipboard mClipboard;
 
     std::optional<uint8_t> mInstrument;
 

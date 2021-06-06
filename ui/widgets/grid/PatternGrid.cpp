@@ -308,9 +308,11 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
     if (mHasDrag) {
         auto selection = patternModel.selection();
-        selection.moveTo(mDragPos);
-        selection.translate((int)centerRow - cursor.row - mDragRow);
-        selection.clampRows(centerRow - cursor.row, rowsInCurrent - 1 - cursor.row + centerRow);
+        auto pos = mDragPos;
+        pos.row -= mDragRow;
+        selection.moveTo(pos);
+        selection.clamp(rowsInCurrent - 1);
+        selection.translate((int)centerRow - cursor.row);
         auto rect = mPainter.selectionRectangle(selection);
 
         painter.setPen(Qt::white);

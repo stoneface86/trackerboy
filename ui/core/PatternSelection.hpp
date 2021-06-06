@@ -5,6 +5,54 @@
 
 #include <QtDebug>
 
+/*
+Developer notes for iterating selections:
+
+When modifying a pattern, you will typically apply an operation to a
+selection. The Iterator class is a utility for doing so.
+
+To iterate a selection, first get an iterator from the selection
+
+auto iter = selection.iterator();
+
+then you can iterate over the selected tracks via trackStart() and trackEnd()
+and/or over the selected rows via rowStart() and rowEnd()
+
+For checking the selected columns, you can get a TrackMeta object for the
+given track, and use hasColumn()
+
+example code:
+
+auto iter = selection.iterator();
+for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
+    auto tmeta = iter.getTrackMeta(track);
+
+    for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
+        if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
+            // do something for the note column
+        }
+        if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
+            // do something for the instrument column
+        }
+
+        // effects can also be iterated via for loop
+        for (int effectNo = tmeta.effectStart(); effectNo < tmeta.effectEnd(); ++effectNo) {
+            // do something for each effect
+        }
+
+        // or via hasColumn
+        if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
+            // do something for effect 1
+        }
+    }
+}
+
+Note that the end indices for all coordinates are inclusive, so use <= in your
+loop condition. (Except for effect columns, TrackMeta::effectEnd() is exclusive)
+
+*/
+
+
 //
 // Class representing selected data for a pattern. Contains two cursor positions
 // start and end.
@@ -26,6 +74,7 @@ public:
 
     static constexpr int MAX_SELECTS = SelectEffect3 + 1;
 
+    
     class Iterator;
 
     // utility for iterating a track
@@ -34,10 +83,14 @@ public:
 
         int mStart;
         int mEnd;
+        int mEffectStart;
+        int mEffectEnd;
 
         constexpr TrackMeta(int start, int end) :
             mStart(start),
-            mEnd(end)
+            mEnd(end),
+            mEffectStart(std::max(0, start - SelectEffect1)),
+            mEffectEnd(std::max(0, end - SelectEffect1 + 1))
         {
         }
 
@@ -49,6 +102,16 @@ public:
 
         constexpr int columnEnd() const {
             return mEnd;
+        }
+
+        // starting effect column that is selected
+        constexpr int effectStart() const {
+            return mEffectStart;
+        }
+
+        // ending effect column + 1 that is selected
+        constexpr int effectEnd() const {
+            return mEffectEnd;
         }
 
         //
@@ -108,11 +171,20 @@ public:
             return mEnd.track;
         }
 
+        constexpr PatternCursor start() const {
+            return mStart;
+        }
+
+        constexpr PatternCursor end() const {
+            return mEnd;
+        }
+
         TrackMeta getTrackMeta(int track) const;
 
     };
 
     PatternSelection();
+    PatternSelection(PatternCursor pos);
     PatternSelection(PatternCursor start, PatternCursor end);
 
     PatternCursor start() const;
@@ -139,7 +211,11 @@ public:
     //
     void translate(int rows);
 
-    void clampRows(int min, int max);
+    //
+    // Adjusts the selection such that both cursors are valid positions in the
+    // pattern.
+    //
+    void clamp(int rowMax);
 
     //
     // Moves the selection to start at the given cursor position

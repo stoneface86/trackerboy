@@ -45,6 +45,10 @@ TrackRow const& Pattern::getTrackRow(ChType ch, uint16_t row) const {
         );
 }
 
+unsigned Pattern::size() const {
+    return mTrack1->size();
+}
+
 unsigned Pattern::totalRows() {
     if (mRowCount == 0) {
 

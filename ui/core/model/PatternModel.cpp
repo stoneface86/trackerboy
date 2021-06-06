@@ -175,12 +175,16 @@ void PatternModel::deselect() {
     }
 }
 
-QString PatternModel::exportSelection() {
-    return {};
-}
+PatternClip PatternModel::clip() {
+    PatternClip clip;
+    
+    if (mHasSelection) {
+        clip.save(mPatternCurr, mSelection);
+    } else {
+        clip.save(mPatternCurr, PatternSelection(mCursor));
+    }
 
-void PatternModel::importSelection(QString const& str) {
-    Q_UNUSED(str)
+    return clip;
 }
 
 // slots -------------------------------
@@ -738,6 +742,54 @@ public:
 
 };
 
+class PasteCmd : public QUndoCommand {
+
+    PatternModel &mModel;
+    PatternClip mSrc;
+    PatternClip mPast;
+    PatternCursor mPos;
+    uint8_t mPattern;
+    bool mMix;
+
+public:
+    PasteCmd(PatternModel &model, PatternClip const& clip, PatternCursor pos, bool mix) :
+        QUndoCommand(),
+        mModel(model),
+        mSrc(clip),
+        mPast(),
+        mPos(pos),
+        mPattern((uint8_t)model.mCursorPattern),
+        mMix(mix)
+    {
+        auto region = mSrc.selection();
+        region.moveTo(pos);
+        region.clamp(model.mPatternCurr.size() - 1);
+        mPast.save(model.mPatternCurr, region);
+    }
+
+    virtual void redo() override {
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+            mSrc.paste(pattern, mPos, mMix);
+        }
+
+        mModel.invalidate(mPattern, true);
+    }
+
+    virtual void undo() override {
+        {
+            auto ctx = mModel.mDocument.beginCommandEdit();
+            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+            mPast.restore(pattern);
+        }
+
+        mModel.invalidate(mPattern, true);
+    }
+
+};
+
+
 class TransposeCmd : public SelectionCmd {
 
     int8_t mTransposeAmount; // semitones to transpose all notes by
@@ -1031,7 +1083,7 @@ void PatternModel::deleteSelection() {
 
 void PatternModel::transpose(int amount) {
 
-    if (amount) { // a transpose of 0 does nothing
+    if (mRecording && amount) { // a transpose of 0 does nothing
         if (hasSelection()) {
             auto cmd = new TransposeCmd(*this, (int8_t)amount);
             cmd->setText(tr("transpose selection"));
@@ -1052,7 +1104,7 @@ void PatternModel::transpose(int amount) {
 }
 
 void PatternModel::reverse() {
-    if (hasSelection()) {
+    if (mRecording && mHasSelection) {
         auto iter = mSelection.iterator();
 
         if (iter.rows() > 1) {
@@ -1064,5 +1116,25 @@ void PatternModel::reverse() {
 }
 
 void PatternModel::moveSelection(PatternCursor pos) {
-    // TODO: implement this after copy/paste
+    if (mRecording && mHasSelection) {
+        auto &undoStack = mDocument.undoStack();
+
+        undoStack.beginMacro(tr("move selection"));
+        auto toMove = clip();
+        undoStack.push(new DeleteSelectionCmd(*this));
+        undoStack.push(new PasteCmd(*this, toMove, pos, false));
+        undoStack.endMacro();
+
+        mSelection.moveTo(pos);
+        mSelection.clamp((int)mPatternCurr.totalRows() - 1);
+        emit selectionChanged();
+    }
+}
+
+void PatternModel::paste(PatternClip const& clip, bool mix) {
+    if (mRecording) {
+        auto cmd = new PasteCmd(*this, clip, mCursor, mix);
+        cmd->setText(tr("paste"));
+        mDocument.undoStack().push(cmd);
+    }
 }

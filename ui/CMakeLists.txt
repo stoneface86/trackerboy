@@ -21,6 +21,7 @@ set(UI_SRC
     "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
     "core/clipboard/PatternClip.cpp"
+    "core/clipboard/PatternClipboard.cpp"
     "core/model/BaseTableModel.cpp"
     "core/model/InstrumentListModel.cpp"
     "core/model/ModuleDocument.cpp"

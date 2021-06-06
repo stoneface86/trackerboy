@@ -47,6 +47,11 @@ public:
     TrackRow const& getTrackRow(ChType ch, uint16_t row) const;
 
     //
+    // Gets the pattern size, in rows.
+    //
+    unsigned size() const;
+
+    //
     // Returns the count of rows that will be stepped by the MusicRuntime. Track::rowCount
     // will be returned if there are no pattern skip effects in any of the track data
     //

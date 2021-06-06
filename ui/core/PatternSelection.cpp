@@ -33,6 +33,12 @@ PatternSelection::PatternSelection() :
 {
 }
 
+PatternSelection::PatternSelection(PatternCursor pos) :
+    mStart(pos),
+    mEnd(pos)
+{
+}
+
 PatternSelection::PatternSelection(PatternCursor start, PatternCursor end) :
     mStart(start),
     mEnd(end)
@@ -101,9 +107,20 @@ void PatternSelection::translate(int rows) {
     mEnd.row += rows;
 }
 
-void PatternSelection::clampRows(int min, int max) {
-    mStart.row = std::clamp(mStart.row, min, max);
-    mEnd.row = std::clamp(mEnd.row, min, max);
+void PatternSelection::clamp(int rowMax) {
+    for (auto cursor : {&mStart, &mEnd}) {
+        cursor->row = std::clamp(cursor->row, 0, rowMax);
+        if (cursor->track < 0) {
+            cursor->track = 0;
+            cursor->column = 0;
+        } else if (cursor->track >= PatternCursor::MAX_TRACKS) {
+            cursor->track = PatternCursor::MAX_TRACKS - 1;
+            cursor->column = PatternCursor::MAX_COLUMNS - 1;
+        } else {
+            cursor->column = std::clamp(cursor->column, 0, PatternCursor::MAX_COLUMNS - 1);
+        }
+        
+    }
 }
 
 static bool isEffect(int select) {
@@ -129,24 +146,14 @@ void PatternSelection::moveTo(PatternCursor cursor) {
             // only effects are selected, move by column
             auto start = std::max((int)SelectEffect1, cursor.column);
             int end = start + iter.columnEnd() - iter.columnStart();
-            if (end > SelectEffect3) {
-                start -= end - SelectEffect3;
-                end = SelectEffect3;
-            } 
-                mStart.column = start;
-                mEnd.column = end;
+            mStart.column = start;
+            mEnd.column = end;
         }
     }
 
     // move to track
-    auto start = cursor.track;
-    auto end = cursor.track + iter.trackEnd() - iter.trackStart();
-    if (end >= PatternCursor::MAX_TRACKS) {
-        start -= end - PatternCursor::MAX_TRACKS + 1;
-        end = PatternCursor::MAX_TRACKS - 1;
-    }
-    mStart.track = start;
-    mEnd.track = end;
+    mStart.track = cursor.track;
+    mEnd.track = cursor.track + iter.trackEnd() - iter.trackStart();
 }
 
 bool PatternSelection::contains(PatternCursor cursor) {

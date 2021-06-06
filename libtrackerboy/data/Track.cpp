@@ -121,5 +121,9 @@ uint16_t Track::rowCount() const {
     return count;
 }
 
+unsigned Track::size() const {
+    return mData.size();
+}
+
 
 }
