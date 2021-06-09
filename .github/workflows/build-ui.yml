@@ -1,4 +1,4 @@
-name: build-lib
+name: build-ui
 
 on: [push]
 
