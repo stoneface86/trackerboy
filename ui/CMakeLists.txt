@@ -22,6 +22,8 @@ set(UI_SRC
     "core/audio/Ringbuffer.cpp"
     "core/clipboard/PatternClip.cpp"
     "core/clipboard/PatternClipboard.cpp"
+    "core/model/graph/GraphModel.cpp"
+    "core/model/graph/WaveModel.cpp"
     "core/model/BaseTableModel.cpp"
     "core/model/InstrumentListModel.cpp"
     "core/model/ModuleDocument.cpp"
@@ -64,10 +66,11 @@ set(UI_SRC
     "widgets/visualizers/VolumeMeterAnimation.cpp"
     "widgets/CustomSpinBox.cpp"
     "widgets/EnvelopeForm.cpp"
+    "widgets/GraphEdit.cpp"
     "widgets/OrderEditor.cpp"
     "widgets/PatternEditor.cpp"
     "widgets/PianoWidget.cpp"
-    #"widgets/SequenceEditor.cpp"
+    "widgets/SequenceEditor.cpp"
     #"widgets/WaveGraph.cpp"
 )
 

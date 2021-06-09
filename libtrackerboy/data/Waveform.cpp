@@ -1,6 +1,9 @@
 
 #include "trackerboy/data/Waveform.hpp"
 
+#include <sstream>
+#include <iomanip>
+
 namespace trackerboy {
 
 
@@ -42,6 +45,18 @@ void Waveform::fromString(std::string const& hexstring) {
 
         mData[i] = byte;
     }
+}
+
+std::string Waveform::toString() const {
+    std::stringstream ss;
+    ss << std::hex;
+    ss << std::uppercase;
+
+    for (auto byte : mData) {
+        ss << std::setw(2) << std::setfill('0') << (int)byte;
+    }
+
+    return ss.str();
 }
 
 uint8_t& Waveform::operator[](int index) {

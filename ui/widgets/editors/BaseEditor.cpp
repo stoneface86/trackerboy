@@ -107,6 +107,9 @@ QWidget& BaseEditor::editorWidget() {
     return mEditorWidget;
 }
 
+ModuleDocument* BaseEditor::document() {
+    return mDocument;
+}
 
 void BaseEditor::onIndexChanged(int index) {
     if (mSignalsEnabled) {
@@ -122,6 +125,7 @@ void BaseEditor::onIndexChanged(int index) {
             }
             mNameEdit.setEnabled(hasIndex);
             mPiano.setEnabled(hasIndex);
+            mEditorWidget.setEnabled(hasIndex);
             mActionRemove.setEnabled(hasIndex);
             mActionDuplicate.setEnabled(model->canDuplicate() && hasIndex);
         }

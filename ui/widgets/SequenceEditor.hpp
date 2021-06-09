@@ -1,6 +1,10 @@
 
 #pragma once
 
+#include <QGridLayout>
+#include <QScrollBar>
+#include <QLabel>
+#include <QVBoxLayout>
 #include <QWidget>
 
 class SequenceEditor : public QWidget {
@@ -10,35 +14,44 @@ class SequenceEditor : public QWidget {
 public:
 
     enum ViewMode {
-        SampleView,
-        BarView
+        SampleView, // waveforms, arpeggio
+        BarView     // duty, pitch, panning
     };
 
     explicit SequenceEditor(QWidget *parent = nullptr);
 
-    void setRange(int min, int max);
+//     void setRange(int min, int max);
 
-    void setViewMode(ViewMode mode);
+//     void setScrollY(int y);
 
-public slots:
+//     void setScrollX(int x);
 
-    void setSize(int size);
+//     void setViewMode(ViewMode mode);
 
-    void setData(QString const& data);
+// public slots:
 
-protected:
+//     void setSize(int size);
 
-    virtual void paintEvent(QPaintEvent *evt) override;
+//     void setData(QString const& data);
 
 private:
+
+    QGridLayout mLayout;
+        // row 0
+        // loop select widget
+
+        // row 1
+        QVBoxLayout mAxisLayout;
+            QLabel mMaxLabel;
+            QLabel mMinLabel;
+        //SequenceGraph mGraph;
+        QScrollBar mVScroll;
+
+        // row 2
+        QScrollBar mHScroll;
+
+
     std::vector<uint8_t> mData;
-
-    bool mDragging;
-
-    uint8_t mCurX;
-    uint8_t mCurY;
-
-    QRect mPlotRect;
 
     int mCellWidth;
     int mCellHeight;

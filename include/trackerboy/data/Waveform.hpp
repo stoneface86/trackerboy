@@ -51,6 +51,8 @@ public:
     // convenience method, sets the waveform data from a string of hex nibbles
     void fromString(std::string const& hexstring);
 
+    std::string toString() const;
+
     uint8_t& operator[](int index);
 
 private:

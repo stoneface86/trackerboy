@@ -328,6 +328,10 @@ OrderEditor QTableView QHeaderView::section {
     border bottom: none;
 }
 
+GraphEdit {
+    background-color: black;
+}
+
 )stylesheet").arg(
         appearance.colors[+Color::background].name(),
         appearance.colors[+Color::line].name(),
