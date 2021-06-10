@@ -11,6 +11,8 @@
 #include <QGridLayout>
 #include <QtDebug>
 
+#include <cmath>
+
 static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
     switch (key) {
         case Qt::Key_B:

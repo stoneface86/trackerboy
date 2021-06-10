@@ -8,6 +8,7 @@
 #include <QAction>
 #include <QKeySequence>
 #include <QString>
+#include <QTreeView>
 
 //
 // Sets the text, statusTip and shortcut for the given action. Equivalent to
@@ -30,3 +31,8 @@ void setupAction(
     Icons icon,
     QKeySequence const &seq = QKeySequence()
 );
+
+//
+// workaround for QTreeView::expandRecursively, which was added in v5.13
+//
+void expandRecursively(QTreeView &view, QModelIndex const& index, int depth = -1);
