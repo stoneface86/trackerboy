@@ -49,6 +49,7 @@ set(UI_SRC
     "resources/fonts.qrc"
     "resources/icons.qrc"
     "resources/images.qrc"
+    "resources/stylesheets.qrc"
 
     "widgets/config/ConfigTab.cpp"
     "widgets/config/SoundConfigTab.cpp"

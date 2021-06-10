@@ -84,6 +84,7 @@ int main(int argc, char *argv[]) {
     Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(icons);
     Q_INIT_RESOURCE(images);
+    Q_INIT_RESOURCE(stylesheets);
 
     // register types for signals
     qRegisterMetaType<ModuleDocument::OutputFlags>("OutputFlags");

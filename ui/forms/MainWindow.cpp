@@ -286,59 +286,19 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
     if (categories.testFlag(Config::CategoryAppearance)) {
         auto &appearance = mConfig.appearance();
 
-        setStyleSheet(QStringLiteral(R"stylesheet(
-PatternEditor PatternGrid {
-    font-family: %5;
-    font-size: %6pt;
-}
+        // see resources/stylesheet.qss
+        QFile styleFile(QStringLiteral(":/stylesheet.qss"));
+        styleFile.open(QFile::ReadOnly);
 
-AudioScope {
-    background-color: %1;
-    color: %3;
-}
+        QString stylesheet(styleFile.readAll());
 
-OrderEditor QTableView {
-    background-color: %1;
-    gridline-color: %2;
-    color: %3;
-    selection-color: %3;
-    selection-background-color: %4;
-    font-family: %5;
-}
-
-OrderEditor QTableView QTableCornerButton::section {
-    background-color: %1;
-    border-right: 1px solid %2;
-    border-bottom: 1px solid %2;
-    border-top: none;
-    border bottom: none;
-}
-
-OrderEditor QTableView QHeaderView {
-    background-color: %1;
-    color: %3;
-    font-family: %5;
-}
-
-OrderEditor QTableView QHeaderView::section {
-    background-color: %1;
-    border-right: 1px solid %2;
-    border-bottom: 1px solid %2;
-    border-top: none;
-    border bottom: none;
-}
-
-GraphEdit {
-    background-color: black;
-}
-
-)stylesheet").arg(
-        appearance.colors[+Color::background].name(),
-        appearance.colors[+Color::line].name(),
-        appearance.colors[+Color::foreground].name(),
-        appearance.colors[+Color::selection].name(),
-        appearance.font.family(),
-        QString::number(appearance.font.pointSize())
+        setStyleSheet(stylesheet.arg(
+            appearance.colors[+Color::background].name(),
+            appearance.colors[+Color::line].name(),
+            appearance.colors[+Color::foreground].name(),
+            appearance.colors[+Color::selection].name(),
+            appearance.font.family(),
+            QString::number(appearance.font.pointSize())
         ));
 
         mPatternEditor.setColors(appearance.colors);
