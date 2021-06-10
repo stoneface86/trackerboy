@@ -8,19 +8,19 @@
 // SyncWorker handles audio synchronization in a separate thread.
 //
 
-SyncWorker::SyncWorker(Renderer &renderer, AudioScope &leftScope, AudioScope &rightScope) :
+SyncWorker::SyncWorker(Renderer &renderer) : //, AudioScope &leftScope, AudioScope &rightScope) :
     QObject(),
     mRenderer(renderer),
-    mLeftScope(leftScope),
-    mRightScope(rightScope),
+    //mLeftScope(leftScope),
+    //mRightScope(rightScope),
     mMutex(),
     mSampleBuffer(nullptr),
     mSamplesPerFrame(0),
     mPeakLeft(0),
     mPeakRight(0)
 {
-    connect(this, &SyncWorker::updateScopes, &mLeftScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
-    connect(this, &SyncWorker::updateScopes, &mRightScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
+    //connect(this, &SyncWorker::updateScopes, &mLeftScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
+    //connect(this, &SyncWorker::updateScopes, &mRightScope, qOverload<>(&AudioScope::update), Qt::QueuedConnection);
     connect(&renderer, &Renderer::audioStarted, this, &SyncWorker::onAudioStart, Qt::QueuedConnection);
     connect(&renderer, &Renderer::audioStopped, this, &SyncWorker::onAudioStop, Qt::QueuedConnection);
     connect(&renderer, &Renderer::frameSync, this, &SyncWorker::onFrameSync, Qt::QueuedConnection);
@@ -49,8 +49,8 @@ void SyncWorker::onAudioStop() {
     setPeaks(0, 0);
 
     // clear and update the scopes
-    mLeftScope.clear();
-    mRightScope.clear();
+    //mLeftScope.clear();
+    //mRightScope.clear();
 
     emit updateScopes();
 }

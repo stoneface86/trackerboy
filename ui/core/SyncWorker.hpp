@@ -16,7 +16,7 @@ class SyncWorker : public QObject {
     Q_OBJECT
 
 public:
-    SyncWorker(Renderer &renderer, AudioScope &left, AudioScope &right);
+    SyncWorker(Renderer &renderer); //, AudioScope &left, AudioScope &right);
 
     void setSamplesPerFrame(size_t samples);
 
@@ -43,8 +43,8 @@ private:
     void setPeaks(int16_t peakLeft, int16_t peakRight);
 
     Renderer &mRenderer;
-    AudioScope &mLeftScope;
-    AudioScope &mRightScope;
+    //AudioScope &mLeftScope;
+    //AudioScope &mRightScope;
 
     QMutex mMutex;
     std::unique_ptr<int16_t[]> mSampleBuffer;

@@ -152,10 +152,10 @@ private:
         QTreeView mBrowser;
         QWidget mMainWidget;
             QVBoxLayout mMainLayout;
-                QHBoxLayout mVisualizerLayout;
-                    AudioScope mLeftScope;
-                    PeakMeter mPeakMeter;
-                    AudioScope mRightScope;
+                //QHBoxLayout mVisualizerLayout;
+                //    AudioScope mLeftScope;
+                //    PeakMeter mPeakMeter;
+                //    AudioScope mRightScope;
                 QTabBar mTabs;
                 QHBoxLayout mEditorLayout;
                     OrderEditor mOrderEditor;

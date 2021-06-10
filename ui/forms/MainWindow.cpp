@@ -44,7 +44,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mPatternEditor(mPianoInput),
     mRenderer(new Renderer),
     mRenderThread(),
-    mSyncWorker(new SyncWorker(*mRenderer, mLeftScope, mRightScope)),
+    mSyncWorker(new SyncWorker(*mRenderer)), //, mLeftScope, mRightScope)),
     mSyncWorkerThread()
 {
     setupUi();
@@ -269,8 +269,8 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
 
         auto samplesPerFrame = samplerate / 60;
         mSyncWorker->setSamplesPerFrame(samplesPerFrame);
-        mLeftScope.setDuration(samplesPerFrame);
-        mRightScope.setDuration(samplesPerFrame);
+        //mLeftScope.setDuration(samplesPerFrame);
+        //mRightScope.setDuration(samplesPerFrame);
 
         mRenderer->setConfig(mMiniaudio, sound);
         mErrorSinceLastConfig = mRenderer->lastDeviceError() != MA_SUCCESS;
@@ -607,15 +607,15 @@ void MainWindow::setupUi() {
     mBrowser.setHeaderHidden(true);
     mBrowser.setExpandsOnDoubleClick(false);
 
-    mVisualizerLayout.addWidget(&mLeftScope);
-    mVisualizerLayout.addWidget(&mPeakMeter, 1);
-    mVisualizerLayout.addWidget(&mRightScope);
+    //mVisualizerLayout.addWidget(&mLeftScope);
+    //mVisualizerLayout.addWidget(&mPeakMeter, 1);
+    //mVisualizerLayout.addWidget(&mRightScope);
 
     mEditorLayout.addWidget(&mOrderEditor);
     mEditorLayout.addWidget(&mPatternEditor, 1);
     mEditorLayout.setMargin(0);
 
-    mMainLayout.addLayout(&mVisualizerLayout);
+    //mMainLayout.addLayout(&mVisualizerLayout);
     mMainLayout.addWidget(&mTabs);
     mMainLayout.addLayout(&mEditorLayout, 1);
     mMainLayout.setMargin(0);
@@ -860,7 +860,7 @@ void MainWindow::setupUi() {
     });
 
     // sync worker
-    connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);
+    //connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);
     connect(mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged, Qt::QueuedConnection);
     connect(mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText, Qt::QueuedConnection);
 
