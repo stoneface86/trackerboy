@@ -23,6 +23,7 @@ set(UI_SRC
     "core/clipboard/PatternClip.cpp"
     "core/clipboard/PatternClipboard.cpp"
     "core/model/graph/GraphModel.cpp"
+    "core/model/graph/SequenceModel.cpp"
     "core/model/graph/WaveModel.cpp"
     "core/model/BaseTableModel.cpp"
     "core/model/InstrumentListModel.cpp"
@@ -71,8 +72,6 @@ set(UI_SRC
     "widgets/OrderEditor.cpp"
     "widgets/PatternEditor.cpp"
     "widgets/PianoWidget.cpp"
-    "widgets/SequenceEditor.cpp"
-    #"widgets/WaveGraph.cpp"
 )
 
 if (MSVC)

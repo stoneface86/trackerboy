@@ -9,6 +9,8 @@ class ModuleDocument;
 
 class WaveModel : public GraphModel {
 
+    Q_OBJECT
+
 public:
     explicit WaveModel(QObject *parent = nullptr);
 

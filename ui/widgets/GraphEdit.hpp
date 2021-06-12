@@ -6,6 +6,7 @@
 #include <QPoint>
 
 #include <optional>
+#include <variant>
 
 class GraphEdit : public QAbstractScrollArea {
 
@@ -50,23 +51,29 @@ protected:
 
     virtual void mousePressEvent(QMouseEvent *evt) override;
 
+    virtual void mouseReleaseEvent(QMouseEvent *evt) override;
+
     virtual void resizeEvent(QResizeEvent *evt) override;
-
-private slots:
-
-    void recalculate();
 
 private:
 
     void setViewModeImpl(ViewMode mode);
 
-    void setDataAtMouse();
+    void setDataAtMouse(QPoint coords);
 
     void calculateAxis();
 
     void calculateCellWidth();
 
     void calculateCellHeight();
+
+    int availableWidth();
+
+    int availableHeight();
+
+    QPoint mouseToPlotCoordinates(QPoint mouse);
+
+    void updateHover(QPoint mouse);
 
     GraphModel &mModel;
     ViewMode mMode;
@@ -85,6 +92,7 @@ private:
     int mCellHeight;
 
     std::optional<QPoint> mMouseOver;
+    QPoint mLastMouseCoords;
 
     QColor mLineColor;
     QColor mSampleColor;

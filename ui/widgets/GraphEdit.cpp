@@ -14,13 +14,44 @@
 constexpr int MIN_CELL_WIDTH = 12;
 constexpr int MAX_CELL_WIDTH = 32;
 
-constexpr int MIN_CELL_HEIGHT = 6;
+constexpr int MIN_CELL_HEIGHT = 8;
 
-constexpr int PADDING_X = 4;
-constexpr int PADDING_Y = 4;
+constexpr int PADDING_X = 8;
+constexpr int PADDING_Y = 8;
+
+class BarPlotter {
+
+    int const mRange;
+    int const mMin;
+    int const mHeight;
+    int const mBottom;
+    int mXAxis;
+
+public:
+    BarPlotter(QRect const& rect, int min, int max) :
+        mRange(abs(max - min)),
+        mMin(min),
+        mHeight(rect.height()),
+        mBottom(rect.bottom()),
+        mXAxis(0)
+    {
+        int axis = std::max(0, min);
+        mXAxis = plot((GraphModel::DataType)axis);
+        
+    }
+
+    int xaxis() const {
+        return mXAxis;
+    }
+
+    int plot(GraphModel::DataType input) {
+        return mBottom - ((mHeight * ((int)input - mMin)) / mRange);
+    }
+
+};
+
 
 // TIP: always call viewport()->update() instead of update()!
-
 
 GraphEdit::GraphEdit(GraphModel &model, QWidget *parent) :
     QAbstractScrollArea(parent),
@@ -44,7 +75,12 @@ GraphEdit::GraphEdit(GraphModel &model, QWidget *parent) :
     mPlotRect.adjust(PADDING_X, PADDING_Y, -PADDING_X, -PADDING_Y);
 
     connect(&model, &GraphModel::dataChanged, _viewport, qOverload<>(&QWidget::update));
-    connect(&model, &GraphModel::countChanged, this, &GraphEdit::calculateCellWidth);
+    connect(&model, &GraphModel::countChanged, this,
+        [this](int count) {
+            Q_UNUSED(count)
+            calculateCellWidth();
+            update();
+        });
 
     _viewport->setAttribute(Qt::WA_StyledBackground);
 
@@ -75,9 +111,8 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
     switch (mode) {
         case ArpeggioView:
             mBarMode = false;
-            mLines = true;
-            mMinValue = 0;
-            mMaxValue = trackerboy::NOTE_LAST;
+            mMinValue = -128;
+            mMaxValue = 127;
             break;
         case TimbreView:
         case PanningView:
@@ -94,13 +129,23 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
             break;
         case WaveformView:
             mBarMode = false;
-            mLines = true;
             mMinValue = 0;
             mMaxValue = 0xF;
             break;
     }
     calculateCellHeight();
     calculateCellWidth();
+
+    auto vscroll = verticalScrollBar();
+    auto vmax = vscroll->maximum();
+    auto vmin = vscroll->minimum();
+    if (vmin != vmax) {
+        // center the scroll position
+        auto range = vmax + 1 - vmin;
+        auto value = (range - vscroll->pageStep()) / 2 + vmin;
+        vscroll->setValue(value);
+    }
+
     update();
 }
 
@@ -126,6 +171,7 @@ void GraphEdit::leaveEvent(QEvent *evt) {
 void GraphEdit::paintEvent(QPaintEvent *evt) {
     Q_UNUSED(evt)
 
+    // paint on the viewport widget
     auto _viewport = viewport();
     QPainter painter(_viewport);
 
@@ -143,35 +189,74 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
         viewportMax = value + vscroll->pageStep();
     }
 
-    // Grid lines
-    painter.setPen(mLineColor);
-    auto gridRect = mPlotRect.adjusted(-1, -1, 0, 0);
-    painter.drawRect(gridRect);
-    if (mLines) {
-        if (mBarMode) {
-
-        } else {
-            int ypos = mPlotRect.bottom() - mCellHeight;
-            for (int const top = mPlotRect.top(); ypos > top; ypos -= mCellHeight) {
-                painter.drawLine(mPlotRect.left(), ypos, mPlotRect.right(), ypos);
-            }
-        }
-    }
-
     auto metrics = fontMetrics();
 
+    // viewport minimum/maximum or just minimum/maximum
     painter.setPen(mSampleColor);
     painter.drawText(PADDING_X, mPlotRect.top(), mYAxisWidth, metrics.height(), Qt::AlignRight | Qt::AlignTop, QString::number(viewportMax));
     painter.drawText(PADDING_X, _viewport->height() - PADDING_Y - metrics.height(), mYAxisWidth, metrics.height(), Qt::AlignRight | Qt::AlignBottom, QString::number(viewportMin));
 
-    //painter.fillRect(mPlotRect, Qt::gray);
 
-    painter.translate(QPoint(mPlotRect.x(), mPlotRect.bottom() + viewportMin * mCellHeight));
-    painter.scale(1.0, -1.0);
+    // Grid lines
+    painter.setPen(mLineColor);
+    auto const plotTop = mPlotRect.top() - 1;
+    auto const plotBottom = mPlotRect.bottom() + 1;
+    auto const axis = mPlotRect.left() - 1;
+    auto const viewportWidth = _viewport->width();
+    painter.drawLine(axis, plotTop, axis, plotBottom);
+    painter.drawLine(axis + 1, plotTop, viewportWidth, plotTop);
+    painter.drawLine(axis + 1, plotBottom, viewportWidth, plotBottom);
 
     if (mBarMode) {
+        BarPlotter plotter(mPlotRect, mMinValue, mMaxValue);
+        if (mLines) {
+            for (int i = mMinValue + 1; i < mMaxValue; ++i) {
+                auto ypos = plotter.plot((GraphModel::DataType)i);
+                painter.drawLine(mPlotRect.left(), ypos, viewportWidth, ypos);
+            }
+        }
+
+        // xaxis (only drawn if the minimum value isn't 0, since then it is the bottom line of the plot)
+        if (mMinValue) {
+            painter.drawLine(mPlotRect.left(), plotter.xaxis(), viewportWidth, plotter.xaxis());
+        }
+
+        // mouse hover
+        painter.translate(QPoint(mPlotRect.x(), 0));
+        painter.setPen(mSampleColor);
+        if (mMouseOver) {
+            painter.drawRect(
+                mMouseOver->x() * mCellWidth,
+                plotter.xaxis(), 
+                mCellWidth, 
+                plotter.plot((GraphModel::DataType)mMouseOver->y()) - plotter.xaxis()
+            );
+        }
+
+        // bars
+        auto count = mModel.count();
+        int xpos = 1;
+        for (auto i = hscroll->value(); i < count; ++i, xpos += mCellWidth) {
+            auto h = plotter.plot(mModel.dataAt(i)) - plotter.xaxis();
+            if (h == 0) {
+                h = 1;
+            }
+            painter.fillRect(xpos, plotter.xaxis(), mCellWidth - 1, h, mSampleColor);
+        }
 
     } else {
+        // always draw lines for sample view
+        {
+            int ypos = mPlotRect.bottom() - mCellHeight;
+            for (int const top = mPlotRect.top(); ypos > top; ypos -= mCellHeight) {
+                painter.drawLine(mPlotRect.left(), ypos, viewportWidth, ypos);
+            }
+        }
+
+        painter.translate(QPoint(mPlotRect.x(), mPlotRect.bottom() + viewportMin * mCellHeight));
+        painter.scale(1.0, -1.0);
+        painter.setPen(mSampleColor);
+        
         if (mMouseOver) {
             painter.drawRect(
                 mMouseOver->x() * mCellWidth,
@@ -182,11 +267,7 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
         }
 
         auto count = mModel.count();
-        auto color = mSampleColor;
-        color.setAlpha(200);
-        painter.setPen(mSampleColor);
-        painter.setBrush(QBrush(color));
-        int xpos = 0;
+        int xpos = 1;
         for (int i = hscroll->value(); i < count; ++i, xpos += mCellWidth) {
             auto sample = mModel.dataAt(i);
             if (sample < viewportMin || sample > viewportMax) {
@@ -194,9 +275,8 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
             }
             auto ypos = sample * mCellHeight;
             QRect rect(xpos, ypos, mCellWidth, mCellHeight);
-            painter.drawRect(rect);
+            painter.fillRect(xpos, ypos, mCellWidth - 1, mCellHeight - 1, mSampleColor);
         }
-
     }
 
 }
@@ -207,39 +287,38 @@ void GraphEdit::mouseMoveEvent(QMouseEvent *evt) {
     }
 
     auto pos = evt->pos();
-    if (mPlotRect.contains(pos, true)) {
-        QPoint mousePos;
-
-        mousePos.setX((pos.x() - mPlotRect.left()) / mCellWidth);
-        if (mBarMode) {
-            auto range = abs(mMaxValue - mMinValue);
-            auto yInRange = (pos.y() - mPlotRect.top()) * range / mPlotRect.height();
-            mousePos.setY(yInRange + mMinValue);
-        } else {
-            mousePos.setY((mPlotRect.bottom() - pos.y()) / mCellHeight);
-        }
-
-        if (!mMouseOver.has_value() || *mMouseOver != mousePos) {
-            mMouseOver = mousePos;
-            if (evt->buttons() & Qt::LeftButton) {
-                setDataAtMouse();
-            }
-            viewport()->update();
+    if (evt->buttons() & Qt::LeftButton) {
+        auto coords = mouseToPlotCoordinates(pos);
+        if (mLastMouseCoords != coords) {
+            mLastMouseCoords = coords;
+            setDataAtMouse(coords);
         }
     } else {
-        if (mMouseOver) {
-            mMouseOver.reset();
-            viewport()->update();
-        }
+        updateHover(pos);
     }
+
 }
 
 void GraphEdit::mousePressEvent(QMouseEvent *evt) {
-    if (evt->button() != Qt::LeftButton || !mMouseOver) {
+    if (evt->button() != Qt::LeftButton || mModel.count() == 0) {
         return;
     }
 
-    setDataAtMouse();
+    if (mMouseOver) {
+        mMouseOver.reset();
+        viewport()->update();
+    }
+
+    mLastMouseCoords = mouseToPlotCoordinates(evt->pos());
+    setDataAtMouse(mLastMouseCoords);
+}
+
+void GraphEdit::mouseReleaseEvent(QMouseEvent *evt) {
+    if (evt->button() != Qt::LeftButton || mModel.count() == 0) {
+        return;
+    }
+
+    updateHover(evt->pos());
 }
 
 void GraphEdit::resizeEvent(QResizeEvent *evt) {
@@ -248,28 +327,84 @@ void GraphEdit::resizeEvent(QResizeEvent *evt) {
     auto newsize = evt->size();
 
     if (oldsize.width() != newsize.width()) {
-        mPlotRect.setRight(newsize.width() - PADDING_X);
         calculateCellWidth();
     }
 
     if (oldsize.height() != newsize.height()) {
-        mPlotRect.setTop(PADDING_Y);
-        mPlotRect.setBottom(newsize.height() - PADDING_Y);
         calculateCellHeight();
     }
 
 }
 
-void GraphEdit::setDataAtMouse() {
+void GraphEdit::setDataAtMouse(QPoint coords) {
+    GraphModel::DataType y;
+    if (mBarMode) {
+        y = (GraphModel::DataType)coords.y();
+    } else {
+        auto vscroll = verticalScrollBar();
+        if (vscroll->isVisible()) {
+            y = (GraphModel::DataType)(vscroll->maximum() - (vscroll->value() - vscroll->minimum()) + coords.y());
+        } else {
+            y = (GraphModel::DataType)coords.y();
+        }
+    }
+
     mModel.setData(
-        horizontalScrollBar()->value() + mMouseOver->x(),
-        mMouseOver->y()
+        horizontalScrollBar()->value() + coords.x(),
+        y
     );
 }
 
-void GraphEdit::recalculate() {
-    calculateCellWidth();
-    calculateCellHeight();
+QPoint GraphEdit::mouseToPlotCoordinates(QPoint mouse) {
+
+    int x;
+    if (mouse.x() >= mPlotRect.right()) {
+        x = (mPlotRect.width() / mCellWidth) - 1;
+    } else if (mouse.x() < mPlotRect.left()) {
+        x = 0;
+    } else {
+        x = (mouse.x() - mPlotRect.left()) / mCellWidth;
+    }
+
+    auto y = mPlotRect.bottom() - mouse.y();
+    bool const belowBottom = y < 0;
+    bool const aboveTop = mPlotRect.top() >= mouse.y();
+    
+    if (mBarMode) {
+        if (belowBottom) {
+            y = mMinValue;
+        } else if (aboveTop) {
+            y = mMaxValue;
+        } else {
+            auto range = mMaxValue - mMinValue;
+            y += mPlotRect.height() / range / 2;
+            y = y * range / mPlotRect.height() + mMinValue;
+            y = std::clamp(y, mMinValue, mMaxValue);
+        }
+    } else {
+        if (belowBottom) {
+            y = 0;
+        } else if (aboveTop) {
+            y = (mPlotRect.height() - 1) / mCellHeight;
+        } else {
+            y = y / mCellHeight;
+        }
+    }
+
+    return {x, y};
+}
+
+void GraphEdit::updateHover(QPoint mouse) {
+    if (mPlotRect.contains(mouse, true)) {
+        auto mousePos = mouseToPlotCoordinates(mouse);
+        if (mMouseOver != mousePos) {
+            mMouseOver = mousePos;
+            viewport()->update();
+        }
+    } else if (mMouseOver) {
+        mMouseOver.reset();
+        viewport()->update();
+    }
 }
 
 void GraphEdit::calculateAxis() {
@@ -282,9 +417,17 @@ void GraphEdit::calculateAxis() {
     calculateCellWidth();
 }
 
+int GraphEdit::availableWidth() {
+    return viewport()->width() - mPlotRect.left();
+}
+
+int GraphEdit::availableHeight() {
+    return viewport()->height() - PADDING_Y * 2;
+}
+
 void GraphEdit::calculateCellWidth() {
     // determine cell width
-    auto const _width = mPlotRect.width();
+    auto const _width = availableWidth();
     auto count = mModel.count();
     if (count) {
         auto cellWidth = _width / count;
@@ -306,13 +449,16 @@ void GraphEdit::calculateCellWidth() {
 }
 
 void GraphEdit::calculateCellHeight() {
-    auto const _height = mPlotRect.height();
+    auto const _height = availableHeight();
 
     auto range = abs(mMaxValue + 1 - mMinValue);
     if (range) {
+        int newHeight;
         auto cellHeight = _height / range;
-        if (!mBarMode) {
-            int newHeight;
+        if (mBarMode) {
+            verticalScrollBar()->setRange(0, 0);
+            newHeight = _height;
+        } else {
             if (cellHeight < MIN_CELL_HEIGHT) {
                 cellHeight = MIN_CELL_HEIGHT;
                 // idk why the -1 is needed but it works
@@ -325,9 +471,14 @@ void GraphEdit::calculateCellHeight() {
                 verticalScrollBar()->setRange(0, 0);
                 newHeight = cellHeight * range;
             }
-            mPlotRect.setTop(mPlotRect.bottom() - newHeight);
         }
-
+        
+        mPlotRect.setTop((viewport()->height() - newHeight) / 2);
+        mPlotRect.setHeight(newHeight);
+        
+        if (cellHeight == 0) {
+            cellHeight = 1;
+        }
         mCellHeight = cellHeight;
     }
 }
