@@ -1,6 +1,8 @@
 
 #include "trackerboy/data/Sequence.hpp"
 
+#include <stdexcept>
+
 namespace trackerboy {
 
 Sequence::Sequence() :
@@ -19,11 +21,22 @@ std::vector<uint8_t>& Sequence::data() noexcept {
     return mData;
 }
 
+std::vector<uint8_t> const& Sequence::data() const noexcept {
+    return mData;
+}
+
 void Sequence::resize(size_t size) {
+    if (size > MAX_SIZE) {
+        throw std::invalid_argument("size must be less than or equal to 256");
+    }
     mData.resize(size);
     if (mLoop && *mLoop >= size) {
         mLoop.reset();
     }
+}
+
+std::optional<uint8_t> Sequence::loop() const noexcept {
+    return mLoop;
 }
 
 void Sequence::setLoop(uint8_t loop) {

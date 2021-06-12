@@ -38,6 +38,8 @@ class Sequence {
 
 public:
 
+    static constexpr size_t MAX_SIZE = 256;
+
     //
     // class for enumerating the values of a sequence
     //
@@ -60,10 +62,13 @@ public:
     Sequence(Sequence const& seq);
 
     std::vector<uint8_t>& data() noexcept;
+    std::vector<uint8_t> const& data() const noexcept;
 
     Enumerator enumerator() const;
 
     void resize(size_t size);
+
+    std::optional<uint8_t> loop() const noexcept;
 
     void setLoop(uint8_t loop);
 

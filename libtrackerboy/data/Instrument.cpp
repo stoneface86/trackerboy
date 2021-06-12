@@ -40,11 +40,23 @@ std::optional<uint8_t> Instrument::queryEnvelope() const noexcept {
     }
 }
 
+Instrument::SequenceArray& Instrument::sequences() noexcept {
+    return mSequences;
+}
+
+Instrument::SequenceArray const& Instrument::sequences() const noexcept {
+    return mSequences;
+}
+
 Sequence::Enumerator Instrument::enumerateSequence(size_t parameter) const noexcept {
     return mSequences[parameter].enumerator();
 }
 
 Sequence& Instrument::sequence(size_t parameter) noexcept {
+    return mSequences[parameter];
+}
+
+Sequence const& Instrument::sequence(size_t parameter) const noexcept {
     return mSequences[parameter];
 }
 

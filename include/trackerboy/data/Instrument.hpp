@@ -44,10 +44,13 @@ class Instrument : public DataItem {
 
 public:
 
-    static constexpr size_t SEQUENCE_PANNING = 0;
-    static constexpr size_t SEQUENCE_ARP = 1;
+    static constexpr size_t SEQUENCE_ARP = 0;
+    static constexpr size_t SEQUENCE_PANNING = 1;
     static constexpr size_t SEQUENCE_PITCH = 2;
     static constexpr size_t SEQUENCE_TIMBRE = 3;
+    static constexpr size_t SEQUENCE_COUNT = 4;
+
+    using SequenceArray = std::array<Sequence, SEQUENCE_COUNT>;
 
 
     Instrument();
@@ -61,9 +64,13 @@ public:
 
     std::optional<uint8_t> queryEnvelope() const noexcept;
 
+    SequenceArray& sequences() noexcept;
+    SequenceArray const& sequences() const noexcept;
+
     Sequence::Enumerator enumerateSequence(size_t parameter) const noexcept;
 
     Sequence& sequence(size_t parameter) noexcept;
+    Sequence const& sequence(size_t parameter) const noexcept;
 
     void setChannel(ChType ch) noexcept;
 
@@ -80,7 +87,7 @@ private:
     uint8_t mEnvelope;
 
     // parameter sequences
-    std::array<Sequence, 4> mSequences;
+    SequenceArray mSequences;
 
 
 };

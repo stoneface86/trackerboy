@@ -348,6 +348,13 @@ struct InstrumentFormat {
     // sequence data follows
 };
 
+struct SequenceFormat {
+    uint16_t length;
+    bool loopEnabled;
+    uint8_t loopIndex;
+    // sequence data follows uint8_t[length]
+};
+
 #pragma pack(pop)
 
 void serializeString(OutputBlock &block, std::string const& str) {
@@ -566,7 +573,24 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
                 inst->setChannel(static_cast<ChType>(format.channel));
                 inst->setEnvelopeEnable(format.envelopeEnabled);
                 inst->setEnvelope(format.envelope);
-                // TODO: read in sequences
+                
+                for (size_t i = 0; i < Instrument::SEQUENCE_COUNT; ++i) {
+                    auto &sequence = inst->sequence(i);
+                    
+                    SequenceFormat sequenceFmt;
+                    block.read(sequenceFmt);
+                    sequenceFmt.length = correctEndian(sequenceFmt.length);
+                    if (sequenceFmt.length > Sequence::MAX_SIZE) {
+                        return FormatError::invalid;
+                    }
+
+                    sequence.resize(sequenceFmt.length);
+                    if (sequenceFmt.loopEnabled) {
+                        sequence.setLoop(sequenceFmt.loopIndex);
+                    }
+                    auto &seqdata = sequence.data();
+                    block.read(sequenceFmt.length, seqdata.data());
+                }
             }
         }
 
@@ -747,7 +771,16 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
                 format.envelope = instrument->envelope();
                 block.write(format);
 
-                // TODO: write out sequences
+                for (auto &sequence : instrument->sequences()) {
+                    SequenceFormat sequenceFmt;
+                    auto &seqdata = sequence.data();
+                    sequenceFmt.length = correctEndian((uint16_t)seqdata.size());
+                    auto loop = sequence.loop();
+                    sequenceFmt.loopEnabled = loop.has_value();
+                    sequenceFmt.loopIndex = loop.value_or((uint8_t)0);
+                    block.write(sequenceFmt);
+                    block.write(seqdata.size(), seqdata.data());
+                }
             }
         }
         block.finish();
