@@ -1,4 +1,5 @@
-# Trackerboy
+![Trackerboy](/.github/logo.png)
+---
 
 [![build-lib][build-lib-badge]][build-lib-link]
 [![build-ui][build-ui-badge]][build-ui-link]
@@ -33,8 +34,9 @@ The UI is being redesigned to be less cluttered than the old one, as well as add
 The library is (almost) finished and the UI is being worked on now.
 
 Here is a general list of what needs to be completed:
- * Instrument/Wave editor
- * Pattern editor / Tracker grid (In progress)
+ * Instrument editor (in progress)
+ * ~~Wave editor~~
+ * ~~Pattern editor / Tracker grid~~
  * Export to WAV
 
  Post-release features:
