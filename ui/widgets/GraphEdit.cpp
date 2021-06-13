@@ -100,6 +100,14 @@ GraphEdit::ViewMode GraphEdit::viewMode() const {
     return mMode;
 }
 
+int GraphEdit::minimumValue() const {
+    return mMinValue;
+}
+
+int GraphEdit::maximumValue() const {
+    return mMaxValue;
+}
+
 void GraphEdit::setViewMode(ViewMode mode) {
     if (mMode != mode) {
         setViewModeImpl(mode);

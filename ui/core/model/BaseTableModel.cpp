@@ -106,6 +106,18 @@ uint8_t BaseTableModel::id(int index) {
     return mItems[index].id;
 }
 
+int BaseTableModel::lookupId(uint8_t id) {
+    auto item = std::find_if(mItems.begin(), mItems.end(),
+        [id](ModelData &data) {
+            return data.id == id;
+        });
+    if (item == mItems.end()) {
+        return -1;
+    } else {
+        return (int)(item - mItems.begin());
+    }
+}
+
 QString BaseTableModel::name(int index) {
     return mItems[index].name;
 }

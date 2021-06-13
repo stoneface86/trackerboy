@@ -19,6 +19,8 @@ public:
 
     std::shared_ptr<trackerboy::Instrument> currentInstrument();
 
+    void updateChannelIcon();
+
 protected:
     virtual QIcon iconData(uint8_t id) const override;
 

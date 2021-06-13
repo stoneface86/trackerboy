@@ -131,6 +131,10 @@ private:
     void removeChildRows(QModelIndex const& index, int first, int last);
     void _removeChildRows(ChildModelContext ctx, int first, int last);
 
+    template <class tModel>
+    void childDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
+    void _childDataChanged(ChildModelContext ctx, const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
+
     template <class T>
     ChildModelContext getChildNode(QObject *sender);
 

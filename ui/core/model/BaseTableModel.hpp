@@ -46,6 +46,8 @@ public:
 
     uint8_t id(int index);
 
+    int lookupId(uint8_t id);
+
     void rename(int index, const QString &name);
 
 public slots:

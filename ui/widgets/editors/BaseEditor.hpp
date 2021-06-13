@@ -44,6 +44,8 @@ protected:
 protected:
     virtual void setCurrentItem(int index) = 0;
 
+    virtual void documentChanged(ModuleDocument *doc);
+
 private slots:
 
     void onIndexChanged(int index);

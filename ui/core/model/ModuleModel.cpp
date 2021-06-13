@@ -409,6 +409,7 @@ void ModuleModel::connectChildModel(T &model) {
     // model has not been modified yet (if it was then an assert in Qt's source
     // will fail)
     connect(&model, &T::rowsAboutToBeRemoved, this, &ModuleModel::removeChildRows<T>);
+    connect(&model, &T::dataChanged, this, &ModuleModel::childDataChanged<T>);
 }
 
 template <class T>
@@ -434,6 +435,31 @@ void ModuleModel::_removeChildRows(ChildModelContext ctx, int first, int last) {
     beginRemoveRows(createIndex(std::get<1>(ctx), 0, id.data), first, last);
     endRemoveRows();
 }
+
+template <class T>
+void ModuleModel::childDataChanged(
+    const QModelIndex &topLeft,
+    const QModelIndex &bottomRight,
+    const QVector<int> &roles) 
+{
+    _childDataChanged(getChildNode<T>(sender()), topLeft, bottomRight, roles);
+}
+
+void ModuleModel::_childDataChanged(
+    ChildModelContext ctx,
+    const QModelIndex &topLeft,
+    const QModelIndex &bottomRight,
+    const QVector<int> &roles) 
+{
+    ModelId id((unsigned)mDocuments.indexOf(std::get<0>(ctx)), std::get<1>(ctx));
+    emit dataChanged(
+        createIndex(topLeft.row(), 0, id.data),
+        createIndex(bottomRight.row(), 0, id.data),
+        roles
+    );
+}
+
+
 
 template <>
 ModuleModel::ChildModelContext ModuleModel::getChildNode<InstrumentListModel>(QObject *sender) {

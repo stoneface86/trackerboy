@@ -255,7 +255,7 @@ void FrequencyControl::step() noexcept {
     if (mContext) {
         auto pitch = mContext->pitchSequence.next();
         if (pitch) {
-            mInstrumentPitch += *pitch;
+            mInstrumentPitch += (int8_t)*pitch;
         }
 
         arp = mContext->arpSequence.next();

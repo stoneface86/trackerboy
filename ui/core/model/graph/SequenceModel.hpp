@@ -27,6 +27,14 @@ public:
 
     void setSize(int size);
 
+    void setLoop(uint8_t pos);
+
+    void removeLoop();
+
+    void replaceData(std::vector<uint8_t> const& data);
+
+    trackerboy::Sequence* sequence() const;
+
 private:
     ModuleDocument *mDocument;
     trackerboy::Sequence *mSequence;

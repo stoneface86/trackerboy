@@ -2,7 +2,8 @@
 #pragma once
 
 #include <QCheckBox>
-#include <QFormLayout>
+#include <QGridLayout>
+#include <QLabel>
 #include <QSpinBox>
 #include <QWidget>
 
@@ -27,17 +28,24 @@ signals:
     void envelopeChanged(uint8_t value);
 
 private slots:
-    void updateEnvelope(int value);
+    void updateEnvelope();
 
 private:
+    void setPeriodLabel(int value);
+
     Q_DISABLE_COPY(EnvelopeForm)
 
     bool mIgnoreChanges;
     uint8_t mEnvelope;
 
-    QFormLayout mLayout;
+    QGridLayout mLayout;
+        // row 0
+        QLabel mInitVolumeLabel;
         QSpinBox mInitVolumeSpin;
         QCheckBox mIncreasingCheckbox;
+        // row 1
+        QLabel mPeriodLabel;
         QSpinBox mPeriodSpin;
+        QLabel mPeriodRateLabel;
 
 };

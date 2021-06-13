@@ -40,3 +40,7 @@ std::shared_ptr<trackerboy::Instrument> InstrumentListModel::currentInstrument()
     }
 }
 
+void InstrumentListModel::updateChannelIcon() {
+    auto index = createIndex(mCurrentIndex, 0);
+    emit dataChanged(index, index, { Qt::DecorationRole });
+}

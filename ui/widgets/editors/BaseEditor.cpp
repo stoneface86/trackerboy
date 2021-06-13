@@ -78,6 +78,7 @@ void BaseEditor::setDocument(ModuleDocument *document) {
     mSignalsEnabled = false;
 
     mDocument = document;
+    documentChanged(document);
 
     bool const hasDocument = document != nullptr;
     int index;
@@ -109,6 +110,10 @@ QWidget& BaseEditor::editorWidget() {
 
 ModuleDocument* BaseEditor::document() {
     return mDocument;
+}
+
+void BaseEditor::documentChanged(ModuleDocument *doc) {
+    // do nothing
 }
 
 void BaseEditor::onIndexChanged(int index) {

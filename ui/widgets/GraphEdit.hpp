@@ -40,6 +40,10 @@ public:
 
     void setViewMode(ViewMode mode);
 
+    int minimumValue() const;
+
+    int maximumValue() const;
+
 
 protected:
 

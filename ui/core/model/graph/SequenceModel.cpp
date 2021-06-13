@@ -67,3 +67,42 @@ void SequenceModel::removeSequence() {
     }
 }
 
+trackerboy::Sequence* SequenceModel::sequence() const {
+    return mSequence;
+}
+
+void SequenceModel::replaceData(std::vector<uint8_t> const& data) {
+    size_t oldsize;
+    {
+        auto ctx = mDocument->beginEdit();
+        auto &seqdata = mSequence->data();
+        oldsize = seqdata.size();
+        seqdata = data;
+    }
+
+    emit dataChanged();
+
+    if (oldsize != data.size()) {
+        emit countChanged((int)data.size());
+    }
+}
+
+void SequenceModel::setLoop(uint8_t loop) {
+    if (mSequence->loop() != loop) {
+        {
+            auto ctx = mDocument->beginEdit();
+            mSequence->setLoop(loop);
+        }
+        qDebug() << "loop set";
+    }
+}
+
+void SequenceModel::removeLoop() {
+    if (mSequence->loop()) {
+        {
+            auto ctx = mDocument->beginEdit();
+            mSequence->removeLoop();
+        }
+        qDebug() << "loop removed";
+    }
+}

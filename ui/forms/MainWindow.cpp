@@ -849,6 +849,14 @@ void MainWindow::setupUi() {
         connect(&piano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview, Qt::QueuedConnection);
     }
 
+    connect(&mInstrumentEditor, &InstrumentEditor::openWaveEditor, this,
+        [this](int index) {
+            mWaveEditor.openItem(index);
+            mDockWaveformEditor.show();
+            mDockWaveformEditor.raise();
+            mDockWaveformEditor.activateWindow();
+        });
+
     {
         auto &piano = mWaveEditor.piano();
         connect(&piano, &PianoWidget::keyDown, mRenderer, &Renderer::previewWaveform, Qt::QueuedConnection);
