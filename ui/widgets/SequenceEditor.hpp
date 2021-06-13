@@ -43,11 +43,6 @@ private:
             QSpinBox mSizeSpin;
             QLineEdit mSequenceInput;
 
-    // scratch buffers for sequence/string conversions
-    std::vector<uint8_t> mSequenceDataScratch;
-    QString mNumberScratch;
-    QString mStringScratch;
-
     bool mIgnoreUpdates;
     bool mEditDirty;
 

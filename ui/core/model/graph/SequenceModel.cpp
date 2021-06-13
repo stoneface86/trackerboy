@@ -93,7 +93,6 @@ void SequenceModel::setLoop(uint8_t loop) {
             auto ctx = mDocument->beginEdit();
             mSequence->setLoop(loop);
         }
-        qDebug() << "loop set";
     }
 }
 
@@ -103,6 +102,5 @@ void SequenceModel::removeLoop() {
             auto ctx = mDocument->beginEdit();
             mSequence->removeLoop();
         }
-        qDebug() << "loop removed";
     }
 }

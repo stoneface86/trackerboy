@@ -2,8 +2,11 @@
 #include "widgets/SequenceEditor.hpp"
 
 #include <QtDebug>
+#include <QElapsedTimer>
 
 #include <algorithm>
+
+//#define PROFILE_STRING_CONVERSION
 
 SequenceEditor::SequenceEditor(size_t sequenceIndex, QWidget *parent) :
     QWidget(parent),
@@ -15,8 +18,6 @@ SequenceEditor::SequenceEditor(size_t sequenceIndex, QWidget *parent) :
     mSizeLabel(tr("Size")),
     mSizeSpin(),
     mSequenceInput(),
-    mNumberScratch(4),
-    mStringScratch(),
     mIgnoreUpdates(false),
     mEditDirty(false)
 {
@@ -76,11 +77,16 @@ void SequenceEditor::convertEditToSequence() {
         return;
     }
 
+    #ifdef PROFILE_STRING_CONVERSION
+    QElapsedTimer timer;
+    timer.start();
+    #endif
+
     mEditDirty = false;
 
     auto const str = mSequenceInput.text();
     auto tokens = str.splitRef(' ');
-    mSequenceDataScratch.clear();
+    std::vector<uint8_t> newdata;
 
     auto min = mGraph.minimumValue();
     auto max = mGraph.maximumValue();
@@ -98,7 +104,7 @@ void SequenceEditor::convertEditToSequence() {
                 auto num = token.toInt(&ok);
                 if (ok) {
                     num = std::clamp(num, min, max);
-                    mSequenceDataScratch.push_back((uint8_t)num);
+                    newdata.push_back((uint8_t)num);
                     if (++index == (int)trackerboy::Sequence::MAX_SIZE) {
                         break;
                     }
@@ -107,8 +113,12 @@ void SequenceEditor::convertEditToSequence() {
         } 
     }
 
+    #ifdef PROFILE_STRING_CONVERSION
+    qDebug() << "Converted string to sequence in" << timer.nsecsElapsed() / 1000 << "microseconds";
+    #endif
+
     mIgnoreUpdates = true;
-    mModel.replaceData(mSequenceDataScratch);
+    mModel.replaceData(newdata);
     if (loopIndex) {
         mModel.setLoop(*loopIndex);
     } else {
@@ -123,26 +133,51 @@ void SequenceEditor::updateString() {
         return;
     }
 
+    // profiling notes:
+    // Windows 10, Ryzen 5 2600
+    // converting the maximum size sequence, 256, took 1000-1200 microseconds
+    // small sequences 0-10 take about 20-40 microseconds
+    // string to sequence conversion is more than twice as fast
+
+    #ifdef PROFILE_STRING_CONVERSION
+    QElapsedTimer timer;
+    timer.start();
+    #endif
+
     auto sequence = mModel.sequence();
 
     if (sequence) {
         auto const& sequenceData = sequence->data();
-        auto loop = sequence->loop();
-        int loopIndex = loop ? *loop : -1;
-        int index = 0;
 
-        mStringScratch.clear();
-        for (auto value : sequenceData) {
-            if (index++ == loopIndex) {
-                mStringScratch.append(QStringLiteral("| "));
+        auto size = sequenceData.size();
+        if (size) {
+            auto loop = sequence->loop();
+            int loopIndex = loop ? *loop : -1;
+            int index = 0;
+            
+            QString str;
+            // reserve helps reduce the number of allocations that occur when appending
+            // guess the final size of the string by multiplying the size of the sequence
+            str.reserve((int)(size * 2));
+
+            for (auto value : sequenceData) {
+                if (index++ == loopIndex) {
+                    str.append(QStringLiteral("| "));
+                }
+                str.append(QString::number((int8_t)value));
+                str.append(' ');
             }
-            mNumberScratch.setNum((int8_t)value);
-            mStringScratch.append(mNumberScratch);
-            mStringScratch.append(' ');
+            str.chop(1);
+            mSequenceInput.setText(str);
+        } else {
+            mSequenceInput.clear();
         }
-        mStringScratch.chop(1);
-        mSequenceInput.setText(mStringScratch);
     } else {
         mSequenceInput.clear();
     }
+
+    #ifdef PROFILE_STRING_CONVERSION
+    qDebug() << "Converted sequence to string in" << timer.nsecsElapsed() / 1000 << "microseconds";
+    #endif
+
 }
