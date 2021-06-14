@@ -33,7 +33,7 @@ public:
 
     uint8_t currentSpeed() const noexcept;
 
-    void halt();
+    void halt(RuntimeContext const& rc);
 
     void lock(RuntimeContext const& rc, ChType ch);
 
@@ -45,6 +45,9 @@ private:
 
     template <ChType ch = ChType::ch1>
     void update(RuntimeContext const& rc);
+
+    template <ChType ch = ChType::ch1>
+    void haltChannels(RuntimeContext const& rc);
 
     static constexpr size_t FLAG_LOCK1 = 0;
     static constexpr size_t FLAG_LOCK2 = 1;

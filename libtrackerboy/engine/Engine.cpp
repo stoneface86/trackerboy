@@ -54,7 +54,7 @@ void Engine::play(uint8_t orderNo, uint8_t patternRow) {
 
 void Engine::halt() {
     if (mMusicContext) {
-        mMusicContext->halt();
+        mMusicContext->halt(*mRc);
     }
 }
 

@@ -37,8 +37,9 @@ uint8_t MusicRuntime::currentSpeed() const noexcept {
     return mTimer.period();
 }
 
-void MusicRuntime::halt() {
+void MusicRuntime::halt(RuntimeContext const &rc) {
     mFlags.set(FLAG_HALT);
+    haltChannels(rc);
 }
 
 void MusicRuntime::lock(RuntimeContext const& rc, ChType ch) {
@@ -65,6 +66,7 @@ void MusicRuntime::lock(RuntimeContext const& rc, ChType ch) {
 }
 
 void MusicRuntime::unlock(RuntimeContext const& rc, ChType ch) {
+    (void)rc;
     mFlags.set(+ch);
 }
 
@@ -112,7 +114,7 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
         mTc4.setRow(mSong.getRow(ChType::ch4, mOrderCounter, mRowCounter));
         
         if (mGlobal.halt) {
-            halt();
+            halt(rc);
             return true;
         }
 
@@ -176,6 +178,23 @@ void MusicRuntime::update(RuntimeContext const& rc) {
     // recurse and update the next channel
     if constexpr (ch != ChType::ch4) {
         update<static_cast<ChType>(+ch + 1)>(rc);
+    }
+}
+
+template <ChType ch>
+void MusicRuntime::haltChannels(RuntimeContext const& rc) {
+    // zero out the channel
+    ChannelState state;
+
+    // only write if the channel is locked
+    if (!mFlags.test(+ch)) {
+        ChannelControl<ch>::update(rc.apu, rc.waveTable, mStates[+ch], state);
+    }
+    // save the state
+    mStates[+ch] = state;
+    // recurse and halt the next channel
+    if constexpr (ch != ChType::ch4) {
+        haltChannels<static_cast<ChType>(+ch + 1)>(rc);
     }
 }
 
