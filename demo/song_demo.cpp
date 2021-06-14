@@ -4,6 +4,7 @@
 #include "trackerboy/data/Module.hpp"
 #include "trackerboy/Synth.hpp"
 #include "trackerboy/engine/MusicRuntime.hpp"
+#include "trackerboy/export/Player.hpp"
 
 #include "miniaudio.h"
 
@@ -350,12 +351,15 @@ int main() {
     buffer.resize(synth.framesize() * 2);
 
     Engine engine(apu, &mod);
-    engine.play(0, 0);
 
+    // play the song twice
+    Player player(engine, 2);
+    // play the song for 30 seconds
+    //Player player(engine, std::chrono::seconds(30));
 
-    for (int i = 600; i != 0; --i) {
-        Engine::Frame frame;
-        engine.step(frame);
+    bool isPlaying = player.isPlaying();
+    while (player.isPlaying()) {
+        player.step();
         synth.run();
         auto samplesRead = synth.apu().readSamples(buffer.data(), buffer.size());
 
@@ -367,6 +371,22 @@ int main() {
             dataPtr += written * 2;
         }
     }
+
+
+    // for (int i = 600; i != 0; --i) {
+    //     Engine::Frame frame;
+    //     engine.step(frame);
+    //     synth.run();
+    //     auto samplesRead = synth.apu().readSamples(buffer.data(), buffer.size());
+
+    //     size_t toWrite = samplesRead;
+    //     auto dataPtr = buffer.data();
+    //     while (toWrite) {
+    //         auto written = ma_encoder_write_pcm_frames(&encoder, dataPtr, toWrite);
+    //         toWrite -= written;
+    //         dataPtr += written * 2;
+    //     }
+    // }
 
     ma_encoder_uninit(&encoder);
     

@@ -59,6 +59,8 @@ public:
 
     Engine(IApu &apu, Module const* mod = nullptr);
 
+    Module const* getModule() const;
+
     void setModule(Module const* mod);
 
     void reset();

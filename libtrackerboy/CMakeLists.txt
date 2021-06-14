@@ -25,6 +25,8 @@ set(SRC_FILES
     "engine/RuntimeContext.cpp"
     "engine/Timer.cpp"
     "engine/TrackControl.cpp"
+
+    "export/Player.cpp"
     
     "internal/endian.cpp"
 

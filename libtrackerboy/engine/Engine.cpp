@@ -19,6 +19,10 @@ Engine::Engine(IApu &apu, Module const* mod) :
     }
 }
 
+Module const* Engine::getModule() const {
+    return mModule;
+}
+
 void Engine::setModule(Module const* mod) {
     if (mModule != mod) {
         mModule = mod;
