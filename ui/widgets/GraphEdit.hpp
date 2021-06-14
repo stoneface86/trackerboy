@@ -13,6 +13,7 @@ class GraphEdit : public QAbstractScrollArea {
     Q_OBJECT
     Q_PROPERTY(QColor lineColor READ lineColor WRITE setLineColor)
     Q_PROPERTY(QColor sampleColor READ sampleColor WRITE setSampleColor)
+    Q_PROPERTY(QColor alternateColor READ alternateColor WRITE setAlternateColor)
     Q_PROPERTY(ViewMode viewMode READ viewMode WRITE setViewMode)
 
 public:
@@ -30,9 +31,13 @@ public:
 
     ViewMode viewMode() const;
 
+    QColor alternateColor() const;
+
     QColor lineColor() const;
 
     QColor sampleColor() const;
+
+    void setAlternateColor(QColor color);
 
     void setLineColor(QColor color);
 
@@ -95,9 +100,13 @@ private:
     int mCellWidth;
     int mCellHeight;
 
+    // highlight interval for rows in sample mode
+    int mAlternateInterval;
+
     std::optional<QPoint> mMouseOver;
     QPoint mLastMouseCoords;
 
+    QColor mAlternateColor;
     QColor mLineColor;
     QColor mSampleColor;
 

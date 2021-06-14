@@ -19,6 +19,23 @@ constexpr int MIN_CELL_HEIGHT = 8;
 constexpr int PADDING_X = 8;
 constexpr int PADDING_Y = 8;
 
+
+//
+// special modulo - idk what to call this
+// mod(-3, 3) = 0
+// mod(-2, 3) = 2
+// mod(-1, 3) = 1
+// mod( 0, 3) = 0
+// mod( 1, 3) = 2
+// mod( 2, 3) = 1
+// mod( 3, 3) = 0
+//
+constexpr int mod(int a, int b) {
+    auto rem = a % b;
+    return rem < 0 ? -rem : (b - rem) % b;
+}
+
+
 class BarPlotter {
 
     int const mRange;
@@ -63,12 +80,12 @@ GraphEdit::GraphEdit(GraphModel &model, QWidget *parent) :
     mMaxValue(0),
     mCellWidth(0),
     mCellHeight(0),
+    mAlternateInterval(0),
     mMouseOver(),
+    mAlternateColor(0x20, 0x20, 0x20),
     mLineColor(0x40, 0x40, 0x40),
     mSampleColor(0xE0, 0xE0, 0xE0)
 {
-    
-
     auto _viewport = viewport();
     _viewport->setMouseTracking(true);
     mPlotRect = _viewport->rect();
@@ -86,6 +103,10 @@ GraphEdit::GraphEdit(GraphModel &model, QWidget *parent) :
 
     calculateAxis();
     setViewModeImpl(mMode);
+}
+
+QColor GraphEdit::alternateColor() const {
+    return mAlternateColor;
 }
 
 QColor GraphEdit::lineColor() const {
@@ -121,6 +142,7 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
             mBarMode = false;
             mMinValue = -128;
             mMaxValue = 127;
+            mAlternateInterval = 12; // highlight every octave row
             break;
         case TimbreView:
         case PanningView:
@@ -128,17 +150,20 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
             mLines = true;
             mMinValue = 0;
             mMaxValue = 3;
+            mAlternateInterval = 0;
             break;
         case PitchView:
             mBarMode = true;
             mLines = false;
             mMinValue = -128;
             mMaxValue = 127;
+            mAlternateInterval = 0; // no highlights
             break;
         case WaveformView:
             mBarMode = false;
             mMinValue = 0;
             mMaxValue = 0xF;
+            mAlternateInterval = 2;
             break;
     }
     calculateCellHeight();
@@ -155,6 +180,13 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
     }
 
     update();
+}
+
+void GraphEdit::setAlternateColor(QColor color) {
+    mAlternateColor = color;
+    if (mAlternateInterval) {
+        viewport()->update();
+    }
 }
 
 void GraphEdit::setLineColor(QColor color) {
@@ -208,7 +240,7 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
     // Grid lines
     painter.setPen(mLineColor);
     auto const plotTop = mPlotRect.top() - 1;
-    auto const plotBottom = mPlotRect.bottom() + 1;
+    auto const plotBottom = mPlotRect.bottom();
     auto const axis = mPlotRect.left() - 1;
     auto const viewportWidth = _viewport->width();
     painter.drawLine(axis, plotTop, axis, plotBottom);
@@ -259,6 +291,15 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
             for (int const top = mPlotRect.top(); ypos > top; ypos -= mCellHeight) {
                 painter.drawLine(mPlotRect.left(), ypos, viewportWidth, ypos);
             }
+        }
+
+        if (mAlternateInterval) {
+            int ypos = mPlotRect.bottom() - mod(viewportMin, mAlternateInterval) * mCellHeight;
+            int skip = mAlternateInterval * mCellHeight;
+            for (int const top = mPlotRect.top(); ypos > top; ypos -= skip) {
+                painter.fillRect(mPlotRect.left(), ypos - mCellHeight + 1, viewportWidth, mCellHeight - 1, mAlternateColor);
+            }
+
         }
 
         painter.translate(QPoint(mPlotRect.x(), mPlotRect.bottom() + viewportMin * mCellHeight));
