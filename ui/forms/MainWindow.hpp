@@ -4,6 +4,7 @@
 #include "core/SyncWorker.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/ModuleModel.hpp"
+#include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
 #include "widgets/docks/ModuleSettingsWidget.hpp"
@@ -66,6 +67,7 @@ private slots:
     void onConfigApplied(Config::Categories categories);
 
     // dialog show slots (lazy loading)
+    void showAboutDialog();
     void showAudioDiag();
     void showConfigDialog();
     void showExportWavDialog();
@@ -125,6 +127,7 @@ private:
     bool mErrorSinceLastConfig;
 
     // dialogs
+    AboutDialog *mAboutDialog;
     AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;
 

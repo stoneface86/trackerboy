@@ -1,9 +1,10 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
-    <file>images/gridHeaderFont.bmp</file>
-    <file>images/whitekey_down.png</file>
     <file>images/blackkey_down.png</file>
-    <file>images/piano_whitekeys.png</file>
+    <file>images/gridHeaderFont.bmp</file>
+    <file>images/logo.png</file>
     <file>images/piano_blackkeys.png</file>
+    <file>images/piano_whitekeys.png</file>
+    <file>images/whitekey_down.png</file>
 </qresource>
 </RCC>

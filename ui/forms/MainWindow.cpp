@@ -35,6 +35,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mConfig(miniaudio),
     mDocumentCounter(0),
     mErrorSinceLastConfig(false),
+    mAboutDialog(nullptr),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
     mToolbarFile(),
@@ -311,6 +312,13 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
     }
 
     mConfig.writeSettings();
+}
+
+void MainWindow::showAboutDialog() {
+    if (mAboutDialog == nullptr) {
+        mAboutDialog = new AboutDialog(this);
+    }
+    mAboutDialog->show();
 }
 
 void MainWindow::showAudioDiag() {
@@ -855,6 +863,7 @@ void MainWindow::setupUi() {
 
     // help
     connectActionToThis(mActionAudioDiag, showAudioDiag);
+    connectActionToThis(mActionHelpAbout, showAboutDialog);
     QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);
 
     // editors

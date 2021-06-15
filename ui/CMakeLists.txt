@@ -41,6 +41,7 @@ set(UI_SRC
     "core/SyncWorker.cpp"
     "core/WavExporter.cpp"
 
+    "forms/AboutDialog.cpp"
     "forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"
     "forms/ExportWavDialog.cpp"
