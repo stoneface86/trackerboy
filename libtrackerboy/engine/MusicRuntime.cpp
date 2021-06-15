@@ -10,6 +10,7 @@ MusicRuntime::MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow
     mSong(song),
     mOrderCounter(orderNo),
     mRowCounter(patternRow),
+    mHasNewPattern(false),
     mFlags(DEFAULT_FLAGS),
     mStates{
         ChannelState(ChType::ch1),
@@ -35,6 +36,10 @@ uint8_t MusicRuntime::currentRow() const noexcept {
 
 uint8_t MusicRuntime::currentSpeed() const noexcept {
     return mTimer.period();
+}
+
+bool MusicRuntime::newPattern() const noexcept {
+    return mHasNewPattern;
 }
 
 void MusicRuntime::halt(RuntimeContext const &rc) {
@@ -84,6 +89,8 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
         mFlags.reset(FLAG_INIT);
     }
 
+    mHasNewPattern = false;
+
     // if timer is active, we are starting a new row
     if (mTimer.active()) {
 
@@ -98,14 +105,17 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
                 }
                 mRowCounter = mGlobal.patternCommandParam;
                 mGlobal.patternCommand = Operation::PatternCommand::none;
+                mHasNewPattern = true;
                 break;
             case Operation::PatternCommand::jump:
                 mRowCounter = 0;
                 // if the parameter goes past the last one, use the last one
                 mOrderCounter = std::min(mGlobal.patternCommandParam, (uint8_t)(mSong.order().size() - 1));
                 mGlobal.patternCommand = Operation::PatternCommand::none;
+                mHasNewPattern = true;
                 break;
         }
+        
 
         // set row data to our track controls
         mTc1.setRow(mSong.getRow(ChType::ch1, mOrderCounter, mRowCounter));
@@ -140,6 +150,7 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
                 mGlobal.patternCommandParam = 0;
             }
         }
+
     }
 
     return false;

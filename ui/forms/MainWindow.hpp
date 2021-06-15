@@ -68,6 +68,7 @@ private slots:
     // dialog show slots (lazy loading)
     void showAudioDiag();
     void showConfigDialog();
+    void showExportWavDialog();
 
     // statusbar
     void trackerPositionChanged(QPoint const pos);
@@ -179,6 +180,7 @@ private:
     QAction mActionFileOpen;
     QAction mActionFileSave;
     QAction mActionFileSaveAs;
+    QAction mActionFileExportWav;
     QAction mActionFileClose;
     QAction mActionFileCloseAll;
     QAction mActionFileConfig;

@@ -42,6 +42,7 @@ public:
     struct Frame {
         constexpr Frame() :
             halted(false),
+            startedNewPattern(false),
             time(0),
             speed(0),
             order(0),
@@ -50,10 +51,11 @@ public:
         }
 
         bool halted;        // halt status
+        bool startedNewPattern;
         uint32_t time;      // time index
         Speed speed;        // the current engine speed
-        uint8_t order;      // current order index
-        uint8_t row;        // current row index
+        unsigned order;      // current order index
+        unsigned row;        // current row index
     };
 
 

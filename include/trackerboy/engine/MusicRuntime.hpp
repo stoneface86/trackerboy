@@ -33,6 +33,8 @@ public:
 
     uint8_t currentSpeed() const noexcept;
 
+    bool newPattern() const noexcept;
+
     void halt(RuntimeContext const& rc);
 
     void lock(RuntimeContext const& rc, ChType ch);
@@ -60,8 +62,10 @@ private:
 
     Song const& mSong;
 
-    uint8_t mOrderCounter;
-    uint8_t mRowCounter;
+    unsigned mOrderCounter;
+    unsigned mRowCounter;
+
+    bool mHasNewPattern;
 
     Timer mTimer;
 

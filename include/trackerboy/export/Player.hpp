@@ -12,14 +12,14 @@ namespace trackerboy {
 // Player class for exporting music. Steps the engine so that the song is
 // looped a specified number of times or plays for a specified duration.
 //
-// Players are single use objects. If you want to restart playing, create a
-// new player.
-//
 class Player {
 
 public:
-    Player(Engine &engine, unsigned loop);
-    Player(Engine &engine, std::chrono::seconds seconds);
+    using Duration = std::variant<unsigned, std::chrono::seconds>;
+
+    Player(Engine &engine);
+
+    void start(Duration duration);
 
     //
     // Gets the playing status of the player.
@@ -28,13 +28,15 @@ public:
     //
     bool isPlaying() const;
 
+    unsigned progress() const;
+    unsigned progressMax() const;
+
     //
     // Steps the engine, returns true if the player has another step.
     //
     void step();
 
 private:
-    Player(Engine &engine);
 
     struct LoopContext {
         uint8_t currentPattern;
@@ -53,12 +55,11 @@ private:
         DurationContext(unsigned framesToPlay);
     };
 
-    // monostate is there so the variant can be default constructed
-    // mContext should never be set to it after construction
     using ContextVariant = std::variant<std::monostate, LoopContext, DurationContext>;
 
 
     Engine &mEngine;
+    Engine::Frame mLastFrame;
     bool mPlaying;
     ContextVariant mContext;
 

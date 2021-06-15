@@ -17,49 +17,88 @@ Player::DurationContext::DurationContext(unsigned framesToPlay) :
 }
 
 
-Player::Player(Engine &engine, unsigned loopCount) :
-    Player(engine)
-{
-    if (loopCount == 0) {
-        // if loopCount is 0 then we play the song 0 times
-        // ...
-        // done!
-        mPlaying = false;
-    } else if (mPlaying) {
-        auto mod = mEngine.getModule();
-        mContext.emplace<LoopContext>(loopCount);
-        auto &ctx = std::get<LoopContext>(mContext);
-        ctx.visits.resize(mod->song().order().size());
-        ctx.visits[0] = 1; // visit the first pattern
-    }
-
-}
-
-Player::Player(Engine &engine, std::chrono::seconds duration) :
-    Player(engine)
-{
-    if (mPlaying) {
-        // determine how many frames to play
-        auto mod = mEngine.getModule();
-        auto frames = mod->framerate() * duration.count();
-        mContext.emplace<DurationContext>((unsigned)frames);
-    }
-}
-
 Player::Player(Engine &engine) :
     mEngine(engine),
     mPlaying(false),
     mContext()
 {
-    auto mod = mEngine.getModule();
-    if (mod) {
-        mEngine.play(0);
+}
+
+void Player::start(Duration duration) {
+    bool init = false;
+    if (std::holds_alternative<unsigned>(duration)) {
+        auto loopCount = std::get<unsigned>(duration);
+        if (loopCount == 0) {
+            // if loopCount is 0 then we play the song 0 times
+            // ...
+            // done!
+            mPlaying = false;
+            mContext = {};
+        } else {
+            auto mod = mEngine.getModule();
+            if (mod) {
+                mContext.emplace<LoopContext>(loopCount);
+                auto &ctx = std::get<LoopContext>(mContext);
+                ctx.visits.resize(mod->song().order().size());
+                ctx.visits[0] = 1; // visit the first pattern
+                init = true;
+            }
+        }
+    } else {
+        // determine how many frames to play
+        auto secs = std::get<std::chrono::seconds>(duration);
+        if (secs.count() == 0) {
+            mPlaying = false;
+            mContext = {};
+        } else {
+            auto mod = mEngine.getModule();
+            if (mod) {
+                auto frames = mod->framerate() * secs.count();
+                mContext.emplace<DurationContext>((unsigned)frames);
+                init = true;
+            }
+        }
+        
+    }
+
+    if (init) {
+        mEngine.play(0, 0);
         mPlaying = true;
     }
+
+
 }
 
 bool Player::isPlaying() const {
     return mPlaying;
+}
+
+unsigned Player::progress() const {
+    return std::visit([this](auto&& ctx) {
+        using T = std::decay_t<decltype(ctx)>;
+
+        if constexpr (std::is_same_v<T, LoopContext>) {
+            return ctx.visits[ctx.currentPattern];
+        } else if constexpr (std::is_same_v<T, DurationContext>) {
+            return ctx.frameCounter;
+        } else {
+            return (unsigned)0;
+        }
+    }, mContext);
+}
+
+unsigned Player::progressMax() const {
+    return std::visit([this](auto&& ctx) {
+        using T = std::decay_t<decltype(ctx)>;
+
+        if constexpr (std::is_same_v<T, LoopContext>) {
+            return ctx.loopAmount;
+        } else if constexpr (std::is_same_v<T, DurationContext>) {
+            return ctx.framesToPlay;
+        } else {
+            return (unsigned)0;
+        }
+    }, mContext);
 }
 
 void Player::step() {
@@ -75,7 +114,7 @@ void Player::step() {
                 using T = std::decay_t<decltype(ctx)>;
 
                 if constexpr (std::is_same_v<T, LoopContext>) {
-                    if (frame.order != ctx.currentPattern) {
+                    if (frame.startedNewPattern) {
                         if (ctx.visits[frame.order]++ == ctx.loopAmount) {
                             mPlaying = false;
                         }

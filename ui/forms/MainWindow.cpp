@@ -2,6 +2,7 @@
 #include "MainWindow.hpp"
 
 #include "core/samplerates.hpp"
+#include "forms/ExportWavDialog.hpp"
 #include "misc/IconManager.hpp"
 #include "misc/utils.hpp"
 
@@ -331,6 +332,13 @@ void MainWindow::showConfigDialog() {
     mConfigDialog->show();
 }
 
+void MainWindow::showExportWavDialog() {
+    auto dialog = new ExportWavDialog(*mBrowserModel.currentDocument(), mConfig, this);
+    dialog->show();
+    dialog->exec();
+    delete dialog;
+}
+
 void MainWindow::trackerPositionChanged(QPoint const pos) {
     auto pattern = pos.x();
     auto row = pos.y();
@@ -387,6 +395,7 @@ void MainWindow::onTabChanged(int tabIndex) {
     mActionFileSaveAs.setEnabled(hasDocument);
     mActionFileClose.setEnabled(hasDocument);
     mActionFileCloseAll.setEnabled(hasDocument);
+    mActionFileExportWav.setEnabled(hasDocument);
     mActionWindowNext.setEnabled(hasDocument);
     mActionWindowPrev.setEnabled(hasDocument);
 
@@ -637,6 +646,7 @@ void MainWindow::setupUi() {
     setupAction(mActionFileOpen, "&Open", "Open an existing module", Icons::fileOpen, QKeySequence::Open);
     setupAction(mActionFileSave, "&Save", "Save the module", Icons::fileSave, QKeySequence::Save);
     setupAction(mActionFileSaveAs, "Save &As...", "Save the module to a new file", QKeySequence::SaveAs);
+    setupAction(mActionFileExportWav, "Export to WAV...", "Exports the module to a WAV file");
     setupAction(mActionFileClose, "Close", "Close the current module", QKeySequence::Close);
     setupAction(mActionFileCloseAll, "Close All", "Closes all open modules");
     setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
@@ -671,6 +681,7 @@ void MainWindow::setupUi() {
     mActionFileSaveAs.setEnabled(false);
     mActionFileClose.setEnabled(false);
     mActionFileCloseAll.setEnabled(false);
+    mActionFileExportWav.setEnabled(false);
 
     // MENUS ==============================================================
 
@@ -680,6 +691,9 @@ void MainWindow::setupUi() {
     mMenuFile.addAction(&mActionFileOpen);
     mMenuFile.addAction(&mActionFileSave);
     mMenuFile.addAction(&mActionFileSaveAs);
+    mMenuFile.addSeparator();
+    mMenuFile.addAction(&mActionFileExportWav);
+    mMenuFile.addSeparator();
     mMenuFile.addAction(&mActionFileClose);
     mMenuFile.addAction(&mActionFileCloseAll);
     mMenuFile.addSeparator();
@@ -820,6 +834,7 @@ void MainWindow::setupUi() {
     connectActionToThis(mActionFileOpen, onFileOpen);
     connectActionToThis(mActionFileSave, onFileSave);
     connectActionToThis(mActionFileSaveAs, onFileSaveAs);
+    connectActionToThis(mActionFileExportWav, showExportWavDialog);
     connectActionToThis(mActionFileClose, onFileClose);
     connectActionToThis(mActionFileCloseAll, onFileCloseAll);
     connectActionToThis(mActionFileConfig, showConfigDialog);

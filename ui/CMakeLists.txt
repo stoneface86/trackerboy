@@ -39,9 +39,11 @@ set(UI_SRC
     "core/PianoInput.cpp"
     "core/samplerates.cpp"
     "core/SyncWorker.cpp"
+    "core/WavExporter.cpp"
 
     "forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"
+    "forms/ExportWavDialog.cpp"
     "forms/MainWindow.cpp"
     
     "misc/IconManager.cpp"

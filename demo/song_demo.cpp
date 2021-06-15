@@ -352,10 +352,11 @@ int main() {
 
     Engine engine(apu, &mod);
 
+    Player player(engine);
     // play the song twice
-    Player player(engine, 2);
+    //player.start(2);
     // play the song for 30 seconds
-    //Player player(engine, std::chrono::seconds(30));
+    player.start(std::chrono::seconds(30));
 
     bool isPlaying = player.isPlaying();
     while (player.isPlaying()) {

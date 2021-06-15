@@ -62,7 +62,7 @@ void SyncWorker::onFrameSync() {
     // check if the player position changed
     if (mLastFrame.engineFrame.order != frame.order ||
         mLastFrame.engineFrame.row != frame.row) {
-        emit positionChanged({ frame.order, frame.row });
+        emit positionChanged({ (int)frame.order, (int)frame.row });
     }
 
     // check if the speed changed
