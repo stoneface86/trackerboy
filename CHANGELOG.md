@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+ * Choose which channels to export when exporting to WAV
+ * Option to export each channel as separate WAV files
+ * Color configuration for the pattern editor and other editors
+ * Note previews when entering notes in the pattern editor
+ * Keyboard binding configuration for the pattern editor
+ * Loop pattern playback functionality
+ * Row playback
+ * MIDI Support
+ * Pattern compiler - export module data to assembly
+ * Export to .gbs
+ * Visualizers - scopes and peak meters
+
+
+## [0.2.0] - 2021-06-15
+The project has changed dramatically since the last release so changes will
+not be listed for this version.
+Here's a quick list of features:
+ * Open/save modules, can have multiple modules open at once
+ * Edit pattern data via keyboard (OpenMPT style keybindings, will be configurable in later versions)
+ * Transpose selection by note/octave or by a custom semitone offset (Ctrl+T)
+ * Reverse selected rows (Ctrl+R)
+ * Cut/Copy/Paste pattern data using system clipboard
+ * Mix paste (only the unset columns get set to the pasted data)
+ * Move pattern data via drag n drop
+ * Music playback, pattern cursor follows the current playing row
+ * Edit waveforms visually via a graph control, by selecting a preset or by manually entering waveram data
+ * Edit instrument sequences visually
+ * Instruments and Waveforms can be previewed using the piano control (or by keyboard).
+ * Undo/Redo functionality for song order and pattern editing.
+ * Audio diagnostics dialog (Help > Audio Diagnostics) for debugging sound output / buffer issues.
+
 
 ## [0.1.0] - 2020-09-20
 ### Added

@@ -317,10 +317,16 @@ void ModuleModel::setCurrentDocument(int index) {
         // benchmark this for usability reasons
         // if it's too high then the user experience will suffer, switching
         // tabs should be instantaneous
+        #ifndef QT_NO_DEBUG_OUTPUT
         QElapsedTimer timer;
         timer.start();
+        #endif
+        
         emit currentDocumentChanged(doc);
+        
+        #ifndef QT_NO_DEBUG_OUTPUT
         qDebug() << "Document switched in" << timer.elapsed() << "milliseconds";
+        #endif
     }
 }
 

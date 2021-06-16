@@ -13,7 +13,7 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOverrides.
 
 project (
     trackerboy 
-    VERSION "0.1.0"
+    VERSION "0.2.0"
     LANGUAGES C CXX
 )
 
@@ -39,6 +39,7 @@ if (NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE MATCHES "Debug")
 else ()
     set(DEBUG_BUILD FALSE)
 endif ()
+
 
 # abort if compiler is 32-bit
 if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)

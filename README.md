@@ -24,20 +24,9 @@ My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
 
 ## Status
 
-v0.2.0 is in progress and will be the first "functional" version of trackerboy. This version
-will feature a usable pattern editor.
+v0.2.0 is now available.
 
-### UI redo
-The UI is being redesigned to be less cluttered than the old one, as well as adding MDI support
-![Pattern Editor Demo](/.github/newui.png)
-
-The library is (almost) finished and the UI is being worked on now.
-
-Here is a general list of what needs to be completed:
- * Instrument editor (in progress)
- * ~~Wave editor~~
- * ~~Pattern editor / Tracker grid~~
- * Export to WAV
+![Demo](/.github/demo.gif)
 
  Post-release features:
  * Sound effects

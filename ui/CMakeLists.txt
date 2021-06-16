@@ -3,6 +3,7 @@ project(ui CXX)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 if (WIN32)
     set(GUI_TYPE WIN32)
     set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
@@ -93,6 +94,11 @@ target_link_libraries(ui PUBLIC
     Qt5::Widgets
 )
 
+if (NOT ${DEBUG_BUILD})
+    target_compile_definitions(ui PUBLIC QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
+endif ()
+
+
 #
 # Target for the main ui, trackerboy_ui. We cannot use trackerboy as that name is used
 # for libtrackerboy. However, the resulting executable is named trackerboy, not trackerboy_ui
@@ -102,10 +108,6 @@ target_link_libraries(trackerboy_ui PRIVATE ui)
 # output executable is "trackerboy" and not "trackerboy_ui"
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
-# no info or debug output via qDebug for release builds
-if (NOT DEBUG_BUILD)
-    target_compile_definitions(trackerboy_ui PRIVATE QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
-endif ()
 
 #
 # test programs
