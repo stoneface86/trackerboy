@@ -73,13 +73,13 @@ public:
     //
     void writeSettings();
 
-    Appearance const& appearance();
+    Appearance const& appearance() const;
 
-    General const& general();
+    General const& general() const;
 
-    Keyboard const& keyboard();
+    Keyboard const& keyboard() const;
 
-    Sound const& sound();
+    Sound const& sound() const;
 
 
 private:

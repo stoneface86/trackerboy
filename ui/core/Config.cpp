@@ -73,19 +73,19 @@ Config::Config(Miniaudio &miniaudio) :
 {
 }
 
-Config::Appearance const& Config::appearance() {
+Config::Appearance const& Config::appearance() const {
     return mAppearance;
 }
 
-Config::General const& Config::general() {
+Config::General const& Config::general() const {
     return mGeneral;
 }
 
-Config::Keyboard const& Config::keyboard() {
+Config::Keyboard const& Config::keyboard() const {
     return mKeyboard;
 }
 
-Config::Sound const& Config::sound() {
+Config::Sound const& Config::sound() const {
     return mSound;
 }
 
