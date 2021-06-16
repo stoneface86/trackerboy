@@ -4,11 +4,16 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
+get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
+get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+
 if (WIN32)
     set(GUI_TYPE WIN32)
     set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
+    find_program(WINDEPLOYQT windeployqt HINTS "${_qt_bin_dir}")
 elseif (APPLE)
     set(GUI_TYPE MACOSX_BUNDLE)
+    find_program(MACDEPLOYQT macdeployqt HINTS "${_qt_bin_dir}")
 else ()
     set(GUI_TYPE "")
 endif ()
@@ -108,6 +113,30 @@ target_link_libraries(trackerboy_ui PRIVATE ui)
 # output executable is "trackerboy" and not "trackerboy_ui"
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
+#
+# Deployment
+#
+if (NOT DEFINED WINDEPLOYQT-NOTFOUND)
+    set(DEPLOY_DIR_NAME "${PROJECT_AND_VERSION_NAME}-win")
+    # directory for deployment
+    set(DEPLOY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${DEPLOY_DIR_NAME}")
+    # deploy target is a zip of the directory contents created by windeployqt
+    set(DEPLOY_TARGET "${DEPLOY_DIR_NAME}.zip")
+    add_custom_command(
+        OUTPUT ${DEPLOY_TARGET}
+        COMMAND ${WINDEPLOYQT} --dir ${DEPLOY_DIR} --no-translations --no-svg --no-angle --no-system-d3d-compiler --no-opengl-sw "$<TARGET_FILE:trackerboy_ui>"
+        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" ${DEPLOY_DIR}
+        COMMAND ${CMAKE_COMMAND} -E tar "cfv" ${DEPLOY_TARGET} --format=zip ${DEPLOY_DIR}
+        COMMAND ${CMAKE_COMMAND} -E rm -r ${DEPLOY_DIR}
+        DEPENDS trackerboy_ui
+    )
+    add_custom_target(deploy DEPENDS ${DEPLOY_TARGET})
+
+elseif (NOT DEFINED MACDEPLOYQT-NOTFOUND)
+
+endif()
+
+# also need to handle deployment for linux, qt doesn't provide a tool for linux unfortunately
 
 #
 # test programs
