@@ -174,7 +174,6 @@ void PatternGrid::dragMoveEvent(QDragMoveEvent *evt) {
 
 void PatternGrid::dropEvent(QDropEvent *evt) {
     if (evt->proposedAction() == Qt::MoveAction) {
-        qDebug() << "dropped";
         evt->acceptProposedAction();
     }
 }

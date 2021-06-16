@@ -484,6 +484,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         return;
     }
 
+    auto const recording = patternModel.isRecording();
     bool validKey = false;
 
     switch (patternModel.cursorColumn()) {
@@ -495,7 +496,9 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
                     mPreviewKey = key;
                     emit previewNote(*note);
                 }
-                patternModel.setNote(note, mInstrument);
+                if (recording) {
+                    patternModel.setNote(note, mInstrument);
+                }
                 validKey = true;
             }
 
@@ -508,7 +511,9 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             // check if the key pressed is a valid effect type
             auto effectType = keyToEffectType(key);
             if (effectType) {
-                patternModel.setEffectType(*effectType);
+                if (recording) {
+                    patternModel.setEffectType(*effectType);
+                }
                 validKey = true;
             }
             break;
@@ -517,7 +522,9 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         case PatternCursor::ColumnInstrumentLow: {
             auto hex = keyToHex(key);
             if (hex) {
-                patternModel.setInstrument(hex);
+                if (recording) {
+                    patternModel.setInstrument(hex);
+                }
                 validKey = true;
             }
             break;
@@ -532,7 +539,9 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             // check if the key pressed is a hex number
             auto hex = keyToHex(key);
             if (hex) {
-                patternModel.setEffectParam(*hex);
+                if (recording) {
+                    patternModel.setEffectParam(*hex);
+                }
                 validKey = true;
             }
             
@@ -541,7 +550,9 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     }
 
     if (validKey) {
-        stepDown();
+        if (recording) {
+            stepDown();
+        }
     } else {
         // invalid key or edit mode is off, let QWidget handle it
         QWidget::keyPressEvent(evt);
@@ -858,9 +869,7 @@ void PatternEditor::setAutoInstrument(int index) {
 
 void PatternEditor::stepDown() {
     auto &patternModel = mDocument->patternModel();
-    if (patternModel.isRecording()) {
-        patternModel.moveCursorRow(mEditStepSpin.value());
-    }
+    patternModel.moveCursorRow(mEditStepSpin.value());
 }
 
 void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {

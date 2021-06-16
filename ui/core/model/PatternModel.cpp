@@ -906,152 +906,145 @@ private:
 
 
 void PatternModel::setNote(std::optional<uint8_t> note, std::optional<uint8_t> instrument) {
-    if (mRecording) {
         
-        auto &rowdata = cursorTrackRow();
-        auto oldNote = rowdata.queryNote();
-        auto oldInstrument = rowdata.queryInstrument();
+    auto &rowdata = cursorTrackRow();
+    auto oldNote = rowdata.queryNote();
+    auto oldInstrument = rowdata.queryInstrument();
 
-        auto const editNote = oldNote != note;
-        // edit the instrument if the instrument has a value and the it does not equal the current instrument
-        auto const editInstrument = instrument && oldInstrument != instrument;
-        int editCount = editNote + editInstrument;
-        if (editCount) {
-            QUndoCommand *parent = nullptr;
-            QUndoCommand *cmd = nullptr;
+    auto const editNote = oldNote != note;
+    // edit the instrument if the instrument has a value and the it does not equal the current instrument
+    auto const editInstrument = instrument && oldInstrument != instrument;
+    int editCount = editNote + editInstrument;
+    if (editCount) {
+        QUndoCommand *parent = nullptr;
+        QUndoCommand *cmd = nullptr;
 
-            if (editCount == 2) {
-                parent = new QUndoCommand;
-            }
-
-            if (editNote) {
-                cmd = new NoteEditCmd(
-                    *this,
-                    trackerboy::TrackRow::convertColumn(note),
-                    trackerboy::TrackRow::convertColumn(oldNote),
-                    parent
-                );
-            }
-
-            if (editInstrument) {
-                cmd = new InstrumentEditCmd(
-                    *this,
-                    trackerboy::TrackRow::convertColumn(instrument),
-                    trackerboy::TrackRow::convertColumn(oldInstrument),
-                    parent
-                );
-            }
-
-            if (parent) {
-                cmd = parent;
-            }
-
-            if (note) {
-                cmd->setText(tr("Note entry")); // todo: put the pattern, row, and track in this text
-            } else {
-                cmd->setText(tr("Clear note"));
-            }
-            mDocument.undoStack().push(cmd);
-
-            
+        if (editCount == 2) {
+            parent = new QUndoCommand;
         }
 
+        if (editNote) {
+            cmd = new NoteEditCmd(
+                *this,
+                trackerboy::TrackRow::convertColumn(note),
+                trackerboy::TrackRow::convertColumn(oldNote),
+                parent
+            );
+        }
+
+        if (editInstrument) {
+            cmd = new InstrumentEditCmd(
+                *this,
+                trackerboy::TrackRow::convertColumn(instrument),
+                trackerboy::TrackRow::convertColumn(oldInstrument),
+                parent
+            );
+        }
+
+        if (parent) {
+            cmd = parent;
+        }
+
+        if (note) {
+            cmd->setText(tr("Note entry")); // todo: put the pattern, row, and track in this text
+        } else {
+            cmd->setText(tr("Clear note"));
+        }
+        mDocument.undoStack().push(cmd);
+
+        
     }
+
+
 }
 
 void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
-    if (mRecording) {
-        auto &rowdata = cursorTrackRow();
-        auto oldInstrument = rowdata.queryInstrument();
-        std::optional<uint8_t> newInstrument;
-        if (nibble) {
-            bool const highNibble = mCursor.column == PatternCursor::ColumnInstrumentHigh;
-            newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
-            if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
-                return;
-            }
+    auto &rowdata = cursorTrackRow();
+    auto oldInstrument = rowdata.queryInstrument();
+    std::optional<uint8_t> newInstrument;
+    if (nibble) {
+        bool const highNibble = mCursor.column == PatternCursor::ColumnInstrumentHigh;
+        newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
+        if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
+            return;
         }
+    }
 
-        if (newInstrument != oldInstrument) {
-            auto cmd = new InstrumentEditCmd(
-                *this,
-                trackerboy::TrackRow::convertColumn(newInstrument),
-                trackerboy::TrackRow::convertColumn(oldInstrument)
-            );
-            if (newInstrument) {
-                cmd->setText(tr("set instrument"));
-            } else {
-                cmd->setText(tr("clear instrument"));
-            }
-            mDocument.undoStack().push(cmd);
+    if (newInstrument != oldInstrument) {
+        auto cmd = new InstrumentEditCmd(
+            *this,
+            trackerboy::TrackRow::convertColumn(newInstrument),
+            trackerboy::TrackRow::convertColumn(oldInstrument)
+        );
+        if (newInstrument) {
+            cmd->setText(tr("set instrument"));
+        } else {
+            cmd->setText(tr("clear instrument"));
         }
-
+        mDocument.undoStack().push(cmd);
     }
 }
 
 void PatternModel::setEffectType(trackerboy::EffectType type) {
-    if (mRecording) {
-        auto effectNo = cursorEffectNo();
-        auto &rowdata = cursorTrackRow();
-        auto &effect = rowdata.effects[effectNo];
-        if (effect.type != type) {
-            auto cmd = new EffectTypeEditCmd(
-                *this,
-                (uint8_t)effectNo,
-                static_cast<uint8_t>(type),
-                static_cast<uint8_t>(effect.type)
-            );
+    auto effectNo = cursorEffectNo();
+    auto &rowdata = cursorTrackRow();
+    auto &effect = rowdata.effects[effectNo];
+    if (effect.type != type) {
+        auto cmd = new EffectTypeEditCmd(
+            *this,
+            (uint8_t)effectNo,
+            static_cast<uint8_t>(type),
+            static_cast<uint8_t>(effect.type)
+        );
 
-            auto &stack = mDocument.undoStack();
-            if (type == trackerboy::EffectType::noEffect) {
+        auto &stack = mDocument.undoStack();
+        if (type == trackerboy::EffectType::noEffect) {
 
-                static auto CLEAR_EFFECT_STR = QT_TR_NOOP("clear effect");
+            static auto CLEAR_EFFECT_STR = QT_TR_NOOP("clear effect");
 
-                // we also need to clear the parameter
-                if (effect.param != 0) {
-                    stack.beginMacro(tr(CLEAR_EFFECT_STR));
-                    stack.push(cmd);
-                    stack.push(new EffectParamEditCmd(
-                        *this, (uint8_t)effectNo, 0, effect.param
-                    ));
-                    stack.endMacro();
-                } else {
-                    cmd->setText(tr(CLEAR_EFFECT_STR));
-                    stack.push(cmd);
-                }
-                
+            // we also need to clear the parameter
+            if (effect.param != 0) {
+                stack.beginMacro(tr(CLEAR_EFFECT_STR));
+                stack.push(cmd);
+                stack.push(new EffectParamEditCmd(
+                    *this, (uint8_t)effectNo, 0, effect.param
+                ));
+                stack.endMacro();
             } else {
-                cmd->setText(tr("set effect type"));
+                cmd->setText(tr(CLEAR_EFFECT_STR));
                 stack.push(cmd);
             }
+            
+        } else {
+            cmd->setText(tr("set effect type"));
+            stack.push(cmd);
         }
     }
+
 }
 
 void PatternModel::setEffectParam(uint8_t nibble) {
-    if (mRecording) {
-        auto effectNo = cursorEffectNo();
-        auto &rowdata = cursorTrackRow();
+    auto effectNo = cursorEffectNo();
+    auto &rowdata = cursorTrackRow();
 
-        auto &oldEffect = rowdata.effects[effectNo];
-        if (oldEffect.type != trackerboy::EffectType::noEffect) {
-            bool isHighNibble = mCursor.column == PatternCursor::ColumnEffect1ArgHigh ||
-                                mCursor.column == PatternCursor::ColumnEffect2ArgHigh ||
-                                mCursor.column == PatternCursor::ColumnEffect3ArgHigh;
-            auto newParam = replaceNibble(oldEffect.param, nibble, isHighNibble);
-            if (newParam != oldEffect.param) {
-                auto cmd = new EffectParamEditCmd(
-                    *this,
-                    (uint8_t)effectNo,
-                    newParam,
-                    oldEffect.param
-                );
-                cmd->setText(tr("edit effect parameter"));
-                mDocument.undoStack().push(cmd);
-            }
+    auto &oldEffect = rowdata.effects[effectNo];
+    if (oldEffect.type != trackerboy::EffectType::noEffect) {
+        bool isHighNibble = mCursor.column == PatternCursor::ColumnEffect1ArgHigh ||
+                            mCursor.column == PatternCursor::ColumnEffect2ArgHigh ||
+                            mCursor.column == PatternCursor::ColumnEffect3ArgHigh;
+        auto newParam = replaceNibble(oldEffect.param, nibble, isHighNibble);
+        if (newParam != oldEffect.param) {
+            auto cmd = new EffectParamEditCmd(
+                *this,
+                (uint8_t)effectNo,
+                newParam,
+                oldEffect.param
+            );
+            cmd->setText(tr("edit effect parameter"));
+            mDocument.undoStack().push(cmd);
         }
-        
     }
+        
 }
 
 void PatternModel::deleteSelection() {
@@ -1083,7 +1076,7 @@ void PatternModel::deleteSelection() {
 
 void PatternModel::transpose(int amount) {
 
-    if (mRecording && amount) { // a transpose of 0 does nothing
+    if (amount) { // a transpose of 0 does nothing
         if (hasSelection()) {
             auto cmd = new TransposeCmd(*this, (int8_t)amount);
             cmd->setText(tr("transpose selection"));
@@ -1104,7 +1097,7 @@ void PatternModel::transpose(int amount) {
 }
 
 void PatternModel::reverse() {
-    if (mRecording && mHasSelection) {
+    if (mHasSelection) {
         auto iter = mSelection.iterator();
 
         if (iter.rows() > 1) {
@@ -1116,7 +1109,7 @@ void PatternModel::reverse() {
 }
 
 void PatternModel::moveSelection(PatternCursor pos) {
-    if (mRecording && mHasSelection) {
+    if (mHasSelection) {
         auto &undoStack = mDocument.undoStack();
 
         undoStack.beginMacro(tr("move selection"));
@@ -1132,9 +1125,7 @@ void PatternModel::moveSelection(PatternCursor pos) {
 }
 
 void PatternModel::paste(PatternClip const& clip, bool mix) {
-    if (mRecording) {
-        auto cmd = new PasteCmd(*this, clip, mCursor, mix);
-        cmd->setText(tr("paste"));
-        mDocument.undoStack().push(cmd);
-    }
+    auto cmd = new PasteCmd(*this, clip, mCursor, mix);
+    cmd->setText(tr("paste"));
+    mDocument.undoStack().push(cmd);
 }
