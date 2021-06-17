@@ -49,21 +49,12 @@ public:
 
     };
 
-    struct TrackerActions {
-        QAction play;
-        QAction restart;
-        QAction playRow;
-        QAction record;
-    };
-
     explicit PatternEditor(PianoInput const& input, QWidget *parent = nullptr);
     ~PatternEditor() = default;
 
     PatternGrid& grid();
 
     Actions& menuActions();
-
-    TrackerActions& trackerActions();
 
     void setupMenu(QMenu &menu);
 
@@ -154,7 +145,6 @@ private:
         QWidget mControls;
             QVBoxLayout mControlsLayout;
                 QHBoxLayout mToolbarLayout;
-                    QToolBar mToolbar;
                     QLabel mOctaveLabel;
                     QSpinBox mOctaveSpin;
                     QLabel mEditStepLabel;
@@ -200,8 +190,6 @@ private:
     QMenu mContextMenu;
     QMenu mTransposeMenu;
     Actions mActions;
-
-    TrackerActions mTrackerActions;
 
     int mWheel;
     int mPageStep;

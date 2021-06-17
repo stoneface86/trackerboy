@@ -103,7 +103,6 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mControls(),
     mControlsLayout(),
     mToolbarLayout(),
-    mToolbar(),
     mOctaveLabel(tr("Octave")),
     mOctaveSpin(),
     mEditStepLabel(tr("Edit step")),
@@ -150,7 +149,6 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mHScroll.setMaximum(PatternCursor::MAX_COLUMNS * PatternCursor::MAX_TRACKS - 1);
     mHScroll.setPageStep(1);
 
-    mToolbarLayout.addWidget(&mToolbar);
     mToolbarLayout.addWidget(&mOctaveLabel);
     mToolbarLayout.addWidget(&mOctaveSpin);
     mToolbarLayout.addWidget(&mEditStepLabel);
@@ -215,19 +213,6 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mEditStepSpin.setRange(0, 256);
     mEditStepSpin.setValue(1);
     mOctaveSpin.setRange(2, 8);
-
-    setupAction(mTrackerActions.play, "Play at cursor", "Play from the cursor", Icons::patternPlay);
-    setupAction(mTrackerActions.restart, "Play pattern", "Plays at the start of the current pattern", Icons::patternRestart);
-    setupAction(mTrackerActions.playRow, "Play row", "Plays the current row", Icons::patternPlayRow);
-    setupAction(mTrackerActions.record, "Record", "Toggles record mode", Icons::patternRecord);
-
-    mToolbar.setIconSize(QSize(16, 16));
-    mToolbar.addAction(&mTrackerActions.play);
-    mToolbar.addAction(&mTrackerActions.restart);
-    mToolbar.addAction(&mTrackerActions.playRow);
-    mToolbar.addAction(&mTrackerActions.record);
-    mTrackerActions.record.setCheckable(true);
-
 
     setupAction(mActions.cut, "C&ut", "Copies and deletes selection to the clipboard", Icons::editCut, QKeySequence::Cut);
     setupAction(mActions.copy, "&Copy", "Copies selected rows to the clipboard", Icons::editCopy, QKeySequence::Copy);
@@ -337,10 +322,6 @@ PatternGrid& PatternEditor::grid() {
 
 PatternEditor::Actions& PatternEditor::menuActions() {
     return mActions;
-}
-
-PatternEditor::TrackerActions& PatternEditor::trackerActions() {
-    return mTrackerActions;
 }
 
 void PatternEditor::setupMenu(QMenu &menu) {
@@ -457,7 +438,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             patternModel.moveCursorRow(-mPageStep, selectionMode);
             return;
         case Qt::Key_Space:
-            mTrackerActions.record.toggle();
+            patternModel.setRecord(!patternModel.isRecording());
             return;
         case Qt::Key_Asterisk:
             if (modifiers.testFlag(Qt::KeypadModifier)) {
@@ -666,10 +647,6 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
         mConnections.append(connect(&mPatternSizeSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setPatternSize));
     
         auto &patternModel = doc->patternModel();
-        mTrackerActions.record.setChecked(patternModel.isRecording());
-        mConnections.append(connect(&mTrackerActions.record, &QAction::toggled, &patternModel, &PatternModel::setRecord));
-        mConnections.append(connect(&patternModel, &PatternModel::recordingChanged, &mTrackerActions.record, &QAction::setChecked));
-        
         // scrollbars
         mVScroll.setMaximum((int)patternModel.currentPattern().totalRows() - 1);
         updateScrollbars(PatternModel::CursorRowChanged | PatternModel::CursorColumnChanged);

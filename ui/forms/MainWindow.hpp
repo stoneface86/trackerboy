@@ -29,6 +29,8 @@
 #include <QSplitter>
 #include <QTreeView>
 
+#include <array>
+
 //
 // Main form for the application
 //
@@ -177,17 +179,46 @@ private:
 
     // menus
 
+    // action indices
+    enum ActionIndex {
+        ActionFileNew,
+        ActionFileOpen,
+        ActionFileConfig,
+        ActionFileQuit,
+        ActionViewResetLayout,
+        ActionHelpAudioDiag,
+        ActionHelpAbout,
+        ActionHelpAboutQt,
+
+        // document actions - these actions require an open document
+        // when there are no open documents they are disabled
+        DOCUMENT_ACTIONS_BEGIN,
+
+        ActionFileSave = DOCUMENT_ACTIONS_BEGIN,
+        ActionFileSaveAs,
+        ActionFileExportWav,
+        ActionFileClose,
+        ActionFileCloseAll,
+        ActionTrackerPlay,
+        ActionTrackerRestart,
+        ActionTrackerPlayCurrentRow,
+        ActionTrackerStepRow,
+        ActionTrackerStop,
+        ActionTrackerRecord,
+        ActionTrackerToggleChannel,
+        ActionTrackerSolo,
+        ActionTrackerKill,
+
+        ActionWindowPrev,
+        ActionWindowNext,
+
+        ACTION_COUNT
+    };
+
+    std::array<QAction, ACTION_COUNT> mActions;
+
     // File
     QMenu mMenuFile;
-    QAction mActionFileNew;
-    QAction mActionFileOpen;
-    QAction mActionFileSave;
-    QAction mActionFileSaveAs;
-    QAction mActionFileExportWav;
-    QAction mActionFileClose;
-    QAction mActionFileCloseAll;
-    QAction mActionFileConfig;
-    QAction mActionFileQuit;
 
     // Edit
     QMenu mMenuEdit;
@@ -196,28 +227,16 @@ private:
     
     // View
     QMenu mMenuView;
-    QMenu mMenuViewToolbars;
-    QAction mActionViewResetLayout;
+        QMenu mMenuViewToolbars;
 
     // Tracker
     QMenu mMenuTracker;
-    QAction mActionTrackerPlay;
-    QAction mActionTrackerRestart;
-    QAction mActionTrackerStop;
-    QAction mActionTrackerToggleChannel;
-    QAction mActionTrackerSolo;
-    QAction mActionTrackerKill;
 
     // Window
     QMenu mMenuWindow;
-    QAction mActionWindowPrev;
-    QAction mActionWindowNext;
 
     // Help
     QMenu mMenuHelp;
-    QAction mActionAudioDiag;
-    QAction mActionHelpAboutQt;
-    QAction mActionHelpAbout;
 
     // workers / threading
 

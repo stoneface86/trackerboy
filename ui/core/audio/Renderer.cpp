@@ -262,13 +262,13 @@ void Renderer::playAtStart() {
     }
 }
 
-// void Renderer::playPattern() {
-//     // TODO: Engine needs functionality for looping a single pattern
-// }
+void Renderer::playFromCursor() {
+    Q_ASSERT(isThreadSafe());
 
-// void Renderer::playFromCursor() {
-//     // TODO: we need a way to get the cursor row from the PatternEditor
-// }
+    if (mEnabled) {
+       playMusic(mDocument->orderModel().currentPattern(), mDocument->patternModel().cursorRow());
+    }
+}
 
 
 void Renderer::previewInstrument(quint8 note) {

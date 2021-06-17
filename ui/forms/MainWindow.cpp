@@ -94,8 +94,8 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
         restoreState(windowState);
     }
 
-    // window title
-    setWindowTitle(tr("Trackerboy"));
+    // initialize document state
+    onTabChanged(-1);
 
     // audio sync worker thread
     mSyncWorker->moveToThread(&mSyncWorkerThread);
@@ -396,16 +396,34 @@ void MainWindow::onAudioStop() {
 }
 
 void MainWindow::onTabChanged(int tabIndex) {
+    auto previousDocument = mBrowserModel.currentDocument();
     mBrowserModel.setCurrentDocument(tabIndex);
     bool const hasDocument = tabIndex != -1;
 
-    mActionFileSave.setEnabled(hasDocument);
-    mActionFileSaveAs.setEnabled(hasDocument);
-    mActionFileClose.setEnabled(hasDocument);
-    mActionFileCloseAll.setEnabled(hasDocument);
-    mActionFileExportWav.setEnabled(hasDocument);
-    mActionWindowNext.setEnabled(hasDocument);
-    mActionWindowPrev.setEnabled(hasDocument);
+    if (mActions[DOCUMENT_ACTIONS_BEGIN].isEnabled() != hasDocument) {
+        // update enabled state for all document actions
+        for (int i = DOCUMENT_ACTIONS_BEGIN; i < ACTION_COUNT; ++i) {
+            mActions[i].setEnabled(hasDocument);
+        }
+    }
+
+    if (previousDocument) {
+        // disconnect any signals for the previous document
+        auto &patternModel = previousDocument->patternModel();
+        patternModel.disconnect(&mActions[ActionTrackerRecord]);
+        mActions[ActionTrackerRecord].disconnect(&patternModel);
+    }
+
+    if (hasDocument) {
+        auto doc = mBrowserModel.currentDocument();
+        auto &patternModel = doc->patternModel();
+        mActions[ActionTrackerRecord].setChecked(patternModel.isRecording());
+        connect(&mActions[ActionTrackerRecord], &QAction::toggled, &patternModel, &PatternModel::setRecord);
+        connect(&patternModel, &PatternModel::recordingChanged, &mActions[ActionTrackerRecord], &QAction::setChecked);
+    } else {
+        mActions[ActionTrackerRecord].setChecked(false);
+    }
+    
 
     mOrderEditor.setVisible(hasDocument);
     mPatternEditor.setVisible(hasDocument);
@@ -481,8 +499,8 @@ void MainWindow::onDocumentModified(bool modified) {
 
 void MainWindow::updateWindowMenu() {
     mMenuWindow.clear();
-    mMenuWindow.addAction(&mActionWindowPrev);
-    mMenuWindow.addAction(&mActionWindowNext);
+    mMenuWindow.addAction(&mActions[ActionWindowPrev]);
+    mMenuWindow.addAction(&mActions[ActionWindowNext]);
     
     auto const& documents = mBrowserModel.documents();
     if (documents.size() > 0) {
@@ -597,10 +615,7 @@ bool MainWindow::closeDocument(ModuleDocument *doc) {
     mBrowserModel.removeDocument(doc);
     mTabs.removeTab(tabIndex);
 
-    // TODO: renderer needs to know about the document being removed
     mRenderer->removeDocument(doc);
-    // if (mRenderer.document() == doc) {
-    // }
 
     // no longer using this document, delete it
     delete doc;
@@ -650,15 +665,15 @@ void MainWindow::setupUi() {
 
     // ACTIONS ===============================================================
 
-    setupAction(mActionFileNew, "&New", "Create a new module", Icons::fileNew, QKeySequence::New);
-    setupAction(mActionFileOpen, "&Open", "Open an existing module", Icons::fileOpen, QKeySequence::Open);
-    setupAction(mActionFileSave, "&Save", "Save the module", Icons::fileSave, QKeySequence::Save);
-    setupAction(mActionFileSaveAs, "Save &As...", "Save the module to a new file", QKeySequence::SaveAs);
-    setupAction(mActionFileExportWav, "Export to WAV...", "Exports the module to a WAV file");
-    setupAction(mActionFileClose, "Close", "Close the current module", QKeySequence::Close);
-    setupAction(mActionFileCloseAll, "Close All", "Closes all open modules");
-    setupAction(mActionFileConfig, "&Configuration...", "Change application settings", Icons::fileConfig);
-    setupAction(mActionFileQuit, "&Quit", "Exit the application", QKeySequence::Quit);
+    setupAction(mActions[ActionFileNew], "&New", "Create a new module", Icons::fileNew, QKeySequence::New);
+    setupAction(mActions[ActionFileOpen], "&Open", "Open an existing module", Icons::fileOpen, QKeySequence::Open);
+    setupAction(mActions[ActionFileSave], "&Save", "Save the module", Icons::fileSave, QKeySequence::Save);
+    setupAction(mActions[ActionFileSaveAs], "Save &As...", "Save the module to a new file", QKeySequence::SaveAs);
+    setupAction(mActions[ActionFileExportWav], "Export to WAV...", "Exports the module to a WAV file");
+    setupAction(mActions[ActionFileClose], "Close", "Close the current module", QKeySequence::Close);
+    setupAction(mActions[ActionFileCloseAll], "Close All", "Closes all open modules");
+    setupAction(mActions[ActionFileConfig], "&Configuration...", "Change application settings", Icons::fileConfig);
+    setupAction(mActions[ActionFileQuit], "&Quit", "Exit the application", QKeySequence::Quit);
 
     auto &undoGroup = mBrowserModel.undoGroup();
     mActionEditUndo = undoGroup.createUndoAction(this);
@@ -668,66 +683,50 @@ void MainWindow::setupUi() {
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
     mActionEditRedo->setShortcut(QKeySequence::Redo);
 
-    setupAction(mActionViewResetLayout, "Reset layout", "Rearranges all docks and toolbars to the default layout");
+    setupAction(mActions[ActionViewResetLayout], "Reset layout", "Rearranges all docks and toolbars to the default layout");
 
-    setupAction(mActionTrackerPlay, "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
-    setupAction(mActionTrackerRestart, "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
-    setupAction(mActionTrackerStop, "&Stop", "Stop playing", Icons::trackerStop);
-    setupAction(mActionTrackerToggleChannel, "Toggle channel output", "Enables/disables sound output for the current track");
-    setupAction(mActionTrackerSolo, "Solo", "Solos the current track");
-    setupAction(mActionTrackerKill, "&Kill sound", "Immediately stops sound output", QKeySequence(Qt::Key_F12));
+    setupAction(mActions[ActionTrackerPlay], "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
+    setupAction(mActions[ActionTrackerRestart], "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
+    setupAction(mActions[ActionTrackerPlayCurrentRow], "Play at cursor", "Begin playback from the cursor", Icons::patternPlay);
+    setupAction(mActions[ActionTrackerStepRow], "Step row", "Play and hold the row at the cursor", Icons::patternPlayRow);
+    setupAction(mActions[ActionTrackerStop], "&Stop", "Stop playing", Icons::trackerStop);
+    setupAction(mActions[ActionTrackerRecord], "Record", "Toggles record mode", Icons::patternRecord);
+    mActions[ActionTrackerRecord].setCheckable(true);
 
-    setupAction(mActionWindowPrev, "Pre&vious", "Move the focus to the previous module");
-    setupAction(mActionWindowNext, "Ne&xt", "Move the focus to the next module");
+    setupAction(mActions[ActionTrackerToggleChannel], "Toggle channel output", "Enables/disables sound output for the current track");
+    setupAction(mActions[ActionTrackerSolo], "Solo", "Solos the current track");
+    setupAction(mActions[ActionTrackerKill], "&Kill sound", "Immediately stops sound output", QKeySequence(Qt::Key_F12));
 
-    setupAction(mActionAudioDiag, "Audio diagnostics...", "Shows the audio diagnostics dialog");
-    setupAction(mActionHelpAbout, "&About", "About this program");
-    setupAction(mActionHelpAboutQt, "About &Qt", "Shows information about Qt");
+    setupAction(mActions[ActionWindowPrev], "Pre&vious", "Move the focus to the previous module");
+    setupAction(mActions[ActionWindowNext], "Ne&xt", "Move the focus to the next module");
 
-    // default action states
-    mActionFileSave.setEnabled(false);
-    mActionFileSaveAs.setEnabled(false);
-    mActionFileClose.setEnabled(false);
-    mActionFileCloseAll.setEnabled(false);
-    mActionFileExportWav.setEnabled(false);
+    setupAction(mActions[ActionHelpAudioDiag], "Audio diagnostics...", "Shows the audio diagnostics dialog");
+    setupAction(mActions[ActionHelpAbout], "&About", "About this program");
+    setupAction(mActions[ActionHelpAboutQt], "About &Qt", "Shows information about Qt");
 
     // MENUS ==============================================================
 
 
     mMenuFile.setTitle(tr("&File"));
-    mMenuFile.addAction(&mActionFileNew);
-    mMenuFile.addAction(&mActionFileOpen);
-    mMenuFile.addAction(&mActionFileSave);
-    mMenuFile.addAction(&mActionFileSaveAs);
+    mMenuFile.addAction(&mActions[ActionFileNew]);
+    mMenuFile.addAction(&mActions[ActionFileOpen]);
+    mMenuFile.addAction(&mActions[ActionFileSave]);
+    mMenuFile.addAction(&mActions[ActionFileSaveAs]);
     mMenuFile.addSeparator();
-    mMenuFile.addAction(&mActionFileExportWav);
+    mMenuFile.addAction(&mActions[ActionFileExportWav]);
     mMenuFile.addSeparator();
-    mMenuFile.addAction(&mActionFileClose);
-    mMenuFile.addAction(&mActionFileCloseAll);
+    mMenuFile.addAction(&mActions[ActionFileClose]);
+    mMenuFile.addAction(&mActions[ActionFileCloseAll]);
     mMenuFile.addSeparator();
-    mMenuFile.addAction(&mActionFileConfig);
+    mMenuFile.addAction(&mActions[ActionFileConfig]);
     mMenuFile.addSeparator();
-    mMenuFile.addAction(&mActionFileQuit);
+    mMenuFile.addAction(&mActions[ActionFileQuit]);
 
     mMenuEdit.setTitle(tr("&Edit"));
     mMenuEdit.addAction(mActionEditUndo);
     mMenuEdit.addAction(mActionEditRedo);
     mMenuEdit.addSeparator();
     mPatternEditor.setupMenu(mMenuEdit);
-    // mMenuEdit.addAction(&patternActions.cut]);
-    // mMenuEdit.addAction(&patternActions.copy);
-    // mMenuEdit.addAction(&patternActions.paste);
-    // mMenuEdit.addAction(&patternActions.pasteMix);
-    // mMenuEdit.addAction(&patternActions.delete_);
-    // mMenuEdit.addSeparator();
-    // mMenuEdit.addAction(&mActionEditSelectAll);
-    // mMenuEdit.addSeparator();
-    //     mMenuEditTranspose.setTitle(tr("Transpose"));
-    //     mMenuEditTranspose.addAction(&mActionTransposeNoteIncrease);
-    //     mMenuEditTranspose.addAction(&mActionTransposeNoteDecrease);
-    //     mMenuEditTranspose.addAction(&mActionTransposeOctaveIncrease);
-    //     mMenuEditTranspose.addAction(&mActionTransposeOctaveDecrease);
-    // mMenuEdit.addMenu(&mMenuEditTranspose);    
 
     mMenuView.setTitle(tr("&View"));
     mMenuViewToolbars.setTitle(tr("&Toolbars"));
@@ -737,25 +736,29 @@ void MainWindow::setupUi() {
     setupViewMenu(mMenuView);
 
     mMenuTracker.setTitle(tr("&Tracker"));
-    mMenuTracker.addAction(&mActionTrackerPlay);
-    mMenuTracker.addAction(&mActionTrackerRestart);
-    mMenuTracker.addAction(&mActionTrackerStop);
+    mMenuTracker.addAction(&mActions[ActionTrackerPlay]);
+    mMenuTracker.addAction(&mActions[ActionTrackerRestart]);
+    mMenuTracker.addAction(&mActions[ActionTrackerPlayCurrentRow]);
+    mMenuTracker.addAction(&mActions[ActionTrackerStepRow]);
+    mMenuTracker.addAction(&mActions[ActionTrackerStop]);
+    mMenuTracker.addAction(&mActions[ActionTrackerRecord]);
     mMenuTracker.addSeparator();
 
-    mMenuTracker.addAction(&mActionTrackerToggleChannel);
-    mMenuTracker.addAction(&mActionTrackerSolo);
+    mMenuTracker.addAction(&mActions[ActionTrackerToggleChannel]);
+    mMenuTracker.addAction(&mActions[ActionTrackerSolo]);
 
     mMenuTracker.addSeparator();
 
-    mMenuTracker.addAction(&mActionTrackerKill);
+    mMenuTracker.addAction(&mActions[ActionTrackerKill]);
 
     mMenuWindow.setTitle(tr("Wi&ndow"));
+    //mMenuWindow is setup by setupWindowMenu()
 
     mMenuHelp.setTitle(tr("&Help"));
-    mMenuHelp.addAction(&mActionAudioDiag);
+    mMenuHelp.addAction(&mActions[ActionHelpAudioDiag]);
     mMenuHelp.addSeparator();
-    mMenuHelp.addAction(&mActionHelpAbout);
-    mMenuHelp.addAction(&mActionHelpAboutQt);
+    mMenuHelp.addAction(&mActions[ActionHelpAbout]);
+    mMenuHelp.addAction(&mActions[ActionHelpAboutQt]);
 
     // MENUBAR ================================================================
 
@@ -774,11 +777,11 @@ void MainWindow::setupUi() {
     mToolbarFile.setWindowTitle(tr("File"));
     mToolbarFile.setIconSize(iconSize);
     setObjectNameFromDeclared(mToolbarFile);
-    mToolbarFile.addAction(&mActionFileNew);
-    mToolbarFile.addAction(&mActionFileOpen);
-    mToolbarFile.addAction(&mActionFileSave);
+    mToolbarFile.addAction(&mActions[ActionFileNew]);
+    mToolbarFile.addAction(&mActions[ActionFileOpen]);
+    mToolbarFile.addAction(&mActions[ActionFileSave]);
     mToolbarFile.addSeparator();
-    mToolbarFile.addAction(&mActionFileConfig);
+    mToolbarFile.addAction(&mActions[ActionFileConfig]);
 
     mToolbarEdit.setWindowTitle(tr("Edit"));
     mToolbarEdit.setIconSize(iconSize);
@@ -794,9 +797,14 @@ void MainWindow::setupUi() {
     mToolbarTracker.setWindowTitle(tr("Tracker"));
     mToolbarTracker.setIconSize(iconSize);
     setObjectNameFromDeclared(mToolbarTracker);
-    mToolbarTracker.addAction(&mActionTrackerPlay);
-    mToolbarTracker.addAction(&mActionTrackerRestart);
-    mToolbarTracker.addAction(&mActionTrackerStop);
+    mToolbarTracker.addAction(&mActions[ActionTrackerPlay]);
+    mToolbarTracker.addAction(&mActions[ActionTrackerRestart]);
+    mToolbarTracker.addAction(&mActions[ActionTrackerPlayCurrentRow]);
+    mToolbarTracker.addAction(&mActions[ActionTrackerStepRow]);
+    mToolbarTracker.addAction(&mActions[ActionTrackerStop]);
+    mToolbarTracker.addAction(&mActions[ActionTrackerRecord]);
+    
+    
 
     // DOCKS =================================================================
 
@@ -838,33 +846,35 @@ void MainWindow::setupUi() {
     // Actions
 
     // File
-    connectActionToThis(mActionFileNew, onFileNew);
-    connectActionToThis(mActionFileOpen, onFileOpen);
-    connectActionToThis(mActionFileSave, onFileSave);
-    connectActionToThis(mActionFileSaveAs, onFileSaveAs);
-    connectActionToThis(mActionFileExportWav, showExportWavDialog);
-    connectActionToThis(mActionFileClose, onFileClose);
-    connectActionToThis(mActionFileCloseAll, onFileCloseAll);
-    connectActionToThis(mActionFileConfig, showConfigDialog);
-    connectActionToThis(mActionFileQuit, close);
+    connectActionToThis(mActions[ActionFileNew], onFileNew);
+    connectActionToThis(mActions[ActionFileOpen], onFileOpen);
+    connectActionToThis(mActions[ActionFileSave], onFileSave);
+    connectActionToThis(mActions[ActionFileSaveAs], onFileSaveAs);
+    connectActionToThis(mActions[ActionFileExportWav], showExportWavDialog);
+    connectActionToThis(mActions[ActionFileClose], onFileClose);
+    connectActionToThis(mActions[ActionFileCloseAll], onFileCloseAll);
+    connectActionToThis(mActions[ActionFileConfig], showConfigDialog);
+    connectActionToThis(mActions[ActionFileQuit], close);
 
     // view
-    connectActionToThis(mActionViewResetLayout, onViewResetLayout);
+    connectActionToThis(mActions[ActionViewResetLayout], onViewResetLayout);
 
     // window
-    connectActionToThis(mActionWindowPrev, onWindowPrevious);
-    connectActionToThis(mActionWindowNext, onWindowNext);
+    connectActionToThis(mActions[ActionWindowPrev], onWindowPrevious);
+    connectActionToThis(mActions[ActionWindowNext], onWindowNext);
 
     // tracker
-    connect(&mActionTrackerPlay, &QAction::triggered, mRenderer, &Renderer::play, Qt::QueuedConnection);
-    connect(&mActionTrackerRestart, &QAction::triggered, mRenderer, &Renderer::playAtStart, Qt::QueuedConnection);
-    connect(&mActionTrackerStop, &QAction::triggered, mRenderer, &Renderer::stopMusic, Qt::QueuedConnection);
-    connect(&mActionTrackerKill, &QAction::triggered, mRenderer, &Renderer::forceStop, Qt::QueuedConnection);
+    connect(&mActions[ActionTrackerPlay], &QAction::triggered, mRenderer, &Renderer::play, Qt::QueuedConnection);
+    connect(&mActions[ActionTrackerRestart], &QAction::triggered, mRenderer, &Renderer::playAtStart, Qt::QueuedConnection);
+    connect(&mActions[ActionTrackerPlayCurrentRow], &QAction::triggered, mRenderer, &Renderer::playFromCursor, Qt::QueuedConnection);
+    //connect(&mActions[ActionTrackerStepRow], &QAction::triggered, mRenderer, &Renderer::stepRow, Qt::QueuedConnection);
+    connect(&mActions[ActionTrackerStop], &QAction::triggered, mRenderer, &Renderer::stopMusic, Qt::QueuedConnection);
+    connect(&mActions[ActionTrackerKill], &QAction::triggered, mRenderer, &Renderer::forceStop, Qt::QueuedConnection);
 
     // help
-    connectActionToThis(mActionAudioDiag, showAudioDiag);
-    connectActionToThis(mActionHelpAbout, showAboutDialog);
-    QApplication::connect(&mActionHelpAboutQt, &QAction::triggered, &QApplication::aboutQt);
+    connectActionToThis(mActions[ActionHelpAudioDiag], showAudioDiag);
+    connectActionToThis(mActions[ActionHelpAbout], showAboutDialog);
+    QApplication::connect(&mActions[ActionHelpAboutQt], &QAction::triggered, &QApplication::aboutQt);
 
     // editors
     {
@@ -970,7 +980,7 @@ void MainWindow::setupViewMenu(QMenu &menu) {
     
     menu.addSeparator();
     
-    menu.addAction(&mActionViewResetLayout);
+    menu.addAction(&mActions[ActionViewResetLayout]);
 }
 
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {

@@ -156,7 +156,7 @@ public slots:
 
     //void playPattern();
 
-    //void playFromCursor();
+    void playFromCursor();
 
     //
     // Stop previewing an instrument, waveform or row.
