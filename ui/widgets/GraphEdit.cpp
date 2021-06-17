@@ -174,7 +174,8 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
     auto vmin = vscroll->minimum();
     if (vmin != vmax) {
         // center the scroll position
-        auto range = vmax + 1 - vmin;
+        auto pageStep = vscroll->pageStep();
+        auto range = vmax + 1 + pageStep - vmin;
         auto value = (range - vscroll->pageStep()) / 2 + vmin;
         vscroll->setValue(value);
     }
@@ -513,8 +514,13 @@ void GraphEdit::calculateCellHeight() {
                 // idk why the -1 is needed but it works
                 auto pagestep = (_height / MIN_CELL_HEIGHT) - 1;
                 auto scrollbar = verticalScrollBar();
+
+                // keep the current value proportional to the new range
+                auto value = scrollbar->value() + (scrollbar->pageStep() + 1) / 2 - (pagestep + 1) / 2;
+
                 scrollbar->setPageStep(pagestep);
                 scrollbar->setRange(mMinValue, mMaxValue - pagestep);
+                scrollbar->setValue(value);
                 newHeight = (pagestep + 1) * MIN_CELL_HEIGHT;
             } else {
                 verticalScrollBar()->setRange(0, 0);
