@@ -158,9 +158,9 @@ public slots:
 
     void playAtStart();
 
-    //void playPattern();
-
     void playFromCursor();
+
+    void stepFromCursor();
 
     //
     // Stop previewing an instrument, waveform or row.
@@ -216,7 +216,7 @@ private:
     bool isThreadSafe();
 
     // sets up the engine to play starting at the given pattern and row
-    void playMusic(uint8_t pattern, uint8_t row);
+    void playMusic(uint8_t pattern, uint8_t row, bool stepping = false);
 
     // utility function for preview slots
     void resetPreview();
@@ -275,6 +275,10 @@ private:
     ma_result mLastDeviceError;
     bool mEnabled;
     bool mRunning;
+    // indicates if step mode is enabled
+    bool mStepping;
+    // determines if the engine should step (ignored when mStepping = false)
+    bool mStep;
 
     int mPeriod;
 

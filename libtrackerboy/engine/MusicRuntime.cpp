@@ -11,6 +11,7 @@ MusicRuntime::MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow
     mOrderCounter(orderNo),
     mRowCounter(patternRow),
     mHasNewPattern(false),
+    mHasNewRow(false),
     mPatternRepeat(patternRepeat),
     mFlags(DEFAULT_FLAGS),
     mStates{
@@ -39,7 +40,11 @@ uint8_t MusicRuntime::currentSpeed() const noexcept {
     return mTimer.period();
 }
 
-bool MusicRuntime::newPattern() const noexcept {
+bool MusicRuntime::hasNewRow() const noexcept {
+    return mHasNewRow;
+}
+
+bool MusicRuntime::hasNewPattern() const noexcept {
     return mHasNewPattern;
 }
 
@@ -97,7 +102,8 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
     mHasNewPattern = false;
 
     // if timer is active, we are starting a new row
-    if (mTimer.active()) {
+    mHasNewRow = mTimer.active();
+    if (mHasNewRow) {
 
         // change the current pattern if needed
         if (mGlobal.patternCommand != Operation::PatternCommand::none && mPatternRepeat) {

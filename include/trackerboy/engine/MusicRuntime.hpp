@@ -33,7 +33,9 @@ public:
 
     uint8_t currentSpeed() const noexcept;
 
-    bool newPattern() const noexcept;
+    bool hasNewRow() const noexcept;
+
+    bool hasNewPattern() const noexcept;
 
     void halt(RuntimeContext const& rc);
 
@@ -68,6 +70,7 @@ private:
     unsigned mRowCounter;
 
     bool mHasNewPattern;
+    bool mHasNewRow;
 
     bool mPatternRepeat;
 

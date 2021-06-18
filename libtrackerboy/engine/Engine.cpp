@@ -89,7 +89,8 @@ void Engine::step(Frame &frame) {
 
     if (mMusicContext) {
         frame.halted = mMusicContext->step(*mRc);
-        frame.startedNewPattern = mMusicContext->newPattern();
+        frame.startedNewRow = mMusicContext->hasNewRow();
+        frame.startedNewPattern = mMusicContext->hasNewPattern();
         frame.order = mMusicContext->currentOrder();
         frame.row = mMusicContext->currentRow();
         frame.speed = mMusicContext->currentSpeed();

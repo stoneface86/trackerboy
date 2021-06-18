@@ -870,7 +870,7 @@ void MainWindow::setupUi() {
     connect(&mActions[ActionTrackerPlay], &QAction::triggered, mRenderer, &Renderer::play, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerRestart], &QAction::triggered, mRenderer, &Renderer::playAtStart, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerPlayCurrentRow], &QAction::triggered, mRenderer, &Renderer::playFromCursor, Qt::QueuedConnection);
-    //connect(&mActions[ActionTrackerStepRow], &QAction::triggered, mRenderer, &Renderer::stepRow, Qt::QueuedConnection);
+    connect(&mActions[ActionTrackerStepRow], &QAction::triggered, mRenderer, &Renderer::stepFromCursor, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerStop], &QAction::triggered, mRenderer, &Renderer::stopMusic, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerKill], &QAction::triggered, mRenderer, &Renderer::forceStop, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerRepeat], &QAction::toggled, mRenderer, &Renderer::setPatternRepeat, Qt::QueuedConnection);

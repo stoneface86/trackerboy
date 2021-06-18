@@ -38,6 +38,8 @@ Renderer::Renderer(QObject *parent) :
     mLastDeviceError(MA_SUCCESS),
     mEnabled(false),
     mRunning(false),
+    mStepping(false),
+    mStep(false),
     mPeriod(5),
     mSynth(44100),
     mApu(mSynth.apu()),
@@ -250,7 +252,12 @@ void Renderer::play() {
     Q_ASSERT(isThreadSafe());
 
     if (mEnabled) {
-       playMusic(mDocument->orderModel().currentPattern(), 0);
+        if (mStepping) {
+            // stop step mode
+            mStepping = false;
+        } else {
+            playMusic(mDocument->orderModel().currentPattern(), 0);
+        }
     }
 }
 
@@ -267,6 +274,20 @@ void Renderer::playFromCursor() {
 
     if (mEnabled) {
        playMusic(mDocument->orderModel().currentPattern(), mDocument->patternModel().cursorRow());
+    }
+}
+
+void Renderer::stepFromCursor() {
+    Q_ASSERT(isThreadSafe());
+
+    if (mEnabled) {
+
+        if (!mStepping) {
+            playMusic(mDocument->orderModel().currentPattern(), mDocument->patternModel().cursorRow(), true);
+        }
+
+        mStep = true;
+
     }
 }
 
@@ -369,6 +390,7 @@ void Renderer::stopMusic() {
 
     if (mEnabled) {
         mEngine.halt();
+        mStepping = false;
     }
 
 }
@@ -385,6 +407,7 @@ void Renderer::forceStop() {
         if (mState != State::stopped) {
             resetPreview();
             mEngine.halt();
+            mStepping = false;
             stopRender();
         }
     }
@@ -394,13 +417,15 @@ bool Renderer::isThreadSafe() {
     return thread() == QThread::currentThread();
 }
 
-void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo) {
+void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo, bool stepping) {
     mDocument->lock();
     setMusicDocument();
     mEngine.play(orderNo, rowNo);
     // unlock disabled channels
     setChannelOutput(mMusicDocument->channelOutput());
     mDocument->unlock();
+
+    mStepping = stepping;
     
     beginRender();
 
@@ -534,7 +559,12 @@ void Renderer::render() {
                         mMusicDocument->lock();
                     }
 
-                    mEngine.step(frame);
+                    if (!mStepping || mStep) {
+                        mEngine.step(frame);
+                        if (frame.startedNewRow) {
+                            mStep = false;
+                        }
+                    }
 
                     if (mMusicDocument) {
                         mMusicDocument->unlock();
