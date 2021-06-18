@@ -21,7 +21,7 @@ QIcon IconManager::getAppIcon() {
     return appIcon;
 }
 
-QIcon& IconManager::getIcon(Icons icon) {
+QIcon const& IconManager::getIcon(Icons icon) {
 
     auto &instance = getInstance();
     
@@ -80,33 +80,33 @@ QIcon& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/itemImport.png"));
                 iconRef.addFile(QStringLiteral(":/icons/itemImport-disabled.png"), QSize(), QIcon::Disabled);
                 break;
-            case Icons::itemEdit:
-                iconRef.addFile(QStringLiteral(":/icons/itemEdit.png"));
-                iconRef.addFile(QStringLiteral(":/icons/itemEdit-disabled.png"), QSize(), QIcon::Disabled);
-                break;
             case Icons::trackerPlay:
                 iconRef.addFile(QStringLiteral(":/icons/trackerPlay.png"));
-                break;
-            case Icons::trackerPause:
-                iconRef.addFile(QStringLiteral(":/icons/trackerPause.png"));
+                iconRef.addFile(QStringLiteral(":/icons/trackerPlay-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::trackerRestart:
                 iconRef.addFile(QStringLiteral(":/icons/trackerRestart.png"));
+                iconRef.addFile(QStringLiteral(":/icons/trackerRestart-disabled.png"), QSize(), QIcon::Disabled);
+                break;
+            case Icons::trackerPlayRow:
+                iconRef.addFile(QStringLiteral(":/icons/trackerPlayRow.png"));
+                iconRef.addFile(QStringLiteral(":/icons/trackerPlayRow-disabled.png"), QSize(), QIcon::Disabled);
+                break;
+            case Icons::trackerStepRow:
+                iconRef.addFile(QStringLiteral(":/icons/trackerStepRow.png"));
+                iconRef.addFile(QStringLiteral(":/icons/trackerStepRow-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::trackerStop:
                 iconRef.addFile(QStringLiteral(":/icons/trackerStop.png"));
+                iconRef.addFile(QStringLiteral(":/icons/trackerStop-disabled.png"), QSize(), QIcon::Disabled);
                 break;
-            case Icons::patternPlay:
-                iconRef.addFile(QStringLiteral(":/icons/patternPlay.png"));
+            case Icons::trackerRecord:
+                iconRef.addFile(QStringLiteral(":/icons/trackerRecord.png"));
+                iconRef.addFile(QStringLiteral(":/icons/trackerRecord-disabled.png"), QSize(), QIcon::Disabled);
                 break;
-            case Icons::patternRestart:
-                iconRef.addFile(QStringLiteral(":/icons/patternRestart.png"));
-                break;
-            case Icons::patternRecord:
-                iconRef.addFile(QStringLiteral(":/icons/patternRecord.png"));
-                break;
-            case Icons::patternPlayRow:
-                iconRef.addFile(QStringLiteral(":/icons/patternPlayRow.png"));
+            case Icons::trackerRepeat:
+                iconRef.addFile(QStringLiteral(":/icons/trackerRepeat.png"));
+                iconRef.addFile(QStringLiteral(":/icons/trackerRepeat-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::ch1:
                 iconRef.addFile(QStringLiteral(":/icons/ch1.png"));
@@ -133,14 +133,6 @@ QIcon& IconManager::getIcon(Icons icon) {
             case Icons::moveDown:
                 iconRef.addFile(QStringLiteral(":/icons/moveDown.png"));
                 iconRef.addFile(QStringLiteral(":/icons/moveDown-disabled.png"), QSize(), QIcon::Disabled);
-                break;
-            case Icons::previous:
-                iconRef.addFile(QStringLiteral(":/icons/prev.png"));
-                iconRef.addFile(QStringLiteral(":/icons/prev-disabled.png"), QSize(), QIcon::Disabled);
-                break;
-            case Icons::next:
-                iconRef.addFile(QStringLiteral(":/icons/next.png"));
-                iconRef.addFile(QStringLiteral(":/icons/next-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             default:
                 break;

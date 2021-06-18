@@ -687,15 +687,17 @@ void MainWindow::setupUi() {
 
     setupAction(mActions[ActionTrackerPlay], "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
     setupAction(mActions[ActionTrackerRestart], "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
-    setupAction(mActions[ActionTrackerPlayCurrentRow], "Play at cursor", "Begin playback from the cursor", Icons::patternPlay);
-    setupAction(mActions[ActionTrackerStepRow], "Step row", "Play and hold the row at the cursor", Icons::patternPlayRow);
+    setupAction(mActions[ActionTrackerPlayCurrentRow], "Play at cursor", "Begin playback from the cursor", Icons::trackerPlayRow);
+    setupAction(mActions[ActionTrackerStepRow], "Step row", "Play and hold the row at the cursor", Icons::trackerStepRow);
     setupAction(mActions[ActionTrackerStop], "&Stop", "Stop playing", Icons::trackerStop);
-    setupAction(mActions[ActionTrackerRecord], "Record", "Toggles record mode", Icons::patternRecord);
+    setupAction(mActions[ActionTrackerRecord], "Record", "Toggles record mode", Icons::trackerRecord);
     mActions[ActionTrackerRecord].setCheckable(true);
 
     setupAction(mActions[ActionTrackerToggleChannel], "Toggle channel output", "Enables/disables sound output for the current track");
     setupAction(mActions[ActionTrackerSolo], "Solo", "Solos the current track");
     setupAction(mActions[ActionTrackerKill], "&Kill sound", "Immediately stops sound output", QKeySequence(Qt::Key_F12));
+    setupAction(mActions[ActionTrackerRepeat], "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat);
+    mActions[ActionTrackerRepeat].setCheckable(true);
 
     setupAction(mActions[ActionWindowPrev], "Pre&vious", "Move the focus to the previous module");
     setupAction(mActions[ActionWindowNext], "Ne&xt", "Move the focus to the next module");
@@ -741,6 +743,7 @@ void MainWindow::setupUi() {
     mMenuTracker.addAction(&mActions[ActionTrackerPlayCurrentRow]);
     mMenuTracker.addAction(&mActions[ActionTrackerStepRow]);
     mMenuTracker.addAction(&mActions[ActionTrackerStop]);
+    mMenuTracker.addAction(&mActions[ActionTrackerRepeat]);
     mMenuTracker.addAction(&mActions[ActionTrackerRecord]);
     mMenuTracker.addSeparator();
 
@@ -870,6 +873,7 @@ void MainWindow::setupUi() {
     //connect(&mActions[ActionTrackerStepRow], &QAction::triggered, mRenderer, &Renderer::stepRow, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerStop], &QAction::triggered, mRenderer, &Renderer::stopMusic, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerKill], &QAction::triggered, mRenderer, &Renderer::forceStop, Qt::QueuedConnection);
+    connect(&mActions[ActionTrackerRepeat], &QAction::toggled, mRenderer, &Renderer::setPatternRepeat, Qt::QueuedConnection);
 
     // help
     connectActionToThis(mActions[ActionHelpAudioDiag], showAudioDiag);

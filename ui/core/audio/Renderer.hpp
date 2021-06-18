@@ -142,7 +142,11 @@ public slots:
 
     void clearDiagnostics();
 
-    
+    //
+    // Sets pattern repeat mode. When enabled, the current playing pattern is
+    // repeated.
+    //
+    void setPatternRepeat(bool repeat);
 
     // instrument preview
     void previewInstrument(quint8 note);

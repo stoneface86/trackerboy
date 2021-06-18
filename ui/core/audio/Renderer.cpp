@@ -270,6 +270,14 @@ void Renderer::playFromCursor() {
     }
 }
 
+void Renderer::setPatternRepeat(bool repeat) {
+    Q_ASSERT(isThreadSafe());
+
+    if (mEnabled) {
+        mEngine.repeatPattern(repeat);
+    }
+}
+
 
 void Renderer::previewInstrument(quint8 note) {
     Q_ASSERT(isThreadSafe());

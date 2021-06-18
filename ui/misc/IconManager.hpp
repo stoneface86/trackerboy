@@ -20,15 +20,13 @@ enum class Icons : int {
     itemRemove,
     itemDuplicate,
     itemImport,
-    itemEdit,
     trackerPlay,
-    trackerPause,
     trackerRestart,
+    trackerPlayRow,
+    trackerStepRow,
     trackerStop,
-    patternPlay,
-    patternRestart,
-    patternRecord,
-    patternPlayRow,
+    trackerRecord,
+    trackerRepeat,
     ch1,
     ch2,
     ch3,
@@ -37,8 +35,6 @@ enum class Icons : int {
     decrement,
     moveUp,
     moveDown,
-    previous,
-    next,
 
     noIcon,
 
@@ -55,7 +51,7 @@ public:
 
     static QIcon getAppIcon();
 
-    static QIcon& getIcon(Icons icon);
+    static QIcon const& getIcon(Icons icon);
 
 private:
 

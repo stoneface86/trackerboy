@@ -12,7 +12,8 @@ Engine::Engine(IApu &apu, Module const* mod) :
     mModule(mod),
     mRc(),
     mMusicContext(),
-    mTime(0)
+    mTime(0),
+    mPatternRepeat(false)
 {
     if (mod != nullptr) {
         mRc.emplace(mApu, mod->instrumentTable(), mod->waveformTable());
@@ -52,7 +53,7 @@ void Engine::play(uint8_t orderNo, uint8_t patternRow) {
             throw std::invalid_argument("cannot start at given row, exceeds pattern size");
         }
 
-        mMusicContext.emplace(song, orderNo, patternRow);
+        mMusicContext.emplace(song, orderNo, patternRow, mPatternRepeat);
     }
 }
 
@@ -75,6 +76,13 @@ void Engine::unlock(ChType ch) {
     if (mMusicContext) {
         mMusicContext->unlock(*mRc, ch);
     }
+}
+
+void Engine::repeatPattern(bool repeat) {
+    if (mMusicContext) {
+        mMusicContext->repeatPattern(repeat);
+    }
+    mPatternRepeat = repeat;
 }
 
 void Engine::step(Frame &frame) {

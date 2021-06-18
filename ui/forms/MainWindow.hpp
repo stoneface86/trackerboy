@@ -208,6 +208,7 @@ private:
         ActionTrackerToggleChannel,
         ActionTrackerSolo,
         ActionTrackerKill,
+        ActionTrackerRepeat,
 
         ActionWindowPrev,
         ActionWindowNext,

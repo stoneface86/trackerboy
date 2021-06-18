@@ -89,6 +89,11 @@ public:
     void unlock(ChType ch);
 
     //
+    // If enabled, the music runtime will keep repeating the current pattern
+    //
+    void repeatPattern(bool repeat);
+
+    //
     // Step the engine for 1 frame. Details about the frame are written to
     // the given Frame structure.
     //
@@ -108,6 +113,8 @@ private:
 
     // frames elapsed since last reset
     uint32_t mTime;
+
+    bool mPatternRepeat;
 
 };
 

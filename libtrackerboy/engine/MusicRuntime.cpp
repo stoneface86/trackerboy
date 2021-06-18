@@ -6,11 +6,12 @@
 
 namespace trackerboy {
 
-MusicRuntime::MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow) :
+MusicRuntime::MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow, bool patternRepeat) :
     mSong(song),
     mOrderCounter(orderNo),
     mRowCounter(patternRow),
     mHasNewPattern(false),
+    mPatternRepeat(patternRepeat),
     mFlags(DEFAULT_FLAGS),
     mStates{
         ChannelState(ChType::ch1),
@@ -75,6 +76,10 @@ void MusicRuntime::unlock(RuntimeContext const& rc, ChType ch) {
     mFlags.set(+ch);
 }
 
+void MusicRuntime::repeatPattern(bool repeat) {
+    mPatternRepeat = repeat;
+}
+
 bool MusicRuntime::step(RuntimeContext const& rc) {
     if (mFlags.test(FLAG_HALT)) {
         return true;
@@ -95,25 +100,30 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
     if (mTimer.active()) {
 
         // change the current pattern if needed
-        switch (mGlobal.patternCommand) {
-            case Operation::PatternCommand::none:
-                break;
-            case Operation::PatternCommand::next:
-                if (++mOrderCounter >= mSong.order().size()) {
-                    // loop back to the first pattern
-                    mOrderCounter = 0;
-                }
-                mRowCounter = mGlobal.patternCommandParam;
-                mGlobal.patternCommand = Operation::PatternCommand::none;
-                mHasNewPattern = true;
-                break;
-            case Operation::PatternCommand::jump:
-                mRowCounter = 0;
-                // if the parameter goes past the last one, use the last one
-                mOrderCounter = std::min(mGlobal.patternCommandParam, (uint8_t)(mSong.order().size() - 1));
-                mGlobal.patternCommand = Operation::PatternCommand::none;
-                mHasNewPattern = true;
-                break;
+        if (mGlobal.patternCommand != Operation::PatternCommand::none && mPatternRepeat) {
+            mGlobal.patternCommand = Operation::PatternCommand::none;
+            mRowCounter = 0;
+        } else {
+            switch (mGlobal.patternCommand) {
+                case Operation::PatternCommand::none:
+                    break;
+                case Operation::PatternCommand::next:
+                    if (++mOrderCounter >= mSong.order().size()) {
+                        // loop back to the first pattern
+                        mOrderCounter = 0;
+                    }
+                    mRowCounter = mGlobal.patternCommandParam;
+                    mGlobal.patternCommand = Operation::PatternCommand::none;
+                    mHasNewPattern = true;
+                    break;
+                case Operation::PatternCommand::jump:
+                    mRowCounter = 0;
+                    // if the parameter goes past the last one, use the last one
+                    mOrderCounter = std::min(mGlobal.patternCommandParam, (uint8_t)(mSong.order().size() - 1));
+                    mGlobal.patternCommand = Operation::PatternCommand::none;
+                    mHasNewPattern = true;
+                    break;
+            }
         }
         
 

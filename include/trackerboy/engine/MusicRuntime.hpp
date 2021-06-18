@@ -25,7 +25,7 @@ namespace trackerboy {
 class MusicRuntime {
 
 public:
-    MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow);
+    MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow, bool patternRepeat = false);
 
     uint8_t currentOrder() const noexcept;
 
@@ -42,6 +42,8 @@ public:
     void unlock(RuntimeContext const& rc, ChType ch);
 
     bool step(RuntimeContext const& rc);
+
+    void repeatPattern(bool repeat);
 
 private:
 
@@ -66,6 +68,8 @@ private:
     unsigned mRowCounter;
 
     bool mHasNewPattern;
+
+    bool mPatternRepeat;
 
     Timer mTimer;
 

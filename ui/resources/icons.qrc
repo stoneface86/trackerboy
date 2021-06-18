@@ -22,16 +22,22 @@
     <file>icons/itemDuplicate-disabled.png</file>
     <file>icons/itemImport.png</file>
     <file>icons/itemImport-disabled.png</file>
-    <file>icons/itemEdit.png</file>
-    <file>icons/itemEdit-disabled.png</file>
+
     <file>icons/trackerPlay.png</file>
-    <file>icons/trackerPause.png</file>
+    <file>icons/trackerPlay-disabled.png</file>
+    <file>icons/trackerPlayRow.png</file>
+    <file>icons/trackerPlayRow-disabled.png</file>
+    <file>icons/trackerRecord.png</file>
+    <file>icons/trackerRecord-disabled.png</file>
+    <file>icons/trackerRepeat.png</file>
+    <file>icons/trackerRepeat-disabled.png</file>
     <file>icons/trackerRestart.png</file>
+    <file>icons/trackerRestart-disabled.png</file>
+    <file>icons/trackerStepRow.png</file>
+    <file>icons/trackerStepRow-disabled.png</file>
     <file>icons/trackerStop.png</file>
-    <file>icons/patternPlay.png</file>
-    <file>icons/patternRestart.png</file>
-    <file>icons/patternPlayRow.png</file>
-    <file>icons/patternRecord.png</file>
+    <file>icons/trackerStop-disabled.png</file>
+
     <file>icons/ch1.png</file>
     <file>icons/ch2.png</file>
     <file>icons/ch3.png</file>
@@ -40,13 +46,8 @@
     <file>icons/moveUp-disabled.png</file>
     <file>icons/moveDown.png</file>
     <file>icons/moveDown-disabled.png</file>
-    <file>icons/prev.png</file>
-    <file>icons/prev-disabled.png</file>
-    <file>icons/next.png</file>
-    <file>icons/next-disabled.png</file>
     <file>icons/increment.png</file>
     <file>icons/decrement.png</file>
-
 
     <file>icons/placeholder.png</file>
     <file>icons/placeholder-disabled.png</file>
