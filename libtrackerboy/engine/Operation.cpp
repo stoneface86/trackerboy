@@ -75,6 +75,7 @@ Operation::Operation(TrackRow const& row) :
                     break;
                 case trackerboy::EffectType::patternSkip:
                     patternCommand = PatternCommand::next;
+                    patternCommandParam = param;
                     break;
                 case trackerboy::EffectType::setTempo:
                     if (param >= SPEED_MIN && param <= SPEED_MAX) {
