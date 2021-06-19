@@ -6,7 +6,7 @@
 
 namespace trackerboy {
 
-MusicRuntime::MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow, bool patternRepeat) :
+MusicRuntime::MusicRuntime(Song const& song, int orderNo, int patternRow, bool patternRepeat) :
     mSong(song),
     mOrderCounter(orderNo),
     mRowCounter(patternRow),
@@ -28,15 +28,15 @@ MusicRuntime::MusicRuntime(Song const& song, uint8_t orderNo, uint8_t patternRow
     mTimer.setPeriod(song.speed());
 }
 
-uint8_t MusicRuntime::currentOrder() const noexcept {
+int MusicRuntime::currentOrder() const noexcept {
     return mOrderCounter;
 }
 
-uint8_t MusicRuntime::currentRow() const noexcept {
+int MusicRuntime::currentRow() const noexcept {
     return mRowCounter;
 }
 
-uint8_t MusicRuntime::currentSpeed() const noexcept {
+Speed MusicRuntime::currentSpeed() const noexcept {
     return mTimer.period();
 }
 

@@ -85,12 +85,6 @@ enum class EffectType : uint8_t {
 
 };
 
-enum class InstrumentType {
-    pulse,
-    wave,
-    noise
-};
-
 enum class Panning : uint8_t {
     mute,
     left,

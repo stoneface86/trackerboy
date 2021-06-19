@@ -29,6 +29,10 @@
 
 namespace trackerboy {
 
+//
+// typedef for an OrderRow, each item in the array is a track id for its
+// corresponding channel. uint8_t is used for memory conservation [3]
+//
 using OrderRow = std::array<uint8_t, 4>;
 
 }

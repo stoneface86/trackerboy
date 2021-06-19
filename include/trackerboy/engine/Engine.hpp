@@ -56,8 +56,8 @@ public:
         bool startedNewPattern;
         uint32_t time;      // time index
         Speed speed;        // the current engine speed
-        unsigned order;      // current order index
-        unsigned row;        // current row index
+        int order;      // current order index
+        int row;        // current row index
     };
 
 
@@ -72,7 +72,7 @@ public:
     //
     // begin playing music from a starting order and row
     //
-    void play(uint8_t orderNo, uint8_t patternRow = 0);
+    void play(int orderNo, int patternRow = 0);
 
     //
     // Stops music playback if playing music.

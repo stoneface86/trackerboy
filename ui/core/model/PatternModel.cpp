@@ -402,7 +402,7 @@ void PatternModel::setPatterns(int pattern, CursorChangeFlags &flags) {
 
     // update the current pattern
     auto oldsize = (int)mPatternCurr.totalRows();
-    mPatternCurr = song.getPattern((uint8_t)pattern);
+    mPatternCurr = song.getPattern(pattern);
     auto newsize = (int)mPatternCurr.totalRows();
 
     if (oldsize != newsize) {
@@ -427,14 +427,14 @@ void PatternModel::setPreviewPatterns(int pattern) {
     auto &song = mDocument.mod().song();
     // get the previous pattern for preview
     if (pattern > 0) {
-        mPatternPrev.emplace(song.getPattern((uint8_t)pattern - 1));
+        mPatternPrev.emplace(song.getPattern(pattern - 1));
     } else {
         mPatternPrev.reset();
     }
     // get the next pattern for preview
     auto nextPattern = pattern + 1;
     if (nextPattern < song.order().size()) {
-        mPatternNext.emplace(song.getPattern((uint8_t)nextPattern));
+        mPatternNext.emplace(song.getPattern(nextPattern));
     } else {
         mPatternNext.reset();
     }

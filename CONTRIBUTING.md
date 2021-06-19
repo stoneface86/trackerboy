@@ -48,18 +48,19 @@ Fixed-width and unsigned integers should be avoided, only to be used in certain
 circumstances such as:
  1. bitwise operations / modulo arithmetic
  2. `size_t` for array indexing / or use with std library
+    (except when possible to use int, see below)
  3. data serialization, or where the format of a struct is fixed
- 4. memory optimization
+ 4. memory conservation
 
-`unsigned` should not be used for nonnegative integers, always use `int`. Always default to using `int` unless you have a good reason otherwise.
+`unsigned` should not be used for nonnegative integers, always use `int`.
+Always default to using `int` unless you have a good reason otherwise.
 
-When indexing an array, prefer to use `int` unless you need the full
-range of `size_t`. The sizes of all arrays/vectors used in this project are well within the limits of `int`, so there should be rarely any need to use `size_t`
+When indexing an array, prefer to use `int` unless you need the full range of
+`size_t`. The sizes of all arrays/vectors used in this project are well within
+the limits of `int`, so there should be rarely any need to use `size_t`.
 
-When using unsigned or fixed-width, specify in the comments the
-reason why. A simple `// [1]` will suffice, where the number in
-the brackets refers to one of the reasons listed here.
-
+Note: there is still a lot of code in this repo that doesn't follow this rule,
+as it is slowly being refactored. All new code however, should follow this rule.
 
 ### Documentation
 

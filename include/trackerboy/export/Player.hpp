@@ -15,7 +15,7 @@ namespace trackerboy {
 class Player {
 
 public:
-    using Duration = std::variant<unsigned, std::chrono::seconds>;
+    using Duration = std::variant<int, std::chrono::seconds>;
 
     Player(Engine &engine);
 
@@ -28,8 +28,8 @@ public:
     //
     bool isPlaying() const;
 
-    unsigned progress() const;
-    unsigned progressMax() const;
+    int progress() const;
+    int progressMax() const;
 
     //
     // Steps the engine, returns true if the player has another step.
@@ -39,20 +39,20 @@ public:
 private:
 
     struct LoopContext {
-        uint8_t currentPattern;
+        int currentPattern;
         // keep track of how many times a pattern is visited
         // we have looped the song x times when we have visited a pattern x times
-        std::vector<unsigned> visits;
-        unsigned loopAmount;
+        std::vector<int> visits;
+        int loopAmount;
 
-        LoopContext(unsigned loopAmount);
+        LoopContext(int loopAmount);
     };
 
     struct DurationContext {
-        unsigned frameCounter;
-        unsigned framesToPlay;
+        int frameCounter;
+        int framesToPlay;
 
-        DurationContext(unsigned framesToPlay);
+        DurationContext(int framesToPlay);
     };
 
     using ContextVariant = std::variant<std::monostate, LoopContext, DurationContext>;

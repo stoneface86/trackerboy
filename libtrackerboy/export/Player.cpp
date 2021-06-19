@@ -3,14 +3,14 @@
 
 namespace trackerboy {
 
-Player::LoopContext::LoopContext(unsigned loopAmount) :
-    currentPattern(0u),
+Player::LoopContext::LoopContext(int loopAmount) :
+    currentPattern(0),
     visits(),
     loopAmount(loopAmount)
 {
 }
 
-Player::DurationContext::DurationContext(unsigned framesToPlay) :
+Player::DurationContext::DurationContext(int framesToPlay) :
     frameCounter(0),
     framesToPlay(framesToPlay)
 {
@@ -26,8 +26,8 @@ Player::Player(Engine &engine) :
 
 void Player::start(Duration duration) {
     bool init = false;
-    if (std::holds_alternative<unsigned>(duration)) {
-        auto loopCount = std::get<unsigned>(duration);
+    if (std::holds_alternative<int>(duration)) {
+        auto loopCount = std::get<int>(duration);
         if (loopCount == 0) {
             // if loopCount is 0 then we play the song 0 times
             // ...
@@ -73,7 +73,7 @@ bool Player::isPlaying() const {
     return mPlaying;
 }
 
-unsigned Player::progress() const {
+int Player::progress() const {
     return std::visit([this](auto&& ctx) {
         using T = std::decay_t<decltype(ctx)>;
 
@@ -82,12 +82,12 @@ unsigned Player::progress() const {
         } else if constexpr (std::is_same_v<T, DurationContext>) {
             return ctx.frameCounter;
         } else {
-            return (unsigned)0;
+            return 0;
         }
     }, mContext);
 }
 
-unsigned Player::progressMax() const {
+int Player::progressMax() const {
     return std::visit([this](auto&& ctx) {
         using T = std::decay_t<decltype(ctx)>;
 
@@ -96,7 +96,7 @@ unsigned Player::progressMax() const {
         } else if constexpr (std::is_same_v<T, DurationContext>) {
             return ctx.framesToPlay;
         } else {
-            return (unsigned)0;
+            return 0;
         }
     }, mContext);
 }

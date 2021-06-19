@@ -216,7 +216,7 @@ private:
     bool isThreadSafe();
 
     // sets up the engine to play starting at the given pattern and row
-    void playMusic(uint8_t pattern, uint8_t row, bool stepping = false);
+    void playMusic(int pattern, int row, bool stepping = false);
 
     // utility function for preview slots
     void resetPreview();

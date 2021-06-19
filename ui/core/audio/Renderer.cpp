@@ -417,7 +417,7 @@ bool Renderer::isThreadSafe() {
     return thread() == QThread::currentThread();
 }
 
-void Renderer::playMusic(uint8_t orderNo, uint8_t rowNo, bool stepping) {
+void Renderer::playMusic(int orderNo, int rowNo, bool stepping) {
     mDocument->lock();
     setMusicDocument();
     mEngine.play(orderNo, rowNo);

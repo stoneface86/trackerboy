@@ -41,15 +41,15 @@ void Engine::reset() {
     mTime = 0;
 }
 
-void Engine::play(uint8_t orderNo, uint8_t patternRow) {
+void Engine::play(int orderNo, int patternRow) {
     
     if (mModule) {
         auto &song = mModule->song();
 
-        if (orderNo >= song.order().size()) {
+        if (orderNo < 0 || orderNo >= song.order().size()) {
             throw std::invalid_argument("cannot play order, order does not exist");
         }
-        if (patternRow >= song.patterns().rowSize()) {
+        if (patternRow < 0 || patternRow >= song.patterns().rowSize()) {
             throw std::invalid_argument("cannot start at given row, exceeds pattern size");
         }
 

@@ -167,7 +167,7 @@ void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool 
         auto ctx = mDocument->beginEdit();
         auto& mod = mDocument->mod();
         if (isCustom) {
-            mod.setFramerate((uint16_t)mFramerateCustomSpin.value());
+            mod.setFramerate(mFramerateCustomSpin.value());
         } else {
             mod.setFramerate(sys);
         }
@@ -179,7 +179,7 @@ void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool 
 void ModuleSettingsWidget::customFramerateSpinChanged(int value) {
     if (mDocument) {
         auto ctx = mDocument->beginEdit();
-        mDocument->mod().setFramerate((uint16_t)value);
+        mDocument->mod().setFramerate(value);
     }
     //calculateActualTempo();
 }
