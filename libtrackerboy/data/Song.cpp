@@ -47,11 +47,11 @@ void Song::reset() noexcept {
     mMaster.setRowSize(DEFAULT_ROWS);
 }
 
-uint8_t Song::rowsPerBeat() const noexcept {
+int Song::rowsPerBeat() const noexcept {
     return mRowsPerBeat;
 }
 
-uint8_t Song::rowsPerMeasure() const noexcept {
+int Song::rowsPerMeasure() const noexcept {
     return mRowsPerMeasure;
 }
 
@@ -77,8 +77,8 @@ PatternMaster const& Song::patterns() const noexcept {
     return mMaster;
 }
 
-Pattern Song::getPattern(uint8_t orderNo) {
-    if (orderNo >= mOrder.size()) {
+Pattern Song::getPattern(int orderNo) {
+    if (orderNo < 0 || orderNo >= mOrder.size()) {
         throw std::invalid_argument("order does not exist");
     }
 
@@ -91,12 +91,12 @@ Pattern Song::getPattern(uint8_t orderNo) {
     );
 }
 
-TrackRow& Song::getRow(ChType ch, uint8_t order, uint16_t row) {
+TrackRow& Song::getRow(ChType ch, int order, int row) {
     auto &track = mMaster.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
     return track[row];
 }
 
-TrackRow Song::getRow(ChType ch, uint8_t order, uint16_t row) const {
+TrackRow Song::getRow(ChType ch, int order, int row) const {
     auto track = mMaster.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
     if (track) {
         return (*track)[row];
@@ -106,16 +106,18 @@ TrackRow Song::getRow(ChType ch, uint8_t order, uint16_t row) const {
     }
 }
 
-void Song::setRowsPerBeat(uint8_t rowsPerBeat) {
-    if (rowsPerBeat == 0) {
-        throw std::invalid_argument("Cannot have 0 rows per beat");
+void Song::setRowsPerBeat(int rowsPerBeat) {
+    if (rowsPerBeat <= 0 || rowsPerBeat >= 256) {
+        throw std::invalid_argument("invalid rows per beat argument");
     }
     mRowsPerBeat = rowsPerBeat;
 }
 
-void Song::setRowsPerMeasure(uint8_t rowsPerMeasure) {
+void Song::setRowsPerMeasure(int rowsPerMeasure) {
     if (rowsPerMeasure < mRowsPerBeat) {
         throw std::invalid_argument("Rows per measure must be >= rows per beat");
+    } else if (rowsPerMeasure >= 256) {
+        throw std::invalid_argument("Rows per measure must be < 256");
     }
 
     mRowsPerMeasure = rowsPerMeasure;

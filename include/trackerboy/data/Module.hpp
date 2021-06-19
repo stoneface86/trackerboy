@@ -65,7 +65,7 @@ public:
 
     System system() const noexcept;
 
-    uint16_t customFramerate() const noexcept;
+    int customFramerate() const noexcept;
 
     Song& song() noexcept;
     Song const& song() const noexcept;
@@ -92,7 +92,7 @@ public:
 
     void setFramerate(System system) noexcept;
 
-    void setFramerate(uint16_t rate);
+    void setFramerate(int rate);
 
 private:
 
@@ -113,7 +113,7 @@ private:
     std::string mComments;
 
     System mSystem;
-    uint16_t mCustomFramerate;
+    int mCustomFramerate;
 };
 
 

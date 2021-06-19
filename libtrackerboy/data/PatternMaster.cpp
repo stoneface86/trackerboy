@@ -3,12 +3,17 @@
 
 #include "internal/enumutils.hpp"
 
+#include <stdexcept>
+
 namespace trackerboy {
 
 
-PatternMaster::PatternMaster(uint16_t rows) :
+PatternMaster::PatternMaster(int rows) :
     mRows(rows)
 {
+    if (rows <= 0 || rows > MAX_ROWS) {
+        throw std::invalid_argument("invalid row count");
+    }
 }
 
 PatternMaster::PatternMaster(const PatternMaster &master) :
@@ -28,7 +33,7 @@ void PatternMaster::clear() {
     }
 }
 
-uint16_t PatternMaster::rowSize() const noexcept {
+int PatternMaster::rowSize() const noexcept {
     return mRows;
 }
 
@@ -75,7 +80,10 @@ void PatternMaster::remove(ChType ch, uint8_t track) {
     chMap.erase(track);
 }
 
-void PatternMaster::setRowSize(uint16_t newsize) {
+void PatternMaster::setRowSize(int newsize) {
+    if (newsize <= 0 || newsize > MAX_ROWS) {
+        throw std::invalid_argument("invalid row size given");
+    }
     mRows = newsize;
 
     for (auto &chMap : mMap) {

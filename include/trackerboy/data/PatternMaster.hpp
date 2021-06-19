@@ -45,15 +45,15 @@ public:
 
     using Data = std::unordered_map<uint8_t, Track>;
 
-    static constexpr uint16_t MAX_ROWS = 256;
+    static constexpr int MAX_ROWS = 256;
 
-    PatternMaster(uint16_t mRows);
+    PatternMaster(int rows);
 
     PatternMaster(const PatternMaster &master);
 
     void clear();
 
-    uint16_t rowSize() const noexcept;
+    int rowSize() const noexcept;
 
     size_t tracks(ChType ch) const noexcept;
     size_t tracks() const noexcept;
@@ -82,12 +82,12 @@ public:
     // Removes a given track from the master
     void remove(ChType ch, uint8_t track);
 
-    void setRowSize(uint16_t newsize);
+    void setRowSize(int newsize);
 
 
 private:
 
-    uint16_t mRows;
+    int mRows;
 
     // maps a track id -> TrackData
         

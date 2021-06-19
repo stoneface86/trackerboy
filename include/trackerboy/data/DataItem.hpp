@@ -55,7 +55,7 @@ protected:
     DataItem();
     DataItem(const DataItem &item);
 
-    uint8_t mId;
+    uint8_t mId; // [?] this could probably be an int
     std::string mName;
 
 };

@@ -21,16 +21,16 @@ constexpr Effect NULL_EFFECT = { EffectType::noEffect, 0 };
 
 }
 
-Track::Track(uint16_t rows) :
+Track::Track(int rows) :
     mData(rows)
 {
 }
 
-TrackRow& Track::operator[](uint16_t row) {
+TrackRow& Track::operator[](int row) {
     return mData[row];
 }
 
-TrackRow const& Track::operator[](uint16_t row) const {
+TrackRow const& Track::operator[](int row) const {
     return mData[row];
 }
 
@@ -42,16 +42,16 @@ Track::Data::const_iterator Track::begin() const {
     return mData.begin();
 }
 
-void Track::clear(uint16_t rowStart, uint16_t rowEnd) {
+void Track::clear(int rowStart, int rowEnd) {
 
-    uint16_t size = std::min(static_cast<uint16_t>(mData.size()), rowEnd);
+    int size = std::min(static_cast<int>(mData.size()), rowEnd);
     auto iter = mData.begin() + rowStart;
-    for (uint16_t i = rowStart; i < size; ++i) {
+    for (int i = rowStart; i < size; ++i) {
         *iter++ = NULL_ROW;
     }
 }
 
-void Track::clearEffect(uint8_t rowNo, uint8_t effectNo) {
+void Track::clearEffect(int rowNo, int effectNo) {
     assert(effectNo < TrackRow::MAX_EFFECTS);
 
     auto &row = mData[rowNo];
@@ -59,13 +59,13 @@ void Track::clearEffect(uint8_t rowNo, uint8_t effectNo) {
 
 }
 
-void Track::clearInstrument(uint8_t rowNo) {
+void Track::clearInstrument(int rowNo) {
     auto &row = mData[rowNo];
     row.setInstrument({});
 
 }
 
-void Track::clearNote(uint8_t rowNo) {
+void Track::clearNote(int rowNo) {
     auto &row = mData[rowNo];
     row.setNote({});
 }
@@ -78,7 +78,7 @@ Track::Data::const_iterator Track::end() const {
     return mData.end();
 }
 
-void Track::setEffect(uint8_t rowNo, uint8_t effectNo, EffectType effect, uint8_t param) {
+void Track::setEffect(int rowNo, int effectNo, EffectType effect, uint8_t param) {
     assert(effectNo < TrackRow::MAX_EFFECTS);
 
     if (effect == EffectType::noEffect) {
@@ -92,27 +92,27 @@ void Track::setEffect(uint8_t rowNo, uint8_t effectNo, EffectType effect, uint8_
     effectSt.param = param;
 }
 
-void Track::setInstrument(uint8_t rowNo, uint8_t instrumentId) {
+void Track::setInstrument(int rowNo, uint8_t instrumentId) {
     auto &row = mData[rowNo];
     row.setInstrument(instrumentId);
 }
 
-void Track::setNote(uint8_t rowNo, uint8_t note) {
+void Track::setNote(int rowNo, uint8_t note) {
     auto &row = mData[rowNo];
     row.setNote(note);
 }
 
-void Track::replace(uint8_t rowNo, TrackRow &row) {
+void Track::replace(int rowNo, TrackRow &row) {
     // TODO: this function is now useless, remove it
     mData[rowNo] = row;
 }
 
-void Track::resize(uint16_t newSize) {
+void Track::resize(int newSize) {
     mData.resize(newSize);
 }
 
-uint16_t Track::rowCount() const {
-    uint16_t count = 0;
+int Track::rowCount() const {
+    int count = 0;
     for (auto &row : mData) {
         if (!row.isEmpty()) {
             ++count;
@@ -121,8 +121,8 @@ uint16_t Track::rowCount() const {
     return count;
 }
 
-unsigned Track::size() const {
-    return mData.size();
+int Track::size() const {
+    return (int)mData.size();
 }
 
 

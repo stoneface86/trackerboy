@@ -108,7 +108,7 @@ System Module::system() const noexcept {
     return mSystem;
 }
 
-uint16_t Module::customFramerate() const noexcept {
+int Module::customFramerate() const noexcept {
     return mCustomFramerate;
 }
 
@@ -132,9 +132,9 @@ void Module::setFramerate(System system) noexcept {
     mSystem = system;
 }
 
-void Module::setFramerate(uint16_t rate) {
-    if (rate == 0) {
-        throw std::invalid_argument("rate must be nonzero");
+void Module::setFramerate(int rate) {
+    if (rate <= 0 || rate >= UINT16_MAX) {
+        throw std::invalid_argument("invalid framerate given");
     }
 
     mSystem = System::custom;
@@ -462,7 +462,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
             if (framerate == 0) {
                 return FormatError::invalid;
             }
-            mCustomFramerate = framerate;
+            mCustomFramerate = (int)framerate;
         }
     }
 
@@ -670,7 +670,7 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
 
     header.system = +mSystem;
     if (mSystem == System::custom) {
-        header.customFramerate = correctEndian(mCustomFramerate);
+        header.customFramerate = correctEndian((uint16_t)mCustomFramerate);
     }
 
     #undef copyStringToFixed
@@ -709,8 +709,8 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
             auto &pm = mSong.patterns();
 
             SongFormat songHeader;
-            songHeader.rowsPerBeat = mSong.rowsPerBeat();
-            songHeader.rowsPerMeasure = mSong.rowsPerMeasure();
+            songHeader.rowsPerBeat = (uint8_t)mSong.rowsPerBeat();
+            songHeader.rowsPerMeasure = (uint8_t)mSong.rowsPerMeasure();
             songHeader.speed = mSong.speed();
             songHeader.patternCount = bias(order.size());
             songHeader.rowsPerTrack = bias(pm.rowSize());

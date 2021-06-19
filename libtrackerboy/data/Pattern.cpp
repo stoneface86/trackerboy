@@ -14,13 +14,13 @@ Pattern::Pattern(Track &track1, Track &track2, Track &track3, Track &track4) :
 {
 }
 
-PatternRow Pattern::operator[](uint16_t row) {
+PatternRow Pattern::operator[](int row) {
     return {
         (*mTrack1)[row], (*mTrack2)[row], (*mTrack3)[row], (*mTrack4)[row]
     };
 }
 
-TrackRow& Pattern::getTrackRow(ChType ch, uint16_t row) {
+TrackRow& Pattern::getTrackRow(ChType ch, int row) {
     Track *track;
     switch (ch) {
         case ChType::ch1:
@@ -39,17 +39,17 @@ TrackRow& Pattern::getTrackRow(ChType ch, uint16_t row) {
     return track->operator[](row);
 }
 
-TrackRow const& Pattern::getTrackRow(ChType ch, uint16_t row) const {
+TrackRow const& Pattern::getTrackRow(ChType ch, int row) const {
     return const_cast<TrackRow const&>(
         const_cast<Pattern*>(this)->getTrackRow(ch, row)
         );
 }
 
-unsigned Pattern::size() const {
+int Pattern::size() const {
     return mTrack1->size();
 }
 
-unsigned Pattern::totalRows() {
+int Pattern::totalRows() {
     if (mRowCount == 0) {
 
         std::array iters = { mTrack1->begin(), mTrack2->begin(), mTrack3->begin(), mTrack4->begin() };

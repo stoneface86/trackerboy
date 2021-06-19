@@ -38,8 +38,8 @@ class Song : public DataItem {
 public:
 
 
-    static constexpr uint8_t DEFAULT_RPB = 4;
-    static constexpr uint8_t DEFAULT_RPM = 16;
+    static constexpr int DEFAULT_RPB = 4;
+    static constexpr int DEFAULT_RPM = 16;
     // Tempo = 150, RPB = 4  => 6.0 frames per row
     static constexpr Speed DEFAULT_SPEED = 0x60;
     static constexpr uint16_t DEFAULT_ROWS = 64;
@@ -51,9 +51,9 @@ public:
 
     void reset() noexcept;
 
-    uint8_t rowsPerBeat() const noexcept;
+    int rowsPerBeat() const noexcept;
 
-    uint8_t rowsPerMeasure() const noexcept;
+    int rowsPerMeasure() const noexcept;
 
     Speed speed() const noexcept;
 
@@ -63,14 +63,14 @@ public:
     PatternMaster& patterns() noexcept;
     PatternMaster const& patterns() const noexcept;
 
-    Pattern getPattern(uint8_t orderNo);
+    Pattern getPattern(int orderNo);
 
-    TrackRow& getRow(ChType ch, uint8_t order, uint16_t row);
-    TrackRow getRow(ChType ch, uint8_t order, uint16_t row) const;
+    TrackRow& getRow(ChType ch, int order, int row);
+    TrackRow getRow(ChType ch, int order, int row) const;
 
-    void setRowsPerBeat(uint8_t rowsPerBeat);
+    void setRowsPerBeat(int rowsPerBeat);
 
-    void setRowsPerMeasure(uint8_t rowsPerMeasure);
+    void setRowsPerMeasure(int rowsPerMeasure);
 
     void setSpeed(Speed speed);
 
@@ -83,8 +83,8 @@ private:
     PatternMaster mMaster;
     Order mOrder;
 
-    uint8_t mRowsPerBeat;
-    uint8_t mRowsPerMeasure;
+    int mRowsPerBeat;
+    int mRowsPerMeasure;
 
     // Speed - fixed point Q4.4
     // frame timing for each row

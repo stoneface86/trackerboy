@@ -40,6 +40,27 @@ follow these rules when contributing:
 See [ORGANIZATION.md](ORGANIZATION.md) for details on where to put source files,
 as well as editing the build system.
 
+### Notes on integers
+
+The use of unsigned integers seems to be a controversal topic in C++,
+so I'm going to follow the advice of Bjarne Stroustrup, which is to avoid them.
+Fixed-width and unsigned integers should be avoided, only to be used in certain
+circumstances such as:
+ 1. bitwise operations / modulo arithmetic
+ 2. `size_t` for array indexing / or use with std library
+ 3. data serialization, or where the format of a struct is fixed
+ 4. memory optimization
+
+`unsigned` should not be used for nonnegative integers, always use `int`. Always default to using `int` unless you have a good reason otherwise.
+
+When indexing an array, prefer to use `int` unless you need the full
+range of `size_t`. The sizes of all arrays/vectors used in this project are well within the limits of `int`, so there should be rarely any need to use `size_t`
+
+When using unsigned or fixed-width, specify in the comments the
+reason why. A simple `// [1]` will suffice, where the number in
+the brackets refers to one of the reasons listed here.
+
+
 ### Documentation
 
-TBD. Haven't decided on using something like doxygen yet.
+TBD

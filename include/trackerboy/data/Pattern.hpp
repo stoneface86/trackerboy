@@ -41,21 +41,21 @@ public:
     //
     // Gets the row data at the given row index.
     //
-    PatternRow operator[](uint16_t row);
+    PatternRow operator[](int row);
 
-    TrackRow& getTrackRow(ChType ch, uint16_t row);
-    TrackRow const& getTrackRow(ChType ch, uint16_t row) const;
+    TrackRow& getTrackRow(ChType ch, int row);
+    TrackRow const& getTrackRow(ChType ch, int row) const;
 
     //
     // Gets the pattern size, in rows.
     //
-    unsigned size() const;
+    int size() const;
 
     //
     // Returns the count of rows that will be stepped by the MusicRuntime. Track::rowCount
     // will be returned if there are no pattern skip effects in any of the track data
     //
-    unsigned totalRows();
+    int totalRows();
 
 private:
     Track *mTrack1;
@@ -64,7 +64,7 @@ private:
     Track *mTrack4;
 
     // cache the calculated row count
-    unsigned mRowCount;
+    int mRowCount;
 };
 
 

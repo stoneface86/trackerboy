@@ -39,38 +39,38 @@ public:
 
     using Data = std::vector<TrackRow>;
 
-    Track(uint16_t rows);
+    Track(int rows);
 
-    TrackRow& operator[](uint16_t row);
-    TrackRow const& operator[](uint16_t row) const;
+    TrackRow& operator[](int row);
+    TrackRow const& operator[](int row) const;
 
     Data::iterator begin();
     Data::const_iterator begin() const;
 
-    void clear(uint16_t rowStart, uint16_t rowEnd);
+    void clear(int rowStart, int rowEnd);
 
-    void clearEffect(uint8_t row, uint8_t effectNo);
+    void clearEffect(int row, int effectNo);
 
-    void clearInstrument(uint8_t row);
+    void clearInstrument(int row);
 
-    void clearNote(uint8_t row);
+    void clearNote(int row);
 
     Data::iterator end();
     Data::const_iterator end() const;
 
-    void setEffect(uint8_t row, uint8_t effectNo, EffectType effect, uint8_t param = 0);
+    void setEffect(int row, int effectNo, EffectType effect, uint8_t param = 0);
 
-    void setInstrument(uint8_t row, uint8_t instrumentId);
+    void setInstrument(int row, uint8_t instrumentId);
 
-    void setNote(uint8_t row, uint8_t note);
+    void setNote(int row, uint8_t note);
 
-    void replace(uint8_t rowno, TrackRow &row);
+    void replace(int rowno, TrackRow &row);
 
-    void resize(uint16_t newSize);
+    void resize(int newSize);
 
-    uint16_t rowCount() const;
+    int rowCount() const;
 
-    unsigned size() const;
+    int size() const;
 
 private:
 
