@@ -54,7 +54,8 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mFilename(),
     mFilepath(),
     mState(),
-    mChannelEnables(CH1 | CH2 | CH3 | CH4)
+    mChannelEnables(CH1 | CH2 | CH3 | CH4),
+    mKeyRepetition(true)
 {
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }
@@ -283,4 +284,12 @@ void ModuleDocument::setChannelOutput(OutputFlags flags) {
         mChannelEnables = flags;
         emit channelOutputChanged(flags);
     }
+}
+
+void ModuleDocument::setKeyRepetition(bool repetition) {
+    mKeyRepetition = repetition;
+}
+
+bool ModuleDocument::keyRepetition() const {
+    return mKeyRepetition;
 }

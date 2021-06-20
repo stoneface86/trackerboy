@@ -114,7 +114,6 @@ private:
 
     void updateWindowTitle();
 
-    //Trackerboy &mApp;
     Miniaudio &mMiniaudio;
     Config mConfig;
 
@@ -122,7 +121,7 @@ private:
 
 
     // counter for how many times a new document has been created
-    unsigned mDocumentCounter;
+    int mDocumentCounter;
 
     ModuleModel mBrowserModel;
 
@@ -138,6 +137,13 @@ private:
     QToolBar mToolbarFile;
     QToolBar mToolbarEdit;
     QToolBar mToolbarTracker;
+    QToolBar mToolbarInput;
+        QLabel mOctaveLabel;
+        QSpinBox mOctaveSpin;
+        QLabel mEditStepLabel;
+        QSpinBox mEditStepSpin;
+    QToolBar mToolbarInstrument;
+        QComboBox mInstrumentCombo;
 
 
     // dock widgets
@@ -199,6 +205,21 @@ private:
         ActionFileExportWav,
         ActionFileClose,
         ActionFileCloseAll,
+
+        ActionEditCopy,
+        ActionEditCut,
+        ActionEditPaste,
+        ActionEditPasteMix,
+        ActionEditErase,
+        ActionEditSelectAll,
+        ActionEditNoteIncrease,
+        ActionEditNoteDecrease,
+        ActionEditOctaveIncrease,
+        ActionEditOctaveDecrease,
+        ActionEditTranspose,
+        ActionEditReverse,
+        ActionEditKeyRepetition,
+
         ActionTrackerPlay,
         ActionTrackerRestart,
         ActionTrackerPlayCurrentRow,
@@ -209,6 +230,7 @@ private:
         ActionTrackerSolo,
         ActionTrackerKill,
         ActionTrackerRepeat,
+        ActionTrackerFollow,
 
         ActionWindowPrev,
         ActionWindowNext,
@@ -223,8 +245,9 @@ private:
 
     // Edit
     QMenu mMenuEdit;
-    QAction *mActionEditUndo;
-    QAction *mActionEditRedo;
+        QAction *mActionEditUndo;
+        QAction *mActionEditRedo;
+        QMenu mMenuTranspose;
     
     // View
     QMenu mMenuView;

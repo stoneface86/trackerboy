@@ -177,6 +177,8 @@ public:
 
     OutputFlags channelOutput();
 
+    bool keyRepetition() const;
+
 signals:
     void modifiedChanged(bool value);
 
@@ -187,6 +189,8 @@ public slots:
     void makeDirty();
 
     void setChannelOutput(OutputFlags flags);
+
+    void setKeyRepetition(bool enable);
 
 private slots:
     void onStackCleanChanged(bool clean);
@@ -237,6 +241,8 @@ private:
 
     // bitmap for channels that are outputting sound.
     OutputFlags mChannelEnables;
+
+    bool mKeyRepetition;
 
     WidgetState mState;
 };

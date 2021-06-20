@@ -33,6 +33,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     QMainWindow(),
     mMiniaudio(miniaudio),
     mConfig(miniaudio),
+    mPianoInput(),
     mDocumentCounter(0),
     mErrorSinceLastConfig(false),
     mAboutDialog(nullptr),
@@ -41,8 +42,25 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mToolbarFile(),
     mToolbarEdit(),
     mToolbarTracker(),
+    mToolbarInput(),
+    mOctaveLabel(tr("Octave")),
+    mOctaveSpin(),
+    mEditStepLabel(tr("Edit step")),
+    mEditStepSpin(),
+    mToolbarInstrument(),
+    mInstrumentCombo(),
+    mDockModuleSettings(),
+    mModuleSettingsWidget(),
+    mDockInstrumentEditor(),
     mInstrumentEditor(mPianoInput),
+    mDockWaveformEditor(),
     mWaveEditor(mPianoInput),
+    mDockHistory(),
+    mUndoView(),
+    mHSplitter(nullptr),
+    mBrowser(),
+    mMainWidget(),
+    mMainLayout(),
     mPatternEditor(mPianoInput),
     mRenderer(new Renderer),
     mRenderThread(),
@@ -87,6 +105,8 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
         addToolBar(&mToolbarTracker);
+        addToolBar(&mToolbarInput);
+        addToolBar(&mToolbarInstrument);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleSettings);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockInstrumentEditor);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveformEditor);
@@ -111,6 +131,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
 
     // apply the read in configuration
     onConfigApplied(Config::CategoryAll);
+
 }
 
 MainWindow::~MainWindow() {
@@ -412,6 +433,8 @@ void MainWindow::onTabChanged(int tabIndex) {
         auto &patternModel = previousDocument->patternModel();
         patternModel.disconnect(&mActions[ActionTrackerRecord]);
         mActions[ActionTrackerRecord].disconnect(&patternModel);
+        mActions[ActionTrackerFollow].disconnect(&patternModel);
+        mActions[ActionEditKeyRepetition].disconnect(previousDocument);
     }
 
     if (hasDocument) {
@@ -420,6 +443,11 @@ void MainWindow::onTabChanged(int tabIndex) {
         mActions[ActionTrackerRecord].setChecked(patternModel.isRecording());
         connect(&mActions[ActionTrackerRecord], &QAction::toggled, &patternModel, &PatternModel::setRecord);
         connect(&patternModel, &PatternModel::recordingChanged, &mActions[ActionTrackerRecord], &QAction::setChecked);
+        mActions[ActionTrackerFollow].setChecked(patternModel.isFollowing());
+        connect(&mActions[ActionTrackerFollow], &QAction::toggled, &patternModel, &PatternModel::setFollowing);
+
+        mActions[ActionEditKeyRepetition].setChecked(doc->keyRepetition());
+        connect(&mActions[ActionEditKeyRepetition], &QAction::toggled, doc, &ModuleDocument::setKeyRepetition);
     } else {
         mActions[ActionTrackerRecord].setChecked(false);
     }
@@ -683,6 +711,29 @@ void MainWindow::setupUi() {
     mActionEditRedo->setIcon(IconManager::getIcon(Icons::editRedo));
     mActionEditRedo->setShortcut(QKeySequence::Redo);
 
+    setupAction(mActions[ActionEditCut], "C&ut", "Copies and deletes selection to the clipboard", Icons::editCut, QKeySequence::Cut);
+    setupAction(mActions[ActionEditCopy], "&Copy", "Copies selected rows to the clipboard", Icons::editCopy, QKeySequence::Copy);
+    setupAction(mActions[ActionEditPaste], "&Paste", "Pastes contents at the cursor", Icons::editPaste, QKeySequence::Paste);
+    setupAction(mActions[ActionEditPasteMix], "Paste &Mix", "Pastes contents at the cursor, merging with existing rows", tr("Ctrl+M"));
+    setupAction(mActions[ActionEditErase], "&Erase", "Erases selection contents", QKeySequence::Delete);
+    setupAction(mActions[ActionEditSelectAll], "&Select All", "Selects entire track/pattern", QKeySequence::SelectAll);
+    setupAction(mActions[ActionEditNoteDecrease], "Decrease note", "Decreases note/notes by 1 step");
+    setupAction(mActions[ActionEditNoteIncrease], "Increase note", "Increases note/notes by 1 step");
+    setupAction(mActions[ActionEditOctaveDecrease], "Decrease octave", "Decreases note/notes by 12 steps");
+    setupAction(mActions[ActionEditOctaveIncrease], "Increase octave", "Increases note/notes by 12 steps");
+    setupAction(mActions[ActionEditTranspose], "Custom...", "Transpose by a custom amount", tr("Ctrl+T"));
+    setupAction(mActions[ActionEditReverse], "&Reverse", "Reverses selected rows", tr("Ctrl+R"));
+    setupAction(mActions[ActionEditKeyRepetition], "Key repetition", "Toggles key repetition for pattern editor");
+    mActions[ActionEditKeyRepetition].setCheckable(true);
+    mActions[ActionEditKeyRepetition].setChecked(true);
+
+    mMenuTranspose.setTitle(tr("&Transpose"));
+    mMenuTranspose.addAction(&mActions[ActionEditNoteDecrease]);
+    mMenuTranspose.addAction(&mActions[ActionEditNoteIncrease]);
+    mMenuTranspose.addAction(&mActions[ActionEditOctaveDecrease]);
+    mMenuTranspose.addAction(&mActions[ActionEditOctaveDecrease]);
+    mMenuTranspose.addAction(&mActions[ActionEditTranspose]);
+
     setupAction(mActions[ActionViewResetLayout], "Reset layout", "Rearranges all docks and toolbars to the default layout");
 
     setupAction(mActions[ActionTrackerPlay], "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
@@ -697,7 +748,9 @@ void MainWindow::setupUi() {
     setupAction(mActions[ActionTrackerSolo], "Solo", "Solos the current track");
     setupAction(mActions[ActionTrackerKill], "&Kill sound", "Immediately stops sound output", QKeySequence(Qt::Key_F12));
     setupAction(mActions[ActionTrackerRepeat], "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat);
+    setupAction(mActions[ActionTrackerFollow], "Follow-mode", "Toggles follow mode", Qt::Key_ScrollLock);
     mActions[ActionTrackerRepeat].setCheckable(true);
+    mActions[ActionTrackerFollow].setCheckable(true);
 
     setupAction(mActions[ActionWindowPrev], "Pre&vious", "Move the focus to the previous module");
     setupAction(mActions[ActionWindowNext], "Ne&xt", "Move the focus to the next module");
@@ -728,13 +781,26 @@ void MainWindow::setupUi() {
     mMenuEdit.addAction(mActionEditUndo);
     mMenuEdit.addAction(mActionEditRedo);
     mMenuEdit.addSeparator();
-    mPatternEditor.setupMenu(mMenuEdit);
+    mMenuEdit.addAction(&mActions[ActionEditCut]);
+    mMenuEdit.addAction(&mActions[ActionEditCopy]);
+    mMenuEdit.addAction(&mActions[ActionEditPaste]);
+    mMenuEdit.addAction(&mActions[ActionEditPasteMix]);
+    mMenuEdit.addAction(&mActions[ActionEditErase]);
+    mMenuEdit.addSeparator();
+    mMenuEdit.addAction(&mActions[ActionEditSelectAll]);
+    mMenuEdit.addSeparator();
+    mMenuEdit.addMenu(&mMenuTranspose);
+    mMenuEdit.addAction(&mActions[ActionEditReverse]);
+    mMenuEdit.addSeparator();
+    mMenuEdit.addAction(&mActions[ActionEditKeyRepetition]);
 
     mMenuView.setTitle(tr("&View"));
     mMenuViewToolbars.setTitle(tr("&Toolbars"));
     mMenuViewToolbars.addAction(mToolbarFile.toggleViewAction());
     mMenuViewToolbars.addAction(mToolbarEdit.toggleViewAction());
     mMenuViewToolbars.addAction(mToolbarTracker.toggleViewAction());
+    mMenuViewToolbars.addAction(mToolbarInput.toggleViewAction());
+    mMenuViewToolbars.addAction(mToolbarInstrument.toggleViewAction());
     setupViewMenu(mMenuView);
 
     mMenuTracker.setTitle(tr("&Tracker"));
@@ -775,7 +841,7 @@ void MainWindow::setupUi() {
 
     // TOOLBARS ==============================================================
 
-    QSize const iconSize(16, 16);
+    QSize const iconSize(16, 16); // TODO: make this constant in IconManager
 
     mToolbarFile.setWindowTitle(tr("File"));
     mToolbarFile.setIconSize(iconSize);
@@ -792,10 +858,9 @@ void MainWindow::setupUi() {
     mToolbarEdit.addAction(mActionEditUndo);
     mToolbarEdit.addAction(mActionEditRedo);
     mToolbarEdit.addSeparator();
-    auto &patternActions = mPatternEditor.menuActions();
-    mToolbarEdit.addAction(&patternActions.cut);
-    mToolbarEdit.addAction(&patternActions.copy);
-    mToolbarEdit.addAction(&patternActions.paste);
+    mToolbarEdit.addAction(&mActions[ActionEditCut]);
+    mToolbarEdit.addAction(&mActions[ActionEditCopy]);
+    mToolbarEdit.addAction(&mActions[ActionEditPaste]);
 
     mToolbarTracker.setWindowTitle(tr("Tracker"));
     mToolbarTracker.setIconSize(iconSize);
@@ -805,9 +870,30 @@ void MainWindow::setupUi() {
     mToolbarTracker.addAction(&mActions[ActionTrackerPlayCurrentRow]);
     mToolbarTracker.addAction(&mActions[ActionTrackerStepRow]);
     mToolbarTracker.addAction(&mActions[ActionTrackerStop]);
+    mToolbarTracker.addSeparator();
     mToolbarTracker.addAction(&mActions[ActionTrackerRecord]);
+    mToolbarTracker.addAction(&mActions[ActionTrackerRepeat]);
+    mToolbarTracker.addAction(&mActions[ActionTrackerFollow]);
     
-    
+    mToolbarInput.setWindowTitle(tr("Input"));
+    mToolbarInput.setIconSize(iconSize);
+    setObjectNameFromDeclared(mToolbarInput);
+    mToolbarInput.addWidget(&mOctaveLabel);
+    mToolbarInput.addWidget(&mOctaveSpin);
+    mToolbarInput.addWidget(&mEditStepLabel);
+    mToolbarInput.addWidget(&mEditStepSpin);
+    mToolbarInput.addAction(&mActions[ActionEditKeyRepetition]);
+    mToolbarInput.setStyleSheet(QStringLiteral("spacing: 8px;"));
+    mOctaveSpin.setRange(2, 8);
+    mOctaveSpin.setValue(4);
+    mEditStepSpin.setRange(0, 255);
+    mEditStepSpin.setValue(1);
+
+    mToolbarInstrument.setWindowTitle(tr("Instrument"));
+    mToolbarInstrument.setIconSize(iconSize);
+    setObjectNameFromDeclared(mToolbarInstrument);
+    mToolbarInstrument.addWidget(&mInstrumentCombo);
+    mInstrumentCombo.setMinimumWidth(200);
 
     // DOCKS =================================================================
 
@@ -858,6 +944,20 @@ void MainWindow::setupUi() {
     connectActionToThis(mActions[ActionFileCloseAll], onFileCloseAll);
     connectActionToThis(mActions[ActionFileConfig], showConfigDialog);
     connectActionToThis(mActions[ActionFileQuit], close);
+
+    // Edit
+    connect(&mActions[ActionEditCut], &QAction::triggered, &mPatternEditor, &PatternEditor::cut);
+    connect(&mActions[ActionEditCopy], &QAction::triggered, &mPatternEditor, &PatternEditor::copy);
+    connect(&mActions[ActionEditPaste], &QAction::triggered, &mPatternEditor, &PatternEditor::paste);
+    connect(&mActions[ActionEditPasteMix], &QAction::triggered, &mPatternEditor, &PatternEditor::pasteMix);
+    connect(&mActions[ActionEditErase], &QAction::triggered, &mPatternEditor, &PatternEditor::erase);
+    connect(&mActions[ActionEditSelectAll], &QAction::triggered, &mPatternEditor, &PatternEditor::selectAll);
+    connect(&mActions[ActionEditNoteIncrease], &QAction::triggered, &mPatternEditor, &PatternEditor::increaseNote);
+    connect(&mActions[ActionEditNoteDecrease], &QAction::triggered, &mPatternEditor, &PatternEditor::decreaseNote);
+    connect(&mActions[ActionEditOctaveIncrease], &QAction::triggered, &mPatternEditor, &PatternEditor::increaseOctave);
+    connect(&mActions[ActionEditOctaveDecrease], &QAction::triggered, &mPatternEditor, &PatternEditor::decreaseOctave);
+    connect(&mActions[ActionEditTranspose], &QAction::triggered, &mPatternEditor, &PatternEditor::transpose);
+    connect(&mActions[ActionEditReverse], &QAction::triggered, &mPatternEditor, &PatternEditor::reverse);
 
     // view
     connectActionToThis(mActions[ActionViewResetLayout], onViewResetLayout);
