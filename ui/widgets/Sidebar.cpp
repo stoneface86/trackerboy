@@ -4,6 +4,8 @@
 
 #include <QHeaderView>
 
+#include <cmath>
+
 Sidebar::Sidebar(QWidget *parent) :
     QWidget(parent),
     mDocument(nullptr),
