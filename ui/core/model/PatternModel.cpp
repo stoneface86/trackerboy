@@ -52,6 +52,7 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
 void PatternModel::reload() {
     // patternCurr was invalidated
     mPatternCurr = mDocument.mod().song().getPattern(0);
+    mCursorPattern = -1;
     setCursorPattern(0);
 }
 
