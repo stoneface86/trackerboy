@@ -23,12 +23,12 @@ PatternGridHeader::PatternGridHeader(QWidget *parent) :
 void PatternGridHeader::setColors(ColorTable const& colorTable) {
     
     auto pal = palette();
-    pal.setColor(COLOR_BACKGROUND, colorTable[+Color::headerBackground]);
-    pal.setColor(COLOR_FOREGROUND, colorTable[+Color::headerForeground]);
-    pal.setColor(COLOR_HOVER, colorTable[+Color::headerHover]);
-    pal.setColor(COLOR_DISABLED, colorTable[+Color::headerDisabled]);
-    pal.setColor(COLOR_LINE, colorTable[+Color::line]);
+    pal.setColor(backgroundRole(), colorTable[+Color::headerBackground]);
     setPalette(pal);
+    mColorForeground = colorTable[+Color::headerForeground];
+    mColorHover = colorTable[+Color::headerHover];
+    mColorDisabled = colorTable[+Color::headerDisabled];
+    mColorLine = colorTable[+Color::line];
 
     update();
 }
@@ -58,9 +58,8 @@ void PatternGridHeader::paintEvent(QPaintEvent *evt) {
     Q_UNUSED(evt);
 
     QPainter painter(this);
-    auto &pal = palette();
     
-    painter.setPen(pal.color(COLOR_FOREGROUND));
+    painter.setPen(mColorForeground);
     painter.drawLine(0, HEIGHT - 2, width(), HEIGHT - 2);
     
     
@@ -71,10 +70,9 @@ void PatternGridHeader::paintEvent(QPaintEvent *evt) {
     // disabled tracks
     
     int xpos = mRownoWidth;
-    auto &disabledColor = pal.color(COLOR_DISABLED);
     for (int i = 0; i != 4; ++i) {
         if (!(mTrackFlags & (1 << i))) {
-            painter.fillRect(xpos, 0, mTrackWidth, HEIGHT, disabledColor);
+            painter.fillRect(xpos, 0, mTrackWidth, HEIGHT, mColorDisabled);
         }
         xpos += mTrackWidth;
     }
@@ -95,7 +93,7 @@ void PatternGridHeader::paintEvent(QPaintEvent *evt) {
 
     // lines
     xpos = 0;
-    painter.setPen(pal.color(COLOR_LINE));
+    painter.setPen(mColorLine);
     for (int i = 0; i != 5; ++i) {
         painter.drawLine(xpos, 0, xpos, HEIGHT);
         xpos += mTrackWidth;
@@ -104,7 +102,7 @@ void PatternGridHeader::paintEvent(QPaintEvent *evt) {
 
     // highlight
     if (mTrackHover != HOVER_NONE) {
-        painter.setPen(pal.color(COLOR_HOVER));
+        painter.setPen(mColorHover);
         int trackBegin = mTrackWidth * mTrackHover;
         int trackEnd = trackBegin + mTrackWidth;
         painter.drawLine(trackBegin, HEIGHT - 1, trackEnd, HEIGHT - 1);

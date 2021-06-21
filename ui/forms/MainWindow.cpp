@@ -61,6 +61,14 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mBrowser(),
     mMainWidget(),
     mMainLayout(),
+    mTabs(),
+    mEditorWidget(),
+    mEditorLayout(),
+    // mOrderGroup(tr("Song order")),
+    // mOrderLayout(),
+    // mOrderEditor(),
+    // mSongGroup(tr("Song settings")),
+    mSidebar(),
     mPatternEditor(mPianoInput),
     mRenderer(new Renderer),
     mRenderThread(),
@@ -104,6 +112,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     } else {
         addToolBar(&mToolbarFile);
         addToolBar(&mToolbarEdit);
+        addToolBar(&mToolbarSong);
         addToolBar(&mToolbarTracker);
         addToolBar(&mToolbarInput);
         addToolBar(&mToolbarInstrument);
@@ -464,6 +473,8 @@ void MainWindow::onTabChanged(int tabIndex) {
             // the index didn't change, but the referenced instrument might have
             mPatternEditor.setInstrument(index);
         }
+
+        updateOrderActions();
         
     } else {
         mInstrumentChoiceModel.setModel(nullptr);
@@ -471,10 +482,9 @@ void MainWindow::onTabChanged(int tabIndex) {
     }
     
 
-    mOrderEditor.setVisible(hasDocument);
-    mPatternEditor.setVisible(hasDocument);
     mTabs.setVisible(hasDocument);
-
+    mEditorWidget.setVisible(hasDocument);
+    
     mOctaveSpin.setEnabled(hasDocument);
     mEditStepSpin.setEnabled(hasDocument);
     mInstrumentCombo.setEnabled(hasDocument);
@@ -693,14 +703,28 @@ void MainWindow::setupUi() {
     //mVisualizerLayout.addWidget(&mPeakMeter, 1);
     //mVisualizerLayout.addWidget(&mRightScope);
 
-    mEditorLayout.addWidget(&mOrderEditor);
+    //mOrderLayout.addWidget(&mOrderEditor, 0, 0);
+    //mOrderGroup.setLayout(&mOrderLayout);
+
+    //mGroupLayout.addWidget(&mOrderGroup, 1);
+    //mGroupLayout.addWidget(&mSongGroup);
+
+    mMainWidget.setObjectName(QStringLiteral("MainWidget"));
+
+    //mEditorLayout.addLayout(&mGroupLayout);
+    mEditorLayout.addWidget(&mSidebar);
     mEditorLayout.addWidget(&mPatternEditor, 1);
     mEditorLayout.setMargin(0);
+    mEditorWidget.setLayout(&mEditorLayout);
+    mEditorWidget.setBackgroundRole(QPalette::Base);
+    mEditorWidget.setAutoFillBackground(true);
 
     //mMainLayout.addLayout(&mVisualizerLayout);
     mMainLayout.addWidget(&mTabs);
-    mMainLayout.addLayout(&mEditorLayout, 1);
+    //mMainLayout.addLayout(&mEditorLayout, 1);
+    mMainLayout.addWidget(&mEditorWidget, 1);
     mMainLayout.setMargin(0);
+    mMainLayout.setSpacing(0);
     mMainWidget.setLayout(&mMainLayout);
 
     mHSplitter->addWidget(&mBrowser);
@@ -708,10 +732,6 @@ void MainWindow::setupUi() {
     mHSplitter->setStretchFactor(0, 0);
     mHSplitter->setStretchFactor(1, 1);
     setCentralWidget(mHSplitter);
-
-    mTabs.setVisible(false);
-    mOrderEditor.setVisible(false);
-    mPatternEditor.setVisible(false);
 
     // ACTIONS ===============================================================
 
@@ -755,6 +775,12 @@ void MainWindow::setupUi() {
     mMenuTranspose.addAction(&mActions[ActionEditOctaveDecrease]);
     mMenuTranspose.addAction(&mActions[ActionEditOctaveDecrease]);
     mMenuTranspose.addAction(&mActions[ActionEditTranspose]);
+
+    setupAction(mActions[ActionSongOrderInsert], "&Insert order row", "Inserts a new order at the current pattern", Icons::itemAdd);
+    setupAction(mActions[ActionSongOrderRemove], "&Remove order row", "Removes the order at the current pattern", Icons::itemRemove);
+    setupAction(mActions[ActionSongOrderDuplicate], "&Duplicate order row", "Duplicates the order at the current pattern", Icons::itemDuplicate);
+    setupAction(mActions[ActionSongOrderMoveUp], "Move order &up", "Moves the order up 1", Icons::moveUp);
+    setupAction(mActions[ActionSongOrderMoveDown], "Move order dow&n", "Moves the order down 1", Icons::moveDown);
 
     setupAction(mActions[ActionViewResetLayout], "Reset layout", "Rearranges all docks and toolbars to the default layout");
 
@@ -816,10 +842,14 @@ void MainWindow::setupUi() {
     mMenuEdit.addSeparator();
     mMenuEdit.addAction(&mActions[ActionEditKeyRepetition]);
 
+    mMenuSong.setTitle(tr("&Song"));
+    setupSongMenu(mMenuSong);
+
     mMenuView.setTitle(tr("&View"));
     mMenuViewToolbars.setTitle(tr("&Toolbars"));
     mMenuViewToolbars.addAction(mToolbarFile.toggleViewAction());
     mMenuViewToolbars.addAction(mToolbarEdit.toggleViewAction());
+    mMenuViewToolbars.addAction(mToolbarSong.toggleViewAction());
     mMenuViewToolbars.addAction(mToolbarTracker.toggleViewAction());
     mMenuViewToolbars.addAction(mToolbarInput.toggleViewAction());
     mMenuViewToolbars.addAction(mToolbarInstrument.toggleViewAction());
@@ -851,13 +881,16 @@ void MainWindow::setupUi() {
     mMenuHelp.addAction(&mActions[ActionHelpAbout]);
     mMenuHelp.addAction(&mActions[ActionHelpAboutQt]);
 
+    setupSongMenu(mContextMenuOrder);
+
     // MENUBAR ================================================================
 
     auto menubar = menuBar();
     menubar->addMenu(&mMenuFile);
     menubar->addMenu(&mMenuEdit);
-    menubar->addMenu(&mMenuView);
+    menubar->addMenu(&mMenuSong);
     menubar->addMenu(&mMenuTracker);
+    menubar->addMenu(&mMenuView);
     menubar->addMenu(&mMenuWindow);
     menubar->addMenu(&mMenuHelp);
 
@@ -883,6 +916,16 @@ void MainWindow::setupUi() {
     mToolbarEdit.addAction(&mActions[ActionEditCut]);
     mToolbarEdit.addAction(&mActions[ActionEditCopy]);
     mToolbarEdit.addAction(&mActions[ActionEditPaste]);
+
+    mToolbarSong.setWindowTitle(tr("Song"));
+    mToolbarSong.setIconSize(iconSize);
+    setObjectNameFromDeclared(mToolbarSong);
+    mToolbarSong.addAction(&mActions[ActionSongOrderInsert]);
+    mToolbarSong.addAction(&mActions[ActionSongOrderRemove]);
+    mToolbarSong.addAction(&mActions[ActionSongOrderMoveUp]);
+    mToolbarSong.addAction(&mActions[ActionSongOrderMoveDown]);
+    mToolbarSong.addAction(&mActions[ActionSongOrderDuplicate]);
+    
 
     mToolbarTracker.setWindowTitle(tr("Tracker"));
     mToolbarTracker.setIconSize(iconSize);
@@ -1052,6 +1095,39 @@ void MainWindow::setupUi() {
             }
         });
 
+    connect(&mSidebar, &Sidebar::orderMenuRequested, this,
+        [this](QPoint const& pos) {
+            mContextMenuOrder.popup(pos);
+        });
+
+    // order actions
+    connect(&mActions[ActionSongOrderInsert], &QAction::triggered, this,
+        [this]() {
+            mBrowserModel.currentDocument()->orderModel().insert();
+            updateOrderActions();
+        });
+    connect(&mActions[ActionSongOrderRemove], &QAction::triggered, this,
+        [this]() {
+            mBrowserModel.currentDocument()->orderModel().remove();
+            updateOrderActions();
+        });
+    connect(&mActions[ActionSongOrderDuplicate], &QAction::triggered, this,
+        [this]() {
+            mBrowserModel.currentDocument()->orderModel().duplicate();
+            updateOrderActions();
+        });
+    connect(&mActions[ActionSongOrderMoveUp], &QAction::triggered, this,
+        [this]() {
+            mBrowserModel.currentDocument()->orderModel().moveUp();
+            updateOrderActions();
+        });
+    connect(&mActions[ActionSongOrderMoveDown], &QAction::triggered, this,
+        [this]() {
+            mBrowserModel.currentDocument()->orderModel().moveDown();
+            updateOrderActions();
+        });
+
+
     // sync worker
     //connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);
     connect(mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged, Qt::QueuedConnection);
@@ -1068,7 +1144,7 @@ void MainWindow::setupUi() {
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mInstrumentEditor, &InstrumentEditor::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mWaveEditor, &WaveEditor::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, mRenderer, &Renderer::setDocument);
-    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mOrderEditor, &OrderEditor::setDocument);
+    connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mSidebar, &Sidebar::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mPatternEditor, &PatternEditor::setDocument);
     
 
@@ -1134,6 +1210,15 @@ void MainWindow::setupViewMenu(QMenu &menu) {
     menu.addAction(&mActions[ActionViewResetLayout]);
 }
 
+void MainWindow::setupSongMenu(QMenu &menu) {
+    menu.addAction(&mActions[ActionSongOrderInsert]);
+    menu.addAction(&mActions[ActionSongOrderRemove]);
+    menu.addAction(&mActions[ActionSongOrderDuplicate]);
+    menu.addSeparator();
+    menu.addAction(&mActions[ActionSongOrderMoveUp]);
+    menu.addAction(&mActions[ActionSongOrderMoveDown]);
+}
+
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
     auto settingsBtn = msgbox.addButton(tr("Change settings"), QMessageBox::ActionRole);
     msgbox.addButton(QMessageBox::Close);
@@ -1152,4 +1237,14 @@ void MainWindow::updateWindowTitle() {
     } else {
         setWindowTitle(tr("Trackerboy"));
     }
+}
+
+void MainWindow::updateOrderActions() {
+    auto &model = mBrowserModel.currentDocument()->orderModel();
+    bool canInsert = model.canInsert();
+    mActions[ActionSongOrderInsert].setEnabled(canInsert);
+    mActions[ActionSongOrderDuplicate].setEnabled(canInsert);
+    mActions[ActionSongOrderRemove].setEnabled(model.canRemove());
+    mActions[ActionSongOrderMoveUp].setEnabled(model.canMoveUp());
+    mActions[ActionSongOrderMoveDown].setEnabled(model.canMoveDown());
 }

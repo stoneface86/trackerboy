@@ -44,13 +44,6 @@ private:
     static constexpr int FONT_WIDTH = 7;
     static constexpr int FONT_HEIGHT = 11;
 
-    // QPalette is used for color storage, the roles were chosen arbitrarily (except for BACKGROUND)
-    static constexpr auto COLOR_FOREGROUND = QPalette::WindowText;
-    static constexpr auto COLOR_BACKGROUND = QPalette::Window;
-    static constexpr auto COLOR_HOVER = QPalette::Button;
-    static constexpr auto COLOR_DISABLED = QPalette::Light;
-    static constexpr auto COLOR_LINE = QPalette::Midlight;
-
     static constexpr int HOVER_NONE = -1;
 
     void setTrackHover(int hover);
@@ -68,5 +61,10 @@ private:
     int mTrackHover;
 
     ModuleDocument::OutputFlags mTrackFlags;
+
+    QColor mColorForeground;
+    QColor mColorHover;
+    QColor mColorDisabled;
+    QColor mColorLine;
 
 };

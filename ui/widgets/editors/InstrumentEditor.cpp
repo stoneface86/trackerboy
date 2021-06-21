@@ -182,6 +182,7 @@ void InstrumentEditor::setCurrentItem(int index) {
         mCanModifyInstrument = false;
         auto channel = mInstrument->channel();
         mChannelCombo.setCurrentIndex(static_cast<int>(channel));
+        mSetEnvelopeCheck.setChecked(mInstrument->hasEnvelope());
         auto envelope = mInstrument->envelope();
         if (channel == trackerboy::ChType::ch3) {
             mWaveformCombo.setCurrentIndex(doc->waveModel().lookupId(envelope));

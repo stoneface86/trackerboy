@@ -2,24 +2,13 @@
 #pragma once
 
 #include "core/clipboard/PatternClipboard.hpp"
-#include "core/model/OrderModel.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
-#include "widgets/CustomSpinBox.hpp"
 
-#include <QCheckBox>
-#include <QComboBox>
-#include <QFormLayout>
 #include <QFrame>
-#include <QGroupBox>
 #include <QGridLayout>
-#include <QLabel>
-#include <QMenu>
 #include <QScrollBar>
-#include <QSpinBox>
-#include <QToolBar>
-#include <QVector>
 
 #include <array>
 #include <optional>
@@ -102,16 +91,6 @@ private slots:
     void updateScrollbars(PatternModel::CursorChangeFlags flags);
     void setCursorFromHScroll(int value);
 
-    void speedChanged(int value);
-    void tempoChanged(int value);
-
-    void enableAutoInstrument(bool enabled);
-    void setAutoInstrument(int index);
-
-    void updatePatternsSpin(QModelIndex const& index, int first, int last);
-
-    void updateTempoLabel();
-
 private:
 
     void pasteImpl(bool mix);
@@ -126,38 +105,6 @@ private:
     PianoInput const& mPianoIn;
     ModuleDocument *mDocument;
 
-    // QVBoxLayout mLayout;
-    //     QWidget mControls;
-    //         QVBoxLayout mControlsLayout;
-    //             QGridLayout mSettingsLayout;
-    //                 // row 0
-    //                 QLabel mRowsPerBeatLabel;
-    //                 QSpinBox mRowsPerBeatSpin;
-    //                 //
-    //                 QLabel mSpeedLabel;
-    //                 CustomSpinBox mSpeedSpin;
-    //                 QLabel mSpeedActualLabel;
-    //                 //
-    //                 QLabel mPatternsLabel;
-    //                 QSpinBox mPatternsSpin;
-    //                 //
-                    
-
-    //                 // row 1
-    //                 QLabel mRowsPerMeasureLabel;
-    //                 QSpinBox mRowsPerMeasureSpin;
-    //                 //
-    //                 QLabel mTempoLabel;
-    //                 QSpinBox mTempoSpin;
-    //                 QLabel mTempoActualLabel;
-    //                 //
-    //                 QLabel mPatternSizeLabel;
-    //                 QSpinBox mPatternSizeSpin;
-    //                 //
-                    
-
-    //                 std::array<QFrame, 2> mLines;
-    //     QFrame mGridFrame;
     QGridLayout mLayout;
         PatternGridHeader mGridHeader;
         PatternGrid mGrid;
@@ -176,12 +123,6 @@ private:
 
     std::optional<uint8_t> mInstrument;
 
-    //
-    // Vector of connections for the current document, makes disconnecting
-    // easy when switching documents
-    //
-    // make this an array later, the number of connections is static
-    // a vector is used for convenience
-    //
-    QVector<QMetaObject::Connection> mConnections;
+    std::array<QMetaObject::Connection, 4> mConnections;
+
 };

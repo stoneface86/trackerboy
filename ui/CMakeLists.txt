@@ -83,6 +83,7 @@ set(UI_SRC
     "widgets/PatternEditor.cpp"
     "widgets/PianoWidget.cpp"
     "widgets/SequenceEditor.cpp"
+    "widgets/Sidebar.cpp"
 )
 
 if (MSVC)

@@ -8,6 +8,9 @@
 ** %%6 - pattern editor font point size
 */
 
+QWidget#MainWidget {
+    background-color: gray;
+}
 
 PatternEditor PatternGrid {
     font-family: %5;
@@ -19,7 +22,7 @@ AudioScope {
     color: %3;
 }
 
-OrderEditor QTableView {
+Sidebar QTableView {
     background-color: %1;
     gridline-color: %2;
     color: %3;
@@ -28,7 +31,7 @@ OrderEditor QTableView {
     font-family: %5;
 }
 
-OrderEditor QTableView QTableCornerButton::section {
+Sidebar QTableView QTableCornerButton::section {
     background-color: %1;
     border-right: 1px solid %2;
     border-bottom: 1px solid %2;
@@ -36,13 +39,13 @@ OrderEditor QTableView QTableCornerButton::section {
     border bottom: none;
 }
 
-OrderEditor QTableView QHeaderView {
+Sidebar QTableView QHeaderView {
     background-color: %1;
     color: %3;
     font-family: %5;
 }
 
-OrderEditor QTableView QHeaderView::section {
+Sidebar QTableView QHeaderView::section {
     background-color: %1;
     border-right: 1px solid %2;
     border-bottom: 1px solid %2;

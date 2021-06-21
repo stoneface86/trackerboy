@@ -70,7 +70,7 @@ void PatternGrid::setColors(ColorTable const& colors) {
 
     // update palette so the background is automatically drawn
     auto pal = palette();
-    pal.setColor(QPalette::Window, colors[+Color::background]);
+    pal.setColor(backgroundRole(), colors[+Color::background]);
     setPalette(pal);
 
     // new colors, redraw everything

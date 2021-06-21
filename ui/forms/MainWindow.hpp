@@ -13,6 +13,7 @@
 #include "widgets/editors/WaveEditor.hpp"
 #include "widgets/OrderEditor.hpp"
 #include "widgets/PatternEditor.hpp"
+#include "widgets/Sidebar.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/visualizers/PeakMeter.hpp"
 
@@ -101,6 +102,8 @@ private:
 
     void setupViewMenu(QMenu &menu);
 
+    void setupSongMenu(QMenu &menu);
+
     void settingsMessageBox(QMessageBox &msgbox);
 
     // document management
@@ -114,6 +117,8 @@ private:
     bool closeDocument(ModuleDocument *doc);
 
     void updateWindowTitle();
+
+    void updateOrderActions();
 
     Miniaudio &mMiniaudio;
     Config mConfig;
@@ -137,6 +142,7 @@ private:
     // toolbars
     QToolBar mToolbarFile;
     QToolBar mToolbarEdit;
+    QToolBar mToolbarSong;
     QToolBar mToolbarTracker;
     QToolBar mToolbarInput;
         QLabel mOctaveLabel;
@@ -171,9 +177,16 @@ private:
                 //    PeakMeter mPeakMeter;
                 //    AudioScope mRightScope;
                 QTabBar mTabs;
-                QHBoxLayout mEditorLayout;
-                    OrderEditor mOrderEditor;
-                    PatternEditor mPatternEditor;
+                QWidget mEditorWidget;
+                    QHBoxLayout mEditorLayout;
+                        // QVBoxLayout mGroupLayout;
+                        //     QGroupBox mOrderGroup;
+                        //         QGridLayout mOrderLayout;
+                        //             OrderEditor mOrderEditor;
+                        //     QGroupBox mSongGroup;
+                        //         //QGridLayout mSongLayout;
+                        Sidebar mSidebar;
+                        PatternEditor mPatternEditor;
 
 
     // statusbar widgets
@@ -222,6 +235,12 @@ private:
         ActionEditReverse,
         ActionEditKeyRepetition,
 
+        ActionSongOrderInsert,
+        ActionSongOrderRemove,
+        ActionSongOrderDuplicate,
+        ActionSongOrderMoveUp,
+        ActionSongOrderMoveDown,
+
         ActionTrackerPlay,
         ActionTrackerRestart,
         ActionTrackerPlayCurrentRow,
@@ -251,6 +270,9 @@ private:
         QAction *mActionEditRedo;
         QMenu mMenuTranspose;
     
+    // Song
+    QMenu mMenuSong;
+
     // View
     QMenu mMenuView;
         QMenu mMenuViewToolbars;
@@ -263,6 +285,9 @@ private:
 
     // Help
     QMenu mMenuHelp;
+
+    QMenu mContextMenuOrder;
+
 
     // workers / threading
 
