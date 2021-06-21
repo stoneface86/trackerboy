@@ -41,7 +41,12 @@ public:
     virtual bool event(QEvent *evt) override;
 
 signals:
-    void octaveChanged(int octave);
+
+    void changeOctave(int octave);
+
+    void nextInstrument();
+
+    void previousInstrument();
 
     void previewNote(quint8 note);
 
@@ -50,6 +55,8 @@ signals:
 public slots:
 
     void setDocument(ModuleDocument *doc);
+
+    void setInstrument(int index);
 
     void cut();
 

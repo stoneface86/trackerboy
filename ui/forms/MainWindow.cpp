@@ -435,6 +435,7 @@ void MainWindow::onTabChanged(int tabIndex) {
         mActions[ActionTrackerRecord].disconnect(&patternModel);
         mActions[ActionTrackerFollow].disconnect(&patternModel);
         mActions[ActionEditKeyRepetition].disconnect(previousDocument);
+        previousDocument->setInstrument(mInstrumentCombo.currentIndex());
     }
 
     if (hasDocument) {
@@ -443,12 +444,29 @@ void MainWindow::onTabChanged(int tabIndex) {
         mActions[ActionTrackerRecord].setChecked(patternModel.isRecording());
         connect(&mActions[ActionTrackerRecord], &QAction::toggled, &patternModel, &PatternModel::setRecord);
         connect(&patternModel, &PatternModel::recordingChanged, &mActions[ActionTrackerRecord], &QAction::setChecked);
+        
+        // follow mode
         mActions[ActionTrackerFollow].setChecked(patternModel.isFollowing());
         connect(&mActions[ActionTrackerFollow], &QAction::toggled, &patternModel, &PatternModel::setFollowing);
 
+        // key repetition
         mActions[ActionEditKeyRepetition].setChecked(doc->keyRepetition());
         connect(&mActions[ActionEditKeyRepetition], &QAction::toggled, doc, &ModuleDocument::setKeyRepetition);
+
+        // edit step
+        mEditStepSpin.setValue(doc->editStep());
+
+        mInstrumentChoiceModel.setModel(&doc->instrumentModel());
+        auto index = doc->instrument();
+        if (index != mInstrumentCombo.currentIndex()) {
+            mInstrumentCombo.setCurrentIndex(doc->instrument());
+        } else {
+            // the index didn't change, but the referenced instrument might have
+            mPatternEditor.setInstrument(index);
+        }
+        
     } else {
+        mInstrumentChoiceModel.setModel(nullptr);
         mActions[ActionTrackerRecord].setChecked(false);
     }
     
@@ -456,6 +474,10 @@ void MainWindow::onTabChanged(int tabIndex) {
     mOrderEditor.setVisible(hasDocument);
     mPatternEditor.setVisible(hasDocument);
     mTabs.setVisible(hasDocument);
+
+    mOctaveSpin.setEnabled(hasDocument);
+    mEditStepSpin.setEnabled(hasDocument);
+    mInstrumentCombo.setEnabled(hasDocument);
 
     if (hasDocument) {
         mPatternEditor.setFocus();
@@ -885,7 +907,7 @@ void MainWindow::setupUi() {
     mToolbarInput.addAction(&mActions[ActionEditKeyRepetition]);
     mToolbarInput.setStyleSheet(QStringLiteral("spacing: 8px;"));
     mOctaveSpin.setRange(2, 8);
-    mOctaveSpin.setValue(4);
+    mOctaveSpin.setValue(mPianoInput.octave());
     mEditStepSpin.setRange(0, 255);
     mEditStepSpin.setValue(1);
 
@@ -894,6 +916,7 @@ void MainWindow::setupUi() {
     setObjectNameFromDeclared(mToolbarInstrument);
     mToolbarInstrument.addWidget(&mInstrumentCombo);
     mInstrumentCombo.setMinimumWidth(200);
+    mInstrumentCombo.setModel(&mInstrumentChoiceModel);
 
     // DOCKS =================================================================
 
@@ -1001,9 +1024,33 @@ void MainWindow::setupUi() {
         connect(&piano, &PianoWidget::keyUp, mRenderer, &Renderer::stopPreview, Qt::QueuedConnection);
     }
 
-    connect(&mPatternEditor, &PatternEditor::octaveChanged, this, [this](int octave){ 
-        mPianoInput.setOctave(octave); 
-    });
+    connect(&mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, 
+        [this](int octave) {
+            mPianoInput.setOctave(octave);
+        });
+    connect(&mPatternEditor, &PatternEditor::changeOctave, &mOctaveSpin, &QSpinBox::setValue);
+
+    connect(&mEditStepSpin, qOverload<int>(&QSpinBox::valueChanged), this,
+            [this](int value) {
+                mBrowserModel.currentDocument()->setEditStep(value);
+            });
+
+    connect(&mInstrumentCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mPatternEditor, &PatternEditor::setInstrument);
+
+    connect(&mPatternEditor, &PatternEditor::nextInstrument, this,
+        [this]() {
+            auto index = mInstrumentCombo.currentIndex() + 1;
+            if (index < mInstrumentCombo.count()) {
+                mInstrumentCombo.setCurrentIndex(index);
+            }
+        });
+    connect(&mPatternEditor, &PatternEditor::previousInstrument, this,
+        [this]() {
+            auto index = mInstrumentCombo.currentIndex() - 1;
+            if (index >= 0) {
+                mInstrumentCombo.setCurrentIndex(index);
+            }
+        });
 
     // sync worker
     //connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);

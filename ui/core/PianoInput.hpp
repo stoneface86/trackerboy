@@ -61,6 +61,8 @@ public:
     //
     std::optional<trackerboy::Note> keyToNote(int key) const;
 
+    int octave() const;
+
     void setOctave(int octave);
 
 private:

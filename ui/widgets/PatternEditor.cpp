@@ -132,7 +132,7 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     mSpeedLock(false),
     mScrollLock(false),
     mClipboard(),
-    mInstrument(0)
+    mInstrument()
 {
 
     setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -341,20 +341,14 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             return;
         case Qt::Key_Up:
             if (controlDown) {
-                // auto index = mInstrumentCombo.currentIndex();
-                // if (++index < mInstrumentCombo.count()) {
-                //     mInstrumentCombo.setCurrentIndex(index);
-                // }
+                emit nextInstrument();
             } else {
                 patternModel.moveCursorRow(-1, selectionMode);
             }
             return;
         case Qt::Key_Down:
             if (controlDown) {
-                // auto index = mInstrumentCombo.currentIndex();
-                // if (index > 0) {
-                //     mInstrumentCombo.setCurrentIndex(index - 1);
-                // }
+                emit previousInstrument();
             } else {
                 patternModel.moveCursorRow(1, selectionMode);
             }
@@ -370,13 +364,13 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             return;
         case Qt::Key_Asterisk:
             if (modifiers.testFlag(Qt::KeypadModifier)) {
-                //mOctaveSpin.setValue(mOctaveSpin.value() + 1);
+                emit changeOctave(mPianoIn.octave() + 1);
                 return;
             }
             break;
         case Qt::Key_Slash:
             if (modifiers.testFlag(Qt::KeypadModifier)) {
-                //mOctaveSpin.setValue(mOctaveSpin.value() - 1);
+                emit changeOctave(mPianoIn.octave() - 1);
                 return;
             }
             break;
@@ -596,6 +590,14 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
 
 }
 
+void PatternEditor::setInstrument(int index) {
+    if (index == 0) {
+        mInstrument.reset();
+    } else {
+        mInstrument = mDocument->instrumentModel().id(index - 1);
+    }
+}
+
 void PatternEditor::cut() {
     copy();
     mDocument->patternModel().deleteSelection();
@@ -755,8 +757,7 @@ void PatternEditor::setAutoInstrument(int index) {
 }
 
 void PatternEditor::stepDown() {
-    //auto &patternModel = mDocument->patternModel();
-    //patternModel.moveCursorRow(mEditStepSpin.value());
+    mDocument->patternModel().moveCursorRow(mDocument->editStep());
 }
 
 void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {

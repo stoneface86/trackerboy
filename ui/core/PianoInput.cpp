@@ -50,6 +50,10 @@ std::optional<trackerboy::Note> PianoInput::keyToNote(int key) const {
 
 }
 
+int PianoInput::octave() const {
+    return mOctave + 2;
+}
+
 void PianoInput::setOctave(int octave) {
     if (octave >= 2 && octave <= 8) {
         mOctave = octave - 2;

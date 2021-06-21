@@ -55,7 +55,9 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mFilepath(),
     mState(),
     mChannelEnables(CH1 | CH2 | CH3 | CH4),
-    mKeyRepetition(true)
+    mKeyRepetition(true),
+    mEditStep(1),
+    mInstrument(0)
 {
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }
@@ -292,4 +294,22 @@ void ModuleDocument::setKeyRepetition(bool repetition) {
 
 bool ModuleDocument::keyRepetition() const {
     return mKeyRepetition;
+}
+
+void ModuleDocument::setEditStep(int editStep) {
+    if (editStep >= 0) {
+        mEditStep = editStep;
+    }
+}
+
+int ModuleDocument::editStep() const {
+    return mEditStep;
+}
+
+int ModuleDocument::instrument() const {
+    return mInstrument;
+}
+
+void ModuleDocument::setInstrument(int instrument) {
+    mInstrument = instrument;
 }

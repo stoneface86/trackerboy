@@ -4,6 +4,7 @@
 #include "core/SyncWorker.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/ModuleModel.hpp"
+#include "core/model/InstrumentChoiceModel.hpp"
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
@@ -144,6 +145,7 @@ private:
         QSpinBox mEditStepSpin;
     QToolBar mToolbarInstrument;
         QComboBox mInstrumentCombo;
+        InstrumentChoiceModel mInstrumentChoiceModel;
 
 
     // dock widgets

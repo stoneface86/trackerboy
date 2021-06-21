@@ -179,6 +179,10 @@ public:
 
     bool keyRepetition() const;
 
+    int editStep() const;
+
+    int instrument() const;
+
 signals:
     void modifiedChanged(bool value);
 
@@ -191,6 +195,10 @@ public slots:
     void setChannelOutput(OutputFlags flags);
 
     void setKeyRepetition(bool enable);
+
+    void setEditStep(int editStep);
+
+    void setInstrument(int instrument);
 
 private slots:
     void onStackCleanChanged(bool clean);
@@ -243,6 +251,8 @@ private:
     OutputFlags mChannelEnables;
 
     bool mKeyRepetition;
+    int mEditStep;
+    int mInstrument;
 
     WidgetState mState;
 };
