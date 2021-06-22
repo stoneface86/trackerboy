@@ -1,4 +1,6 @@
 
+#include "trackerboy/note.hpp"
+
 #include "core/clipboard/PatternClip.hpp"
 #include "core/model/PatternModel.hpp"
 #include "core/model/ModuleDocument.hpp"
@@ -913,6 +915,10 @@ void PatternModel::setNote(std::optional<uint8_t> note, std::optional<uint8_t> i
     auto oldInstrument = rowdata.queryInstrument();
 
     auto const editNote = oldNote != note;
+    if (editNote && note.has_value() && *note == trackerboy::NOTE_CUT) {
+        // don't set the instrument for note cuts
+        instrument.reset();
+    }
     // edit the instrument if the instrument has a value and the it does not equal the current instrument
     auto const editInstrument = instrument && oldInstrument != instrument;
     int editCount = editNote + editInstrument;
