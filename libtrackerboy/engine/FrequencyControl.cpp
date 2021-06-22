@@ -84,13 +84,13 @@ void FrequencyControl::apply(Operation const& op) noexcept {
     bool updateChord = false;
 
     bool newNote;
-    if (op.note && *op.note <= mMaxNote) {
+    if (op.note) {
         if (mMod == ModType::noteSlide) {
             // setting a new note cancels a note slide
             mMod = ModType::none;
         }
 
-        mNote = *op.note;
+        mNote = std::min(*op.note, mMaxNote);
         newNote = true;
     } else {
         newNote = false;
