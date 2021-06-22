@@ -445,6 +445,7 @@ void MainWindow::onTabChanged(int tabIndex) {
         mActions[ActionTrackerFollow].disconnect(&patternModel);
         mActions[ActionEditKeyRepetition].disconnect(previousDocument);
         previousDocument->setInstrument(mInstrumentCombo.currentIndex());
+        previousDocument->orderModel().disconnect(this);
     }
 
     if (hasDocument) {
@@ -474,6 +475,10 @@ void MainWindow::onTabChanged(int tabIndex) {
             mPatternEditor.setInstrument(index);
         }
 
+        auto &orderModel = doc->orderModel();
+        // when the user changes the current pattern, we have to make sure the
+        // move up/down actions are properly enabled
+        connect(&orderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
         updateOrderActions();
         
     } else {
