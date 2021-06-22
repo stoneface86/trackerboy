@@ -45,7 +45,7 @@ QIcon const& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/save-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::fileConfig:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/fileConfig.png"));
                 break;
             case Icons::editUndo:
                 iconRef.addFile(QStringLiteral(":/icons/editUndo.png"));

@@ -8,6 +8,7 @@
     
     <file>icons/fileNew.png</file>
     <file>icons/fileOpen.png</file>
+    <file>icons/fileConfig.png</file>
     <file>icons/save.png</file>
     <file>icons/save-disabled.png</file>
     <file>icons/editUndo.png</file>
