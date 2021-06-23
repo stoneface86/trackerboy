@@ -70,6 +70,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     // mSongGroup(tr("Song settings")),
     mSidebar(),
     mPatternEditor(mPianoInput),
+    mPlayAndStopShortcut(this),
     mRenderer(new Renderer),
     mRenderThread(),
     mSyncWorker(new SyncWorker(*mRenderer)), //, mLeftScope, mRightScope)),
@@ -437,6 +438,8 @@ void MainWindow::onTabChanged(int tabIndex) {
         }
     }
 
+    mPlayAndStopShortcut.setEnabled(hasDocument);
+
     if (previousDocument) {
         // disconnect any signals for the previous document
         auto &patternModel = previousDocument->patternModel();
@@ -790,17 +793,17 @@ void MainWindow::setupUi() {
     setupAction(mActions[ActionViewResetLayout], "Reset layout", "Rearranges all docks and toolbars to the default layout");
 
     setupAction(mActions[ActionTrackerPlay], "&Play", "Resume playing or play the song from the current position", Icons::trackerPlay);
-    setupAction(mActions[ActionTrackerRestart], "Play from start", "Begin playback of the song from the start", Icons::trackerRestart);
-    setupAction(mActions[ActionTrackerPlayCurrentRow], "Play at cursor", "Begin playback from the cursor", Icons::trackerPlayRow);
-    setupAction(mActions[ActionTrackerStepRow], "Step row", "Play and hold the row at the cursor", Icons::trackerStepRow);
-    setupAction(mActions[ActionTrackerStop], "&Stop", "Stop playing", Icons::trackerStop);
-    setupAction(mActions[ActionTrackerRecord], "Record", "Toggles record mode", Icons::trackerRecord);
+    setupAction(mActions[ActionTrackerRestart], "Play from start", "Begin playback of the song from the start", Icons::trackerRestart, QKeySequence(Qt::Key_F5));
+    setupAction(mActions[ActionTrackerPlayCurrentRow], "Play at cursor", "Begin playback from the cursor", Icons::trackerPlayRow, QKeySequence(Qt::Key_F6));
+    setupAction(mActions[ActionTrackerStepRow], "Step row", "Play and hold the row at the cursor", Icons::trackerStepRow, QKeySequence(Qt::Key_F7));
+    setupAction(mActions[ActionTrackerStop], "&Stop", "Stop playing", Icons::trackerStop, QKeySequence(Qt::Key_F8));
+    setupAction(mActions[ActionTrackerRecord], "Record", "Toggles record mode", Icons::trackerRecord, QKeySequence(Qt::Key_Space));
     mActions[ActionTrackerRecord].setCheckable(true);
 
-    setupAction(mActions[ActionTrackerToggleChannel], "Toggle channel output", "Enables/disables sound output for the current track");
-    setupAction(mActions[ActionTrackerSolo], "Solo", "Solos the current track");
+    setupAction(mActions[ActionTrackerToggleChannel], "Toggle channel output", "Enables/disables sound output for the current track", QKeySequence(Qt::Key_F10));
+    setupAction(mActions[ActionTrackerSolo], "Solo", "Solos the current track", QKeySequence(Qt::Key_F11));
     setupAction(mActions[ActionTrackerKill], "&Kill sound", "Immediately stops sound output", QKeySequence(Qt::Key_F12));
-    setupAction(mActions[ActionTrackerRepeat], "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat);
+    setupAction(mActions[ActionTrackerRepeat], "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat, QKeySequence(Qt::Key_F9));
     setupAction(mActions[ActionTrackerFollow], "Follow-mode", "Toggles follow mode", Qt::Key_ScrollLock);
     mActions[ActionTrackerRepeat].setCheckable(true);
     mActions[ActionTrackerFollow].setCheckable(true);
@@ -965,6 +968,10 @@ void MainWindow::setupUi() {
     mToolbarInstrument.addWidget(&mInstrumentCombo);
     mInstrumentCombo.setMinimumWidth(200);
     mInstrumentCombo.setModel(&mInstrumentChoiceModel);
+
+    // SHORTCUTS =============================================================
+
+    mPlayAndStopShortcut.setKey(QKeySequence(Qt::Key_Return));
 
     // DOCKS =================================================================
 
@@ -1144,6 +1151,15 @@ void MainWindow::setupUi() {
     connect(&mPatternEditor, &PatternEditor::previewNote, mRenderer, &Renderer::previewNote, Qt::QueuedConnection);
     connect(&mPatternEditor, &PatternEditor::stopNotePreview, mRenderer, &Renderer::stopPreview, Qt::QueuedConnection);
     
+
+    connect(&mPlayAndStopShortcut, &QShortcut::activated, this,
+        [this]() {
+            if (mRenderer->isRunning()) {
+                mActions[ActionTrackerStop].trigger();
+            } else {
+                mActions[ActionTrackerPlay].trigger();
+            }
+        });
 
 
     // sync worker

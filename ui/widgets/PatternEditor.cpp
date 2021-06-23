@@ -192,7 +192,6 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     // Ctrl+Up/Ctrl+Down - select current instrument
     // Ctrl+Left/Ctrl+Right - select current pattern
     // Tab/Shift-Tab - move cursor to next/previous track
-    // Space - toggles record mode
     // Numpad / * - decrease or increase octave
     
     // navigation keys / non-edit keys
@@ -232,9 +231,6 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             return;
         case Qt::Key_PageUp:
             patternModel.moveCursorRow(-mPageStep, selectionMode);
-            return;
-        case Qt::Key_Space:
-            patternModel.setRecord(!patternModel.isRecording());
             return;
         case Qt::Key_Asterisk:
             if (modifiers.testFlag(Qt::KeypadModifier)) {

@@ -28,6 +28,7 @@
 #include <QToolBar>
 #include <QTabBar>
 #include <QUndoView>
+#include <QShortcut>
 #include <QSplitter>
 #include <QTreeView>
 
@@ -287,6 +288,8 @@ private:
     QMenu mMenuHelp;
 
     QMenu mContextMenuOrder;
+
+    QShortcut mPlayAndStopShortcut;
 
 
     // workers / threading
