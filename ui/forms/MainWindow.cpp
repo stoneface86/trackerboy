@@ -70,7 +70,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     // mSongGroup(tr("Song settings")),
     mSidebar(),
     mPatternEditor(mPianoInput),
-    mPlayAndStopShortcut(this),
+    mPlayAndStopShortcut(&mPatternEditor),
     mRenderer(new Renderer),
     mRenderThread(),
     mSyncWorker(new SyncWorker(*mRenderer)), //, mLeftScope, mRightScope)),
@@ -972,6 +972,7 @@ void MainWindow::setupUi() {
     // SHORTCUTS =============================================================
 
     mPlayAndStopShortcut.setKey(QKeySequence(Qt::Key_Return));
+    mPlayAndStopShortcut.setContext(Qt::WidgetWithChildrenShortcut);
 
     // DOCKS =================================================================
 
