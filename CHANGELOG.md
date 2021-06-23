@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  * Export to .gbs
  * Visualizers - scopes and peak meters
 
+## [0.3.1] - 2021-06-23
+### Changed
+ - Play and stop shortcut only triggers when pattern editor has focus
+### Fixed
+ - Note previews not working right on CH4
+ - Current track not updating in order editor
 
 ## [0.3.0] - 2021-06-22
 ### Added
