@@ -19,30 +19,31 @@ InstrumentPreview::InstrumentPreview() :
 {
 }
 
-void InstrumentPreview::setInstrument(std::shared_ptr<Instrument> instrument) {
+void InstrumentPreview::setInstrument(std::shared_ptr<Instrument> instrument, std::optional<ChType> ch) {
     mInstrument = std::move(instrument);
     if (mInstrument) {
-        mCh = mInstrument->channel();
+        mCh = ch.value_or(mInstrument->channel());
         if (mCh == ChType::ch4) {
             mFc = &mNoiseFc;
         } else {
             mFc = &mToneFc;
         }
-        restart();
-        mInit = true;
+        
     } else {
+        mCh = ch.value_or(ChType::ch1);
         mIr.reset();
     }
+
+    restart();
+    mInit = true;
 }
 
 
 void InstrumentPreview::play(uint8_t note) {
-    if (mInstrument) {
-        Operation op;
-        op.note = note;
-        mFc->apply(op);
-        restart();
-    }
+    Operation op;
+    op.note = note;
+    mFc->apply(op);
+    restart();
 }
 
 void InstrumentPreview::step(RuntimeContext const& rc) {
@@ -107,10 +108,11 @@ void InstrumentPreview::step(RuntimeContext const& rc) {
 
 void InstrumentPreview::restart() {
     mRetrigger = true;
-    mIr.emplace(*mInstrument);
-    mToneFc.useInstrument(*mInstrument);
-    mNoiseFc.useInstrument(*mInstrument);
-
+    if (mInstrument) {
+        mIr.emplace(*mInstrument);
+        mToneFc.useInstrument(*mInstrument);
+        mNoiseFc.useInstrument(*mInstrument);
+    }
 }
 
 }

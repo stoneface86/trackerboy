@@ -1132,6 +1132,10 @@ void MainWindow::setupUi() {
             updateOrderActions();
         });
 
+    connect(&mPatternEditor, &PatternEditor::previewNote, mRenderer, &Renderer::previewNote, Qt::QueuedConnection);
+    connect(&mPatternEditor, &PatternEditor::stopNotePreview, mRenderer, &Renderer::stopPreview, Qt::QueuedConnection);
+    
+
 
     // sync worker
     //connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);

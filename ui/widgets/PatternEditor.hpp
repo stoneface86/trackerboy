@@ -37,7 +37,7 @@ signals:
 
     void previousInstrument();
 
-    void previewNote(quint8 note);
+    void previewNote(int note, int track, int instrument);
 
     void stopNotePreview();
 
@@ -124,5 +124,6 @@ private:
     std::optional<uint8_t> mInstrument;
 
     std::array<QMetaObject::Connection, 4> mConnections;
+
 
 };

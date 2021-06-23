@@ -151,6 +151,11 @@ public slots:
     // instrument preview
     void previewInstrument(quint8 note);
 
+    //
+    // Previews a note on the given track using the given instrument.
+    //
+    void previewNote(int note, int track, int instrument);
+
     // waveform preview
     void previewWaveform(quint8 note);
 
@@ -220,6 +225,8 @@ private:
 
     // utility function for preview slots
     void resetPreview();
+
+    void previewNoteOrInstrument(int note, int track = -1, int instrument = -1);
 
     void setMusicDocument();
 

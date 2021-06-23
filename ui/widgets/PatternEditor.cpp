@@ -270,8 +270,10 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
 
             if (note) {
                 if (*note != trackerboy::NOTE_CUT) {
-                    mPreviewKey = key;
-                    emit previewNote(*note);
+                    if (mPreviewKey != key) {
+                        mPreviewKey = key;
+                        emit previewNote(*note, patternModel.cursorTrack(), mInstrument.value_or(-1));
+                    }
                 }
                 if (recording) {
                     patternModel.setNote(note, mInstrument);
@@ -338,7 +340,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
 }
 
 void PatternEditor::keyReleaseEvent(QKeyEvent *evt) {
-    if (evt->key() == mPreviewKey) {
+    if (!evt->isAutoRepeat() && evt->key() == mPreviewKey) {
         mPreviewKey = Qt::Key_unknown;
         emit stopNotePreview();
     }

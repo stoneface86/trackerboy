@@ -299,8 +299,7 @@ void Renderer::setPatternRepeat(bool repeat) {
     }
 }
 
-
-void Renderer::previewInstrument(quint8 note) {
+void Renderer::previewNoteOrInstrument(int note, int track, int instrument) {
     Q_ASSERT(isThreadSafe());
 
     if (mEnabled) {
@@ -311,10 +310,20 @@ void Renderer::previewInstrument(quint8 note) {
             case PreviewState::none:
                 mDocument->lock();
                 {
-                    // set instrument preview's instrument to the current one
-                    auto inst = mDocument->instrumentModel().currentInstrument();
-                    mPreviewChannel = inst->channel();
-                    mIp.setInstrument(std::move(inst));
+                    std::shared_ptr<trackerboy::Instrument> inst = nullptr;
+                    if (track == -1) {
+                        // instrument preview
+                        // set instrument preview's instrument to the current one
+                        inst = mDocument->instrumentModel().currentInstrument();
+                        mPreviewChannel = inst->channel();
+                    } else {
+                        // note preview
+                        if (instrument != -1) {
+                            inst = mDocument->mod().instrumentTable().getShared((uint8_t)instrument);
+                        }
+                        mPreviewChannel = static_cast<trackerboy::ChType>(track);
+                    }
+                    mIp.setInstrument(std::move(inst), mPreviewChannel);
                 }
                 mDocument->unlock();
                 mPreviewState = PreviewState::instrument;
@@ -323,12 +332,21 @@ void Renderer::previewInstrument(quint8 note) {
                 [[fallthrough]];
             case PreviewState::instrument:
                 // update the current note
-                mIp.play(note);
+                mIp.play((uint8_t)note);
                 break;
         }
 
        beginRender();
     }
+}
+
+
+void Renderer::previewInstrument(quint8 note) {
+    previewNoteOrInstrument(note);
+}
+
+void Renderer::previewNote(int note, int track, int instrument) {
+    previewNoteOrInstrument(note, track, instrument);
 }
 
 void Renderer::previewWaveform(quint8 note) {

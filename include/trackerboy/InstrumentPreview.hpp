@@ -21,7 +21,13 @@ public:
 
     InstrumentPreview();
 
-    void setInstrument(std::shared_ptr<Instrument> instrument);
+    //
+    // Start previewing the given instrument. If instrument is nullptr, then
+    // the runtime will preview the set note on the given channel. If no channel
+    // is provided, then it will default to the instrument's channel or CH1 if
+    // no instrument was provided.
+    //
+    void setInstrument(std::shared_ptr<Instrument> instrument, std::optional<ChType> ch = std::nullopt);
 
     void play(uint8_t note);
 
