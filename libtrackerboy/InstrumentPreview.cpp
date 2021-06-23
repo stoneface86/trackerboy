@@ -23,15 +23,15 @@ void InstrumentPreview::setInstrument(std::shared_ptr<Instrument> instrument, st
     mInstrument = std::move(instrument);
     if (mInstrument) {
         mCh = ch.value_or(mInstrument->channel());
-        if (mCh == ChType::ch4) {
-            mFc = &mNoiseFc;
-        } else {
-            mFc = &mToneFc;
-        }
-        
     } else {
         mCh = ch.value_or(ChType::ch1);
         mIr.reset();
+    }
+
+    if (mCh == ChType::ch4) {
+        mFc = &mNoiseFc;
+    } else {
+        mFc = &mToneFc;
     }
 
     restart();
