@@ -8,14 +8,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  * Choose which channels to export when exporting to WAV
  * Option to export each channel as separate WAV files
  * Color configuration for the pattern editor and other editors
- * Note previews when entering notes in the pattern editor
  * Keyboard binding configuration for the pattern editor
- * Loop pattern playback functionality
- * Row playback
  * MIDI Support
  * Pattern compiler - export module data to assembly
  * Export to .gbs
  * Visualizers - scopes and peak meters
+
+
+## [0.3.0] - 2021-06-22
+### Added
+ - Note previews when inputting notes in the pattern editor
+ - Pattern repeat mode
+ - Step mode playback
+ - Input toolbar (set the octave and edit step)
+ - Instrument toolbar (combobox for the current instrument)
+ - Song menu, contains actions for adding/removing orders
+ - Sidebar widget, combines song settings + order editor
+ - Icon for configuration
+ - Keybinds for tracker actions (play, stop, etc)
+ - Add "play and stop" shortcut (pressing enter plays, pressing it again stops)
+### Changed
+ - No longer need to have record mode on when deleting, transposing, etc
+   (record mode now only applies to setting notes, instruments and effects)
+ - Arpeggio editor graph is now centered at 0
+ - Moved stuff from PatternEditor to separate toolbars
+ - Renamed Delete action in Edit menu to Erase
+ - View menu is now between Tracker and Window
+ - Fix "set volume on trigger" checkbox not updating when changing instruments
+ - Fix pattern previews not showing up on module load
+ - Fix order move up/down actions not disabling/enabling when user changes patterns
+ - Setting a note cut does not set the instrument column
+### Removed
+ - PatternEditor toolbar (now is part of the main application toolbar)
+ - Order increment/decrement and set controls
 
 
 ## [0.2.0] - 2021-06-15
