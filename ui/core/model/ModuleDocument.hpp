@@ -193,6 +193,8 @@ public slots:
     void makeDirty();
 
     void setChannelOutput(OutputFlags flags);
+    void toggleChannelOutput();
+    void solo();
 
     void setKeyRepetition(bool enable);
 

@@ -288,6 +288,23 @@ void ModuleDocument::setChannelOutput(OutputFlags flags) {
     }
 }
 
+void ModuleDocument::toggleChannelOutput() {
+    auto track = mPatternModel.cursorTrack();
+    mChannelEnables ^= (OutputFlag)(1 << track);
+    emit channelOutputChanged(mChannelEnables);
+}
+
+void ModuleDocument::solo() {
+    auto track = mPatternModel.cursorTrack();
+    auto soloFlags = (OutputFlag)(1 << track);
+    if (mChannelEnables == soloFlags) {
+        mChannelEnables = AllOn;
+    } else {
+        mChannelEnables = soloFlags;
+    }
+    emit channelOutputChanged(mChannelEnables);
+}
+
 void ModuleDocument::setKeyRepetition(bool repetition) {
     mKeyRepetition = repetition;
 }

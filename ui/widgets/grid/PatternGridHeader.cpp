@@ -34,10 +34,16 @@ void PatternGridHeader::setColors(ColorTable const& colorTable) {
 }
 
 void PatternGridHeader::setDocument(ModuleDocument *doc) {
+    if (mDocument) {
+        mDocument->disconnect(this);
+    }
+
     mDocument = doc;
     if (doc) {
         mTrackFlags = doc->channelOutput();
         update();
+
+        connect(doc, &ModuleDocument::channelOutputChanged, this, &PatternGridHeader::setOutputFlags);
     }
 }
 
@@ -166,3 +172,9 @@ void PatternGridHeader::setTrackHover(int hover) {
     }
 }
 
+void PatternGridHeader::setOutputFlags(ModuleDocument::OutputFlags flags) {
+    if (mTrackFlags != flags) {
+        mTrackFlags = flags;
+        update();
+    }
+}

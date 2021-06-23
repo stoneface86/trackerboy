@@ -1046,6 +1046,15 @@ void MainWindow::setupUi() {
     connect(&mActions[ActionTrackerKill], &QAction::triggered, mRenderer, &Renderer::forceStop, Qt::QueuedConnection);
     connect(&mActions[ActionTrackerRepeat], &QAction::toggled, mRenderer, &Renderer::setPatternRepeat, Qt::QueuedConnection);
 
+    connect(&mActions[ActionTrackerToggleChannel], &QAction::triggered, this,
+            [this]() {
+                mBrowserModel.currentDocument()->toggleChannelOutput();
+            });
+    connect(&mActions[ActionTrackerSolo], &QAction::triggered, this,
+            [this]() {
+                mBrowserModel.currentDocument()->solo();
+            });
+
     // help
     connectActionToThis(mActions[ActionHelpAudioDiag], showAudioDiag);
     connectActionToThis(mActions[ActionHelpAbout], showAboutDialog);

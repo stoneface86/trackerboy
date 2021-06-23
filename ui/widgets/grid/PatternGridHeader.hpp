@@ -46,6 +46,8 @@ private:
 
     static constexpr int HOVER_NONE = -1;
 
+    void setOutputFlags(ModuleDocument::OutputFlags flags);
+
     void setTrackHover(int hover);
 
     ModuleDocument *mDocument;
