@@ -312,6 +312,7 @@ void PatternModel::setCursorTrackImpl(int track, CursorChangeFlags &flags) {
 
     if (track != mCursor.track) {
         mCursor.track = track;
+        mDocument.orderModel().selectTrack(track);
         flags |= CursorTrackChanged;
     }
 }
