@@ -204,7 +204,7 @@ void ExportWavDialog::accept() {
         }
 
         if (mLoopRadio.isChecked()) {
-            mExporter->setDuration((unsigned)mLoopSpin.value());
+            mExporter->setDuration(mLoopSpin.value());
         } else {
             mExporter->setDuration(std::chrono::seconds(mTimeEditDuration));
         }
