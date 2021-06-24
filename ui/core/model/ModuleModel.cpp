@@ -49,11 +49,6 @@ struct ModelId {
     {
     }
 
-    constexpr ModelId(quintptr data) :
-        data(data)
-    {
-    }
-
     constexpr ModelId& operator=(quintptr data_) {
         data = data_;
         return *this;
@@ -91,7 +86,9 @@ Qt::ItemFlags ModuleModel::flags(QModelIndex const& index) const {
     if (index.isValid()) {
         Qt::ItemFlags flags = Qt::ItemIsEnabled;
 
-        ModelId id = index.internalId();
+        ModelId id;
+        id = index.internalId();
+        
         if (id.level() == 2) {
             flags |= Qt::ItemIsSelectable;
         }
@@ -104,7 +101,8 @@ Qt::ItemFlags ModuleModel::flags(QModelIndex const& index) const {
 
 QVariant ModuleModel::data(QModelIndex const& index, int role) const {
     if (index.isValid()) {
-        ModelId id = index.internalId();
+        ModelId id;
+        id = index.internalId();
 
         switch (id.level()) {
             case 0:
@@ -155,7 +153,9 @@ QVariant ModuleModel::data(QModelIndex const& index, int role) const {
 bool ModuleModel::hasChildren(QModelIndex const& index) const {
     // only modules and table nodes have children
     if (index.isValid()) {
-        ModelId id = index.internalId();
+        ModelId id;
+        id = index.internalId();
+        
         switch (id.level()) {
             case 0:
                 return true;
@@ -187,7 +187,9 @@ QModelIndex ModuleModel::index(int row, int column, QModelIndex const& parent) c
 
     if (parent.isValid()) {
 
-        ModelId parentId = parent.internalId();
+        ModelId parentId;
+        parentId = parent.internalId();
+        
         switch (parentId.level()) {
             case 0:
                 id = ModelId((unsigned)parent.row());
@@ -210,7 +212,8 @@ QModelIndex ModuleModel::index(int row, int column, QModelIndex const& parent) c
 QModelIndex ModuleModel::parent(QModelIndex const& index) const {
     if (index.isValid()) {
 
-        ModelId id = index.internalId();
+        ModelId id;
+        id = index.internalId();
         switch (id.level()) {
             case 0:
                 break; // return invalid to serve as the root
@@ -229,7 +232,7 @@ QModelIndex ModuleModel::parent(QModelIndex const& index) const {
 
 int ModuleModel::rowCount(QModelIndex const& parent) const {
     if (parent.isValid()) {
-        ModelId parentId = parent.internalId();
+        ModelId parentId; parentId.data = parent.internalId();
 
         switch (parentId.level()) {
             case 0:
@@ -336,7 +339,7 @@ ModuleDocument* ModuleModel::currentDocument() const noexcept {
 
 int ModuleModel::documentIndex(QModelIndex const& index) {
     if (index.isValid()) {
-        ModelId id = index.internalId();
+        ModelId id; id.data = index.internalId();
         if (id.level() == 0) {
             return index.row();
         } else {
@@ -350,7 +353,7 @@ int ModuleModel::documentIndex(QModelIndex const& index) {
 ModuleModel::ItemType ModuleModel::itemAt(QModelIndex const& index) {
     if (index.isValid()) {
 
-        ModelId id = index.internalId();
+        ModelId id; id = index.internalId();
 
         switch (id.level()) {
             case 0:

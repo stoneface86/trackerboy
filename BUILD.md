@@ -4,7 +4,6 @@ Use the main CMakeLists.txt to build the library. The ui and demo programs are
 optional, and can be enabled/disabled by setting their respective options.
 
 Requirements:
- * 64-bit target<sup>[1](#64bit-footnote)</sup>
  * C/C++ compiler with the C++17 standard or later
  * CMake
  * [Miniaudio](https://github.com/mackron/miniaudio)
@@ -18,9 +17,6 @@ before running CMake.
 In order to build the main ui, you will need to install Qt 5 on your development
 machine. Windows users may need to specify the install location manually when
 configuring. (cmake variable Qt5_DIR).
-
-<a name="64bit-footnote">1</a>: 32-bit builds are not supported. If you get an
-error message when configuring, double-check your compiler/toolchain.
 
 <a name="qtversion-footnote">2</a>: You can build with any later Qt 5 version, but all code in this repo must
 be compatible with v5.12.10

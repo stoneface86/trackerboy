@@ -43,12 +43,6 @@ else ()
     set(DEBUG_BUILD FALSE)
 endif ()
 
-
-# abort if compiler is 32-bit
-if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
-    message(FATAL_ERROR "32-bit builds are not supported")
-endif ()
-
 # ============================================================================
 # Dependencies
 # ============================================================================
