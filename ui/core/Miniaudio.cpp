@@ -103,7 +103,7 @@ QString Miniaudio::deviceName(int index) {
     if (index == 0) {
         return QCoreApplication::tr("Default device");
     } else {
-        return QString::fromLatin1(mDeviceList[index - 1].name);
+        return QString::fromUtf8(mDeviceList[index - 1].name);
     }
 }
 
@@ -124,17 +124,17 @@ QString Miniaudio::deviceIdString(ma_device_id const& id) {
             // uint
             return QString::number(id.winmm);
         case ma_backend_coreaudio:
-            return QString::fromLatin1(id.coreaudio);
+            return QString::fromUtf8(id.coreaudio);
         case ma_backend_sndio:
-            return QString::fromLatin1(id.sndio);
+            return QString::fromUtf8(id.sndio);
         case ma_backend_audio4:
-            return QString::fromLatin1(id.audio4);
+            return QString::fromUtf8(id.audio4);
         case ma_backend_oss:
-            return QString::fromLatin1(id.oss);
+            return QString::fromUtf8(id.oss);
         case ma_backend_pulseaudio:
-            return QString::fromLatin1(id.pulse);
+            return QString::fromUtf8(id.pulse);
         case ma_backend_alsa:
-            return QString::fromLatin1(id.alsa);
+            return QString::fromUtf8(id.alsa);
         case ma_backend_aaudio:
             return QString::number(id.aaudio);
         case ma_backend_opensl:
