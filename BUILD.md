@@ -50,7 +50,6 @@ Here is a table of options that can be used when building.
 | TRACKERBOY_ENABLE_DEMO  | BOOL | If enabled, the demo programs will be built. Default is OFF                       |
 | TRACKERBOY_ENABLE_TESTS | BOOL | Enables unit tests. Default is ON                                                 |
 | TRACKERBOY_ENABLE_UI    | BOOL | Enables building of the trackerboy ui. Default is ON                              |
-| TRACKERBOY_COVERAGE     | BOOL | Builds unit tests with coverage when enabled. Only works with GCC. Requires lcov. Default is OFF |
 
 ## Compilers
 

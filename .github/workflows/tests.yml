@@ -11,22 +11,14 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-#    - name: Install Qt
-#      uses: jurplel/install-qt-action@v2.2.1
     - name: configure
       run: |
         mkdir build
         cd build
-        cmake -D TRACKERBOY_ENABLE_UI=OFF -D TRACKERBOY_ENABLE_DEMO=OFF -D TRACKERBOY_ENABLE_TESTS=ON -D TRACKERBOY_COVERAGE=ON ..
+        cmake -D TRACKERBOY_ENABLE_UI=OFF -D TRACKERBOY_ENABLE_DEMO=OFF -D TRACKERBOY_ENABLE_TESTS=ON ..
     - name: build
       run: cmake --build build --config Debug
     - name: test
       run: |
         cd build
         ctest
-    - name: coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: unittests
-        yml: ./codecov.yml

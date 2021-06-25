@@ -98,22 +98,6 @@ if (TRACKERBOY_ENABLE_TESTS)
 
 endif ()
 
-add_library(trackerboyCoverage INTERFACE)
-if (TRACKERBOY_COVERAGE)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        target_compile_options(trackerboyCoverage INTERFACE
-            -O0
-            -g
-            --coverage
-        )
-        if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
-            target_link_options(trackerboyCoverage INTERFACE --coverage)
-        else ()
-            target_link_libraries(trackerboyCoverage INTERFACE --coverage)
-        endif ()
-    endif()
-endif()
-
 include(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 

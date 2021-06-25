@@ -44,8 +44,6 @@ add_library("trackerboy" STATIC ${SRC_FILES})
 target_include_directories(trackerboy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(trackerboy PRIVATE trackerboyWarnings)
-target_link_libraries(trackerboy PUBLIC trackerboyCoverage)
-
 target_link_libraries(trackerboy PUBLIC gbapu)
 
 if (IS_BIG_ENDIAN)
