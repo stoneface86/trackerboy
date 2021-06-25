@@ -3,29 +3,6 @@
 
 #include <algorithm>
 
-PatternSelection::SelectType PatternSelection::selectColumn(int column) {
-    switch (column) {
-        case PatternCursor::ColumnNote:
-            return PatternSelection::SelectNote;
-
-        case PatternCursor::ColumnInstrumentHigh:
-        case PatternCursor::ColumnInstrumentLow:
-            return PatternSelection::SelectInstrument;
-
-        case PatternCursor::ColumnEffect1Type:
-        case PatternCursor::ColumnEffect1ArgHigh:
-        case PatternCursor::ColumnEffect1ArgLow:
-            return PatternSelection::SelectEffect1;
-
-        case PatternCursor::ColumnEffect2Type:
-        case PatternCursor::ColumnEffect2ArgHigh:
-        case PatternCursor::ColumnEffect2ArgLow:
-            return PatternSelection::SelectEffect2;
-
-        default:
-            return PatternSelection::SelectEffect3;
-    }
-}
 
 PatternSelection::PatternSelection() :
     mStart(),
@@ -33,37 +10,37 @@ PatternSelection::PatternSelection() :
 {
 }
 
-PatternSelection::PatternSelection(PatternCursor pos) :
-    mStart(pos),
-    mEnd(pos)
+PatternSelection::PatternSelection(PatternAnchor anchor) :
+    mStart(anchor),
+    mEnd(anchor)
 {
 }
 
-PatternSelection::PatternSelection(PatternCursor start, PatternCursor end) :
+PatternSelection::PatternSelection(PatternAnchor start, PatternAnchor end) :
     mStart(start),
     mEnd(end)
 {
 }
 
-PatternCursor PatternSelection::start() const {
+PatternAnchor PatternSelection::start() const {
     return mStart;
 }
 
-PatternCursor PatternSelection::end() const {
+PatternAnchor PatternSelection::end() const {
     return mEnd;
 }
 
-void PatternSelection::setStart(PatternCursor start) {
+void PatternSelection::setStart(PatternAnchor start) {
     mStart = start;
 }
 
-void PatternSelection::setEnd(PatternCursor end) {
+void PatternSelection::setEnd(PatternAnchor end) {
     mEnd = end;
 }
 
 PatternSelection::Iterator PatternSelection::iterator() const {
-    PatternCursor start = mStart;
-    PatternCursor end = mEnd;
+    auto start = mStart;
+    auto end = mEnd;
 
     // normalize coordinates
 
@@ -96,7 +73,7 @@ PatternSelection::TrackMeta PatternSelection::Iterator::getTrackMeta(int track) 
     if (track == mEnd.track) {
         end = mEnd.column;
     } else {
-        end = MAX_SELECTS - 1;
+        end = PatternAnchor::MAX_SELECTS - 1;
     }
 
     return { start, end };
@@ -113,22 +90,22 @@ void PatternSelection::clamp(int rowMax) {
         if (cursor->track < 0) {
             cursor->track = 0;
             cursor->column = 0;
-        } else if (cursor->track >= PatternCursor::MAX_TRACKS) {
-            cursor->track = PatternCursor::MAX_TRACKS - 1;
-            cursor->column = PatternCursor::MAX_COLUMNS - 1;
+        } else if (cursor->track >= PatternAnchor::MAX_TRACKS) {
+            cursor->track = PatternAnchor::MAX_TRACKS - 1;
+            cursor->column = PatternAnchor::MAX_SELECTS - 1;
         } else {
-            cursor->column = std::clamp(cursor->column, 0, PatternCursor::MAX_COLUMNS - 1);
+            cursor->column = std::clamp(cursor->column, 0, PatternAnchor::MAX_SELECTS - 1);
         }
         
     }
 }
 
 static bool isEffect(int select) {
-    return select >= PatternSelection::SelectEffect1;
+    return select >= PatternAnchor::SelectEffect1;
 }
 
 
-void PatternSelection::moveTo(PatternCursor cursor) {
+void PatternSelection::moveTo(PatternAnchor cursor) {
     auto iter = iterator();
     // normalize the selection coordinates
     mStart = iter.mStart;
@@ -144,7 +121,7 @@ void PatternSelection::moveTo(PatternCursor cursor) {
         // within the same track
         if (isEffect(iter.columnStart())) {
             // only effects are selected, move by column
-            auto start = std::max((int)SelectEffect1, cursor.column);
+            auto start = std::max((int)PatternAnchor::SelectEffect1, cursor.column);
             int end = start + iter.columnEnd() - iter.columnStart();
             mStart.column = start;
             mEnd.column = end;
@@ -156,11 +133,11 @@ void PatternSelection::moveTo(PatternCursor cursor) {
     mEnd.track = cursor.track + iter.trackEnd() - iter.trackStart();
 }
 
-bool PatternSelection::contains(PatternCursor cursor) {
+bool PatternSelection::contains(PatternAnchor cursor) {
     auto iter = iterator();
-    auto start = iter.trackStart() * MAX_SELECTS + iter.columnStart();
-    auto end = iter.trackEnd() * MAX_SELECTS + iter.columnEnd();
-    auto cursorColumn = cursor.track * MAX_SELECTS + cursor.column;
+    auto start = iter.trackStart() * PatternAnchor::MAX_SELECTS + iter.columnStart();
+    auto end = iter.trackEnd() * PatternAnchor::MAX_SELECTS + iter.columnEnd();
+    auto cursorColumn = cursor.track * PatternAnchor::MAX_SELECTS + cursor.column;
     return cursor.row >= iter.rowStart() && cursor.row <= iter.rowEnd() &&
            cursorColumn >= start && cursorColumn <= end;
 }

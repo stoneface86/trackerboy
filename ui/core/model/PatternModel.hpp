@@ -63,8 +63,6 @@ public:
 
     PatternCursor cursor() const;
 
-    PatternSelection::SelectType selectType() const;
-
     int trackerCursorRow() const;
     int trackerCursorPattern() const;
 

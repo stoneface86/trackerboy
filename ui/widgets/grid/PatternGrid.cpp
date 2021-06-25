@@ -162,7 +162,7 @@ void PatternGrid::dragMoveEvent(QDragMoveEvent *evt) {
     auto cursor = mouseToCursor(pos);
     cursor.column = std::clamp(cursor.column, 0, PatternCursor::MAX_COLUMNS - 1);
     cursor.track = std::clamp(cursor.track, 0, PatternCursor::MAX_TRACKS - 1);
-    cursor.column = PatternSelection::selectColumn(cursor.column);
+    //cursor.column = PatternSelection::selectColumn(cursor.column);
     if (cursor != mDragPos) {
         mDragPos = cursor;
         
@@ -307,7 +307,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
     if (mHasDrag) {
         auto selection = patternModel.selection();
-        auto pos = mDragPos;
+        PatternAnchor pos = mDragPos;
         pos.row -= mDragRow;
         selection.moveTo(pos);
         selection.clamp(rowsInCurrent - 1);
@@ -426,9 +426,7 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
                 if (patternModel.hasSelection()) {
                     // check if the mouse is within the selection rectangle
                     auto selection = patternModel.selection();
-                    auto selectCursor = cursor;
-                    selectCursor.column = PatternSelection::selectColumn(selectCursor.column);
-                    if (selection.contains(selectCursor)) {
+                    if (selection.contains(cursor)) {
                         mMouseOp = MouseOperation::dragging;
                         mDragRow = cursor.row - selection.iterator().rowStart();
                         return;

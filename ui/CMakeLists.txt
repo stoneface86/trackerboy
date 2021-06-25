@@ -86,11 +86,6 @@ set(UI_SRC
     "widgets/Sidebar.cpp"
 )
 
-if (MSVC)
-    # prevent warnings from external libraries
-    add_compile_options(/W4 /experimental:external /external:W0 /external:anglebrackets)
-endif ()
-
 #
 # ui library
 #
@@ -99,6 +94,7 @@ target_link_libraries(ui PUBLIC
     trackerboy
     miniaudio
     Qt5::Widgets
+    trackerboyWarnings
 )
 
 if (NOT ${DEBUG_BUILD})

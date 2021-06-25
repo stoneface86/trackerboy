@@ -319,16 +319,16 @@ QRect PatternPainter::selectionRectangle(PatternSelection const& selection) {
     {
         int cell;
         switch (iter.columnStart()) {
-            case PatternSelection::SelectNote:
+            case PatternAnchor::SelectNote:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnNote] - 1;
                 break;
-            case PatternSelection::SelectInstrument:
+            case PatternAnchor::SelectInstrument:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh];
                 break;
-            case PatternSelection::SelectEffect1:
+            case PatternAnchor::SelectEffect1:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type];
                 break;
-            case PatternSelection::SelectEffect2:
+            case PatternAnchor::SelectEffect2:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type];
                 break;
             default:
@@ -341,16 +341,16 @@ QRect PatternPainter::selectionRectangle(PatternSelection const& selection) {
     {
         int cell;
         switch (iter.columnEnd()) {
-            case PatternSelection::SelectNote:
+            case PatternAnchor::SelectNote:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnNote] + 3;
                 break;
-            case PatternSelection::SelectInstrument:
+            case PatternAnchor::SelectInstrument:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh] + 2;
                 break;
-            case PatternSelection::SelectEffect1:
+            case PatternAnchor::SelectEffect1:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type] + 3;
                 break;
-            case PatternSelection::SelectEffect2:
+            case PatternAnchor::SelectEffect2:
                 cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type] + 3;
                 break;
             default:

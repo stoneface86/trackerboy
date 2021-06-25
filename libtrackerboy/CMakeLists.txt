@@ -43,19 +43,7 @@ add_library("trackerboy" STATIC ${SRC_FILES})
 
 target_include_directories(trackerboy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-if (MSVC)
-set(WARNFLAGS /W4)
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-# -Wno-missing-field-initializers prevents warnings when zero-initializing a struct
-set(WARNFLAGS -Wall -Wextra -pedantic -Wno-missing-field-initializers)
-endif ()
-
-target_compile_options(
-    trackerboy
-    PRIVATE
-    ${WARNFLAGS}
-)
-
+target_link_libraries(trackerboy PRIVATE trackerboyWarnings)
 target_link_libraries(trackerboy PUBLIC trackerboyCoverage)
 
 target_link_libraries(trackerboy PUBLIC gbapu)

@@ -23,15 +23,15 @@ given track, and use hasColumn()
 
 example code:
 
-auto iter = selection.iterator();
+auto const iter = selection.iterator();
 for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
-    auto tmeta = iter.getTrackMeta(track);
+    auto const tmeta = iter.getTrackMeta(track);
 
     for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
-        if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
+        if (tmeta.hasColumn<PatternAnchor::SelectNote>()) {
             // do something for the note column
         }
-        if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
+        if (tmeta.hasColumn<PatternAnchor::SelectInstrument>()) {
             // do something for the instrument column
         }
 
@@ -41,7 +41,7 @@ for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
         }
 
         // or via hasColumn
-        if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
+        if (tmeta.hasColumn<PatternAnchor::SelectEffect1>()) {
             // do something for effect 1
         }
     }
@@ -50,31 +50,22 @@ for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
 Note that the end indices for all coordinates are inclusive, so use <= in your
 loop condition. (Except for effect columns, TrackMeta::effectEnd() is exclusive)
 
+Also note that a PatternSelection uses PatternAnchors and not PatternCursors.
+You can still use cursors, however, they will be implicitly converted to an
+anchor. Iterators also use anchors, so the columns you are iterating are select
+columns and not cursor columns (PatternAnchor::SelectType instead of
+PatternCursor::ColumnType).
 */
 
 
 //
-// Class representing selected data for a pattern. Contains two cursor positions
+// Class representing selected data for a pattern. Contains two PatternAnchors
 // start and end.
 //
 class PatternSelection {
 
 public:
 
-    //  
-    // Selectable columns
-    //
-    enum SelectType {
-        SelectNote,
-        SelectInstrument,
-        SelectEffect1,
-        SelectEffect2,
-        SelectEffect3
-    };
-
-    static constexpr int MAX_SELECTS = SelectEffect3 + 1;
-
-    
     class Iterator;
 
     // utility for iterating a track
@@ -89,8 +80,8 @@ public:
         constexpr TrackMeta(int start, int end) :
             mStart(start),
             mEnd(end),
-            mEffectStart(std::max(0, start - SelectEffect1)),
-            mEffectEnd(std::max(0, end - SelectEffect1 + 1))
+            mEffectStart(std::max(0, start - PatternAnchor::SelectEffect1)),
+            mEffectEnd(std::max(0, end - PatternAnchor::SelectEffect1 + 1))
         {
         }
 
@@ -117,7 +108,7 @@ public:
         //
         // Returns true if the given column is selected
         //
-        template <SelectType tColumn>
+        template <PatternAnchor::SelectType tColumn>
         constexpr bool hasColumn() const {
             return tColumn >= mStart && tColumn <= mEnd;
         }
@@ -132,10 +123,10 @@ public:
         friend class PatternSelection;
 
         // same as Selection, but mStart is <= mEnd
-        PatternCursor mStart;
-        PatternCursor mEnd;
+        PatternAnchor mStart;
+        PatternAnchor mEnd;
 
-        constexpr Iterator(PatternCursor start, PatternCursor end) :
+        constexpr Iterator(PatternAnchor start, PatternAnchor end) :
             mStart(start),
             mEnd(end)
         {
@@ -171,11 +162,11 @@ public:
             return mEnd.track;
         }
 
-        constexpr PatternCursor start() const {
+        constexpr PatternAnchor start() const {
             return mStart;
         }
 
-        constexpr PatternCursor end() const {
+        constexpr PatternAnchor end() const {
             return mEnd;
         }
 
@@ -184,26 +175,23 @@ public:
     };
 
     PatternSelection();
-    PatternSelection(PatternCursor pos);
-    PatternSelection(PatternCursor start, PatternCursor end);
 
-    PatternCursor start() const;
+    PatternSelection(PatternAnchor anchor);
+    PatternSelection(PatternAnchor start, PatternAnchor end);
+    
 
-    PatternCursor end() const;
+    PatternAnchor start() const;
 
-    void setStart(PatternCursor start);
+    PatternAnchor end() const;
 
-    void setEnd(PatternCursor end);
+    void setStart(PatternAnchor start);
+
+    void setEnd(PatternAnchor end);
 
     //
     // Gets an interator for this selection
     //
     Iterator iterator() const;
-
-    //
-    // Converts a cursor column (ColumnType) to a select column (SelectType)
-    //
-    static SelectType selectColumn(int column);
 
     //
     // Translates the selection by the given number of rows. Each coordinate's
@@ -220,18 +208,17 @@ public:
     //
     // Moves the selection to start at the given cursor position
     //
-    void moveTo(PatternCursor cursor);
+    void moveTo(PatternAnchor pos);
 
     //
     // Determine if the given cursor is within this selection
     //
-    bool contains(PatternCursor cursor);
+    bool contains(PatternAnchor cursor);
 
 private:
 
-    // the columns in these cursors are select columns (SelectType)
-    PatternCursor mStart;
-    PatternCursor mEnd;
+    PatternAnchor mStart;
+    PatternAnchor mEnd;
 
 #ifndef QT_NO_DEBUG
 friend QDebug operator<<(QDebug debug, const PatternSelection &selection);

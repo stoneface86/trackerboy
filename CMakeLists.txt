@@ -121,6 +121,23 @@ TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 
 add_subdirectory(external/gbapu)
 
+# global warning flags
+add_library(trackerboyWarnings INTERFACE)
+if (MSVC)
+    target_compile_options(trackerboyWarnings INTERFACE
+        /W4
+        /experimental:external /external:W0 /external:anglebrackets
+    )
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # -Wno-missing-field-initializers prevents warnings when zero-initializing a struct
+    target_compile_options(trackerboyWarnings INTERFACE
+        -Wall
+        -Wextra
+        -pedantic
+        -Wno-missing-field-initializers
+    )
+endif ()
+
 # ============================================================================
 # Sub-projects
 # ============================================================================

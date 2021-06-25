@@ -115,16 +115,16 @@ PatternSelection PatternModel::selection() const {
 }
 
 void PatternModel::setSelection(PatternCursor pos) {
-    pos.column = PatternSelection::selectColumn(pos.column);
+    PatternAnchor anchor(pos);
     if (mHasSelection) {
-        if (pos != mSelection.end()) {
-            mSelection.setEnd(pos);
+        if (anchor != mSelection.end()) {
+            mSelection.setEnd(anchor);
             emit selectionChanged();
         }
     } else {
         mHasSelection = true;
         // no selection, start with just the given point selected
-        mSelection = PatternSelection(pos, pos);
+        mSelection = PatternSelection(anchor);
         emit selectionChanged();
     }
 }
@@ -141,12 +141,12 @@ void PatternModel::selectAll() {
         if (
             iter.rowStart() == 0 && iter.rowEnd() == lastRow &&
             iter.trackStart() == iter.trackEnd() &&
-            iter.columnStart() == 0 && iter.columnEnd() == PatternSelection::MAX_SELECTS - 1
+            iter.columnStart() == 0 && iter.columnEnd() == PatternAnchor::MAX_SELECTS - 1
         ) {
             // yes, select all instead
             mHasSelection = true;
-            mSelection.setStart({0, 0, 0});
-            mSelection.setEnd(PatternCursor(lastRow, PatternSelection::MAX_SELECTS - 1, 3));
+            mSelection.setStart({ 0, 0, 0 });
+            mSelection.setEnd({ lastRow, PatternAnchor::MAX_SELECTS - 1, 3 });
             emit selectionChanged();
             return;
         }
@@ -155,8 +155,8 @@ void PatternModel::selectAll() {
     }
 
     // select track
-    mSelection.setStart(PatternCursor(0, 0, mCursor.track));
-    mSelection.setEnd(PatternCursor(lastRow, PatternSelection::MAX_SELECTS - 1, mCursor.track));
+    mSelection.setStart({ 0, 0, mCursor.track });
+    mSelection.setEnd({ lastRow, PatternAnchor::MAX_SELECTS - 1, mCursor.track });
     emit selectionChanged();
 }
 
@@ -164,9 +164,9 @@ void PatternModel::selectRow(int row) {
     if (row >= 0 && row < (int)mPatternCurr.totalRows()) {
         if (!mHasSelection) {
             mHasSelection = true;
-            mSelection.setStart(PatternCursor(row, 0, 0));
+            mSelection.setStart({row, 0, 0});
         }
-        mSelection.setEnd(PatternCursor(row, PatternSelection::MAX_SELECTS - 1, PatternCursor::MAX_TRACKS - 1));
+        mSelection.setEnd({row, PatternAnchor::MAX_SELECTS - 1, PatternAnchor::MAX_TRACKS - 1});
         emit selectionChanged();
     }
 }
@@ -479,31 +479,31 @@ bool PatternModel::selectionDataIsEmpty() {
             auto tmeta = iter.getTrackMeta(track);
             for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
                 auto const& rowdata = mPatternCurr.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
+                if (tmeta.hasColumn<PatternAnchor::SelectNote>()) {
                     if (rowdata.queryNote()) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
+                if (tmeta.hasColumn<PatternAnchor::SelectInstrument>()) {
                     if (rowdata.queryInstrument()) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
+                if (tmeta.hasColumn<PatternAnchor::SelectEffect1>()) {
                     if (rowdata.queryEffect(0)) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternSelection::SelectEffect2>()) {
+                if (tmeta.hasColumn<PatternAnchor::SelectEffect2>()) {
                     if (rowdata.queryEffect(1)) {
                         return false;
                     }
                 }
 
-                if (tmeta.hasColumn<PatternSelection::SelectEffect3>()) {
+                if (tmeta.hasColumn<PatternAnchor::SelectEffect3>()) {
                     if (rowdata.queryEffect(2)) {
                         return false;
                     }
@@ -712,23 +712,23 @@ public:
                 auto tmeta = iter.getTrackMeta(track);
                 for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
                     auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                    if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectNote>()) {
                         rowdata.note = 0;
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectInstrument>()) {
                         rowdata.instrumentId = 0;
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectEffect1>()) {
                         rowdata.effects[0] = trackerboy::NO_EFFECT;
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectEffect2>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectEffect2>()) {
                         rowdata.effects[1] = trackerboy::NO_EFFECT;
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectEffect3>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectEffect3>()) {
                         rowdata.effects[2] = trackerboy::NO_EFFECT;
                     }
                 }
@@ -814,7 +814,7 @@ public:
 
             for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
                 auto tmeta = iter.getTrackMeta(track);
-                if (!tmeta.hasColumn<PatternSelection::SelectNote>()) {
+                if (!tmeta.hasColumn<PatternAnchor::SelectNote>()) {
                     continue;
                 }
 
@@ -879,23 +879,23 @@ private:
 
                     // inefficient, but works
 
-                    if (tmeta.hasColumn<PatternSelection::SelectNote>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectNote>()) {
                         std::swap(first.note, last.note);
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectInstrument>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectInstrument>()) {
                         std::swap(first.instrumentId, last.instrumentId);
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectEffect1>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectEffect1>()) {
                         std::swap(first.effects[0], last.effects[0]);
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectEffect2>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectEffect2>()) {
                         std::swap(first.effects[1], last.effects[1]);
                     }
 
-                    if (tmeta.hasColumn<PatternSelection::SelectEffect3>()) {
+                    if (tmeta.hasColumn<PatternAnchor::SelectEffect3>()) {
                         std::swap(first.effects[2], last.effects[2]);
                     }
 
