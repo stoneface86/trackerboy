@@ -1,8 +1,7 @@
 ![Trackerboy](/ui/resources/images/logo.png)
 ---
 
-[![build-lib][build-lib-badge]][build-lib-link]
-[![build-ui][build-ui-badge]][build-ui-link]
+[![build-lib][build-badge]][build-link]
 [![tests][tests-badge]][tests-link]
 [![codecov](https://codecov.io/gh/stoneface86/trackerboy/branch/develop/graph/badge.svg)](https://codecov.io/gh/stoneface86/trackerboy)
 [![Discord](https://img.shields.io/discord/770034905231917066?svg=true)](https://discord.gg/m6wcAK3)
@@ -49,9 +48,7 @@ This project uses Semantic Versioning v2.0.0
 
 This project is licensed under the MIT License - See [LICENSE](LICENSE) for more details
 
-[build-lib-badge]: https://github.com/stoneface86/trackerboy/workflows/build-lib/badge.svg
-[build-lib-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Abuild-lib
-[build-ui-badge]: https://github.com/stoneface86/trackerboy/workflows/build-ui/badge.svg
-[build-ui-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Abuild-ui
+[build-badge]: https://github.com/stoneface86/trackerboy/workflows/build/badge.svg
+[build-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Abuild
 [tests-badge]: https://github.com/stoneface86/trackerboy/workflows/tests/badge.svg
 [tests-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Atests

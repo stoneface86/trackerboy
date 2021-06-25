@@ -1,4 +1,4 @@
-name: build-ui
+name: build
 
 on: [push]
 
@@ -30,6 +30,6 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -D TRACKERBOY_ENABLE_UI=ON -D TRACKERBOY_ENABLE_DEMO=OFF -D TRACKERBOY_ENABLE_TESTS=OFF ..
+        cmake ../
     - name: build
       run: cmake --build build --config Debug
