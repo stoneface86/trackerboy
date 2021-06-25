@@ -100,7 +100,7 @@ void Order::move(int from, int to) {
 
 void Order::remove(int pattern, int count) {
     if (count > 0) {
-        if (mTable.size() <= count) {
+        if ((int)mTable.size() <= count) {
             throw std::runtime_error("cannot remove: Order must have at least 1 pattern");
         }
         checkIndex(pattern);

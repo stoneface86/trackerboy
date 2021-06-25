@@ -139,6 +139,8 @@ Operation::Operation(TrackRow const& row) :
                     modulationType = FrequencyMod::noteSlideDown;
                     modulationParam = param;
                     break;
+                default:
+                    break;
             }
         }
     }
