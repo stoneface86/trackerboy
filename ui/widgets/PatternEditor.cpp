@@ -417,7 +417,9 @@ void PatternEditor::setDocument(ModuleDocument *doc) {
 }
 
 void PatternEditor::setInstrument(int index) {
-    if (index == 0) {
+    // index should never be -1 since the instrument combobox will always have
+    // an option but just in case treat it as 0
+    if (index <= 0) {
         mInstrument.reset();
     } else {
         mInstrument = mDocument->instrumentModel().id(index - 1);
