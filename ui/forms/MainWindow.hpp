@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/SyncWorker.hpp"
+#include "core/midi/Midi.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/ModuleModel.hpp"
 #include "core/model/InstrumentChoiceModel.hpp"
@@ -105,6 +106,10 @@ private:
 
     void setupSongMenu(QMenu &menu);
 
+    //
+    // Shows and adds a "Change settings" button that opens the configuration
+    // to the given QMessageBox
+    //
     void settingsMessageBox(QMessageBox &msgbox);
 
     // document management
@@ -121,8 +126,17 @@ private:
 
     void updateOrderActions();
 
+    //
+    // Shows a message and disables the configured midi device.
+    // If causedByError is true, then the messagebox states it was caused by
+    // an error, otherwise it states that it failed to initialize the device.
+    //
+    void disableMidi(bool causedByError);
+
     Miniaudio &mMiniaudio;
     Config mConfig;
+
+    Midi mMidi;
 
     PianoInput mPianoInput;
 

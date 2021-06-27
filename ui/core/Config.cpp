@@ -3,7 +3,12 @@
 
 #include "gbapu.hpp"
 
+#include "core/midi/MidiProber.hpp"
+
+#include "RtMidi.h"
+
 #include <QSettings>
+#include <QtDebug>
 
 
 namespace {
@@ -13,6 +18,9 @@ constexpr int DEFAULT_PERIOD = 5;
 constexpr int DEFAULT_LATENCY = 40;
 constexpr int DEFAULT_QUALITY = static_cast<int>(gbapu::Apu::Quality::medium);
 constexpr unsigned DEFAULT_HISTORY_LIMIT = 64;
+
+constexpr int DEFAULT_MIDI_API = 0;
+
 
 Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
 
@@ -85,6 +93,10 @@ Config::Keyboard const& Config::keyboard() const {
     return mKeyboard;
 }
 
+Config::Midi const& Config::midi() const {
+    return mMidi;
+}
+
 Config::Sound const& Config::sound() const {
     return mSound;
 }
@@ -144,6 +156,42 @@ void Config::readSettings() {
     settings.endArray();
 
     settings.endGroup(); // keyboard
+
+
+    settings.beginGroup(QStringLiteral("midi"));
+
+    mMidi.enabled = settings.value(QStringLiteral("enabled"), false).toBool();
+    auto api = (RtMidi::Api)settings.value(QStringLiteral("api"), DEFAULT_MIDI_API).toInt();
+    auto portName = settings.value(QStringLiteral("portname"), QString()).toString();
+
+    {
+        auto &prober = MidiProber::instance();
+        mMidi.backendIndex = prober.indexOfApi(api);
+        if (mMidi.backendIndex == -1) {
+            // this should rarely happen
+            qWarning() << "MIDI API is not available, falling back to the first available";
+            mMidi.backendIndex = 0; // default to the first one
+        }
+        prober.setBackend(mMidi.backendIndex);
+        
+        if (portName.isEmpty()) {
+            mMidi.portIndex = -1;
+        } else {
+            // we don't really have a way to uniquely identify the device so just use the
+            // port name.
+            mMidi.portIndex = prober.portNames().indexOf(portName);
+            // if portIndex is -1, then we couldn't find the port, log a warning
+            if (mMidi.portIndex == -1) {
+                qWarning() << "Could not find MIDI port, please select a new device";
+            }
+        }
+        
+    }
+
+
+    settings.endGroup(); // midi
+
+
 
     settings.beginGroup(QStringLiteral("sound"));
     
@@ -209,6 +257,19 @@ void Config::writeSettings() {
     settings.endArray();
     settings.endGroup();
 
+    settings.beginGroup(QStringLiteral("midi"));
+    {
+        settings.setValue(QStringLiteral("enabled"), mMidi.enabled);
+        auto &prober = MidiProber::instance();
+        settings.setValue(QStringLiteral("api"), (int)prober.api());
+        QString str;
+        if (mMidi.portIndex != -1) {
+            str = prober.portNames().at(mMidi.portIndex);
+        }
+        settings.setValue(QStringLiteral("portname"), str);
+    }
+    settings.endGroup();
+
     settings.beginGroup("sound");
     QByteArray barray;
     if (mSound.deviceIndex != 0) {
@@ -226,4 +287,8 @@ void Config::writeSettings() {
     settings.endGroup();
 
     settings.endGroup();
+}
+
+void Config::disableMidi() {
+    mMidi.enabled = false;
 }

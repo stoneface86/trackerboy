@@ -1,6 +1,7 @@
 
 #include "MainWindow.hpp"
 
+#include "core/midi/MidiProber.hpp"
 #include "core/samplerates.hpp"
 #include "forms/ExportWavDialog.hpp"
 #include "misc/IconManager.hpp"
@@ -33,6 +34,7 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     QMainWindow(),
     mMiniaudio(miniaudio),
     mConfig(miniaudio),
+    mMidi(),
     mPianoInput(),
     mDocumentCounter(0),
     mErrorSinceLastConfig(false),
@@ -340,6 +342,19 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
 
     if (categories.testFlag(Config::CategoryKeyboard)) {
         mPianoInput = mConfig.keyboard().pianoInput;
+    }
+
+    if (categories.testFlag(Config::CategoryMidi)) {
+        auto midiConfig = mConfig.midi();
+        auto &prober = MidiProber::instance();
+        if (!midiConfig.enabled || midiConfig.portIndex == -1) {
+            mMidi.close();
+        } else {
+            auto success = mMidi.setDevice(prober.backend(), midiConfig.portIndex);
+            if (!success) {
+                disableMidi(false);
+            }
+        }
     }
 
     mConfig.writeSettings();
@@ -1162,6 +1177,20 @@ void MainWindow::setupUi() {
             }
         });
 
+    connect(&mMidi, &Midi::error, this,
+        [this]() {
+            disableMidi(true);
+        });
+
+    connect(&mMidi, &Midi::noteOn, this,
+        [this](int note) {
+            qDebug() << "Note on:" << note;
+        });
+
+    connect(&mMidi, &Midi::noteOff, this,
+        [this]() {
+            qDebug() << "Note off";
+        });
 
     // sync worker
     //connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);
@@ -1282,4 +1311,27 @@ void MainWindow::updateOrderActions() {
     mActions[ActionSongOrderRemove].setEnabled(model.canRemove());
     mActions[ActionSongOrderMoveUp].setEnabled(model.canMoveUp());
     mActions[ActionSongOrderMoveDown].setEnabled(model.canMoveDown());
+}
+
+void MainWindow::disableMidi(bool causedByError) {
+    mConfig.disableMidi();
+    if (mConfigDialog) {
+        mConfigDialog->resetControls();
+    }
+
+    if (!causedByError) {
+        qCritical().noquote() << "[MIDI] Failed to initialize MIDI device:" << mMidi.lastErrorString();
+    }
+
+    if (isVisible()) {
+        QMessageBox msgbox(this);
+        msgbox.setIcon(QMessageBox::Critical);
+        if (causedByError) {
+            msgbox.setText(tr("MIDI device error"));
+        } else {
+            msgbox.setText(tr("Could not initialize MIDI device"));
+        }
+        msgbox.setInformativeText(mMidi.lastErrorString());
+        settingsMessageBox(msgbox);
+    }
 }

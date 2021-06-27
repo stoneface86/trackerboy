@@ -4,6 +4,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
+set(RTMIDI_BUILD_STATIC_LIBS ON)
+add_subdirectory("${CMAKE_SOURCE_DIR}/external/rtmidi" "${CMAKE_CURRENT_BINARY_DIR}/rtmidi" EXCLUDE_FROM_ALL)
+
 get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
 get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
 
@@ -21,6 +24,7 @@ endif ()
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
+    "${CMAKE_SOURCE_DIR}/external/rtmidi"
 )
 
 set(UI_SRC
@@ -28,6 +32,8 @@ set(UI_SRC
     "core/audio/Ringbuffer.cpp"
     "core/clipboard/PatternClip.cpp"
     "core/clipboard/PatternClipboard.cpp"
+    "core/midi/Midi.cpp"
+    "core/midi/MidiProber.cpp"
     "core/model/graph/GraphModel.cpp"
     "core/model/graph/SequenceModel.cpp"
     "core/model/graph/WaveModel.cpp"
@@ -63,6 +69,7 @@ set(UI_SRC
     "resources/stylesheets.qrc"
 
     "widgets/config/ConfigTab.cpp"
+    "widgets/config/MidiConfigTab.cpp"
     "widgets/config/SoundConfigTab.cpp"
     "widgets/config/SoundQualityPreview.cpp"
     "widgets/docks/ModuleSettingsWidget.cpp"
@@ -93,6 +100,7 @@ add_library(ui STATIC ${UI_SRC})
 target_link_libraries(ui PUBLIC 
     trackerboy
     miniaudio
+    rtmidi
     Qt5::Widgets
     trackerboyWarnings
 )

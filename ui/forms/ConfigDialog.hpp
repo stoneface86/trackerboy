@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Config.hpp"
+#include "widgets/config/MidiConfigTab.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
 
 #include <QDialog>
@@ -55,6 +56,7 @@ private:
 
     QVBoxLayout mLayout;
         QTabWidget mTabs;
+            MidiConfigTab mTabMidi;
             SoundConfigTab mTabSound;
         QDialogButtonBox mButtons;
 

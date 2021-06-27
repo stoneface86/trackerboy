@@ -29,8 +29,12 @@ public:
         CategorySound = 1,
         CategoryAppearance = 2,
         CategoryKeyboard = 4,
+        CategoryMidi = 8,
 
-        CategoryAll = CategorySound | CategoryAppearance | CategoryKeyboard
+        CategoryAll = CategorySound |
+                      CategoryAppearance |
+                      CategoryKeyboard |
+                      CategoryMidi
     };
     Q_DECLARE_FLAGS(Categories, Category);
 
@@ -48,6 +52,12 @@ public:
     struct Keyboard {
 
         PianoInput pianoInput;
+    };
+
+    struct Midi {
+        bool enabled;
+        int backendIndex;
+        int portIndex;
     };
 
     struct Sound {
@@ -79,7 +89,15 @@ public:
 
     Keyboard const& keyboard() const;
 
+    Midi const& midi() const;
+
     Sound const& sound() const;
+
+    //
+    // Disables MIDI configuration. This is to be called when a MIDI error occurs with
+    // the configured device.
+    //
+    void disableMidi();
 
 
 private:
@@ -93,6 +111,7 @@ private:
     Appearance mAppearance;
     General mGeneral;
     Keyboard mKeyboard;
+    Midi mMidi;
     Sound mSound;
 
 };
