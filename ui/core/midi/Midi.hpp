@@ -7,6 +7,7 @@
 #include "RtMidi.h"
 
 #include <optional>
+#include <memory>
 #include <vector>
 
 

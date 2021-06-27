@@ -1,10 +1,9 @@
-name: build
 
+name: build
 on: [push]
 
 jobs:
   build:
-
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -13,8 +12,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
+    - name: Install dependencies (Linux)
+      if: ${{ runner.os == 'Linux'}}
+      run: |
+        sudo apt update
+        sudo apt install libasound2-dev
     - name: Cache Qt
       id: cache-qt
       uses: actions/cache@v1

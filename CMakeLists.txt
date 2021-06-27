@@ -5,7 +5,7 @@
 # See README.md for details on building
 #
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.14)
 
 # removes default /W3 flag for MSVC 
 # https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
@@ -17,6 +17,8 @@ project (
     LANGUAGES C CXX
 )
 
+include(FetchContent)
+
 # combines the project name and version, ie trackerboy-v1.1.2
 set(PROJECT_AND_VERSION_NAME "${PROJECT_NAME}-v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
@@ -25,7 +27,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
 option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
 option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
-option(TRACKERBOY_COVERAGE "Enable code coverage" OFF)
 
 include_directories(
     "include"
@@ -36,6 +37,8 @@ if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
 else ()
     set(SOUND_REQUIRED FALSE)
 endif ()
+
+set(RTMIDI_REQUIRED ${TRACKERBOY_ENABLE_UI})
 
 if (NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE MATCHES "Debug")
     set(DEBUG_BUILD TRUE)
@@ -51,9 +54,42 @@ endif ()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# gbapu is required for libtrackerboy, which is always built
+
+FetchContent_Declare(
+    gbapu
+    GIT_REPOSITORY "https://github.com/stoneface86/gbapu"
+    GIT_TAG "f25ff6435065982bd6f46d9a65aaddc8a4cd1c83"
+)
+FetchContent_MakeAvailable(gbapu)
+
+if (RTMIDI_REQUIRED)
+    # RtMidi is only needed for the ui project
+    FetchContent_Declare(
+        RtMidi
+        GIT_REPOSITORY "https://github.com/thestk/rtmidi"
+        GIT_TAG "4.0.0"
+    )
+    set(RTMIDI_BUILD_STATIC_LIBS ON)
+    FetchContent_MakeAvailable(RtMidi)
+endif ()
+
 # sound related dependencies for demo and ui projects
 if (SOUND_REQUIRED)
-    add_library(miniaudio STATIC "external/miniaudio/extras/miniaudio_split/miniaudio.c")
+
+    FetchContent_Declare(
+        miniaudio
+        GIT_REPOSITORY "https://github.com/mackron/miniaudio"
+        GIT_TAG "199d6a7875b4288af6a7b615367c8fdc2019b03c"
+    )
+    FetchContent_MakeAvailable(miniaudio)
+
+    # Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
+    # we'll have to DIY it then.
+    # The split version is used to speed up compilation, the single c file gets compiled
+    # into a library, miniaudio.
+
+    add_library(miniaudio STATIC "${miniaudio_SOURCE_DIR}/extras/miniaudio_split/miniaudio.c")
     #target_compile_definitions(miniaudio PRIVATE
     #    MA_NO_DECODING
     #    MA_NO_GENERATION
@@ -62,7 +98,7 @@ if (SOUND_REQUIRED)
         # MA_LOG_LEVEL_INFO for debug builds
         target_compile_definitions(miniaudio PRIVATE MA_LOG_LEVEL=3)
     endif ()
-    target_include_directories(miniaudio PUBLIC "external/miniaudio/extras/miniaudio_split")
+    target_include_directories(miniaudio PUBLIC "${miniaudio_SOURCE_DIR}/extras/miniaudio_split")
     # miniaudio dependencies
     # windows: none
     # mac: none
@@ -100,10 +136,6 @@ endif ()
 
 include(TestBigEndian)
 TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
-
-#add_subdirectory(external/blip_buf-1.1.0)
-
-add_subdirectory(external/gbapu)
 
 # global warning flags
 add_library(trackerboyWarnings INTERFACE)

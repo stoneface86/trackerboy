@@ -4,8 +4,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-set(RTMIDI_BUILD_STATIC_LIBS ON)
-add_subdirectory("${CMAKE_SOURCE_DIR}/external/rtmidi" "${CMAKE_CURRENT_BINARY_DIR}/rtmidi" EXCLUDE_FROM_ALL)
 
 get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
 get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
@@ -24,7 +22,7 @@ endif ()
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
-    "${CMAKE_SOURCE_DIR}/external/rtmidi"
+    ${RtMidi_SOURCE_DIR}
 )
 
 set(UI_SRC
