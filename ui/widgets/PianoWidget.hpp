@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/midi/IMidiReceiver.hpp"
 #include "core/PianoInput.hpp"
 
 #include "trackerboy/note.hpp"
@@ -16,15 +17,20 @@
 // Custom widget for a piano control. This control displays a piano keyboard with an
 // 8 octaves. Individual keys can be pressed using the mouse.
 //
-class PianoWidget : public QWidget {
+class PianoWidget : public QWidget, public IMidiReceiver {
 
     Q_OBJECT
 
 public:
     PianoWidget(PianoInput const& input, QWidget *parent = nullptr);
+    virtual ~PianoWidget() = default;
 
     void play(trackerboy::Note note);
     void release();
+
+    virtual void midiNoteOn(int note) override;
+
+    virtual void midiNoteOff() override;
 
 signals:
     void keyDown(quint8 note);

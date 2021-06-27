@@ -35,6 +35,8 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mMiniaudio(miniaudio),
     mConfig(miniaudio),
     mMidi(),
+    mMidiReceiver(nullptr),
+    mMidiNoteDown(false),
     mPianoInput(),
     mDocumentCounter(0),
     mErrorSinceLastConfig(false),
@@ -78,6 +80,8 @@ MainWindow::MainWindow(Miniaudio &miniaudio) :
     mSyncWorker(new SyncWorker(*mRenderer)), //, mLeftScope, mRightScope)),
     mSyncWorkerThread()
 {
+    mMidiReceiver = &mPatternEditor;
+
     setupUi();
 
     // read in application configuration
@@ -169,6 +173,44 @@ QMenu* MainWindow::createPopupMenu() {
     auto menu = new QMenu(this);
     setupViewMenu(*menu);
     return menu;
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *evt) {
+    // this filter is just for checking whether the instrument or waveform editor
+    // is focused. Whoever has focus gets MIDI events. Filter can be disabled if
+    // MIDI input is disabled.
+
+    auto type = evt->type();
+    IMidiReceiver *receiver = nullptr;
+    if (type == QEvent::FocusIn) {
+        if (watched == &mDockWaveformEditor) {
+            receiver = &mWaveEditor.piano();
+        } else if (watched == &mDockInstrumentEditor) {
+            receiver = &mInstrumentEditor.piano();
+        }
+    } else if (type == QEvent::FocusOut) {
+        if (!mDockInstrumentEditor.hasFocus() && !mDockWaveformEditor.hasFocus()) {
+            receiver = &mPatternEditor;
+        }
+    }
+
+    if (receiver != nullptr && mMidiReceiver != receiver) {
+        // the mMidiReceiver != receiver check might be unnecessary
+
+        // change the receiver
+        if (mMidiNoteDown) {
+            // force the note off
+            // if we don't do this, the previous receiver won't get the next noteOff message
+            // and the note will be held indefinitely
+            mMidiReceiver->midiNoteOff();
+            mMidiNoteDown = false;
+        }
+        mMidiReceiver = receiver;
+
+    }
+
+
+    return false; // we are only looking at events, not filtering them
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
@@ -1184,12 +1226,14 @@ void MainWindow::setupUi() {
 
     connect(&mMidi, &Midi::noteOn, this,
         [this](int note) {
-            qDebug() << "Note on:" << note;
+            mMidiReceiver->midiNoteOn(note);
+            mMidiNoteDown = true;
         });
 
     connect(&mMidi, &Midi::noteOff, this,
         [this]() {
-            qDebug() << "Note off";
+            mMidiReceiver->midiNoteOff();
+            mMidiNoteDown = false;
         });
 
     // sync worker
@@ -1219,6 +1263,16 @@ void MainWindow::setupUi() {
     connectThis(&mTabs, &QTabBar::currentChanged, onTabChanged);
     connectThis(&mTabs, &QTabBar::tabCloseRequested, closeTab);
     connect(&mTabs, &QTabBar::tabMoved, &mBrowserModel, &ModuleModel::moveDocument);
+
+    auto app = static_cast<QApplication*>(QApplication::instance());
+    connect(app, &QApplication::focusChanged, this, &MainWindow::handleFocusChange);
+
+    // event filters
+    //mDockWaveformEditor.setFocusPolicy(Qt::ClickFocus);
+    //mDockInstrumentEditor.setFocusPolicy(Qt::ClickFocus);
+
+    //mDockWaveformEditor.installEventFilter(this);
+    //mDockInstrumentEditor.installEventFilter(this);
 
 }
 
@@ -1334,4 +1388,58 @@ void MainWindow::disableMidi(bool causedByError) {
         msgbox.setInformativeText(mMidi.lastErrorString());
         settingsMessageBox(msgbox);
     }
+}
+
+void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
+    Q_UNUSED(oldWidget)
+
+    // this handler is for determining where MIDI events will go, based on
+    // who has focus. If MIDI is disabled we don't need to do anything
+
+    // performance notes
+    // searching is required by walking the newWidget's parents until either
+    // nullptr or the editor dock widgets are found. Performance depends on
+    // how deep newWidget is nested in the hierarchy.
+
+    // alternative solution:
+    // BaseEditor could have an eventFilter installed on all of its child widgets,
+    // that check for FocusIn and FocusOut events, which we could emit a
+    // signal for these and the MainWindow would handle them appropriately.
+
+    if (mMidi.isEnabled()) {
+        if (QApplication::activeModalWidget()) {
+            return; // ignore if a dialog is open
+        }
+
+        // MIDI events by default go to the pattern editor
+        IMidiReceiver *receiver = &mPatternEditor;
+
+        QWidget *widget = newWidget;
+        while (widget) {
+            // search if this widget's parent is the instrument or waveform editor dock
+            // if it is, midi events will go to the editor's piano widget
+            if (widget == &mDockWaveformEditor) {
+                receiver = &mWaveEditor.piano();
+                break;
+            } else if (widget == &mDockInstrumentEditor) {
+                receiver = &mInstrumentEditor.piano();
+                break;
+            }
+            widget = widget->parentWidget();
+        }
+
+        if (mMidiReceiver != receiver) {
+            // change the receiver
+            if (mMidiNoteDown) {
+                // force the note off
+                // if we don't do this, the previous receiver won't get the next noteOff message
+                // and the note will be held indefinitely
+                mMidiReceiver->midiNoteOff();
+                mMidiNoteDown = false;
+            }
+            mMidiReceiver = receiver;
+
+        }
+    }
+
 }

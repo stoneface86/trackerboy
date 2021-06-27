@@ -19,7 +19,7 @@ constexpr int DEFAULT_LATENCY = 40;
 constexpr int DEFAULT_QUALITY = static_cast<int>(gbapu::Apu::Quality::medium);
 constexpr unsigned DEFAULT_HISTORY_LIMIT = 64;
 
-constexpr int DEFAULT_MIDI_API = 0;
+constexpr int DEFAULT_MIDI_API = RtMidi::UNSPECIFIED;
 
 
 Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
@@ -166,11 +166,15 @@ void Config::readSettings() {
 
     {
         auto &prober = MidiProber::instance();
-        mMidi.backendIndex = prober.indexOfApi(api);
-        if (mMidi.backendIndex == -1) {
-            // this should rarely happen
-            qWarning() << "MIDI API is not available, falling back to the first available";
-            mMidi.backendIndex = 0; // default to the first one
+        if (api == RtMidi::UNSPECIFIED) {
+            mMidi.backendIndex = 0; // default to first available
+        } else {
+            mMidi.backendIndex = prober.indexOfApi(api);
+            if (mMidi.backendIndex == -1) {
+                // this should rarely happen
+                qWarning() << "MIDI API is not available, falling back to the first available";
+                mMidi.backendIndex = 0; // default to the first one
+            }
         }
         prober.setBackend(mMidi.backendIndex);
         

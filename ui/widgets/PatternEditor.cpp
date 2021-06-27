@@ -263,7 +263,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     switch (patternModel.cursorColumn()) {
         case PatternCursor::ColumnNote: {
             auto note = mPianoIn.keyToNote(key);
-
+            
             if (note) {
                 if (*note != trackerboy::NOTE_CUT) {
                     if (mPreviewKey != key) {
@@ -541,5 +541,23 @@ void PatternEditor::setCursorFromHScroll(int value) {
         patternModel.setCursor(cursor);
 
         mScrollLock = false;
+    }
+}
+
+void PatternEditor::midiNoteOn(int note) {
+    if (mDocument) {
+        auto &patternModel = mDocument->patternModel();
+        if (patternModel.isRecording()) {
+            patternModel.setNote((uint8_t)note, mInstrument);
+            stepDown();
+        }
+
+        emit previewNote(note, patternModel.cursorTrack(), mInstrument.value_or(-1));
+    }
+}
+
+void PatternEditor::midiNoteOff() {
+    if (mDocument) {
+        emit stopNotePreview();
     }
 }

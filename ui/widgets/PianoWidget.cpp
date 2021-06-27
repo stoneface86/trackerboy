@@ -111,6 +111,18 @@ void PianoWidget::release() {
     emit keyUp();
 }
 
+void PianoWidget::midiNoteOn(int note) {
+    if (isEnabled()) {
+        play((trackerboy::Note)note);
+    }
+}
+
+void PianoWidget::midiNoteOff() {
+    if (isEnabled()) {
+        release();
+    }
+}
+
 void PianoWidget::focusOutEvent(QFocusEvent *evt) {
     Q_UNUSED(evt);
 

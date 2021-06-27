@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/clipboard/PatternClipboard.hpp"
+#include "core/midi/IMidiReceiver.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
@@ -14,18 +15,22 @@
 #include <optional>
 
 
-class PatternEditor : public QFrame {
+class PatternEditor : public QFrame, public IMidiReceiver {
 
     Q_OBJECT
 
 public:
 
     explicit PatternEditor(PianoInput const& input, QWidget *parent = nullptr);
-    ~PatternEditor() = default;
+    virtual ~PatternEditor() = default;
 
     PatternGrid& grid();
 
     void setColors(ColorTable const& colors);
+
+    virtual void midiNoteOn(int note) override;
+
+    virtual void midiNoteOff() override;
 
     virtual bool event(QEvent *evt) override;
 

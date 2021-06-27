@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/SyncWorker.hpp"
+#include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/ModuleModel.hpp"
@@ -47,6 +48,11 @@ public:
     ~MainWindow();
 
     QMenu* createPopupMenu() override;
+
+    //
+    // This filter checks for changes in the current activated window.
+    //
+    virtual bool eventFilter(QObject *watched, QEvent *evt) override;
 
 protected:
 
@@ -126,6 +132,8 @@ private:
 
     void updateOrderActions();
 
+    void handleFocusChange(QWidget *oldWidget, QWidget *newWidget);
+
     //
     // Shows a message and disables the configured midi device.
     // If causedByError is true, then the messagebox states it was caused by
@@ -137,6 +145,8 @@ private:
     Config mConfig;
 
     Midi mMidi;
+    IMidiReceiver *mMidiReceiver;
+    bool mMidiNoteDown;
 
     PianoInput mPianoInput;
 
