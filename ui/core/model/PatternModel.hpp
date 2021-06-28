@@ -30,7 +30,7 @@ public:
         CursorTrackChanged = 0x4,
         CursorUnchanged = 0x0
     };
-    Q_DECLARE_FLAGS(CursorChangeFlags, CursorChangeFlag);
+    Q_DECLARE_FLAGS(CursorChangeFlags, CursorChangeFlag)
 
     enum SelectMode {
         SelectionKeep,      // the current selection will be kept
@@ -241,4 +241,4 @@ private:
 
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(PatternModel::CursorChangeFlags);
+Q_DECLARE_OPERATORS_FOR_FLAGS(PatternModel::CursorChangeFlags)

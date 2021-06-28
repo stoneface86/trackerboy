@@ -8,12 +8,16 @@
 PatternGridHeader::PatternGridHeader(QWidget *parent) :
     QWidget(parent),
     mDocument(nullptr),
-    mHeaderFont(QStringLiteral(":/images/gridHeaderFont.bmp")),
     mOffset(0),
     mRownoWidth(0),
     mTrackWidth(0),
+    mHeaderFont(QStringLiteral(":/images/gridHeaderFont.bmp")),
     mTrackHover(HOVER_NONE),
-    mTrackFlags(ModuleDocument::AllOn)
+    mTrackFlags(ModuleDocument::AllOn),
+    mColorForeground(),
+    mColorHover(),
+    mColorDisabled(),
+    mColorLine()
 {
     setFixedHeight(HEIGHT);
     setAutoFillBackground(true);

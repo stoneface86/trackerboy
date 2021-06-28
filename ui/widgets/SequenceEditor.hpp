@@ -30,7 +30,7 @@ private:
 
     void updateString();
 
-    Q_DISABLE_COPY(SequenceEditor);
+    Q_DISABLE_COPY(SequenceEditor)
 
 
     SequenceModel mModel;

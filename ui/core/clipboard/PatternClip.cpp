@@ -108,9 +108,9 @@ PatternClip::PatternClip(PatternClip const& clip) :
     operator=(clip);
 }
 
-PatternClip::PatternClip(PatternClip &&clip) :
-    mLocation(clip.mLocation),
-    mData(std::exchange(clip.mData, nullptr))
+PatternClip::PatternClip(PatternClip &&clip) noexcept :
+    mData(std::exchange(clip.mData, nullptr)),
+    mLocation(clip.mLocation)
 {
 }
 
@@ -129,7 +129,7 @@ PatternClip& PatternClip::operator=(PatternClip const& clip) {
     return *this;
 }
 
-PatternClip& PatternClip::operator=(PatternClip &&clip) {
+PatternClip& PatternClip::operator=(PatternClip &&clip) noexcept {
     std::swap(mData, clip.mData);
     mLocation = clip.mLocation;
     return *this;

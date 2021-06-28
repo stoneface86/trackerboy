@@ -175,44 +175,6 @@ QMenu* MainWindow::createPopupMenu() {
     return menu;
 }
 
-bool MainWindow::eventFilter(QObject *watched, QEvent *evt) {
-    // this filter is just for checking whether the instrument or waveform editor
-    // is focused. Whoever has focus gets MIDI events. Filter can be disabled if
-    // MIDI input is disabled.
-
-    auto type = evt->type();
-    IMidiReceiver *receiver = nullptr;
-    if (type == QEvent::FocusIn) {
-        if (watched == &mDockWaveformEditor) {
-            receiver = &mWaveEditor.piano();
-        } else if (watched == &mDockInstrumentEditor) {
-            receiver = &mInstrumentEditor.piano();
-        }
-    } else if (type == QEvent::FocusOut) {
-        if (!mDockInstrumentEditor.hasFocus() && !mDockWaveformEditor.hasFocus()) {
-            receiver = &mPatternEditor;
-        }
-    }
-
-    if (receiver != nullptr && mMidiReceiver != receiver) {
-        // the mMidiReceiver != receiver check might be unnecessary
-
-        // change the receiver
-        if (mMidiNoteDown) {
-            // force the note off
-            // if we don't do this, the previous receiver won't get the next noteOff message
-            // and the note will be held indefinitely
-            mMidiReceiver->midiNoteOff();
-            mMidiNoteDown = false;
-        }
-        mMidiReceiver = receiver;
-
-    }
-
-
-    return false; // we are only looking at events, not filtering them
-}
-
 void MainWindow::closeEvent(QCloseEvent *evt) {
 
     onFileCloseAll();
@@ -1266,13 +1228,6 @@ void MainWindow::setupUi() {
 
     auto app = static_cast<QApplication*>(QApplication::instance());
     connect(app, &QApplication::focusChanged, this, &MainWindow::handleFocusChange);
-
-    // event filters
-    //mDockWaveformEditor.setFocusPolicy(Qt::ClickFocus);
-    //mDockInstrumentEditor.setFocusPolicy(Qt::ClickFocus);
-
-    //mDockWaveformEditor.installEventFilter(this);
-    //mDockInstrumentEditor.installEventFilter(this);
 
 }
 

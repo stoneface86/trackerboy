@@ -49,11 +49,6 @@ public:
 
     QMenu* createPopupMenu() override;
 
-    //
-    // This filter checks for changes in the current activated window.
-    //
-    virtual bool eventFilter(QObject *watched, QEvent *evt) override;
-
 protected:
 
     void closeEvent(QCloseEvent *evt) override;

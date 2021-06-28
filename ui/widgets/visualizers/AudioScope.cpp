@@ -44,7 +44,6 @@ AudioScope::AudioScope(QWidget *parent) :
 
 void AudioScope::clear() {
     QMutexLocker locker(&mMutex);
-    auto const w = width();
 
     auto &bgcolor = palette().color(QPalette::Window);
     mWaveform.fill(bgcolor);
@@ -89,7 +88,7 @@ void AudioScope::render(int16_t samples[], size_t nsamples, size_t skip) {
 
         // sample the current bin (averaging)
         float sample = 0.0f;
-        for (int i = 0; i != mBinSize; ++i) {
+        for (decltype(mBinSize) i = 0; i != mBinSize; ++i) {
             sample += *dataPtr / (65536.0f / WAVE_HEIGHT);
             dataPtr += skip;
         }

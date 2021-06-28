@@ -371,6 +371,7 @@ ModuleModel::ItemType ModuleModel::itemAt(QModelIndex const& index) {
                     default:
                         break;
                 }
+                break;
             case 2:
                 switch (id.parent()) {
                     case 0:

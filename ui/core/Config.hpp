@@ -36,7 +36,7 @@ public:
                       CategoryKeyboard |
                       CategoryMidi
     };
-    Q_DECLARE_FLAGS(Categories, Category);
+    Q_DECLARE_FLAGS(Categories, Category)
 
     struct Appearance {
         ColorTable colors;
@@ -116,4 +116,4 @@ private:
 
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(Config::Categories);
+Q_DECLARE_OPERATORS_FOR_FLAGS(Config::Categories)

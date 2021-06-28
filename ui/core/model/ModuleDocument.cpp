@@ -53,11 +53,15 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mLastError(trackerboy::FormatError::none),
     mFilename(),
     mFilepath(),
-    mState(),
+    mTitle(),
+    mArtist(),
+    mCopyright(),
+    mComments(),
     mChannelEnables(CH1 | CH2 | CH3 | CH4),
     mKeyRepetition(true),
     mEditStep(1),
-    mInstrument(0)
+    mInstrument(0),
+    mState()
 {
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }

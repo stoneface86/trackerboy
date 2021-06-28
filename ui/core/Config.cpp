@@ -238,8 +238,8 @@ void Config::writeSettings() {
     settings.setValue("fontFamily", mAppearance.font.family());
     settings.setValue("fontSize", mAppearance.font.pointSize());
     settings.beginWriteArray("colors", (int)mAppearance.colors.size());
-    for (int i = 0; i != mAppearance.colors.size(); ++i) {
-        settings.setArrayIndex(i);
+    for (size_t i = 0; i != mAppearance.colors.size(); ++i) {
+        settings.setArrayIndex((int)i);
         settings.setValue("color", mAppearance.colors[i]);
     }
     settings.endArray();

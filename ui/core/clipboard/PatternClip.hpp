@@ -30,8 +30,8 @@ public:
     PatternClip& operator=(PatternClip const& clip);
 
     // move constructor/assignment
-    PatternClip(PatternClip &&clip);
-    PatternClip& operator=(PatternClip &&clip);
+    PatternClip(PatternClip &&clip) noexcept;
+    PatternClip& operator=(PatternClip &&clip) noexcept;
 
     ~PatternClip();
 

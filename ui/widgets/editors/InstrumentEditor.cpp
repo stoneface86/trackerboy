@@ -3,20 +3,6 @@
 
 #include <algorithm>
 
-enum TabSequence {
-    TabArpeggio,
-    TabPanning,
-    TabPitch,
-    TabTimbre
-};
-
-static std::array const TAB_TO_SEQUENCE_INDEX = {
-    trackerboy::Instrument::SEQUENCE_ARP,
-    trackerboy::Instrument::SEQUENCE_PANNING,
-    trackerboy::Instrument::SEQUENCE_PITCH,
-    trackerboy::Instrument::SEQUENCE_TIMBRE
-};
-
 static auto SET_VOLUME_CHECK_STR = QT_TR_NOOP("Set volume on trigger");
 static auto SET_WAVE_CHECK_STR = QT_TR_NOOP("Set waveform on trigger");
 static auto DUTY_CYCLE_STR = QT_TR_NOOP("Duty cycle");

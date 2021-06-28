@@ -187,9 +187,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
 
     auto const h = height();
-    auto const rownoWidth = mPainter.rownoWidth();
     auto const rowHeight = mPainter.cellHeight();
-    auto const trackWidth = mPainter.trackWidth();
     unsigned const centerRow = mVisibleRows / 2;
 
     auto &patternModel = mDocument->patternModel();

@@ -426,8 +426,10 @@ void OrderModel::modifyCell(QUndoStack &stack, uint8_t pattern, uint8_t track, u
     auto oldVal = mOrder[pattern][track];
     uint8_t newVal;
     if constexpr (mode == ModifyMode::inc) {
+        (void)option;
         newVal = (oldVal == 255) ? oldVal : oldVal + 1;
     } else if constexpr (mode == ModifyMode::dec) {
+        (void)option;
         newVal = (oldVal == 0) ? oldVal : oldVal - 1;
     } else {
         newVal = option;
@@ -536,7 +538,7 @@ void OrderModel::doSelectTrack(uint8_t track) {
 }
 
 bool OrderModel::canInsert() {
-    return rowCount() < trackerboy::MAX_PATTERNS;
+    return rowCount() < (int)trackerboy::MAX_PATTERNS;
 }
 
 bool OrderModel::canRemove() {

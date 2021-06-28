@@ -113,6 +113,7 @@ ModuleDocument* BaseEditor::document() {
 }
 
 void BaseEditor::documentChanged(ModuleDocument *doc) {
+    Q_UNUSED(doc)
     // do nothing
 }
 

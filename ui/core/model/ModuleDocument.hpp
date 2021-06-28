@@ -75,7 +75,7 @@ public:
         CH4 = 0x8,
         AllOn = CH1 | CH2 | CH3 | CH4
     };
-    Q_DECLARE_FLAGS(OutputFlags, OutputFlag);
+    Q_DECLARE_FLAGS(OutputFlags, OutputFlag)
 
     struct WidgetState {
         // value for OrderEditor's spinbox
