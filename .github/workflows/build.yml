@@ -1,4 +1,6 @@
 
+# This workflow is inspired by https://github.com/lukka/CppBuildTasks-Validation/blob/master/.github/workflows/hosted-pure-workflow.yml
+
 name: build
 on: [push]
 
@@ -9,26 +11,69 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-
+        include:
+          - os: macos-latest
+            triplet: x64-osx
+          - os: ubuntu-latest
+            triplet: x64-linux
+          - os: windows-latest
+            triplet: x64-windows
+    env:
+      CMAKE_BUILD_DIR: ${{ github.workspace }}/build
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+        
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
+
+    - uses: lukka/get-cmake@latest
+    
+    - name: Restore vcpkg
+      uses: actions/cache@v2
+      with:
+        # The first path is where vcpkg generates artifacts while consuming the vcpkg.json manifest file.
+        # The second path is the location of vcpkg (it contains the vcpkg executable and data files).
+        # The other paths starting with '!' are exclusions: they contain termporary files generated during the build of the installed packages.
+        path: |
+          ${{ env.CMAKE_BUILD_DIR }}/vcpkg_installed/
+          ${{ env.VCPKG_ROOT }}
+          !${{ env.VCPKG_ROOT }}/buildtrees
+          !${{ env.VCPKG_ROOT }}/packages
+          !${{ env.VCPKG_ROOT }}/downloads
+        # The key is composed in a way that it gets properly invalidated: this must happen whenever vcpkg's Git commit id changes, or the list of packages changes. In this case a cache miss must happen and a new entry with a new key with be pushed to GitHub the cache service.
+        # The key includes: hash of the vcpkg.json file, the hash of the vcpkg Git commit id, and the used vcpkg's triplet. The vcpkg's commit id would suffice, but computing an hash out it does not harm.
+        # Note: given a key, the cache content is immutable. If a cache entry has been created improperly, in order the recreate the right content the key must be changed as well, and it must be brand new (i.e. not existing already).
+        key: |
+          ${{ hashFiles( 'vcpkg_manifest/vcpkg.json' ) }}-${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}-${{ matrix.triplet }}-invalidate
+    
+    - name: Show content of workspace after cache has been restored
+      run: find $RUNNER_WORKSPACE
+      shell: bash
+    
+    # On Windows runners, let's ensure to have the Developer Command Prompt environment setup correctly. As used here the Developer Command Prompt created is targeting x64 and using the default the Windows SDK.
+    - uses: ilammy/msvc-dev-cmd@v1
+
     - name: Cache Qt
       id: cache-qt
       uses: actions/cache@v1
       with:
         path: ../Qt
         key: ${{ runner.os }}-QtCache
+    
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
         version: 5.12.10
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
+    
     - name: configure
       run: |
-        mkdir build
-        cd build
-        cmake -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake ../
+        cmake -S "${{ github.workspace }}/vcpkg_manifest" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+    
     - name: build
-      run: cmake --build build --config Debug
+      run: cmake --build "${{ env.CMAKE_BUILD_DIR }}"
+    
+    - name: Show content of workspace at its completion
+      run: find $RUNNER_WORKSPACE
+      shell: bash

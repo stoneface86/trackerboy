@@ -26,10 +26,13 @@ project (
     LANGUAGES C CXX
 )
 
+
 if (NOT VCPKG_MANIFEST_MODE AND NOT DEFINED NO_VCPKG)
     # abort if the user isn't using vcpkg and did not define NO_VCPKG
     message(FATAL_ERROR "vcpkg toolchain not provided! You must either provide the toolchain or define NO_VCPKG")
 endif ()
+
+unset(NO_VCPKG)
 
 
 include(FetchContent)
