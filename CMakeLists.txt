@@ -7,20 +7,14 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-if (VCPKG_MANIFEST_MODE) 
+if (DEFINED NO_VCPKG)
+    message(WARNING "configuring without vcpkg - not supported - use at your own risk")
+else ()
     # use our custom triplet settings
     # - static libraries except for Qt
     # - dynamic CRT
-    set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets")
-else ()
-    if (DEFINED NO_VCPKG)
-        message(WARNING "configuring without vcpkg - not supported - use at your own risk")
-    else ()
-        # abort if the user isn't using vcpkg and did not define NO_VCPKG
-        message(FATAL_ERROR "vcpkg toolchain not provided! You must either provide the toolchain or define NO_VCPKG")
-    endif ()
-
-endif()
+    set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets") 
+endif ()
 
 # removes default /W3 flag for MSVC 
 # https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
@@ -31,6 +25,12 @@ project (
     VERSION "0.3.1"
     LANGUAGES C CXX
 )
+
+if (NOT VCPKG_MANIFEST_MODE AND NOT DEFINED NO_VCPKG)
+    # abort if the user isn't using vcpkg and did not define NO_VCPKG
+    message(FATAL_ERROR "vcpkg toolchain not provided! You must either provide the toolchain or define NO_VCPKG")
+endif ()
+
 
 include(FetchContent)
 
