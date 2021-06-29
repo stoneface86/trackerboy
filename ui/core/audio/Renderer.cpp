@@ -22,6 +22,21 @@ static void logMaResult(ma_result result) {
 
 constexpr int NO_TIMER = -1;
 
+
+// Renderer Notes
+//
+// This class is reponsible for rendering audio in real time. There is only one
+// Renderer object and it lives in its own thread. The Renderer synthesizes audio
+// for playback which is then played out to speakers via the audio callback function.
+// Synthesized audio is put into the ringbuffer, mBuffer. This buffer is filled
+// completely every period, which is by default 5 ms. The audio callback takes what it
+// needs from the buffer. Ideally, the buffer is always at 100% utilization. A lower
+// utilization indicates that the callback is consuming faster than the rate the
+// audio is being produced. When this happens underruns occur, as the callback doesn't
+// get what it needs and there are now gaps in the playback.
+
+
+
 // if Q_ASSERT(isThreadSafe()) fails you are calling a slot from a different
 // thread, do not do this! Call via signal-slot connection or QMetaObject::invokeMethod
 
@@ -74,15 +89,10 @@ Renderer::Diagnostics Renderer::diagnostics() {
     // no synchronization needed since all these values are atomic
     return {
         mUnderruns.load(),
-        mSamplesElapsed.load(),
+        mSamplesElapsed.load() * 1000 / mDevice->sampleRate,
         mBufferUsage.load(),
         mBufferSize.load()
     };
-}
-
-ma_device const& Renderer::device() {
-    // This function is not thread-safe (and will never be) and needs to go away
-    return *mDevice;
 }
 
 ModuleDocument* Renderer::document() {

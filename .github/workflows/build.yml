@@ -47,10 +47,6 @@ jobs:
         key: |
           ${{ hashFiles( 'vcpkg.json' ) }}-${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}-${{ matrix.triplet }}-invalidate
     
-    - name: Show content of workspace after cache has been restored
-      run: find $RUNNER_WORKSPACE
-      shell: bash
-    
     # On Windows runners, let's ensure to have the Developer Command Prompt environment setup correctly. As used here the Developer Command Prompt created is targeting x64 and using the default the Windows SDK.
     - uses: ilammy/msvc-dev-cmd@v1
 
@@ -73,7 +69,3 @@ jobs:
     
     - name: build
       run: cmake --build "${{ env.CMAKE_BUILD_DIR }}"
-    
-    - name: Show content of workspace at its completion
-      run: find $RUNNER_WORKSPACE
-      shell: bash

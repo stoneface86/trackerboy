@@ -37,7 +37,7 @@ public:
 
     struct Diagnostics {
         unsigned underruns;
-        unsigned elapsed;
+        unsigned elapsed; // elapsed in milliseconds
         unsigned bufferUsage;
         unsigned bufferSize;
     };
@@ -53,13 +53,6 @@ public:
     // Note: Function is thread-safe
     //
     Diagnostics diagnostics();
-
-    //
-    // Gets the current device. Not thread-safe, the referenced ma_device
-    // struct can change if setConfig is called. References are used since a 
-    // copy of the device would be expensive (sizeof(ma_device) is about 22000!)
-    //
-    ma_device const& device();
 
     //
     // Gets the current document.

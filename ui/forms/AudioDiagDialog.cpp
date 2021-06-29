@@ -113,11 +113,10 @@ void AudioDiagDialog::refresh() {
         .arg(diags.bufferSize)
     );
 
-    auto elapsed = diags.elapsed * 1000 / mRenderer.device().sampleRate;
     mElapsedLabel.setText(QStringLiteral("%1:%2.%3")
-        .arg(elapsed / 60000, 2, 10, QChar('0'))
-        .arg((elapsed % 60000) / 1000, 2, 10, QChar('0'))
-        .arg(elapsed % 1000, 3, 10, QChar('0'))
+        .arg(diags.elapsed / 60000, 2, 10, QChar('0'))
+        .arg((diags.elapsed % 60000) / 1000, 2, 10, QChar('0'))
+        .arg(diags.elapsed % 1000, 3, 10, QChar('0'))
         );
 
     mStatusLabel.setText(mRenderer.isRunning() ? tr("Playing") : tr("Stopped"));
