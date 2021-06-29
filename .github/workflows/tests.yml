@@ -9,13 +9,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
     - name: configure
       run: |
         mkdir build
         cd build
-        cmake -D TRACKERBOY_ENABLE_UI=OFF -D TRACKERBOY_ENABLE_DEMO=OFF -D TRACKERBOY_ENABLE_TESTS=ON ..
+        cmake -DTRACKERBOY_ENABLE_UI=OFF -DTRACKERBOY_ENABLE_TESTS=ON -DNO_VCPKG ..
     - name: build
       run: cmake --build build --config Debug
     - name: test

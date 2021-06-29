@@ -7,6 +7,21 @@
 
 cmake_minimum_required(VERSION 3.14)
 
+if (VCPKG_MANIFEST_MODE) 
+    # use our custom triplet settings
+    # - static libraries except for Qt
+    # - dynamic CRT
+    set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets")
+else ()
+    if (DEFINED NO_VCPKG)
+        message(WARNING "configuring without vcpkg - not supported - use at your own risk")
+    else ()
+        # abort if the user isn't using vcpkg and did not define NO_VCPKG
+        message(FATAL_ERROR "vcpkg toolchain not provided! You must either provide the toolchain or define NO_VCPKG")
+    endif ()
+
+endif()
+
 # removes default /W3 flag for MSVC 
 # https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOverrides.cmake")
@@ -22,7 +37,8 @@ include(FetchContent)
 # combines the project name and version, ie trackerboy-v1.1.2
 set(PROJECT_AND_VERSION_NAME "${PROJECT_NAME}-v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
+# uncomment if we need some cmake modules (none currently)
+#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
 option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
@@ -31,6 +47,13 @@ option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application"
 include_directories(
     "include"
 )
+
+if (VCPKG_TOOLCHAIN)
+    # hack
+    # the toolchain should do this but it does not for some reason ?
+    # might just be a problem with the rtmidi port
+    include_directories("${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
+endif ()
 
 if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
     set(SOUND_REQUIRED TRUE)
@@ -64,14 +87,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(gbapu)
 
 if (RTMIDI_REQUIRED)
-    # RtMidi is only needed for the ui project
-    FetchContent_Declare(
-        RtMidi
-        GIT_REPOSITORY "https://github.com/thestk/rtmidi"
-        GIT_TAG "4.0.0"
-    )
-    set(RTMIDI_BUILD_STATIC_LIBS ON)
-    FetchContent_MakeAvailable(RtMidi)
+    find_package(RtMidi CONFIG REQUIRED)
 endif ()
 
 # sound related dependencies for demo and ui projects
@@ -83,6 +99,9 @@ if (SOUND_REQUIRED)
         GIT_TAG "199d6a7875b4288af6a7b615367c8fdc2019b03c"
     )
     FetchContent_MakeAvailable(miniaudio)
+
+    # TODO: we will use RtAudio instead of Miniaudio eventually, for stability reasons
+    #find_package(RtAudio CONFIG REQUIRED)
 
     # Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
     # we'll have to DIY it then.

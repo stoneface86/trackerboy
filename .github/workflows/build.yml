@@ -12,11 +12,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install dependencies (Linux)
-      if: ${{ runner.os == 'Linux'}}
-      run: |
-        sudo apt-get update
-        sudo apt-get install libasound2-dev
+      with:
+        submodules: true
     - name: Cache Qt
       id: cache-qt
       uses: actions/cache@v1
@@ -32,6 +29,6 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake ../
+        cmake -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake ../
     - name: build
       run: cmake --build build --config Debug

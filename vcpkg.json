@@ -1,0 +1,8 @@
+{
+    "name": "trackerboy",
+    "description": "Gameboy/Gameboy Color music tracker",
+    "version": "0.3.1",
+    "dependencies": [
+        "rtmidi"
+    ]
+}

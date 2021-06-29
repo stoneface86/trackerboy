@@ -22,7 +22,6 @@ endif ()
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
-    ${RtMidi_SOURCE_DIR}
 )
 
 set(UI_SRC
@@ -98,7 +97,7 @@ add_library(ui STATIC ${UI_SRC})
 target_link_libraries(ui PUBLIC 
     trackerboy
     miniaudio
-    rtmidi
+    RtMidi::rtmidi
     Qt5::Widgets
     trackerboyWarnings
 )

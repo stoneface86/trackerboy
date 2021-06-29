@@ -2,5 +2,6 @@
 .vscode/
 build/
 out/
+vcpkg_installed/
 CMakeSettings.json
 CMakeLists.txt.user
