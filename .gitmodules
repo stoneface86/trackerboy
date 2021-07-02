@@ -1,3 +1,6 @@
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg
+[submodule "external/gbapu"]
+	path = external/gbapu
+	url = https://github.com/stoneface86/gbapu

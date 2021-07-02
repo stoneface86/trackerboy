@@ -5,7 +5,7 @@
 # See README.md for details on building
 #
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.8)
 
 if (DEFINED NO_VCPKG)
     message(WARNING "configuring without vcpkg - not supported - use at your own risk")
@@ -81,13 +81,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # gbapu is required for libtrackerboy, which is always built
-
-FetchContent_Declare(
-    gbapu
-    GIT_REPOSITORY "https://github.com/stoneface86/gbapu"
-    GIT_TAG "f25ff6435065982bd6f46d9a65aaddc8a4cd1c83"
-)
-FetchContent_MakeAvailable(gbapu)
+add_subdirectory(external/gbapu)
 
 if (RTMIDI_REQUIRED)
     find_package(RtMidi CONFIG REQUIRED)
