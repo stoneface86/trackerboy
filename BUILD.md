@@ -1,5 +1,10 @@
 # Building
 
+UPDATE: Only windows builds are supported at this point in time. I simply
+do not have the resources to build and test for all platforms. If you do
+get it working on linux/macOS or have any suggestions feel free to
+submit a pull request. Contributions are always welcome.
+
 Use the main CMakeLists.txt to build the library. The ui and demo programs are
 optional, and can be enabled/disabled by setting their respective options.
 
