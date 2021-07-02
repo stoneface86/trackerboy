@@ -1,5 +1,6 @@
 
 #include "core/Config.hpp"
+#include "core/samplerates.hpp"
 
 #include "gbapu.hpp"
 
@@ -12,16 +13,9 @@
 #include <QSettings>
 #include <QtDebug>
 
-
 namespace {
 
-constexpr int DEFAULT_SAMPLERATE_INDEX = 4; // 44100 Hz
-constexpr int DEFAULT_PERIOD = 5;
-constexpr int DEFAULT_LATENCY = 40;
-constexpr int DEFAULT_QUALITY = static_cast<int>(gbapu::Apu::Quality::medium);
-constexpr unsigned DEFAULT_HISTORY_LIMIT = 64;
-
-constexpr int DEFAULT_MIDI_API = RtMidi::UNSPECIFIED;
+static auto LOG_PREFIX = "[Config]";
 
 
 Qt::Key const DEFAULT_PIANO_BINDINGS[] = {
@@ -112,8 +106,8 @@ void Config::readSettings() {
 
     settings.beginGroup(QStringLiteral("appearance"));
 
-    mAppearance.font.setFamily(settings.value("fontFamily", "Cascadia Mono").toString());
-    mAppearance.font.setPointSize(settings.value("fontSize", 12).toInt());
+    mAppearance.font.setFamily(settings.value(QStringLiteral("fontFamily"), "Cascadia Mono").toString());
+    mAppearance.font.setPointSize(settings.value(QStringLiteral("fontSize"), 12).toInt());
 
     settings.beginReadArray("colors");
     readColor(settings, Color::background,              QColor(0x18, 0x18, 0x18));
@@ -136,23 +130,26 @@ void Config::readSettings() {
     readColor(settings, Color::headerDisabled,          QColor(52, 104, 86));
     settings.endArray();
    
-    mAppearance.showFlats = settings.value("showFlats", false).toBool();
-    mAppearance.showPreviews = settings.value("showPreviews", true).toBool();
+    mAppearance.showFlats = settings.value(QStringLiteral("showFlats"), false).toBool();
+    mAppearance.showPreviews = settings.value(QStringLiteral("showPreviews"), true).toBool();
 
     settings.endGroup(); // appearance
 
     settings.beginGroup(QStringLiteral("general"));
-    mGeneral.historyLimit = settings.value(QStringLiteral("historyLimit"), DEFAULT_HISTORY_LIMIT).toUInt();
+    mGeneral.historyLimit = settings.value(QStringLiteral("historyLimit"), General::DEFAULT_HISTORY).toInt();
+    if (mGeneral.historyLimit < General::MIN_HISTORY || mGeneral.historyLimit > General::MAX_HISTORY) {
+        qWarning() << LOG_PREFIX << "invalid history setting, using default";
+    }
     settings.endGroup(); // general
 
     settings.beginGroup(QStringLiteral("keyboard"));
 
     // keybindings for the piano widget + note column in pattern editor
-    settings.beginReadArray("piano");
+    settings.beginReadArray(QStringLiteral("piano"));
     for (int i = 0; i != sizeof(DEFAULT_PIANO_BINDINGS) / sizeof(Qt::Key); ++i) {
         settings.setArrayIndex(i);
         mKeyboard.pianoInput.bind(
-            static_cast<Qt::Key>(settings.value("keycode", DEFAULT_PIANO_BINDINGS[i]).toInt()),
+            static_cast<Qt::Key>(settings.value(QStringLiteral("keycode"), DEFAULT_PIANO_BINDINGS[i]).toInt()),
             i
         );
     }
@@ -162,12 +159,12 @@ void Config::readSettings() {
 
 
     settings.beginGroup(QStringLiteral("midi"));
-
-    mMidi.enabled = settings.value(QStringLiteral("enabled"), false).toBool();
-    auto api = (RtMidi::Api)settings.value(QStringLiteral("api"), DEFAULT_MIDI_API).toInt();
-    auto portName = settings.value(QStringLiteral("portname"), QString()).toString();
-
     {
+        mMidi.enabled = settings.value(QStringLiteral("enabled"), Midi::DEFAULT_ENABLED).toBool();
+        auto api = (RtMidi::Api)settings.value(QStringLiteral("api"), RtMidi::UNSPECIFIED).toInt();
+        auto portName = settings.value(QStringLiteral("portname"), QString()).toString();
+
+    
         auto &prober = MidiProber::instance();
         if (api == RtMidi::UNSPECIFIED) {
             mMidi.backendIndex = 0; // default to first available
@@ -175,7 +172,7 @@ void Config::readSettings() {
             mMidi.backendIndex = prober.indexOfApi(api);
             if (mMidi.backendIndex == -1) {
                 // this should rarely happen
-                qWarning() << "MIDI API is not available, falling back to the first available";
+                qWarning() << LOG_PREFIX << "MIDI API is not available, falling back to the first available";
                 mMidi.backendIndex = 0; // default to the first one
             }
         }
@@ -189,48 +186,74 @@ void Config::readSettings() {
             mMidi.portIndex = prober.portNames().indexOf(portName);
             // if portIndex is -1, then we couldn't find the port, log a warning
             if (mMidi.portIndex == -1) {
-                qWarning() << "Could not find MIDI port, please select a new device";
+                qWarning() << LOG_PREFIX << "Could not find MIDI port, please select a new device";
             }
         }
         
     }
-
-
     settings.endGroup(); // midi
 
-
+    //
+    // Sound configuration notes:
+    // If the API cannot be found the first one available is chosen
+    // If the device name cannot be found, the default one is chosen
+    //
 
     settings.beginGroup(QStringLiteral("sound"));
     {
         auto &audioProber = AudioProber::instance();
+        // get the configured API
         auto const api = (RtAudio::Api)settings.value(QStringLiteral("api"), RtAudio::UNSPECIFIED).toInt();
+        // get the configured device name
         mSound.deviceName = settings.value(QStringLiteral("deviceName"), QString()).toString();
         if (api == RtAudio::UNSPECIFIED) {
             mSound.backendIndex = 0; // default to the first one
-            audioProber.probe(0);
         } else {
             mSound.backendIndex = audioProber.indexOfApi(api);
             if (mSound.backendIndex == -1) {
                 auto apiName = RtAudio::getApiName(api);
-                qWarning().noquote() << "audio API" << QString::fromStdString(apiName) << "not available";
-            } else {
-                audioProber.probe(mSound.backendIndex);
+                qWarning().noquote() << LOG_PREFIX << "audio API" << QString::fromStdString(apiName) << "not available";
+                mSound.backendIndex = 0; // default to the first one
             }
         }
+        
+        audioProber.probe(mSound.backendIndex);
+
         if (mSound.deviceName.isEmpty()) {
+            // get the default
             mSound.deviceIndex = audioProber.getDefaultDevice(mSound.backendIndex);
         } else {
             mSound.deviceIndex = audioProber.indexOfDevice(mSound.backendIndex, mSound.deviceName);
             if (mSound.deviceIndex == -1) {
-                qWarning().noquote() << "audio device" << mSound.deviceName << "not available";
+                qWarning().noquote() << LOG_PREFIX << "audio device" << mSound.deviceName << "not available";
             }
         }
+        
+        mSound.deviceName = audioProber.deviceName(mSound.backendIndex, mSound.deviceIndex);
+
+
     }
 
-    mSound.samplerateIndex = settings.value("samplerateIndex", DEFAULT_SAMPLERATE_INDEX).toInt();
-    mSound.latency = settings.value("latency", DEFAULT_LATENCY).toInt();
-    mSound.period = settings.value("period", DEFAULT_PERIOD).toInt();
-    mSound.quality = settings.value("quality", DEFAULT_QUALITY).toInt();
+    mSound.samplerateIndex = settings.value(QStringLiteral("samplerateIndex"), Sound::DEFAULT_SAMPLERATE).toInt();
+    if (mSound.samplerateIndex < 0 || mSound.samplerateIndex >= N_SAMPLERATES) {
+        qWarning() << LOG_PREFIX << "invalid samplerate in config, loading default";
+        mSound.samplerateIndex = Sound::DEFAULT_SAMPLERATE;
+    }
+    mSound.latency = settings.value(QStringLiteral("latency"), Sound::DEFAULT_LATENCY).toInt();
+    if (mSound.latency < Sound::MIN_LATENCY || mSound.latency > Sound::MAX_LATENCY) {
+        qWarning() << LOG_PREFIX << "invalid latency in config, loading default";
+        mSound.latency = Sound::DEFAULT_LATENCY;
+    }
+    mSound.period = settings.value(QStringLiteral("period"), Sound::DEFAULT_PERIOD).toInt();
+    if (mSound.period < Sound::MIN_PERIOD || mSound.period > Sound::MAX_PERIOD) {
+        qWarning() << LOG_PREFIX << "invalid period in config, loading default";
+        mSound.period = Sound::DEFAULT_PERIOD;
+    }
+    mSound.quality = settings.value(QStringLiteral("quality"), Sound::DEFAULT_QUALITY).toInt();
+    if (mSound.quality < (int)gbapu::Apu::Quality::low || mSound.quality > (int)gbapu::Apu::Quality::high) {
+        qWarning() << LOG_PREFIX << "invalid quality in config, loading default";
+        mSound.quality = Sound::DEFAULT_QUALITY;
+    }
 
     settings.endGroup(); // sound
 
@@ -239,37 +262,37 @@ void Config::readSettings() {
 
 void Config::readColor(QSettings &settings, Color color, QColor def) {
     settings.setArrayIndex(+color);
-    mAppearance.colors[+color] = settings.value("color", def).value<QColor>();
+    mAppearance.colors[+color] = settings.value(QStringLiteral("color"), def).value<QColor>();
 }
 
 
 void Config::writeSettings() {
     QSettings settings;
-    settings.beginGroup("config");
+    settings.beginGroup(QStringLiteral("config"));
 
-    settings.beginGroup("appearance");
-    settings.setValue("fontFamily", mAppearance.font.family());
-    settings.setValue("fontSize", mAppearance.font.pointSize());
-    settings.beginWriteArray("colors", (int)mAppearance.colors.size());
+    settings.beginGroup(QStringLiteral("appearance"));
+    settings.setValue(QStringLiteral("fontFamily"), mAppearance.font.family());
+    settings.setValue(QStringLiteral("fontSize"), mAppearance.font.pointSize());
+    settings.beginWriteArray(QStringLiteral("colors"), (int)mAppearance.colors.size());
     for (size_t i = 0; i != mAppearance.colors.size(); ++i) {
         settings.setArrayIndex((int)i);
-        settings.setValue("color", mAppearance.colors[i]);
+        settings.setValue(QStringLiteral("color"), mAppearance.colors[i]);
     }
     settings.endArray();
-    settings.setValue("showFlats", mAppearance.showFlats);
-    settings.setValue("showPreviews", mAppearance.showPreviews);
+    settings.setValue(QStringLiteral("showFlats"), mAppearance.showFlats);
+    settings.setValue(QStringLiteral("showPreviews"), mAppearance.showPreviews);
     settings.endGroup();
 
     settings.beginGroup(QStringLiteral("general"));
-    settings.setValue("historyLimit", mGeneral.historyLimit);
+    settings.setValue(QStringLiteral("historyLimit"), mGeneral.historyLimit);
     settings.endGroup();
 
-    settings.beginGroup("keyboard");
-    settings.beginWriteArray("piano");
+    settings.beginGroup(QStringLiteral("keyboard"));
+    settings.beginWriteArray(QStringLiteral("piano"));
     auto &bindings = mKeyboard.pianoInput.bindings();
     for (size_t i = 0; i != bindings.size(); ++i) {
         settings.setArrayIndex((int)i);
-        settings.setValue("keycode", bindings[i]);
+        settings.setValue(QStringLiteral("keycode"), bindings[i]);
     }
     settings.endArray();
     settings.endGroup();
@@ -287,7 +310,7 @@ void Config::writeSettings() {
     }
     settings.endGroup();
 
-    settings.beginGroup("sound");
+    settings.beginGroup(QStringLiteral("sound"));
 
     {
         auto &audioProber = AudioProber::instance();
@@ -295,10 +318,10 @@ void Config::writeSettings() {
         settings.setValue(QStringLiteral("deviceName"), mSound.deviceName);
     }
 
-    settings.setValue("samplerateIndex", mSound.samplerateIndex);
-    settings.setValue("latency", mSound.latency);
-    settings.setValue("period", mSound.period);
-    settings.setValue("quality", mSound.quality);
+    settings.setValue(QStringLiteral("samplerateIndex"), mSound.samplerateIndex);
+    settings.setValue(QStringLiteral("latency"), mSound.latency);
+    settings.setValue(QStringLiteral("period"), mSound.period);
+    settings.setValue(QStringLiteral("quality"), mSound.quality);
     settings.endGroup();
 
     settings.endGroup();

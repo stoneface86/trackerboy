@@ -144,6 +144,21 @@ QStringList AudioProber::deviceNames(int backendIndex) const {
     return mBackends[backendIndex].deviceNames;
 }
 
+QString AudioProber::deviceName(int backendIndex, int deviceIndex) const {
+    QMutexLocker locker(&mMutex);
+
+    if (indexIsInvalid(backendIndex)) {
+        return {};
+    }
+
+    auto &backend = mBackends[backendIndex];
+    if (deviceIndex < 0 || deviceIndex >= backend.deviceNames.size()) {
+        return {};
+    }
+
+    return backend.deviceNames[deviceIndex];
+}
+
 int AudioProber::findDevice(int backendIndex, QString const& name) const {
     QMutexLocker locker(&mMutex);
 

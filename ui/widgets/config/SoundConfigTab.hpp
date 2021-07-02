@@ -27,7 +27,7 @@ public:
 
     void apply(Config::Sound &soundConfig);
 
-    void resetControls(Config::Sound &soundConfig);
+    void resetControls(Config::Sound const& soundConfig);
 
 private slots:
 

@@ -86,19 +86,21 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
 
     auto &prober = AudioProber::instance();
     mApiCombo.addItems(prober.backendNames());
-    mDeviceCombo.addItems(prober.deviceNames(mConfig.mSound.backendIndex));
+    mDeviceCombo.addItems(prober.deviceNames(config.sound().backendIndex));
     // populate samplerate combo
     for (int i = 0; i != N_SAMPLERATES; ++i) {
         mSamplerateCombo.addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
     }
 
     setupTimeSpinbox(mLatencySpin);
-    mLatencySpin.setMaximum(2000);
-    mLatencySpin.setValue(40);
+    mLatencySpin.setMinimum(Config::Sound::MIN_LATENCY);
+    mLatencySpin.setMaximum(Config::Sound::MAX_LATENCY);
+    mLatencySpin.setValue(Config::Sound::DEFAULT_LATENCY);
 
     setupTimeSpinbox(mPeriodSpin);
-    mPeriodSpin.setMaximum(500);
-    mPeriodSpin.setValue(5);
+    mPeriodSpin.setMinimum(Config::Sound::MIN_PERIOD);
+    mPeriodSpin.setMaximum(Config::Sound::MAX_PERIOD);
+    mPeriodSpin.setValue(Config::Sound::DEFAULT_PERIOD);
 
     mLowQualityRadio.setToolTip(tr("Linear interpolation on all channels"));
     mMedQualityRadio.setToolTip(tr("Sinc interpolation on channels 1 and 2, linear interpolation on channels 3 and 4."));
@@ -137,7 +139,7 @@ void SoundConfigTab::apply(Config::Sound &soundConfig) {
     clean();
 }
 
-void SoundConfigTab::resetControls(Config::Sound &soundConfig) {
+void SoundConfigTab::resetControls(Config::Sound const& soundConfig) {
 
     mApiCombo.setCurrentIndex(soundConfig.backendIndex);
     
@@ -165,6 +167,7 @@ void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
 }
 
 void SoundConfigTab::apiChanged(int index) {
+    Q_UNUSED(index)
     rescan(true); // new api selected, pick the default device
     setDirty();
 }
@@ -178,12 +181,14 @@ void SoundConfigTab::rescan(bool rescanDueToApiChange) {
     // get the new list of device names
     auto const deviceNames = prober.deviceNames(backendIndex);
 
+
     int deviceIndex;
     if (rescanDueToApiChange) {
+        auto &soundConfig = mConfig.sound();
         // always select the default device
-        if (backendIndex == mConfig.mSound.backendIndex) {
+        if (backendIndex == soundConfig.backendIndex) {
             // went back to configured backend, try to find the configured device
-            deviceIndex = deviceNames.indexOf(mConfig.mSound.deviceName);
+            deviceIndex = deviceNames.indexOf(soundConfig.deviceName);
         } else {
             // new backend, pick the default
             deviceIndex = prober.getDefaultDevice(backendIndex);

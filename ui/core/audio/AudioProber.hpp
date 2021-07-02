@@ -66,6 +66,12 @@ public:
     QStringList deviceNames(int backendIndex) const;
 
     //
+    // Utility for getting the device name from a backend and device index.
+    // An empty string is returned if the device does not exist.
+    //
+    QString deviceName(int backendIndex, int deviceIndex) const;
+
+    //
     // Finds the device index from the device name
     //
     int findDevice(int backendIndex, QString const& name) const;

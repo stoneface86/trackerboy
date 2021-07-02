@@ -4,6 +4,8 @@
 #include "core/ColorTable.hpp"
 #include "core/PianoInput.hpp"
 
+#include "gbapu.hpp"
+
 #include <QFlags>
 #include <QFont>
 #include <QSettings>
@@ -15,7 +17,6 @@ class Config {
 
     // only ConfigDialog can modify settings
     friend class ConfigDialog;
-    friend class SoundConfigTab;
 
 public:
 
@@ -45,7 +46,11 @@ public:
     };
 
     struct General {
-        unsigned historyLimit;  // number of actions in the undo history, 0 for infinite
+        static constexpr int MAX_HISTORY = 10000;
+        static constexpr int MIN_HISTORY = 0;
+        static constexpr int DEFAULT_HISTORY = 64;
+
+        int historyLimit;  // number of actions in the undo history, 0 for infinite
     };
 
     struct Keyboard {
@@ -54,12 +59,27 @@ public:
     };
 
     struct Midi {
+        static constexpr int DEFAULT_ENABLED = false;
+
         bool enabled;
         int backendIndex;
         int portIndex;
     };
 
     struct Sound {
+        static constexpr int DEFAULT_PERIOD = 5;
+        static constexpr int MIN_PERIOD = 1;
+        static constexpr int MAX_PERIOD = 100;
+
+        static constexpr int DEFAULT_LATENCY = 40;
+        static constexpr int MIN_LATENCY = 1;
+        static constexpr int MAX_LATENCY = 500;
+
+        static constexpr int DEFAULT_SAMPLERATE = 4; // 44100 Hz
+        
+        static constexpr int DEFAULT_QUALITY = (int)gbapu::Apu::Quality::medium;
+
+
         int backendIndex;           // backend index in AudioProber list (-1 for no backend)
         int deviceIndex;            // device index from AudioProber device list
         QString deviceName;         // last configured device name (used for identification)
