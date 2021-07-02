@@ -5,19 +5,26 @@
 
 MidiConfigTab::MidiConfigTab(QWidget *parent) :
     ConfigTab(Config::CategoryMidi, parent),
+    mRescanning(false),
     mLayout(),
     mMidiGroup(tr("MIDI input")),
     mMidiLayout(),
     mApiLabel(tr("API")),
     mApiCombo(),
     mPortLabel(tr("Device")),
-    mPortCombo()
+    mPortCombo(),
+    mRescanLayout(),
+    mRescanButton(tr("Rescan"))
 {
+
+    mRescanLayout.addStretch();
+    mRescanLayout.addWidget(&mRescanButton);
 
     mMidiLayout.addWidget(&mApiLabel, 0, 0);
     mMidiLayout.addWidget(&mApiCombo, 0, 1);
     mMidiLayout.addWidget(&mPortLabel, 1, 0);
     mMidiLayout.addWidget(&mPortCombo, 1, 1);
+    mMidiLayout.addLayout(&mRescanLayout, 2, 0, 1, 2);
     mMidiLayout.setColumnStretch(1, 1);
     mMidiGroup.setLayout(&mMidiLayout);
     mMidiGroup.setCheckable(true);
@@ -45,6 +52,7 @@ MidiConfigTab::MidiConfigTab(QWidget *parent) :
     connect(&mApiCombo, qOverload<int>(&QComboBox::activated), this, &MidiConfigTab::setDirty);
     connect(&mPortCombo, qOverload<int>(&QComboBox::activated), this, &MidiConfigTab::setDirty);
     connect(&mMidiGroup, &QGroupBox::toggled, this, &MidiConfigTab::setDirty);
+    connect(&mRescanButton, &QPushButton::clicked, this, &MidiConfigTab::rescan);
 
 }
 
@@ -60,7 +68,6 @@ void MidiConfigTab::apply(Config::Midi &midiConfig) {
 
 void MidiConfigTab::resetControls(Config::Midi const& midiConfig) {
 
-    mMidiGroup.setChecked(midiConfig.enabled);
 
     auto &prober = MidiProber::instance();
 
@@ -70,6 +77,28 @@ void MidiConfigTab::resetControls(Config::Midi const& midiConfig) {
     }
 
     mPortCombo.setCurrentIndex(midiConfig.portIndex);
+    mMidiGroup.setChecked(midiConfig.enabled);
 
     clean();
+}
+
+void MidiConfigTab::rescan() {
+    mRescanning = true;
+
+    auto &prober = MidiProber::instance();
+    auto const current = mPortCombo.currentText();
+    prober.probe();
+    mPortCombo.clear();
+    auto const portNames = prober.portNames();
+    mPortCombo.addItems(portNames);
+    mPortCombo.setCurrentIndex(portNames.indexOf(current));
+    mPortCombo.setEnabled(mPortCombo.count() > 0);
+
+    mRescanning = false;
+}
+
+void MidiConfigTab::portChosen() {
+    if (!mRescanning) {
+        setDirty();
+    }
 }

@@ -165,10 +165,7 @@ void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
 }
 
 void SoundConfigTab::apiChanged(int index) {
-    auto &prober = AudioProber::instance();
     rescan(true); // new api selected, pick the default device
-    mDeviceCombo.clear();
-    mDeviceCombo.addItems(prober.deviceNames(index));
     setDirty();
 }
 

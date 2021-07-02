@@ -7,6 +7,7 @@
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QPushButton>
 
 class MidiConfigTab : public ConfigTab {
 
@@ -21,6 +22,12 @@ public:
 
 private:
 
+    void rescan();
+
+    void portChosen();
+
+    bool mRescanning;
+
     QVBoxLayout mLayout;
         QGroupBox mMidiGroup;
             QGridLayout mMidiLayout;
@@ -28,6 +35,8 @@ private:
                 QComboBox mApiCombo;
                 QLabel mPortLabel;
                 QComboBox mPortCombo;
+                QHBoxLayout mRescanLayout;
+                    QPushButton mRescanButton;
 
 
 };
