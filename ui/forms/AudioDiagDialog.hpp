@@ -3,7 +3,6 @@
 
 #include "core/audio/Renderer.hpp"
 #include "core/Config.hpp"
-#include "core/Miniaudio.hpp"
 
 #include <QCheckBox>
 #include <QDialog>

@@ -41,6 +41,10 @@ public:
 
     void lock(RuntimeContext const& rc, ChType ch);
 
+    void reloadAll(RuntimeContext const& rc);
+
+    void reload(RuntimeContext const& rc, ChType ch);
+
     void unlock(RuntimeContext const& rc, ChType ch);
 
     bool step(RuntimeContext const& rc);

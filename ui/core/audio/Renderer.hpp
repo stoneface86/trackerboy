@@ -1,11 +1,12 @@
 
 #pragma once
 
+#include "core/audio/AudioStream.hpp"
 #include "core/audio/RenderFrame.hpp"
 #include "core/audio/Ringbuffer.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/Config.hpp"
-#include "core/Miniaudio.hpp"
+#include "core/FastTimer.hpp"
 
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/Instrument.hpp"
@@ -35,24 +36,10 @@ class Renderer : public QObject {
 
 public:
 
-    struct Diagnostics {
-        unsigned underruns;
-        unsigned elapsed; // elapsed in milliseconds
-        unsigned bufferUsage;
-        unsigned bufferSize;
-    };
-
     Renderer(QObject *parent = nullptr);
     ~Renderer();
 
     // DIAGNOSTICS ====
-
-    //
-    // Retrieves the current diagnostic state.
-    //
-    // Note: Function is thread-safe
-    //
-    Diagnostics diagnostics();
 
     //
     // Gets the current document.
@@ -76,7 +63,7 @@ public:
     //
     // Note: Function is thread-safe
     //
-    bool isEnabled();
+    //bool isEnabled();
 
     //
     // Determines if the renderer is renderering sound.
@@ -93,21 +80,13 @@ public:
     trackerboy::Engine::Frame currentFrame();
 
     //
-    // Gets the last device error that occurred from device configuration or
-    // error during render. MA_SUCCESS is returned on no error.
-    //
-    // Note: Function is thread-safe
-    //
-    ma_result lastDeviceError();
-
-    //
     // Configures the output device with the given Sound config. If device
     // cannot be configured, the renderer is disabled. This function must
     // be called from the GUI thread.
     //
     // Note: Function is thread-safe
     //
-    void setConfig(Miniaudio &miniaudio, Config::Sound const& config);
+    bool setConfig(Config::Sound const& config);
 
 signals:
 
@@ -183,16 +162,14 @@ public slots:
     //
     void removeDocument(ModuleDocument *doc);
 
-protected:
-
-    virtual void timerEvent(QTimerEvent *evt) override;
-
 private slots:
 
     //
     // Enables/Disables channel output for music playback
     //
     void setChannelOutput(ModuleDocument::OutputFlags flags);
+
+   
 
 private:
     Q_DISABLE_COPY(Renderer)
@@ -209,32 +186,58 @@ private:
         stopped     // no longer renderering anything, do nothing when render is called
     };
 
-    // returns true if the current thread is the same as this object's thread
-    // if false is returned we need to use synchronization primitives
-    bool isThreadSafe();
+    struct RenderContext {
+        // the current document
+        ModuleDocument *document;
+        ModuleDocument *musicDocument;
+
+        // indicates if step mode is enabled
+        bool stepping;
+        // determines if the engine should step (ignored when mStepping = false)
+        bool step;
+
+        trackerboy::Synth synth;
+        trackerboy::GbApu apu;
+        //trackerboy::RuntimeContext mRc;
+        // read access to the current song, wave table and instrument table
+        trackerboy::Engine engine;
+        // has read access to an Instrument and wave table
+        trackerboy::InstrumentPreview ip;
+
+
+        PreviewState previewState;
+        trackerboy::ChType previewChannel;
+
+        trackerboy::Engine::Frame currentEngineFrame;
+
+        State state;
+        int stopCounter;
+
+        RenderContext();
+    };
+
+    // type alias for mutually exclusive access to the RenderContext
+    using Handle = Guarded<RenderContext>::Handle;
 
     // sets up the engine to play starting at the given pattern and row
-    void playMusic(int pattern, int row, bool stepping = false);
+    void playMusic(Handle &handle, int pattern, int row, bool stepping = false);
 
     // utility function for preview slots
-    void resetPreview();
+    void resetPreview(Handle &handle);
 
     void previewNoteOrInstrument(int note, int track = -1, int instrument = -1);
 
-    void setMusicDocument();
+    void _setChannelOutput(Handle &handle, ModuleDocument::OutputFlags flags);
 
-    // device management -----------------------------------------------------
-
-    //
-    // Destroys the current device if initialized
-    //
-    void closeDevice();
+    // stream management -----------------------------------------------------
 
     //
     // Start the audio callback thread for the configured device. If the audio
     // callback thread is already running, the stop countdown is cancelled
     //
-    void beginRender();
+    void beginRender(Handle &handle);
+
+    static void timerCallback(void *userData);
 
     //
     // Fills the playback buffer with newly renderered samples. Stops rendering
@@ -245,76 +248,23 @@ private:
     //
     // Immediately stops the render without letting the buffer drain.
     //
-    void stopRender();
-
-    // device callback functions
-
-    static void deviceDataHandler(ma_device *device, void *out, const void *in, ma_uint32 frames);
-    void _deviceDataHandler(int16_t *out, size_t frames);
-
-    static void deviceStopHandler(ma_device *device);
-    void _deviceStopHandler();
+    void stopRender(Handle &handle, bool aborted = false);
 
     // class members ---------------------------------------------------------
 
-    QMutex mMutex;
+    mutable QMutex mMutex;
 
-    // the current document
-    ModuleDocument *mDocument;
-    ModuleDocument *mMusicDocument;
+    QThread mTimerThread;
+    FastTimer *mTimer;
 
-    ma_device_config mDeviceConfig;
-    std::optional<ma_device> mDevice;
+    AudioStream mStream;
 
-    int mTimerId;
+    //
+    // All variables accessible from multiple threads are stored in the RenderContext
+    // struct, access to them is guarded by a mutex.
+    //
+    Guarded<RenderContext> mContext;
+    
 
-    // playback buffer
-    // written by the gui, read from the callback
-    AudioRingbuffer mBuffer;
-
-    ma_result mLastDeviceError;
-    bool mEnabled;
-    bool mRunning;
-    // indicates if step mode is enabled
-    bool mStepping;
-    // determines if the engine should step (ignored when mStepping = false)
-    bool mStep;
-
-    int mPeriod;
-
-    trackerboy::Synth mSynth;
-    trackerboy::GbApu mApu;
-    //trackerboy::RuntimeContext mRc;
-    // read access to the current song, wave table and instrument table
-    trackerboy::Engine mEngine;
-    // has read access to an Instrument and wave table
-    trackerboy::InstrumentPreview mIp;
-
-
-    PreviewState mPreviewState;
-    trackerboy::ChType mPreviewChannel;
-
-    trackerboy::Engine::Frame mCurrentEngineFrame;
-
-    State mState;
-    int mStopCounter;
-
-    // callback flags
-
-    // when starting playback, delay by this number of samples
-    // silence is played during this delay, which gives the renderer time
-    // to fill the buffer
-    size_t mPlaybackDelay;
-    // ignores underruns when true, used when mState = State::stopping and we
-    // are "draining" the buffer or letting it empty completely
-    std::atomic_bool mDraining;
-    // counter of underruns that have occurred. An underrun occurs when the
-    // buffer does not have enough samples for the device.
-    std::atomic_uint mUnderruns;
-    // counter of total samples played out. This value is reset on every render.
-    std::atomic_uint mSamplesElapsed;
-    // buffer utilization at start of data callback
-    std::atomic_uint mBufferUsage;
-    std::atomic_uint mBufferSize;
 
 };

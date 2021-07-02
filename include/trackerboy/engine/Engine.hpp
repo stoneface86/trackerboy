@@ -91,6 +91,11 @@ public:
     void unlock(ChType ch);
 
     //
+    // Writes the current music state to all locked channels.
+    //
+    void reload();
+
+    //
     // If enabled, the music runtime will keep repeating the current pattern
     //
     void repeatPattern(bool repeat);

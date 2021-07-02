@@ -1,4 +1,5 @@
 
+#include "core/audio/AudioProber.hpp"
 #include "core/samplerates.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
 
@@ -14,11 +15,12 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mLayout(),
     mDeviceGroup(tr("Device")),
     mDeviceLayout(),
+    mApiLabel(tr("API")),
+    mApiCombo(),
+    mDeviceLabel(tr("Device")),
     mDeviceCombo(),
-    mBackendLayout(),
-    mBackendLabel(),
-    mRescanButton(tr("Rescan device list")),
-    mDeviceFormLayout(),
+    mRescanLayout(),
+    mRescanButton(tr("Rescan")),
     mLatencyLabel(tr("Buffer size")),
     mLatencySpin(),
     mPeriodLabel(tr("Period")),
@@ -35,19 +37,30 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mChannels12Label(tr("CH1 + CH2")),
     mChannels34Label(tr("CH3 + CH4")),
     mPreview12(),
-    mPreview34()
+    mPreview34(),
+    mQualityButtons(),
+    mRescanning(false)
 {
     // layout
-    mBackendLayout.addWidget(&mBackendLabel, 1);
-    mBackendLayout.addWidget(&mRescanButton);
+    mRescanLayout.addStretch();
+    mRescanLayout.addWidget(&mRescanButton);
 
-    mDeviceFormLayout.addRow(&mLatencyLabel, &mLatencySpin);
-    mDeviceFormLayout.addRow(&mPeriodLabel, &mPeriodSpin);
-    mDeviceFormLayout.addRow(&mSamplerateLabel, &mSamplerateCombo);
+    mDeviceLayout.addWidget(&mApiLabel,         0, 0);
+    mDeviceLayout.addWidget(&mApiCombo,         0, 1);
 
-    mDeviceLayout.addWidget(&mDeviceCombo);
-    mDeviceLayout.addLayout(&mBackendLayout);
-    mDeviceLayout.addLayout(&mDeviceFormLayout);
+    mDeviceLayout.addWidget(&mDeviceLabel,      1, 0);
+    mDeviceLayout.addWidget(&mDeviceCombo,      1, 1);
+
+    mDeviceLayout.addLayout(&mRescanLayout,     2, 0, 1, 2);
+
+    mDeviceLayout.addWidget(&mLatencyLabel,     3, 0);
+    mDeviceLayout.addWidget(&mLatencySpin,      3, 1);
+    mDeviceLayout.addWidget(&mPeriodLabel,      4, 0);
+    mDeviceLayout.addWidget(&mPeriodSpin,       4, 1);
+    mDeviceLayout.addWidget(&mSamplerateLabel,  5, 0);
+    mDeviceLayout.addWidget(&mSamplerateCombo,  5, 1);
+
+    mDeviceLayout.setColumnStretch(1, 1);
     mDeviceGroup.setLayout(&mDeviceLayout);
 
     mQualityRadioLayout.addWidget(&mLowQualityRadio);
@@ -70,9 +83,10 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     setLayout(&mLayout);
 
     // settings
-    mBackendLabel.setText(tr("Backend: %1").arg(mConfig.mMiniaudio.backendName()));
 
-    mDeviceCombo.addItems(config.mMiniaudio.deviceNames());
+    auto &prober = AudioProber::instance();
+    mApiCombo.addItems(prober.backendNames());
+    mDeviceCombo.addItems(prober.deviceNames(mConfig.mSound.backendIndex));
     // populate samplerate combo
     for (int i = 0; i != N_SAMPLERATES; ++i) {
         mSamplerateCombo.addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
@@ -95,8 +109,10 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mQualityButtons.addButton(&mHighQualityRadio, (int)gbapu::Apu::Quality::high);
 
     // any changes made by the user will mark this tab as "dirty"
-    connect(&mSamplerateCombo, QOverload<int>::of(&QComboBox::activated), this, &SoundConfigTab::setDirty);
-    connect(&mDeviceCombo, QOverload<int>::of(&QComboBox::activated), this, &SoundConfigTab::setDirty);
+    connect(&mSamplerateCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty);
+    connect(&mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::apiChanged);
+    connect(&mDeviceCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::onDeviceComboSelected);
+    connect(&mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::onDeviceComboSelected);
     connect(&mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
     connect(&mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
     connect(&mQualityButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &SoundConfigTab::qualityRadioToggled);
@@ -109,7 +125,9 @@ void SoundConfigTab::setupTimeSpinbox(QSpinBox &spin) {
 }
 
 void SoundConfigTab::apply(Config::Sound &soundConfig) {
+    soundConfig.backendIndex = mApiCombo.currentIndex();
     soundConfig.deviceIndex = mDeviceCombo.currentIndex();
+    soundConfig.deviceName = mDeviceCombo.currentText();
     soundConfig.samplerateIndex = mSamplerateCombo.currentIndex();
 
     soundConfig.latency = mLatencySpin.value();
@@ -121,7 +139,13 @@ void SoundConfigTab::apply(Config::Sound &soundConfig) {
 
 void SoundConfigTab::resetControls(Config::Sound &soundConfig) {
 
-    mDeviceCombo.setCurrentIndex(soundConfig.deviceIndex);
+    mApiCombo.setCurrentIndex(soundConfig.backendIndex);
+    
+    // lookup the device index again, if it doesn't exist deselect it
+    auto &prober = AudioProber::instance();
+    int index = prober.deviceNames(soundConfig.backendIndex).indexOf(soundConfig.deviceName);
+    
+    mDeviceCombo.setCurrentIndex(index);
     mSamplerateCombo.setCurrentIndex(soundConfig.samplerateIndex);
 
     mLatencySpin.setValue(soundConfig.latency);
@@ -140,29 +164,56 @@ void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
     }
 }
 
-void SoundConfigTab::rescan() {
-    auto &miniaudio = mConfig.mMiniaudio;
-    
-    // copy the current id for looking up
-    auto deviceId = miniaudio.deviceId(mDeviceCombo.currentIndex());
-    std::optional<ma_device_id> deviceIdCopy;
-    if (deviceId != nullptr) {
-        deviceIdCopy = *deviceId;
-    }
-
+void SoundConfigTab::apiChanged(int index) {
+    auto &prober = AudioProber::instance();
+    rescan(true); // new api selected, pick the default device
     mDeviceCombo.clear();
-    miniaudio.rescan();
-    mDeviceCombo.addItems(miniaudio.deviceNames());
+    mDeviceCombo.addItems(prober.deviceNames(index));
+    setDirty();
+}
 
-    int index = 0;
-    if (deviceIdCopy) {
-        index = miniaudio.lookupDevice(&*deviceIdCopy);
-        if (index == -1) {
-            // the old device wasn't found (probably got disconnected)
-            // go to the default device
-            index = 0;
-            setDirty();
+void SoundConfigTab::rescan(bool rescanDueToApiChange) {
+    
+    auto &prober = AudioProber::instance();
+
+    auto const backendIndex = mApiCombo.currentIndex();
+    prober.probe(backendIndex);
+    // get the new list of device names
+    auto const deviceNames = prober.deviceNames(backendIndex);
+
+    int deviceIndex;
+    if (rescanDueToApiChange) {
+        // always select the default device
+        if (backendIndex == mConfig.mSound.backendIndex) {
+            // went back to configured backend, try to find the configured device
+            deviceIndex = deviceNames.indexOf(mConfig.mSound.deviceName);
+        } else {
+            // new backend, pick the default
+            deviceIndex = prober.getDefaultDevice(backendIndex);
         }
+    } else {
+        // try to find the new index of the previously set device
+        deviceIndex = deviceNames.indexOf(mDeviceCombo.currentText());
     }
-    mDeviceCombo.setCurrentIndex(index);
+    
+    if (deviceIndex == -1) {
+        // not found, device possibly got disconnected, use the default
+        deviceIndex = prober.getDefaultDevice(backendIndex);
+        setDirty();
+    }
+
+    mRescanning = true;
+    mDeviceCombo.clear();
+    mDeviceCombo.addItems(deviceNames);
+
+    mDeviceCombo.setCurrentIndex(deviceIndex);
+    mRescanning = false;
+}
+
+void SoundConfigTab::onDeviceComboSelected(int index) {
+    Q_UNUSED(index)
+
+    if (!mRescanning) {
+        setDirty();
+    }
 }

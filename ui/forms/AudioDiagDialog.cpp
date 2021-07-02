@@ -103,7 +103,7 @@ void AudioDiagDialog::timerEvent(QTimerEvent *evt) {
 
 void AudioDiagDialog::refresh() {
 
-    auto diags = mRenderer.diagnostics();
+    /*auto diags = mRenderer.diagnostics();
 
     mUnderrunLabel.setText(QString::number(diags.underruns));
 
@@ -119,5 +119,5 @@ void AudioDiagDialog::refresh() {
         .arg(diags.elapsed % 1000, 3, 10, QChar('0'))
         );
 
-    mStatusLabel.setText(mRenderer.isRunning() ? tr("Playing") : tr("Stopped"));
+    mStatusLabel.setText(mRenderer.isRunning() ? tr("Playing") : tr("Stopped"));*/
 }

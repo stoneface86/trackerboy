@@ -2,7 +2,6 @@
 #pragma once
 
 #include "core/ColorTable.hpp"
-#include "core/Miniaudio.hpp"
 #include "core/PianoInput.hpp"
 
 #include <QFlags>
@@ -61,14 +60,16 @@ public:
     };
 
     struct Sound {
-        int deviceIndex;
-        unsigned samplerateIndex;   // index of the current samplerate
+        int backendIndex;           // backend index in AudioProber list (-1 for no backend)
+        int deviceIndex;            // device index from AudioProber device list
+        QString deviceName;         // last configured device name (used for identification)
+        int samplerateIndex;        // index of the current samplerate
         int latency;                // latency, or internal buffer size, in milliseconds
         int period;                 // period, in milliseconds
         int quality;                // synthesizer quality setting
     };
 
-    Config(Miniaudio &miniaudio);
+    Config();
     ~Config() = default;
 
     //
@@ -104,9 +105,6 @@ private:
 
     void readColor(QSettings &settings, Color color, QColor def);
 
-    void readPianoBinding(QSettings &settings, int semitone, Qt::Key def);
-
-    Miniaudio &mMiniaudio;
     
     Appearance mAppearance;
     General mGeneral;

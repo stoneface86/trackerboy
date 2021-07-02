@@ -56,24 +56,37 @@ void MusicRuntime::halt(RuntimeContext const &rc) {
 void MusicRuntime::lock(RuntimeContext const& rc, ChType ch) {
     // do nothing if channel is already locked
     if (mFlags.test(+ch)) {
-        // reload current channel state
-        switch (ch) {
-            case ChType::ch1:
-                ChannelControl<ChType::ch1>::init(rc.apu, rc.waveTable, mStates[0]);
-                break;
-            case ChType::ch2:
-                ChannelControl<ChType::ch2>::init(rc.apu, rc.waveTable, mStates[1]);
-                break;
-            case ChType::ch3:
-                ChannelControl<ChType::ch3>::init(rc.apu, rc.waveTable, mStates[2]);
-                break;
-            case ChType::ch4:
-                ChannelControl<ChType::ch4>::init(rc.apu, rc.waveTable, mStates[3]);
-                break;
-        }
+        reload(rc, ch);
         // update lock bit for channel
         mFlags.reset(+ch);
     }
+}
+
+void MusicRuntime::reloadAll(RuntimeContext const& rc) {
+    for (int i = +ChType::ch1; i <= +ChType::ch4; ++i) {
+        if (!mFlags.test(i)) {
+            reload(rc, static_cast<ChType>(i));
+        }
+    }
+}
+
+void MusicRuntime::reload(RuntimeContext const& rc, ChType ch) {
+    // reload current channel state
+    switch (ch) {
+        case ChType::ch1:
+            ChannelControl<ChType::ch1>::init(rc.apu, rc.waveTable, mStates[0]);
+            break;
+        case ChType::ch2:
+            ChannelControl<ChType::ch2>::init(rc.apu, rc.waveTable, mStates[1]);
+            break;
+        case ChType::ch3:
+            ChannelControl<ChType::ch3>::init(rc.apu, rc.waveTable, mStates[2]);
+            break;
+        case ChType::ch4:
+            ChannelControl<ChType::ch4>::init(rc.apu, rc.waveTable, mStates[3]);
+            break;
+    }
+    
 }
 
 void MusicRuntime::unlock(RuntimeContext const& rc, ChType ch) {

@@ -16,7 +16,6 @@
 #include <new>
 
 constexpr int EXIT_BAD_ALLOC = 1;
-constexpr int EXIT_MINIAUDIO = 2;
 
 //
 // fuction pointer for the default qt message handler. We need to use a variable here
@@ -95,18 +94,8 @@ int main(int argc, char *argv[]) {
 
     // add the default font for the pattern editor
     QFontDatabase::addApplicationFont(":/CascadiaMono.ttf");
-
-    std::unique_ptr<Miniaudio> miniaudio(new Miniaudio());
-    
-    // initialize audio
-    auto result = miniaudio->init();
-    if (result != MA_SUCCESS) {
-        qCritical() << "could not initialize miniaudio:" << ma_result_description(result);
-        return EXIT_MINIAUDIO;
-    }
-
-
-    std::unique_ptr<MainWindow> win(new MainWindow(*miniaudio));
+   
+    std::unique_ptr<MainWindow> win(new MainWindow);
     win->show();
 
     #ifndef QT_NO_INFO_OUTPUT

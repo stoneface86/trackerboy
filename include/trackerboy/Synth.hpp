@@ -43,6 +43,8 @@ public:
 
     gbapu::Apu& apu() noexcept;
 
+    unsigned samplerate() const noexcept;
+
     //
     // Returns the minimum number of samples per frame. Frame sizes alternate between
     // the result of this method and 1 extra sample.

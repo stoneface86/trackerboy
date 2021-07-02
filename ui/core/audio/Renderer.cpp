@@ -16,19 +16,12 @@
 
 static auto LOG_PREFIX = "[Renderer]";
 
-static void logMaResult(ma_result result) {
-    qCritical() << LOG_PREFIX << result << ":" << ma_result_description(result);
-}
-
-constexpr int NO_TIMER = -1;
-
 
 // Renderer Notes
 //
-// This class is reponsible for rendering audio in real time. There is only one
-// Renderer object and it lives in its own thread. The Renderer synthesizes audio
-// for playback which is then played out to speakers via the audio callback function.
-// Synthesized audio is put into the ringbuffer, mBuffer. This buffer is filled
+// This class is reponsible for rendering audio in real time.The Renderer synthesizes
+// audio for playback which is then played out to speakers via the audio callback function.
+// Synthesized audio is put into an AudioStream's ringbuffer. This buffer is filled
 // completely every period, which is by default 5 ms. The audio callback takes what it
 // needs from the buffer. Ideally, the buffer is always at 100% utilization. A lower
 // utilization indicates that the callback is consuming faster than the rate the
@@ -36,320 +29,272 @@ constexpr int NO_TIMER = -1;
 // get what it needs and there are now gaps in the playback.
 
 
+Renderer::RenderContext::RenderContext() :
+    document(nullptr),
+    musicDocument(nullptr),
+    stepping(false),
+    step(false),
+    synth(44100),
+    apu(synth.apu()),
+    engine(apu, nullptr),
+    ip(),
+    previewState(PreviewState::none),
+    previewChannel(trackerboy::ChType::ch1),
+    state(State::stopped),
+    stopCounter(0)
+{
+}
 
-// if Q_ASSERT(isThreadSafe()) fails you are calling a slot from a different
-// thread, do not do this! Call via signal-slot connection or QMetaObject::invokeMethod
 
 
 Renderer::Renderer(QObject *parent) :
     QObject(parent),
+    mTimerThread(),
+    mTimer(new FastTimer),
     mMutex(),
-    mDocument(nullptr),
-    mMusicDocument(nullptr),
-    mDeviceConfig(),
-    mDevice(),
-    mTimerId(NO_TIMER),
-    mBuffer(),
-    mLastDeviceError(MA_SUCCESS),
-    mEnabled(false),
-    mRunning(false),
-    mStepping(false),
-    mStep(false),
-    mPeriod(5),
-    mSynth(44100),
-    mApu(mSynth.apu()),
-    mEngine(mApu, nullptr),
-    mIp(),
-    mPreviewState(PreviewState::none),
-    mPreviewChannel(trackerboy::ChType::ch1),
-    mState(State::stopped),
-    mStopCounter(0),
-    mPlaybackDelay(0),
-    mDraining(false),
-    mUnderruns(0u),
-    mSamplesElapsed(0u),
-    mBufferUsage(0u),
-    mBufferSize(0u)
+    mContext()
 {
-
-    mDeviceConfig = ma_device_config_init(ma_device_type_playback);
-    // always 16-bit stereo format
-    mDeviceConfig.playback.format = ma_format_s16;
-    mDeviceConfig.playback.channels = 2;
-    mDeviceConfig.dataCallback = deviceDataHandler;
-    mDeviceConfig.stopCallback = deviceStopHandler;
-    mDeviceConfig.pUserData = this;
+    mTimer->setCallback(timerCallback, this);
+    mTimer->moveToThread(&mTimerThread);
+    connect(&mTimerThread, &QThread::finished, mTimer, &FastTimer::deleteLater);
+    mTimerThread.setObjectName(QStringLiteral("renderer timer thread"));
+    mTimerThread.start();
 }
 
 Renderer::~Renderer() {
-    closeDevice();
-}
-
-Renderer::Diagnostics Renderer::diagnostics() {
-    // no synchronization needed since all these values are atomic
-    return {
-        mUnderruns.load(),
-        mSamplesElapsed.load() * 1000 / mDevice->sampleRate,
-        mBufferUsage.load(),
-        mBufferSize.load()
-    };
-}
-
-ModuleDocument* Renderer::document() {
-    QMutexLocker locker(&mMutex);
-    return mDocument;
-}
-
-ModuleDocument* Renderer::documentPlayingMusic() {
-    QMutexLocker locker(&mMutex);
-    return mMusicDocument;
+    mTimer->stop();
+    mTimerThread.quit();
+    mTimerThread.wait();
 }
 
 bool Renderer::isRunning() {
-    QMutexLocker locker(&mMutex);
-    return mRunning;
+    return mStream.isRunning();
 }
 
-bool Renderer::isEnabled() {
-    QMutexLocker locker(&mMutex);
-    return mEnabled;
+ModuleDocument* Renderer::document() {
+    auto handle = mContext.access();
+    return handle->document;
+}
+
+ModuleDocument* Renderer::documentPlayingMusic() {
+    auto handle = mContext.access();
+    return handle->musicDocument;
 }
 
 trackerboy::Engine::Frame Renderer::currentFrame() {
-    QMutexLocker locker(&mMutex);
-    return mCurrentEngineFrame;
+    auto handle = mContext.access();
+    return handle->currentEngineFrame;
 }
 
-ma_result Renderer::lastDeviceError() {
-    QMutexLocker locker(&mMutex);
-    return mLastDeviceError;
-}
+bool Renderer::setConfig(Config::Sound const &soundConfig) {
 
-void Renderer::setConfig(Miniaudio &miniaudio, Config::Sound const &soundConfig) {
+    // if there is rendering going at on when this function is called it will
+    // resume with a slight gap in playback if the config applied without error,
+    // otherwise the render is stopped
 
-    // assert that the GUI thread is calling this
-    // for some reason, miniaudio fails to init a device when called from another thread
-    Q_ASSERT(QThread::currentThread() == QApplication::instance()->thread());
 
-    mMutex.lock();
-    mRunning = false;
-    mMutex.unlock();
-    closeDevice();
-
-    auto const SAMPLERATE = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
-
-    // update device config
-    mDeviceConfig.playback.pDeviceID = miniaudio.deviceId(soundConfig.deviceIndex);
-    mDeviceConfig.sampleRate = SAMPLERATE;
-
-    // initialize device with settings
-    mDevice.emplace();
-    auto error = ma_device_init(miniaudio.context(), &mDeviceConfig, &mDevice.value());
-    {
-        QMutexLocker locker(&mMutex);
-        mLastDeviceError = error;
-        mEnabled = error == MA_SUCCESS;
+    bool wasRunning = mStream.isRunning();
+    if (wasRunning) {
+        mTimer->stop();
     }
 
-    if (mEnabled) {
+    mStream.setConfig(soundConfig);
 
-        QMetaObject::invokeMethod(this, [this, &soundConfig, SAMPLERATE]() {
-            mBuffer.init((size_t)(soundConfig.latency * SAMPLERATE / 1000));
-            // cache this for diagnostics
-            mBufferSize = (unsigned)mBuffer.size();
-            mPeriod = soundConfig.period;
+    if (mStream.isEnabled()) {
 
-            // update the synthesizer
-            mSynth.setSamplingRate(SAMPLERATE);
-            mSynth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
-            mSynth.setupBuffers();
+        mTimer->setInterval(soundConfig.period, Qt::PreciseTimer);
 
-            if (mState != State::stopped) {
-                // the callback was running before we applied the config, restart it
-                ma_device_start(&mDevice.value());
-                killTimer(mTimerId);
-                mTimerId = startTimer(mPeriod, Qt::PreciseTimer);
+        // update the synthesizer (the guard isn't necessary here but we'll use it anyways)
+        {
+            auto handle = mContext.access();
+            
+            bool reloadRegisters = false;
+            auto const samplerate = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
+            if (samplerate != handle->synth.samplerate()) {
+                handle->synth.setSamplingRate(samplerate);
+                reloadRegisters = true;
             }
-        }, Qt::BlockingQueuedConnection);
+            handle->synth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
+            handle->synth.setupBuffers();
+
+            if (reloadRegisters) {
+                // resizing the buffers in synth results in an APU reset so we need to
+                // rewrite channel registers
+                handle->engine.reload();
+            }
+
+        }
+
+        if (wasRunning && mStream.isRunning()) {
+            mTimer->start();
+        }
+
+        return true;
+
     } else {
-        qCritical() << LOG_PREFIX << "failed to initialize the configured device";
-        logMaResult(mLastDeviceError);
-    }
-
-
-}
-
-void Renderer::closeDevice() {
-
-    if (mDevice) {
-        ma_device_uninit(&mDevice.value());
-        mDevice.reset();
+        // something went wrong
+        mContext.access()->state = State::stopped;
+        return false;
     }
 }
 
-void Renderer::beginRender() {
-    if (mState == State::stopped) {
-        // begin a new render
-        mBuffer.reset();
-        mSamplesElapsed = 0;
-        // delay playback by the buffer size
-        // silence will play out for the entire buffer duration
-        mPlaybackDelay = mBuffer.size();
-        auto error = ma_device_start(&*mDevice);
-        bool running = error == MA_SUCCESS;
+void Renderer::beginRender(Handle &handle) {
+    if (handle->state == State::stopped) {
 
-        mMutex.lock();
-        mLastDeviceError = error;
-        mRunning = running;
-        mMutex.unlock();
+        bool success = mStream.start();
 
-        if (!running) {
-            logMaResult(mLastDeviceError);
+        if (success) {
+            mTimer->start();
+            handle.unlock();
+            emit audioStarted();
+            handle.relock();
+        } else {
+            // unable to start, an error occurred
+            handle.unlock();
             emit audioError();
             return;
         }
 
-        emit audioStarted();
-        mTimerId = startTimer(mPeriod, Qt::PreciseTimer);
     }
 
     // reset state to running
-    mDraining = false;
-    mState = State::running;
-    mStopCounter = 0;
+    handle->state = State::running;
+    handle->stopCounter = 0;
 }
 
-void Renderer::stopRender() {
+void Renderer::stopRender(Handle &handle, bool aborted) {
 
-    mState = State::stopped;
-    auto device = &*mDevice;
+    handle->state = State::stopped;
+    
+    mTimer->stop();
 
-    mMutex.lock();
-    mRunning = false;
-    mMutex.unlock();
+    auto success = mStream.stop();
 
-    ma_device_stop(device);
-
-    emit audioStopped();
-    // kill the timer, we are no longer rendering
-    killTimer(mTimerId);
-    mTimerId = NO_TIMER;
+    handle.unlock();
+    if (aborted) {
+        mStream.disable();
+        emit audioError();
+    } else {
+        if (success) {
+            emit audioStopped();
+        } else {
+            emit audioError();
+        }
+    }
 }
 
 
 
 // SLOTS
-// thread-safety is implied unless the slot was called directly from another thread
 
 void Renderer::clearDiagnostics() {
-    mUnderruns = 0;
+
 }
 
-
 void Renderer::setDocument(ModuleDocument *doc) {
-    Q_ASSERT(isThreadSafe());
-
-    mMutex.lock();
-    mDocument = doc;
-    mMutex.unlock();
+    
+    mContext.access()->document = doc;
 
     stopPreview();
 }
 
-
-
 void Renderer::play() {
-    Q_ASSERT(isThreadSafe());
 
-    if (mEnabled) {
-        if (mStepping) {
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        if (handle->stepping) {
             // stop step mode
-            mStepping = false;
+            handle->stepping = false;
         } else {
-            playMusic(mDocument->orderModel().currentPattern(), 0);
+            playMusic(handle, handle->document->orderModel().currentPattern(), 0);
         }
     }
 }
 
 void Renderer::playAtStart() {
-    Q_ASSERT(isThreadSafe());
-
-    if (mEnabled) {
-        playMusic(0, 0);
+    
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        playMusic(handle, 0, 0);
     }
 }
 
 void Renderer::playFromCursor() {
-    Q_ASSERT(isThreadSafe());
-
-    if (mEnabled) {
-       playMusic(mDocument->orderModel().currentPattern(), mDocument->patternModel().cursorRow());
+    
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        playMusic(
+            handle,
+            handle->document->orderModel().currentPattern(),
+            handle->document->patternModel().cursorRow()
+        );
     }
 }
 
 void Renderer::stepFromCursor() {
-    Q_ASSERT(isThreadSafe());
-
-    if (mEnabled) {
-
-        if (!mStepping) {
-            playMusic(mDocument->orderModel().currentPattern(), mDocument->patternModel().cursorRow(), true);
+    
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        if (!handle->stepping) {
+            playMusic(
+                handle,
+                handle->document->orderModel().currentPattern(), 
+                handle->document->patternModel().cursorRow(), 
+                true
+            );
         }
 
-        mStep = true;
+        handle->step = true;
 
     }
 }
 
 void Renderer::setPatternRepeat(bool repeat) {
-    Q_ASSERT(isThreadSafe());
 
-    if (mEnabled) {
-        mEngine.repeatPattern(repeat);
+    if (mStream.isEnabled()) {
+        mContext.access()->engine.repeatPattern(repeat);
     }
 }
 
 void Renderer::previewNoteOrInstrument(int note, int track, int instrument) {
-    Q_ASSERT(isThreadSafe());
-
-    if (mEnabled) {
-        switch (mPreviewState) {
+    
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        switch (handle->previewState) {
             case PreviewState::waveform:
-                resetPreview();
+                resetPreview(handle);
                 [[fallthrough]];
-            case PreviewState::none:
-                mDocument->lock();
-                {
-                    std::shared_ptr<trackerboy::Instrument> inst = nullptr;
-                    if (track == -1) {
-                        // instrument preview
-                        // set instrument preview's instrument to the current one
-                        inst = mDocument->instrumentModel().currentInstrument();
-                        mPreviewChannel = inst->channel();
-                    } else {
-                        // note preview
-                        if (instrument != -1) {
-                            inst = mDocument->mod().instrumentTable().getShared((uint8_t)instrument);
-                        }
-                        mPreviewChannel = static_cast<trackerboy::ChType>(track);
+            case PreviewState::none: {
+
+                std::shared_ptr<trackerboy::Instrument> inst = nullptr;
+                if (track == -1) {
+                    // instrument preview
+                    // set instrument preview's instrument to the current one
+                    inst = handle->document->instrumentModel().currentInstrument();
+                    handle->previewChannel = inst->channel();
+                } else {
+                    // note preview
+                    if (instrument != -1) {
+                        inst = handle->document->mod().instrumentTable().getShared((uint8_t)instrument);
                     }
-                    mIp.setInstrument(std::move(inst), mPreviewChannel);
+                    handle->previewChannel = static_cast<trackerboy::ChType>(track);
                 }
-                mDocument->unlock();
-                mPreviewState = PreviewState::instrument;
+                handle->ip.setInstrument(std::move(inst), handle->previewChannel);
+
+                handle->previewState = PreviewState::instrument;
                 // unlock the channel for preview
-                mEngine.unlock(mPreviewChannel);
+                handle->engine.unlock(handle->previewChannel);
+            }
                 [[fallthrough]];
             case PreviewState::instrument:
                 // update the current note
-                mIp.play((uint8_t)note);
+                handle->ip.play((uint8_t)note);
                 break;
         }
 
-       beginRender();
+        beginRender(handle);
     }
 }
-
 
 void Renderer::previewInstrument(quint8 note) {
     previewNoteOrInstrument(note);
@@ -360,9 +305,7 @@ void Renderer::previewNote(int note, int track, int instrument) {
 }
 
 void Renderer::previewWaveform(quint8 note) {
-    //QMutexLocker locker(&mMutex);
-    Q_ASSERT(isThreadSafe());
-    if (mEnabled) {
+    if (mStream.isEnabled()) {
         // state changes
         // instrument -> none -> waveform
 
@@ -372,162 +315,135 @@ void Renderer::previewWaveform(quint8 note) {
         }
         auto freq = trackerboy::NOTE_FREQ_TABLE[note];
 
-        switch (mPreviewState) {
+        auto handle = mContext.access();
+        switch (handle->previewState) {
             case PreviewState::instrument:
-                resetPreview();
+                resetPreview(handle);
                 [[fallthrough]];
             case PreviewState::none: {
-                mPreviewState = PreviewState::waveform;
-                mPreviewChannel = trackerboy::ChType::ch3;
+                handle->previewState = PreviewState::waveform;
+                handle->previewChannel = trackerboy::ChType::ch3;
                 // unlock the channel, no longer effected by music
-                mEngine.unlock(trackerboy::ChType::ch3);
+                handle->engine.unlock(trackerboy::ChType::ch3);
 
                 trackerboy::ChannelState state(trackerboy::ChType::ch3);
                 state.playing = true;
                 state.frequency = freq;
-                mDocument->lock();
-                state.envelope = mDocument->waveModel().currentWaveform()->id();
-                trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(mApu, mDocument->mod().waveformTable(), state);
-                mDocument->unlock();
+                state.envelope = handle->document->waveModel().currentWaveform()->id();
+                trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(handle->apu, handle->document->mod().waveformTable(), state);
                 break;
             }
             case PreviewState::waveform:
                 // already previewing, just update the frequency
-                mApu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
-                mApu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
+                handle->apu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
+                handle->apu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
                 break;
         }
 
-        beginRender();
+        beginRender(handle);
     }
 }
 
 void Renderer::stopPreview() {
-    Q_ASSERT(isThreadSafe());
 
-    if (mEnabled) {
-        if (mPreviewState != PreviewState::none) {
-            resetPreview();
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        if (handle->previewState != PreviewState::none) {
+            resetPreview(handle);
         }
     }
     
 }
 
 void Renderer::stopMusic() {
-    Q_ASSERT(isThreadSafe());
-
-    if (mEnabled) {
-        mEngine.halt();
-        mStepping = false;
+    
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        handle->engine.halt();
+        handle->stepping = false;
     }
 
 }
-
-// void Renderer::stopAll() {
-//     stopPreview();
-//     stopMusic();
-// }
 
 void Renderer::forceStop() {
-    Q_ASSERT(isThreadSafe());
 
-    if (mEnabled) {
-        if (mState != State::stopped) {
-            resetPreview();
-            mEngine.halt();
-            mStepping = false;
-            stopRender();
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        if (handle->state != State::stopped) {
+            resetPreview(handle);
+            handle->engine.halt();
+            handle->stepping = false;
+            stopRender(handle);
         }
     }
 }
 
-bool Renderer::isThreadSafe() {
-    return thread() == QThread::currentThread();
-}
+void Renderer::playMusic(Handle &handle, int orderNo, int rowNo, bool stepping) {
 
-void Renderer::playMusic(int orderNo, int rowNo, bool stepping) {
-    mDocument->lock();
-    setMusicDocument();
-    mEngine.play(orderNo, rowNo);
+    if (handle->musicDocument != handle->document) {
+        if (handle->musicDocument) {
+            handle->musicDocument->disconnect(this);
+        }
+
+        handle->musicDocument = handle->document;
+
+        handle->engine.setModule(&handle->document->mod());
+        connect(handle->musicDocument, &ModuleDocument::channelOutputChanged, this, &Renderer::setChannelOutput);
+    }
+    handle->engine.play(orderNo, rowNo);
     // unlock disabled channels
-    setChannelOutput(mMusicDocument->channelOutput());
-    mDocument->unlock();
+    _setChannelOutput(handle, handle->musicDocument->channelOutput());
 
-    mStepping = stepping;
+    handle->stepping = stepping;
     
-    beginRender();
+    beginRender(handle);
 
 }
 
-void Renderer::resetPreview() {
+void Renderer::resetPreview(Handle &handle) {
     // lock the channel so it can be used for music
-    mEngine.lock(mPreviewChannel);
-    mIp.setInstrument(nullptr);
-    mPreviewState = PreviewState::none;
-}
-
-void Renderer::setMusicDocument() {
-    if (mMusicDocument != mDocument) {
-        if (mMusicDocument) {
-            mMusicDocument->disconnect(this);
-        }
-
-        mMutex.lock();
-        mMusicDocument = mDocument;
-        mMutex.unlock();
-
-        mEngine.setModule(&mDocument->mod());
-        connect(mMusicDocument, &ModuleDocument::channelOutputChanged, this, &Renderer::setChannelOutput);
-    }
+    handle->engine.lock(handle->previewChannel);
+    handle->ip.setInstrument(nullptr);
+    handle->previewState = PreviewState::none;
 }
 
 void Renderer::removeDocument(ModuleDocument *doc) {
-    //QMutexLocker locker(&mMutex);
-
-    if (isThreadSafe()) {
-        if (mMusicDocument == doc) {
-            if (!mCurrentEngineFrame.halted && mState != State::stopped) {
-                // we are currently renderering this document, stop immediately
-                // since doc will no longer exist after this function
-                stopRender();
-            }
-            mEngine.setModule(nullptr);
-
-            mMutex.lock();
-            mMusicDocument = nullptr;
-            mMutex.unlock();
+    auto handle = mContext.access();
+    if (handle->musicDocument == doc) {
+        if (!handle->currentEngineFrame.halted && handle->state != State::stopped) {
+            // we are currently renderering this document, stop immediately
+            // since doc will no longer exist after this function
+            stopRender(handle);
         }
-    } else {
-        QMetaObject::invokeMethod(
-            this, 
-            [this, doc]() {
-                removeDocument(doc);
-            },
-            Qt::BlockingQueuedConnection
-        );
-    }
-}
+        handle->engine.setModule(nullptr);
+        handle->musicDocument = nullptr;
 
-void Renderer::timerEvent(QTimerEvent *evt) {
-    if (evt->timerId() == mTimerId) {
-        render();
     }
+    
 }
 
 void Renderer::setChannelOutput(ModuleDocument::OutputFlags flags) {
-    // locking the mutex is not required because this method is only called
-    // via queued signal-slot mechanism or is locked prior to the call
+    auto handle = mContext.access();
+    _setChannelOutput(handle, flags);
+}
+
+void Renderer::_setChannelOutput(Handle &handle, ModuleDocument::OutputFlags flags) {
     int flag = ModuleDocument::CH1;
     for (int i = 0; i < 4; ++i) {
         auto ch = static_cast<trackerboy::ChType>(i);
         if (flags.testFlag((ModuleDocument::OutputFlag)(flag))) {
-            mEngine.lock(ch);
+            handle->engine.lock(ch);
         } else {
             // channel is disabled, keep unlocked
-            mEngine.unlock(ch);
+            handle->engine.unlock(ch);
         }
         flag <<= 1;
     }
+}
+
+void Renderer::timerCallback(void *userData) {
+    // called by FastTimer 
+    static_cast<Renderer*>(userData)->render();
 }
 
 // this is the number of frames to output before stopping playback
@@ -536,27 +452,38 @@ void Renderer::setChannelOutput(ModuleDocument::OutputFlags flags) {
 constexpr int STOP_FRAMES = 5;
 
 void Renderer::render() {
-    //QMutexLocker locker(&mMutex);
+    // This function is called from a separate thread!
+    // FastTimer lives in its own thread and calls this function via the timer callback
 
-    if (mState == State::stopped) {
+    auto handle = mContext.access();
+
+    if (handle->state == State::stopped) {
         return;
     }
 
-    auto frame = mCurrentEngineFrame;
+    // make sure the stream is still running
+    if (!mStream.isRunning()) {
+        // stream isn't running and it should be, abort the render
+        // this typically means a device has been disconnected and can no longer be used
+        stopRender(handle, true);
+    }
 
-    auto writer = mBuffer.writer();
+    auto frame = handle->currentEngineFrame;
+
+    auto writer = mStream.writer();
     auto framesToRender = writer.availableWrite();
 
-    auto &apu = mSynth.apu();
+    // cache a ref to the apu, we'll be using it often
+    auto &apu = handle->synth.apu();
 
     bool newFrame = false;
 
     while (framesToRender) {
 
-        if (mState == State::stopping) {
-            if (writer.availableWrite() == mBuffer.size()) {
+        if (handle->state == State::stopping) {
+            if (writer.availableWrite() == mStream.bufferSize()) {
                 // the buffer has been drained, stop the callback
-                stopRender();
+                stopRender(handle);
             }
             return;
 
@@ -565,15 +492,13 @@ void Renderer::render() {
             if (apu.availableSamples() == 0) {
                 // new frame
 
-                if (mState == State::stopping) {
+                if (handle->state == State::stopping) {
                     break; // stop, don't render any more
                 }
 
-                if (mStopCounter) {
-                    if (--mStopCounter == 0) {
-                        mState = State::stopping;
-                        // no longer counting underruns
-                        mDraining = true;
+                if (handle->stopCounter) {
+                    if (--handle->stopCounter == 0) {
+                        handle->state = State::stopping;
                     }
                 } else {
                     newFrame = true;
@@ -583,38 +508,39 @@ void Renderer::render() {
                     // stepping
 
                     // step engine/previewer
-                    if (mMusicDocument) {
-                        mMusicDocument->lock();
+                    bool const lockMusicDocument = handle->musicDocument != nullptr;
+                    if (lockMusicDocument) {
+                        handle->musicDocument->lock();
                     }
 
-                    if (!mStepping || mStep) {
-                        mEngine.step(frame);
+                    if (!handle->stepping || handle->step) {
+                        handle->engine.step(frame);
                         if (frame.startedNewRow) {
-                            mStep = false;
+                            handle->step = false;
                         }
                     }
 
-                    if (mMusicDocument) {
-                        mMusicDocument->unlock();
+                    if (lockMusicDocument) {
+                        handle->musicDocument->unlock();
                     }
 
-                    if (mPreviewState == PreviewState::instrument) {
+                    if (handle->previewState == PreviewState::instrument) {
 
-                        mDocument->lock();
-                        auto &mod = mDocument->mod();
-                        trackerboy::RuntimeContext rc(mApu, mod.instrumentTable(), mod.waveformTable());
-                        mIp.step(rc);
-                        mDocument->unlock();
+                        handle->document->lock();
+                        auto &mod = handle->document->mod();
+                        trackerboy::RuntimeContext rc(handle->apu, mod.instrumentTable(), mod.waveformTable());
+                        handle->ip.step(rc);
+                        handle->document->unlock();
                     }
 
-                    if (frame.halted && mPreviewState == PreviewState::none) {
+                    if (frame.halted && handle->previewState == PreviewState::none) {
                         // no longer doing anything, start the stop counter
-                        mStopCounter = STOP_FRAMES;
+                        handle->stopCounter = STOP_FRAMES;
                     }
 
                 }
 
-                mSynth.run();
+                handle->synth.run();
 
             }
 
@@ -630,73 +556,9 @@ void Renderer::render() {
     }
 
     if (newFrame) {
-        mMutex.lock();
-        mCurrentEngineFrame = frame;
-        mMutex.unlock();
+        handle->currentEngineFrame = frame;
+        handle.unlock(); // always unlock before emitting signals
         emit frameSync();
     }
 
-}
-
-// ~~~~~~ CALLBACK THREAD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// called when audio data is needed to be played out to speakers.
-
-void Renderer::deviceStopHandler(ma_device *device) {
-    // this handler is called explicitly via ma_device_stop or
-    // implicitly via error during playback.
-    
-    // do nothing when called explicitly (mStopDevice is true)
-    // force the background thread to stop when called implicitly
-
-    static_cast<Renderer*>(device->pUserData)->_deviceStopHandler();
-}
-
-void Renderer::_deviceStopHandler() {
-    QMutexLocker locker(&mMutex);
-
-    if (mRunning) {
-
-        // we didn't stop the callback explicitly, a device error has occurred
-        mState = State::stopped;
-        emit audioError();
-    }
-}
-
-void Renderer::deviceDataHandler(ma_device *device, void *out, const void *in, ma_uint32 frames) {
-    Q_UNUSED(in)
-
-    static_cast<Renderer*>(device->pUserData)->_deviceDataHandler(
-        static_cast<int16_t*>(out),
-        (size_t)frames
-    );
-}
-
-void Renderer::_deviceDataHandler(int16_t *out, size_t frames) {
-
-    if (mPlaybackDelay) {
-        auto samples = std::min(mPlaybackDelay, frames);
-        frames -= samples;
-        out += samples * 2;
-        mPlaybackDelay -= samples;
-    }
-
-    auto reader = mBuffer.reader();
-
-    // update buffer utilization (for diagnostics)
-    // low utilization indicates that the render thread can't keep up with
-    // the callback, and underruns may occur
-    mBufferUsage = (unsigned)reader.availableRead();
-
-    // read from the buffer to the device buffer
-    auto nread = reader.fullRead(out, frames);
-
-    // if we didn't read enough and we are not draining the buffer, then
-    // an underrun has occurred
-    if (nread != frames && !mDraining) {
-        ++mUnderruns;
-    }
-
-    // increment the total samples elapsed
-    mSamplesElapsed += (unsigned)frames;
 }

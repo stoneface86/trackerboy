@@ -25,6 +25,8 @@ include_directories(
 )
 
 set(UI_SRC
+    "core/audio/AudioProber.cpp"
+    "core/audio/AudioStream.cpp"
     "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
     "core/clipboard/PatternClip.cpp"
@@ -44,7 +46,7 @@ set(UI_SRC
     "core/model/SongModel.cpp"
     "core/model/WaveListModel.cpp"
     "core/Config.cpp"
-    "core/Miniaudio.cpp"
+    "core/FastTimer.cpp"
     "core/PatternSelection.cpp"
     "core/PianoInput.cpp"
     "core/samplerates.cpp"
@@ -97,6 +99,7 @@ add_library(ui STATIC ${UI_SRC})
 target_link_libraries(ui PUBLIC 
     trackerboy
     miniaudio
+    RtAudio::rtaudio
     RtMidi::rtmidi
     Qt5::Widgets
     trackerboyWarnings
@@ -155,6 +158,9 @@ target_link_libraries(test_OrderWidget PRIVATE ui)
 
 add_executable(test_PianoWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_PianoWidget.cpp")
 target_link_libraries(test_PianoWidget PRIVATE ui)
+
+add_executable(test_AudioStream ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_AudioStream.cpp")
+target_link_libraries(test_AudioStream PRIVATE ui)
 
 #add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
 #target_link_libraries(test_pattern_painter

@@ -1,12 +1,12 @@
 
 #pragma once
 
-#include "core/SyncWorker.hpp"
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/ModuleModel.hpp"
 #include "core/model/InstrumentChoiceModel.hpp"
+#include "core/SyncWorker.hpp"
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
@@ -44,7 +44,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(Miniaudio &miniaudio);
+    explicit MainWindow();
     ~MainWindow();
 
     QMenu* createPopupMenu() override;
@@ -99,6 +99,12 @@ private slots:
 private:
     Q_DISABLE_COPY(MainWindow)
 
+    enum class PlayingStatusText {
+        ready,
+        playing,
+        error
+    };
+
     void setupUi();
 
     void initState();
@@ -127,6 +133,8 @@ private:
 
     void updateOrderActions();
 
+    void setPlayingStatus(PlayingStatusText type);
+
     void handleFocusChange(QWidget *oldWidget, QWidget *newWidget);
 
     //
@@ -136,7 +144,6 @@ private:
     //
     void disableMidi(bool causedByError);
 
-    Miniaudio &mMiniaudio;
     Config mConfig;
 
     Midi mMidi;
@@ -310,11 +317,10 @@ private:
 
     QShortcut mPlayAndStopShortcut;
 
+    Renderer mRenderer;
+
 
     // workers / threading
-
-    Renderer *mRenderer;
-    QThread mRenderThread;
     
     SyncWorker *mSyncWorker;
     QThread mSyncWorkerThread;

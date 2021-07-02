@@ -71,6 +71,12 @@ void Engine::lock(ChType ch) {
     }
 }
 
+void Engine::reload() {
+    if (mMusicContext) {
+        mMusicContext->reloadAll(*mRc);
+    }
+}
+
 void Engine::unlock(ChType ch) {
     clearChannel(ch);
     if (mMusicContext) {

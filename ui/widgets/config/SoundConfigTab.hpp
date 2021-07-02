@@ -33,29 +33,40 @@ private slots:
 
     void qualityRadioToggled(QAbstractButton *btn, bool checked);
 
-    void rescan();
+    void rescan(bool rescanDueToApiChange = false);
 
 private:
     Q_DISABLE_COPY(SoundConfigTab)
 
     void setupTimeSpinbox(QSpinBox &spin);
 
+    void onDeviceComboSelected(int index);
+
+    void apiChanged(int index);
+
     Config &mConfig;
 
     QVBoxLayout mLayout;
         QGroupBox mDeviceGroup;
-            QVBoxLayout mDeviceLayout;
+            QGridLayout mDeviceLayout;
+                // row 0
+                QLabel mApiLabel;
+                QComboBox mApiCombo;
+                // row 1
+                QLabel mDeviceLabel;
                 QComboBox mDeviceCombo;
-                QHBoxLayout mBackendLayout;
-                    QLabel mBackendLabel;
+                // row 2
+                QHBoxLayout mRescanLayout;
                     QPushButton mRescanButton;
-                QFormLayout mDeviceFormLayout;
-                    QLabel mLatencyLabel;
-                    QSpinBox mLatencySpin;
-                    QLabel mPeriodLabel;
-                    QSpinBox mPeriodSpin;
-                    QLabel mSamplerateLabel;
-                    QComboBox mSamplerateCombo;
+                // row 3
+                QLabel mLatencyLabel;
+                QSpinBox mLatencySpin;
+                // row 4
+                QLabel mPeriodLabel;
+                QSpinBox mPeriodSpin;
+                // row 5
+                QLabel mSamplerateLabel;
+                QComboBox mSamplerateCombo;
         QGroupBox mQualityGroup;
             QVBoxLayout mQualityLayout;
                 QHBoxLayout mQualityRadioLayout;
@@ -69,5 +80,7 @@ private:
                     SoundQualityPreview mPreview34; // 1, 1
 
     QButtonGroup mQualityButtons;
+
+    bool mRescanning;
 
 };

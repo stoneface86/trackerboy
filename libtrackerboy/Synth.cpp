@@ -58,6 +58,10 @@ void Synth::setFramerate(float framerate) {
     }
 }
 
+unsigned Synth::samplerate() const noexcept {
+    return mSamplerate;
+}
+
 void Synth::setSamplingRate(unsigned samplingRate) {
     if (mSamplerate != samplingRate) {
         mSamplerate = samplingRate;
