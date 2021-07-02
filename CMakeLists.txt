@@ -96,14 +96,6 @@ endif ()
 # sound related dependencies for demo and ui projects
 if (SOUND_REQUIRED)
 
-    FetchContent_Declare(
-        miniaudio
-        GIT_REPOSITORY "https://github.com/mackron/miniaudio"
-        GIT_TAG "199d6a7875b4288af6a7b615367c8fdc2019b03c"
-    )
-    FetchContent_MakeAvailable(miniaudio)
-
-    # TODO: we will use RtAudio instead of Miniaudio eventually, for stability reasons
     find_package(RtAudio CONFIG REQUIRED)
 
     # Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
@@ -111,7 +103,7 @@ if (SOUND_REQUIRED)
     # The split version is used to speed up compilation, the single c file gets compiled
     # into a library, miniaudio.
 
-    add_library(miniaudio STATIC "${miniaudio_SOURCE_DIR}/extras/miniaudio_split/miniaudio.c")
+    add_library(miniaudio STATIC "external/miniaudio.c")
     # since we are using RtAudio, we don't need device IO
     # miniaudio is only used for two things:
     #  1. exporting to WAV (wav encoder)
@@ -126,22 +118,21 @@ if (SOUND_REQUIRED)
         # MA_LOG_LEVEL_INFO for debug builds
         target_compile_definitions(miniaudio PRIVATE MA_LOG_LEVEL=3)
     endif ()
-    target_include_directories(miniaudio PUBLIC "${miniaudio_SOURCE_DIR}/extras/miniaudio_split")
     # miniaudio dependencies
     # windows: none
     # mac: none
     # linux: pthreads, libm, libdl
     # bsd: pthreads, libm
-    if (UNIX AND NOT APPLE)
-        set(THREADS_PREFER_PTHREAD_FLAG ON)
-        find_package(Threads REQUIRED)
-        find_library(LIB_M m)
-        if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-            find_library(LIB_DL dl)
-            target_link_libraries(miniaudio PRIVATE ${LIB_DL})
-        endif ()
-        target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
-    endif ()
+    #if (UNIX AND NOT APPLE)
+    #    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    #    find_package(Threads REQUIRED)
+    #    find_library(LIB_M m)
+    #    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    #        find_library(LIB_DL dl)
+    #        target_link_libraries(miniaudio PRIVATE ${LIB_DL})
+    #    endif ()
+    #    target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
+    #endif ()
 endif ()
 
 if (TRACKERBOY_ENABLE_TESTS)
