@@ -1,6 +1,8 @@
 
 #include "widgets/Sidebar.hpp"
 #include "core/model/ModuleDocument.hpp"
+#include "misc/IconManager.hpp"
+#include "misc/utils.hpp"
 
 #include <QHeaderView>
 
@@ -13,6 +15,10 @@ Sidebar::Sidebar(QWidget *parent) :
     mLayout(),
     mOrderGroup(tr("Song order")),
     mOrderLayout(),
+    mOrderButtonLayout(),
+    mOrderToolbar(),
+    mSetSpin(),
+    mSetButton(tr("Set")),
     mOrderView(),
     mSongGroup(tr("Song settings")),
     mSongLayout(),
@@ -32,7 +38,12 @@ Sidebar::Sidebar(QWidget *parent) :
     mPatternsSpin()
 {
 
-    mOrderLayout.addWidget(&mOrderView);
+    mOrderButtonLayout.addWidget(&mOrderToolbar, 1);
+    mOrderButtonLayout.addWidget(&mSetSpin);
+    mOrderButtonLayout.addWidget(&mSetButton);
+
+    mOrderLayout.addLayout(&mOrderButtonLayout);
+    mOrderLayout.addWidget(&mOrderView, 1);
     mOrderGroup.setLayout(&mOrderLayout);
 
     mSongLayout.addWidget(&mRowsPerBeatLabel, 0, 0);
@@ -54,6 +65,13 @@ Sidebar::Sidebar(QWidget *parent) :
     mLayout.addWidget(&mSongGroup);
     mLayout.addWidget(&mOrderGroup, 1);
     setLayout(&mLayout);
+
+    setupAction(mActionIncrement, "Increment selection", "Increments all selected cells by 1", Icons::increment);
+    setupAction(mActionDecrement, "Decrement selection", "Decrements all selected cells by 1", Icons::decrement);
+    mOrderToolbar.addAction(&mActionIncrement);
+    mOrderToolbar.addAction(&mActionDecrement);
+    mOrderToolbar.setIconSize(QSize(16, 16));
+
 
     mOrderView.setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
     connect(&mOrderView, &QTableView::customContextMenuRequested, this,
@@ -83,6 +101,8 @@ Sidebar::Sidebar(QWidget *parent) :
 
     mSpeedActual.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     mTempoActual.setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+    mSetButton.setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
 
     // buddies
     mRowsPerBeatLabel.setBuddy(&mRowsPerBeatSpin);
@@ -129,6 +149,26 @@ Sidebar::Sidebar(QWidget *parent) :
         });
     connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &mRowsPerMeasureSpin, &QSpinBox::setMinimum);
     connect(&mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &mRowsPerBeatSpin, &QSpinBox::setMaximum);
+
+    connect(&mActionIncrement, &QAction::triggered, this,
+        [this]() {
+            mDocument->orderModel().incrementSelection(mOrderView.selectionModel()->selection());
+        });
+
+    connect(&mActionDecrement, &QAction::triggered, this,
+        [this]() {
+            mDocument->orderModel().decrementSelection(mOrderView.selectionModel()->selection());
+        });
+
+    connect(&mSetButton, &QPushButton::clicked, this,
+        [this]() {
+            mDocument->orderModel().setSelection(
+                mOrderView.selectionModel()->selection(),
+                static_cast<uint8_t>(mSetSpin.value())
+            );
+        });
+
+
 
 }
 

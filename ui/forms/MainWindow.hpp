@@ -13,7 +13,6 @@
 #include "widgets/docks/ModuleSettingsWidget.hpp"
 #include "widgets/editors/InstrumentEditor.hpp"
 #include "widgets/editors/WaveEditor.hpp"
-#include "widgets/OrderEditor.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 #include "widgets/visualizers/AudioScope.hpp"
@@ -199,19 +198,9 @@ private:
         QTreeView mBrowser;
         QWidget mMainWidget;
             QVBoxLayout mMainLayout;
-                //QHBoxLayout mVisualizerLayout;
-                //    AudioScope mLeftScope;
-                //    PeakMeter mPeakMeter;
-                //    AudioScope mRightScope;
                 QTabBar mTabs;
                 QWidget mEditorWidget;
                     QHBoxLayout mEditorLayout;
-                        // QVBoxLayout mGroupLayout;
-                        //     QGroupBox mOrderGroup;
-                        //         QGridLayout mOrderLayout;
-                        //             OrderEditor mOrderEditor;
-                        //     QGroupBox mSongGroup;
-                        //         //QGridLayout mSongLayout;
                         Sidebar mSidebar;
                         PatternEditor mPatternEditor;
 

@@ -8,8 +8,10 @@ class ModuleDocument;
 #include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QPushButton>
 #include <QSpinBox>
 #include <QTableView>
+#include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -50,6 +52,12 @@ private:
     QVBoxLayout mLayout;
         QGroupBox mOrderGroup;
             QVBoxLayout mOrderLayout;
+                QHBoxLayout mOrderButtonLayout;
+                    QToolBar mOrderToolbar;
+                        QAction mActionIncrement;
+                        QAction mActionDecrement;
+                    CustomSpinBox mSetSpin;
+                    QPushButton mSetButton;
                 QTableView mOrderView;
         QGroupBox mSongGroup;
             QGridLayout mSongLayout;

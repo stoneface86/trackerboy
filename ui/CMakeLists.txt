@@ -85,7 +85,6 @@ set(UI_SRC
     "widgets/CustomSpinBox.cpp"
     "widgets/EnvelopeForm.cpp"
     "widgets/GraphEdit.cpp"
-    "widgets/OrderEditor.cpp"
     "widgets/PatternEditor.cpp"
     "widgets/PianoWidget.cpp"
     "widgets/SequenceEditor.cpp"
