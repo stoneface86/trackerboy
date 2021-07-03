@@ -33,7 +33,7 @@ class ModuleDocument;
 //
 // Any class that modifies the document's data outside of this class (ie Model classes)
 // should lock the document when making changes. Use the beginEdit() to get an edit context
-// object that will automatically lock and unlock the spinlock. If your edit can
+// object that will automatically lock and unlock the mutex. If your edit can
 // be undone, use beginCommandEdit() instead and add your QUndoCommand to this
 // document's undo stack (accessible via the undoStack() method).
 //
@@ -76,26 +76,6 @@ public:
         AllOn = CH1 | CH2 | CH3 | CH4
     };
     Q_DECLARE_FLAGS(OutputFlags, OutputFlag)
-
-    struct WidgetState {
-        // value for OrderEditor's spinbox
-        int orderSetSpinbox;
-
-        bool recording;
-        int octave;
-        int editStep;
-        bool loopPattern;
-        bool followMode;
-        bool keyRepetition;
-        int cursorRow;
-        int cursorColumn;
-
-        bool autoInstrument;
-        int autoInstrumentIndex;
-
-        WidgetState();
-
-    };
 
     explicit ModuleDocument(QObject *parent = nullptr);
     explicit ModuleDocument(QString const& path, QObject *parent = nullptr);
@@ -173,8 +153,6 @@ public:
     QString comments() const noexcept;
     void setComments(QString const& comments);
 
-    WidgetState& state();
-
     OutputFlags channelOutput();
 
     bool keyRepetition() const;
@@ -183,10 +161,18 @@ public:
 
     int instrument() const;
 
+    float framerate() const;
+
+    void setFramerate(int custom);
+    void setFramerate(trackerboy::System system);
+
+
 signals:
     void modifiedChanged(bool value);
 
     void channelOutputChanged(OutputFlags flags);
+
+    void framerateChanged(float rate);
 
 public slots:
     
@@ -255,8 +241,6 @@ private:
     bool mKeyRepetition;
     int mEditStep;
     int mInstrument;
-
-    WidgetState mState;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ModuleDocument::OutputFlags)

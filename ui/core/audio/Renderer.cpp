@@ -41,7 +41,10 @@ Renderer::RenderContext::RenderContext() :
     previewState(PreviewState::none),
     previewChannel(trackerboy::ChType::ch1),
     state(State::stopped),
-    stopCounter(0)
+    stopCounter(0),
+    lastPeriod(),
+    periodTime(0),
+    writesSinceLastPeriod(0)
 {
 }
 
@@ -65,6 +68,24 @@ Renderer::~Renderer() {
     mTimer->stop();
     mTimerThread.quit();
     mTimerThread.wait();
+}
+
+Renderer::Diagnostics Renderer::diagnostics() {
+    auto handle = mContext.access();
+
+    auto size = mStream.bufferSize();
+    // it is safe to access the writer since we have acquired access to context
+    auto usage = size - mStream.writer().availableWrite();
+
+
+    return {
+        mStream.underruns(),
+        usage,
+        size,
+        handle->writesSinceLastPeriod,
+        handle->periodTime,
+        mStream.elapsed()
+    };
 }
 
 bool Renderer::isRunning() {
@@ -144,6 +165,7 @@ void Renderer::beginRender(Handle &handle) {
         bool success = mStream.start();
 
         if (success) {
+            handle->lastPeriod = Clock::now();
             mTimer->start();
             handle.unlock();
             emit audioStarted();
@@ -188,11 +210,11 @@ void Renderer::stopRender(Handle &handle, bool aborted) {
 // SLOTS
 
 void Renderer::clearDiagnostics() {
-
+    mStream.resetUnderruns();
 }
 
 void Renderer::setDocument(ModuleDocument *doc) {
-    
+
     mContext.access()->document = doc;
 
     stopPreview();
@@ -454,6 +476,8 @@ constexpr int STOP_FRAMES = 5;
 void Renderer::render() {
     // This function is called from a separate thread!
     // FastTimer lives in its own thread and calls this function via the timer callback
+    
+    auto now = Clock::now();
 
     auto handle = mContext.access();
 
@@ -472,6 +496,11 @@ void Renderer::render() {
 
     auto writer = mStream.writer();
     auto framesToRender = writer.availableWrite();
+
+    // diagnostics
+    handle->periodTime = now - handle->lastPeriod;
+    handle->lastPeriod = now;
+    handle->writesSinceLastPeriod = 0;
 
     // cache a ref to the apu, we'll be using it often
     auto &apu = handle->synth.apu();
@@ -549,6 +578,7 @@ void Renderer::render() {
             apu.readSamples(writePtr, toWrite);
             writer.commitWrite(writePtr, toWrite);
             
+            handle->writesSinceLastPeriod += toWrite;
             framesToRender -= toWrite;
 
         }

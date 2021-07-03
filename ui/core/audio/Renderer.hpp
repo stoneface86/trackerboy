@@ -22,6 +22,7 @@
 #include <QWaitCondition>
 
 #include <cstddef>
+#include <chrono>
 #include <memory>
 #include <optional>
 
@@ -34,12 +35,27 @@ class Renderer : public QObject {
 
     Q_OBJECT
 
+    using Clock = std::chrono::steady_clock;
+
 public:
+
+    struct Diagnostics {
+        int underruns;
+        size_t bufferUse;
+        size_t bufferSize;
+        size_t writesSinceLastPeriod;
+        Clock::duration lastPeriod;
+        double elapsed;
+
+
+    };
 
     Renderer(QObject *parent = nullptr);
     ~Renderer();
 
     // DIAGNOSTICS ====
+
+    Diagnostics diagnostics();
 
     //
     // Gets the current document.
@@ -174,6 +190,8 @@ private slots:
 private:
     Q_DISABLE_COPY(Renderer)
 
+    
+
     enum class PreviewState {
         none,
         waveform,
@@ -189,6 +207,7 @@ private:
     struct RenderContext {
         // the current document
         ModuleDocument *document;
+        // the document that is playing music (usually the same as the current document)
         ModuleDocument *musicDocument;
 
         // indicates if step mode is enabled
@@ -212,6 +231,11 @@ private:
 
         State state;
         int stopCounter;
+
+        // diagnostics
+        Clock::time_point lastPeriod; // occurance of the last period
+        Clock::duration periodTime; // time difference between the last period and the current one
+        size_t writesSinceLastPeriod; // number of samples written for the last period
 
         RenderContext();
     };

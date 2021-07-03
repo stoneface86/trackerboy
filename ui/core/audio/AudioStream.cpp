@@ -28,8 +28,7 @@ AudioStream::AudioStream() :
     mBuffer(),
     mSamplerate(0),
     mPlaybackDelay(0),
-    mUnderruns(0),
-    mBufferUsage(0)
+    mUnderruns(0)
 {
 }
 
@@ -72,13 +71,22 @@ int AudioStream::underruns() const {
     return mUnderruns.load();
 }
 
-int AudioStream::bufferUsage() const {
-    return mBufferUsage.load();
+void AudioStream::resetUnderruns() {
+    mUnderruns = 0;
 }
 
 size_t AudioStream::bufferSize() {
     QMutexLocker locker(&mMutex);
     return mBuffer.size();
+}
+
+double AudioStream::elapsed() {
+    QMutexLocker locker(&mMutex);
+    if (_isEnabled()) {
+        return mApi->access()->getStreamTime();
+    } else {
+        return 0.0;
+    }
 }
 
 AudioRingbuffer::Writer AudioStream::writer() {
@@ -211,6 +219,7 @@ void AudioStream::_start(Guarded<RtAudio> *api) {
     mPlaybackDelay = mBuffer.size();
 
     auto handle = api->access();
+    handle->setStreamTime(0.0);
     handle->startStream();
 }
 
@@ -285,8 +294,6 @@ int AudioStream::handleAudio(int16_t *output, size_t bufferFrames, double stream
     }
 
     auto reader = mBuffer.reader();
-
-    mBufferUsage.store((int)reader.availableRead());
 
     auto nread = reader.fullRead(output, bufferFrames);
     if (nread != bufferFrames) {

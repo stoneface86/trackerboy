@@ -63,14 +63,21 @@ public:
     int underruns() const;
 
     //
-    // Gets the current utilization of the buffer, in samples. 
+    // Resets the underrun counter to 0. 
     //
-    int bufferUsage() const;
+    void resetUnderruns();
 
     //
     // Gets the size of the buffer, in samples.
     //
     size_t bufferSize();
+
+    //
+    // Gets the time in seconds the stream has been running. If the stream is
+    // disabled, 0.0 is returned. If the stream is not running, then this function
+    // returns the time elapsed of the previous stream or 0.0 if there was no stream.
+    //
+    double elapsed();
 
     //
     // Get the buffer writer. If the stream is playing, samples written to
@@ -150,5 +157,4 @@ private:
     size_t mPlaybackDelay;
 
     std::atomic_int mUnderruns;
-    std::atomic_int mBufferUsage;
 };

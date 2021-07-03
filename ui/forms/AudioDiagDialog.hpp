@@ -10,6 +10,7 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QLabel>
+#include <QProgressBar>
 #include <QPushButton>
 #include <QSpinBox>
 
@@ -46,9 +47,12 @@ private:
         QGroupBox mRenderGroup;
             QFormLayout mRenderLayout;
                 QLabel mUnderrunLabel;
-                QLabel mBufferLabel;
+                //QLabel mBufferLabel;
+                QProgressBar mBufferProgress;
                 QLabel mStatusLabel;
                 QLabel mElapsedLabel;
+                QLabel mPeriodLabel;
+                QLabel mPeriodWrittenLabel;
                 QPushButton mClearButton;
         QHBoxLayout mButtonLayout;
             QCheckBox mAutoRefreshCheck;

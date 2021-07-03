@@ -164,12 +164,14 @@ void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool 
         bool const isCustom = sys == trackerboy::System::custom;
         mFramerateCustomSpin.setEnabled(isCustom);
 
-        auto ctx = mDocument->beginEdit();
-        auto& mod = mDocument->mod();
+        //auto ctx = mDocument->beginEdit();
+        //auto& mod = mDocument->mod();
         if (isCustom) {
-            mod.setFramerate(mFramerateCustomSpin.value());
+            //mod.setFramerate(mFramerateCustomSpin.value());
+            mDocument->setFramerate(mFramerateCustomSpin.value());
         } else {
-            mod.setFramerate(sys);
+            //mod.setFramerate(sys);
+            mDocument->setFramerate(sys);
         }
 
         //calculateActualTempo();
@@ -178,8 +180,7 @@ void ModuleSettingsWidget::framerateButtonToggled(QAbstractButton *button, bool 
 
 void ModuleSettingsWidget::customFramerateSpinChanged(int value) {
     if (mDocument) {
-        auto ctx = mDocument->beginEdit();
-        mDocument->mod().setFramerate(value);
+        mDocument->setFramerate(value);
     }
     //calculateActualTempo();
 }

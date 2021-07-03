@@ -23,21 +23,6 @@ ModuleDocument::EditContext<tPermanent>::~EditContext() {
 template class ModuleDocument::EditContext<true>;
 template class ModuleDocument::EditContext<false>;
 
-ModuleDocument::WidgetState::WidgetState() :
-    orderSetSpinbox(0),
-    recording(false),
-    octave(4),
-    editStep(1),
-    loopPattern(false),
-    followMode(true),
-    keyRepetition(true),
-    cursorRow(0),
-    cursorColumn(0),
-    autoInstrument(true),
-    autoInstrumentIndex(-1)
-{
-}
-
 ModuleDocument::ModuleDocument(QObject *parent) :
     QObject(parent),
     mPermaDirty(false),
@@ -60,8 +45,7 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     mChannelEnables(CH1 | CH2 | CH3 | CH4),
     mKeyRepetition(true),
     mEditStep(1),
-    mInstrument(0),
-    mState()
+    mInstrument(0)
 {
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }
@@ -277,10 +261,6 @@ void ModuleDocument::setComments(QString const& comments) {
     makeDirty();
 }
 
-ModuleDocument::WidgetState& ModuleDocument::state() {
-    return mState;
-}
-
 ModuleDocument::OutputFlags ModuleDocument::channelOutput() {
     return mChannelEnables;
 }
@@ -333,4 +313,29 @@ int ModuleDocument::instrument() const {
 
 void ModuleDocument::setInstrument(int instrument) {
     mInstrument = instrument;
+}
+
+float ModuleDocument::framerate() const {
+    return mModule.framerate();
+}
+
+void ModuleDocument::setFramerate(int rate) {
+    if (mModule.system() == trackerboy::System::custom && mModule.customFramerate() == rate) {
+        return;
+    }
+    
+    auto ctx = beginEdit();
+    mModule.setFramerate(rate);
+    emit framerateChanged((float)rate);
+    
+}
+
+void ModuleDocument::setFramerate(trackerboy::System system) {
+    if (system == trackerboy::System::custom || mModule.system() == system) {
+        return;
+    }
+
+    auto ctx = beginEdit();
+    mModule.setFramerate(system);
+    emit framerateChanged(mModule.framerate());
 }
