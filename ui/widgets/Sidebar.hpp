@@ -3,6 +3,7 @@
 
 class ModuleDocument;
 
+#include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/CustomSpinBox.hpp"
 
 #include <QGridLayout>
@@ -29,6 +30,8 @@ public:
 
     void setDocument(ModuleDocument *doc);
 
+    AudioScope& scope();
+
 
 signals:
     void orderMenuRequested(QPoint const& pos);
@@ -50,6 +53,7 @@ private:
     bool mSpeedLock;
     
     QVBoxLayout mLayout;
+        AudioScope mScope;
         QGroupBox mOrderGroup;
             QVBoxLayout mOrderLayout;
                 QHBoxLayout mOrderButtonLayout;

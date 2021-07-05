@@ -2,6 +2,9 @@
 #pragma once
 
 
+#include "core/Guarded.hpp"
+#include "core/audio/VisualizerBuffer.hpp"
+
 #include <QFrame>
 #include <QMutex>
 #include <QPixmap>
@@ -20,24 +23,8 @@ public:
 
     explicit AudioScope(QWidget *parent = nullptr);
 
-    //
-    // Render the curve from the given sample data. Call update() afterwards for
-    // changes to be shown.
-    //
-    void render(int16_t samples[], size_t nsamples, size_t skip = 2);
 
-public slots:
-
-    //
-    // Clear the scope.
-    //
-    void clear();
-
-    //
-    // Sets the curve duration, by number of samples. Ie, setting this to 44100 will
-    // show one second of audio for 44100 Hz streams.
-    //
-    void setDuration(size_t samples);
+    void setBuffer(Guarded<VisualizerBuffer>* buffer);
 
 protected:
 
@@ -46,27 +33,18 @@ protected:
 private:
     Q_DISABLE_COPY(AudioScope)
 
+    void drawSilence();
+
+    void sample(Locked<VisualizerBuffer> &handle, float index, float ratio, float &outLeft, float &outRight);
+
     static constexpr int WAVE_WIDTH = 160;
     static constexpr int WAVE_HEIGHT = 64;
     static constexpr int WAVE_AXIS = WAVE_HEIGHT / 2 - 1;
 
+    static constexpr int WAVE_LEFT_AXIS = (WAVE_HEIGHT / 2) + 1;
+    static constexpr int WAVE_RIGHT_AXIS = (WAVE_HEIGHT / 2) + WAVE_HEIGHT + 1;
 
-    // Size of the curve, in samples.
-    size_t mDuration;
-
-    // the size of a "bin" or the number of audio samples that make a single
-    // pixel on the graph, units are in samples per pixel
-    size_t mBinSize;
-
-    // previous bin amplitudes from the last call to addSamples
-    float mPreviousBin;
-
-    //
-    // Cached drawing of the waveform (so we don't have to do it every paint event)
-    //
-    QPixmap mWaveform;
-
-    QMutex mMutex;
+    Guarded<VisualizerBuffer> *mBuffer;
 
 
 };

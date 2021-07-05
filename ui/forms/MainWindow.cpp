@@ -754,6 +754,8 @@ void MainWindow::setupUi() {
     mHSplitter->setStretchFactor(1, 1);
     setCentralWidget(mHSplitter);
 
+    mSidebar.scope().setBuffer(&mRenderer.visualizerBuffer());
+
     // ACTIONS ===============================================================
 
     setupAction(mActions[ActionFileNew], "&New", "Create a new module", Icons::fileNew, QKeySequence::New);
@@ -1211,6 +1213,7 @@ void MainWindow::setupUi() {
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mSidebar, &Sidebar::setDocument);
     connect(&mBrowserModel, &ModuleModel::currentDocumentChanged, &mPatternEditor, &PatternEditor::setDocument);
     
+    connect(&mRenderer, &Renderer::updateVisualizers, &mSidebar.scope(), qOverload<>(&AudioScope::update));
 
     //connect(&mRenderer, &Renderer::audioStarted, &mUpdateTimer, qOverload<>(&QTimer::start), Qt::QueuedConnection);
     //connect(&mRenderer, &Renderer::audioStopped, &mUpdateTimer, &QTimer::stop, Qt::QueuedConnection);

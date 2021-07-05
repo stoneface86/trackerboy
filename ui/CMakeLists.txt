@@ -29,6 +29,7 @@ set(UI_SRC
     "core/audio/AudioStream.cpp"
     "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
+    "core/audio/VisualizerBuffer.cpp"
     "core/clipboard/PatternClip.cpp"
     "core/clipboard/PatternClipboard.cpp"
     "core/midi/Midi.cpp"

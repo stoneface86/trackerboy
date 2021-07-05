@@ -13,6 +13,7 @@ Sidebar::Sidebar(QWidget *parent) :
     mDocument(nullptr),
     mIgnoreSelect(false),
     mLayout(),
+    mScope(),
     mOrderGroup(tr("Song order")),
     mOrderLayout(),
     mOrderButtonLayout(),
@@ -62,6 +63,7 @@ Sidebar::Sidebar(QWidget *parent) :
     mSongLayout.addWidget(&mPatternsSpin, 5, 1);
     mSongGroup.setLayout(&mSongLayout);
 
+    mLayout.addWidget(&mScope);
     mLayout.addWidget(&mSongGroup);
     mLayout.addWidget(&mOrderGroup, 1);
     setLayout(&mLayout);
@@ -170,6 +172,10 @@ Sidebar::Sidebar(QWidget *parent) :
 
 
 
+}
+
+AudioScope& Sidebar::scope() {
+    return mScope;
 }
 
 

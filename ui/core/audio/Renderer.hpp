@@ -4,6 +4,7 @@
 #include "core/audio/AudioStream.hpp"
 #include "core/audio/RenderFrame.hpp"
 #include "core/audio/Ringbuffer.hpp"
+#include "core/audio/VisualizerBuffer.hpp"
 #include "core/model/ModuleDocument.hpp"
 #include "core/Config.hpp"
 #include "core/FastTimer.hpp"
@@ -56,6 +57,8 @@ public:
     // DIAGNOSTICS ====
 
     Diagnostics diagnostics();
+
+    Guarded<VisualizerBuffer>& visualizerBuffer();
 
     //
     // Gets the current document.
@@ -125,6 +128,8 @@ signals:
     // emitted when a new frame is rendererd
     //
     void frameSync();
+
+    void updateVisualizers();
 
 public slots:
 
@@ -241,7 +246,7 @@ private:
     };
 
     // type alias for mutually exclusive access to the RenderContext
-    using Handle = Guarded<RenderContext>::Handle;
+    using Handle = Locked<RenderContext>;
 
     // sets up the engine to play starting at the given pattern and row
     void playMusic(Handle &handle, int pattern, int row, bool stepping = false);
@@ -282,6 +287,7 @@ private:
     FastTimer *mTimer;
 
     AudioStream mStream;
+    Guarded<VisualizerBuffer> mVisBuffer;
 
     //
     // All variables accessible from multiple threads are stored in the RenderContext

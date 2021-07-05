@@ -7,6 +7,27 @@
 #include <utility>
 
 //
+// QMutexLocker subclass holding a reference to a locked object.
+//
+template <class T>
+class Locked : public QMutexLocker {
+
+    T &mRef;
+
+public:
+    constexpr Locked(T &ref, QMutex &mutex) :
+        QMutexLocker(&mutex),
+        mRef(ref)
+    {
+    }
+
+    constexpr T* operator->() {
+        return &mRef;
+    }
+
+};
+
+//
 // This class provides mutually exclusive access to a type.
 // 
 // Ex: RtAudio
@@ -21,25 +42,6 @@ template <class T>
 class Guarded {
 
 public:
-    class Handle : public QMutexLocker {
-        friend class Guarded<T>;
-
-    public:
-        constexpr T* operator->() {
-            return &mRef;
-        }
-
-    private:
-        constexpr Handle(QMutex &mutex, T &ref) :
-            QMutexLocker(&mutex),
-            mRef(ref)
-        {
-        }
-
-        Q_DISABLE_COPY(Handle)
-
-        T &mRef;
-    };
 
     template <typename... Ts>
     Guarded(Ts&&... args) :
@@ -49,22 +51,18 @@ public:
     }
 
     //
-    // Gets access to the contained object without locking the mutex
-    // Be careful using this.
-    //
-    T& unguarded() {
-        return mHandle;
-    }
-
-    //
     // Returns a handle to the contained object that holds the mutex
     // for the lifetime of the handle.
     //
-    Handle access() {
-        return { mMutex, mHandle };
+    Locked<T> access() {
+        return { mHandle, mMutex };
     }
 
 private:
     T mHandle;
     QMutex mMutex;
 };
+
+
+
+

@@ -52,9 +52,11 @@ Renderer::RenderContext::RenderContext() :
 
 Renderer::Renderer(QObject *parent) :
     QObject(parent),
+    mMutex(),
     mTimerThread(),
     mTimer(new FastTimer),
-    mMutex(),
+    mStream(),
+    mVisBuffer(),
     mContext()
 {
     mTimer->setCallback(timerCallback, this);
@@ -86,6 +88,10 @@ Renderer::Diagnostics Renderer::diagnostics() {
         handle->periodTime,
         mStream.elapsed()
     };
+}
+
+Guarded<VisualizerBuffer>& Renderer::visualizerBuffer() {
+    return mVisBuffer;
 }
 
 bool Renderer::isRunning() {
@@ -124,6 +130,7 @@ bool Renderer::setConfig(Config::Sound const &soundConfig) {
     if (mStream.isEnabled()) {
 
         mTimer->setInterval(soundConfig.period, Qt::PreciseTimer);
+        
 
         // update the synthesizer (the guard isn't necessary here but we'll use it anyways)
         {
@@ -143,6 +150,11 @@ bool Renderer::setConfig(Config::Sound const &soundConfig) {
                 // rewrite channel registers
                 handle->engine.reload();
             }
+
+
+            mVisBuffer.access()->resize(handle->synth.framesize());
+
+
 
         }
 
@@ -193,6 +205,10 @@ void Renderer::stopRender(Handle &handle, bool aborted) {
     auto success = mStream.stop();
 
     handle.unlock();
+
+    mVisBuffer.access()->clear();
+    emit updateVisualizers();
+
     if (aborted) {
         mStream.disable();
         emit audioError();
@@ -507,11 +523,15 @@ void Renderer::render() {
 
     bool newFrame = false;
 
+    auto visHandle = mVisBuffer.access();
+    visHandle->beginWrite(framesToRender);
+
     while (framesToRender) {
 
         if (handle->state == State::stopping) {
             if (writer.availableWrite() == mStream.bufferSize()) {
                 // the buffer has been drained, stop the callback
+                visHandle.unlock();
                 stopRender(handle);
             }
             return;
@@ -575,7 +595,12 @@ void Renderer::render() {
 
             size_t toWrite = std::min(framesToRender, apu.availableSamples());
             auto writePtr = writer.acquireWrite(toWrite);
+            
+            // read from the apu to the ringbuffer
             apu.readSamples(writePtr, toWrite);
+            // send a copy to the visualizer buffer as well
+            visHandle->write(writePtr, toWrite);
+            
             writer.commitWrite(writePtr, toWrite);
             
             handle->writesSinceLastPeriod += toWrite;
@@ -583,6 +608,10 @@ void Renderer::render() {
 
         }
 
+    }
+
+    if (handle->writesSinceLastPeriod) {
+        emit updateVisualizers();
     }
 
     if (newFrame) {
