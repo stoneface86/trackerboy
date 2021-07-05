@@ -56,13 +56,16 @@ QIcon const& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/editRedo-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::editCut:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/editCut.png"));
+                iconRef.addFile(QStringLiteral(":/icons/editCut-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::editCopy:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/editCopy.png"));
+                iconRef.addFile(QStringLiteral(":/icons/editCopy-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::editPaste:
-                iconRef = instance.mPlaceholder;
+                iconRef.addFile(QStringLiteral(":/icons/editPaste.png"));
+                iconRef.addFile(QStringLiteral(":/icons/editPaste-disabled.png"), QSize(), QIcon::Disabled);
                 break;
             case Icons::itemAdd:
                 iconRef.addFile(QStringLiteral(":/icons/itemAdd.png"));

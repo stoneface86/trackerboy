@@ -15,6 +15,12 @@
     <file>icons/editUndo-disabled.png</file>
     <file>icons/editRedo.png</file>
     <file>icons/editRedo-disabled.png</file>
+    <file>icons/editCut.png</file>
+    <file>icons/editCut-disabled.png</file>
+    <file>icons/editCopy.png</file>
+    <file>icons/editCopy-disabled.png</file>
+    <file>icons/editPaste.png</file>
+    <file>icons/editPaste-disabled.png</file>
     <file>icons/itemAdd.png</file>
     <file>icons/itemAdd-disabled.png</file>
     <file>icons/itemRemove.png</file>
