@@ -36,6 +36,8 @@ public:
 signals:
     void orderMenuRequested(QPoint const& pos);
 
+    void patternJumpRequested(int pattern);
+
 private:
 
     void currentIndexChanged(QModelIndex const& index);

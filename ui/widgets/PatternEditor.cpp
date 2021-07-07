@@ -355,7 +355,8 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
     }
 
     if (amount) {
-        mDocument->patternModel().moveCursorRow(amount);
+        auto &patternModel = mDocument->patternModel();
+        patternModel.moveCursorRow(amount);
     }
 
     evt->accept();
@@ -375,12 +376,15 @@ void PatternEditor::hscrollAction(int action) {
 }
 
 void PatternEditor::vscrollAction(int action) {
+
+    auto &patternModel = mDocument->patternModel();
+
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mDocument->patternModel().moveCursorRow(1);
+            patternModel.moveCursorRow(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mDocument->patternModel().moveCursorRow(-1);
+            patternModel.moveCursorRow(-1);
             break;
         default:
             break;

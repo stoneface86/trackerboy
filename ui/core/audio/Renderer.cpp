@@ -292,6 +292,13 @@ void Renderer::stepFromCursor() {
     }
 }
 
+void Renderer::jumpToPattern(int pattern) {
+    if (mStream.isEnabled()) {
+        auto ctx = mContext.access();
+        ctx->engine.jump(pattern);
+    }
+}
+
 void Renderer::setPatternRepeat(bool repeat) {
 
     if (mStream.isEnabled()) {

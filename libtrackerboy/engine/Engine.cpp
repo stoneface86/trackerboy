@@ -63,6 +63,12 @@ void Engine::halt() {
     }
 }
 
+void Engine::jump(int pattern) {
+    if (mMusicContext) {
+        mMusicContext->jump(pattern);
+    }
+}
+
 void Engine::lock(ChType ch) {
     if (mMusicContext) {
         mMusicContext->lock(*mRc, ch);

@@ -1196,6 +1196,8 @@ void MainWindow::setupUi() {
             mContextMenuOrder.popup(pos);
         });
 
+    connect(&mSidebar, &Sidebar::patternJumpRequested, &mRenderer, &Renderer::jumpToPattern);
+
     // order actions
     connect(&mActions[ActionSongOrderInsert], &QAction::triggered, this,
         [this]() {

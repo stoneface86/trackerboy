@@ -193,6 +193,10 @@ PatternClip PatternModel::clip() {
 // slots -------------------------------
 
 void PatternModel::moveCursorRow(int amount, SelectMode mode) {
+    if (mPlaying && mFollowing) {
+        return;
+    }
+    
     if (mode == SelectionModify) {
         selectCursor();
     } else if (mode == SelectionRemove) {
@@ -221,6 +225,10 @@ void PatternModel::moveCursorTrack(int amount) {
 }
 
 void PatternModel::setCursorRow(int row) {
+    if (mPlaying && mFollowing) {
+        return;
+    }
+
     CursorChangeFlags flags = CursorUnchanged;
     setCursorRowImpl(row, flags);
     emitIfChanged(flags);
@@ -319,7 +327,9 @@ void PatternModel::setCursorTrackImpl(int track, CursorChangeFlags &flags) {
 
 void PatternModel::setCursor(PatternCursor const cursor) {
     CursorChangeFlags flags = CursorUnchanged;
-    setCursorRowImpl(cursor.row, flags);
+    if (!(mPlaying && mFollowing)) {
+        setCursorRowImpl(cursor.row, flags);
+    }
     setCursorColumnImpl(cursor.column, flags);
     setCursorTrackImpl(cursor.track, flags);
     emitIfChanged(flags);
@@ -357,7 +367,9 @@ void PatternModel::setTrackerCursor(int row, int pattern) {
     if (changed) {
         if (mFollowing) {
             mDocument.orderModel().selectPattern(pattern);
-            setCursorRow(row);
+            CursorChangeFlags flags = CursorUnchanged;
+            setCursorRowImpl(row, flags);
+            emitIfChanged(flags);
         }
         emit trackerCursorChanged(row, pattern);
     }

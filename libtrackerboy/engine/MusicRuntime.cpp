@@ -33,6 +33,11 @@ void MusicRuntime::halt(RuntimeContext const &rc) {
     haltChannels(rc);
 }
 
+void MusicRuntime::jump(int pattern) {
+    mOrderCounter = pattern;
+    mRowCounter = 0;
+}
+
 void MusicRuntime::lock(RuntimeContext const& rc, ChType ch) {
     // do nothing if channel is already locked
     if (mFlags.test(+ch)) {

@@ -160,6 +160,11 @@ public slots:
     void stepFromCursor();
 
     //
+    // Jumps to the given pattern if currently playing music
+    //
+    void jumpToPattern(int pattern);
+
+    //
     // Stop previewing an instrument, waveform or row.
     //
     void stopPreview();

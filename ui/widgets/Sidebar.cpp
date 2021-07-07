@@ -233,7 +233,17 @@ void Sidebar::currentChanged(QModelIndex const &current, QModelIndex const &prev
 
     if (mDocument) {
         mIgnoreSelect = true;
-        mDocument->orderModel().select(current.row(), current.column());
+        auto &orderModel = mDocument->orderModel();
+        auto &patternModel = mDocument->patternModel();
+        if (patternModel.isPlaying() && patternModel.isFollowing()) {
+            if (orderModel.currentPattern() != current.row()) {
+                // jump to this pattern instead of selecting it
+                emit patternJumpRequested(current.row());
+            }
+            orderModel.selectTrack(current.column());
+        } else {
+            orderModel.select(current.row(), current.column());
+        }
         mIgnoreSelect = false;
     }
 }

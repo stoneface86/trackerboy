@@ -38,6 +38,8 @@ public:
 
     void unlock(RuntimeContext const& rc, ChType ch);
 
+    void jump(int pattern);
+
     bool step(RuntimeContext const& rc, Frame &frame);
 
     void repeatPattern(bool repeat);

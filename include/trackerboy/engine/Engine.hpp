@@ -58,6 +58,8 @@ public:
     //
     void halt();
     
+    void jump(int pattern);
+
     //
     // Lock the given channel. Channel is reloaded with music settings.
     //
