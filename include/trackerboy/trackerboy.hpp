@@ -92,6 +92,25 @@ enum class Panning : uint8_t {
     middle
 };
 
+template <typename T>
+constexpr T GB_CLOCK_SPEED = T(4194304);
+
+constexpr float GB_FRAMERATE_DMG = 59.7f;
+constexpr float GB_FRAMERATE_SGB = 61.1f;
+
+// each channel has 5 registers
+constexpr unsigned GB_CHANNEL_REGS = 5;
+
+//
+// Maximum frequency setting for channels 1, 2 and 3
+//
+constexpr uint16_t GB_MAX_FREQUENCY = 2047;
+
+//
+// CH3 waveram is 16 bytes
+//
+constexpr size_t GB_WAVERAM_SIZE = 16;
+
 //
 // The speed type determines the tempo during pattern playback. Its unit is
 // frames per row in Q4.4 format. Speeds with a fractional component will
@@ -111,29 +130,16 @@ constexpr float speedToFloat(Speed speed) {
     return speed * (1.0f / (1 << SPEED_FRACTION_BITS));
 }
 
+constexpr float speedToTempo(float speed, int rowsPerBeat = 4, float framerate = GB_FRAMERATE_DMG) {
+    return (framerate * 60.0f) / (speed * rowsPerBeat);
+}
+
 constexpr size_t TABLE_SIZE = 64;
 constexpr size_t MAX_INSTRUMENTS = TABLE_SIZE;
 constexpr size_t MAX_WAVEFORMS = TABLE_SIZE;
 constexpr size_t MAX_PATTERNS = 256;
 
-template <typename T>
-constexpr T GB_CLOCK_SPEED = T(4194304);
 
-constexpr float GB_FRAMERATE_DMG = 59.7f;
-constexpr float GB_FRAMERATE_SGB = 61.1f;
-
-// each channel has 5 registers
-constexpr unsigned GB_CHANNEL_REGS = 5;
-
-//
-// Maximum frequency setting for channels 1, 2 and 3
-//
-constexpr uint16_t GB_MAX_FREQUENCY = 2047;
-
-//
-// CH3 waveram is 16 bytes
-//
-constexpr size_t GB_WAVERAM_SIZE = 16;
 
 
 

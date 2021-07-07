@@ -2,6 +2,7 @@
 #pragma once
 
 #include "trackerboy/data/Song.hpp"
+#include "trackerboy/engine/Frame.hpp"
 #include "trackerboy/engine/FrequencyControl.hpp"
 #include "trackerboy/engine/GlobalState.hpp"
 #include "trackerboy/engine/InstrumentRuntime.hpp"
@@ -27,16 +28,6 @@ class MusicRuntime {
 public:
     MusicRuntime(Song const& song, int orderNo, int patternRow, bool patternRepeat = false);
 
-    int currentOrder() const noexcept;
-
-    int currentRow() const noexcept;
-
-    Speed currentSpeed() const noexcept;
-
-    bool hasNewRow() const noexcept;
-
-    bool hasNewPattern() const noexcept;
-
     void halt(RuntimeContext const& rc);
 
     void lock(RuntimeContext const& rc, ChType ch);
@@ -47,7 +38,7 @@ public:
 
     void unlock(RuntimeContext const& rc, ChType ch);
 
-    bool step(RuntimeContext const& rc);
+    bool step(RuntimeContext const& rc, Frame &frame);
 
     void repeatPattern(bool repeat);
 
@@ -72,9 +63,6 @@ private:
 
     int mOrderCounter;
     int mRowCounter;
-
-    bool mHasNewPattern;
-    bool mHasNewRow;
 
     bool mPatternRepeat;
 

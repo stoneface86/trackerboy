@@ -64,7 +64,7 @@ void WavExporter::run() {
     emit progress(lastProgress);
     auto &apu = mSynth.apu();
 
-    while (player.isPlaying()) {
+    for (;;) {
 
         mMutex.lock();
         if (mAbort) {
@@ -81,6 +81,9 @@ void WavExporter::run() {
         }
 
         player.step();
+        if (!player.isPlaying()) {
+            break;
+        }
         mSynth.run();
 
         auto samplesRead = apu.readSamples(buffer.data(), buffer.size());

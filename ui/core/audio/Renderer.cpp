@@ -68,6 +68,11 @@ Renderer::Renderer(QObject *parent) :
 
 Renderer::~Renderer() {
     mTimer->stop();
+
+    if (mStream.isRunning()) {
+        mStream.stop();
+    }
+
     mTimerThread.quit();
     mTimerThread.wait();
 }
@@ -108,7 +113,7 @@ ModuleDocument* Renderer::documentPlayingMusic() {
     return handle->musicDocument;
 }
 
-trackerboy::Engine::Frame Renderer::currentFrame() {
+trackerboy::Frame Renderer::currentFrame() {
     auto handle = mContext.access();
     return handle->currentEngineFrame;
 }
@@ -140,7 +145,7 @@ bool Renderer::setConfig(Config::Sound const &soundConfig) {
             auto const samplerate = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
             if (samplerate != handle->synth.samplerate()) {
                 handle->synth.setSamplingRate(samplerate);
-                reloadRegisters = true;
+                reloadRegisters = wasRunning;
             }
             handle->synth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
             handle->synth.setupBuffers();

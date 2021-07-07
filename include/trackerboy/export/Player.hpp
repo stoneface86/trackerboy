@@ -59,7 +59,7 @@ private:
 
 
     Engine &mEngine;
-    Engine::Frame mLastFrame;
+    Frame mLastFrame;
     bool mPlaying;
     ContextVariant mContext;
 

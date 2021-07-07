@@ -43,7 +43,9 @@ void Timer::reset() noexcept {
 
 void Timer::setPeriod(Speed period) noexcept {
     mPeriod = std::min(std::max(period, SPEED_MIN), SPEED_MAX);
-    // might need to adjust mCounter
+    // if the counter exceeds the new period, clamp it to 1 unit less
+    // this way, the timer will overflow on the next call to step
+    mCounter = std::min(mCounter, (Speed)(mPeriod - UNIT_SPEED));
 }
 
 bool Timer::step() noexcept {

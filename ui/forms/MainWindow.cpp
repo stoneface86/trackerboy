@@ -74,9 +74,7 @@ MainWindow::MainWindow() :
     mSidebar(),
     mPatternEditor(mPianoInput),
     mPlayAndStopShortcut(&mPatternEditor),
-    mRenderer(),
-    mSyncWorker(new SyncWorker(mRenderer)), //, mLeftScope, mRightScope)),
-    mSyncWorkerThread()
+    mRenderer()
 {
     mMidiReceiver = &mPatternEditor;
 
@@ -131,27 +129,12 @@ MainWindow::MainWindow() :
     // initialize document state
     onTabChanged(-1);
 
-    // audio sync worker thread
-    mSyncWorker->moveToThread(&mSyncWorkerThread);
-    connect(&mSyncWorkerThread, &QThread::finished, mSyncWorker, &SyncWorker::deleteLater);
-    mSyncWorkerThread.setObjectName(QStringLiteral("sync worker thread"));
-    mSyncWorkerThread.start();
-
-
     // apply the read in configuration
     onConfigApplied(Config::CategoryAll);
 
 }
 
 MainWindow::~MainWindow() {
-
-    // force stop any ongoing render
-    //QMetaObject::invokeMethod(mRenderer, &Renderer::forceStop, Qt::BlockingQueuedConnection);
-    //mRenderer.forceStop();
-
-    // quit and wait for threads to finish
-    mSyncWorkerThread.quit();
-    mSyncWorkerThread.wait();
 
 }
 
@@ -294,11 +277,6 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
-        auto samplesPerFrame = samplerate / 60;
-        mSyncWorker->setSamplesPerFrame(samplesPerFrame);
-        //mLeftScope.setDuration(samplesPerFrame);
-        //mRightScope.setDuration(samplesPerFrame);
-
         mErrorSinceLastConfig = !mRenderer.setConfig(sound);
         if (mErrorSinceLastConfig) {
             setPlayingStatus(PlayingStatusText::error);
@@ -391,19 +369,13 @@ void MainWindow::showExportWavDialog() {
     delete dialog;
 }
 
-void MainWindow::trackerPositionChanged(QPoint const pos) {
-    auto pattern = pos.x();
-    auto row = pos.y();
-    
-    auto doc = mBrowserModel.currentDocument();
-    if (doc == mRenderer.documentPlayingMusic()) {
-        doc->patternModel().setTrackerCursor(row, pattern);
+void MainWindow::onAudioStart() {
+    if (!mRenderer.isRunning()) {
+        return;
     }
 
-    mStatusPos.setText(QStringLiteral("%1 / %2").arg(pattern).arg(row));
-}
-
-void MainWindow::onAudioStart() {
+    mLastEngineFrame = {};
+    mFrameSkip = 0;
     setPlayingStatus(PlayingStatusText::playing);
     auto doc = mRenderer.documentPlayingMusic();
     if (doc) {
@@ -429,6 +401,10 @@ void MainWindow::onAudioError() {
 }
 
 void MainWindow::onAudioStop() {
+    if (mRenderer.isRunning()) {
+        return; // sometimes it takes too long for this signal to get here
+    }
+
     if (!mErrorSinceLastConfig) {
         setPlayingStatus(PlayingStatusText::ready);
     }
@@ -437,6 +413,68 @@ void MainWindow::onAudioStop() {
     if (doc) {
         doc->patternModel().setPlaying(false);
     }
+}
+
+void MainWindow::onFrameSync() {
+    // this slot is called when the renderer has renderered a new frame
+    // sync is a bit misleading here, as this slot is called when this frame
+    // is in process of being bufferred. It is not the current frame being played out.
+
+    auto frame = mRenderer.currentFrame();
+    auto doc = mBrowserModel.currentDocument();
+    if (doc == nullptr) {
+        return;
+    }
+
+    bool const docIsPlaying = doc == mRenderer.documentPlayingMusic();
+
+    // check if the player position changed
+    if (frame.startedNewRow) {
+        if (docIsPlaying) {
+            // update tracker position
+            doc->patternModel().setTrackerCursor(frame.row, frame.order);
+        }
+
+        // update position status
+        mStatusPos.setText(QStringLiteral("%1 / %2")
+            .arg(frame.order, 2, 10, QChar('0'))
+            .arg(frame.row, 2, 10, QChar('0')));
+    }
+
+    // check if the speed changed
+    if (mLastEngineFrame.speed != frame.speed) {
+        auto speedF = trackerboy::speedToFloat(frame.speed);
+        // update speed status
+        mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+        auto tempo = trackerboy::speedToTempo(speedF, doc->songModel().rowsPerBeat());
+        mStatusTempo.setText(tr("%1 BPM").arg(tempo, 0, 'f', 2));
+    }
+
+    constexpr auto FRAME_SKIP = 30;
+
+    if (mLastEngineFrame.time != frame.time) {
+        // determine elapsed time
+        if (mFrameSkip == 0) {
+
+            auto framerate = doc->framerate();
+            int elapsed = frame.time / framerate;
+            int secs = elapsed;
+            int mins = secs / 60;
+            secs = secs % 60;
+
+            QString str = QStringLiteral("%1:%2")
+                .arg(mins, 2, 10, QChar('0'))
+                .arg(secs, 2, 10, QChar('0'));
+            mStatusElapsed.setText(str);
+
+
+            mFrameSkip = FRAME_SKIP;
+        } else {
+            --mFrameSkip;
+        }
+    }
+
+    mLastEngineFrame = frame;
 }
 
 void MainWindow::onTabChanged(int tabIndex) {
@@ -970,8 +1008,8 @@ void MainWindow::setupUi() {
     mToolbarInput.addWidget(&mOctaveSpin);
     mToolbarInput.addWidget(&mEditStepLabel);
     mToolbarInput.addWidget(&mEditStepSpin);
+    mToolbarInput.addSeparator();
     mToolbarInput.addAction(&mActions[ActionEditKeyRepetition]);
-    mToolbarInput.setStyleSheet(QStringLiteral("spacing: 8px;"));
     mOctaveSpin.setRange(2, 8);
     mOctaveSpin.setValue(mPianoInput.octave());
     mEditStepSpin.setRange(0, 255);
@@ -1011,18 +1049,39 @@ void MainWindow::setupUi() {
     // STATUSBAR ==============================================================
 
     auto statusbar = statusBar();
+
+    mStatusRenderer.setMinimumWidth(60);
+    mStatusSpeed.setMinimumWidth(60);
+    mStatusTempo.setMinimumWidth(60);
+    mStatusElapsed.setMinimumWidth(40);
+    mStatusPos.setMinimumWidth(40);
+    mStatusSamplerate.setMinimumWidth(60);
+
+    {
+        for (auto label : { &mStatusRenderer, &mStatusSpeed, &mStatusTempo, &mStatusElapsed, &mStatusPos, &mStatusSamplerate }) {
+            label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        }
+    }
     
-    mStatusRenderer.setText(tr("Ready"));
     statusbar->addPermanentWidget(&mStatusRenderer);
-    statusbar->addPermanentWidget(&mStatusFramerate);
     statusbar->addPermanentWidget(&mStatusSpeed);
     statusbar->addPermanentWidget(&mStatusTempo);
-    mStatusElapsed.setText(QStringLiteral("00:00:00"));
     statusbar->addPermanentWidget(&mStatusElapsed);
-    mStatusPos.setText(QStringLiteral("00 / 00"));
     statusbar->addPermanentWidget(&mStatusPos);
     statusbar->addPermanentWidget(&mStatusSamplerate);
 
+    statusbar->showMessage(tr("Trackerboy v%1.%2.%3")
+        .arg(trackerboy::VERSION.major)
+        .arg(trackerboy::VERSION.minor)
+        .arg(trackerboy::VERSION.patch));
+
+    // default statuses
+    setPlayingStatus(PlayingStatusText::ready);
+    mStatusSpeed.setText(tr("6.000 FPR"));
+    mStatusTempo.setText(tr("150 BPM"));
+    mStatusElapsed.setText(QStringLiteral("00:00"));
+    mStatusPos.setText(QStringLiteral("00 / 00"));
+    // no need to set samplerate, it is done so in onConfigApplied
 
     // CONNECTIONS ============================================================
 
@@ -1194,14 +1253,11 @@ void MainWindow::setupUi() {
             mMidiNoteDown = false;
         });
 
-    // sync worker
-    //connect(mSyncWorker, &SyncWorker::peaksChanged, &mPeakMeter, &PeakMeter::setPeaks, Qt::QueuedConnection);
-    connect(mSyncWorker, &SyncWorker::positionChanged, this, &MainWindow::trackerPositionChanged, Qt::QueuedConnection);
-    connect(mSyncWorker, &SyncWorker::speedChanged, &mStatusSpeed, &QLabel::setText, Qt::QueuedConnection);
 
     connect(&mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(&mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
     connect(&mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
+    connect(&mRenderer, &Renderer::frameSync, this, &MainWindow::onFrameSync);
 
     connect(&mMenuWindow, &QMenu::aboutToShow, this, &MainWindow::updateWindowMenu);
 

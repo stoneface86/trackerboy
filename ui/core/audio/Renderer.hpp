@@ -2,7 +2,6 @@
 #pragma once
 
 #include "core/audio/AudioStream.hpp"
-#include "core/audio/RenderFrame.hpp"
 #include "core/audio/Ringbuffer.hpp"
 #include "core/audio/VisualizerBuffer.hpp"
 #include "core/model/ModuleDocument.hpp"
@@ -96,7 +95,7 @@ public:
     //
     // Note: Function is thread-safe
     //
-    trackerboy::Engine::Frame currentFrame();
+    trackerboy::Frame currentFrame();
 
     //
     // Configures the output device with the given Sound config. If device
@@ -232,7 +231,7 @@ private:
         PreviewState previewState;
         trackerboy::ChType previewChannel;
 
-        trackerboy::Engine::Frame currentEngineFrame;
+        trackerboy::Frame currentEngineFrame;
 
         State state;
         int stopCounter;

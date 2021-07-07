@@ -51,7 +51,6 @@ set(UI_SRC
     "core/PatternSelection.cpp"
     "core/PianoInput.cpp"
     "core/samplerates.cpp"
-    "core/SyncWorker.cpp"
     "core/WavExporter.cpp"
 
     "forms/AboutDialog.cpp"

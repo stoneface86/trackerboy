@@ -2,7 +2,6 @@
 ---
 
 [![build-lib][build-badge]][build-link]
-[![tests][tests-badge]][tests-link]
 [![Discord](https://img.shields.io/discord/770034905231917066?svg=true)](https://discord.gg/m6wcAK3)
 
 
@@ -49,5 +48,3 @@ This project is licensed under the MIT License - See [LICENSE](LICENSE) for more
 
 [build-badge]: https://github.com/stoneface86/trackerboy/workflows/build/badge.svg
 [build-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Abuild
-[tests-badge]: https://github.com/stoneface86/trackerboy/workflows/tests/badge.svg
-[tests-link]: https://github.com/stoneface86/trackerboy/actions?query=workflow%3Atests

@@ -6,7 +6,6 @@
 #include "core/model/ModuleDocument.hpp"
 #include "core/model/ModuleModel.hpp"
 #include "core/model/InstrumentChoiceModel.hpp"
-#include "core/SyncWorker.hpp"
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
@@ -78,12 +77,10 @@ private slots:
     void showConfigDialog();
     void showExportWavDialog();
 
-    // statusbar
-    void trackerPositionChanged(QPoint const pos);
-
     void onAudioStart();
     void onAudioError();
     void onAudioStop();
+    void onFrameSync();
 
     void onTabChanged(int tabIndex);
 
@@ -158,6 +155,8 @@ private:
     ModuleModel mBrowserModel;
 
     bool mErrorSinceLastConfig;
+    trackerboy::Frame mLastEngineFrame;
+    int mFrameSkip;
 
     // dialogs
     AboutDialog *mAboutDialog;
@@ -207,7 +206,6 @@ private:
 
     // statusbar widgets
     QLabel mStatusRenderer;
-    QLabel mStatusFramerate;
     QLabel mStatusSpeed;
     QLabel mStatusTempo;
     QLabel mStatusElapsed;
@@ -307,12 +305,6 @@ private:
     QShortcut mPlayAndStopShortcut;
 
     Renderer mRenderer;
-
-
-    // workers / threading
-    
-    SyncWorker *mSyncWorker;
-    QThread mSyncWorkerThread;
 
 
 };

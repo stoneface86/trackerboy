@@ -103,7 +103,8 @@ if (SOUND_REQUIRED)
     #  1. exporting to WAV (wav encoder)
     #  2. Ringbuffer, ma_rb
     target_compile_definitions(miniaudio PUBLIC
-        MA_NO_DECODING
+        MA_NO_MP3
+        MA_NO_FLAC
         MA_NO_GENERATION
         MA_NO_DEVICE_IO
         MA_NO_THREADING

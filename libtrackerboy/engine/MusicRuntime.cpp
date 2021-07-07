@@ -10,9 +10,9 @@ MusicRuntime::MusicRuntime(Song const& song, int orderNo, int patternRow, bool p
     mSong(song),
     mOrderCounter(orderNo),
     mRowCounter(patternRow),
-    mHasNewPattern(false),
-    mHasNewRow(false),
     mPatternRepeat(patternRepeat),
+    mTimer(),
+    mGlobal(),
     mFlags(DEFAULT_FLAGS),
     mStates{
         ChannelState(ChType::ch1),
@@ -26,26 +26,6 @@ MusicRuntime::MusicRuntime(Song const& song, int orderNo, int patternRow, bool p
     mTc4()
 {
     mTimer.setPeriod(song.speed());
-}
-
-int MusicRuntime::currentOrder() const noexcept {
-    return mOrderCounter;
-}
-
-int MusicRuntime::currentRow() const noexcept {
-    return mRowCounter;
-}
-
-Speed MusicRuntime::currentSpeed() const noexcept {
-    return mTimer.period();
-}
-
-bool MusicRuntime::hasNewRow() const noexcept {
-    return mHasNewRow;
-}
-
-bool MusicRuntime::hasNewPattern() const noexcept {
-    return mHasNewPattern;
 }
 
 void MusicRuntime::halt(RuntimeContext const &rc) {
@@ -98,8 +78,9 @@ void MusicRuntime::repeatPattern(bool repeat) {
     mPatternRepeat = repeat;
 }
 
-bool MusicRuntime::step(RuntimeContext const& rc) {
+bool MusicRuntime::step(RuntimeContext const& rc, Frame &frame) {
     if (mFlags.test(FLAG_HALT)) {
+        // runtime is halted, do nothing
         return true;
     }
     
@@ -112,11 +93,13 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
         mFlags.reset(FLAG_INIT);
     }
 
-    mHasNewPattern = false;
-
     // if timer is active, we are starting a new row
-    mHasNewRow = mTimer.active();
-    if (mHasNewRow) {
+    frame.startedNewRow = mTimer.active();
+    // this gets set to true if:
+    //  1. we have started a new row
+    //  2. a pattern command was set (jump or next)
+    frame.startedNewPattern = false;
+    if (frame.startedNewRow) {
 
         // change the current pattern if needed
         if (mGlobal.patternCommand != Operation::PatternCommand::none && mPatternRepeat) {
@@ -133,19 +116,18 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
                     }
                     mRowCounter = mGlobal.patternCommandParam;
                     mGlobal.patternCommand = Operation::PatternCommand::none;
-                    mHasNewPattern = true;
+                    frame.startedNewPattern = true;
                     break;
                 case Operation::PatternCommand::jump:
                     mRowCounter = 0;
                     // if the parameter goes past the last one, use the last one
                     mOrderCounter = std::min(mGlobal.patternCommandParam, (uint8_t)(mSong.order().size() - 1));
                     mGlobal.patternCommand = Operation::PatternCommand::none;
-                    mHasNewPattern = true;
+                    frame.startedNewPattern = true;
                     break;
             }
         }
         
-
         // set row data to our track controls
         mTc1.setRow(mSong.getRow(ChType::ch1, mOrderCounter, mRowCounter));
         mTc2.setRow(mSong.getRow(ChType::ch2, mOrderCounter, mRowCounter));
@@ -154,20 +136,24 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
         
         if (mGlobal.halt) {
             halt(rc);
+            // halting is immediate, do not continue this row
             return true;
         }
 
-        // change the speed if the Fxx effect was used
-        if (mGlobal.speed) {
-            mTimer.setPeriod(mGlobal.speed);
-            mGlobal.speed = 0;
-        }
-
+        frame.row = mRowCounter;
+        frame.order = mOrderCounter;
+        
     }
 
     // update channel state and write to registers on locked channels
     update(rc);
 
+    // change the speed if the Fxx effect was used
+    if (mGlobal.speed) {
+        mTimer.setPeriod(mGlobal.speed);
+        mGlobal.speed = 0;
+    }
+    frame.speed = mTimer.period();
 
     if (mTimer.step()) {
         // timer overflow, advance row counter
@@ -182,6 +168,7 @@ bool MusicRuntime::step(RuntimeContext const& rc) {
 
     }
 
+    // runtime did not halt
     return false;
 
 }

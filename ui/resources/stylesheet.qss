@@ -56,3 +56,8 @@ Sidebar QTableView QHeaderView::section {
 GraphEdit {
     background-color: black;
 }
+
+QToolBar QLabel {
+    padding-left: 3px;
+    padding-right: 3px;
+}

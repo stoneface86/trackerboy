@@ -38,7 +38,6 @@ void Engine::setModule(Module const* mod) {
 
 void Engine::reset() {
     mMusicContext.reset();
-    mTime = 0;
 }
 
 void Engine::play(int orderNo, int patternRow) {
@@ -54,6 +53,7 @@ void Engine::play(int orderNo, int patternRow) {
         }
 
         mMusicContext.emplace(song, orderNo, patternRow, mPatternRepeat);
+        mTime = 0;
     }
 }
 
@@ -94,26 +94,19 @@ void Engine::repeatPattern(bool repeat) {
 void Engine::step(Frame &frame) {
 
     if (mMusicContext) {
-        frame.halted = mMusicContext->step(*mRc);
-        frame.startedNewRow = mMusicContext->hasNewRow();
-        frame.startedNewPattern = mMusicContext->hasNewPattern();
-        frame.order = mMusicContext->currentOrder();
-        frame.row = mMusicContext->currentRow();
-        frame.speed = mMusicContext->currentSpeed();
+        frame.time = mTime;
+        frame.halted = mMusicContext->step(*mRc, frame);
+
+        // increment timestamp for next frame
+        if (!frame.halted) {
+            ++mTime;
+        }
     } else {
-        // no runtime, do nothing
         frame.halted = true;
-        frame.order = 0;
-        frame.row = 0;
-        frame.speed = 0;
     }
-
-    frame.time = mTime;
-
     // TODO: sound effects 
 
-    // increment timestamp for next frame
-    ++mTime;
+    
 }
 
 void Engine::clearChannel(ChType ch) {
@@ -135,7 +128,6 @@ void Engine::clearChannel(ChType ch) {
     }
     
 }
-
 
 
 }

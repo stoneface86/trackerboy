@@ -74,7 +74,7 @@ bool Player::isPlaying() const {
 }
 
 int Player::progress() const {
-    return std::visit([this](auto&& ctx) {
+    return std::visit([](auto&& ctx) {
         using T = std::decay_t<decltype(ctx)>;
 
         if constexpr (std::is_same_v<T, LoopContext>) {
@@ -88,7 +88,7 @@ int Player::progress() const {
 }
 
 int Player::progressMax() const {
-    return std::visit([this](auto&& ctx) {
+    return std::visit([](auto&& ctx) {
         using T = std::decay_t<decltype(ctx)>;
 
         if constexpr (std::is_same_v<T, LoopContext>) {
@@ -103,7 +103,7 @@ int Player::progressMax() const {
 
 void Player::step() {
     if (mPlaying) {
-        Engine::Frame frame;
+        Frame frame;
         mEngine.step(frame);
 
         if (frame.halted) {

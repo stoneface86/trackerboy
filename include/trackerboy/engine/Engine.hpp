@@ -25,6 +25,7 @@
 #pragma once
 
 #include "trackerboy/data/Module.hpp"
+#include "trackerboy/engine/Frame.hpp"
 #include "trackerboy/engine/IApu.hpp"
 #include "trackerboy/engine/MusicRuntime.hpp"
 #include "trackerboy/engine/RuntimeContext.hpp"
@@ -38,28 +39,6 @@ namespace trackerboy {
 class Engine {
 
 public:
-
-    struct Frame {
-        constexpr Frame() :
-            halted(false),
-            startedNewRow(false),
-            startedNewPattern(false),
-            time(0),
-            speed(0),
-            order(0),
-            row(0)
-        {
-        }
-
-        bool halted;        // halt status
-        bool startedNewRow;
-        bool startedNewPattern;
-        uint32_t time;      // time index
-        Speed speed;        // the current engine speed
-        int order;      // current order index
-        int row;        // current row index
-    };
-
 
     Engine(IApu &apu, Module const* mod = nullptr);
 
@@ -111,15 +90,12 @@ private:
     void clearChannel(ChType ch);
 
     IApu &mApu;
-    //Module &mModule;
     Module const* mModule;
     std::optional<RuntimeContext> mRc;
     std::optional<MusicRuntime> mMusicContext;
 
     //TODO: sfx runtime
-
-    // frames elapsed since last reset
-    uint32_t mTime;
+    int mTime;
 
     bool mPatternRepeat;
 
