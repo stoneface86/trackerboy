@@ -22,7 +22,7 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOverrides.
 
 project (
     trackerboy 
-    VERSION "0.3.1"
+    VERSION "0.4.0"
     LANGUAGES C CXX
 )
 
@@ -46,6 +46,12 @@ set(PROJECT_AND_VERSION_NAME "${PROJECT_NAME}-v${PROJECT_VERSION_MAJOR}.${PROJEC
 option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
 option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
 option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
+
+if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+    set(BUILD_IS_32BIT TRUE)
+else ()
+    set(BUILD_IS_32BIT FALSE)
+endif ()
 
 include_directories(
     "include"

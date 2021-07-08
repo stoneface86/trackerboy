@@ -123,6 +123,11 @@ set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 #
 if (NOT DEFINED WINDEPLOYQT-NOTFOUND)
     set(DEPLOY_DIR_NAME "${PROJECT_AND_VERSION_NAME}-win")
+    if (${BUILD_IS_32BIT})
+        string(APPEND DEPLOY_DIR_NAME "-x86")
+    else ()
+        string(APPEND DEPLOY_DIR_NAME "-x64")
+    endif ()
     # directory for deployment
     set(DEPLOY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${DEPLOY_DIR_NAME}")
     # deploy target is a zip of the directory contents created by windeployqt

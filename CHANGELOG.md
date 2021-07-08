@@ -14,12 +14,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  * Export to .gbs
  * Visualizers - scopes and peak meters
 
+
+## [0.4.0] - 2021-07-07
+### Added
+ - MIDI support. You can now use a MIDI input device to input notes / preview instruments
+ - Order editor has increment/decrement and set operations again
+ - Oscilloscope visualizer
+ - Icons for cut/copy/paste
+### Changed
+ - 32-bit builds are now supported
+ - Using RtAudio instead of miniaudio for audio playback
+ - Some improvements to the audio diagnostics dialog
+ - Fxx effect changes the speed immediately now (previously it only took effect on the next row)
+ - Status bar is now updated with speed/tempo, time elapsed and position of
+   current song being played.
+ - Cursor row is locked when playing in follow-mode
+ - Selecting an order while playing in follow-mode jumps to it
+### Fixed
+ - Crash when creating new module on linux
+ - Copy/Paste bugs when copying effect columns
+
+
 ## [0.3.1] - 2021-06-23
 ### Changed
  - Play and stop shortcut only triggers when pattern editor has focus
 ### Fixed
  - Note previews not working right on CH4
  - Current track not updating in order editor
+
 
 ## [0.3.0] - 2021-06-22
 ### Added
