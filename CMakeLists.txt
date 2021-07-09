@@ -7,14 +7,10 @@
 
 cmake_minimum_required(VERSION 3.8)
 
-if (DEFINED NO_VCPKG)
-    message(WARNING "configuring without vcpkg - not supported - use at your own risk")
-else ()
-    # use our custom triplet settings
-    # - static libraries except for Qt
-    # - dynamic CRT
-    set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets") 
-endif ()
+# use our custom triplet settings
+# - static libraries except for Qt
+# - dynamic CRT
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets") 
 
 # removes default /W3 flag for MSVC 
 # https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
@@ -26,26 +22,15 @@ project (
     LANGUAGES C CXX
 )
 
-
-if (NOT VCPKG_MANIFEST_MODE AND NOT DEFINED NO_VCPKG)
-    # abort if the user isn't using vcpkg and did not define NO_VCPKG
-    message(FATAL_ERROR "vcpkg toolchain not provided! You must either provide the toolchain or define NO_VCPKG")
-endif ()
-
-unset(NO_VCPKG)
-
-
-include(FetchContent)
-
 # combines the project name and version, ie trackerboy-v1.1.2
 set(PROJECT_AND_VERSION_NAME "${PROJECT_NAME}-v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 # uncomment if we need some cmake modules (none currently)
-#set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 
-option(TRACKERBOY_ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
-option(TRACKERBOY_ENABLE_TESTS "Enable unit tests" ON)
-option(TRACKERBOY_ENABLE_UI "Enable building of the main trackerboy application" ON)
+option(ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
+option(ENABLE_TESTS "Enable unit tests" ON)
+option(ENABLE_UI "Enable building of the main trackerboy application" ON)
 
 if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     set(BUILD_IS_32BIT TRUE)
@@ -57,20 +42,30 @@ include_directories(
     "include"
 )
 
+set(PACKAGE_MODE "CONFIG")
+
 if (VCPKG_TOOLCHAIN)
     # hack
     # the toolchain should do this but it does not for some reason ?
     # might just be a problem with the rtmidi port
     include_directories("${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
+    unset(USE_FIND_SCRIPTS)
+else ()
+    # not using vcpkg, unset this setting
+    unset(VCPKG_OVERLAY_TRIPLETS)
+
+    if (DEFINED USE_FIND_SCRIPTS)
+        set(PACKAGE_MODE "MODULE")
+    endif ()
 endif ()
 
-if (TRACKERBOY_ENABLE_DEMO OR TRACKERBOY_ENABLE_UI)
+if (ENABLE_DEMO OR ENABLE_UI)
     set(SOUND_REQUIRED TRUE)
 else ()
     set(SOUND_REQUIRED FALSE)
 endif ()
 
-set(RTMIDI_REQUIRED ${TRACKERBOY_ENABLE_UI})
+set(RTMIDI_REQUIRED ${ENABLE_UI})
 
 if (NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE MATCHES "Debug")
     set(DEBUG_BUILD TRUE)
@@ -90,13 +85,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(external/gbapu)
 
 if (RTMIDI_REQUIRED)
-    find_package(RtMidi CONFIG REQUIRED)
+    find_package(RtMidi ${PACKAGE_MODE} REQUIRED)
 endif ()
 
 # sound related dependencies for demo and ui projects
 if (SOUND_REQUIRED)
 
-    find_package(RtAudio CONFIG REQUIRED)
+    find_package(RtAudio ${PACKAGE_MODE} REQUIRED)
 
     # Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
     # we'll have to DIY it then.
@@ -136,7 +131,7 @@ if (SOUND_REQUIRED)
     #endif ()
 endif ()
 
-if (TRACKERBOY_ENABLE_TESTS)
+if (ENABLE_TESTS)
     enable_testing()
     # catch object library (compiles the header once, used by test programs)
     set(CATCH "catch")
@@ -186,13 +181,13 @@ add_subdirectory(libtrackerboy)
 #
 # Main program (optional)
 #
-if (TRACKERBOY_ENABLE_UI)
+if (ENABLE_UI)
     add_subdirectory(ui)
 endif()
 
 #
 # Demo programs (optional)
 #
-if (TRACKERBOY_ENABLE_DEMO)
+if (ENABLE_DEMO)
     add_subdirectory(demo)
 endif ()

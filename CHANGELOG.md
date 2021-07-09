@@ -9,10 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  * Option to export each channel as separate WAV files
  * Color configuration for the pattern editor and other editors
  * Keyboard binding configuration for the pattern editor
- * MIDI Support
  * Pattern compiler - export module data to assembly
  * Export to .gbs
- * Visualizers - scopes and peak meters
 
 
 ## [0.4.0] - 2021-07-07

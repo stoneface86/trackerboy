@@ -13,7 +13,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -DTRACKERBOY_ENABLE_UI=OFF -DTRACKERBOY_ENABLE_TESTS=ON -DNO_VCPKG=ON ..
+        cmake -DENABLE_UI=OFF -DENABLE_TESTS=ON ..
     - name: build
       run: cmake --build build --config Debug
     - name: test

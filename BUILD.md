@@ -1,9 +1,9 @@
 # Building
 
-UPDATE: Only windows builds are supported at this point in time. I simply
-do not have the resources to build and test for all platforms. If you do
-get it working on linux/macOS or have any suggestions feel free to
-submit a pull request. Contributions are always welcome.
+UPDATE: Only windows and linux builds are supported at this point in time.
+I simply do not have the resources to build and test for all platforms.
+If you have any issues building on macOS, feel free to submit an issue or
+pull request. Contributions are always welcome.
 
 Use the main CMakeLists.txt to build the library. The ui and demo programs are
 optional, and can be enabled/disabled by setting their respective options.
@@ -20,8 +20,8 @@ Requirements:
 Miniaudio is included in the repo and gbapu is available via submodule
 so there is no need to install these libraries on your system. All of the
 other requirements can be acquired from vcpkg, or you can provide your own if
-that is preferred. Building without vcpkg is not supported, so you are on your
-own if you choose to not use it.
+that is preferred. If you choose to not use vcpkg, then cmake will attempt
+to find all required dependencies installed on your system.
 
 # Recommended build guide
 
@@ -30,8 +30,6 @@ own if you choose to not use it.
 ```sh
 git clone --recursive https://github.com/stoneface86/trackerboy
 ```
-Note: you can omit the `--recursive` option if you are planning on not using
-vcpkg (not recommended).
 
 ## 2. Install Qt
 
@@ -71,18 +69,32 @@ cmake -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" ../
 
 You should then be able to build the project.
 
-If you do not want to use vcpkg, then instead of providing the toolchain file
-define `NO_VCPKG` when running cmake.
+### Notes
+
+If using vcpkg, the rtmidi port builds without support for ALSA (port file defines
+RTMIDI_API_ALSA=OFF). So if you are using vcpkg on linux, the ALSA MIDI api will not
+be usable. Not sure why they disabled it when the rtaudio port builds with ALSA support.
+You will need to edit the port file if you want ALSA support, by commenting out the
+line with `OPTIONS -DRTMIDI_API_ALSA=OFF`
+
+# Alternative building
+
+When not using vcpkg, you must provide the cmake packages for RtAudio and RtMidi yourself.
+To do so you must acquire the source, build and install using cmake. Then either define
+CMAKE_PREFIX_PATH or <package_name>_DIR with the location of the installed packages.
+
+Or, you can define `USE_FIND_SCRIPTS` and cmake will search your system for the required
+dependencies. The scripts used are located in the cmake folder.
 
 ## Options
 
 Here is a table of options that can be used when building.
 
-| Option                  | Type | Default | Description                                  |
-|-------------------------|------|---------|----------------------------------------------|
-| TRACKERBOY_ENABLE_DEMO  | BOOL | OFF     | If enabled, the demo programs will be built. |
-| TRACKERBOY_ENABLE_TESTS | BOOL | ON      | Enables unit testing                         |
-| TRACKERBOY_ENABLE_UI    | BOOL | ON      | Enables building of the trackerboy ui        |
+| Option       | Type | Default | Description                                  |
+|--------------|------|---------|----------------------------------------------|
+| ENABLE_DEMO  | BOOL | OFF     | If enabled, the demo programs will be built. |
+| ENABLE_TESTS | BOOL | ON      | Enables unit testing                         |
+| ENABLE_UI    | BOOL | ON      | Enables building of the trackerboy ui        |
 
 ## Compilers
 

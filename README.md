@@ -21,13 +21,12 @@ My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
 
 ## Status
 
-v0.3.1 is now available.
+v0.4.0 is now available.
 
 ![Demo](/.github/demo.gif)
 
  Post-release features:
  * Sound effects
- * MIDI support
  * Export to .asm (pattern compilation)
    * Compile to [tbengine](https://github.com/stoneface86/tbengine) format
    * Compile to pokemon engine (experimental)
