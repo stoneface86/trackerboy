@@ -1,6 +1,8 @@
 
 #include "core/audio/AudioProber.hpp"
 
+#include <array>
+
 #include <QMutexLocker>
 #include <QtDebug>
 

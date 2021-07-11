@@ -70,15 +70,16 @@ You should then be able to build the project.
 
 ### Notes
 
-If using vcpkg, the rtmidi port builds without support for ALSA (port file defines
-RTMIDI_API_ALSA=OFF). So if you are using vcpkg on linux, the ALSA MIDI api will not
-be usable. Not sure why they disabled it when the rtaudio port builds with ALSA support.
-You will need to edit the port file if you want ALSA support, by commenting out the
-line with `OPTIONS -DRTMIDI_API_ALSA=OFF`
+You may need to install the ALSA development libraries when building on linux
+
+For apt based distros:
+```sh
+sudo apt install libasound2-dev
+```
 
 # Alternative building
 
-When not using vcpkg, you must provide the cmake packages for RtAudio and RtMidi yourself.
+When not using vcpkg, you must provide the cmake packages for RtMidi yourself.
 To do so you must acquire the source, build and install using cmake. Then either define
 CMAKE_PREFIX_PATH or <package_name>_DIR with the location of the installed packages.
 

@@ -26,6 +26,13 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
+    
+    - name: Install dependencies (Linux)
+      # building rtmidi with ALSA support requires libsound2-dev
+      if: ${{ runner.os == 'Linux'}}
+      run: |
+        sudo apt-get update
+        sudo apt-get install libasound2-dev
 
     - uses: lukka/get-cmake@latest
     

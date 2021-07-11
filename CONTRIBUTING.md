@@ -10,14 +10,14 @@ If you have found a bug or problem, please create an
 [issue](https://github.com/stoneface86/trackerboy/issues) for it. When
 posting the issue, be sure to include as much information about the bug
 as possible such as screenshots, log dumps, module files, etc. At the
-very least, your issue show describe how to reproduce the bug.
+very least, your issue should describe how to reproduce the bug.
 
 You can also submit a pull request that fixes the bug, just make sure you
 follow the same guidelines for pull requests.
 
 ## Pull Requests
 
-If you interested in Trackerboy's development, pull requests are a good way to
+If you are interested in Trackerboy's development, pull requests are a good way to
 start. I would prefer it if you contact me before you start any work, as I
 have final say in what gets merged. If I don't like it, it doesn't get merged.
 You can contact me on [Twitter](https://twitter.com/stoneface86) or

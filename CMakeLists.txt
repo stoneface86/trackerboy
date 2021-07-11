@@ -10,7 +10,8 @@ cmake_minimum_required(VERSION 3.8)
 # use our custom triplet settings
 # - static libraries except for Qt
 # - dynamic CRT
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets") 
+set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/triplets")
+set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/ports")
 
 # removes default /W3 flag for MSVC 
 # https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
@@ -53,6 +54,7 @@ if (VCPKG_TOOLCHAIN)
 else ()
     # not using vcpkg, unset this setting
     unset(VCPKG_OVERLAY_TRIPLETS)
+    unset(VCPKG_OVERLAY_PORTS)
 
     if (DEFINED USE_FIND_SCRIPTS)
         set(PACKAGE_MODE "MODULE")
