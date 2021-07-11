@@ -13,7 +13,6 @@ Requirements:
  * CMake 3.8 or higher
  * [Miniaudio](https://github.com/mackron/miniaudio)
  * [gbapu](https://github.com/stoneface86/gbapu)
- * [RtAudio](https://github.com/thestk/rtaudio)
  * [RtMidi](https://github.com/thestk/rtmidi)
  * Qt v5.12.10 or higher
 

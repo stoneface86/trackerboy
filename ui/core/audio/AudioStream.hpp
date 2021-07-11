@@ -6,7 +6,7 @@
 #include "core/Guarded.hpp"
 
 #include "miniaudio.h"
-#include "rtaudio/RtAudio.h"
+
 
 #include <QMutex>
 #include <QObject>
@@ -15,10 +15,10 @@
 #include <cstdint>
 
 //
-// AudioStream class. Manages an RtAudio device and a playback buffer for
+// AudioStream class. Manages a miniaudio device and a playback buffer for
 // asynchronous sound output.
 // 
-// All functions in this class are thread-safe
+// All functions (except setConfig) in this class are thread-safe
 //
 class AudioStream {
 
@@ -41,12 +41,6 @@ public:
     // is disabled.
     //
     bool isRunning();
-
-    //
-    // Gets the last RtAudio error that occurred. RtAudioError::UNSPECIFIED is
-    // returned if no error has occured.
-    //
-    RtAudioError::Type lastError();
     
     //
     // Applies the configuration and opens a stream for the configured device.
@@ -55,10 +49,12 @@ public:
     // worked. If the stream was running when this function is called, it is
     // stopped and then restarted with the new configuration.
     //
+    // NOTE: this function should only be called from the GUI thread
+    //
     void setConfig(Config::Sound const& config);
 
     //
-    // Gets the current count of underruns reported by RtAudio.
+    // Currently unused
     //
     int underruns() const;
 
@@ -73,9 +69,7 @@ public:
     size_t bufferSize();
 
     //
-    // Gets the time in seconds the stream has been running. If the stream is
-    // disabled, 0.0 is returned. If the stream is not running, then this function
-    // returns the time elapsed of the previous stream or 0.0 if there was no stream.
+    // Unused, always returns 0.0
     //
     double elapsed();
 
@@ -112,11 +106,6 @@ private:
     bool _isRunning();
 
     //
-    // Closes the stream if it is open, does nothing otherwise.
-    //
-    void _close();
-
-    //
     // Disables the stream. If a stream is open it is closed, and then the
     // pointer to RtAudio handle is set to null.
     //
@@ -127,32 +116,29 @@ private:
     // message via qCritical. Stores the error's type in mLastError and then disables
     // the stream.
     //
-    void handleError(const char *msg, RtAudioError const& err);
+    //void handleError(const char *msg, SoundIoError err);
 
-    //
-    // Starts the stream for the given RtAudio handle
-    //
-    void _start(Guarded<RtAudio> *api);
+    void _handleError(const char *msg, ma_result err);
+
+    static void deviceDataCallback(ma_device *device, void *out, const void *in, ma_uint32 frames);
+    void handleData(int16_t *out, size_t frames);
+
+    static void deviceStopCallback(ma_device *device);
+    void handleStop();
+
     
-    static int audioCallback(
-        void *output,
-        void *input,
-        unsigned bufferFrames,
-        double streamTime,
-        RtAudioStreamStatus status,
-        void *userData
-    );
-
-    int handleAudio(int16_t *output, size_t bufferFrames, double streamTime, RtAudioStreamStatus status);
 
     QMutex mMutex;
 
-    Guarded<RtAudio> *mApi;
-    RtAudioError::Type mLastError;
+    bool mEnabled;
+    std::unique_ptr<ma_device> mDevice; // heap alloc because sizeof(ma_device) is 22448!
+
     AudioRingbuffer mBuffer;
 
     // current stream settings (modified by setConfig)
     unsigned mSamplerate;
+
+    bool mRunning;
 
     size_t mPlaybackDelay;
 

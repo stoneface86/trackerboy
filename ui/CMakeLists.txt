@@ -98,7 +98,6 @@ add_library(ui STATIC ${UI_SRC})
 target_link_libraries(ui PUBLIC 
     trackerboy
     miniaudio
-    RtAudio::rtaudio
     RtMidi::rtmidi
     Qt5::Widgets
     trackerboyWarnings

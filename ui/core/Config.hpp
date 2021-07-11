@@ -82,7 +82,6 @@ public:
 
         int backendIndex;           // backend index in AudioProber list (-1 for no backend)
         int deviceIndex;            // device index from AudioProber device list
-        QString deviceName;         // last configured device name (used for identification)
         int samplerateIndex;        // index of the current samplerate
         int latency;                // latency, or internal buffer size, in milliseconds
         int period;                 // period, in milliseconds

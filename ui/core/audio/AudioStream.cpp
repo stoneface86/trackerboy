@@ -8,25 +8,18 @@
 
 #include <algorithm>
 
+
+
 static const char* LOG_PREFIX = "[AudioStream]";
-
-static void errorCallback(RtAudioError::Type type, std::string const& message) {
-    Q_UNUSED(type)
-
-    // only thing we can do here is just log the message, we don't have a void
-    // pointer so we can't disable the AudioStream instance that is responsible
-    // for this error. (We could make AudioStream a singleton but eh)
-    qCritical().noquote() << LOG_PREFIX << QString::fromStdString(message);
-}
-
 
 
 AudioStream::AudioStream() :
     mMutex(),
-    mApi(nullptr),
-    mLastError(RtAudioError::UNSPECIFIED),
+    mEnabled(false),
+    mDevice(new ma_device),
     mBuffer(),
     mSamplerate(0),
+    mRunning(false),
     mPlaybackDelay(0),
     mUnderruns(0)
 {
@@ -34,7 +27,7 @@ AudioStream::AudioStream() :
 
 AudioStream::~AudioStream() {
     QMutexLocker locker(&mMutex);
-    _close();
+    _disable();
 }
 
 
@@ -44,7 +37,7 @@ bool AudioStream::isEnabled() {
 }
 
 bool AudioStream::_isEnabled() {
-    return mApi != nullptr;
+    return mEnabled;
 }
 
 bool AudioStream::isRunning() {
@@ -54,16 +47,10 @@ bool AudioStream::isRunning() {
 
 bool AudioStream::_isRunning() {
     if (_isEnabled()) {
-        auto handle = mApi->access();
-        return handle->isStreamRunning();
+        return mRunning;
     } else {
         return false;
     }
-}
-
-RtAudioError::Type AudioStream::lastError() {
-    QMutexLocker locker(&mMutex);
-    return mLastError;
 }
 
 int AudioStream::underruns() const {
@@ -81,12 +68,7 @@ size_t AudioStream::bufferSize() {
 }
 
 double AudioStream::elapsed() {
-    QMutexLocker locker(&mMutex);
-    if (_isEnabled()) {
-        return mApi->access()->getStreamTime();
-    } else {
-        return 0.0;
-    }
+    return 0.0;
 }
 
 AudioRingbuffer::Writer AudioStream::writer() {
@@ -96,49 +78,66 @@ AudioRingbuffer::Writer AudioStream::writer() {
 
 void AudioStream::setConfig(Config::Sound const& config) {
 
-    // get the current running state
-    // if we are running then we will have to start the newly opened stream
-    bool running = isRunning();
-
     auto const samplerate = SAMPLERATE_TABLE[config.samplerateIndex];
     
     auto &prober = AudioProber::instance();
-    // get the configured api
-    auto *api = prober.backend(config.backendIndex);
-    if (api == nullptr) {
-        // no API found! (this should rarely happen, only possible if RtAudio has no available APIs to use)
-        qCritical() << LOG_PREFIX << "setConfig: the configured API is not available";
-        QMutexLocker locker(&mMutex);
-        _disable();
-        return;
-    }
-
-    // now we must find the configured device, and attempt to open a stream for it
-    // probe devices again, (in case any devices were connected/disconnected)
-    prober.probe(config.backendIndex);
-    auto deviceIndex = prober.findDevice(config.backendIndex, config.deviceName);
-    if (deviceIndex == -1) {
-        // device not found!
-        qCritical() << LOG_PREFIX << "setConfig: the configured device was not found";
-        QMutexLocker locker(&mMutex);
-        _disable();
-        return;
-    }
-    auto rtaudioDevice = prober.mapDeviceIndex(config.backendIndex, deviceIndex);
-
-    // stop and close any current streams
+    
+    auto deviceConfig = ma_device_config_init(ma_device_type_playback);
+    // always 16-bit stereo format
+    deviceConfig.playback.format = ma_format_s16;
+    deviceConfig.playback.channels = 2;
+    deviceConfig.dataCallback = deviceDataCallback;
+    deviceConfig.stopCallback = deviceStopCallback;
+    deviceConfig.pUserData = this;
+    deviceConfig.sampleRate = samplerate;
+    deviceConfig.playback.pDeviceID = prober.deviceId(config.backendIndex, config.deviceIndex);
+    
     mMutex.lock();
-    if (mApi) {
-        auto handle = mApi->access();
-        if (handle->isStreamRunning()) {
-            handle->stopStream();
-            handle->closeStream();
-        } else if (handle->isStreamOpen()) {
-            handle->closeStream();
-        }
+
+    // get the current running state
+    // if we are running then we will have to start the newly opened stream
+    bool running = _isRunning();
+
+    // must be disabled when applying config
+    _disable();
+
+    // update buffer size
+    mBuffer.init((size_t)(config.latency * samplerate / 1000));
+
+    // attempt to initialize device
+    auto result = ma_device_init(prober.context(config.backendIndex), &deviceConfig, mDevice.get());
+    if (result != MA_SUCCESS) {
+        _handleError("could not initialize device:", result);
+        return;
     }
 
-    mApi = api;
+    mEnabled = true;
+    mMutex.unlock();
+
+    if (running) {
+        start();
+    }
+
+    
+    #if 0
+
+    
+    // get the configured device
+    auto dev = config.deviceConfig.device();
+    if (dev == nullptr) {
+        // device is not available
+        qCritical() << LOG_PREFIX << "setConfig: the configured device is not available";
+        disable();
+        return;
+    }
+
+    mMutex.lock();
+
+    // get the current running state
+    // if we are running then we will have to start the newly opened stream
+    bool running = _isRunning();
+
+    _disable();
 
     // apply the configuration
 
@@ -147,91 +146,66 @@ void AudioStream::setConfig(Config::Sound const& config) {
     mBuffer.init((size_t)(config.latency * samplerate / 1000));
     mMutex.unlock();
 
-    // for the rtaudio buffer size, we want this to be as small as possible, since
-    // we are using our own buffer. This means the callback will be called much more often,
-    // but since the buffer is lock-free, this shouldn't affect performance too much.
-    // Latency is bound by both the size of the buffer and the latency of the device (whichever is higher)
+    // open a stream
+    auto stream = soundio_outstream_create(dev);
+    stream->sample_rate = samplerate;
+    stream->name = "trackerboy";
+    stream->format = SoundIoFormatS16NE;
+    stream->write_callback = streamWriteCallback;
+    stream->userdata = this;
 
-    // the size of the rtaudio buffer should be relative to the period of the renderer
-    // if the renderer's period is 5ms, then there will be audio available in the buffer
-    // every 5 ms +/- 1 ms.
+    auto err = soundio_outstream_open(stream);
+    if (err != SoundIoErrorNone) {
+        qCritical().noquote()
+            << LOG_PREFIX 
+            << "setConfig: failed to open stream for device: " 
+            << soundio_strerror(err);
 
-    RtAudio::StreamOptions streamOpts;
-    streamOpts.numberOfBuffers = 2;
-    streamOpts.streamName = "Trackerboy";
-
-    RtAudio::StreamParameters streamParameters;
-    streamParameters.deviceId = rtaudioDevice;
-    streamParameters.nChannels = 2;
-    unsigned bufferFrames = config.period * samplerate / 1000;
-
-
-    try {
-        auto handle = api->access();
-        handle->openStream(
-            &streamParameters,
-            nullptr,
-            RTAUDIO_SINT16,
-            samplerate,
-            &bufferFrames,
-            audioCallback,
-            this,
-            &streamOpts,
-            errorCallback
-        );
-    } catch (RtAudioError const& err) {
-        // the device does not support our settings or some other error occured
-        handleError("setConfig: could not open stream:", err);
+        soundio_device_unref(dev);
+        // still disabled, just leave
         return;
     }
 
-    qDebug() << LOG_PREFIX << "rtaudio buffer (in samples):" << bufferFrames;
+    qDebug() << LOG_PREFIX << "software latency:" << stream->software_latency;
+
+    mMutex.lock();
+    mDevice = dev;
+    mOutStream = stream;
+    mMutex.unlock();
 
     if (running) {
-        try {
-            QMutexLocker locker(&mMutex);
-            _start(api);
-        } catch (RtAudioError const& err) {
-            handleError("setConfig: could not restart stream:", err);
-            return;
-        }
+        start();
     }
+
+
+    #endif
 
 }
 
 bool AudioStream::start() {
     QMutexLocker locker(&mMutex);
     if (_isEnabled() && !_isRunning()) {
-        try {
-            _start(mApi);
-        } catch (RtAudioError const& err) {
-            locker.unlock();
-            handleError("error occured when starting stream:", err);
+        mBuffer.reset();
+        mPlaybackDelay = mBuffer.size();
+        
+        auto result = ma_device_start(mDevice.get());
+        if (result != MA_SUCCESS) {
+            _handleError("failed to start device:", result);
             return false;
         }
+        mRunning = true;
     }
 
     return true;
 }
 
-void AudioStream::_start(Guarded<RtAudio> *api) {
-    mBuffer.reset();
-    mPlaybackDelay = mBuffer.size();
-
-    auto handle = api->access();
-    handle->setStreamTime(0.0);
-    handle->startStream();
-}
-
 bool AudioStream::stop() {
     QMutexLocker locker(&mMutex);
     if (_isRunning()) {
-        try {
-            auto handle = mApi->access();
-            handle->stopStream();
-        } catch (RtAudioError const& err) {
-            locker.unlock();
-            handleError("error occured when stopping stream:", err);
+        mRunning = false;
+        auto result = ma_device_stop(mDevice.get());
+        if (result != MA_SUCCESS) {
+            _handleError("failed to stop device:", result);
             return false;
         }
     }
@@ -245,74 +219,52 @@ void AudioStream::disable() {
     _disable();
 }
 
-void AudioStream::_close() {
-    
-    if (_isEnabled()) {
-        auto handle = mApi->access();
-        if (handle->isStreamOpen()) {
-            handle->closeStream();
-        }
-    }
-}
-
 void AudioStream::_disable() {
-    _close();
-    mApi = nullptr;
+    mRunning = false;
+
+    if (mEnabled) {
+        mEnabled = false;
+        ma_device_uninit(mDevice.get());
+    }
+
 }
 
+void AudioStream::deviceDataCallback(ma_device *device, void *out, const void *in, ma_uint32 frames) {
+    Q_UNUSED(in)
 
-int AudioStream::audioCallback(
-    void *output,
-    void *input,
-    unsigned bufferFrames,
-    double streamTime,
-    RtAudioStreamStatus status,
-    void *userData
-) {
-    Q_UNUSED(input) // only outputing sound
-    return static_cast<AudioStream*>(userData)->handleAudio(
-        static_cast<int16_t*>(output), 
-        bufferFrames, 
-        streamTime, 
-        status
+    static_cast<AudioStream*>(device->pUserData)->handleData(
+        static_cast<int16_t*>(out),
+        (size_t)frames
     );
 }
 
-int AudioStream::handleAudio(int16_t *output, size_t bufferFrames, double streamTime, RtAudioStreamStatus status) {
-    Q_UNUSED(streamTime) // not used for timing or anything, we're just copying out from a buffer
-
-    if (status == RTAUDIO_OUTPUT_UNDERFLOW) {
-        ++mUnderruns;
-    }
-
+void AudioStream::handleData(int16_t *out, size_t frames) {
     if (mPlaybackDelay) {
-        auto samples = std::min(mPlaybackDelay, bufferFrames);
-        bufferFrames -= samples;
-        std::fill_n(output, samples * 2, (int16_t)0);
-        output += samples * 2;
+        auto samples = std::min(mPlaybackDelay, frames);
+        frames -= samples;
+        std::fill_n(out, samples * 2, (int16_t)0);
+        out += samples * 2;
         mPlaybackDelay -= samples;
     }
 
     auto reader = mBuffer.reader();
+    reader.fullRead(out, frames);
+    
+}
 
-    auto nread = reader.fullRead(output, bufferFrames);
-    if (nread != bufferFrames) {
-        std::fill_n(output + (nread * 2), bufferFrames - nread, (int16_t)0);
-    }
+void AudioStream::deviceStopCallback(ma_device *device) {
+    static_cast<AudioStream*>(device->pUserData)->handleStop();
+}
 
+void AudioStream::handleStop() {
 
-    return 0;
 }
 
 
-void AudioStream::handleError(const char *msg, RtAudioError const& err) {
+void AudioStream::_handleError(const char *msg, ma_result err) {
     qCritical().noquote()
         << LOG_PREFIX
         << msg
-        << QString::fromStdString(err.getMessage());
-
-    QMutexLocker locker(&mMutex);
-    
+        << ma_result_description(err);
     _disable();
-    mLastError = err.getType();
 }

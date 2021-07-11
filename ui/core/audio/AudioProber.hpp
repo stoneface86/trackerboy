@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include "core/Guarded.hpp"
-
-#include "rtaudio/RtAudio.h"
+#include "miniaudio.h"
 
 #include <QMutex>
 #include <QStringList>
@@ -12,20 +10,18 @@
 #include <vector>
 
 //
-// Singleton class for managing all available RtAudio backends. A handle to
-// each available API is stored in this instance, but are only initialized
-// when needed (lazy loading).
-// 
-// All functions in this class are thread safe.
+// Singleton class for managing all available miniaudio backends. A context to
+// each available backend is stored in this instance, but are only initialized
+// when needed (lazy loading). Note that device indices used by this class are
+// offset by 1, as the index 0 is used to specify the default device.
+//
+// Not thread-safe. Should only be called from the GUI thread
 //
 class AudioProber {
 
 public:
     AudioProber(AudioProber const&) = delete;
     void operator=(AudioProber const&) = delete;
-
-
-    int getDefaultDevice(int backend) const;
 
     //
     // Gets the one and only instance
@@ -36,7 +32,7 @@ public:
     // Gets the backend index of the RtAudio api. -1 is returned if the
     // index was not found.
     //
-    int indexOfApi(RtAudio::Api api) const;
+    int indexOfBackend(ma_backend backend) const;
 
     //
     // Gets the index of the device with the given name in the given backendIndex
@@ -44,15 +40,11 @@ public:
     // probe the backend before searching, so be sure to probe before calling this
     // function.
     //
-    int indexOfDevice(int backendIndex, QString const& name) const;
+    int indexOfDevice(int backendIndex, ma_device_id const& id) const;
 
-    //
-    // Gets an RtAudio handle for the given backend or nullptr if the index
-    // is out of bounds.
-    //
-    Guarded<RtAudio>* backend(int backendIndex);
+    ma_context* context(int backendIndex);
 
-    RtAudio::Api backendApi(int backendIndex) const;
+    ma_device_id* deviceId(int backendIndex, int deviceIndex);
 
     //
     // Gets a list of names for all available apis.
@@ -66,23 +58,6 @@ public:
     QStringList deviceNames(int backendIndex) const;
 
     //
-    // Utility for getting the device name from a backend and device index.
-    // An empty string is returned if the device does not exist.
-    //
-    QString deviceName(int backendIndex, int deviceIndex) const;
-
-    //
-    // Finds the device index from the device name
-    //
-    int findDevice(int backendIndex, QString const& name) const;
-
-    //
-    // Maps our backend and device index to an RtAudio device number. 0 is returned
-    // if the device wasn't found or the backend is invalid.
-    //
-    unsigned mapDeviceIndex(int backendIndex, int deviceIndex) const;
-
-    //
     // Probes all available devices for the given backend
     //
     void probe(int backendIndex);
@@ -94,35 +69,51 @@ private:
     bool indexIsInvalid(int backendIndex) const;
 
 
-    struct Backend {
-        // a pointer is used for lazy loading
-        // this way we only initialize the backends when they are used
-        std::unique_ptr<Guarded<RtAudio>> rtaudio;
-        RtAudio::Api const api;
-        // maps our device index to an RtAudio device index
-        std::vector<unsigned> deviceIds;
+    class Context {
+        
+    public:
 
-        // list of device names
-        QStringList deviceNames;
+        Context() = delete;
+        explicit Context(ma_backend backend);
+        Context(const Context&) = delete;
+        Context(Context&&) = default;
+        ~Context();
 
-        int defaultDevice;
-
-        Backend(RtAudio::Api api);
+        ma_backend backend() const;
 
         //
-        // Gets the RtAudio handle for this backend
+        // Gets the miniaudio context for this backend
         //
-        Guarded<RtAudio>* get();
+        ma_context* get();
+
+        ma_device_id* id(int deviceIndex);
+
+        int findDevice(ma_device_id const& id) const;
+
+        QStringList deviceNames() const;
 
         //
         // Probe all devices in the rtaudio handle, updating ids and names
         //
         void probe();
 
+    private:
+
+        // a pointer is used for lazy loading
+        // this way we only initialize the backends when they are used
+        
+
+        std::unique_ptr<ma_context> mContext;
+        ma_backend const mBackend;
+
+        ma_device_info *mDeviceInfos;
+        ma_uint32 mDeviceCount;
+
     };
 
-    std::vector<Backend> mBackends;
-    mutable QMutex mMutex;
+    std::vector<Context> mContexts;
+
+    //mutable QMutex mMutex;
 
 
 

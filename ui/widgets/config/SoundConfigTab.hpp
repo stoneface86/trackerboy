@@ -24,6 +24,7 @@ class SoundConfigTab : public ConfigTab {
 
 public:
     SoundConfigTab(Config &config, QWidget *parent = nullptr);
+    ~SoundConfigTab() = default;
 
     void apply(Config::Sound &soundConfig);
 
@@ -41,6 +42,8 @@ private:
     void setupTimeSpinbox(QSpinBox &spin);
 
     void onDeviceComboSelected(int index);
+
+    void populateDevices();
 
     void apiChanged(int index);
 
@@ -80,7 +83,5 @@ private:
                     SoundQualityPreview mPreview34; // 1, 1
 
     QButtonGroup mQualityButtons;
-
-    bool mRescanning;
 
 };

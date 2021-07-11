@@ -6,7 +6,10 @@
 #include "gbapu.hpp"
 
 #include <array>
+#include <optional>
 #include <cmath>
+
+#include <QSignalBlocker>
 
 
 SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
@@ -38,8 +41,7 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     mChannels34Label(tr("CH3 + CH4")),
     mPreview12(),
     mPreview34(),
-    mQualityButtons(),
-    mRescanning(false)
+    mQualityButtons()
 {
     // layout
     mRescanLayout.addStretch();
@@ -83,10 +85,10 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     setLayout(&mLayout);
 
     // settings
+    mDeviceCombo.setMaximumWidth(300); // device names can get pretty long sometimes
 
     auto &prober = AudioProber::instance();
     mApiCombo.addItems(prober.backendNames());
-    mDeviceCombo.addItems(prober.deviceNames(config.sound().backendIndex));
     // populate samplerate combo
     for (int i = 0; i != N_SAMPLERATES; ++i) {
         mSamplerateCombo.addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
@@ -129,7 +131,6 @@ void SoundConfigTab::setupTimeSpinbox(QSpinBox &spin) {
 void SoundConfigTab::apply(Config::Sound &soundConfig) {
     soundConfig.backendIndex = mApiCombo.currentIndex();
     soundConfig.deviceIndex = mDeviceCombo.currentIndex();
-    soundConfig.deviceName = mDeviceCombo.currentText();
     soundConfig.samplerateIndex = mSamplerateCombo.currentIndex();
 
     soundConfig.latency = mLatencySpin.value();
@@ -141,13 +142,18 @@ void SoundConfigTab::apply(Config::Sound &soundConfig) {
 
 void SoundConfigTab::resetControls(Config::Sound const& soundConfig) {
 
-    mApiCombo.setCurrentIndex(soundConfig.backendIndex);
-    
-    // lookup the device index again, if it doesn't exist deselect it
-    auto &prober = AudioProber::instance();
-    int index = prober.deviceNames(soundConfig.backendIndex).indexOf(soundConfig.deviceName);
-    
-    mDeviceCombo.setCurrentIndex(index);
+    {
+        QSignalBlocker blocker(&mApiCombo);
+        mApiCombo.setCurrentIndex(soundConfig.backendIndex);
+    }
+
+
+    {
+        QSignalBlocker blocker(&mDeviceCombo);
+        populateDevices();
+        mDeviceCombo.setCurrentIndex(soundConfig.deviceIndex);
+    }
+
     mSamplerateCombo.setCurrentIndex(soundConfig.samplerateIndex);
 
     mLatencySpin.setValue(soundConfig.latency);
@@ -172,50 +178,55 @@ void SoundConfigTab::apiChanged(int index) {
     setDirty();
 }
 
+void SoundConfigTab::populateDevices() {
+    mDeviceCombo.clear();
+    mDeviceCombo.addItem(tr("Default device"));
+    mDeviceCombo.addItems(AudioProber::instance().deviceNames(mApiCombo.currentIndex()));
+}
+
 void SoundConfigTab::rescan(bool rescanDueToApiChange) {
     
-    auto &prober = AudioProber::instance();
-
     auto const backendIndex = mApiCombo.currentIndex();
-    prober.probe(backendIndex);
-    // get the new list of device names
-    auto const deviceNames = prober.deviceNames(backendIndex);
 
-
-    int deviceIndex;
-    if (rescanDueToApiChange) {
-        auto &soundConfig = mConfig.sound();
-        // always select the default device
-        if (backendIndex == soundConfig.backendIndex) {
-            // went back to configured backend, try to find the configured device
-            deviceIndex = deviceNames.indexOf(soundConfig.deviceName);
-        } else {
-            // new backend, pick the default
-            deviceIndex = prober.getDefaultDevice(backendIndex);
-        }
-    } else {
-        // try to find the new index of the previously set device
-        deviceIndex = deviceNames.indexOf(mDeviceCombo.currentText());
-    }
+    auto &prober = AudioProber::instance();
     
-    if (deviceIndex == -1) {
-        // not found, device possibly got disconnected, use the default
-        deviceIndex = prober.getDefaultDevice(backendIndex);
-        setDirty();
+    mDeviceCombo.blockSignals(true);
+
+    if (rescanDueToApiChange) {
+        prober.probe(backendIndex);
+        populateDevices();
+        mDeviceCombo.setCurrentIndex(0); // default
+    } else {
+
+        // get a copy of the current id
+        // the current index becomes invalid when devices are added/removed
+        // so we'll search after probing for the current device using it's id
+        std::optional<ma_device_id> idCopy;
+        auto id = prober.deviceId(backendIndex, mDeviceCombo.currentIndex());
+        if (id) {
+            idCopy = *id;
+        }
+
+        // rescan
+        prober.probe(backendIndex);
+        populateDevices();
+
+        int index;
+        if (idCopy) {
+            index = prober.indexOfDevice(backendIndex, *idCopy);
+        } else {
+            index = 0;
+        }
+        mDeviceCombo.setCurrentIndex(index);
+
     }
+    mDeviceCombo.blockSignals(false);
 
-    mRescanning = true;
-    mDeviceCombo.clear();
-    mDeviceCombo.addItems(deviceNames);
-
-    mDeviceCombo.setCurrentIndex(deviceIndex);
-    mRescanning = false;
 }
 
 void SoundConfigTab::onDeviceComboSelected(int index) {
     Q_UNUSED(index)
 
-    if (!mRescanning) {
-        setDirty();
-    }
+    //mDeviceConfig.setDevice(index);
+    setDirty();
 }

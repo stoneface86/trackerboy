@@ -7,7 +7,6 @@
 #include "core/audio/AudioProber.hpp"
 #include "core/midi/MidiProber.hpp"
 
-#include "rtaudio/RtAudio.h"
 #include "RtMidi.h"
 
 #include <QSettings>
@@ -202,35 +201,37 @@ void Config::readSettings() {
     settings.beginGroup(QStringLiteral("sound"));
     {
         auto &audioProber = AudioProber::instance();
-        // get the configured API
-        auto const api = (RtAudio::Api)settings.value(QStringLiteral("api"), RtAudio::UNSPECIFIED).toInt();
-        // get the configured device name
-        mSound.deviceName = settings.value(QStringLiteral("deviceName"), QString()).toString();
-        if (api == RtAudio::UNSPECIFIED) {
-            mSound.backendIndex = 0; // default to the first one
+        // get the configured backend
+        auto const backend = (ma_backend)settings.value(QStringLiteral("backend"), MA_BACKEND_COUNT).toInt();
+        if (backend == MA_BACKEND_COUNT) {
+            mSound.backendIndex = 0;
         } else {
-            mSound.backendIndex = audioProber.indexOfApi(api);
+            mSound.backendIndex = audioProber.indexOfBackend(backend);
             if (mSound.backendIndex == -1) {
-                auto apiName = RtAudio::getApiName(api);
-                qWarning().noquote() << LOG_PREFIX << "audio API" << QString::fromStdString(apiName) << "not available";
+                auto backendName = ma_get_backend_name(backend);
+                qWarning().noquote() << LOG_PREFIX << "audio API" << backendName << "not available";
                 mSound.backendIndex = 0; // default to the first one
             }
         }
-        
+
         audioProber.probe(mSound.backendIndex);
-
-        if (mSound.deviceName.isEmpty()) {
-            // get the default
-            mSound.deviceIndex = audioProber.getDefaultDevice(mSound.backendIndex);
-        } else {
-            mSound.deviceIndex = audioProber.indexOfDevice(mSound.backendIndex, mSound.deviceName);
-            if (mSound.deviceIndex == -1) {
-                qWarning().noquote() << LOG_PREFIX << "audio device" << mSound.deviceName << "not available";
-            }
-        }
         
-        mSound.deviceName = audioProber.deviceName(mSound.backendIndex, mSound.deviceIndex);
+        // get the configured device name
+        auto idData = settings.value(QStringLiteral("deviceId")).toByteArray();
+        if (idData.size() == sizeof(ma_device_id)) {
+            int index = audioProber.indexOfDevice(
+                mSound.backendIndex,
+                *reinterpret_cast<ma_device_id*>(idData.data())
+            );
 
+            if (index == 0) {
+                // device not available, use the default
+                qWarning() << LOG_PREFIX << "last configured device not available, using default";
+            }
+            mSound.deviceIndex = index;
+        } else {
+            mSound.deviceIndex = 0;
+        }
 
     }
 
@@ -314,8 +315,19 @@ void Config::writeSettings() {
 
     {
         auto &audioProber = AudioProber::instance();
-        settings.setValue(QStringLiteral("api"), (int)audioProber.backendApi(mSound.backendIndex));
-        settings.setValue(QStringLiteral("deviceName"), mSound.deviceName);
+        auto context = audioProber.context(mSound.backendIndex);
+        int backend = MA_BACKEND_COUNT;
+        if (context) {
+            backend = context->backend;
+        }
+        settings.setValue(QStringLiteral("backend"), backend);
+
+        QByteArray id;
+        auto devId = audioProber.deviceId(mSound.backendIndex, mSound.deviceIndex);
+        if (devId) {
+            id = QByteArray(reinterpret_cast<char*>(devId), sizeof(ma_device_id));
+        }
+        settings.setValue(QStringLiteral("deviceId"), id);
     }
 
     settings.setValue(QStringLiteral("samplerateIndex"), mSound.samplerateIndex);

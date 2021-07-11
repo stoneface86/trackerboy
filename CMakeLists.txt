@@ -91,24 +91,20 @@ endif ()
 # sound related dependencies for demo and ui projects
 if (SOUND_REQUIRED)
 
-    find_package(RtAudio ${PACKAGE_MODE} REQUIRED)
-
     # Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
     # we'll have to DIY it then.
     # The split version is used to speed up compilation, the single c file gets compiled
     # into a library, miniaudio.
 
     add_library(miniaudio STATIC "external/miniaudio.c")
-    # since we are using RtAudio, we don't need device IO
-    # miniaudio is only used for two things:
-    #  1. exporting to WAV (wav encoder)
-    #  2. Ringbuffer, ma_rb
+    #
+    # add some definitions to cut out stuff we don't need
+    #
     target_compile_definitions(miniaudio PUBLIC
-        MA_NO_MP3
-        MA_NO_FLAC
-        MA_NO_GENERATION
-        MA_NO_DEVICE_IO
-        MA_NO_THREADING
+        MA_NO_MP3           # No MP3 decoding
+        MA_NO_FLAC          # No FLAC decoding
+        MA_NO_GENERATION    # No waveform generators
+        MA_NO_CUSTOM        # No custom backend
     )
     if (DEBUG_BUILD)
         # MA_LOG_LEVEL_INFO for debug builds
@@ -119,16 +115,16 @@ if (SOUND_REQUIRED)
     # mac: none
     # linux: pthreads, libm, libdl
     # bsd: pthreads, libm
-    #if (UNIX AND NOT APPLE)
-    #    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    #    find_package(Threads REQUIRED)
-    #    find_library(LIB_M m)
-    #    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    #        find_library(LIB_DL dl)
-    #        target_link_libraries(miniaudio PRIVATE ${LIB_DL})
-    #    endif ()
-    #    target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
-    #endif ()
+    if (UNIX AND NOT APPLE)
+       set(THREADS_PREFER_PTHREAD_FLAG ON)
+       find_package(Threads REQUIRED)
+       find_library(LIB_M m)
+       if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+           find_library(LIB_DL dl)
+           target_link_libraries(miniaudio PRIVATE ${LIB_DL})
+       endif ()
+       target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
+    endif ()
 endif ()
 
 if (ENABLE_TESTS)

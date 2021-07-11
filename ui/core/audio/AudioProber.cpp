@@ -2,89 +2,126 @@
 #include "core/audio/AudioProber.hpp"
 
 #include <QMutexLocker>
+#include <QtDebug>
 
-AudioProber::Backend::Backend(RtAudio::Api api) :
-    rtaudio(),
-    api(api),
-    deviceIds(),
-    deviceNames(),
-    defaultDevice(0)
+
+//
+// logging callback for miniaudio, redirects to Qt's message logging utility
+//
+void logCallback(ma_context* pContext, ma_device* pDevice, ma_uint32 logLevel, const char* message) {
+    Q_UNUSED(pContext)
+    Q_UNUSED(pDevice)
+
+    static QMessageLogger logger;
+    
+    QDebug dbg = (logLevel == MA_LOG_LEVEL_ERROR) ? logger.critical() :
+        ((logLevel == MA_LOG_LEVEL_WARNING) ? logger.warning() : logger.info());
+    dbg << "[Miniaudio]" << message;
+}
+
+
+AudioProber::Context::Context(ma_backend backend) :
+    mContext(),
+    mBackend(backend),
+    mDeviceInfos(nullptr),
+    mDeviceCount(0)
 {
 }
 
-Guarded<RtAudio>* AudioProber::Backend::get() {
-    if (rtaudio == nullptr) {
-        rtaudio.reset(new Guarded<RtAudio>(api));
-        #ifndef QT_NO_DEBUG
-        {
-            auto handle = rtaudio->access(); 
-            handle->showWarnings(true);
-        }
-        #endif
-        probe();
+AudioProber::Context::~Context() {
+    if (mContext != nullptr) {
+        ma_context_uninit(mContext.get());
     }
-    return rtaudio.get();
 }
 
-void AudioProber::Backend::probe() {
-    if (rtaudio == nullptr) {
-        get(); // get calls probe when allocating rtaudio
+ma_backend AudioProber::Context::backend() const {
+    return mBackend;
+}
+
+ma_context* AudioProber::Context::get() {
+    if (mContext == nullptr) {
+        mContext.reset(new ma_context);
+
+        auto config = ma_context_config_init();
+        config.logCallback = logCallback;
+        ma_context_init(&mBackend, 1, &config, mContext.get());
+        probe();
+    }
+    return mContext.get();
+}
+
+ma_device_id* AudioProber::Context::id(int deviceIndex) {
+    if (deviceIndex <= 0 || deviceIndex > (int)mDeviceCount) {
+        return nullptr; // default device
+    }
+
+    return &mDeviceInfos[deviceIndex - 1].id;
+}
+
+int AudioProber::Context::findDevice(ma_device_id const& id) const {
+    auto devInfo = mDeviceInfos;
+    for (ma_uint32 i = 0; i < mDeviceCount; ++i) {
+        if (memcmp(&id, &devInfo->id, sizeof(ma_device_id)) == 0) {
+            return (int)i + 1;
+        }
+        ++devInfo;
+    }
+    return 0;
+}
+
+QStringList AudioProber::Context::deviceNames() const {
+    QStringList list;
+
+    auto devInfo = mDeviceInfos;
+    for (ma_uint32 i = 0; i < mDeviceCount; ++i) {
+        list.append(QString::fromUtf8(devInfo->name));
+        ++devInfo;
+    }
+
+    return list;
+}
+
+void AudioProber::Context::probe() {
+    if (mContext == nullptr) {
+        get(); // get calls probe when allocating context
         return;
     }
 
-    defaultDevice = 0;
-    deviceIds.clear();
-    deviceNames.clear();
+    auto err = ma_context_get_devices(
+        mContext.get(),
+        &mDeviceInfos,
+        &mDeviceCount,
+        nullptr,
+        nullptr
+    );
 
-    auto handle = rtaudio->access();
-    auto const count = handle->getDeviceCount();
-    for (unsigned i = 0; i < count; ++i) {
-        // filter all devices to ones we can use
-        // 1. stereo output device (number of output channels >= 2)
-        auto info = handle->getDeviceInfo(i);
-        if (info.probed) { // if this is false an error has occurred within RtAudio
-            if (info.outputChannels >= 2) {
-                deviceIds.push_back(i);
-                deviceNames.append(QString::fromStdString(info.name));
-                if (info.isDefaultOutput) {
-                    defaultDevice = (int)deviceIds.size() - 1;
-                }
-            }
-        }
+    if (err != MA_SUCCESS) {
+        mDeviceInfos = nullptr;
+        mDeviceCount = 0;
     }
 }
 
 
 AudioProber::AudioProber() :
-    mBackends(),
-    mMutex()
+    mContexts()
 {
-    QMutexLocker locker(&mMutex);
 
-    std::vector<RtAudio::Api> apis;
-    RtAudio::getCompiledApi(apis);
+    std::array<ma_backend, MA_BACKEND_COUNT> backendArr;
+    size_t count;
+    ma_get_enabled_backends(backendArr.data(), backendArr.size(), &count);
 
-    for (auto api : apis) {
-        mBackends.emplace_back(api);
-    }
-}
-
-int AudioProber::getDefaultDevice(int backendIndex) const {
-    QMutexLocker locker(&mMutex);
-
-    if (indexIsInvalid(backendIndex)) {
-        return 0;
+    for (size_t i = 0; i < count; ++i) {
+        mContexts.emplace_back(backendArr[i]);
     }
 
-    return mBackends[backendIndex].defaultDevice;
 }
 
-int AudioProber::indexOfApi(RtAudio::Api api) const {
-    QMutexLocker locker(&mMutex);
+
+int AudioProber::indexOfBackend(ma_backend backend) const {
 
     int index = 0;
-    for (auto const& backend : mBackends) {
-        if (backend.api == api) {
+    for (auto const& context : mContexts) {
+        if (context.backend() == backend) {
             return index;
         }
         ++index;
@@ -93,95 +130,47 @@ int AudioProber::indexOfApi(RtAudio::Api api) const {
 
 }
 
-int AudioProber::indexOfDevice(int backendIndex, QString const& name) const {
-    QMutexLocker locker(&mMutex);
+int AudioProber::indexOfDevice(int backendIndex, ma_device_id const& id) const {
 
     if (indexIsInvalid(backendIndex)) {
         return -1;
     }
 
-    return mBackends[backendIndex].deviceNames.indexOf(name);
+    return mContexts[backendIndex].findDevice(id);
 }
 
-Guarded<RtAudio>* AudioProber::backend(int backendIndex) {
-    QMutexLocker locker(&mMutex);
-
+ma_context* AudioProber::context(int backendIndex) {
     if (indexIsInvalid(backendIndex)) {
         return nullptr;
     }
 
-    return mBackends[backendIndex].get();
+    return mContexts[backendIndex].get();
 }
 
-RtAudio::Api AudioProber::backendApi(int backendIndex) const {
-    QMutexLocker locker(&mMutex);
-    
+ma_device_id* AudioProber::deviceId(int backendIndex, int deviceIndex) {
     if (indexIsInvalid(backendIndex)) {
-        return RtAudio::UNSPECIFIED;
+        return nullptr;
     }
 
-    return mBackends[backendIndex].api;
+    return mContexts[backendIndex].id(deviceIndex);
 }
 
 QStringList AudioProber::backendNames() const {
-    QMutexLocker locker(&mMutex);
 
     QStringList list;
-    for (auto &backend : mBackends) {
-        auto name = RtAudio::getApiDisplayName(backend.api);
-        list.append(QString::fromStdString(name));
+    for (auto const& context : mContexts) {
+        auto name = ma_get_backend_name(context.backend());
+        list.append(QString::fromUtf8(name));
     }
     return list;
 }
 
 QStringList AudioProber::deviceNames(int backendIndex) const {
-    QMutexLocker locker(&mMutex);
-
     if (indexIsInvalid(backendIndex)) {
         return {};
     }
 
-    return mBackends[backendIndex].deviceNames;
-}
-
-QString AudioProber::deviceName(int backendIndex, int deviceIndex) const {
-    QMutexLocker locker(&mMutex);
-
-    if (indexIsInvalid(backendIndex)) {
-        return {};
-    }
-
-    auto &backend = mBackends[backendIndex];
-    if (deviceIndex < 0 || deviceIndex >= backend.deviceNames.size()) {
-        return {};
-    }
-
-    return backend.deviceNames[deviceIndex];
-}
-
-int AudioProber::findDevice(int backendIndex, QString const& name) const {
-    QMutexLocker locker(&mMutex);
-
-    if (indexIsInvalid(backendIndex)) {
-        return -1;
-    }
-
-    return mBackends[backendIndex].deviceNames.indexOf(name);
-}
-
-unsigned AudioProber::mapDeviceIndex(int backendIndex, int deviceIndex) const {
-    QMutexLocker locker(&mMutex);
-    
-    if (indexIsInvalid(backendIndex)) {
-        return 0;
-    }
-
-    auto const& map = mBackends[backendIndex].deviceIds;
-    if (deviceIndex < 0 || deviceIndex >= (int)map.size()) {
-        return 0;
-    }
-
-    return map[deviceIndex];
+    return mContexts[backendIndex].deviceNames();
 }
 
 AudioProber& AudioProber::instance() {
@@ -190,15 +179,13 @@ AudioProber& AudioProber::instance() {
 }
 
 void AudioProber::probe(int backendIndex) {
-    QMutexLocker locker(&mMutex);
-
     if (indexIsInvalid(backendIndex)) {
         return;
     }
 
-    mBackends[backendIndex].probe();
+    mContexts[backendIndex].probe();
 }
 
 bool AudioProber::indexIsInvalid(int backendIndex) const {
-    return backendIndex < 0 || backendIndex > (int)mBackends.size();
+    return backendIndex < 0 || backendIndex > (int)mContexts.size();
 }
