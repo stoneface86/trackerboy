@@ -48,7 +48,7 @@ size_t RingbufferBase::read(void *data, size_t sizeInBytes) {
     memcpy(data, src, bytesToRead);
     
     result = ma_rb_commit_read(&mRingbuffer, bytesToRead, src);
-    assert(result == MA_SUCCESS);
+    assert(result == MA_SUCCESS || result == MA_AT_END);
     
     return bytesToRead;
 }
@@ -62,8 +62,8 @@ size_t RingbufferBase::write(void const *data, size_t sizeInBytes) {
 
     memcpy(dest, data, bytesToWrite);
     
-    ma_rb_commit_write(&mRingbuffer, bytesToWrite, dest);
-    assert(result == MA_SUCCESS);
+    result = ma_rb_commit_write(&mRingbuffer, bytesToWrite, dest);
+    assert(result == MA_SUCCESS || result == MA_AT_END);
     
     return bytesToWrite;
 }

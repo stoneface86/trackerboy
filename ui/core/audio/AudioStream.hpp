@@ -20,7 +20,9 @@
 // 
 // All functions (except setConfig) in this class are thread-safe
 //
-class AudioStream {
+class AudioStream : public QObject {
+
+    Q_OBJECT
 
 public:
 
@@ -97,6 +99,13 @@ public:
     //
     void disable();
 
+signals:
+
+    //
+    // Emitted if the stream was aborted due to device error
+    //
+    void aborted();
+
 private:
 
     // NOTE: functions prefixed with an underscore do not lock the mutex
@@ -110,13 +119,6 @@ private:
     // pointer to RtAudio handle is set to null.
     //
     void _disable();
-
-    //
-    // error handler for RtAudioError. Logs a specified message and RtAudio's
-    // message via qCritical. Stores the error's type in mLastError and then disables
-    // the stream.
-    //
-    //void handleError(const char *msg, SoundIoError err);
 
     void _handleError(const char *msg, ma_result err);
 
@@ -138,7 +140,7 @@ private:
     // current stream settings (modified by setConfig)
     unsigned mSamplerate;
 
-    bool mRunning;
+    std::atomic_bool mRunning;
 
     size_t mPlaybackDelay;
 

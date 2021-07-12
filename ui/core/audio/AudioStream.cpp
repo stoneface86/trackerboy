@@ -14,6 +14,7 @@ static const char* LOG_PREFIX = "[AudioStream]";
 
 
 AudioStream::AudioStream() :
+    QObject(),
     mMutex(),
     mEnabled(false),
     mDevice(new ma_device),
@@ -47,7 +48,7 @@ bool AudioStream::isRunning() {
 
 bool AudioStream::_isRunning() {
     if (_isEnabled()) {
-        return mRunning;
+        return mRunning.load();
     } else {
         return false;
     }
@@ -117,68 +118,6 @@ void AudioStream::setConfig(Config::Sound const& config) {
     if (running) {
         start();
     }
-
-    
-    #if 0
-
-    
-    // get the configured device
-    auto dev = config.deviceConfig.device();
-    if (dev == nullptr) {
-        // device is not available
-        qCritical() << LOG_PREFIX << "setConfig: the configured device is not available";
-        disable();
-        return;
-    }
-
-    mMutex.lock();
-
-    // get the current running state
-    // if we are running then we will have to start the newly opened stream
-    bool running = _isRunning();
-
-    _disable();
-
-    // apply the configuration
-
-    // initialize the internal buffer
-
-    mBuffer.init((size_t)(config.latency * samplerate / 1000));
-    mMutex.unlock();
-
-    // open a stream
-    auto stream = soundio_outstream_create(dev);
-    stream->sample_rate = samplerate;
-    stream->name = "trackerboy";
-    stream->format = SoundIoFormatS16NE;
-    stream->write_callback = streamWriteCallback;
-    stream->userdata = this;
-
-    auto err = soundio_outstream_open(stream);
-    if (err != SoundIoErrorNone) {
-        qCritical().noquote()
-            << LOG_PREFIX 
-            << "setConfig: failed to open stream for device: " 
-            << soundio_strerror(err);
-
-        soundio_device_unref(dev);
-        // still disabled, just leave
-        return;
-    }
-
-    qDebug() << LOG_PREFIX << "software latency:" << stream->software_latency;
-
-    mMutex.lock();
-    mDevice = dev;
-    mOutStream = stream;
-    mMutex.unlock();
-
-    if (running) {
-        start();
-    }
-
-
-    #endif
 
 }
 
@@ -257,7 +196,16 @@ void AudioStream::deviceStopCallback(ma_device *device) {
 }
 
 void AudioStream::handleStop() {
-
+    // this handler is called:
+    //  * implicitly: due to device error or disconnect (mRunning = true)
+    //  * explicitly: when the stream is stopped via stop() (mRunning = false)
+    
+    if (mRunning) {
+        qCritical() << LOG_PREFIX << "stream aborted";
+        mRunning = false;
+        // we didn't trigger this stop via stop(), an error must've occurred
+        emit aborted();
+    }
 }
 
 

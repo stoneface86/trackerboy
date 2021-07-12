@@ -64,6 +64,12 @@ Renderer::Renderer(QObject *parent) :
     connect(&mTimerThread, &QThread::finished, mTimer, &FastTimer::deleteLater);
     mTimerThread.setObjectName(QStringLiteral("renderer timer thread"));
     mTimerThread.start();
+
+    connect(&mStream, &AudioStream::aborted, this,
+        [this]() {
+            auto handle = mContext.access();
+            stopRender(handle, true);
+        });
 }
 
 Renderer::~Renderer() {
@@ -513,12 +519,6 @@ void Renderer::render() {
         return;
     }
 
-    // make sure the stream is still running
-    if (!mStream.isRunning()) {
-        // stream isn't running and it should be, abort the render
-        // this typically means a device has been disconnected and can no longer be used
-        stopRender(handle, true);
-    }
 
     auto frame = handle->currentEngineFrame;
 
