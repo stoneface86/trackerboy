@@ -242,6 +242,7 @@ private:
         int stopCounter;
 
         // diagnostics
+        Clock::time_point watchdog; // occurance of last watchdog reset
         Clock::time_point lastPeriod; // occurance of the last period
         Clock::duration periodTime; // time difference between the last period and the current one
         size_t writesSinceLastPeriod; // number of samples written for the last period

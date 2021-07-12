@@ -189,6 +189,7 @@ void Renderer::beginRender(Handle &handle) {
 
         if (success) {
             handle->lastPeriod = Clock::now();
+            handle->watchdog = handle->lastPeriod;
             mTimer->start();
             handle.unlock();
             emit audioStarted();
@@ -520,15 +521,32 @@ void Renderer::render() {
     }
 
 
-    auto frame = handle->currentEngineFrame;
-
-    auto writer = mStream.writer();
-    auto framesToRender = writer.availableWrite();
-
     // diagnostics
     handle->periodTime = now - handle->lastPeriod;
     handle->lastPeriod = now;
     handle->writesSinceLastPeriod = 0;
+
+
+    auto writer = mStream.writer();
+    auto framesToRender = writer.availableWrite();
+
+    if (framesToRender) {
+        // reset the watchdog
+        handle->watchdog = now;
+    } else {
+        constexpr auto WATCHDOG_INTERVAL = std::chrono::seconds(1);
+        auto timeSinceLastWatchdogReset = now - handle->watchdog;
+        if (timeSinceLastWatchdogReset >= WATCHDOG_INTERVAL) {
+            // we have gone 1 second without renderering anything
+            // abort the render
+            stopRender(handle, true);
+        }
+        // no frames to render, exit early
+        return;
+    }
+
+    
+    auto frame = handle->currentEngineFrame;
 
     // cache a ref to the apu, we'll be using it often
     auto &apu = handle->synth.apu();
