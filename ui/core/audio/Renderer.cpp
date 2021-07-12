@@ -14,7 +14,7 @@
 #include <chrono>
 #include <type_traits>
 
-static auto LOG_PREFIX = "[Renderer]";
+//static auto LOG_PREFIX = "[Renderer]";
 
 
 // Renderer Notes
@@ -42,6 +42,8 @@ Renderer::RenderContext::RenderContext() :
     previewChannel(trackerboy::ChType::ch1),
     state(State::stopped),
     stopCounter(0),
+    bufferSize(0),
+    watchdog(),
     lastPeriod(),
     periodTime(0),
     writesSinceLastPeriod(0)
@@ -52,7 +54,6 @@ Renderer::RenderContext::RenderContext() :
 
 Renderer::Renderer(QObject *parent) :
     QObject(parent),
-    mMutex(),
     mTimerThread(),
     mTimer(new FastTimer),
     mStream(),
@@ -161,6 +162,8 @@ bool Renderer::setConfig(Config::Sound const &soundConfig) {
                 // rewrite channel registers
                 handle->engine.reload();
             }
+
+            handle->bufferSize = mStream.bufferSize();
 
 
             mVisBuffer.access()->resize(handle->synth.framesize());
@@ -559,7 +562,7 @@ void Renderer::render() {
     while (framesToRender) {
 
         if (handle->state == State::stopping) {
-            if (writer.availableWrite() == mStream.bufferSize()) {
+            if (writer.availableWrite() == handle->bufferSize) {
                 // the buffer has been drained, stop the callback
                 visHandle.unlock();
                 stopRender(handle);

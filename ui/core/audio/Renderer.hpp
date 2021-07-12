@@ -7,6 +7,7 @@
 #include "core/model/ModuleDocument.hpp"
 #include "core/Config.hpp"
 #include "core/FastTimer.hpp"
+#include "core/Guarded.hpp"
 
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/Instrument.hpp"
@@ -241,6 +242,8 @@ private:
         State state;
         int stopCounter;
 
+        size_t bufferSize; // cache this here so we don't have to call mStream.bufferSize() in the render thread
+
         // diagnostics
         Clock::time_point watchdog; // occurance of last watchdog reset
         Clock::time_point lastPeriod; // occurance of the last period
@@ -285,8 +288,6 @@ private:
     void stopRender(Handle &handle, bool aborted = false);
 
     // class members ---------------------------------------------------------
-
-    mutable QMutex mMutex;
 
     QThread mTimerThread;
     FastTimer *mTimer;

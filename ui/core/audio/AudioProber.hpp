@@ -99,6 +99,9 @@ private:
 
     private:
 
+        static ma_bool32 enumerateCallback(ma_context* pContext, ma_device_type deviceType, const ma_device_info* pInfo, void* pUserData);
+        void enumerate(ma_device_info const* info);
+
         // a pointer is used for lazy loading
         // this way we only initialize the backends when they are used
         
@@ -106,8 +109,10 @@ private:
         std::unique_ptr<ma_context> mContext;
         ma_backend const mBackend;
 
-        ma_device_info *mDeviceInfos;
-        ma_uint32 mDeviceCount;
+        std::vector<ma_device_info> mDevices;
+
+        //ma_device_info *mDeviceInfos;
+        //ma_uint32 mDeviceCount;
 
     };
 

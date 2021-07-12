@@ -15,7 +15,6 @@ static const char* LOG_PREFIX = "[AudioStream]";
 
 AudioStream::AudioStream() :
     QObject(),
-    mMutex(),
     mEnabled(false),
     mDevice(new ma_device),
     mBuffer(),
@@ -27,35 +26,19 @@ AudioStream::AudioStream() :
 }
 
 AudioStream::~AudioStream() {
-    QMutexLocker locker(&mMutex);
-    _disable();
+    disable();
 }
 
 
 bool AudioStream::isEnabled() {
-    QMutexLocker locker(&mMutex);
-    return _isEnabled();
-}
-
-bool AudioStream::_isEnabled() {
     return mEnabled;
 }
 
 bool AudioStream::isRunning() {
-    QMutexLocker locker(&mMutex);
-    return _isRunning();
-}
-
-bool AudioStream::_isRunning() {
-    if (_isEnabled()) {
-        return mRunning.load();
-    } else {
-        return false;
-    }
+    return isEnabled() && mRunning.load();
 }
 
 int AudioStream::underruns() const {
-    // mUnderruns is atomic, mutex not needed
     return mUnderruns.load();
 }
 
@@ -64,7 +47,6 @@ void AudioStream::resetUnderruns() {
 }
 
 size_t AudioStream::bufferSize() {
-    QMutexLocker locker(&mMutex);
     return mBuffer.size();
 }
 
@@ -73,7 +55,6 @@ double AudioStream::elapsed() {
 }
 
 AudioRingbuffer::Writer AudioStream::writer() {
-    QMutexLocker locker(&mMutex);
     return mBuffer.writer();
 }
 
@@ -92,15 +73,13 @@ void AudioStream::setConfig(Config::Sound const& config) {
     deviceConfig.pUserData = this;
     deviceConfig.sampleRate = samplerate;
     deviceConfig.playback.pDeviceID = prober.deviceId(config.backendIndex, config.deviceIndex);
-    
-    mMutex.lock();
 
     // get the current running state
     // if we are running then we will have to start the newly opened stream
-    bool running = _isRunning();
+    bool running = isRunning();
 
     // must be disabled when applying config
-    _disable();
+    disable();
 
     // update buffer size
     mBuffer.init((size_t)(config.latency * samplerate / 1000));
@@ -108,12 +87,11 @@ void AudioStream::setConfig(Config::Sound const& config) {
     // attempt to initialize device
     auto result = ma_device_init(prober.context(config.backendIndex), &deviceConfig, mDevice.get());
     if (result != MA_SUCCESS) {
-        _handleError("could not initialize device:", result);
+        handleError("could not initialize device:", result);
         return;
     }
 
     mEnabled = true;
-    mMutex.unlock();
 
     if (running) {
         start();
@@ -122,14 +100,13 @@ void AudioStream::setConfig(Config::Sound const& config) {
 }
 
 bool AudioStream::start() {
-    QMutexLocker locker(&mMutex);
-    if (_isEnabled() && !_isRunning()) {
+    if (isEnabled() && !isRunning()) {
         mBuffer.reset();
         mPlaybackDelay = mBuffer.size();
         
         auto result = ma_device_start(mDevice.get());
         if (result != MA_SUCCESS) {
-            _handleError("failed to start device:", result);
+            handleError("failed to start device:", result);
             return false;
         }
         mRunning = true;
@@ -139,12 +116,11 @@ bool AudioStream::start() {
 }
 
 bool AudioStream::stop() {
-    QMutexLocker locker(&mMutex);
-    if (_isRunning()) {
+    if (isRunning()) {
         mRunning = false;
         auto result = ma_device_stop(mDevice.get());
         if (result != MA_SUCCESS) {
-            _handleError("failed to stop device:", result);
+            handleError("failed to stop device:", result);
             return false;
         }
     }
@@ -154,11 +130,6 @@ bool AudioStream::stop() {
 
 
 void AudioStream::disable() {
-    QMutexLocker locker(&mMutex);
-    _disable();
-}
-
-void AudioStream::_disable() {
     mRunning = false;
 
     if (mEnabled) {
@@ -209,10 +180,10 @@ void AudioStream::handleStop() {
 }
 
 
-void AudioStream::_handleError(const char *msg, ma_result err) {
+void AudioStream::handleError(const char *msg, ma_result err) {
     qCritical().noquote()
         << LOG_PREFIX
         << msg
         << ma_result_description(err);
-    _disable();
+    disable();
 }

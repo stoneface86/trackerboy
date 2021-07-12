@@ -3,12 +3,9 @@
 
 #include "core/Config.hpp"
 #include "core/audio/Ringbuffer.hpp"
-#include "core/Guarded.hpp"
 
 #include "miniaudio.h"
 
-
-#include <QMutex>
 #include <QObject>
 
 #include <atomic>
@@ -17,8 +14,6 @@
 //
 // AudioStream class. Manages a miniaudio device and a playback buffer for
 // asynchronous sound output.
-// 
-// All functions (except setConfig) in this class are thread-safe
 //
 class AudioStream : public QObject {
 
@@ -108,19 +103,7 @@ signals:
 
 private:
 
-    // NOTE: functions prefixed with an underscore do not lock the mutex
-
-    bool _isEnabled();
-
-    bool _isRunning();
-
-    //
-    // Disables the stream. If a stream is open it is closed, and then the
-    // pointer to RtAudio handle is set to null.
-    //
-    void _disable();
-
-    void _handleError(const char *msg, ma_result err);
+    void handleError(const char *msg, ma_result err);
 
     static void deviceDataCallback(ma_device *device, void *out, const void *in, ma_uint32 frames);
     void handleData(int16_t *out, size_t frames);
@@ -128,9 +111,6 @@ private:
     static void deviceStopCallback(ma_device *device);
     void handleStop();
 
-    
-
-    QMutex mMutex;
 
     bool mEnabled;
     std::unique_ptr<ma_device> mDevice; // heap alloc because sizeof(ma_device) is 22448!

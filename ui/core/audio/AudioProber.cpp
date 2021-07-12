@@ -25,8 +25,7 @@ void logCallback(ma_context* pContext, ma_device* pDevice, ma_uint32 logLevel, c
 AudioProber::Context::Context(ma_backend backend) :
     mContext(),
     mBackend(backend),
-    mDeviceInfos(nullptr),
-    mDeviceCount(0)
+    mDevices()
 {
 }
 
@@ -53,35 +52,56 @@ ma_context* AudioProber::Context::get() {
 }
 
 ma_device_id* AudioProber::Context::id(int deviceIndex) {
-    if (deviceIndex <= 0 || deviceIndex > (int)mDeviceCount) {
+    if (deviceIndex <= 0 || deviceIndex > (int)mDevices.size()) {
         return nullptr; // default device
     }
 
-    return &mDeviceInfos[deviceIndex - 1].id;
+    return &mDevices[deviceIndex - 1].id;
 }
 
 int AudioProber::Context::findDevice(ma_device_id const& id) const {
-    auto devInfo = mDeviceInfos;
-    for (ma_uint32 i = 0; i < mDeviceCount; ++i) {
-        if (memcmp(&id, &devInfo->id, sizeof(ma_device_id)) == 0) {
+    int i = 0;
+    for (auto &info : mDevices) {
+        if (memcmp(&id, &info.id, sizeof(ma_device_id)) == 0) {
             return (int)i + 1;
         }
-        ++devInfo;
+        ++i;
     }
+
     return 0;
 }
 
 QStringList AudioProber::Context::deviceNames() const {
     QStringList list;
 
-    auto devInfo = mDeviceInfos;
-    for (ma_uint32 i = 0; i < mDeviceCount; ++i) {
-        list.append(QString::fromUtf8(devInfo->name));
-        ++devInfo;
+    for (auto &info : mDevices) {
+        list.append(QString::fromUtf8(info.name));
     }
 
     return list;
 }
+
+
+ma_bool32 AudioProber::Context::enumerateCallback(
+    ma_context* pContext,
+    ma_device_type deviceType,
+    const ma_device_info* pInfo,
+    void* pUserData
+) {
+    Q_UNUSED(pContext)
+    if (deviceType == ma_device_type_playback) {
+        static_cast<AudioProber::Context*>(pUserData)->enumerate(pInfo);
+    }
+
+    return MA_TRUE;
+
+}
+
+
+void AudioProber::Context::enumerate(const ma_device_info* info) {
+    mDevices.push_back(*info);
+}
+
 
 void AudioProber::Context::probe() {
     if (mContext == nullptr) {
@@ -89,17 +109,11 @@ void AudioProber::Context::probe() {
         return;
     }
 
-    auto err = ma_context_get_devices(
-        mContext.get(),
-        &mDeviceInfos,
-        &mDeviceCount,
-        nullptr,
-        nullptr
-    );
+    mDevices.clear();
+    auto result = ma_context_enumerate_devices(mContext.get(), enumerateCallback, this);
 
-    if (err != MA_SUCCESS) {
-        mDeviceInfos = nullptr;
-        mDeviceCount = 0;
+    if (result != MA_SUCCESS) {
+        mDevices.clear();
     }
 }
 
