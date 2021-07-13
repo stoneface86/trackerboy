@@ -8,9 +8,9 @@
 
 #include <cmath>
 
-Sidebar::Sidebar(QWidget *parent) :
+Sidebar::Sidebar(ModuleDocument &document, QWidget *parent) :
     QWidget(parent),
-    mDocument(nullptr),
+    mDocument(document),
     mIgnoreSelect(false),
     mLayout(),
     mScope(),
@@ -144,7 +144,7 @@ Sidebar::Sidebar(QWidget *parent) :
                 mSpeedLock = true;
                 // convert tempo to speed and set in the speed spin
                 // speed = (framerate * 60) / (tempo * rpb)
-                float speed = (mDocument->mod().framerate() * 60.0f) / (value * mRowsPerBeatSpin.value());
+                float speed = (mDocument.mod().framerate() * 60.0f) / (value * mRowsPerBeatSpin.value());
                 mSpeedSpin.setValue((int)roundf(speed * (1 << trackerboy::SPEED_FRACTION_BITS)));
                 mSpeedLock = false;
             }
@@ -154,72 +154,49 @@ Sidebar::Sidebar(QWidget *parent) :
 
     connect(&mActionIncrement, &QAction::triggered, this,
         [this]() {
-            mDocument->orderModel().incrementSelection(mOrderView.selectionModel()->selection());
+            mDocument.orderModel().incrementSelection(mOrderView.selectionModel()->selection());
         });
 
     connect(&mActionDecrement, &QAction::triggered, this,
         [this]() {
-            mDocument->orderModel().decrementSelection(mOrderView.selectionModel()->selection());
+            mDocument.orderModel().decrementSelection(mOrderView.selectionModel()->selection());
         });
 
     connect(&mSetButton, &QPushButton::clicked, this,
         [this]() {
-            mDocument->orderModel().setSelection(
+            mDocument.orderModel().setSelection(
                 mOrderView.selectionModel()->selection(),
                 static_cast<uint8_t>(mSetSpin.value())
             );
         });
 
+    auto &orderModel = document.orderModel();
+    mOrderView.setModel(&orderModel);
+    connect(&orderModel, &OrderModel::currentIndexChanged, this, &Sidebar::currentIndexChanged);
+    auto selectionModel = mOrderView.selectionModel();
+    connect(selectionModel, &QItemSelectionModel::currentChanged, this, &Sidebar::currentChanged);
+    connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &Sidebar::selectionChanged);
+    selectionModel->select(orderModel.currentIndex(), QItemSelectionModel::Select);
 
+    mPatternsSpin.setValue(orderModel.rowCount());
+    connect(&orderModel, &OrderModel::rowsInserted, this, &Sidebar::updatePatternsSpin);
+    connect(&orderModel, &OrderModel::rowsRemoved, this, &Sidebar::updatePatternsSpin);
+    connect(&mPatternsSpin, qOverload<int>(&QSpinBox::valueChanged), &orderModel, &OrderModel::setPatternCount);
+
+    auto &songModel = document.songModel();
+    mRowsPerBeatSpin.setValue(songModel.rowsPerBeat());
+    mRowsPerMeasureSpin.setValue(songModel.rowsPerMeasure());
+    mSpeedSpin.setValue(songModel.speed());
+    mRowsSpin.setValue(songModel.patternSize());
+    connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerBeat);
+    connect(&mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerMeasure);
+    connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setSpeed);
+    connect(&mRowsSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setPatternSize);
 
 }
 
 AudioScope& Sidebar::scope() {
     return mScope;
-}
-
-
-void Sidebar::setDocument(ModuleDocument *doc) {
-    if (mDocument) {
-        auto &orderModel = mDocument->orderModel();
-        orderModel.disconnect(this);
-        mPatternsSpin.disconnect(&orderModel);
-        auto &songModel = mDocument->songModel();
-        mRowsPerBeatSpin.disconnect(&songModel);
-        mRowsPerMeasureSpin.disconnect(&songModel);
-        mSpeedSpin.disconnect(&songModel);
-        mRowsSpin.disconnect(&songModel);
-    }
-
-    mDocument = doc;
-    if (doc) {
-        auto &orderModel = doc->orderModel();
-        mOrderView.setModel(&orderModel);
-        connect(&orderModel, &OrderModel::currentIndexChanged, this, &Sidebar::currentIndexChanged);
-        auto selectionModel = mOrderView.selectionModel();
-        connect(selectionModel, &QItemSelectionModel::currentChanged, this, &Sidebar::currentChanged);
-        connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &Sidebar::selectionChanged);
-        selectionModel->select(orderModel.currentIndex(), QItemSelectionModel::Select);
-
-        mPatternsSpin.setValue(orderModel.rowCount());
-        connect(&orderModel, &OrderModel::rowsInserted, this, &Sidebar::updatePatternsSpin);
-        connect(&orderModel, &OrderModel::rowsRemoved, this, &Sidebar::updatePatternsSpin);
-        connect(&mPatternsSpin, qOverload<int>(&QSpinBox::valueChanged), &orderModel, &OrderModel::setPatternCount);
-
-        auto &songModel = doc->songModel();
-        mRowsPerBeatSpin.setValue(songModel.rowsPerBeat());
-        mRowsPerMeasureSpin.setValue(songModel.rowsPerMeasure());
-        mSpeedSpin.setValue(songModel.speed());
-        mRowsSpin.setValue(songModel.patternSize());
-        connect(&mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerBeat);
-        connect(&mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setRowsPerMeasure);
-        connect(&mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setSpeed);
-        connect(&mRowsSpin, qOverload<int>(&QSpinBox::valueChanged), &songModel, &SongModel::setPatternSize);
-    
-
-    } else {
-        mOrderView.setModel(nullptr);
-    }
 }
 
 void Sidebar::currentIndexChanged(QModelIndex const& index) {
@@ -231,35 +208,33 @@ void Sidebar::currentIndexChanged(QModelIndex const& index) {
 void Sidebar::currentChanged(QModelIndex const &current, QModelIndex const &prev) {
     Q_UNUSED(prev);
 
-    if (mDocument) {
-        mIgnoreSelect = true;
-        auto &orderModel = mDocument->orderModel();
-        auto &patternModel = mDocument->patternModel();
-        if (patternModel.isPlaying() && patternModel.isFollowing()) {
-            if (orderModel.currentPattern() != current.row()) {
-                // jump to this pattern instead of selecting it
-                emit patternJumpRequested(current.row());
-            }
-            orderModel.selectTrack(current.column());
-        } else {
-            orderModel.select(current.row(), current.column());
+    mIgnoreSelect = true;
+    auto &orderModel = mDocument.orderModel();
+    auto &patternModel = mDocument.patternModel();
+    if (patternModel.isPlaying() && patternModel.isFollowing()) {
+        if (orderModel.currentPattern() != current.row()) {
+            // jump to this pattern instead of selecting it
+            emit patternJumpRequested(current.row());
         }
-        mIgnoreSelect = false;
+        orderModel.selectTrack(current.column());
+    } else {
+        orderModel.select(current.row(), current.column());
     }
+    mIgnoreSelect = false;
+    
 }
 
 void Sidebar::selectionChanged(const QItemSelection &selected, const QItemSelection &deselected) {
     Q_UNUSED(selected);
     Q_UNUSED(deselected);
 
-    if (mDocument) {
-        // this slot is just for preventing the user from deselecting
-        auto model = mOrderView.selectionModel();
-        if (!model->hasSelection()) {
-            // user deselected everything, force selection of the current index
-            model->select(mOrderView.currentIndex(), QItemSelectionModel::Select);
-        }
+    // this slot is just for preventing the user from deselecting
+    auto model = mOrderView.selectionModel();
+    if (!model->hasSelection()) {
+        // user deselected everything, force selection of the current index
+        model->select(mOrderView.currentIndex(), QItemSelectionModel::Select);
     }
+    
 }
 
 void Sidebar::setTempoLabel(float tempo) {
@@ -270,9 +245,9 @@ float Sidebar::calcActualTempo(float speed) {
     // actual tempo value
     //tempo = (framerate * 60) / (speed * rpb)
     //convert fixed point to floating point
-    return (mDocument->mod().framerate() * 60.0f) / (speed * mRowsPerBeatSpin.value());
+    return (mDocument.mod().framerate() * 60.0f) / (speed * mRowsPerBeatSpin.value());
 }
 
 void Sidebar::updatePatternsSpin() {
-    mPatternsSpin.setValue(mDocument->orderModel().rowCount());
+    mPatternsSpin.setValue(mDocument.orderModel().rowCount());
 }

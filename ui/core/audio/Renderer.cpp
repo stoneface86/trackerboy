@@ -29,14 +29,13 @@
 // get what it needs and there are now gaps in the playback.
 
 
-Renderer::RenderContext::RenderContext() :
-    document(nullptr),
-    musicDocument(nullptr),
+Renderer::RenderContext::RenderContext(ModuleDocument &doc) :
+    document(doc),
     stepping(false),
     step(false),
     synth(44100),
     apu(synth.apu()),
-    engine(apu, nullptr),
+    engine(apu, &doc.mod()),
     ip(),
     previewState(PreviewState::none),
     previewChannel(trackerboy::ChType::ch1),
@@ -52,13 +51,13 @@ Renderer::RenderContext::RenderContext() :
 
 
 
-Renderer::Renderer(QObject *parent) :
+Renderer::Renderer(ModuleDocument &document, QObject *parent) :
     QObject(parent),
     mTimerThread(),
     mTimer(new FastTimer),
     mStream(),
     mVisBuffer(),
-    mContext()
+    mContext(document)
 {
     mTimer->setCallback(timerCallback, this);
     mTimer->moveToThread(&mTimerThread);
@@ -71,6 +70,8 @@ Renderer::Renderer(QObject *parent) :
             auto handle = mContext.access();
             stopRender(handle, true);
         });
+
+    connect(&document, &ModuleDocument::channelOutputChanged, this, &Renderer::setChannelOutput);
 }
 
 Renderer::~Renderer() {
@@ -108,16 +109,6 @@ Guarded<VisualizerBuffer>& Renderer::visualizerBuffer() {
 
 bool Renderer::isRunning() {
     return mStream.isRunning();
-}
-
-ModuleDocument* Renderer::document() {
-    auto handle = mContext.access();
-    return handle->document;
-}
-
-ModuleDocument* Renderer::documentPlayingMusic() {
-    auto handle = mContext.access();
-    return handle->musicDocument;
 }
 
 trackerboy::Frame Renderer::currentFrame() {
@@ -244,13 +235,6 @@ void Renderer::clearDiagnostics() {
     mStream.resetUnderruns();
 }
 
-void Renderer::setDocument(ModuleDocument *doc) {
-
-    mContext.access()->document = doc;
-
-    stopPreview();
-}
-
 void Renderer::play() {
 
     if (mStream.isEnabled()) {
@@ -259,7 +243,7 @@ void Renderer::play() {
             // stop step mode
             handle->stepping = false;
         } else {
-            playMusic(handle, handle->document->orderModel().currentPattern(), 0);
+            playMusic(handle, handle->document.orderModel().currentPattern(), 0);
         }
     }
 }
@@ -278,8 +262,8 @@ void Renderer::playFromCursor() {
         auto handle = mContext.access();
         playMusic(
             handle,
-            handle->document->orderModel().currentPattern(),
-            handle->document->patternModel().cursorRow()
+            handle->document.orderModel().currentPattern(),
+            handle->document.patternModel().cursorRow()
         );
     }
 }
@@ -291,8 +275,8 @@ void Renderer::stepFromCursor() {
         if (!handle->stepping) {
             playMusic(
                 handle,
-                handle->document->orderModel().currentPattern(), 
-                handle->document->patternModel().cursorRow(), 
+                handle->document.orderModel().currentPattern(), 
+                handle->document.patternModel().cursorRow(), 
                 true
             );
         }
@@ -330,12 +314,12 @@ void Renderer::previewNoteOrInstrument(int note, int track, int instrument) {
                 if (track == -1) {
                     // instrument preview
                     // set instrument preview's instrument to the current one
-                    inst = handle->document->instrumentModel().currentInstrument();
+                    inst = handle->document.instrumentModel().currentInstrument();
                     handle->previewChannel = inst->channel();
                 } else {
                     // note preview
                     if (instrument != -1) {
-                        inst = handle->document->mod().instrumentTable().getShared((uint8_t)instrument);
+                        inst = handle->document.mod().instrumentTable().getShared((uint8_t)instrument);
                     }
                     handle->previewChannel = static_cast<trackerboy::ChType>(track);
                 }
@@ -389,8 +373,8 @@ void Renderer::previewWaveform(quint8 note) {
                 trackerboy::ChannelState state(trackerboy::ChType::ch3);
                 state.playing = true;
                 state.frequency = freq;
-                state.envelope = handle->document->waveModel().currentWaveform()->id();
-                trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(handle->apu, handle->document->mod().waveformTable(), state);
+                state.envelope = handle->document.waveModel().currentWaveform()->id();
+                trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(handle->apu, handle->document.mod().waveformTable(), state);
                 break;
             }
             case PreviewState::waveform:
@@ -440,22 +424,9 @@ void Renderer::forceStop() {
 
 void Renderer::playMusic(Handle &handle, int orderNo, int rowNo, bool stepping) {
 
-    if (handle->musicDocument != handle->document) {
-        if (handle->musicDocument) {
-            handle->musicDocument->disconnect(this);
-        }
-
-        handle->musicDocument = handle->document;
-
-        handle->engine.setModule(&handle->document->mod());
-        connect(handle->musicDocument, &ModuleDocument::channelOutputChanged, this, &Renderer::setChannelOutput);
-    }
+    //handle->document.patternModel().setPlaying(true);
     handle->engine.play(orderNo, rowNo);
-    // unlock disabled channels
-    _setChannelOutput(handle, handle->musicDocument->channelOutput());
-
     handle->stepping = stepping;
-    
     beginRender(handle);
 
 }
@@ -465,21 +436,6 @@ void Renderer::resetPreview(Handle &handle) {
     handle->engine.lock(handle->previewChannel);
     handle->ip.setInstrument(nullptr);
     handle->previewState = PreviewState::none;
-}
-
-void Renderer::removeDocument(ModuleDocument *doc) {
-    auto handle = mContext.access();
-    if (handle->musicDocument == doc) {
-        if (!handle->currentEngineFrame.halted && handle->state != State::stopped) {
-            // we are currently renderering this document, stop immediately
-            // since doc will no longer exist after this function
-            stopRender(handle);
-        }
-        handle->engine.setModule(nullptr);
-        handle->musicDocument = nullptr;
-
-    }
-    
 }
 
 void Renderer::setChannelOutput(ModuleDocument::OutputFlags flags) {
@@ -586,34 +542,29 @@ void Renderer::render() {
                     newFrame = true;
 
                     // the engine and previewer have read access to the module
-                    // so their corresponding documents must be locked when
-                    // stepping
+                    // so the document must be locked when stepping
 
                     // step engine/previewer
-                    bool const lockMusicDocument = handle->musicDocument != nullptr;
-                    if (lockMusicDocument) {
-                        handle->musicDocument->lock();
-                    }
-
                     if (!handle->stepping || handle->step) {
+                        
+                        handle->document.lock();
                         handle->engine.step(frame);
+                        handle->document.unlock();
+                        
                         if (frame.startedNewRow) {
                             handle->step = false;
                         }
                     }
 
-                    if (lockMusicDocument) {
-                        handle->musicDocument->unlock();
-                    }
-
                     if (handle->previewState == PreviewState::instrument) {
-
-                        handle->document->lock();
-                        auto &mod = handle->document->mod();
+                        auto &mod = handle->document.mod();
                         trackerboy::RuntimeContext rc(handle->apu, mod.instrumentTable(), mod.waveformTable());
+                        
+                        handle->document.lock();
                         handle->ip.step(rc);
-                        handle->document->unlock();
+                        handle->document.unlock();
                     }
+
 
                     if (frame.halted && handle->previewState == PreviewState::none) {
                         // no longer doing anything, start the stop counter

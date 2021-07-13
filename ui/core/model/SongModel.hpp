@@ -17,6 +17,8 @@ class SongModel : public QObject {
 public:
     explicit SongModel(ModuleDocument &doc);
 
+    void reload();
+
     int rowsPerBeat();
     int rowsPerMeasure();
     int speed();

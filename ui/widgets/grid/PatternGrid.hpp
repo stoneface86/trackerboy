@@ -28,7 +28,7 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(PatternGridHeader &header, QWidget *parent = nullptr);
+    explicit PatternGrid(PatternGridHeader &header, ModuleDocument &document, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
@@ -43,8 +43,6 @@ public:
 
     // if true then flats will be shown instead of sharps
     void setShowFlats(bool showFlats);
-
-    void setDocument(ModuleDocument *document);
 
     void setEditorFocus(bool focus);
 
@@ -106,7 +104,7 @@ private:
 
     void calculateTrackerRow();
 
-    ModuleDocument *mDocument;
+    ModuleDocument &mDocument;
     PatternGridHeader &mHeader;
     PatternPainter mPainter;
 

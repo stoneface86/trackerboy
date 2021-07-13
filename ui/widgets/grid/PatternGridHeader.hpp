@@ -14,11 +14,9 @@ class PatternGridHeader : public QWidget {
 
 public:
 
-    PatternGridHeader(QWidget *parent = nullptr);
+    PatternGridHeader(ModuleDocument &document, QWidget *parent = nullptr);
 
     void setColors(ColorTable const& colorTable);
-
-    void setDocument(ModuleDocument *doc);
 
     void setWidths(int rownoWidth, int trackWidth);
 
@@ -50,7 +48,7 @@ private:
 
     void setTrackHover(int hover);
 
-    ModuleDocument *mDocument;
+    ModuleDocument &mDocument;
 
     int mOffset;
     int mRownoWidth;

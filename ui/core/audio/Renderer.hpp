@@ -51,7 +51,7 @@ public:
 
     };
 
-    Renderer(QObject *parent = nullptr);
+    Renderer(ModuleDocument &document, QObject *parent = nullptr);
     ~Renderer();
 
     // DIAGNOSTICS ====
@@ -61,40 +61,19 @@ public:
     Guarded<VisualizerBuffer>& visualizerBuffer();
 
     //
-    // Gets the current document.
-    //
-    // Note: Function is thread-safe
-    //
-    ModuleDocument* document();
-
-    //
-    // Gets the current document that is playing music. nullptr if not
-    // playing music.
-    //
-    // Note: Function is thread-safe
-    //
-    ModuleDocument* documentPlayingMusic();
-
-    //
     // Determines whether the renderer is enabled. The renderer is enabled if
     // the sound device was successfully configured. The renderer is disabled
     // if an audio error occurs during render.
-    //
-    // Note: Function is thread-safe
     //
     //bool isEnabled();
 
     //
     // Determines if the renderer is renderering sound.
     //
-    // Note: Function is thread-safe
-    //
     bool isRunning();
 
     //
     // Gets a copy of the current engine frame.
-    //
-    // Note: Function is thread-safe
     //
     trackerboy::Frame currentFrame();
 
@@ -102,8 +81,6 @@ public:
     // Configures the output device with the given Sound config. If device
     // cannot be configured, the renderer is disabled. This function must
     // be called from the GUI thread.
-    //
-    // Note: Function is thread-safe
     //
     bool setConfig(Config::Sound const& config);
 
@@ -129,6 +106,9 @@ signals:
     //
     void frameSync();
 
+    //
+    // Emitted when the visualizer buffer has been modified
+    //
     void updateVisualizers();
 
 public slots:
@@ -176,17 +156,6 @@ public slots:
     void stopMusic();
 
     void forceStop();
-    
-    //
-    // Set the document to render. Any ongoing renders will use the old
-    // document until stopped. All new renders will use this document
-    //
-    void setDocument(ModuleDocument *doc);
-
-    //
-    // stops all renders with the given document
-    //
-    void removeDocument(ModuleDocument *doc);
 
 private slots:
 
@@ -216,9 +185,7 @@ private:
 
     struct RenderContext {
         // the current document
-        ModuleDocument *document;
-        // the document that is playing music (usually the same as the current document)
-        ModuleDocument *musicDocument;
+        ModuleDocument &document;
 
         // indicates if step mode is enabled
         bool stepping;
@@ -250,7 +217,7 @@ private:
         Clock::duration periodTime; // time difference between the last period and the current one
         size_t writesSinceLastPeriod; // number of samples written for the last period
 
-        RenderContext();
+        RenderContext(ModuleDocument &document);
     };
 
     // type alias for mutually exclusive access to the RenderContext

@@ -26,9 +26,7 @@ class Sidebar : public QWidget {
 
 public:
 
-    explicit Sidebar(QWidget *parent = nullptr);
-
-    void setDocument(ModuleDocument *doc);
+    explicit Sidebar(ModuleDocument &document, QWidget *parent = nullptr);
 
     AudioScope& scope();
 
@@ -50,7 +48,7 @@ private:
     void updatePatternsSpin();
 
 
-    ModuleDocument *mDocument;
+    ModuleDocument &mDocument;
     bool mIgnoreSelect;
     bool mSpeedLock;
     

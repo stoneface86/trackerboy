@@ -50,9 +50,36 @@ ModuleDocument::ModuleDocument(QObject *parent) :
     connect(&mUndoStack, &QUndoStack::cleanChanged, this, &ModuleDocument::onStackCleanChanged);
 }
 
-ModuleDocument::ModuleDocument(QString const& path, QObject *parent) :
-    ModuleDocument(parent)
-{
+trackerboy::FormatError ModuleDocument::lastError() {
+    return mLastError;
+}
+
+void ModuleDocument::clear() {
+    mUndoStack.clear();
+    mModule.clear();
+
+    mLastError = trackerboy::FormatError::none;
+    mFilename.clear();
+    mFilepath.clear();
+    mTitle.clear();
+    mArtist.clear();
+    mCopyright.clear();
+    mComments.clear();
+    mInstrument = 0;
+
+    clean();
+
+    mInstrumentModel.reload();
+    mWaveModel.reload();
+    mOrderModel.reload();
+    mPatternModel.reload();
+    mSongModel.reload();
+
+    emit reloaded();
+}
+
+bool ModuleDocument::open(QString const& path) {
+    bool success = false;
     std::ifstream in(path.toStdString(), std::ios::binary | std::ios::in);
     if (in.good()) {
         mLastError = mModule.deserialize(in);
@@ -69,14 +96,36 @@ ModuleDocument::ModuleDocument(QString const& path, QObject *parent) :
             mWaveModel.reload();
             mOrderModel.reload();
             mPatternModel.reload();
+            mSongModel.reload();
+
+            emit reloaded();
+            
+            success = true;
+        } else {
+            clear();
         }
     }
 
     in.close();
+    return success;
 }
 
-trackerboy::FormatError ModuleDocument::lastError() {
-    return mLastError;
+bool ModuleDocument::save() {
+    if (mFilepath.isEmpty()) {
+        return false;
+    } else {
+        return doSave(mFilepath);
+    }
+}
+
+bool ModuleDocument::save(QString const& filename) {
+    auto result = doSave(filename);
+    if (result) {
+        updateFilename(filename);
+    }
+
+    return result;
+   
 }
 
 QString ModuleDocument::name() const noexcept {
@@ -127,13 +176,6 @@ WaveListModel& ModuleDocument::waveModel() noexcept {
     return mWaveModel;
 }
 
-//void ModuleDocument::abandonStack() {
-//    if (!mUndoStack.isClean()) {
-//        makeDirty();
-//    }
-//    mUndoStack.clear();
-//}
-
 ModuleDocument::EditContext<true> ModuleDocument::beginEdit() {
     return { *this };
 }
@@ -142,23 +184,7 @@ ModuleDocument::EditContext<false> ModuleDocument::beginCommandEdit() {
     return { *this };
 }
 
-bool ModuleDocument::save() {
-    if (mFilepath.isEmpty()) {
-        return false;
-    } else {
-        return doSave(mFilepath);
-    }
-}
 
-bool ModuleDocument::save(QString const& filename) {
-    auto result = doSave(filename);
-    if (result) {
-        updateFilename(filename);
-    }
-
-    return result;
-   
-}
 
 bool ModuleDocument::doSave(QString const& filename) {
     bool success = false;

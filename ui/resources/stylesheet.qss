@@ -8,10 +8,6 @@
 ** %%6 - pattern editor font point size
 */
 
-QWidget#MainWidget {
-    background-color: gray;
-}
-
 PatternEditor PatternGrid {
     font-family: %5;
     font-size: %6pt;

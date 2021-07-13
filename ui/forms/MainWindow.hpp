@@ -43,30 +43,25 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow();
-    ~MainWindow();
+    virtual ~MainWindow();
 
     QMenu* createPopupMenu() override;
 
 protected:
 
-    void closeEvent(QCloseEvent *evt) override;
+    virtual void closeEvent(QCloseEvent *evt) override;
 
-    void showEvent(QShowEvent *evt) override;
+    virtual void showEvent(QShowEvent *evt) override;
 
 private slots:
 
     // actions
     void onFileNew();
     void onFileOpen();
-    void onFileSave();
-    void onFileSaveAs();
-    void onFileClose();
-    void onFileCloseAll();
+    bool onFileSave();
+    bool onFileSaveAs();
     
     void onViewResetLayout();
-
-    void onWindowNext();
-    void onWindowPrevious();
 
     // config changes
     void onConfigApplied(Config::Categories categories);
@@ -82,16 +77,6 @@ private slots:
     void onAudioStop();
     void onFrameSync();
 
-    void onTabChanged(int tabIndex);
-
-    void onBrowserDoubleClick(QModelIndex const& index);
-
-    void onDocumentModified(bool modified);
-
-    void updateWindowMenu();
-
-    void closeTab(int index);
-
 private:
     Q_DISABLE_COPY(MainWindow)
 
@@ -100,6 +85,8 @@ private:
         playing,
         error
     };
+
+    bool maybeSave();
 
     void setupUi();
 
@@ -117,13 +104,13 @@ private:
 
     // document management
 
-    void addDocument(ModuleDocument *doc);
+    //void addDocument(ModuleDocument *doc);
 
-    bool saveDocument(ModuleDocument *doc);
+    //bool saveDocument(ModuleDocument *doc);
 
-    bool saveDocumentAs(ModuleDocument *doc);
+    //bool saveDocumentAs(ModuleDocument *doc);
 
-    bool closeDocument(ModuleDocument *doc);
+    //bool closeDocument(ModuleDocument *doc);
 
     void updateWindowTitle();
 
@@ -152,7 +139,8 @@ private:
     // counter for how many times a new document has been created
     int mDocumentCounter;
 
-    ModuleModel mBrowserModel;
+    //ModuleModel mBrowserModel;
+    ModuleDocument mDocument;
 
     bool mErrorSinceLastConfig;
     trackerboy::Frame mLastEngineFrame;
@@ -193,15 +181,13 @@ private:
         QUndoView mUndoView;
 
     // central widget (must be heap-alloc'd)
-    QSplitter *mHSplitter;
-        QTreeView mBrowser;
-        QWidget mMainWidget;
-            QVBoxLayout mMainLayout;
-                QTabBar mTabs;
-                QWidget mEditorWidget;
-                    QHBoxLayout mEditorLayout;
-                        Sidebar mSidebar;
-                        PatternEditor mPatternEditor;
+    //QWidget *mMainWidget;
+    //    QVBoxLayout mMainLayout;
+    //        QTabBar mTabs;
+            QWidget *mMainWidget;
+                QHBoxLayout mEditorLayout;
+                    Sidebar mSidebar;
+                    PatternEditor mPatternEditor;
 
 
     // statusbar widgets
@@ -232,8 +218,6 @@ private:
         ActionFileSave = DOCUMENT_ACTIONS_BEGIN,
         ActionFileSaveAs,
         ActionFileExportWav,
-        ActionFileClose,
-        ActionFileCloseAll,
 
         ActionEditCopy,
         ActionEditCut,
@@ -267,9 +251,6 @@ private:
         ActionTrackerRepeat,
         ActionTrackerFollow,
 
-        ActionWindowPrev,
-        ActionWindowNext,
-
         ACTION_COUNT
     };
 
@@ -293,9 +274,6 @@ private:
 
     // Tracker
     QMenu mMenuTracker;
-
-    // Window
-    QMenu mMenuWindow;
 
     // Help
     QMenu mMenuHelp;

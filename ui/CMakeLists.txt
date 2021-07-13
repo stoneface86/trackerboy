@@ -41,7 +41,7 @@ set(UI_SRC
     "core/model/InstrumentChoiceModel.cpp"
     "core/model/InstrumentListModel.cpp"
     "core/model/ModuleDocument.cpp"
-    "core/model/ModuleModel.cpp"
+    #"core/model/ModuleModel.cpp"
     "core/model/OrderModel.cpp"
     "core/model/PatternModel.cpp"
     "core/model/SongModel.cpp"

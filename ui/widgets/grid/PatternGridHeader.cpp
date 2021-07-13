@@ -5,9 +5,9 @@
 #include <QMouseEvent>
 #include <QtDebug>
 
-PatternGridHeader::PatternGridHeader(QWidget *parent) :
+PatternGridHeader::PatternGridHeader(ModuleDocument &document, QWidget *parent) :
     QWidget(parent),
-    mDocument(nullptr),
+    mDocument(document),
     mOffset(0),
     mRownoWidth(0),
     mTrackWidth(0),
@@ -22,6 +22,8 @@ PatternGridHeader::PatternGridHeader(QWidget *parent) :
     setFixedHeight(HEIGHT);
     setAutoFillBackground(true);
     setMouseTracking(true);
+
+    connect(&document, &ModuleDocument::channelOutputChanged, this, &PatternGridHeader::setOutputFlags);
 }
 
 void PatternGridHeader::setColors(ColorTable const& colorTable) {
@@ -35,20 +37,6 @@ void PatternGridHeader::setColors(ColorTable const& colorTable) {
     mColorLine = colorTable[+Color::line];
 
     update();
-}
-
-void PatternGridHeader::setDocument(ModuleDocument *doc) {
-    if (mDocument) {
-        mDocument->disconnect(this);
-    }
-
-    mDocument = doc;
-    if (doc) {
-        mTrackFlags = doc->channelOutput();
-        update();
-
-        connect(doc, &ModuleDocument::channelOutputChanged, this, &PatternGridHeader::setOutputFlags);
-    }
 }
 
 void PatternGridHeader::setWidths(int rownoWidth, int trackWidth) {
@@ -138,7 +126,7 @@ void PatternGridHeader::mouseDoubleClickEvent(QMouseEvent *evt) {
             // solo
             mTrackFlags = (ModuleDocument::OutputFlag)(1 << mTrackHover);
         }
-        mDocument->setChannelOutput(mTrackFlags);
+        mDocument.setChannelOutput(mTrackFlags);
 
         update();
     }
@@ -164,7 +152,7 @@ void PatternGridHeader::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton && mTrackHover != HOVER_NONE) {
         // user clicked on a track header either to mute or unmute the channel
         mTrackFlags ^= (ModuleDocument::OutputFlag)(1 << mTrackHover);
-        mDocument->setChannelOutput(mTrackFlags);
+        mDocument.setChannelOutput(mTrackFlags);
         update();
     }
 }

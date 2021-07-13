@@ -15,8 +15,6 @@
 
 #include <algorithm>
 
-#define REQUIRE_DOCUMENT() if (Q_UNLIKELY(mDocument == nullptr)) return
-
 using namespace PatternConstants;
 
 
@@ -40,9 +38,9 @@ using namespace PatternConstants;
 //
 // The first 4 cells of the grid are reserved for the row numbers, and are not selectable
 
-PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
+PatternGrid::PatternGrid(PatternGridHeader &header, ModuleDocument &document, QWidget *parent) :
     QWidget(parent),
-    mDocument(nullptr),
+    mDocument(document),
     mHeader(header),
     mPainter(font()),
     mSelecting(false),
@@ -61,6 +59,26 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
 
     // first time initialization
     fontChanged();
+
+    auto &songModel = document.songModel();
+
+    connect(&songModel, &SongModel::rowsPerBeatChanged, this, &PatternGrid::setFirstHighlight);
+    connect(&songModel, &SongModel::rowsPerMeasureChanged, this, &PatternGrid::setSecondHighlight);
+
+    mPainter.setFirstHighlight(songModel.rowsPerBeat());
+    mPainter.setSecondHighlight(songModel.rowsPerMeasure());
+
+    auto &patternModel = document.patternModel();
+    connect(&patternModel, &PatternModel::cursorChanged, this, &PatternGrid::updateCursor);
+    // these changes require a full redraw
+    connect(&patternModel, &PatternModel::invalidated, this, &PatternGrid::updateAll);
+    connect(&patternModel, &PatternModel::selectionChanged, this, &PatternGrid::updateAll);
+    // these we only need to redraw the cursor row
+    connect(&patternModel, &PatternModel::recordingChanged, this, &PatternGrid::updateCursorRow);
+    
+
+    connect(&patternModel, &PatternModel::trackerCursorChanged, this, &PatternGrid::calculateTrackerRow);
+    connect(&patternModel, &PatternModel::playingChanged, this, &PatternGrid::setPlaying);
 
 }
 
@@ -91,43 +109,6 @@ void PatternGrid::setEditorFocus(bool focus) {
     }
 }
 
-void PatternGrid::setDocument(ModuleDocument *doc) {
-    if (mDocument) {
-        mDocument->songModel().disconnect(this);
-        mDocument->patternModel().disconnect(this);
-    }
-
-
-    mDocument = doc;
-
-    if (doc) {
-
-        auto &songModel = doc->songModel();
-
-        connect(&songModel, &SongModel::rowsPerBeatChanged, this, &PatternGrid::setFirstHighlight);
-        connect(&songModel, &SongModel::rowsPerMeasureChanged, this, &PatternGrid::setSecondHighlight);
-
-        mPainter.setFirstHighlight(songModel.rowsPerBeat());
-        mPainter.setSecondHighlight(songModel.rowsPerMeasure());
-
-        calculateTrackerRow();
-
-        auto &patternModel = doc->patternModel();
-        connect(&patternModel, &PatternModel::cursorChanged, this, &PatternGrid::updateCursor);
-        // these changes require a full redraw
-        connect(&patternModel, &PatternModel::invalidated, this, &PatternGrid::updateAll);
-        connect(&patternModel, &PatternModel::selectionChanged, this, &PatternGrid::updateAll);
-        // these we only need to redraw the cursor row
-        connect(&patternModel, &PatternModel::recordingChanged, this, &PatternGrid::updateCursorRow);
-        
-
-        connect(&patternModel, &PatternModel::trackerCursorChanged, this, &PatternGrid::calculateTrackerRow);
-        connect(&patternModel, &PatternModel::playingChanged, this, &PatternGrid::setPlaying);
-
-    }
-
-    update();
-}
 
 
 // ================================================================ EVENTS ===
@@ -181,8 +162,6 @@ void PatternGrid::dropEvent(QDropEvent *evt) {
 void PatternGrid::paintEvent(QPaintEvent *evt) {
     Q_UNUSED(evt);
 
-    REQUIRE_DOCUMENT();
-
     QPainter painter(this);
 
 
@@ -190,7 +169,7 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
     auto const rowHeight = mPainter.cellHeight();
     unsigned const centerRow = mVisibleRows / 2;
 
-    auto &patternModel = mDocument->patternModel();
+    auto &patternModel = mDocument.patternModel();
     auto const cursor = patternModel.cursor();
     auto patternPrev = patternModel.previousPattern();
     auto patternCurr = patternModel.currentPattern();
@@ -341,7 +320,7 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
         return;
     }
 
-    auto &patternModel = mDocument->patternModel();
+    auto &patternModel = mDocument.patternModel();
     auto pos = evt->pos();
 
     switch (mMouseOp) {
@@ -368,7 +347,7 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
             // update end coordinate for selection
             mSelectionEnd = mouseToCursor(pos);
             clampCursor(mSelectionEnd);
-            mDocument->patternModel().setSelection(mSelectionEnd);
+            mDocument.patternModel().setSelection(mSelectionEnd);
             break;
         case MouseOperation::dragging: {
             if ((pos - mMousePos).manhattanLength() < QApplication::startDragDistance()) {
@@ -385,7 +364,7 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
                 // do the move
                 auto cursor = mDragPos;
                 cursor.row -= mDragRow;
-                mDocument->patternModel().moveSelection(cursor);
+                mDocument.patternModel().moveSelection(cursor);
 
                 mHasDrag = false;
                 update();
@@ -402,7 +381,7 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
 void PatternGrid::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
 
-        auto &patternModel = mDocument->patternModel();
+        auto &patternModel = mDocument.patternModel();
         
         
         mMousePos = evt->pos();
@@ -446,7 +425,7 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 
         // if the user did not select anything, move the cursor to the starting coordinate
         if (mMouseOp == MouseOperation::beginSelecting || mMouseOp == MouseOperation::dragging) {
-            auto &patternModel = mDocument->patternModel();
+            auto &patternModel = mDocument.patternModel();
             patternModel.deselect();
             patternModel.setCursor(mSelectionStart);
         }
@@ -504,7 +483,7 @@ void PatternGrid::fontChanged() {
 }
 
 int PatternGrid::mouseToRow(int const mouseY) {
-    return mDocument->patternModel().cursorRow() + (mouseY / mPainter.cellHeight() - ((int)mVisibleRows / 2));
+    return mDocument.patternModel().cursorRow() + (mouseY / mPainter.cellHeight() - ((int)mVisibleRows / 2));
 }
 
 PatternCursor PatternGrid::mouseToCursor(QPoint const pos) {
@@ -529,11 +508,11 @@ PatternCursor PatternGrid::mouseToCursor(QPoint const pos) {
 }
 
 bool PatternGrid::rowIsValid(int row) {
-    return row >= 0 && row < (int)mDocument->patternModel().currentPattern().totalRows();
+    return row >= 0 && row < (int)mDocument.patternModel().currentPattern().totalRows();
 }
 
 void PatternGrid::clampCursor(PatternCursor &cursor) {
-    cursor.row = std::clamp(cursor.row, 0, (int)mDocument->patternModel().currentPattern().totalRows() - 1);
+    cursor.row = std::clamp(cursor.row, 0, (int)mDocument.patternModel().currentPattern().totalRows() - 1);
     if (cursor.track >= PatternCursor::MAX_TRACKS) {
         cursor.track = PatternCursor::MAX_TRACKS - 1;
         cursor.column = PatternCursor::MAX_COLUMNS - 1;
@@ -550,9 +529,8 @@ unsigned PatternGrid::getVisibleRows() {
 }
 
 void PatternGrid::calculateTrackerRow() {
-    REQUIRE_DOCUMENT();
 
-    auto &patternModel = mDocument->patternModel();
+    auto &patternModel = mDocument.patternModel();
     if (!patternModel.isFollowing() && patternModel.isPlaying()) {
 
         auto patternPrev = patternModel.previousPattern();
@@ -561,7 +539,7 @@ void PatternGrid::calculateTrackerRow() {
         int const centerRow = mVisibleRows / 2;
         auto const trackerRowCursor = patternModel.trackerCursorRow();
         auto const trackerPattern = patternModel.trackerCursorPattern();
-        auto const currentPattern = mDocument->orderModel().currentPattern();
+        auto const currentPattern = mDocument.orderModel().currentPattern();
         int trackerRow = -1;
         if (currentPattern == trackerPattern) {
             trackerRow = trackerRowCursor - (cursorRow - centerRow);

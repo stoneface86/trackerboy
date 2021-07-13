@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QIcon>
+#include <QSize>
 
 #include <array>
 
@@ -52,6 +53,10 @@ public:
     static QIcon getAppIcon();
 
     static QIcon const& getIcon(Icons icon);
+
+    static constexpr QSize size() {
+        return { 16, 16 };
+    }
 
 private:
 

@@ -78,26 +78,62 @@ public:
     Q_DECLARE_FLAGS(OutputFlags, OutputFlag)
 
     explicit ModuleDocument(QObject *parent = nullptr);
-    explicit ModuleDocument(QString const& path, QObject *parent = nullptr);
 
+    // file management -------------------------------------------------------
 
+    // reset the document to a new one
+    void clear();
+
+    // open the module, true is returned on success. On failure the document
+    // is reverted to a new document.
+    bool open(QString const& filename);
+
+    //
+    // saves the document to the previously loaded/saved file
+    //
+    bool save();
+
+    //
+    // saves the document to the given filename and updates the document's path
+    //
+    bool save(QString const& filename);
+
+    //
+    // Gets the last error that occurred from saving or loading
+    //
     trackerboy::FormatError lastError();
 
+    //
+    // Name of the document, the module filename
+    //
     QString name() const noexcept;
 
+    //
+    // Set the document's name. The save and open methods will set the name
+    // on success.
+    //
     void setName(QString const& name) noexcept;
 
+    //
+    // Filepath of the module if present. This path is used by save()
+    //
     QString filepath() const noexcept;
 
+    //
+    // Returns true if the document has a filepath set (ie open or save(filename) was
+    // successfully called).
+    //
     bool hasFile() const noexcept;
 
     // accessors for the underlying module data containers
+
+    // properties ------------------------------------------------------------
 
     trackerboy::Module& mod();
 
     QUndoStack& undoStack();
 
-    // models
+    // models ----------------------------------------------------------------
 
     InstrumentListModel& instrumentModel() noexcept;
 
@@ -109,6 +145,7 @@ public:
 
     WaveListModel& waveModel() noexcept;
 
+    // editing -------------------------------------------------------------
 
     bool isModified() const;
 
@@ -130,12 +167,6 @@ public:
     EditContext<false> beginCommandEdit();
 
     //trackerboy::FormatError open(QString const& filename);
-
-    // saves the document to the previously loaded/saved file
-    bool save();
-
-    // saves the document to the given filename and updates the document's path
-    bool save(QString const& filename);
 
     void lock();
 
@@ -173,6 +204,8 @@ signals:
     void channelOutputChanged(OutputFlags flags);
 
     void framerateChanged(float rate);
+
+    void reloaded();
 
 public slots:
     

@@ -21,7 +21,7 @@ class PatternEditor : public QFrame, public IMidiReceiver {
 
 public:
 
-    explicit PatternEditor(PianoInput const& input, QWidget *parent = nullptr);
+    explicit PatternEditor(ModuleDocument &document, PianoInput const& input, QWidget *parent = nullptr);
     virtual ~PatternEditor() = default;
 
     PatternGrid& grid();
@@ -48,7 +48,7 @@ signals:
 
 public slots:
 
-    void setDocument(ModuleDocument *doc);
+    //void setDocument(ModuleDocument *doc);
 
     void setInstrument(int index);
 
@@ -108,7 +108,7 @@ private:
     Q_DISABLE_COPY(PatternEditor)
 
     PianoInput const& mPianoIn;
-    ModuleDocument *mDocument;
+    ModuleDocument &mDocument;
 
     QGridLayout mLayout;
         PatternGridHeader mGridHeader;
@@ -127,8 +127,6 @@ private:
     PatternClipboard mClipboard;
 
     std::optional<uint8_t> mInstrument;
-
-    std::array<QMetaObject::Connection, 4> mConnections;
 
 
 };

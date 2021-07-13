@@ -9,6 +9,14 @@ SongModel::SongModel(ModuleDocument &doc) :
 {
 }
 
+void SongModel::reload() {
+    auto &song = mDocument.mod().song();
+    emit rowsPerBeatChanged(song.rowsPerBeat());
+    emit rowsPerMeasureChanged(song.rowsPerMeasure());
+    emit speedChanged((int)song.speed());
+    emit patternSizeChanged(song.patterns().rowSize());
+}
+
 int SongModel::rowsPerBeat() {
     return mDocument.mod().song().rowsPerBeat();
 }

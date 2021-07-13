@@ -98,13 +98,13 @@ static std::optional<uint8_t> keyToHex(int const key) {
 // +----------------------------------+--+
 
 
-PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
+PatternEditor::PatternEditor(ModuleDocument &document, PianoInput const& input, QWidget *parent) :
     QFrame(parent),
     mPianoIn(input),
-    mDocument(nullptr),
+    mDocument(document),
     mLayout(),
-    mGridHeader(),
-    mGrid(mGridHeader),
+    mGridHeader(document),
+    mGrid(mGridHeader, document),
     mHScroll(Qt::Horizontal),
     mVScroll(Qt::Vertical),
     mWheel(0),
@@ -134,7 +134,18 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
     connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 
-    setDocument(nullptr);
+    auto &patternModel = document.patternModel();
+    // scrollbars
+    mVScroll.setMaximum((int)patternModel.currentPattern().totalRows() - 1);
+    updateScrollbars(PatternModel::CursorRowChanged | PatternModel::CursorColumnChanged);
+    connect(&mVScroll, &QScrollBar::valueChanged, &patternModel, &PatternModel::setCursorRow);
+    connect(&mHScroll, &QScrollBar::valueChanged, this, &PatternEditor::setCursorFromHScroll);
+    connect(&patternModel, &PatternModel::cursorChanged, this, &PatternEditor::updateScrollbars);
+
+    connect(&patternModel, &PatternModel::patternSizeChanged, this,
+        [this](int rows) {
+            mVScroll.setMaximum(rows - 1);
+        });
 
 }
 
@@ -156,7 +167,7 @@ bool PatternEditor::event(QEvent *evt)  {
         if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
             // intercept tab presses
             int amount = key == Qt::Key_Backtab ? -1 : 1;
-            mDocument->patternModel().moveCursorTrack(amount);
+            mDocument.patternModel().moveCursorTrack(amount);
             return true;
         }
     }
@@ -184,8 +195,8 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
 
     auto selectionMode = shiftDown ? PatternModel::SelectionModify : PatternModel::SelectionRemove;
     
-    auto &patternModel = mDocument->patternModel();
-    auto &orderModel = mDocument->orderModel();
+    auto &patternModel = mDocument.patternModel();
+    auto &orderModel = mDocument.orderModel();
 
     // Up/Down/Left/Right - move cursor by 1 (also selects if shift is down)
     // PgUp/PgDn - move cursor by page step (also selects if shift is down)
@@ -246,7 +257,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             break;
     }
 
-    if (evt->isAutoRepeat() && !mDocument->keyRepetition()) {
+    if (evt->isAutoRepeat() && !mDocument.keyRepetition()) {
         QWidget::keyPressEvent(evt);
         return; // key repetition disabled, ignore this event
     }
@@ -355,7 +366,7 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
     }
 
     if (amount) {
-        auto &patternModel = mDocument->patternModel();
+        auto &patternModel = mDocument.patternModel();
         patternModel.moveCursorRow(amount);
     }
 
@@ -365,10 +376,10 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
 void PatternEditor::hscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mDocument->patternModel().moveCursorColumn(1);
+            mDocument.patternModel().moveCursorColumn(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mDocument->patternModel().moveCursorColumn(-1);
+            mDocument.patternModel().moveCursorColumn(-1);
             break;
         default:
             break;
@@ -377,7 +388,7 @@ void PatternEditor::hscrollAction(int action) {
 
 void PatternEditor::vscrollAction(int action) {
 
-    auto &patternModel = mDocument->patternModel();
+    auto &patternModel = mDocument.patternModel();
 
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
@@ -391,52 +402,23 @@ void PatternEditor::vscrollAction(int action) {
     }
 }
 
-void PatternEditor::setDocument(ModuleDocument *doc) {
-    if (mDocument != nullptr) {
-        for (auto const& conn : mConnections) {
-            disconnect(conn);
-        }
-    }
-
-    auto const hasDocument = doc != nullptr;
-    mDocument = doc;
-    mGrid.setDocument(doc);
-    mGridHeader.setDocument(doc);
-    if (hasDocument) {
-        auto &patternModel = doc->patternModel();
-        // scrollbars
-        mVScroll.setMaximum((int)patternModel.currentPattern().totalRows() - 1);
-        updateScrollbars(PatternModel::CursorRowChanged | PatternModel::CursorColumnChanged);
-        mConnections[0] = connect(&mVScroll, &QScrollBar::valueChanged, &patternModel, &PatternModel::setCursorRow);
-        mConnections[1] = connect(&mHScroll, &QScrollBar::valueChanged, this, &PatternEditor::setCursorFromHScroll);
-        mConnections[2] = connect(&patternModel, &PatternModel::cursorChanged, this, &PatternEditor::updateScrollbars);
-
-        mConnections[3] = connect(&patternModel, &PatternModel::patternSizeChanged, this,
-            [this](int rows) {
-                mVScroll.setMaximum(rows - 1);
-            });
-    }
-    
-
-}
-
 void PatternEditor::setInstrument(int index) {
     // index should never be -1 since the instrument combobox will always have
     // an option but just in case treat it as 0
     if (index <= 0) {
         mInstrument.reset();
     } else {
-        mInstrument = mDocument->instrumentModel().id(index - 1);
+        mInstrument = mDocument.instrumentModel().id(index - 1);
     }
 }
 
 void PatternEditor::cut() {
     copy();
-    mDocument->patternModel().deleteSelection();
+    mDocument.patternModel().deleteSelection();
 }
 
 void PatternEditor::copy() {
-    auto clip = mDocument->patternModel().clip();
+    auto clip = mDocument.patternModel().clip();
     mClipboard.setClip(clip);
 }
 
@@ -451,36 +433,36 @@ void PatternEditor::pasteMix() {
 void PatternEditor::pasteImpl(bool mix) {
     if (mClipboard.hasClip()) {
         auto &clip = mClipboard.clip();
-        mDocument->patternModel().paste(clip, mix);
+        mDocument.patternModel().paste(clip, mix);
     }
 }
 
 void PatternEditor::erase() {
 
-    mDocument->patternModel().deleteSelection();
-    if (!mDocument->patternModel().hasSelection()) {
+    mDocument.patternModel().deleteSelection();
+    if (!mDocument.patternModel().hasSelection()) {
         stepDown();
     }
 }
 
 void PatternEditor::selectAll() {
-    mDocument->patternModel().selectAll();
+    mDocument.patternModel().selectAll();
 }
 
 void PatternEditor::increaseNote() {
-    mDocument->patternModel().transpose(1);
+    mDocument.patternModel().transpose(1);
 }
 
 void PatternEditor::decreaseNote() {
-    mDocument->patternModel().transpose(-1);
+    mDocument.patternModel().transpose(-1);
 }
 
 void PatternEditor::increaseOctave() {
-    mDocument->patternModel().transpose(12);
+    mDocument.patternModel().transpose(12);
 }
 
 void PatternEditor::decreaseOctave() {
-    mDocument->patternModel().transpose(-12);
+    mDocument.patternModel().transpose(-12);
 }
 
 void PatternEditor::transpose() {
@@ -504,16 +486,16 @@ void PatternEditor::transpose() {
     connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
 
     if (dialog.exec() == QDialog::Accepted) {
-        mDocument->patternModel().transpose(transposeSpin.value());
+        mDocument.patternModel().transpose(transposeSpin.value());
     }
 }
 
 void PatternEditor::reverse() {
-    mDocument->patternModel().reverse();
+    mDocument.patternModel().reverse();
 }
 
 void PatternEditor::stepDown() {
-    mDocument->patternModel().moveCursorRow(mDocument->editStep());
+    mDocument.patternModel().moveCursorRow(mDocument.editStep());
 }
 
 void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {
@@ -521,7 +503,7 @@ void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {
     if (!mScrollLock) {
         mScrollLock = true;
 
-        auto cursor = mDocument->patternModel().cursor();
+        auto cursor = mDocument.patternModel().cursor();
         if (flags.testFlag(PatternModel::CursorRowChanged)) {
             mVScroll.setValue(cursor.row);
         }
@@ -538,7 +520,7 @@ void PatternEditor::setCursorFromHScroll(int value) {
     if (!mScrollLock) {
         mScrollLock = true;
 
-        auto &patternModel = mDocument->patternModel();
+        auto &patternModel = mDocument.patternModel();
         auto cursor = patternModel.cursor();
         cursor.column = value % PatternCursor::MAX_COLUMNS;
         cursor.track = value / PatternCursor::MAX_COLUMNS;
@@ -549,19 +531,16 @@ void PatternEditor::setCursorFromHScroll(int value) {
 }
 
 void PatternEditor::midiNoteOn(int note) {
-    if (mDocument) {
-        auto &patternModel = mDocument->patternModel();
-        if (patternModel.isRecording()) {
-            patternModel.setNote((uint8_t)note, mInstrument);
-            stepDown();
-        }
-
-        emit previewNote(note, patternModel.cursorTrack(), mInstrument.value_or(-1));
+    auto &patternModel = mDocument.patternModel();
+    if (patternModel.isRecording()) {
+        patternModel.setNote((uint8_t)note, mInstrument);
+        stepDown();
     }
+
+    emit previewNote(note, patternModel.cursorTrack(), mInstrument.value_or(-1));
+
 }
 
 void PatternEditor::midiNoteOff() {
-    if (mDocument) {
-        emit stopNotePreview();
-    }
+    emit stopNotePreview();
 }

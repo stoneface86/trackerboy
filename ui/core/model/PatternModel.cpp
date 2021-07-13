@@ -56,6 +56,10 @@ void PatternModel::reload() {
     mPatternCurr = mDocument.mod().song().getPattern(0);
     mCursorPattern = -1;
     setCursorPattern(0);
+    setCursor(PatternCursor(0, 0, 0));
+    deselect();
+    mTrackerRow = 0;
+    mTrackerPattern = 0;
 }
 
 trackerboy::Pattern* PatternModel::previousPattern() {
