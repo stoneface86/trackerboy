@@ -1,31 +1,9 @@
 
 #pragma once
 
-#include <QMutex>
-#include <QMutexLocker>
+#include "core/Locked.hpp"
 
 #include <utility>
-
-//
-// QMutexLocker subclass holding a reference to a locked object.
-//
-template <class T>
-class Locked : public QMutexLocker {
-
-    T &mRef;
-
-public:
-    constexpr Locked(T &ref, QMutex &mutex) :
-        QMutexLocker(&mutex),
-        mRef(ref)
-    {
-    }
-
-    constexpr T* operator->() {
-        return &mRef;
-    }
-
-};
 
 //
 // This class provides mutually exclusive access to a type.
