@@ -4,7 +4,6 @@
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
 #include "core/model/ModuleDocument.hpp"
-#include "core/model/ModuleModel.hpp"
 #include "core/model/InstrumentChoiceModel.hpp"
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"

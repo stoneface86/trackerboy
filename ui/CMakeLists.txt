@@ -32,6 +32,8 @@ set(UI_SRC
     "core/audio/VisualizerBuffer.cpp"
     "core/clipboard/PatternClip.cpp"
     "core/clipboard/PatternClipboard.cpp"
+    "core/document/Document.cpp"
+    "core/document/DocumentEditor.cpp"
     "core/midi/Midi.cpp"
     "core/midi/MidiProber.cpp"
     "core/model/graph/GraphModel.cpp"
