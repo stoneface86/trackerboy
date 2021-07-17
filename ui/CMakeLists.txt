@@ -79,8 +79,9 @@ set(UI_SRC
     #"widgets/grid/PatternGrid.cpp"
     #"widgets/grid/PatternGridHeader.cpp"
     #"widgets/grid/PatternPainter.cpp"
+    "widgets/sidebar/AudioScope.cpp"
     "widgets/sidebar/OrderEditor.cpp"
-    "widgets/visualizers/AudioScope.cpp"
+    "widgets/sidebar/SongEditor.cpp"
     #"widgets/visualizers/PeakMeter.cpp"
     #"widgets/visualizers/VolumeMeterAnimation.cpp"
     "widgets/CustomSpinBox.cpp"
@@ -89,7 +90,7 @@ set(UI_SRC
     #"widgets/PatternEditor.cpp"
     "widgets/PianoWidget.cpp"
     #"widgets/SequenceEditor.cpp"
-    #"widgets/Sidebar.cpp"
+    "widgets/Sidebar.cpp"
 )
 
 #

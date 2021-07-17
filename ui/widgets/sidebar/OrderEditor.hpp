@@ -1,19 +1,14 @@
 
 #pragma once
 
-class OrderModel;
-
+#include "core/model/OrderModel.hpp"
 #include "widgets/CustomSpinBox.hpp"
 
-#include <QAction>
-#include <QHBoxLayout>
-#include <QPushButton>
 #include <QTableView>
-#include <QToolBar>
-#include <QVBoxLayout>
-#include <QWidget>
 
-
+//
+// Composite widget for the song order editor, located in the Sidebar
+//
 class OrderEditor : public QWidget {
 
     Q_OBJECT
@@ -26,6 +21,9 @@ public:
 
 
 signals:
+    //
+    // re-emits QTableView's contextMenuRequested signal
+    //
     void popupMenuAt(QPoint const& pos);
 
     void jumpToPattern(int pattern);
@@ -38,12 +36,6 @@ private:
 
     OrderModel *mOrderModel;
 
-    QVBoxLayout mLayout;
-        QHBoxLayout mButtonLayout;
-            QToolBar mToolbar;
-                QAction mActionIncrement;
-                QAction mActionDecrement;
-            CustomSpinBox mSetSpin;
-            QPushButton mSetButton;
-        QTableView mOrderView;
+    CustomSpinBox *mSetSpin;
+    QTableView *mOrderView;
 };

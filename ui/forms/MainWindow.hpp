@@ -17,7 +17,7 @@
 //#include "widgets/editors/InstrumentEditor.hpp"
 //#include "widgets/editors/WaveEditor.hpp"
 //#include "widgets/PatternEditor.hpp"
-//#include "widgets/Sidebar.hpp"
+#include "widgets/Sidebar.hpp"
 
 #include <QDockWidget>
 #include <QHBoxLayout>
@@ -181,7 +181,7 @@ private:
     //     QHBoxLayout mEditorLayout;
     //         Sidebar mSidebar;
     //         PatternEditor mPatternEditor;
-
+    Sidebar *mSidebar;
 
     // statusbar widgets
     QLabel mStatusRenderer;

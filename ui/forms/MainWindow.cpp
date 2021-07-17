@@ -65,7 +65,8 @@ MainWindow::MainWindow() :
     // mDockWaveformEditor(),
     // mWaveEditor(mPianoInput),
     mDockHistory(),
-    mUndoView()
+    mUndoView(),
+    mSidebar(new Sidebar)
     // mMainWidget(nullptr),
     // mEditorLayout(),
     // mSidebar(mDocument),
@@ -496,7 +497,17 @@ void MainWindow::setupUi() {
 
     // CENTRAL WIDGET ========================================================
 
-    // MainWindow expects this to heap-alloc'd as it will manually delete the widget
+    auto centralWidget = new QWidget(this);
+    auto layout = new QHBoxLayout;
+    layout->addWidget(mSidebar);
+    layout->addStretch(1); // temporary
+    centralWidget->setLayout(layout);
+
+    mSidebar->orderEditor()->setModel(&mOrderModel);
+    mSidebar->songEditor()->setModel(&mSongModel);
+
+    setCentralWidget(centralWidget);
+
     // mMainWidget = new QWidget(this);
     // mMainWidget->setObjectName(QStringLiteral("MainWidget"));
 

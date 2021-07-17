@@ -1,5 +1,5 @@
 
-#include "widgets/visualizers/AudioScope.hpp"
+#include "widgets/sidebar/AudioScope.hpp"
 
 #include <QGuiApplication>
 #include <QMutexLocker>
