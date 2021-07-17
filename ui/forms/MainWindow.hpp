@@ -3,18 +3,21 @@
 
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
-#include "core/model/ModuleDocument.hpp"
+#include "core/model/InstrumentListModel.hpp"
+#include "core/model/OrderModel.hpp"
+#include "core/model/SongModel.hpp"
+#include "core/model/PatternModel.hpp"
+#include "core/model/WaveListModel.hpp"
 #include "core/model/InstrumentChoiceModel.hpp"
+#include "core/Module.hpp"
+#include "core/ModuleFile.hpp"
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
-#include "widgets/docks/ModuleSettingsWidget.hpp"
-#include "widgets/editors/InstrumentEditor.hpp"
-#include "widgets/editors/WaveEditor.hpp"
-#include "widgets/PatternEditor.hpp"
-#include "widgets/Sidebar.hpp"
-#include "widgets/visualizers/AudioScope.hpp"
-#include "widgets/visualizers/PeakMeter.hpp"
+//#include "widgets/editors/InstrumentEditor.hpp"
+//#include "widgets/editors/WaveEditor.hpp"
+//#include "widgets/PatternEditor.hpp"
+//#include "widgets/Sidebar.hpp"
 
 #include <QDockWidget>
 #include <QHBoxLayout>
@@ -101,16 +104,6 @@ private:
     //
     void settingsMessageBox(QMessageBox &msgbox);
 
-    // document management
-
-    //void addDocument(ModuleDocument *doc);
-
-    //bool saveDocument(ModuleDocument *doc);
-
-    //bool saveDocumentAs(ModuleDocument *doc);
-
-    //bool closeDocument(ModuleDocument *doc);
-
     void updateWindowTitle();
 
     void updateOrderActions();
@@ -126,6 +119,8 @@ private:
     //
     void disableMidi(bool causedByError);
 
+    QString const mUntitledString;
+
     Config mConfig;
 
     Midi mMidi;
@@ -134,12 +129,16 @@ private:
 
     PianoInput mPianoInput;
 
+    Module mModule;
+    ModuleFile mModuleFile;
 
-    // counter for how many times a new document has been created
-    int mDocumentCounter;
+    InstrumentListModel mInstrumentModel;
+    OrderModel mOrderModel;
+    SongModel mSongModel;
+    PatternModel mPatternModel;
+    WaveListModel mWaveModel;
 
-    //ModuleModel mBrowserModel;
-    ModuleDocument mDocument;
+    //Renderer mRenderer;
 
     bool mErrorSinceLastConfig;
     trackerboy::Frame mLastEngineFrame;
@@ -167,26 +166,21 @@ private:
 
 
     // dock widgets
-    QDockWidget mDockModuleSettings;
-        ModuleSettingsWidget mModuleSettingsWidget;
 
-    QDockWidget mDockInstrumentEditor;
-        InstrumentEditor mInstrumentEditor;
+    //QDockWidget mDockInstrumentEditor;
+    //    InstrumentEditor mInstrumentEditor;
 
-    QDockWidget mDockWaveformEditor;
-        WaveEditor mWaveEditor;
+    //QDockWidget mDockWaveformEditor;
+    //    WaveEditor mWaveEditor;
 
     QDockWidget mDockHistory;
         QUndoView mUndoView;
 
     // central widget (must be heap-alloc'd)
-    //QWidget *mMainWidget;
-    //    QVBoxLayout mMainLayout;
-    //        QTabBar mTabs;
-            QWidget *mMainWidget;
-                QHBoxLayout mEditorLayout;
-                    Sidebar mSidebar;
-                    PatternEditor mPatternEditor;
+    // QWidget *mMainWidget;
+    //     QHBoxLayout mEditorLayout;
+    //         Sidebar mSidebar;
+    //         PatternEditor mPatternEditor;
 
 
     // statusbar widgets
@@ -279,9 +273,7 @@ private:
 
     QMenu mContextMenuOrder;
 
-    QShortcut mPlayAndStopShortcut;
-
-    Renderer mRenderer;
+    //QShortcut mPlayAndStopShortcut;
 
 
 };

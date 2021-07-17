@@ -74,7 +74,7 @@ PianoWidget& BaseEditor::piano() {
     return mPiano;
 }
 
-void BaseEditor::setDocument(ModuleDocument *document) {
+void BaseEditor::setDocument(Document *document) {
     mSignalsEnabled = false;
 
     mDocument = document;
@@ -108,11 +108,11 @@ QWidget& BaseEditor::editorWidget() {
     return mEditorWidget;
 }
 
-ModuleDocument* BaseEditor::document() {
+Document* BaseEditor::document() {
     return mDocument;
 }
 
-void BaseEditor::documentChanged(ModuleDocument *doc) {
+void BaseEditor::documentChanged(Document *doc) {
     Q_UNUSED(doc)
     // do nothing
 }

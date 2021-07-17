@@ -1,11 +1,9 @@
 
 #include "core/model/graph/SequenceModel.hpp"
-#include "core/model/ModuleDocument.hpp"
-
 
 SequenceModel::SequenceModel(QObject *parent) :
     GraphModel(parent),
-    mDocument(nullptr),
+    mModule(nullptr),
     mSequence(nullptr)
 {
 }
@@ -20,7 +18,7 @@ SequenceModel::DataType SequenceModel::dataAt(int index) {
 
 void SequenceModel::setData(int index, DataType data) {
     {
-        auto ctx = mDocument->beginEdit();
+        auto ctx = mModule->permanentEdit();
         mSequence->data()[index] = data;
     }
 
@@ -30,20 +28,20 @@ void SequenceModel::setData(int index, DataType data) {
 void SequenceModel::setSize(int size) {
     if (count() != size) {
         {
-            auto ctx = mDocument->beginEdit();
+            auto ctx = mModule->permanentEdit();
             mSequence->resize((size_t)size);
         }
         emit countChanged(size);
     }
 }
 
-void SequenceModel::setSequence(ModuleDocument *doc, trackerboy::Sequence *seq) {
+void SequenceModel::setSequence(Module *mod, trackerboy::Sequence *seq) {
     if (mSequence == seq) {
         return;
     }
 
     auto curCount = count();
-    mDocument = doc;
+    mModule = mod;
     mSequence = seq;
     emit dataChanged();
 
@@ -58,7 +56,7 @@ void SequenceModel::removeSequence() {
     bool hadSequence = mSequence != nullptr;
     if (hadSequence) {
         auto _count = count();
-        mDocument = nullptr;
+        mModule = nullptr;
         mSequence = nullptr;
         emit dataChanged();
         if (_count != 0) {
@@ -74,7 +72,7 @@ trackerboy::Sequence* SequenceModel::sequence() const {
 void SequenceModel::replaceData(std::vector<uint8_t> const& data) {
     size_t oldsize;
     {
-        auto ctx = mDocument->beginEdit();
+        auto ctx = mModule->permanentEdit();
         auto &seqdata = mSequence->data();
         oldsize = seqdata.size();
         seqdata = data;
@@ -90,7 +88,7 @@ void SequenceModel::replaceData(std::vector<uint8_t> const& data) {
 void SequenceModel::setLoop(uint8_t loop) {
     if (mSequence->loop() != loop) {
         {
-            auto ctx = mDocument->beginEdit();
+            auto ctx = mModule->permanentEdit();
             mSequence->setLoop(loop);
         }
     }
@@ -99,7 +97,7 @@ void SequenceModel::setLoop(uint8_t loop) {
 void SequenceModel::removeLoop() {
     if (mSequence->loop()) {
         {
-            auto ctx = mDocument->beginEdit();
+            auto ctx = mModule->permanentEdit();
             mSequence->removeLoop();
         }
     }

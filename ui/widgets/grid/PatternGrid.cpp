@@ -38,7 +38,7 @@ using namespace PatternConstants;
 //
 // The first 4 cells of the grid are reserved for the row numbers, and are not selectable
 
-PatternGrid::PatternGrid(PatternGridHeader &header, ModuleDocument &document, QWidget *parent) :
+PatternGrid::PatternGrid(PatternGridHeader &header, Document &document, QWidget *parent) :
     QWidget(parent),
     mDocument(document),
     mHeader(header),

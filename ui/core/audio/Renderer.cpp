@@ -29,8 +29,8 @@
 // get what it needs and there are now gaps in the playback.
 
 
-Renderer::RenderContext::RenderContext(ModuleDocument &doc) :
-    document(doc),
+Renderer::RenderContext::RenderContext() :
+    document(nullptr),
     stepping(false),
     step(false),
     synth(44100),
@@ -51,13 +51,13 @@ Renderer::RenderContext::RenderContext(ModuleDocument &doc) :
 
 
 
-Renderer::Renderer(ModuleDocument &document, QObject *parent) :
+Renderer::Renderer(QObject *parent) :
     QObject(parent),
     mTimerThread(),
     mTimer(new FastTimer),
     mStream(),
     mVisBuffer(),
-    mContext(document)
+    mContext()
 {
     mTimer->setCallback(timerCallback, this);
     mTimer->moveToThread(&mTimerThread);
@@ -70,8 +70,6 @@ Renderer::Renderer(ModuleDocument &document, QObject *parent) :
             auto handle = mContext.access();
             stopRender(handle, true);
         });
-
-    connect(&document, &ModuleDocument::channelOutputChanged, this, &Renderer::setChannelOutput);
 }
 
 Renderer::~Renderer() {
@@ -438,16 +436,16 @@ void Renderer::resetPreview(Handle &handle) {
     handle->previewState = PreviewState::none;
 }
 
-void Renderer::setChannelOutput(ModuleDocument::OutputFlags flags) {
+void Renderer::setChannelOutput(Document::OutputFlags flags) {
     auto handle = mContext.access();
     _setChannelOutput(handle, flags);
 }
 
-void Renderer::_setChannelOutput(Handle &handle, ModuleDocument::OutputFlags flags) {
-    int flag = ModuleDocument::CH1;
+void Renderer::_setChannelOutput(Handle &handle, Document::OutputFlags flags) {
+    int flag = Document::CH1;
     for (int i = 0; i < 4; ++i) {
         auto ch = static_cast<trackerboy::ChType>(i);
-        if (flags.testFlag((ModuleDocument::OutputFlag)(flag))) {
+        if (flags.testFlag((Document::OutputFlag)(flag))) {
             handle->engine.lock(ch);
         } else {
             // channel is disabled, keep unlocked
@@ -547,9 +545,10 @@ void Renderer::render() {
                     // step engine/previewer
                     if (!handle->stepping || handle->step) {
                         
-                        handle->document.lock();
-                        handle->engine.step(frame);
-                        handle->document.unlock();
+                        {
+                            auto locker = handle->document.locker();
+                            handle->engine.step(frame);
+                        }
                         
                         if (frame.startedNewRow) {
                             handle->step = false;
@@ -560,9 +559,10 @@ void Renderer::render() {
                         auto &mod = handle->document.mod();
                         trackerboy::RuntimeContext rc(handle->apu, mod.instrumentTable(), mod.waveformTable());
                         
-                        handle->document.lock();
-                        handle->ip.step(rc);
-                        handle->document.unlock();
+                        {
+                            auto locker = handle->document.locker();
+                            handle->ip.step(rc);
+                        }
                     }
 
 

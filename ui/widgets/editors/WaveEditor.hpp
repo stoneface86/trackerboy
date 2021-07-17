@@ -23,7 +23,7 @@ protected:
 
     virtual void setCurrentItem(int index) override;
 
-    virtual BaseTableModel* getModel(ModuleDocument &doc) override;
+    virtual BaseTableModel* getModel(Document &doc) override;
 
 private:
 

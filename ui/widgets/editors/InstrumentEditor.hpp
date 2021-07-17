@@ -27,11 +27,11 @@ signals:
 
 protected:
 
-    virtual void documentChanged(ModuleDocument *doc) override;
+    virtual void documentChanged(Document *doc) override;
 
     virtual void setCurrentItem(int index) override;
 
-    virtual BaseTableModel* getModel(ModuleDocument &doc) override;
+    virtual BaseTableModel* getModel(Document &doc) override;
 
 private slots:
     void setChannel(int channel);

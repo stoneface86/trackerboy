@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "core/model/ModuleDocument.hpp"
-#include "core/Config.hpp"
-#include "core/WavExporter.hpp"
+class Document;
+class Config;
+class WavExporter;
 
 #include <QCheckBox>
 #include <QDialog>
@@ -25,7 +25,7 @@ class ExportWavDialog : public QDialog {
 
 public:
 
-    explicit ExportWavDialog(ModuleDocument &document, Config &config, QWidget *parent = nullptr);
+    explicit ExportWavDialog(Document &document, Config &config, QWidget *parent = nullptr);
 
     virtual void accept() override;
 
@@ -34,7 +34,7 @@ public:
 private:
     void setGroupsEnabled(bool enabled);
 
-    ModuleDocument &mDocument;
+    Document &mDocument;
     Config &mConfig;
 
     QVBoxLayout mLayout;

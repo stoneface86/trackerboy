@@ -1,7 +1,7 @@
 
 #pragma once
 
-class ModuleDocument;
+#include "core/Module.hpp"
 
 #include "trackerboy/data/Order.hpp"
 
@@ -24,10 +24,8 @@ class OrderModel : public QAbstractTableModel {
 
 public:
 
-    explicit OrderModel(ModuleDocument &document, QObject *parent = nullptr);
+    explicit OrderModel(Module &mod, QObject *parent = nullptr);
     ~OrderModel() = default;
-
-    ModuleDocument& document();
 
     void reload();
 
@@ -145,10 +143,9 @@ private:
     void cmdSwapRows(uint8_t from, uint8_t to);
 
 
-    ModuleDocument &mDocument;
+    Module &mModule;
 
-    trackerboy::Order &mOrder;
-    //std::vector<trackerboy::Order> *mOrder;
+    trackerboy::Order *mOrder;
 
     uint8_t mCurrentRow;
     uint8_t mCurrentTrack;

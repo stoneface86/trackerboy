@@ -1,12 +1,9 @@
 
 #include "core/model/graph/WaveModel.hpp"
 
-#include "core/model/ModuleDocument.hpp"
-#include "trackerboy/data/Waveform.hpp"
-
 WaveModel::WaveModel(QObject *parent) :
     GraphModel(parent),
-    mDocument(nullptr),
+    mModule(nullptr),
     mWaveform(nullptr)
 {
 }
@@ -43,7 +40,7 @@ void WaveModel::setData(int i, DataType data) {
     WaveIndex wi(i);
 
     {
-        auto ctx = mDocument->beginEdit();
+        auto ctx = mModule->permanentEdit();
         auto &samplepairRef = mWaveform->operator[](wi.index);
         auto samplepair = samplepairRef;
         if (wi.isLowNibble) {
@@ -60,15 +57,10 @@ void WaveModel::setData(int i, DataType data) {
 
 }
 
-void WaveModel::setWaveform(ModuleDocument *doc, int waveIndex) {
-    mDocument = doc;
+void WaveModel::setWaveform(Module *mod, trackerboy::Waveform *waveform) {
+    mModule = mod;
     auto oldwave = mWaveform;
-    if (doc) {
-        auto &model = doc->waveModel();
-        mWaveform = doc->mod().waveformTable().get(model.id(waveIndex));
-    } else {
-        mWaveform = nullptr;
-    }
+    mWaveform = waveform;
 
     if (oldwave != mWaveform) {
         emit dataChanged();
@@ -80,7 +72,7 @@ void WaveModel::setWaveform(ModuleDocument *doc, int waveIndex) {
 
 void WaveModel::setWaveformData(trackerboy::Waveform::Data const& data) {
     {
-        auto ctx = mDocument->beginEdit();
+        auto ctx = mModule->permanentEdit();
         std::copy(data.begin(), data.end(), mWaveform->data().begin());
     }
 
@@ -88,9 +80,9 @@ void WaveModel::setWaveformData(trackerboy::Waveform::Data const& data) {
 }
 
 void WaveModel::setDataFromString(QString const& str) {
-    if (mDocument) {
+    if (mModule) {
         {
-            auto ctx = mDocument->beginEdit();
+            auto ctx = mModule->permanentEdit();
             mWaveform->fromString(str.toStdString());
         }
         emit dataChanged();
@@ -104,7 +96,7 @@ QString WaveModel::waveformToString() {
 
 void WaveModel::clear() {
     {
-        auto ctx = mDocument->beginEdit();
+        auto ctx = mModule->permanentEdit();
         mWaveform->data().fill((uint8_t)0);
     }
     emit dataChanged();

@@ -1,9 +1,8 @@
 
 #pragma once
 
+#include "core/Module.hpp"
 #include "core/model/graph/GraphModel.hpp"
-
-class ModuleDocument;
 
 #include "trackerboy/data/Waveform.hpp"
 
@@ -20,7 +19,7 @@ public:
 
     virtual void setData(int i, DataType data) override;
 
-    void setWaveform(ModuleDocument *doc, int waveIndex);
+    void setWaveform(Module *mod, trackerboy::Waveform *waveform);
 
     void setWaveformData(trackerboy::Waveform::Data const& data);
 
@@ -33,7 +32,7 @@ public slots:
     void clear();
 
 private:
-    ModuleDocument *mDocument;
+    Module *mModule;
     trackerboy::Waveform *mWaveform;
 
 };

@@ -3,7 +3,7 @@
 
 #include "core/midi/MidiProber.hpp"
 #include "core/samplerates.hpp"
-#include "forms/ExportWavDialog.hpp"
+//#include "forms/ExportWavDialog.hpp"
 #include "misc/IconManager.hpp"
 #include "misc/utils.hpp"
 
@@ -32,13 +32,20 @@ constexpr int TOOLBAR_ICON_HEIGHT = 16;
 
 MainWindow::MainWindow() :
     QMainWindow(),
+    mUntitledString(tr("Untitled")),
     mConfig(),
     mMidi(),
     mMidiReceiver(nullptr),
     mMidiNoteDown(false),
     mPianoInput(),
-    mDocumentCounter(0),
-    mDocument(),
+    mModule(),
+    mModuleFile(),
+    mInstrumentModel(mModule),
+    mOrderModel(mModule),
+    mSongModel(mModule),
+    mPatternModel(mModule, mOrderModel, mSongModel),
+    mWaveModel(mModule),
+    //mRenderer(mDocument),
     mErrorSinceLastConfig(false),
     mAboutDialog(nullptr),
     mAudioDiag(nullptr),
@@ -53,22 +60,19 @@ MainWindow::MainWindow() :
     mEditStepSpin(),
     mToolbarInstrument(),
     mInstrumentCombo(),
-    mDockModuleSettings(),
-    mModuleSettingsWidget(),
-    mDockInstrumentEditor(),
-    mInstrumentEditor(mPianoInput),
-    mDockWaveformEditor(),
-    mWaveEditor(mPianoInput),
+    // mDockInstrumentEditor(),
+    // mInstrumentEditor(mPianoInput),
+    // mDockWaveformEditor(),
+    // mWaveEditor(mPianoInput),
     mDockHistory(),
-    mUndoView(),
-    mMainWidget(nullptr),
-    mEditorLayout(),
-    mSidebar(mDocument),
-    mPatternEditor(mDocument, mPianoInput),
-    mPlayAndStopShortcut(&mPatternEditor),
-    mRenderer(mDocument)
+    mUndoView()
+    // mMainWidget(nullptr),
+    // mEditorLayout(),
+    // mSidebar(mDocument),
+    // mPatternEditor(mDocument, mPianoInput),
+    // mPlayAndStopShortcut(&mPatternEditor)
 {
-    mMidiReceiver = &mPatternEditor;
+    //mMidiReceiver = &mPatternEditor;
 
     setupUi();
 
@@ -111,19 +115,19 @@ MainWindow::MainWindow() :
         addToolBar(&mToolbarTracker);
         addToolBar(&mToolbarInput);
         addToolBar(&mToolbarInstrument);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleSettings);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockInstrumentEditor);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveformEditor);
+        // addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleSettings);
+        // addDockWidget(Qt::LeftDockWidgetArea, &mDockInstrumentEditor);
+        // addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveformEditor);
         addDockWidget(Qt::LeftDockWidgetArea, &mDockHistory);
         restoreState(windowState);
     }
 
     // temporary
-    mInstrumentEditor.setDocument(&mDocument);
-    mWaveEditor.setDocument(&mDocument);
-    mModuleSettingsWidget.setDocument(&mDocument);
+    // mInstrumentEditor.setDocument(&mDocument);
+    // mWaveEditor.setDocument(&mDocument);
+    // mModuleSettingsWidget.setDocument(&mDocument);
 
-    mDocument.setName(tr("Untitled 1"));
+    mModuleFile.setName(mUntitledString);
     updateWindowTitle();
 
     // apply the read in configuration
@@ -145,13 +149,13 @@ QMenu* MainWindow::createPopupMenu() {
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
     if (maybeSave()) {
-        // all modules closed, accept this event and close
+        // user saved or discarded changes, close the window
         QSettings settings;
         settings.setValue("geometry", saveGeometry());
         settings.setValue("windowState", saveState());
         evt->accept();
     } else {
-        // user canceled closing a document, ignore this event
+        // user aborted closing, ignore this event
         evt->ignore();
     }
     
@@ -170,12 +174,11 @@ void MainWindow::onFileNew() {
         return;
     }
 
-    mRenderer.forceStop();
+    //mRenderer.forceStop();
 
-    ++mDocumentCounter;
-    mDocument.clear();
-    QString name = tr("Untitled %1").arg(mDocumentCounter);
-    mDocument.setName(name);
+    mModule.clear();
+
+    mModuleFile.setName(mUntitledString);
     updateWindowTitle();
 
 }
@@ -196,18 +199,16 @@ void MainWindow::onFileOpen() {
         return;
     }
 
-    mRenderer.forceStop();
+    //mRenderer.forceStop();
 
-    bool opened = mDocument.open(path);
+    bool opened = mModuleFile.open(path, mModule);
 
-    if (opened) {
-        // update window title with document name
-        updateWindowTitle();
-    } else {
-        auto error = mDocument.lastError();
+    if (!opened) {
         QMessageBox msgbox;
         msgbox.setIcon(QMessageBox::Critical);
         msgbox.setText(tr("Could not open module"));
+        
+        auto error = mModuleFile.lastError();
         switch (error) {
             case trackerboy::FormatError::duplicateId:
             case trackerboy::FormatError::invalid:
@@ -222,18 +223,22 @@ void MainWindow::onFileOpen() {
             default:
                 msgbox.setInformativeText(tr("The file could not be read"));
                 break;
-            
         }
+        
 
         msgbox.show();
+        mModuleFile.setName(mUntitledString);
         
     }
+
+    // update window title with document name
+    updateWindowTitle();
 
 }
 
 bool MainWindow::onFileSave() {
-    if (mDocument.hasFile()) {
-        return mDocument.save();
+    if (mModuleFile.hasFile()) {
+        return mModuleFile.save(mModule);
     } else {
         return onFileSaveAs();
     }
@@ -251,7 +256,7 @@ bool MainWindow::onFileSaveAs() {
         return false;
     }
 
-    auto result = mDocument.save(path);
+    auto result = mModuleFile.save(path, mModule);
     if (result) {
         // the document has a new name, update the window title
         updateWindowTitle();
@@ -274,21 +279,21 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
 
-        mErrorSinceLastConfig = !mRenderer.setConfig(sound);
-        if (mErrorSinceLastConfig) {
-            setPlayingStatus(PlayingStatusText::error);
-            if (isVisible()) {
-                QMessageBox msgbox(this);
-                msgbox.setIcon(QMessageBox::Critical);
-                msgbox.setText(tr("Could not initialize device"));
-                msgbox.setInformativeText(tr("The configured device could not be initialized. Playback is disabled."));
-                settingsMessageBox(msgbox);
-            }
-        } else {
-            if (!mRenderer.isRunning()) {
-                setPlayingStatus(PlayingStatusText::ready);
-            }
-        }
+        // mErrorSinceLastConfig = !mRenderer.setConfig(sound);
+        // if (mErrorSinceLastConfig) {
+        //     setPlayingStatus(PlayingStatusText::error);
+        //     if (isVisible()) {
+        //         QMessageBox msgbox(this);
+        //         msgbox.setIcon(QMessageBox::Critical);
+        //         msgbox.setText(tr("Could not initialize device"));
+        //         msgbox.setInformativeText(tr("The configured device could not be initialized. Playback is disabled."));
+        //         settingsMessageBox(msgbox);
+        //     }
+        // } else {
+        //     if (!mRenderer.isRunning()) {
+        //         setPlayingStatus(PlayingStatusText::ready);
+        //     }
+        // }
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
@@ -309,7 +314,7 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
             QString::number(appearance.font.pointSize())
         ));
 
-        mPatternEditor.setColors(appearance.colors);
+        //mPatternEditor.setColors(appearance.colors);
         OrderModel::setRowColor(appearance.colors[+Color::row]);
     }
 
@@ -341,11 +346,11 @@ void MainWindow::showAboutDialog() {
 }
 
 void MainWindow::showAudioDiag() {
-    if (mAudioDiag == nullptr) {
-        mAudioDiag = new AudioDiagDialog(mRenderer, this);
-    }
+    // if (mAudioDiag == nullptr) {
+    //     mAudioDiag = new AudioDiagDialog(mRenderer, this);
+    // }
 
-    mAudioDiag->show();
+    // mAudioDiag->show();
 }
 
 void MainWindow::showConfigDialog() {
@@ -360,16 +365,16 @@ void MainWindow::showConfigDialog() {
 }
 
 void MainWindow::showExportWavDialog() {
-    auto dialog = new ExportWavDialog(mDocument, mConfig, this);
-    dialog->show();
-    dialog->exec();
-    delete dialog;
+    // auto dialog = new ExportWavDialog(mDocument, mConfig, this);
+    // dialog->show();
+    // dialog->exec();
+    // delete dialog;
 }
 
 void MainWindow::onAudioStart() {
-    if (!mRenderer.isRunning()) {
-        return;
-    }
+    // if (!mRenderer.isRunning()) {
+    //     return;
+    // }
 
     mLastEngineFrame = {};
     mFrameSkip = 0;
@@ -394,9 +399,9 @@ void MainWindow::onAudioError() {
 }
 
 void MainWindow::onAudioStop() {
-    if (mRenderer.isRunning()) {
-        return; // sometimes it takes too long for this signal to get here
-    }
+    // if (mRenderer.isRunning()) {
+    //     return; // sometimes it takes too long for this signal to get here
+    // }
 
     if (!mErrorSinceLastConfig) {
         setPlayingStatus(PlayingStatusText::ready);
@@ -408,237 +413,64 @@ void MainWindow::onFrameSync() {
     // sync is a bit misleading here, as this slot is called when this frame
     // is in process of being bufferred. It is not the current frame being played out.
 
-    auto frame = mRenderer.currentFrame();
+    // auto frame = mRenderer.currentFrame();
 
-    // check if the player position changed
-    if (frame.startedNewRow) {        
-        // update tracker position
-        mDocument.patternModel().setTrackerCursor(frame.row, frame.order);
+    // // check if the player position changed
+    // if (frame.startedNewRow) {        
+    //     // update tracker position
+    //     mDocument.patternModel().setTrackerCursor(frame.row, frame.order);
 
-        // update position status
-        mStatusPos.setText(QStringLiteral("%1 / %2")
-            .arg(frame.order, 2, 10, QChar('0'))
-            .arg(frame.row, 2, 10, QChar('0')));
-    }
+    //     // update position status
+    //     mStatusPos.setText(QStringLiteral("%1 / %2")
+    //         .arg(frame.order, 2, 10, QChar('0'))
+    //         .arg(frame.row, 2, 10, QChar('0')));
+    // }
 
-    // check if the speed changed
-    if (mLastEngineFrame.speed != frame.speed) {
-        auto speedF = trackerboy::speedToFloat(frame.speed);
-        // update speed status
-        mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
-        auto tempo = trackerboy::speedToTempo(speedF, mDocument.songModel().rowsPerBeat());
-        mStatusTempo.setText(tr("%1 BPM").arg(tempo, 0, 'f', 2));
-    }
+    // // check if the speed changed
+    // if (mLastEngineFrame.speed != frame.speed) {
+    //     auto speedF = trackerboy::speedToFloat(frame.speed);
+    //     // update speed status
+    //     mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+    //     auto tempo = trackerboy::speedToTempo(speedF, mDocument.songModel().rowsPerBeat());
+    //     mStatusTempo.setText(tr("%1 BPM").arg(tempo, 0, 'f', 2));
+    // }
 
-    constexpr auto FRAME_SKIP = 30;
+    // constexpr auto FRAME_SKIP = 30;
 
-    if (mLastEngineFrame.time != frame.time) {
-        // determine elapsed time
-        if (mFrameSkip == 0) {
+    // if (mLastEngineFrame.time != frame.time) {
+    //     // determine elapsed time
+    //     if (mFrameSkip == 0) {
 
-            auto framerate = mDocument.framerate();
-            int elapsed = frame.time / framerate;
-            int secs = elapsed;
-            int mins = secs / 60;
-            secs = secs % 60;
+    //         auto framerate = mDocument.framerate();
+    //         int elapsed = frame.time / framerate;
+    //         int secs = elapsed;
+    //         int mins = secs / 60;
+    //         secs = secs % 60;
 
-            QString str = QStringLiteral("%1:%2")
-                .arg(mins, 2, 10, QChar('0'))
-                .arg(secs, 2, 10, QChar('0'));
-            mStatusElapsed.setText(str);
+    //         QString str = QStringLiteral("%1:%2")
+    //             .arg(mins, 2, 10, QChar('0'))
+    //             .arg(secs, 2, 10, QChar('0'));
+    //         mStatusElapsed.setText(str);
 
 
-            mFrameSkip = FRAME_SKIP;
-        } else {
-            --mFrameSkip;
-        }
-    }
+    //         mFrameSkip = FRAME_SKIP;
+    //     } else {
+    //         --mFrameSkip;
+    //     }
+    // }
 
-    mLastEngineFrame = frame;
+    // mLastEngineFrame = frame;
 }
-
-#if 0
-void MainWindow::onTabChanged(int tabIndex) {
-    auto previousDocument = mBrowserModel.currentDocument();
-    mBrowserModel.setCurrentDocument(tabIndex);
-    bool const hasDocument = tabIndex != -1;
-
-    if (mActions[DOCUMENT_ACTIONS_BEGIN].isEnabled() != hasDocument) {
-        // update enabled state for all document actions
-        for (int i = DOCUMENT_ACTIONS_BEGIN; i < ACTION_COUNT; ++i) {
-            mActions[i].setEnabled(hasDocument);
-        }
-    }
-
-    mPlayAndStopShortcut.setEnabled(hasDocument);
-
-    if (previousDocument) {
-        // disconnect any signals for the previous document
-        auto &patternModel = previousDocument->patternModel();
-        patternModel.disconnect(&mActions[ActionTrackerRecord]);
-        mActions[ActionTrackerRecord].disconnect(&patternModel);
-        mActions[ActionTrackerFollow].disconnect(&patternModel);
-        mActions[ActionEditKeyRepetition].disconnect(previousDocument);
-        previousDocument->setInstrument(mInstrumentCombo.currentIndex());
-        previousDocument->orderModel().disconnect(this);
-    }
-
-    if (hasDocument) {
-        auto doc = mBrowserModel.currentDocument();
-        auto &patternModel = doc->patternModel();
-        mActions[ActionTrackerRecord].setChecked(patternModel.isRecording());
-        connect(&mActions[ActionTrackerRecord], &QAction::toggled, &patternModel, &PatternModel::setRecord);
-        connect(&patternModel, &PatternModel::recordingChanged, &mActions[ActionTrackerRecord], &QAction::setChecked);
-        
-        // follow mode
-        mActions[ActionTrackerFollow].setChecked(patternModel.isFollowing());
-        connect(&mActions[ActionTrackerFollow], &QAction::toggled, &patternModel, &PatternModel::setFollowing);
-
-        // key repetition
-        mActions[ActionEditKeyRepetition].setChecked(doc->keyRepetition());
-        connect(&mActions[ActionEditKeyRepetition], &QAction::toggled, doc, &ModuleDocument::setKeyRepetition);
-
-        // edit step
-        mEditStepSpin.setValue(doc->editStep());
-
-        mInstrumentChoiceModel.setModel(&doc->instrumentModel());
-        auto index = doc->instrument();
-        if (index != mInstrumentCombo.currentIndex()) {
-            mInstrumentCombo.setCurrentIndex(doc->instrument());
-        } else {
-            // the index didn't change, but the referenced instrument might have
-            mPatternEditor.setInstrument(index);
-        }
-
-        auto &orderModel = doc->orderModel();
-        // when the user changes the current pattern, we have to make sure the
-        // move up/down actions are properly enabled
-        connect(&orderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
-        updateOrderActions();
-        
-    } else {
-        mInstrumentChoiceModel.setModel(nullptr);
-        mActions[ActionTrackerRecord].setChecked(false);
-    }
-    
-
-    mTabs.setVisible(hasDocument);
-    mEditorWidget.setVisible(hasDocument);
-    
-    mOctaveSpin.setEnabled(hasDocument);
-    mEditStepSpin.setEnabled(hasDocument);
-    mInstrumentCombo.setEnabled(hasDocument);
-
-    if (hasDocument) {
-        mPatternEditor.setFocus();
-    }
-
-    updateWindowTitle();
-
-}
-
-void MainWindow::onBrowserDoubleClick(QModelIndex const& index) {
-
-    auto tabIndex = mBrowserModel.documentIndex(index);
-    mTabs.setCurrentIndex(tabIndex);
-
-    QDockWidget *dockToActivate = nullptr;
-
-    // "open" the item according to its type
-    switch (mBrowserModel.itemAt(index)) {
-        case ModuleModel::ItemType::invalid:
-        case ModuleModel::ItemType::document:
-        case ModuleModel::ItemType::orders:
-            break;
-        case ModuleModel::ItemType::instrument:
-            mInstrumentEditor.openItem(index.row());
-            [[fallthrough]];
-        case ModuleModel::ItemType::instruments:
-            dockToActivate = &mDockInstrumentEditor;
-            break;
-        case ModuleModel::ItemType::order:
-            mBrowserModel.documents()[tabIndex]->orderModel().selectPattern(index.row());
-            break;
-        case ModuleModel::ItemType::waveform:
-            mWaveEditor.openItem(index.row());
-            [[fallthrough]];
-        case ModuleModel::ItemType::waveforms:
-            dockToActivate = &mDockWaveformEditor;
-            break;
-        case ModuleModel::ItemType::settings:
-            dockToActivate = &mDockModuleSettings;
-            break;
-    }
-
-    if (dockToActivate) {
-        dockToActivate->show();
-        dockToActivate->raise();
-        dockToActivate->activateWindow();
-    }
-}
-
-void MainWindow::onDocumentModified(bool modified) {
-    auto doc = qobject_cast<ModuleDocument*>(sender());
-    int index = mBrowserModel.documents().indexOf(doc);
-
-    // this happens when the document is being destroyed for some reason
-    if (index == -1) {
-        return;
-    }
-
-    if (modified) {
-        mTabs.setTabText(index, QStringLiteral("%1*").arg(doc->name()));
-    } else {
-        mTabs.setTabText(index, doc->name());
-    }
-
-    if (index == mTabs.currentIndex()) {
-        updateWindowTitle();
-    }
-}
-
-void MainWindow::updateWindowMenu() {
-    mMenuWindow.clear();
-    mMenuWindow.addAction(&mActions[ActionWindowPrev]);
-    mMenuWindow.addAction(&mActions[ActionWindowNext]);
-    
-    auto const& documents = mBrowserModel.documents();
-    if (documents.size() > 0) {
-        mMenuWindow.addSeparator();
-
-        int i = 1;
-        int const current = mTabs.currentIndex() + 1;
-        for (auto doc : documents) {
-            
-            auto textFmt = (i < 9) ? "&%1 %2" : "%1 %2";
-            QString text = tr(textFmt).arg(i).arg(doc->name());
-
-            auto action = mMenuWindow.addAction(text, this, [this, i]() {
-                mTabs.setCurrentIndex(i - 1);
-                });
-            action->setCheckable(true);
-            action->setChecked(i == current);
-
-            ++i;
-        }
-    }
-
-}
-
-void MainWindow::closeTab(int index) {
-    closeDocument(mBrowserModel.documents()[index]);
-}
-#endif
 
 // PRIVATE METHODS -----------------------------------------------------------
 
 bool MainWindow::maybeSave() {
-    if (mDocument.isModified()) {
+    if (mModule.isModified()) {
         // prompt the user if they want to save any changes
         auto const result = QMessageBox::warning(
             this,
             tr("Trackerboy"),
-            tr("Save changes to %1?").arg(mDocument.name()),
+            tr("Save changes to %1?").arg(mModuleFile.name()),
             QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel
         );
 
@@ -665,18 +497,18 @@ void MainWindow::setupUi() {
     // CENTRAL WIDGET ========================================================
 
     // MainWindow expects this to heap-alloc'd as it will manually delete the widget
-    mMainWidget = new QWidget(this);
-    mMainWidget->setObjectName(QStringLiteral("MainWidget"));
+    // mMainWidget = new QWidget(this);
+    // mMainWidget->setObjectName(QStringLiteral("MainWidget"));
 
-    //mEditorLayout.addLayout(&mGroupLayout);
-    mEditorLayout.addWidget(&mSidebar);
-    mEditorLayout.addWidget(&mPatternEditor, 1);
-    mEditorLayout.setMargin(0);
-    mMainWidget->setLayout(&mEditorLayout);
+    // //mEditorLayout.addLayout(&mGroupLayout);
+    // mEditorLayout.addWidget(&mSidebar);
+    // mEditorLayout.addWidget(&mPatternEditor, 1);
+    // mEditorLayout.setMargin(0);
+    // mMainWidget->setLayout(&mEditorLayout);
 
-    setCentralWidget(mMainWidget);
+    // setCentralWidget(mMainWidget);
 
-    mSidebar.scope().setBuffer(&mRenderer.visualizerBuffer());
+    // mSidebar.scope().setBuffer(&mRenderer.visualizerBuffer());
 
     // ACTIONS ===============================================================
 
@@ -688,7 +520,7 @@ void MainWindow::setupUi() {
     setupAction(mActions[ActionFileConfig], "&Configuration...", "Change application settings", Icons::fileConfig);
     setupAction(mActions[ActionFileQuit], "&Quit", "Exit the application", QKeySequence::Quit);
 
-    auto &undoStack = mDocument.undoStack();
+    auto &undoStack = mModule.undoStack();
     mActionEditUndo = undoStack.createUndoAction(this);
     mActionEditUndo->setIcon(IconManager::getIcon(Icons::editUndo));
     mActionEditUndo->setShortcut(QKeySequence::Undo);
@@ -886,7 +718,7 @@ void MainWindow::setupUi() {
     mOctaveSpin.setRange(2, 8);
     mOctaveSpin.setValue(mPianoInput.octave());
     mEditStepSpin.setRange(0, 255);
-    mEditStepSpin.setValue(mDocument.editStep());
+    mEditStepSpin.setValue(1);
 
     mToolbarInstrument.setWindowTitle(tr("Instrument"));
     mToolbarInstrument.setIconSize(iconSize);
@@ -894,26 +726,26 @@ void MainWindow::setupUi() {
     mToolbarInstrument.addWidget(&mInstrumentCombo);
     mInstrumentCombo.setMinimumWidth(200);
     mInstrumentCombo.setModel(&mInstrumentChoiceModel);
-    mInstrumentChoiceModel.setModel(&mDocument.instrumentModel());
+    mInstrumentChoiceModel.setModel(&mInstrumentModel);
 
     // SHORTCUTS =============================================================
 
-    mPlayAndStopShortcut.setKey(QKeySequence(Qt::Key_Return));
-    mPlayAndStopShortcut.setContext(Qt::WidgetWithChildrenShortcut);
+    // mPlayAndStopShortcut.setKey(QKeySequence(Qt::Key_Return));
+    // mPlayAndStopShortcut.setContext(Qt::WidgetWithChildrenShortcut);
 
     // DOCKS =================================================================
 
-    setObjectNameFromDeclared(mDockModuleSettings);
-    mDockModuleSettings.setWindowTitle(tr("Module settings"));
-    mDockModuleSettings.setWidget(&mModuleSettingsWidget);
+    // setObjectNameFromDeclared(mDockModuleSettings);
+    // mDockModuleSettings.setWindowTitle(tr("Module settings"));
+    // mDockModuleSettings.setWidget(&mModuleSettingsWidget);
     
-    setObjectNameFromDeclared(mDockInstrumentEditor);
-    mDockInstrumentEditor.setWindowTitle(tr("Instrument editor"));
-    mDockInstrumentEditor.setWidget(&mInstrumentEditor);
+    // setObjectNameFromDeclared(mDockInstrumentEditor);
+    // mDockInstrumentEditor.setWindowTitle(tr("Instrument editor"));
+    // mDockInstrumentEditor.setWidget(&mInstrumentEditor);
     
-    setObjectNameFromDeclared(mDockWaveformEditor);
-    mDockWaveformEditor.setWindowTitle(tr("Waveform editor"));
-    mDockWaveformEditor.setWidget(&mWaveEditor);
+    // setObjectNameFromDeclared(mDockWaveformEditor);
+    // mDockWaveformEditor.setWindowTitle(tr("Waveform editor"));
+    // mDockWaveformEditor.setWidget(&mWaveEditor);
 
     setObjectNameFromDeclared(mDockHistory);
     mDockHistory.setWindowTitle(tr("History"));
@@ -971,33 +803,33 @@ void MainWindow::setupUi() {
     connectActionToThis(mActions[ActionFileQuit], close);
 
     // Edit
-    connect(&mActions[ActionEditCut], &QAction::triggered, &mPatternEditor, &PatternEditor::cut);
-    connect(&mActions[ActionEditCopy], &QAction::triggered, &mPatternEditor, &PatternEditor::copy);
-    connect(&mActions[ActionEditPaste], &QAction::triggered, &mPatternEditor, &PatternEditor::paste);
-    connect(&mActions[ActionEditPasteMix], &QAction::triggered, &mPatternEditor, &PatternEditor::pasteMix);
-    connect(&mActions[ActionEditErase], &QAction::triggered, &mPatternEditor, &PatternEditor::erase);
-    connect(&mActions[ActionEditSelectAll], &QAction::triggered, &mPatternEditor, &PatternEditor::selectAll);
-    connect(&mActions[ActionEditNoteIncrease], &QAction::triggered, &mPatternEditor, &PatternEditor::increaseNote);
-    connect(&mActions[ActionEditNoteDecrease], &QAction::triggered, &mPatternEditor, &PatternEditor::decreaseNote);
-    connect(&mActions[ActionEditOctaveIncrease], &QAction::triggered, &mPatternEditor, &PatternEditor::increaseOctave);
-    connect(&mActions[ActionEditOctaveDecrease], &QAction::triggered, &mPatternEditor, &PatternEditor::decreaseOctave);
-    connect(&mActions[ActionEditTranspose], &QAction::triggered, &mPatternEditor, &PatternEditor::transpose);
-    connect(&mActions[ActionEditReverse], &QAction::triggered, &mPatternEditor, &PatternEditor::reverse);
+    // connect(&mActions[ActionEditCut], &QAction::triggered, &mPatternEditor, &PatternEditor::cut);
+    // connect(&mActions[ActionEditCopy], &QAction::triggered, &mPatternEditor, &PatternEditor::copy);
+    // connect(&mActions[ActionEditPaste], &QAction::triggered, &mPatternEditor, &PatternEditor::paste);
+    // connect(&mActions[ActionEditPasteMix], &QAction::triggered, &mPatternEditor, &PatternEditor::pasteMix);
+    // connect(&mActions[ActionEditErase], &QAction::triggered, &mPatternEditor, &PatternEditor::erase);
+    // connect(&mActions[ActionEditSelectAll], &QAction::triggered, &mPatternEditor, &PatternEditor::selectAll);
+    // connect(&mActions[ActionEditNoteIncrease], &QAction::triggered, &mPatternEditor, &PatternEditor::increaseNote);
+    // connect(&mActions[ActionEditNoteDecrease], &QAction::triggered, &mPatternEditor, &PatternEditor::decreaseNote);
+    // connect(&mActions[ActionEditOctaveIncrease], &QAction::triggered, &mPatternEditor, &PatternEditor::increaseOctave);
+    // connect(&mActions[ActionEditOctaveDecrease], &QAction::triggered, &mPatternEditor, &PatternEditor::decreaseOctave);
+    // connect(&mActions[ActionEditTranspose], &QAction::triggered, &mPatternEditor, &PatternEditor::transpose);
+    // connect(&mActions[ActionEditReverse], &QAction::triggered, &mPatternEditor, &PatternEditor::reverse);
 
     // view
     connectActionToThis(mActions[ActionViewResetLayout], onViewResetLayout);
 
     // tracker
-    connect(&mActions[ActionTrackerPlay], &QAction::triggered, &mRenderer, &Renderer::play, Qt::DirectConnection);
-    connect(&mActions[ActionTrackerRestart], &QAction::triggered, &mRenderer, &Renderer::playAtStart, Qt::DirectConnection);
-    connect(&mActions[ActionTrackerPlayCurrentRow], &QAction::triggered, &mRenderer, &Renderer::playFromCursor, Qt::DirectConnection);
-    connect(&mActions[ActionTrackerStepRow], &QAction::triggered, &mRenderer, &Renderer::stepFromCursor, Qt::DirectConnection);
-    connect(&mActions[ActionTrackerStop], &QAction::triggered, &mRenderer, &Renderer::stopMusic, Qt::DirectConnection);
-    connect(&mActions[ActionTrackerKill], &QAction::triggered, &mRenderer, &Renderer::forceStop, Qt::DirectConnection);
-    connect(&mActions[ActionTrackerRepeat], &QAction::toggled, &mRenderer, &Renderer::setPatternRepeat, Qt::DirectConnection);
+    // connect(&mActions[ActionTrackerPlay], &QAction::triggered, &mRenderer, &Renderer::play, Qt::DirectConnection);
+    // connect(&mActions[ActionTrackerRestart], &QAction::triggered, &mRenderer, &Renderer::playAtStart, Qt::DirectConnection);
+    // connect(&mActions[ActionTrackerPlayCurrentRow], &QAction::triggered, &mRenderer, &Renderer::playFromCursor, Qt::DirectConnection);
+    // connect(&mActions[ActionTrackerStepRow], &QAction::triggered, &mRenderer, &Renderer::stepFromCursor, Qt::DirectConnection);
+    // connect(&mActions[ActionTrackerStop], &QAction::triggered, &mRenderer, &Renderer::stopMusic, Qt::DirectConnection);
+    // connect(&mActions[ActionTrackerKill], &QAction::triggered, &mRenderer, &Renderer::forceStop, Qt::DirectConnection);
+    // connect(&mActions[ActionTrackerRepeat], &QAction::toggled, &mRenderer, &Renderer::setPatternRepeat, Qt::DirectConnection);
 
-    connect(&mActions[ActionTrackerToggleChannel], &QAction::triggered, &mDocument, &ModuleDocument::toggleChannelOutput);
-    connect(&mActions[ActionTrackerSolo], &QAction::triggered, &mDocument, &ModuleDocument::solo);
+    // connect(&mActions[ActionTrackerToggleChannel], &QAction::triggered, &mDocument, &ModuleDocument::toggleChannelOutput);
+    // connect(&mActions[ActionTrackerSolo], &QAction::triggered, &mDocument, &ModuleDocument::solo);
 
     // help
     connectActionToThis(mActions[ActionHelpAudioDiag], showAudioDiag);
@@ -1005,96 +837,96 @@ void MainWindow::setupUi() {
     QApplication::connect(&mActions[ActionHelpAboutQt], &QAction::triggered, &QApplication::aboutQt);
 
     // editors
-    {
-        auto &piano = mInstrumentEditor.piano();
-        connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewInstrument, Qt::DirectConnection);
-        connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
-    }
+    // {
+    //     auto &piano = mInstrumentEditor.piano();
+    //     connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewInstrument, Qt::DirectConnection);
+    //     connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
+    // }
 
-    connect(&mInstrumentEditor, &InstrumentEditor::openWaveEditor, this,
-        [this](int index) {
-            mWaveEditor.openItem(index);
-            mDockWaveformEditor.show();
-            mDockWaveformEditor.raise();
-            mDockWaveformEditor.activateWindow();
-        });
+    // connect(&mInstrumentEditor, &InstrumentEditor::openWaveEditor, this,
+    //     [this](int index) {
+    //         mWaveEditor.openItem(index);
+    //         mDockWaveformEditor.show();
+    //         mDockWaveformEditor.raise();
+    //         mDockWaveformEditor.activateWindow();
+    //     });
 
-    {
-        auto &piano = mWaveEditor.piano();
-        connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewWaveform, Qt::DirectConnection);
-        connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
-    }
+    // {
+    //     auto &piano = mWaveEditor.piano();
+    //     connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewWaveform, Qt::DirectConnection);
+    //     connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
+    // }
 
     connect(&mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, 
         [this](int octave) {
             mPianoInput.setOctave(octave);
         });
-    connect(&mPatternEditor, &PatternEditor::changeOctave, &mOctaveSpin, &QSpinBox::setValue);
+    // connect(&mPatternEditor, &PatternEditor::changeOctave, &mOctaveSpin, &QSpinBox::setValue);
 
-    connect(&mEditStepSpin, qOverload<int>(&QSpinBox::valueChanged), &mDocument, &ModuleDocument::setEditStep);
-    connect(&mInstrumentCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mPatternEditor, &PatternEditor::setInstrument);
+    // connect(&mEditStepSpin, qOverload<int>(&QSpinBox::valueChanged), &mDocument, &ModuleDocument::setEditStep);
+    // connect(&mInstrumentCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mPatternEditor, &PatternEditor::setInstrument);
 
-    connect(&mPatternEditor, &PatternEditor::nextInstrument, this,
-        [this]() {
-            auto index = mInstrumentCombo.currentIndex() + 1;
-            if (index < mInstrumentCombo.count()) {
-                mInstrumentCombo.setCurrentIndex(index);
-            }
-        });
-    connect(&mPatternEditor, &PatternEditor::previousInstrument, this,
-        [this]() {
-            auto index = mInstrumentCombo.currentIndex() - 1;
-            if (index >= 0) {
-                mInstrumentCombo.setCurrentIndex(index);
-            }
-        });
+    // connect(&mPatternEditor, &PatternEditor::nextInstrument, this,
+    //     [this]() {
+    //         auto index = mInstrumentCombo.currentIndex() + 1;
+    //         if (index < mInstrumentCombo.count()) {
+    //             mInstrumentCombo.setCurrentIndex(index);
+    //         }
+    //     });
+    // connect(&mPatternEditor, &PatternEditor::previousInstrument, this,
+    //     [this]() {
+    //         auto index = mInstrumentCombo.currentIndex() - 1;
+    //         if (index >= 0) {
+    //             mInstrumentCombo.setCurrentIndex(index);
+    //         }
+    //     });
 
-    connect(&mSidebar, &Sidebar::orderMenuRequested, this,
-        [this](QPoint const& pos) {
-            mContextMenuOrder.popup(pos);
-        });
+    // connect(&mSidebar, &Sidebar::orderMenuRequested, this,
+    //     [this](QPoint const& pos) {
+    //         mContextMenuOrder.popup(pos);
+    //     });
 
-    connect(&mSidebar, &Sidebar::patternJumpRequested, &mRenderer, &Renderer::jumpToPattern);
+    // connect(&mSidebar, &Sidebar::patternJumpRequested, &mRenderer, &Renderer::jumpToPattern);
 
     // order actions
     connect(&mActions[ActionSongOrderInsert], &QAction::triggered, this,
         [this]() {
-            mDocument.orderModel().insert();
+            mOrderModel.insert();
             updateOrderActions();
         });
     connect(&mActions[ActionSongOrderRemove], &QAction::triggered, this,
         [this]() {
-            mDocument.orderModel().remove();
+            mOrderModel.remove();
             updateOrderActions();
         });
     connect(&mActions[ActionSongOrderDuplicate], &QAction::triggered, this,
         [this]() {
-            mDocument.orderModel().duplicate();
+            mOrderModel.duplicate();
             updateOrderActions();
         });
     connect(&mActions[ActionSongOrderMoveUp], &QAction::triggered, this,
         [this]() {
-            mDocument.orderModel().moveUp();
+            mOrderModel.moveUp();
             updateOrderActions();
         });
     connect(&mActions[ActionSongOrderMoveDown], &QAction::triggered, this,
         [this]() {
-            mDocument.orderModel().moveDown();
+            mOrderModel.moveDown();
             updateOrderActions();
         });
 
-    connect(&mPatternEditor, &PatternEditor::previewNote, &mRenderer, &Renderer::previewNote, Qt::DirectConnection);
-    connect(&mPatternEditor, &PatternEditor::stopNotePreview, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
+    // connect(&mPatternEditor, &PatternEditor::previewNote, &mRenderer, &Renderer::previewNote, Qt::DirectConnection);
+    // connect(&mPatternEditor, &PatternEditor::stopNotePreview, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
     
 
-    connect(&mPlayAndStopShortcut, &QShortcut::activated, this,
-        [this]() {
-            if (mRenderer.isRunning()) {
-                mActions[ActionTrackerStop].trigger();
-            } else {
-                mActions[ActionTrackerPlay].trigger();
-            }
-        });
+    // connect(&mPlayAndStopShortcut, &QShortcut::activated, this,
+    //     [this]() {
+    //         if (mRenderer.isRunning()) {
+    //             mActions[ActionTrackerStop].trigger();
+    //         } else {
+    //             mActions[ActionTrackerPlay].trigger();
+    //         }
+    //     });
 
     connect(&mMidi, &Midi::error, this,
         [this]() {
@@ -1113,24 +945,22 @@ void MainWindow::setupUi() {
             mMidiNoteDown = false;
         });
 
-    connect(&mDocument, &ModuleDocument::modifiedChanged, this, &MainWindow::setWindowModified);
-    connect(&mActions[ActionEditKeyRepetition], &QAction::toggled, &mDocument, &ModuleDocument::setKeyRepetition);
+    connect(&mModule, &Module::modifiedChanged, this, &MainWindow::setWindowModified);
+    // connect(&mActions[ActionEditKeyRepetition], &QAction::toggled, &mDocument, &ModuleDocument::setKeyRepetition);
 
-    auto &patternModel = mDocument.patternModel();
-    connect(&patternModel, &PatternModel::recordingChanged, &mActions[ActionTrackerRecord], &QAction::setChecked);
-    connect(&mActions[ActionTrackerRecord], &QAction::toggled, &patternModel, &PatternModel::setRecord);
-    connect(&mActions[ActionTrackerFollow], &QAction::toggled, &patternModel, &PatternModel::setFollowing);
+    connect(&mPatternModel, &PatternModel::recordingChanged, &mActions[ActionTrackerRecord], &QAction::setChecked);
+    connect(&mActions[ActionTrackerRecord], &QAction::toggled, &mPatternModel, &PatternModel::setRecord);
+    connect(&mActions[ActionTrackerFollow], &QAction::toggled, &mPatternModel, &PatternModel::setFollowing);
 
-    auto &orderModel = mDocument.orderModel();
-    connect(&orderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
+    connect(&mOrderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
     updateOrderActions();
 
-    connect(&mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
-    connect(&mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
-    connect(&mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
-    connect(&mRenderer, &Renderer::frameSync, this, &MainWindow::onFrameSync);
+    // connect(&mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
+    // connect(&mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
+    // connect(&mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
+    // connect(&mRenderer, &Renderer::frameSync, this, &MainWindow::onFrameSync);
     
-    connect(&mRenderer, &Renderer::updateVisualizers, &mSidebar.scope(), qOverload<>(&AudioScope::update));
+    // connect(&mRenderer, &Renderer::updateVisualizers, &mSidebar.scope(), qOverload<>(&AudioScope::update));
 
     auto app = static_cast<QApplication*>(QApplication::instance());
     connect(app, &QApplication::focusChanged, this, &MainWindow::handleFocusChange);
@@ -1156,17 +986,17 @@ void MainWindow::initState() {
     addToolBar(Qt::TopToolBarArea, &mToolbarTracker);
     mToolbarTracker.show();
 
-    addDockWidget(Qt::RightDockWidgetArea, &mDockModuleSettings);
-    mDockModuleSettings.setFloating(true);
-    mDockModuleSettings.hide();
+    // addDockWidget(Qt::RightDockWidgetArea, &mDockModuleSettings);
+    // mDockModuleSettings.setFloating(true);
+    // mDockModuleSettings.hide();
 
-    addDockWidget(Qt::RightDockWidgetArea, &mDockInstrumentEditor);
-    mDockInstrumentEditor.setFloating(true);
-    mDockInstrumentEditor.hide();
+    // addDockWidget(Qt::RightDockWidgetArea, &mDockInstrumentEditor);
+    // mDockInstrumentEditor.setFloating(true);
+    // mDockInstrumentEditor.hide();
 
-    addDockWidget(Qt::RightDockWidgetArea, &mDockWaveformEditor);
-    mDockWaveformEditor.setFloating(true);
-    mDockWaveformEditor.hide();
+    // addDockWidget(Qt::RightDockWidgetArea, &mDockWaveformEditor);
+    // mDockWaveformEditor.setFloating(true);
+    // mDockWaveformEditor.hide();
 
     addDockWidget(Qt::RightDockWidgetArea, &mDockHistory);
     mDockHistory.setFloating(true);
@@ -1175,9 +1005,9 @@ void MainWindow::initState() {
 
 void MainWindow::setupViewMenu(QMenu &menu) {
 
-    menu.addAction(mDockModuleSettings.toggleViewAction());
-    menu.addAction(mDockInstrumentEditor.toggleViewAction());
-    menu.addAction(mDockWaveformEditor.toggleViewAction());
+    // menu.addAction(mDockModuleSettings.toggleViewAction());
+    // menu.addAction(mDockInstrumentEditor.toggleViewAction());
+    // menu.addAction(mDockWaveformEditor.toggleViewAction());
     menu.addAction(mDockHistory.toggleViewAction());
 
     menu.addSeparator();
@@ -1210,17 +1040,16 @@ void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
 }
 
 void MainWindow::updateWindowTitle() {
-    setWindowTitle(QStringLiteral("%1[*] - Trackerboy").arg(mDocument.name()));
+    setWindowTitle(QStringLiteral("%1[*] - Trackerboy").arg(mModuleFile.name()));
 }
 
 void MainWindow::updateOrderActions() {
-    auto &model = mDocument.orderModel();
-    bool canInsert = model.canInsert();
+    bool canInsert = mOrderModel.canInsert();
     mActions[ActionSongOrderInsert].setEnabled(canInsert);
     mActions[ActionSongOrderDuplicate].setEnabled(canInsert);
-    mActions[ActionSongOrderRemove].setEnabled(model.canRemove());
-    mActions[ActionSongOrderMoveUp].setEnabled(model.canMoveUp());
-    mActions[ActionSongOrderMoveDown].setEnabled(model.canMoveDown());
+    mActions[ActionSongOrderRemove].setEnabled(mOrderModel.canRemove());
+    mActions[ActionSongOrderMoveUp].setEnabled(mOrderModel.canMoveUp());
+    mActions[ActionSongOrderMoveDown].setEnabled(mOrderModel.canMoveDown());
 }
 
 void MainWindow::setPlayingStatus(PlayingStatusText type) {
@@ -1272,40 +1101,40 @@ void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
     // that check for FocusIn and FocusOut events, which we could emit a
     // signal for these and the MainWindow would handle them appropriately.
 
-    if (mMidi.isEnabled()) {
-        if (QApplication::activeModalWidget()) {
-            return; // ignore if a dialog is open
-        }
+    // if (mMidi.isEnabled()) {
+    //     if (QApplication::activeModalWidget()) {
+    //         return; // ignore if a dialog is open
+    //     }
 
-        // MIDI events by default go to the pattern editor
-        IMidiReceiver *receiver = &mPatternEditor;
+    //     // MIDI events by default go to the pattern editor
+    //     IMidiReceiver *receiver = &mPatternEditor;
 
-        QWidget *widget = newWidget;
-        while (widget) {
-            // search if this widget's parent is the instrument or waveform editor dock
-            // if it is, midi events will go to the editor's piano widget
-            if (widget == &mDockWaveformEditor) {
-                receiver = &mWaveEditor.piano();
-                break;
-            } else if (widget == &mDockInstrumentEditor) {
-                receiver = &mInstrumentEditor.piano();
-                break;
-            }
-            widget = widget->parentWidget();
-        }
+    //     QWidget *widget = newWidget;
+    //     while (widget) {
+    //         // search if this widget's parent is the instrument or waveform editor dock
+    //         // if it is, midi events will go to the editor's piano widget
+    //         if (widget == &mDockWaveformEditor) {
+    //             receiver = &mWaveEditor.piano();
+    //             break;
+    //         } else if (widget == &mDockInstrumentEditor) {
+    //             receiver = &mInstrumentEditor.piano();
+    //             break;
+    //         }
+    //         widget = widget->parentWidget();
+    //     }
 
-        if (mMidiReceiver != receiver) {
-            // change the receiver
-            if (mMidiNoteDown) {
-                // force the note off
-                // if we don't do this, the previous receiver won't get the next noteOff message
-                // and the note will be held indefinitely
-                mMidiReceiver->midiNoteOff();
-                mMidiNoteDown = false;
-            }
-            mMidiReceiver = receiver;
+    //     if (mMidiReceiver != receiver) {
+    //         // change the receiver
+    //         if (mMidiNoteDown) {
+    //             // force the note off
+    //             // if we don't do this, the previous receiver won't get the next noteOff message
+    //             // and the note will be held indefinitely
+    //             mMidiReceiver->midiNoteOff();
+    //             mMidiNoteDown = false;
+    //         }
+    //         mMidiReceiver = receiver;
 
-        }
-    }
+    //     }
+    // }
 
 }

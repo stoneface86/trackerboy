@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/ModuleDocument.hpp"
+#include "core/Document.hpp"
 #include "core/ColorTable.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
@@ -28,7 +28,7 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(PatternGridHeader &header, ModuleDocument &document, QWidget *parent = nullptr);
+    explicit PatternGrid(PatternGridHeader &header, Document &document, QWidget *parent = nullptr);
     ~PatternGrid() = default;
 
     // Settings
@@ -104,7 +104,7 @@ private:
 
     void calculateTrackerRow();
 
-    ModuleDocument &mDocument;
+    Document &mDocument;
     PatternGridHeader &mHeader;
     PatternPainter mPainter;
 

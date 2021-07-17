@@ -130,7 +130,7 @@ InstrumentEditor::InstrumentEditor(PianoInput const& input, QWidget *parent) :
 
 }
 
-void InstrumentEditor::documentChanged(ModuleDocument *doc) {
+void InstrumentEditor::documentChanged(Document *doc) {
     if (doc == nullptr) {
         mWaveformCombo.clear();
     } else {
@@ -143,7 +143,7 @@ void InstrumentEditor::setChannel(int channel) {
         auto chtype = static_cast<trackerboy::ChType>(channel);
         auto doc = document();
         if (chtype != mInstrument->channel()) {
-            auto ctx = doc->beginEdit();
+            auto ctx = doc->permanentEdit();
             mInstrument->setChannel(chtype);
         }
         doc->instrumentModel().updateChannelIcon();
@@ -181,7 +181,7 @@ void InstrumentEditor::setCurrentItem(int index) {
 
 }
 
-BaseTableModel* InstrumentEditor::getModel(ModuleDocument &doc) {
+BaseTableModel* InstrumentEditor::getModel(Document &doc) {
     return &doc.instrumentModel();
 }
 
@@ -195,14 +195,14 @@ void InstrumentEditor::setEnvelopeToWaveform(int index) {
 
 void InstrumentEditor::setEnvelope(uint8_t envelope) {
     if (mCanModifyInstrument && mInstrument->envelope() != envelope) {
-        auto ctx = document()->beginEdit();
+        auto ctx = document()->permanentEdit();
         mInstrument->setEnvelope(envelope);
     }
 }
 
 void InstrumentEditor::setEnvelopeEnable(bool enabled) {
     if (mCanModifyInstrument && mInstrument->hasEnvelope() != enabled) {
-        auto ctx = document()->beginEdit();
+        auto ctx = document()->permanentEdit();
         mInstrument->setEnvelopeEnable(enabled);
     }
 }

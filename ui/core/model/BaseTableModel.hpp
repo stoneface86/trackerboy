@@ -1,6 +1,6 @@
 #pragma once
 
-class ModuleDocument;
+#include "core/Module.hpp"
 
 #include "trackerboy/data/Table.hpp"
 
@@ -18,11 +18,10 @@ public:
 
     virtual ~BaseTableModel();
 
-    ModuleDocument& document();
-
     bool canDuplicate() const;
 
-    // resets the model
+    // resets the model. called when the document is reset or loaded a
+    // module from a file
     void reload();
 
     // commit all string data to the underlying data table. To be called
@@ -56,12 +55,12 @@ public slots:
 
 
 protected:
-    BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table, QString defaultName);
+    BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName);
 
     virtual QIcon iconData(uint8_t id) const = 0;
 
-    ModuleDocument &mDocument;
-    trackerboy::BaseTable &mBaseTable;
+    Module &mModule;
+    trackerboy::BaseTable& mBaseTable;
 
     int mCurrentIndex;
 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/ModuleDocument.hpp"
+#include "core/Document.hpp"
 #include "widgets/PianoWidget.hpp"
 
 #include <QAction>
@@ -23,7 +23,7 @@ public:
 
 public slots:
     
-    void setDocument(ModuleDocument *document);
+    void setDocument(Document *document);
 
     //
     // Opens the item at the given index for editing
@@ -37,14 +37,14 @@ protected:
     QWidget& editorWidget();
 
 
-    virtual BaseTableModel* getModel(ModuleDocument &doc) = 0;
+    virtual BaseTableModel* getModel(Document &doc) = 0;
 
-    ModuleDocument *document();
+    Document *document();
 
 protected:
     virtual void setCurrentItem(int index) = 0;
 
-    virtual void documentChanged(ModuleDocument *doc);
+    virtual void documentChanged(Document *doc);
 
 private slots:
 
@@ -60,7 +60,7 @@ private slots:
 
 private:
 
-    ModuleDocument *mDocument;
+    Document *mDocument;
 
     bool mSignalsEnabled;
 

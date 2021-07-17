@@ -1,6 +1,5 @@
 
 #include "core/model/OrderModel.hpp"
-#include "core/model/ModuleDocument.hpp"
 
 #include <QColor>
 
@@ -36,8 +35,8 @@ private:
 
     void setCell(uint8_t value) {
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
-            mModel.mOrder[mPattern][mTrack] = value;
+            auto ctx = mModel.mModule.edit();
+            (*mModel.mOrder)[mPattern][mTrack] = value;
         }
         auto cellIndex = mModel.createIndex(mPattern, mTrack, nullptr);
         emit mModel.dataChanged(cellIndex, cellIndex, { Qt::DisplayRole });
@@ -121,7 +120,7 @@ public:
         mRowData(new trackerboy::OrderRow[count])
     {
         // keep a copy of the rows we removed
-        std::copy_n(mModel.mOrder.data().begin() + row, count, mRowData.get());
+        std::copy_n(mModel.mOrder->data().begin() + row, count, mRowData.get());
     }
 
     void redo() override {
@@ -151,7 +150,7 @@ public:
     }
 
     void redo() override {
-        auto toDuplicate = mModel.mOrder[mRow];
+        auto toDuplicate = (*mModel.mOrder)[mRow];
         mModel.cmdInsertRows(mRow, 1, &toDuplicate);
     }
 
@@ -167,18 +166,14 @@ private:
 
 
 
-OrderModel::OrderModel(ModuleDocument &document, QObject *parent) :
+OrderModel::OrderModel(Module &mod, QObject *parent) :
     QAbstractTableModel(parent),
-    mDocument(document),
-    mOrder(document.mod().song().order()),
+    mModule(mod),
+    mOrder(&mod.data().song().order()),
     mCurrentRow(0),
     mCurrentTrack(0),
     mCanSelect(true)
 {
-}
-
-ModuleDocument& OrderModel::document() {
-    return mDocument;
 }
 
 uint8_t OrderModel::currentPattern() {
@@ -255,7 +250,7 @@ QVariant OrderModel::data(const QModelIndex &index, int role) const {
     switch (role) {
 
         case Qt::DisplayRole: {
-            auto row = mOrder[(uint8_t)index.row()];
+            auto row = (*mOrder)[(uint8_t)index.row()];
             int id = (int)row[index.column()];
             return QString("%1").arg(id, 2, 16, QLatin1Char('0')).toUpper();
         }
@@ -301,7 +296,7 @@ QVariant OrderModel::headerData(int section, Qt::Orientation orientation, int ro
 
 int OrderModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
-    return (int)mOrder.size();
+    return (int)mOrder->size();
 }
 
 bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int role) {
@@ -318,10 +313,10 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
                 (uint8_t)row,
                 (uint8_t)track,
                 (uint8_t)id, 
-                mOrder[(uint8_t)row][track]
+                (*mOrder)[(uint8_t)row][track]
             );
             cmd->setText(tr("Set track in pattern #%1\nSet track").arg(row));
-            mDocument.undoStack().push(cmd);
+            mModule.undoStack().push(cmd);
 
             emit patternsChanged();
             return true;
@@ -336,19 +331,19 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
 void OrderModel::insert() {
     auto cmd = new OrderInsertCommand(*this, mCurrentRow, 1);
     cmd->setText(tr("Insert pattern at #%1\nInsert pattern").arg(mCurrentRow));
-    mDocument.undoStack().push(cmd);
+    mModule.undoStack().push(cmd);
 }
 
 void OrderModel::remove() {
     auto cmd = new OrderRemoveCommand(*this, mCurrentRow, 1);
     cmd->setText(tr("Remove pattern #%1\nRemove pattern").arg(mCurrentRow));
-    mDocument.undoStack().push(cmd);
+    mModule.undoStack().push(cmd);
 }
 
 void OrderModel::duplicate() {
     auto cmd = new OrderDuplicateCommand(*this, mCurrentRow);
     cmd->setText(tr("Duplicate pattern #%1\nDuplicate order").arg(mCurrentRow));
-    mDocument.undoStack().push(cmd);
+    mModule.undoStack().push(cmd);
 }
 
 void OrderModel::moveUp() {
@@ -356,14 +351,14 @@ void OrderModel::moveUp() {
     auto prev = (uint8_t)(mCurrentRow - 1);
     auto cmd = new OrderSwapCommand(*this, mCurrentRow, prev);
     cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern up").arg(mCurrentRow).arg(prev));
-    mDocument.undoStack().push(cmd);
+    mModule.undoStack().push(cmd);
 }
 
 void OrderModel::moveDown() {
     auto next = (uint8_t)(mCurrentRow + 1);
     auto cmd = new OrderSwapCommand(*this, mCurrentRow, next);
     cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern down").arg(mCurrentRow).arg(next));
-    mDocument.undoStack().push(cmd);
+    mModule.undoStack().push(cmd);
 
 }
 
@@ -383,7 +378,7 @@ void OrderModel::setPatternCount(int count) {
 
     if (cmd != nullptr) {
         cmd->setText(tr("Set pattern count to %1\nSet patterns").arg(count));
-        mDocument.undoStack().push(cmd);
+        mModule.undoStack().push(cmd);
     }
 }
 
@@ -392,7 +387,7 @@ void OrderModel::setPatternCount(int count) {
 
 template <OrderModel::ModifyMode mode>
 void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option) {
-    auto &stack = mDocument.undoStack();
+    auto &stack = mModule.undoStack();
 
     QString operationStr;
     if constexpr (mode == ModifyMode::set) {
@@ -423,7 +418,7 @@ void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option
 
 template <OrderModel::ModifyMode mode>
 void OrderModel::modifyCell(QUndoStack &stack, uint8_t pattern, uint8_t track, uint8_t option) {
-    auto oldVal = mOrder[pattern][track];
+    auto oldVal = (*mOrder)[pattern][track];
     uint8_t newVal;
     if constexpr (mode == ModifyMode::inc) {
         (void)option;
@@ -444,9 +439,9 @@ void OrderModel::cmdInsertRows(uint8_t row, uint8_t count, trackerboy::OrderRow 
     mCanSelect = false;
     beginInsertRows(QModelIndex(), row, row + count - 1);
     {
-        auto ctx = mDocument.beginCommandEdit();
+        auto ctx = mModule.edit();
 
-        auto &vec = mOrder.data();
+        auto &vec = mOrder->data();
         auto dest = vec.begin() + row;
         if (rowdata != nullptr) {
             vec.insert(dest, rowdata, rowdata + count);
@@ -473,8 +468,8 @@ void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
     mCanSelect = false;
     beginRemoveRows(QModelIndex(), row, rowEnd - 1);
     {
-        auto ctx = mDocument.beginCommandEdit();
-        mOrder.remove(row, count);
+        auto ctx = mModule.edit();
+        mOrder->remove(row, count);
     }
     endRemoveRows();
     mCanSelect = true;
@@ -492,8 +487,8 @@ void OrderModel::cmdRemoveRows(uint8_t row, uint8_t count) {
 
 void OrderModel::cmdSwapRows(uint8_t from, uint8_t to) {
     {
-        auto ctx = mDocument.beginCommandEdit();
-        mOrder.swapPatterns(from, to);
+        auto ctx = mModule.edit();
+        mOrder->swapPatterns(from, to);
     }
 
     auto fromIndex = createIndex(from, 0, nullptr);

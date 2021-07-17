@@ -4,10 +4,11 @@
 #include "core/audio/AudioStream.hpp"
 #include "core/audio/Ringbuffer.hpp"
 #include "core/audio/VisualizerBuffer.hpp"
-#include "core/model/ModuleDocument.hpp"
+#include "core/ChannelOutput.hpp"
 #include "core/Config.hpp"
 #include "core/FastTimer.hpp"
 #include "core/Guarded.hpp"
+#include "core/Module.hpp"
 
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/Instrument.hpp"
@@ -29,8 +30,7 @@
 
 //
 // Class handles all sound renderering. Sound is sent to the
-// configured device set in Config. This class is intended to run in its own
-// thread. Thus, all slots are thread-safe if invoked via signal-slot mechanism
+// configured device set in Config.
 //
 class Renderer : public QObject {
 
@@ -51,7 +51,7 @@ public:
 
     };
 
-    Renderer(ModuleDocument &document, QObject *parent = nullptr);
+    Renderer(QObject *parent = nullptr);
     ~Renderer();
 
     // DIAGNOSTICS ====
@@ -83,6 +83,8 @@ public:
     // be called from the GUI thread.
     //
     bool setConfig(Config::Sound const& config);
+
+    void setModule(Module *mod);
 
 signals:
 
@@ -162,7 +164,7 @@ private slots:
     //
     // Enables/Disables channel output for music playback
     //
-    void setChannelOutput(ModuleDocument::OutputFlags flags);
+    void setChannelOutput(ChannelOutput::Flags flags);
 
    
 
@@ -184,8 +186,8 @@ private:
     };
 
     struct RenderContext {
-        // the current document
-        ModuleDocument &document;
+        // the current module
+        Module *mod;
 
         // indicates if step mode is enabled
         bool stepping;
@@ -217,7 +219,7 @@ private:
         Clock::duration periodTime; // time difference between the last period and the current one
         size_t writesSinceLastPeriod; // number of samples written for the last period
 
-        RenderContext(ModuleDocument &document);
+        RenderContext();
     };
 
     // type alias for mutually exclusive access to the RenderContext
@@ -231,7 +233,7 @@ private:
 
     void previewNoteOrInstrument(int note, int track = -1, int instrument = -1);
 
-    void _setChannelOutput(Handle &handle, ModuleDocument::OutputFlags flags);
+    void _setChannelOutput(Handle &handle, ChannelOutput::Flags flags);
 
     // stream management -----------------------------------------------------
 

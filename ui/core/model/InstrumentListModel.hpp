@@ -15,7 +15,7 @@ class InstrumentListModel : public BaseTableModel {
     Q_OBJECT
 
 public:
-    InstrumentListModel(ModuleDocument &document);
+    InstrumentListModel(Module &mod);
 
     std::shared_ptr<trackerboy::Instrument> currentInstrument();
 

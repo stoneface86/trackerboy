@@ -106,7 +106,7 @@ void WaveEditor::setCurrentItem(int index) {
     }
 }
 
-BaseTableModel* WaveEditor::getModel(ModuleDocument &doc) {
+BaseTableModel* WaveEditor::getModel(Document &doc) {
     return &doc.waveModel();
 }
 

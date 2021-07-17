@@ -1,16 +1,15 @@
 
 #include "core/model/SongModel.hpp"
-#include "core/model/ModuleDocument.hpp"
 
 
-SongModel::SongModel(ModuleDocument &doc) :
+SongModel::SongModel(Module &mod) :
     QObject(),
-    mDocument(doc)
+    mModule(mod)
 {
 }
 
 void SongModel::reload() {
-    auto &song = mDocument.mod().song();
+    auto &song = mModule.data().song();
     emit rowsPerBeatChanged(song.rowsPerBeat());
     emit rowsPerMeasureChanged(song.rowsPerMeasure());
     emit speedChanged((int)song.speed());
@@ -18,27 +17,27 @@ void SongModel::reload() {
 }
 
 int SongModel::rowsPerBeat() {
-    return mDocument.mod().song().rowsPerBeat();
+    return mModule.data().song().rowsPerBeat();
 }
 
 int SongModel::rowsPerMeasure() {
-    return mDocument.mod().song().rowsPerMeasure();
+    return mModule.data().song().rowsPerMeasure();
 }
 
 int SongModel::speed() {
-    return mDocument.mod().song().speed();
+    return mModule.data().song().speed();
 }
 
 int SongModel::patternSize() {
-    return mDocument.mod().song().patterns().rowSize();
+    return mModule.data().song().patterns().rowSize();
 }
 
 void SongModel::setRowsPerBeat(int rpb) {
-    auto &song = mDocument.mod().song();
+    auto &song = mModule.data().song();
 
     if (song.rowsPerBeat() != (uint8_t)rpb) {
         {
-            auto ctx = mDocument.beginEdit();
+            auto ctx = mModule.permanentEdit();
             song.setRowsPerBeat((uint8_t)rpb);
         }
         emit rowsPerBeatChanged(rpb);
@@ -47,11 +46,11 @@ void SongModel::setRowsPerBeat(int rpb) {
 }
 
 void SongModel::setRowsPerMeasure(int rpm) {
-    auto &song = mDocument.mod().song();
+    auto &song = mModule.data().song();
 
     if (song.rowsPerMeasure() != (uint8_t)rpm) {
         {
-            auto ctx = mDocument.beginEdit();
+            auto ctx = mModule.permanentEdit();
             song.setRowsPerMeasure((uint8_t)rpm);
         }
         emit rowsPerMeasureChanged(rpm);
@@ -59,11 +58,11 @@ void SongModel::setRowsPerMeasure(int rpm) {
 }
 
 void SongModel::setSpeed(int speed) {
-    auto &song = mDocument.mod().song();
+    auto &song = mModule.data().song();
 
     if (song.speed() != (trackerboy::Speed)speed) {
         {
-            auto ctx = mDocument.beginEdit();
+            auto ctx = mModule.permanentEdit();
             song.setSpeed((trackerboy::Speed)speed);
         }
         emit speedChanged(speed);
@@ -71,11 +70,11 @@ void SongModel::setSpeed(int speed) {
 }
 
 void SongModel::setPatternSize(int rows) {
-    auto &pm = mDocument.mod().song().patterns();
+    auto &pm = mModule.data().song().patterns();
 
     if (pm.rowSize() != (uint16_t)rows) {
         {
-            auto ctx = mDocument.beginEdit();
+            auto ctx = mModule.permanentEdit();
             pm.setRowSize((uint16_t)rows);
         }
         emit patternSizeChanged(rows);

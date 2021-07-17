@@ -1,17 +1,16 @@
 
 #include "core/model/InstrumentListModel.hpp"
 #include "misc/IconManager.hpp"
-#include "core/model/ModuleDocument.hpp"
 
 
-InstrumentListModel::InstrumentListModel(ModuleDocument &document) :
-    BaseTableModel(document, document.mod().instrumentTable(), tr("New instrument"))
+InstrumentListModel::InstrumentListModel(Module &mod) :
+    BaseTableModel(mod, mod.data().instrumentTable(), tr("New instrument"))
 {
 }
 
 
 QIcon InstrumentListModel::iconData(uint8_t id) const {
-    auto ch = static_cast<trackerboy::Instrument*>(mBaseTable.get(id))->channel();
+    auto ch = static_cast<trackerboy::Instrument const*>(mBaseTable.get(id))->channel();
     Icons icons;
     switch (ch) {
         case trackerboy::ChType::ch1:
@@ -36,7 +35,7 @@ std::shared_ptr<trackerboy::Instrument> InstrumentListModel::currentInstrument()
     if (mCurrentIndex == -1) {
         return nullptr;
     } else {
-        return static_cast<trackerboy::InstrumentTable&>(mBaseTable).getShared(id(mCurrentIndex));
+        return static_cast<trackerboy::InstrumentTable const&>(mBaseTable).getShared(id(mCurrentIndex));
     }
 }
 

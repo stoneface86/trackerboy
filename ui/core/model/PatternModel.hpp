@@ -1,7 +1,10 @@
 
 #pragma once
 
-class ModuleDocument;
+#include "core/Module.hpp"
+
+class OrderModel;
+class SongModel;
 
 #include "core/clipboard/PatternClip.hpp"
 #include "core/PatternCursor.hpp"
@@ -39,7 +42,8 @@ public:
     };
 
 
-    explicit PatternModel(ModuleDocument &doc, QObject *parent = nullptr);
+    explicit PatternModel(Module &mod, OrderModel &orderModel, SongModel &songModel, QObject *parent = nullptr);
+    virtual ~PatternModel() = default;
 
     void reload();
 
@@ -219,7 +223,8 @@ private:
 
     bool selectionDataIsEmpty();
 
-    ModuleDocument &mDocument;
+    Module &mModule;
+    OrderModel &mOrderModel; // Temporary: break up OrderModel
 
     PatternCursor mCursor;
     int mCursorPattern;

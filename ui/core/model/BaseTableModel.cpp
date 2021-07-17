@@ -2,8 +2,6 @@
 #include "core/model/BaseTableModel.hpp"
 #include "misc/IconManager.hpp"
 
-#include "core/model/ModuleDocument.hpp"
-
 #include <QStringBuilder>
 
 BaseTableModel::ModelData::ModelData(uint8_t id, QString name) :
@@ -18,8 +16,8 @@ BaseTableModel::ModelData::ModelData(trackerboy::DataItem const& item) :
 {
 }
 
-BaseTableModel::BaseTableModel(ModuleDocument &document, trackerboy::BaseTable &table, QString defaultName) :
-    mDocument(document),
+BaseTableModel::BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName) :
+    mModule(mod),
     mBaseTable(table),
     mCurrentIndex(-1),
     mItems(),
@@ -32,10 +30,6 @@ BaseTableModel::~BaseTableModel() {
 
 }
 
-ModuleDocument& BaseTableModel::document() {
-    return mDocument;
-}
-
 bool BaseTableModel::canDuplicate() const {
     return mBaseTable.size() != trackerboy::BaseTable::MAX_SIZE;
 }
@@ -43,6 +37,7 @@ bool BaseTableModel::canDuplicate() const {
 void BaseTableModel::commit() {
     // set the names of all items in the table
     if (mShouldCommit) {
+        auto ctx = mModule.permanentEdit();
         for (auto &data : mItems) {
             auto tableItem = mBaseTable.get(data.id);
             tableItem->setName(data.name.toStdString());
@@ -127,7 +122,7 @@ int BaseTableModel::add() {
 
     uint8_t id;
     {
-        auto ctx = mDocument.beginEdit();
+        auto ctx = mModule.permanentEdit();
         auto &item = mBaseTable.insert();
         id = item.id();
     }
@@ -140,7 +135,7 @@ void BaseTableModel::remove(int index) {
     beginRemoveRows(QModelIndex(), index, index);
     auto iter = mItems.begin() + index;
     {
-        auto ctx = mDocument.beginEdit();
+        auto ctx = mModule.permanentEdit();
         mBaseTable.remove(iter->id);
     }
 
@@ -155,7 +150,7 @@ int BaseTableModel::duplicate(int index) {
     auto const& dataToCopy = mItems[index];
     uint8_t id;
     {
-        auto ctx = mDocument.beginEdit();
+        auto ctx = mModule.permanentEdit();
         id = mBaseTable.duplicate(dataToCopy.id).id();
     }
 
@@ -168,7 +163,7 @@ void BaseTableModel::rename(int index, const QString &name) {
     mShouldCommit = true;
 
     mItems[index].name = name;
-    mDocument.makeDirty();
+    mModule.makeDirty();
 
     auto index_ = createIndex(index, 0, nullptr);
     emit dataChanged(index_, index_, { Qt::DisplayRole });

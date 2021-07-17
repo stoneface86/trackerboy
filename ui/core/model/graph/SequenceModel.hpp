@@ -1,8 +1,7 @@
 
 #pragma once
 
-class ModuleDocument;
-
+#include "core/Module.hpp"
 #include "core/model/graph/GraphModel.hpp"
 
 #include "trackerboy/data/Sequence.hpp"
@@ -21,7 +20,7 @@ public:
 
     virtual void setData(int index, DataType data) override;
 
-    void setSequence(ModuleDocument *doc, trackerboy::Sequence *seq);
+    void setSequence(Module *mod, trackerboy::Sequence *seq);
 
     void removeSequence();
 
@@ -36,7 +35,7 @@ public:
     trackerboy::Sequence* sequence() const;
 
 private:
-    ModuleDocument *mDocument;
+    Module *mModule;
     trackerboy::Sequence *mSequence;
 
 };

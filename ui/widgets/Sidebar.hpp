@@ -1,10 +1,12 @@
 
 #pragma once
 
-class ModuleDocument;
+#include "core/model/OrderModel.hpp"
+#include "core/model/SongModel.hpp"
 
 #include "widgets/visualizers/AudioScope.hpp"
 #include "widgets/CustomSpinBox.hpp"
+#include "widgets/OrderEditor.hpp"
 
 #include <QGridLayout>
 #include <QGroupBox>
@@ -26,15 +28,11 @@ class Sidebar : public QWidget {
 
 public:
 
-    explicit Sidebar(ModuleDocument &document, QWidget *parent = nullptr);
+    explicit Sidebar(QWidget *parent = nullptr);
 
     AudioScope& scope();
 
-
-signals:
-    void orderMenuRequested(QPoint const& pos);
-
-    void patternJumpRequested(int pattern);
+    OrderEditor& orderEditor();
 
 private:
 
@@ -47,8 +45,6 @@ private:
 
     void updatePatternsSpin();
 
-
-    ModuleDocument &mDocument;
     bool mIgnoreSelect;
     bool mSpeedLock;
     
@@ -56,13 +52,7 @@ private:
         AudioScope mScope;
         QGroupBox mOrderGroup;
             QVBoxLayout mOrderLayout;
-                QHBoxLayout mOrderButtonLayout;
-                    QToolBar mOrderToolbar;
-                        QAction mActionIncrement;
-                        QAction mActionDecrement;
-                    CustomSpinBox mSetSpin;
-                    QPushButton mSetButton;
-                QTableView mOrderView;
+                OrderEditor mOrderEditor;
         QGroupBox mSongGroup;
             QGridLayout mSongLayout;
                 QLabel mRowsPerBeatLabel;

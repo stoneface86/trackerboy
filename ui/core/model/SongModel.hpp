@@ -1,7 +1,7 @@
 
 #pragma once
 
-class ModuleDocument;
+#include "core/Module.hpp"
 
 #include <QObject>
 
@@ -15,7 +15,7 @@ class SongModel : public QObject {
     Q_OBJECT
 
 public:
-    explicit SongModel(ModuleDocument &doc);
+    explicit SongModel(Module &mod);
 
     void reload();
 
@@ -40,7 +40,7 @@ public slots:
 
 private:
 
-    ModuleDocument &mDocument;
+    Module &mModule;
 
 
 };

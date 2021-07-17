@@ -2,11 +2,14 @@
 #include "core/samplerates.hpp"
 #include "forms/ExportWavDialog.hpp"
 
+#include "core/Config.hpp"
+#include "core/Document.hpp"
+#include "core/WavExporter.hpp"
 
 #include <QFileDialog>
 #include <QFileInfo>
 
-ExportWavDialog::ExportWavDialog(ModuleDocument &document, Config &config, QWidget *parent) :
+ExportWavDialog::ExportWavDialog(Document &document, Config &config, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mDocument(document),
     mConfig(config),

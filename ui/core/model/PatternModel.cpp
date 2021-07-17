@@ -3,7 +3,8 @@
 
 #include "core/clipboard/PatternClip.hpp"
 #include "core/model/PatternModel.hpp"
-#include "core/model/ModuleDocument.hpp"
+#include "core/model/OrderModel.hpp"
+#include "core/model/SongModel.hpp"
 
 #include <QUndoCommand>
 #include <QtDebug>
@@ -11,9 +12,10 @@
 #include <algorithm>
 #include <memory>
 
-PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
+PatternModel::PatternModel(Module &mod, OrderModel &orderModel, SongModel &songModel, QObject *parent) :
     QObject(parent),
-    mDocument(doc),
+    mModule(mod),
+    mOrderModel(orderModel),
     mCursor(),
     mCursorPattern(0),
     mRecording(false),
@@ -23,13 +25,14 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
     mTrackerRow(0),
     mTrackerPattern(0),
     mPatternPrev(),
-    mPatternCurr(doc.mod().song().getPattern(0)),
+    mPatternCurr(mod.data().song().getPattern(0)),
     mPatternNext(),
     mHasSelection(false),
     mSelection()
 {
+
+    // TODO: Make these connections in MainWindow    
     // OrderModel must be initialized first in order for this to work!
-    auto &orderModel = doc.orderModel();
     connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternModel::setCursorPattern);
     connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternModel::setCursorTrack);
     connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
@@ -38,7 +41,6 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
         emitIfChanged(flags);
     });
 
-    auto &songModel = doc.songModel();
     connect(&songModel, &SongModel::patternSizeChanged, this,
         [this](int rows) {
             CursorChangeFlags flags = CursorUnchanged;
@@ -53,7 +55,7 @@ PatternModel::PatternModel(ModuleDocument &doc, QObject *parent) :
 
 void PatternModel::reload() {
     // patternCurr was invalidated
-    mPatternCurr = mDocument.mod().song().getPattern(0);
+    mPatternCurr = mModule.data().song().getPattern(0);
     mCursorPattern = -1;
     setCursorPattern(0);
     setCursor(PatternCursor(0, 0, 0));
@@ -242,15 +244,13 @@ void PatternModel::setCursorRowImpl(int row, CursorChangeFlags &flags) {
         return;
     }
 
-    auto &orderModel = mDocument.orderModel();
-
     int oldRow = mCursor.row;
     int newRow;
     if (row < 0) {
         // go to the previous pattern or wrap around to the last one
         int prevPattern;
         if (mCursorPattern == 0) {
-            prevPattern = orderModel.rowCount() - 1;
+            prevPattern = mOrderModel.rowCount() - 1;
         } else {
             prevPattern = mCursorPattern - 1;
         }
@@ -261,7 +261,7 @@ void PatternModel::setCursorRowImpl(int row, CursorChangeFlags &flags) {
         // go to the next pattern or wrap around to the first one
         row -= mPatternCurr.totalRows();
         auto nextPattern = mCursorPattern + 1;
-        if (nextPattern == orderModel.rowCount()) {
+        if (nextPattern == mOrderModel.rowCount()) {
             nextPattern = 0;
         }
         setCursorPatternImpl(nextPattern, flags);
@@ -324,7 +324,7 @@ void PatternModel::setCursorTrackImpl(int track, CursorChangeFlags &flags) {
 
     if (track != mCursor.track) {
         mCursor.track = track;
-        mDocument.orderModel().selectTrack(track);
+        mOrderModel.selectTrack(track);
         flags |= CursorTrackChanged;
     }
 }
@@ -352,7 +352,7 @@ void PatternModel::setCursorPatternImpl(int pattern, CursorChangeFlags &flags) {
     }
 
     mCursorPattern = pattern;
-    mDocument.orderModel().selectPattern(pattern);
+    mOrderModel.selectPattern(pattern);
     setPatterns(pattern, flags);
     deselect();
 }
@@ -370,7 +370,7 @@ void PatternModel::setTrackerCursor(int row, int pattern) {
 
     if (changed) {
         if (mFollowing) {
-            mDocument.orderModel().selectPattern(pattern);
+            mOrderModel.selectPattern(pattern);
             CursorChangeFlags flags = CursorUnchanged;
             setCursorRowImpl(row, flags);
             emitIfChanged(flags);
@@ -401,7 +401,7 @@ void PatternModel::setPreviewEnable(bool enable) {
     if (mShowPreviews != enable) {
         mShowPreviews = enable;
         if (enable) {
-            setPreviewPatterns(mDocument.orderModel().currentPattern());
+            setPreviewPatterns(mOrderModel.currentPattern());
         } else {
             mPatternPrev.reset();
             mPatternNext.reset();
@@ -414,7 +414,7 @@ void PatternModel::setPatterns(int pattern, CursorChangeFlags &flags) {
     if (mShowPreviews) {
         setPreviewPatterns(pattern);
     }
-    auto &song = mDocument.mod().song();
+    auto &song = mModule.data().song();
 
     if (mShowPreviews) {
         setPreviewPatterns(pattern);
@@ -444,7 +444,7 @@ void PatternModel::emitIfChanged(CursorChangeFlags flags) {
 }
 
 void PatternModel::setPreviewPatterns(int pattern) {
-    auto &song = mDocument.mod().song();
+    auto &song = mModule.data().song();
     // get the previous pattern for preview
     if (pattern > 0) {
         mPatternPrev.emplace(song.getPattern(pattern - 1));
@@ -588,7 +588,7 @@ public:
 
 protected:
     trackerboy::TrackRow& getRow() {
-        return mModel.mDocument.mod().song().getRow(
+        return mModel.mModule.data().song().getRow(
             static_cast<trackerboy::ChType>(mTrack),
             mPattern,
             (uint16_t)mRow
@@ -599,7 +599,7 @@ protected:
 
 private:
     void setData(uint8_t data) {
-        auto &rowdata = mModel.mDocument.mod().song().getRow(
+        auto &rowdata = mModel.mModule.data().song().getRow(
             static_cast<trackerboy::ChType>(mTrack),
             mPattern,
             (uint16_t)mRow
@@ -607,7 +607,7 @@ private:
 
         bool update;
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
+            auto ctx = mModel.mModule.edit();
             update = edit(rowdata, data);
         }
 
@@ -697,9 +697,9 @@ protected:
     }
 
     void restore(bool update) {
-        auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+        auto pattern = mModel.mModule.data().song().getPattern(mPattern);
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
+            auto ctx = mModel.mModule.edit();
             mClip.restore(pattern);
         }
 
@@ -719,10 +719,10 @@ public:
 
     virtual void redo() override {
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
+            auto ctx = mModel.mModule.edit();
             // clear all set data in the selection
             auto iter = mClip.selection().iterator();
-            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
 
             for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
                 auto tmeta = iter.getTrackMeta(track);
@@ -789,8 +789,8 @@ public:
 
     virtual void redo() override {
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
-            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+            auto ctx = mModel.mModule.edit();
+            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
             mSrc.paste(pattern, mPos, mMix);
         }
 
@@ -799,8 +799,8 @@ public:
 
     virtual void undo() override {
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
-            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+            auto ctx = mModel.mModule.edit();
+            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
             mPast.restore(pattern);
         }
 
@@ -824,9 +824,9 @@ public:
 
     virtual void redo() override {
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
+            auto ctx = mModel.mModule.edit();
             auto iter = mClip.selection().iterator();
-            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
 
             for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
                 auto tmeta = iter.getTrackMeta(track);
@@ -880,9 +880,9 @@ private:
 
     void reverse() {
         {
-            auto ctx = mModel.mDocument.beginCommandEdit();
+            auto ctx = mModel.mModule.edit();
             auto iter = mSelection.iterator();
-            auto pattern = mModel.mDocument.mod().song().getPattern(mPattern);
+            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
 
             auto midpoint = iter.rowStart() + (iter.rows() / 2);
             for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
@@ -974,7 +974,7 @@ void PatternModel::setNote(std::optional<uint8_t> note, std::optional<uint8_t> i
         } else {
             cmd->setText(tr("Clear note"));
         }
-        mDocument.undoStack().push(cmd);
+        mModule.undoStack().push(cmd);
 
         
     }
@@ -1005,7 +1005,7 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
         } else {
             cmd->setText(tr("clear instrument"));
         }
-        mDocument.undoStack().push(cmd);
+        mModule.undoStack().push(cmd);
     }
 }
 
@@ -1021,7 +1021,7 @@ void PatternModel::setEffectType(trackerboy::EffectType type) {
             static_cast<uint8_t>(effect.type)
         );
 
-        auto &stack = mDocument.undoStack();
+        auto &stack = mModule.undoStack();
         if (type == trackerboy::EffectType::noEffect) {
 
             static auto CLEAR_EFFECT_STR = QT_TR_NOOP("clear effect");
@@ -1065,7 +1065,7 @@ void PatternModel::setEffectParam(uint8_t nibble) {
                 oldEffect.param
             );
             cmd->setText(tr("edit effect parameter"));
-            mDocument.undoStack().push(cmd);
+            mModule.undoStack().push(cmd);
         }
     }
         
@@ -1078,7 +1078,7 @@ void PatternModel::deleteSelection() {
         if (!selectionDataIsEmpty()) {
             auto cmd = new DeleteSelectionCmd(*this);
             cmd->setText(tr("Clear selection"));
-            mDocument.undoStack().push(cmd);
+            mModule.undoStack().push(cmd);
         }
     } else {
         switch (mCursor.column) {
@@ -1104,7 +1104,7 @@ void PatternModel::transpose(int amount) {
         if (hasSelection()) {
             auto cmd = new TransposeCmd(*this, (int8_t)amount);
             cmd->setText(tr("transpose selection"));
-            mDocument.undoStack().push(cmd);
+            mModule.undoStack().push(cmd);
         } else {
             auto &rowdata = cursorTrackRow();
             auto rowcopy = rowdata;
@@ -1113,7 +1113,7 @@ void PatternModel::transpose(int amount) {
             if (rowcopy.note != rowdata.note) {
                 auto cmd = new NoteEditCmd(*this, rowcopy.note, rowdata.note);
                 cmd->setText(tr("transpose note"));
-                mDocument.undoStack().push(cmd);
+                mModule.undoStack().push(cmd);
             }
 
         }
@@ -1127,14 +1127,14 @@ void PatternModel::reverse() {
         if (iter.rows() > 1) {
             auto cmd = new ReverseCmd(*this);
             cmd->setText("reverse");
-            mDocument.undoStack().push(cmd);
+            mModule.undoStack().push(cmd);
         }
     }
 }
 
 void PatternModel::moveSelection(PatternCursor pos) {
     if (mHasSelection) {
-        auto &undoStack = mDocument.undoStack();
+        auto &undoStack = mModule.undoStack();
 
         undoStack.beginMacro(tr("move selection"));
         auto toMove = clip();
@@ -1151,5 +1151,5 @@ void PatternModel::moveSelection(PatternCursor pos) {
 void PatternModel::paste(PatternClip const& clip, bool mix) {
     auto cmd = new PasteCmd(*this, clip, mCursor, mix);
     cmd->setText(tr("paste"));
-    mDocument.undoStack().push(cmd);
+    mModule.undoStack().push(cmd);
 }
