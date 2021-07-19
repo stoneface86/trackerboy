@@ -55,7 +55,7 @@ public slots:
 
 
 protected:
-    BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName);
+    BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName, QObject *parent = nullptr);
 
     virtual QIcon iconData(uint8_t id) const = 0;
 

@@ -32,6 +32,11 @@ void setupAction(
     QKeySequence const &seq = QKeySequence()
 );
 
+
+QAction* setupAction(QMenu *menu, QString const& text, QString const& statusTip, QKeySequence const &seq = QKeySequence());
+QAction* setupAction(QMenu *menu, QString const& text, QString const& statusTip, Icons icon, QKeySequence const &seq = QKeySequence());
+
+
 //
 // workaround for QTreeView::expandRecursively, which was added in v5.13
 //

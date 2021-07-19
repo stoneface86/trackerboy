@@ -2,8 +2,8 @@
 #include "core/model/SongModel.hpp"
 
 
-SongModel::SongModel(Module &mod) :
-    QObject(),
+SongModel::SongModel(Module &mod, QObject *parent) :
+    QObject(parent),
     mModule(mod)
 {
 }

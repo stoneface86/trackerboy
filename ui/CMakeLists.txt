@@ -54,6 +54,7 @@ set(UI_SRC
     "core/samplerates.cpp"
     #"core/WavExporter.cpp"
 
+    "forms/MainWindow/actions.cpp"
     "forms/AboutDialog.cpp"
     #"forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"

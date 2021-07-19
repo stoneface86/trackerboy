@@ -1,8 +1,8 @@
 
 #include "core/model/WaveListModel.hpp"
 
-WaveListModel::WaveListModel(Module &mod) :
-    BaseTableModel(mod, mod.data().waveformTable(), tr("New waveform"))
+WaveListModel::WaveListModel(Module &mod, QObject *parent) :
+    BaseTableModel(mod, mod.data().waveformTable(), tr("New waveform"), parent)
 {
 }
 

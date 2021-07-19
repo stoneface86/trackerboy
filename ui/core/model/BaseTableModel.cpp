@@ -16,7 +16,8 @@ BaseTableModel::ModelData::ModelData(trackerboy::DataItem const& item) :
 {
 }
 
-BaseTableModel::BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName) :
+BaseTableModel::BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName, QObject *parent) :
+    QAbstractListModel(parent),
     mModule(mod),
     mBaseTable(table),
     mCurrentIndex(-1),

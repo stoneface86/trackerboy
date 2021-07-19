@@ -14,7 +14,7 @@ class WaveListModel : public BaseTableModel {
     Q_OBJECT
 
 public:
-    WaveListModel(Module &mod);
+    WaveListModel(Module &mod, QObject *parent = nullptr);
 
     trackerboy::Waveform* currentWaveform();
     

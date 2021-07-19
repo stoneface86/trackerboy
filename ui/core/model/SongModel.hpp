@@ -15,7 +15,7 @@ class SongModel : public QObject {
     Q_OBJECT
 
 public:
-    explicit SongModel(Module &mod);
+    explicit SongModel(Module &mod, QObject *parent = nullptr);
 
     void reload();
 

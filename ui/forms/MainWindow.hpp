@@ -62,6 +62,12 @@ private slots:
     void onFileOpen();
     bool onFileSave();
     bool onFileSaveAs();
+
+    void onSongOrderInsert();
+    void onSongOrderRemove();
+    void onSongOrderDuplicate();
+    void onSongOrderMoveUp();
+    void onSongOrderMoveDown();
     
     void onViewResetLayout();
 
@@ -88,15 +94,24 @@ private:
         error
     };
 
+    QToolBar* makeToolbar(QString const& title, QString const& objname);
+
+    // implementation in MainWindow/actions.cpp -------------------------------
+
+    void createActions();
+
+    void setupViewMenu(QMenu *menu);
+
+    void setupSongMenu(QMenu *menu);
+    
+    // ------------------------------------------------------------------------
+
     bool maybeSave();
 
     void setupUi();
 
     void initState();
 
-    void setupViewMenu(QMenu &menu);
-
-    void setupSongMenu(QMenu &menu);
 
     //
     // Shows and adds a "Change settings" button that opens the configuration
@@ -121,6 +136,10 @@ private:
 
     QString const mUntitledString;
 
+    #ifdef QT_DEBUG
+    bool mSaveConfig = true;
+    #endif
+
     Config mConfig;
 
     Midi mMidi;
@@ -129,14 +148,14 @@ private:
 
     PianoInput mPianoInput;
 
-    Module mModule;
+    Module *mModule;
     ModuleFile mModuleFile;
 
-    InstrumentListModel mInstrumentModel;
-    OrderModel mOrderModel;
-    SongModel mSongModel;
-    PatternModel mPatternModel;
-    WaveListModel mWaveModel;
+    InstrumentListModel *mInstrumentModel;
+    OrderModel *mOrderModel;
+    SongModel *mSongModel;
+    PatternModel *mPatternModel;
+    WaveListModel *mWaveModel;
 
     //Renderer mRenderer;
 
@@ -151,19 +170,27 @@ private:
 
 
     // toolbars
-    QToolBar mToolbarFile;
-    QToolBar mToolbarEdit;
-    QToolBar mToolbarSong;
-    QToolBar mToolbarTracker;
-    QToolBar mToolbarInput;
-        QLabel mOctaveLabel;
-        QSpinBox mOctaveSpin;
-        QLabel mEditStepLabel;
-        QSpinBox mEditStepSpin;
-    QToolBar mToolbarInstrument;
-        QComboBox mInstrumentCombo;
-        InstrumentChoiceModel mInstrumentChoiceModel;
+    QToolBar *mToolbarFile;
+    QToolBar *mToolbarEdit;
+    QToolBar *mToolbarSong;
+    QToolBar *mToolbarTracker;
+    QToolBar *mToolbarInput;
+        QSpinBox *mOctaveSpin;
+    QToolBar *mToolbarInstrument;
+        QComboBox *mInstrumentCombo;
 
+    // actions shared by multiple menus (parented by MainWindow)
+    QAction *mActionOrderInsert;
+    QAction *mActionOrderRemove;
+    QAction *mActionOrderDuplicate;
+    QAction *mActionOrderMoveUp;
+    QAction *mActionOrderMoveDown;
+
+    QAction *mActionViewReset;
+
+    QAction *mActionFollowMode;
+
+    QMenu *mSongOrderContextMenu;
 
     // dock widgets
 
@@ -176,12 +203,9 @@ private:
     QDockWidget mDockHistory;
         QUndoView mUndoView;
 
-    // central widget (must be heap-alloc'd)
-    // QWidget *mMainWidget;
-    //     QHBoxLayout mEditorLayout;
-    //         Sidebar mSidebar;
-    //         PatternEditor mPatternEditor;
+    // widgets
     Sidebar *mSidebar;
+    //PatternEditor *mPatternEditor;
 
     // statusbar widgets
     QLabel mStatusRenderer;
@@ -190,88 +214,6 @@ private:
     QLabel mStatusElapsed;
     QLabel mStatusPos;
     QLabel mStatusSamplerate;
-
-    // menus
-
-    // action indices
-    enum ActionIndex {
-        ActionFileNew,
-        ActionFileOpen,
-        ActionFileConfig,
-        ActionFileQuit,
-        ActionViewResetLayout,
-        ActionHelpAudioDiag,
-        ActionHelpAbout,
-        ActionHelpAboutQt,
-
-        // document actions - these actions require an open document
-        // when there are no open documents they are disabled
-        DOCUMENT_ACTIONS_BEGIN,
-
-        ActionFileSave = DOCUMENT_ACTIONS_BEGIN,
-        ActionFileSaveAs,
-        ActionFileExportWav,
-
-        ActionEditCopy,
-        ActionEditCut,
-        ActionEditPaste,
-        ActionEditPasteMix,
-        ActionEditErase,
-        ActionEditSelectAll,
-        ActionEditNoteIncrease,
-        ActionEditNoteDecrease,
-        ActionEditOctaveIncrease,
-        ActionEditOctaveDecrease,
-        ActionEditTranspose,
-        ActionEditReverse,
-        ActionEditKeyRepetition,
-
-        ActionSongOrderInsert,
-        ActionSongOrderRemove,
-        ActionSongOrderDuplicate,
-        ActionSongOrderMoveUp,
-        ActionSongOrderMoveDown,
-
-        ActionTrackerPlay,
-        ActionTrackerRestart,
-        ActionTrackerPlayCurrentRow,
-        ActionTrackerStepRow,
-        ActionTrackerStop,
-        ActionTrackerRecord,
-        ActionTrackerToggleChannel,
-        ActionTrackerSolo,
-        ActionTrackerKill,
-        ActionTrackerRepeat,
-        ActionTrackerFollow,
-
-        ACTION_COUNT
-    };
-
-    std::array<QAction, ACTION_COUNT> mActions;
-
-    // File
-    QMenu mMenuFile;
-
-    // Edit
-    QMenu mMenuEdit;
-        QAction *mActionEditUndo;
-        QAction *mActionEditRedo;
-        QMenu mMenuTranspose;
-    
-    // Song
-    QMenu mMenuSong;
-
-    // View
-    QMenu mMenuView;
-        QMenu mMenuViewToolbars;
-
-    // Tracker
-    QMenu mMenuTracker;
-
-    // Help
-    QMenu mMenuHelp;
-
-    QMenu mContextMenuOrder;
 
     //QShortcut mPlayAndStopShortcut;
 

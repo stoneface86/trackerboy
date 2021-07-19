@@ -25,6 +25,7 @@ public:
     void setModel(InstrumentListModel *model);
 
 private:
+    void modelDestroyed();
 
     void forwardRowInsertion(QModelIndex const& parent, int start, int end);
     void forwardRowRemoval(QModelIndex const& parent, int first, int last);

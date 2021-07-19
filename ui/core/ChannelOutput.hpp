@@ -20,6 +20,6 @@ namespace ChannelOutput {
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
-};
+}
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ChannelOutput::Flags)

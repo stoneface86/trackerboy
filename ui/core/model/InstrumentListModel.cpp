@@ -3,8 +3,8 @@
 #include "misc/IconManager.hpp"
 
 
-InstrumentListModel::InstrumentListModel(Module &mod) :
-    BaseTableModel(mod, mod.data().instrumentTable(), tr("New instrument"))
+InstrumentListModel::InstrumentListModel(Module &mod, QObject *parent) :
+    BaseTableModel(mod, mod.data().instrumentTable(), tr("New instrument"), parent)
 {
 }
 

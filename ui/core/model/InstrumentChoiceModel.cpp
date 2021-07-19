@@ -54,6 +54,7 @@ void InstrumentChoiceModel::setModel(InstrumentListModel *model) {
             connect(mModel, &InstrumentListModel::rowsAboutToBeRemoved, this, &InstrumentChoiceModel::forwardRowRemoval);
             connect(mModel, &InstrumentListModel::rowsRemoved, this, &InstrumentChoiceModel::endRemoveRows);
             connect(mModel, &InstrumentListModel::dataChanged, this, &InstrumentChoiceModel::forwardDataChanges);
+            connect(mModel, &QObject::destroyed, this, &InstrumentChoiceModel::modelDestroyed);
         }
     }
 }
@@ -74,4 +75,10 @@ void InstrumentChoiceModel::forwardDataChanges(QModelIndex const& topLeft, QMode
         createIndex(bottomRight.row() + 1, 0, nullptr),
         roles
     );
+}
+
+void InstrumentChoiceModel::modelDestroyed() {
+    beginResetModel();
+    mModel = nullptr;
+    endResetModel();
 }
