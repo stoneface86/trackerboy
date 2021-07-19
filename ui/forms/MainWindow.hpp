@@ -53,9 +53,9 @@ protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;
 
-    virtual void showEvent(QShowEvent *evt) override;
-
 private slots:
+
+    // implementation in MainWindow/slots.cpp - BEGIN -------------------------
 
     // actions
     void onFileNew();
@@ -85,6 +85,8 @@ private slots:
     void onAudioStop();
     void onFrameSync();
 
+    // implementation in MainWindow/slots.cpp - END ---------------------------
+
 private:
     Q_DISABLE_COPY(MainWindow)
 
@@ -94,24 +96,52 @@ private:
         error
     };
 
+    //
+    // Creates a new toolbar with the given title and object name. This class
+    // takes ownership of the toolbar.
+    //
     QToolBar* makeToolbar(QString const& title, QString const& objname);
 
-    // implementation in MainWindow/actions.cpp -------------------------------
+    // implementation in MainWindow/actions.cpp - BEGIN -----------------------
 
+    //
+    // Creates all actions used by the application
+    //
     void createActions();
 
+    //
+    // Setups the View menu in the given QMenu instance.
+    //
     void setupViewMenu(QMenu *menu);
 
+    //
+    // Adds order actions to the given menu
+    //
     void setupSongMenu(QMenu *menu);
     
-    // ------------------------------------------------------------------------
+    // implementation in MainWindow/actions.cpp - END -------------------------
 
+    //
+    // Prompts the user to save if the module is modified, do nothing otherwise
+    // To be called before saving, loading and when closing the application. If
+    // this function returns false, do not continue with the save/load or close.
+    // true is returned if:
+    //  * The user was prompted to save, saved, and the save was successful
+    //  * The user was prompted to save but chose to discard changes
+    //  * The document was not modified, so the user was not prompted to save
+    // false is returned for all other cases
+    //
     bool maybeSave();
 
+    //
+    // Setups the UI, should only be called once and by the constructor
+    //
     void setupUi();
 
+    //
+    // Resets all toolbars and docks to the initial state.
+    //
     void initState();
-
 
     //
     // Shows and adds a "Change settings" button that opens the configuration
@@ -119,12 +149,28 @@ private:
     //
     void settingsMessageBox(QMessageBox &msgbox);
 
+    //
+    // Sets the window title using the current filename
+    //
     void updateWindowTitle();
 
+    //
+    // Updates action enabled state for order actions
+    //
     void updateOrderActions();
 
+    //
+    // Sets the playing status text in statusbar
+    //  PlayingStatusText::playing - "Playing"
+    //  PlayingStatusText::ready - "Ready"
+    //  PlayingStatusText::error - "Device error"
+    //
     void setPlayingStatus(PlayingStatusText type);
 
+    //
+    // Updates the current midi receiver based on the newWidget that
+    // recieved focus.
+    //
     void handleFocusChange(QWidget *oldWidget, QWidget *newWidget);
 
     //
