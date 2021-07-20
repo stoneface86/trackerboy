@@ -22,6 +22,9 @@
 #include <type_traits>
 
 
+static auto const KEY_WINDOW_STATE = QStringLiteral("windowState");
+static auto const KEY_GEOMETRY = QStringLiteral("geometry");
+
 
 #define setObjectNameFromDeclared(var) var.setObjectName(QStringLiteral(#var))
 
@@ -79,7 +82,7 @@ MainWindow::MainWindow() :
     QSettings settings;
 
     // restore geomtry from the last session
-    auto const geometry = settings.value(QStringLiteral("geometry"), QByteArray()).toByteArray();
+    auto const geometry = settings.value(KEY_GEOMETRY, QByteArray()).toByteArray();
 
     if (geometry.isEmpty()) {
         #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
@@ -98,7 +101,7 @@ MainWindow::MainWindow() :
     }
 
     // restore window state if it exists
-    auto const windowState = settings.value("windowState").toByteArray();
+    auto const windowState = settings.value(KEY_WINDOW_STATE).toByteArray();
     if (windowState.isEmpty()) {
         // default layout
         initState();
@@ -146,8 +149,8 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
         if (mSaveConfig) {
         #endif
             QSettings settings;
-            settings.setValue("geometry", saveGeometry());
-            settings.setValue("windowState", saveState());
+            settings.setValue(KEY_GEOMETRY, saveGeometry());
+            settings.setValue(KEY_WINDOW_STATE, saveState());
         #ifdef QT_DEBUG
         }
         #endif

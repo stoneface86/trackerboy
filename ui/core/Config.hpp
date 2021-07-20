@@ -39,6 +39,11 @@ public:
     Q_DECLARE_FLAGS(Categories, Category)
 
     struct Appearance {
+        static constexpr auto DEFAULT_FONT_FAMILY = "Cascadia Mono";
+        static constexpr int DEFAULT_FONT_SIZE = 12;
+        static constexpr bool DEFAULT_SHOW_FLATS = false;
+        static constexpr bool DEFAULT_SHOW_PREVIEWS = true;
+
         ColorTable colors;
         QFont font;
         bool showFlats;         // if true flats will be shown for accidental notes
