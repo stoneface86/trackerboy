@@ -286,10 +286,9 @@ void MainWindow::setupSongMenu(QMenu *menu) {
 }
 
 void MainWindow::setupViewMenu(QMenu *menu) {
-    // menu->addAction(mDockModuleSettings.toggleViewAction());
-    // menu->addAction(mDockInstrumentEditor.toggleViewAction());
-    // menu->addAction(mDockWaveformEditor.toggleViewAction());
-    menu->addAction(mDockHistory.toggleViewAction());
+    // menu->addAction(mDockInstrumentEditor->toggleViewAction());
+    // menu->addAction(mDockWaveformEditor->toggleViewAction());
+    menu->addAction(mDockHistory->toggleViewAction());
     menu->addSeparator();
     auto toolbarMenu = menu->addMenu(tr("Toolbars"));
     for (auto toolbar : {

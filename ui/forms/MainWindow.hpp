@@ -8,9 +8,10 @@
 #include "core/model/SongModel.hpp"
 #include "core/model/PatternModel.hpp"
 #include "core/model/WaveListModel.hpp"
-#include "core/model/InstrumentChoiceModel.hpp"
+#include "core/Config.hpp"
 #include "core/Module.hpp"
 #include "core/ModuleFile.hpp"
+#include "core/PianoInput.hpp"
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
@@ -19,22 +20,14 @@
 //#include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 
+#include "trackerboy/engine/Frame.hpp"
+
 #include <QDockWidget>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QMainWindow>
-#include <QMdiArea>
-#include <QMenu>
 #include <QMessageBox>
-#include <QTimer>
 #include <QToolBar>
-#include <QTabBar>
-#include <QUndoView>
-#include <QShortcut>
-#include <QSplitter>
-#include <QTreeView>
-
-#include <array>
+#include <QSpinBox>
 
 //
 // Main form for the application
@@ -95,6 +88,8 @@ private:
         playing,
         error
     };
+
+    QDockWidget* makeDock(QString const& title, QString const& objname);
 
     //
     // Creates a new toolbar with the given title and object name. This class
@@ -240,26 +235,21 @@ private:
 
     // dock widgets
 
-    //QDockWidget mDockInstrumentEditor;
-    //    InstrumentEditor mInstrumentEditor;
-
-    //QDockWidget mDockWaveformEditor;
-    //    WaveEditor mWaveEditor;
-
-    QDockWidget mDockHistory;
-        QUndoView mUndoView;
+    //QDockWidget *mDockInstrumentEditor;
+    //QDockWidget *mDockWaveformEditor;
+    QDockWidget *mDockHistory;
 
     // widgets
     Sidebar *mSidebar;
     //PatternEditor *mPatternEditor;
 
     // statusbar widgets
-    QLabel mStatusRenderer;
-    QLabel mStatusSpeed;
-    QLabel mStatusTempo;
-    QLabel mStatusElapsed;
-    QLabel mStatusPos;
-    QLabel mStatusSamplerate;
+    QLabel *mStatusRenderer;
+    QLabel *mStatusSpeed;
+    QLabel *mStatusTempo;
+    QLabel *mStatusElapsed;
+    QLabel *mStatusPos;
+    QLabel *mStatusSamplerate;
 
     //QShortcut mPlayAndStopShortcut;
 

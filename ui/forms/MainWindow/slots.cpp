@@ -3,6 +3,7 @@
 
 #include "core/midi/MidiProber.hpp"
 #include "core/samplerates.hpp"
+//#include "forms/ExportWavDialog.hpp"
 
 #include <QFileDialog>
 
@@ -145,7 +146,7 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
     if (categories.testFlag(Config::CategorySound)) {
         auto &sound = mConfig.sound();
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
-        mStatusSamplerate.setText(tr("%1 Hz").arg(samplerate));
+        mStatusSamplerate->setText(tr("%1 Hz").arg(samplerate));
 
         // mErrorSinceLastConfig = !mRenderer.setConfig(sound);
         // if (mErrorSinceLastConfig) {

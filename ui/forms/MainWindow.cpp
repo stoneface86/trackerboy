@@ -1,32 +1,19 @@
 
 #include "MainWindow.hpp"
 
-#include "core/midi/MidiProber.hpp"
-#include "core/samplerates.hpp"
-//#include "forms/ExportWavDialog.hpp"
+#include "core/model/InstrumentChoiceModel.hpp"
 #include "misc/IconManager.hpp"
-#include "misc/utils.hpp"
 
 #include <QApplication>
-#include <QFileInfo>
-#include <QFileDialog>
-#include <QMessageBox>
 #include <QSettings>
 #include <QScreen>
-#include <QMenuBar>
+#include <QMenu>
 #include <QStatusBar>
-#include <QMdiSubWindow>
 #include <QtDebug>
-
-#include <array>
-#include <type_traits>
-
+#include <QUndoView>
 
 static auto const KEY_WINDOW_STATE = QStringLiteral("windowState");
 static auto const KEY_GEOMETRY = QStringLiteral("geometry");
-
-
-#define setObjectNameFromDeclared(var) var.setObjectName(QStringLiteral(#var))
 
 MainWindow::MainWindow() :
     QMainWindow(),
@@ -42,26 +29,8 @@ MainWindow::MainWindow() :
     mErrorSinceLastConfig(false),
     mAboutDialog(nullptr),
     mAudioDiag(nullptr),
-    mConfigDialog(nullptr),
-    mToolbarFile(),
-    mToolbarEdit(),
-    mToolbarTracker(),
-    mToolbarInput(),
-    mToolbarInstrument(),
-    mInstrumentCombo(),
-    // mDockInstrumentEditor(),
-    // mInstrumentEditor(mPianoInput),
-    // mDockWaveformEditor(),
-    // mWaveEditor(mPianoInput),
-    mDockHistory(),
-    mUndoView()
-    // mMainWidget(nullptr),
-    // mEditorLayout(),
-    // mSidebar(mDocument),
-    // mPatternEditor(mDocument, mPianoInput),
-    // mPlayAndStopShortcut(&mPatternEditor)
+    mConfigDialog(nullptr)
 {
-    //mMidiReceiver = &mPatternEditor;
 
     // create models
     mModule = new Module(this);
@@ -76,7 +45,6 @@ MainWindow::MainWindow() :
     // read in application configuration
     mConfig.readSettings();
     
-
     setWindowIcon(IconManager::getAppIcon());
 
     QSettings settings;
@@ -121,17 +89,11 @@ MainWindow::MainWindow() :
         addToolBar(mToolbarTracker);
         addToolBar(mToolbarInput);
         addToolBar(mToolbarInstrument);
-        // addDockWidget(Qt::LeftDockWidgetArea, &mDockModuleSettings);
-        // addDockWidget(Qt::LeftDockWidgetArea, &mDockInstrumentEditor);
-        // addDockWidget(Qt::LeftDockWidgetArea, &mDockWaveformEditor);
-        addDockWidget(Qt::LeftDockWidgetArea, &mDockHistory);
+        // addDockWidget(Qt::LeftDockWidgetArea, mDockInstrumentEditor);
+        // addDockWidget(Qt::LeftDockWidgetArea, mDockWaveformEditor);
+        addDockWidget(Qt::LeftDockWidgetArea, mDockHistory);
         restoreState(windowState);
     }
-
-    // temporary
-    // mInstrumentEditor.setDocument(&mDocument);
-    // mWaveEditor.setDocument(&mDocument);
-    // mModuleSettingsWidget.setDocument(&mDocument);
 
     mModuleFile.setName(mUntitledString);
     updateWindowTitle();
@@ -201,6 +163,11 @@ bool MainWindow::maybeSave() {
     return true;
 }
 
+QDockWidget* MainWindow::makeDock(QString const& title, QString const& objname) {
+    auto dock = new QDockWidget(title, this);
+    dock->setObjectName(objname);
+    return dock;
+}
 
 QToolBar* MainWindow::makeToolbar(QString const& title, QString const& objname) {
     auto toolbar = new QToolBar(title, this);
@@ -225,19 +192,11 @@ void MainWindow::setupUi() {
 
     setCentralWidget(centralWidget);
 
-    // mMainWidget = new QWidget(this);
-    // mMainWidget->setObjectName(QStringLiteral("MainWidget"));
+    // DOCKS =================================================================
 
-    // //mEditorLayout.addLayout(&mGroupLayout);
-    // mEditorLayout.addWidget(&mSidebar);
-    // mEditorLayout.addWidget(&mPatternEditor, 1);
-    // mEditorLayout.setMargin(0);
-    // mMainWidget->setLayout(&mEditorLayout);
-
-    // setCentralWidget(mMainWidget);
-
-    // mSidebar.scope().setBuffer(&mRenderer.visualizerBuffer());
-
+    mDockHistory = makeDock(tr("History"), QStringLiteral("DockHistory"));
+    auto undoView = new QUndoView(&mModule->undoStack(), mDockHistory);
+    mDockHistory->setWidget(undoView);
 
     // TOOLBARS ==============================================================
 
@@ -247,7 +206,6 @@ void MainWindow::setupUi() {
     mToolbarTracker = makeToolbar(tr("Tracker"), QStringLiteral("ToolbarTracker"));
     mToolbarInput = makeToolbar(tr("Input"), QStringLiteral("ToolbarInput"));
     mToolbarInstrument = makeToolbar(tr("Instrument"), QStringLiteral("ToolbarInstrument"));
-
 
     mOctaveSpin = new QSpinBox(mToolbarInput);
     mOctaveSpin->setRange(2, 8);
@@ -283,48 +241,35 @@ void MainWindow::setupUi() {
     // mPlayAndStopShortcut.setKey(QKeySequence(Qt::Key_Return));
     // mPlayAndStopShortcut.setContext(Qt::WidgetWithChildrenShortcut);
 
-    // DOCKS =================================================================
-
-    // setObjectNameFromDeclared(mDockModuleSettings);
-    // mDockModuleSettings.setWindowTitle(tr("Module settings"));
-    // mDockModuleSettings.setWidget(&mModuleSettingsWidget);
-    
-    // setObjectNameFromDeclared(mDockInstrumentEditor);
-    // mDockInstrumentEditor.setWindowTitle(tr("Instrument editor"));
-    // mDockInstrumentEditor.setWidget(&mInstrumentEditor);
-    
-    // setObjectNameFromDeclared(mDockWaveformEditor);
-    // mDockWaveformEditor.setWindowTitle(tr("Waveform editor"));
-    // mDockWaveformEditor.setWidget(&mWaveEditor);
-
-    setObjectNameFromDeclared(mDockHistory);
-    mDockHistory.setWindowTitle(tr("History"));
-    mDockHistory.setWidget(&mUndoView);
-    mUndoView.setStack(&mModule->undoStack());
-
     // STATUSBAR ==============================================================
 
     auto statusbar = statusBar();
 
-    mStatusRenderer.setMinimumWidth(60);
-    mStatusSpeed.setMinimumWidth(60);
-    mStatusTempo.setMinimumWidth(60);
-    mStatusElapsed.setMinimumWidth(40);
-    mStatusPos.setMinimumWidth(40);
-    mStatusSamplerate.setMinimumWidth(60);
+    mStatusRenderer = new QLabel(statusbar);
+    mStatusSpeed = new QLabel(statusbar);
+    mStatusTempo = new QLabel(statusbar);
+    mStatusElapsed = new QLabel(statusbar);
+    mStatusPos = new QLabel(statusbar);
+    mStatusSamplerate = new QLabel(statusbar);
 
-    {
-        for (auto label : { &mStatusRenderer, &mStatusSpeed, &mStatusTempo, &mStatusElapsed, &mStatusPos, &mStatusSamplerate }) {
-            label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-        }
+    mStatusRenderer->setMinimumWidth(60);
+    mStatusSpeed->setMinimumWidth(60);
+    mStatusTempo->setMinimumWidth(60);
+    mStatusElapsed->setMinimumWidth(40);
+    mStatusPos->setMinimumWidth(40);
+    mStatusSamplerate->setMinimumWidth(60);
+
+    for (auto label : { 
+            mStatusRenderer,
+            mStatusSpeed,
+            mStatusTempo,
+            mStatusElapsed,
+            mStatusPos,
+            mStatusSamplerate
+            }) {
+        label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+        statusbar->addPermanentWidget(label);
     }
-    
-    statusbar->addPermanentWidget(&mStatusRenderer);
-    statusbar->addPermanentWidget(&mStatusSpeed);
-    statusbar->addPermanentWidget(&mStatusTempo);
-    statusbar->addPermanentWidget(&mStatusElapsed);
-    statusbar->addPermanentWidget(&mStatusPos);
-    statusbar->addPermanentWidget(&mStatusSamplerate);
 
     statusbar->showMessage(tr("Trackerboy v%1.%2.%3")
         .arg(trackerboy::VERSION.major)
@@ -333,10 +278,10 @@ void MainWindow::setupUi() {
 
     // default statuses
     setPlayingStatus(PlayingStatusText::ready);
-    mStatusSpeed.setText(tr("6.000 FPR"));
-    mStatusTempo.setText(tr("150 BPM"));
-    mStatusElapsed.setText(QStringLiteral("00:00"));
-    mStatusPos.setText(QStringLiteral("00 / 00"));
+    mStatusSpeed->setText(tr("6.000 FPR"));
+    mStatusTempo->setText(tr("150 BPM"));
+    mStatusElapsed->setText(QStringLiteral("00:00"));
+    mStatusPos->setText(QStringLiteral("00 / 00"));
     // no need to set samplerate, it is done so in onConfigApplied
 
     // CONNECTIONS ============================================================
@@ -474,21 +419,17 @@ void MainWindow::initState() {
     addToolBar(Qt::TopToolBarArea, mToolbarInstrument);
     mToolbarInstrument->show();
 
-    // addDockWidget(Qt::RightDockWidgetArea, &mDockModuleSettings);
-    // mDockModuleSettings.setFloating(true);
-    // mDockModuleSettings.hide();
+    // addDockWidget(Qt::RightDockWidgetArea, mDockInstrumentEditor);
+    // mDockInstrumentEditor->setFloating(true);
+    // mDockInstrumentEditor->hide();
 
-    // addDockWidget(Qt::RightDockWidgetArea, &mDockInstrumentEditor);
-    // mDockInstrumentEditor.setFloating(true);
-    // mDockInstrumentEditor.hide();
+    // addDockWidget(Qt::RightDockWidgetArea, mDockWaveformEditor);
+    // mDockWaveformEditor->setFloating(true);
+    // mDockWaveformEditor->hide();
 
-    // addDockWidget(Qt::RightDockWidgetArea, &mDockWaveformEditor);
-    // mDockWaveformEditor.setFloating(true);
-    // mDockWaveformEditor.hide();
-
-    addDockWidget(Qt::RightDockWidgetArea, &mDockHistory);
-    mDockHistory.setFloating(true);
-    mDockHistory.hide();
+    addDockWidget(Qt::RightDockWidgetArea, mDockHistory);
+    mDockHistory->setFloating(true);
+    mDockHistory->hide();
 }
 
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
@@ -522,7 +463,7 @@ void MainWindow::setPlayingStatus(PlayingStatusText type) {
         QT_TR_NOOP("Device error")
     };
 
-    mStatusRenderer.setText(tr(PLAYING_STATUSES[(int)type]));
+    mStatusRenderer->setText(tr(PLAYING_STATUSES[(int)type]));
 }
 
 void MainWindow::disableMidi(bool causedByError) {
@@ -550,6 +491,7 @@ void MainWindow::disableMidi(bool causedByError) {
 
 void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
     Q_UNUSED(oldWidget)
+    Q_UNUSED(newWidget)
 
     // this handler is for determining where MIDI events will go, based on
     // who has focus. If MIDI is disabled we don't need to do anything
