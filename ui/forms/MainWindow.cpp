@@ -85,17 +85,26 @@ MainWindow::MainWindow() :
     auto const geometry = settings.value(KEY_GEOMETRY, QByteArray()).toByteArray();
 
     if (geometry.isEmpty()) {
-        #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-        // screen() was added at version 5.14, making QDesktopWidget obsolete
-        auto const availableGeometry = window()->screen()->availableGeometry();
-        #else
-        auto const availableGeometry = QApplication::desktop()->availableGeometry();
-        #endif
+        // no saved geometry, initialize it
+        // we will take 3/4 of the primary screen's width and height, but we
+        // will take no more than 1280x720
 
-        // initialize window size to 3/4 of the screen's width and height
-        resize(availableGeometry.width() / 4 * 3, availableGeometry.height() / 4 * 3);
-        move((availableGeometry.width() - width()) / 2,
-            (availableGeometry.height() - height()) / 2);
+        // maximum initial resolution
+        constexpr int MAX_WIDTH = 1280;
+        constexpr int MAX_HEIGHT = 720;
+
+        // get the available geometry for the primary screen
+        auto const availableGeometry = QApplication::primaryScreen()->availableGeometry();
+
+        QRect newGeometry(
+            0,
+            0, 
+            std::min(MAX_WIDTH, availableGeometry.width() * 3 / 4),
+            std::min(MAX_HEIGHT, availableGeometry.height() * 3 / 4)
+        );
+
+        newGeometry.moveTo(availableGeometry.center() - newGeometry.center());
+        setGeometry(newGeometry);
     } else {
         restoreGeometry(geometry);
     }
