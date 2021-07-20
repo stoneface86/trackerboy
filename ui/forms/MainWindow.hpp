@@ -128,6 +128,8 @@ private:
     //
     bool maybeSave();
 
+    void commitModels();
+
     //
     // Setups the UI, should only be called once and by the constructor
     //

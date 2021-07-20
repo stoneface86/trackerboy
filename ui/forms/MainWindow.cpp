@@ -163,6 +163,14 @@ bool MainWindow::maybeSave() {
     return true;
 }
 
+void MainWindow::commitModels() {
+    // libtrackerboy uses std::string, models use QString
+    // models use a QString version of the underlying std::string data
+    // commiting converts the QString data (if needed) to std::string
+    mInstrumentModel->commit();
+    mWaveModel->commit();
+}
+
 QDockWidget* MainWindow::makeDock(QString const& title, QString const& objname) {
     auto dock = new QDockWidget(title, this);
     dock->setObjectName(objname);
