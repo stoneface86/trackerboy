@@ -17,18 +17,19 @@ void SongList::append() {
     mContainer.emplace_back(std::make_shared<Song>());
 }
 
-std::shared_ptr<Song> SongList::appendAndGet() {
-    append();
-    return mContainer.back();
-}
-
 void SongList::duplicate(int index) {
     checkIndex(index);
     // invoke Song copy constructor
     mContainer.emplace_back(std::make_shared<Song>(*mContainer[index]));
 }
 
-std::shared_ptr<Song> SongList::get(int index) {
+Song* SongList::get(int index) const {
+    checkIndex(index);
+
+    return mContainer[index].get();
+}
+
+std::shared_ptr<Song> SongList::getShared(int index) const {
     checkIndex(index);
 
     return mContainer[index];
@@ -72,7 +73,7 @@ int SongList::size() {
     return (int)mContainer.size();
 }
 
-void SongList::checkIndex(int index) {
+void SongList::checkIndex(int index) const {
     if (index < 0 || index >= (int)mContainer.size()) {
         throw std::invalid_argument("index out of bounds");
     }

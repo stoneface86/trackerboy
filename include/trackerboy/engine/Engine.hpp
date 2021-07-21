@@ -44,7 +44,18 @@ public:
 
     Module const* getModule() const;
 
+    Song const* getSong() const;
+
+    bool canPlay() const;
+
     void setModule(Module const* mod);
+
+    //
+    // Set the song to play music from. Ownership of the song is to be
+    // managed by the caller. The engine expects that the lifetime of the
+    // song will be the same as the engine's or until reset() is called.
+    //
+    void setSong(Song const* song);
 
     void reset();
 
@@ -88,13 +99,13 @@ public:
     void step(Frame &frame);
 
 private:
-
     void clearChannel(ChType ch);
 
     IApu &mApu;
     Module const* mModule;
     std::optional<RuntimeContext> mRc;
     std::optional<MusicRuntime> mMusicContext;
+    Song const* mSong;
 
     //TODO: sfx runtime
     int mTime;

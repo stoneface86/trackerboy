@@ -35,11 +35,10 @@ void Player::start(Duration duration) {
             mPlaying = false;
             mContext = {};
         } else {
-            auto mod = mEngine.getModule();
-            if (mod) {
+            if (mEngine.canPlay()) {
                 mContext.emplace<LoopContext>(loopCount);
                 auto &ctx = std::get<LoopContext>(mContext);
-                ctx.visits.resize(mod->song().order().size());
+                ctx.visits.resize(mEngine.getSong()->order().size());
                 ctx.visits[0] = 1; // visit the first pattern
                 init = true;
             }

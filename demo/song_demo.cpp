@@ -61,9 +61,9 @@ int main() {
     triangle.setName("triangle");
 
     
-    auto &testsong = mod.song();
-    testsong.setName("rushing heart");
-    testsong.setSpeed(0x22);
+    auto testsong = mod.songs().get(0);
+    testsong->setName("rushing heart");
+    testsong->setSpeed(0x22);
 
     {
         std::vector<OrderRow> order;
@@ -71,11 +71,11 @@ int main() {
         order.push_back({ 0, 1, 0, 1 });
         order.push_back({ 0, 0, 0, 0 });
         order.push_back({ 0, 2, 0, 2 });
-        testsong.order().setData(std::move(order));
+        testsong->order().setData(std::move(order));
     }
 
 
-    auto &pm = testsong.patterns();
+    auto &pm = testsong->patterns();
     
     {
         auto &tr = pm.getTrack(ChType::ch4, 0);
@@ -351,6 +351,7 @@ int main() {
     buffer.resize(synth.framesize() * 2);
 
     Engine engine(apu, &mod);
+    engine.setSong(testsong);
 
     Player player(engine);
     // play the song twice

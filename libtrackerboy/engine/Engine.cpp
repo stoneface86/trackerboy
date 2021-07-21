@@ -12,6 +12,7 @@ Engine::Engine(IApu &apu, Module const* mod) :
     mModule(mod),
     mRc(),
     mMusicContext(),
+    mSong(nullptr),
     mTime(0),
     mPatternRepeat(false)
 {
@@ -36,15 +37,25 @@ void Engine::setModule(Module const* mod) {
     }
 }
 
+Song const* Engine::getSong() const {
+    return mSong;
+}
+
+void Engine::setSong(Song const* song) {
+    mSong = song;
+}
+
+bool Engine::canPlay() const {
+    return mRc.has_value() && mSong;
+}
+
 void Engine::reset() {
     mMusicContext.reset();
 }
 
 void Engine::play(int orderNo, int patternRow) {
-    
-    if (mModule) {
-        auto &song = mModule->song();
-
+    if (canPlay()) {
+        auto const& song = *mSong;
         if (orderNo < 0 || orderNo >= song.order().size()) {
             throw std::invalid_argument("cannot play order, order does not exist");
         }
