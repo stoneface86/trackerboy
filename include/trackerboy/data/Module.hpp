@@ -26,6 +26,7 @@
 
 #include "trackerboy/data/Table.hpp"
 #include "trackerboy/data/Song.hpp"
+#include "trackerboy/data/SongList.hpp"
 #include "trackerboy/version.hpp"
 
 #include <cstddef>
@@ -70,6 +71,8 @@ public:
     Song& song() noexcept;
     Song const& song() const noexcept;
 
+    SongList& songs() noexcept;
+
     WaveformTable& waveformTable() noexcept;
     WaveformTable const& waveformTable() const noexcept;
 
@@ -97,6 +100,8 @@ public:
 private:
 
     Song mSong;
+
+    SongList mSongs;
 
     InstrumentTable mInstrumentTable;
     WaveformTable mWaveformTable;

@@ -10,6 +10,7 @@ set(SRC_FILES
     "data/PatternMaster.cpp"
     "data/Sequence.cpp"
     "data/Song.cpp"
+    "data/SongList.cpp"
     "data/Table.cpp"
     "data/Track.cpp"
     "data/TrackRow.cpp"

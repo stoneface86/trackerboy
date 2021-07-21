@@ -39,6 +39,7 @@ void Module::clear() noexcept {
     mArtist = "";
     mCopyright = "";
     mSong.reset();
+    mSongs.clear();
     mInstrumentTable.clear();
     mWaveformTable.clear();
     mSystem = System::dmg;
@@ -75,6 +76,10 @@ Song& Module::song() noexcept {
 
 Song const& Module::song() const noexcept {
     return mSong;
+}
+
+SongList& Module::songs() noexcept {
+    return mSongs;
 }
 
 InstrumentTable& Module::instrumentTable() noexcept {
