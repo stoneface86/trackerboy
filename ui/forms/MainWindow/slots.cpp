@@ -52,15 +52,19 @@ void MainWindow::onFileOpen() {
         
         auto error = mModuleFile.lastError();
         switch (error) {
-            case trackerboy::FormatError::duplicateId:
-            case trackerboy::FormatError::invalid:
-            case trackerboy::FormatError::tableDuplicateId:
-            case trackerboy::FormatError::tableSizeBounds:
-            case trackerboy::FormatError::unknownChannel:
-                msgbox.setInformativeText(tr("The module is corrupted"));
-                break;
             case trackerboy::FormatError::invalidSignature:
                 msgbox.setInformativeText(tr("The file is not a trackerboy module"));
+                break;
+            case trackerboy::FormatError::invalidRevision:
+                msgbox.setInformativeText(tr("The module is from a newer version of Trackerboy"));
+                break;
+            case trackerboy::FormatError::cannotUpgrade:
+                msgbox.setInformativeText(tr("Failed to upgrade the module"));
+                break;
+            case trackerboy::FormatError::duplicateId:
+            case trackerboy::FormatError::invalid:
+            case trackerboy::FormatError::unknownChannel:
+                msgbox.setInformativeText(tr("The module is corrupted"));
                 break;
             default:
                 msgbox.setInformativeText(tr("The file could not be read"));

@@ -43,7 +43,13 @@ namespace trackerboy {
 // 20  +-------------------------------------------+
 //     | version patch                             |
 // 24  +----------+----------+---------------------+
-//     | rev      | system   | customFramerate     |
+//     | rev      |
+//     +----------+
+//
+//     ======= FORMAT BELOW DEPENDS ON REV! ========
+//
+//                +----------+---------------------+
+//                | system   | customFramerate     |
 // 28  +----------+----------+---------------------+
 //     |                                           |
 //     |                                           |
@@ -71,21 +77,20 @@ namespace trackerboy {
 //     |                                           |
 //     |                                           |
 //     |                                           |
-// 124 +---------------------+---------------------+
-//     | numberOfInstruments | numberOfWaveforms   |
-// 128 +---------------------+---------------------+
+// 124 +----------+----------+----------+----------+
+//     | icount   | scount   | wcount   | reserved |
+// 128 +---------------------+----------+----------+
 //     |                                           |
 //     |                                           |
 //     |                                           |
 //     |                                           |
-//     | reserved1                                 |
+//     | reserved                                  |
 //     |                                           |
 //     |                                           |
 //     |                                           |
 //     |                                           |
 // 160 +-------------------------------------------+
 //
-// the chunk then follows (contents depend on type)
 
 #pragma pack(push, 1)
 struct Header {
@@ -100,15 +105,21 @@ struct Header {
     uint32_t versionMinor;
     uint32_t versionPatch;
     uint8_t revision;
+
+    // ========================================================================
+
     uint8_t system; // DMG, SGB, custom
     uint16_t customFramerate; // framerate if system == System::custom
     char title[TITLE_LENGTH];
     char artist[ARTIST_LENGTH];
     char copyright[COPYRIGHT_LENGTH];
-    uint16_t numberOfInstruments;
-    uint16_t numberOfWaveforms;
-    // 32 bytes (8 words) are reserved for future revisions of the format
-    uint32_t reserved1[8];
+    uint8_t icount;
+    uint8_t scount;
+    uint8_t wcount;
+    // remainder is reserved for future revisions of the format
+    uint32_t reserved[8];
+
+    
 };
 #pragma pack(pop)
 
@@ -118,11 +129,10 @@ enum class FormatError {
     none,                   // no error
     invalidSignature,       // signature does not match
     invalidRevision,        // unsupported file revision
-    tableSizeBounds,        // size of table exceeds maximum
-    tableDuplicateId,       // 2 or more items with the same id
+    cannotUpgrade,          // module from previous revision is not upgradable
+    duplicateId,            // two instruments/waveforms with the same id
+    invalid,                // data format is invalid
     unknownChannel,         // unknown channel id for track data
-    invalid,
-    duplicateId,
     readError,              // read error occurred
     writeError              // write error occurred
 };
@@ -135,32 +145,34 @@ enum class FormatError {
 using BlockId = uint32_t;
 using BlockSize = uint32_t;
 
-//
-// Index block (INDX), this block contains all names and ids
-// for all songs, instruments and waveforms in the module.
-//
-constexpr BlockId BLOCK_ID_INDEX       = 0x58444e49; // "INDX"
+// The order and counts of the blocks:
+// 1. COMM (1)
+// 2. SONG (scount, 1-256)
+// 3. INST (icount, 0-64)
+// 4. WAVE (wcount, 0-64)
+
 
 //
 // Comment block (COMM), this block contains comment data for
-// the module.
+// the module. There is always 1 COMM block in the module
 //
 constexpr BlockId BLOCK_ID_COMMENT     = 0x4d4d4f43; // "COMM"
 
 //
-// Song block (SONG), contains song data for all songs
+// Song block (SONG), block contains a single song. The number of SONG blocks
+// a module has is determined by the scount field in the header (1-256).
 //
 constexpr BlockId BLOCK_ID_SONG        = 0x474E4F53; // "SONG"
 
 //
-// Instrument block (INST), contains instrument data for instruments,
-// which are stored in the same order as the Index block.
+// Instrument block (INST), contains an instrument. The number of INST blocks
+// the module has is determined by the icount field in the header (0-64).
 //
 constexpr BlockId BLOCK_ID_INSTRUMENT  = 0x54534e49; // "INST"
 
 //
-// Waveform block (WAVE), contains waveform data. Also stored in
-// the same order as the Index block.
+// Waveform block (WAVE), contains a waveform. The number of WAVE blocks a
+// module has is determined by the wcount field in the header (0-64).
 //
 constexpr BlockId BLOCK_ID_WAVE        = 0x45564157; // "WAVE"
 
@@ -172,6 +184,5 @@ extern const char *FILE_SIGNATURE;
 // format.
 //
 static constexpr uint8_t FILE_REVISION = 0;
-
 
 }

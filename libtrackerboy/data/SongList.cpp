@@ -50,6 +50,13 @@ void SongList::clear() {
     append();
 }
 
+void SongList::clear(int fill) {
+    mContainer.clear();
+    for (int i = 0; i < fill; ++i) {
+        append();
+    }
+}
+
 void SongList::moveUp(int index) {
     if (index <= 0 || index >= (int)mContainer.size()) {
         throw std::invalid_argument("index out of bounds");
@@ -69,7 +76,7 @@ void SongList::moveDown(int index) {
     std::iter_swap(iter, ++iter);
 }
 
-int SongList::size() {
+int SongList::size() const {
     return (int)mContainer.size();
 }
 

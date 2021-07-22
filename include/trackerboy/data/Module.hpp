@@ -68,10 +68,8 @@ public:
 
     int customFramerate() const noexcept;
 
-    Song& song() noexcept;
-    Song const& song() const noexcept;
-
     SongList& songs() noexcept;
+    SongList const& songs() const noexcept;
 
     WaveformTable& waveformTable() noexcept;
     WaveformTable const& waveformTable() const noexcept;
@@ -98,8 +96,6 @@ public:
     void setFramerate(int rate);
 
 private:
-
-    Song mSong;
 
     SongList mSongs;
 

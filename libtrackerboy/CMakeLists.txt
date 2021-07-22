@@ -51,7 +51,7 @@ if (IS_BIG_ENDIAN)
     target_compile_definitions(trackerboy PRIVATE -DTRACKERBOY_BIG_ENDIAN)
 endif ()
 
-if (TRACKERBOY_ENABLE_TESTS)
+if (ENABLE_TESTS)
 
     set(TEST_SRC_FILES
         "test/data/test_Table.cpp"

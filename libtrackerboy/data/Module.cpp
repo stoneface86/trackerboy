@@ -15,7 +15,7 @@ namespace trackerboy {
 
 
 Module::Module() noexcept :
-    mSong(),
+    mSongs(),
     mInstrumentTable(),
     mWaveformTable(),
     mVersion(VERSION),
@@ -38,7 +38,6 @@ void Module::clear() noexcept {
     mTitle = "";
     mArtist = "";
     mCopyright = "";
-    mSong.reset();
     mSongs.clear();
     mInstrumentTable.clear();
     mWaveformTable.clear();
@@ -70,15 +69,11 @@ uint8_t Module::revision() const noexcept {
     return mRevision;
 }
 
-Song& Module::song() noexcept {
-    return mSong;
-}
-
-Song const& Module::song() const noexcept {
-    return mSong;
-}
-
 SongList& Module::songs() noexcept {
+    return mSongs;
+}
+
+SongList const& Module::songs() const noexcept {
     return mSongs;
 }
 
@@ -321,6 +316,11 @@ void OutputBlock::write(size_t count, const char* data) {
     mSize += count;
 }
 
+// same as bool, but guaranteed to be 1 byte
+using u8bool = uint8_t;
+
+
+
 #pragma pack(push, 1)
 
 struct SongFormat {
@@ -348,14 +348,14 @@ struct RowFormat {
 
 struct InstrumentFormat {
     uint8_t channel;
-    bool envelopeEnabled;
+    u8bool envelopeEnabled;
     uint8_t envelope;
     // sequence data follows
 };
 
 struct SequenceFormat {
     uint16_t length;
-    bool loopEnabled;
+    u8bool loopEnabled;
     uint8_t loopIndex;
     // sequence data follows uint8_t[length]
 };
@@ -384,29 +384,6 @@ std::string deserializeString(InputBlock &block) {
     block.read(size, str.data());
     
     return str;
-}
-
-template <class T>
-void writeListIndex(OutputBlock &block, T const& list) {
-    for (uint8_t id = 0; id != BaseTable::MAX_SIZE; ++id) {
-        auto item = list[id];
-        if (item) {
-            block.write(id);
-            serializeString(block, list[id]->name());
-        }
-    }
-}
-
-template <class T>
-void readListIndex(InputBlock &block, size_t count, T &list) {
-    while (count--) {
-        uint8_t id;
-        block.read(id);
-        auto &item = list.insert(id);
-        item.setName(deserializeString(block));
-    }
-
-
 }
 
 // most counter fields in the file format range from 1-256, but use a single byte for encoding
@@ -471,29 +448,17 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
         }
     }
 
-    mSong.reset();
     mInstrumentTable.clear();
     mWaveformTable.clear();
+
+    int const songCount = unbias<int>(header.scount);
+    // clear the song list, adding songCount new songs
+    mSongs.clear(songCount);
 
     InputBlock block(stream);
 
     try {
-
-        // "INDX"
-        if (block.begin() != BLOCK_ID_INDEX) {
-            return FormatError::invalid;
-        }
-
-        mSong.setName(deserializeString(block));
-        
-        readListIndex(block, header.numberOfInstruments, mInstrumentTable);
-        readListIndex(block, header.numberOfWaveforms, mWaveformTable);
-
-        if (!block.finished()) {
-            return FormatError::invalid;
-        }
             
-
         // "COMM"
         if (block.begin() != BLOCK_ID_COMMENT) {
             return FormatError::invalid;
@@ -507,24 +472,30 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
         if (!block.finished()) {
             return FormatError::invalid;
         }
-            
+        
 
-        // "SONG"
-        if (block.begin() != BLOCK_ID_SONG) {
-            return FormatError::invalid;
-        }
+        // deserialize the song blocks
+        // the number of blocks present should match the header
+        for (int i = 0; i < songCount; ++i) {
+            if (block.begin() != BLOCK_ID_SONG) {
+                return FormatError::invalid;
+            }
 
-        {
+            // get the song
+            auto song = mSongs.get(i);
+
+            // set the song name
+            song->setName(deserializeString(block));
 
             // read in song settings
             SongFormat songFormat;
             block.read(songFormat);
-            mSong.setRowsPerBeat(songFormat.rowsPerBeat);
-            mSong.setRowsPerMeasure(songFormat.rowsPerMeasure);
-            mSong.setSpeed(songFormat.speed);
+            song->setRowsPerBeat(songFormat.rowsPerBeat);
+            song->setRowsPerMeasure(songFormat.rowsPerMeasure);
+            song->setSpeed(songFormat.speed);
 
-            auto &pm = mSong.patterns();
-            pm.setRowSize(unbias<uint16_t>(songFormat.rowsPerTrack));
+            auto &pm = song->patterns();
+            pm.setRowSize(unbias<int>(songFormat.rowsPerTrack));
 
             // read in the order
             {
@@ -534,7 +505,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
                     block.read(row);
                 }
                 // the order takes ownership of orderData
-                mSong.order().setData(std::move(orderData));
+                song->order().setData(std::move(orderData));
             }
 
 
@@ -554,71 +525,87 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
                 }
             }
 
-        }
-
-        if (!block.finished()) {
-            return FormatError::invalid;
+            if (!block.finished()) {
+                return FormatError::invalid;
+            }
         }
             
 
+        // deserialize the instrument blocks
         // "INST"
-        if (block.begin() != BLOCK_ID_INSTRUMENT) {
-            return FormatError::invalid;
-        }
+        for (int i = 0; i < (int)header.icount; ++i) {
 
-        //for (auto id : mInstrumentList) {
-        for (uint8_t id = 0; id != BaseTable::MAX_SIZE; ++id) {
-            auto inst = mInstrumentTable[id];
-            if (inst) {
-                InstrumentFormat format;
-                block.read(format);
-                if (format.channel > +ChType::ch4) {
-                    return FormatError::unknownChannel;
-                }
-                inst->setChannel(static_cast<ChType>(format.channel));
-                inst->setEnvelopeEnable(format.envelopeEnabled);
-                inst->setEnvelope(format.envelope);
-                
-                for (size_t i = 0; i < Instrument::SEQUENCE_COUNT; ++i) {
-                    auto &sequence = inst->sequence(i);
-                    
-                    SequenceFormat sequenceFmt;
-                    block.read(sequenceFmt);
-                    sequenceFmt.length = correctEndian(sequenceFmt.length);
-                    if (sequenceFmt.length > Sequence::MAX_SIZE) {
-                        return FormatError::invalid;
-                    }
-
-                    sequence.resize(sequenceFmt.length);
-                    if (sequenceFmt.loopEnabled) {
-                        sequence.setLoop(sequenceFmt.loopIndex);
-                    }
-                    auto &seqdata = sequence.data();
-                    block.read(sequenceFmt.length, seqdata.data());
-                }
+            if (block.begin() != BLOCK_ID_INSTRUMENT) {
+                return FormatError::invalid;
             }
-        }
+
+            auto name = deserializeString(block);
+            uint8_t id;
+            block.read(id);
+
+            if (mInstrumentTable[id] != nullptr) {
+                return FormatError::duplicateId;
+            }
+
+            auto &inst = mInstrumentTable.insert(id);
+            inst.setName(name);
+
+            InstrumentFormat format;
+            block.read(format);
+            if (format.channel > +ChType::ch4) {
+                return FormatError::unknownChannel;
+            }
+            inst.setChannel(static_cast<ChType>(format.channel));
+            inst.setEnvelopeEnable((bool)format.envelopeEnabled);
+            inst.setEnvelope(format.envelope);
+            
+            for (size_t i = 0; i < Instrument::SEQUENCE_COUNT; ++i) {
+                auto &sequence = inst.sequence(i);
+                
+                SequenceFormat sequenceFmt;
+                block.read(sequenceFmt);
+                sequenceFmt.length = correctEndian(sequenceFmt.length);
+                if (sequenceFmt.length > Sequence::MAX_SIZE) {
+                    return FormatError::invalid;
+                }
+
+                sequence.resize(sequenceFmt.length);
+                if (sequenceFmt.loopEnabled) {
+                    sequence.setLoop(sequenceFmt.loopIndex);
+                }
+                auto &seqdata = sequence.data();
+                block.read(sequenceFmt.length, seqdata.data());
+            }
 
 
-        if (!block.finished()) {
-            return FormatError::invalid;
+            if (!block.finished()) {
+                return FormatError::invalid;
+            }
         }
             
-
-        // "WAVE"
-        if (block.begin() != BLOCK_ID_WAVE) {
-            return FormatError::invalid;
-        }
-
-        for (uint8_t id = 0; id != BaseTable::MAX_SIZE; ++id) {
-            auto wave = mWaveformTable[id];
-            if (wave) {
-                block.read(wave->data());
+        // deserialize the waveform blocks
+        for (int i = 0; i < (int)header.wcount; ++i) {
+            // "WAVE"
+            if (block.begin() != BLOCK_ID_WAVE) {
+                return FormatError::invalid;
             }
-        }
 
-        if (!block.finished()) {
-            return FormatError::invalid;
+            auto name = deserializeString(block);
+            uint8_t id;
+            block.read(id);
+
+            if (mWaveformTable[id] != nullptr) {
+                return FormatError::duplicateId;
+            }
+
+            auto &wave = mWaveformTable.insert(id);
+            wave.setName(name);
+
+            block.read(wave.data());
+
+            if (!block.finished()) {
+                return FormatError::invalid;
+            }
         }
             
 
@@ -630,6 +617,8 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
         return FormatError::invalid;
     }
     
+    // there should be no more blocks or data after processing all of the
+    // WAVE blocks, deserialization succeeded if the stream is at EOF
     if (stream.peek() == EOF) {
         return FormatError::none;
     } else {
@@ -656,9 +645,9 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
 
     // file information
 
-    // revision remains the same as the one that was loaded.
-    // for new files, it is set to the current revision.
-    header.revision = mRevision;
+    // revision gets set to the current revision
+    // serializing always uses the current revision
+    header.revision = FILE_REVISION;
 
     #define copyStringToFixed(dest, string, count) do { \
             size_t len = std::min(count - 1, string.length()); \
@@ -670,8 +659,11 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
     copyStringToFixed(header.artist, mArtist, Header::ARTIST_LENGTH);
     copyStringToFixed(header.copyright, mCopyright, Header::COPYRIGHT_LENGTH);
 
-    header.numberOfInstruments = correctEndian((uint16_t)mInstrumentTable.size());
-    header.numberOfWaveforms = correctEndian((uint16_t)mWaveformTable.size());
+    // set the table counts. scount is biased since we must have at least 1
+    // song.
+    header.icount = (uint8_t)mInstrumentTable.size();
+    header.scount = bias(mSongs.size());
+    header.wcount = (uint8_t)mWaveformTable.size();
 
     header.system = +mSystem;
     if (mSystem == System::custom) {
@@ -690,33 +682,27 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
     
     OutputBlock block(stream);
     try {
-
-        // "INDX"
-        block.begin(BLOCK_ID_INDEX);
-        serializeString(block, mSong.name());
-        
-        writeListIndex(block, mInstrumentTable);
-        writeListIndex(block, mWaveformTable);
-
-        block.finish();
-        
-
         // "COMM"
         block.begin(BLOCK_ID_COMMENT);
         block.write(mComments.size(), mComments.c_str());
         block.finish();
-        
 
-        // "SONG"
-        block.begin(BLOCK_ID_SONG);
-        {
-            auto &order = mSong.order();
-            auto &pm = mSong.patterns();
+        // write all songs, each song gets its own block
+        for (int i = 0; i < mSongs.size(); ++i) {
+            block.begin(BLOCK_ID_SONG);
+
+            Song const* song = mSongs.get(i);
+
+            // write the name
+            serializeString(block, song->name());
+
+            auto &order = song->order();
+            auto &pm = song->patterns();
 
             SongFormat songHeader;
-            songHeader.rowsPerBeat = (uint8_t)mSong.rowsPerBeat();
-            songHeader.rowsPerMeasure = (uint8_t)mSong.rowsPerMeasure();
-            songHeader.speed = mSong.speed();
+            songHeader.rowsPerBeat = (uint8_t)song->rowsPerBeat();
+            songHeader.rowsPerMeasure = (uint8_t)song->rowsPerMeasure();
+            songHeader.speed = song->speed();
             songHeader.patternCount = bias(order.size());
             songHeader.rowsPerTrack = bias(pm.rowSize());
             songHeader.numberOfTracks = correctEndian((uint16_t)pm.tracks());
@@ -761,18 +747,25 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
                 }
             }
 
+            block.finish();
         }
-        block.finish();
-        
 
-        // "INST"
-        block.begin(BLOCK_ID_INSTRUMENT);
+        // write out instruments, creating an INST block for each instrument
         for (uint8_t id = 0; id != BaseTable::MAX_SIZE; ++id) {
+            // "INST"
             auto instrument = mInstrumentTable[id];
             if (instrument) {
+                block.begin(BLOCK_ID_INSTRUMENT);
+
+                // name
+                serializeString(block, instrument->name());
+
+                // id
+                block.write(id);
+
                 InstrumentFormat format;
                 format.channel = +instrument->channel();
-                format.envelopeEnabled = instrument->hasEnvelope();
+                format.envelopeEnabled = (u8bool)instrument->hasEnvelope();
                 format.envelope = instrument->envelope();
                 block.write(format);
 
@@ -781,25 +774,27 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
                     auto &seqdata = sequence.data();
                     sequenceFmt.length = correctEndian((uint16_t)seqdata.size());
                     auto loop = sequence.loop();
-                    sequenceFmt.loopEnabled = loop.has_value();
+                    sequenceFmt.loopEnabled = (u8bool)loop.has_value();
                     sequenceFmt.loopIndex = loop.value_or((uint8_t)0);
                     block.write(sequenceFmt);
                     block.write(seqdata.size(), seqdata.data());
                 }
+                block.finish();
             }
         }
-        block.finish();
         
 
         // "WAVE"
-        block.begin(BLOCK_ID_WAVE);
         for (uint8_t id = 0; id != BaseTable::MAX_SIZE; ++id) {
             auto waveform = mWaveformTable[id];
             if (waveform) {
+                block.begin(BLOCK_ID_WAVE);
+                serializeString(block, waveform->name());
+                block.write(id);
                 block.write(waveform->data());
+                block.finish();
             }
         }
-        block.finish();
         
 
     } catch (IOError const& err) {
