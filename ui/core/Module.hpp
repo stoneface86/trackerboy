@@ -2,15 +2,17 @@
 #pragma once
 
 #include "trackerboy/data/Module.hpp"
+#include "trackerboy/data/Song.hpp"
 
 #include <QMutex>
 #include <QMutexLocker>
 #include <QObject>
+#include <QUndoGroup>
 #include <QUndoStack>
 
 //
 // Container class for a trackerboy::Module. Also contains a QMutex and
-// QUndoStack for editing. Model classes edit the contained module.
+// QUndoStacks for editing. Model classes edit the contained module.
 //
 class Module : public QObject {
 
@@ -60,17 +62,44 @@ public:
     trackerboy::Module const& data() const;
     trackerboy::Module& data();
 
+    //
+    // Gets the current song for editing. Since trackerboy modules can never
+    // have 0 songs, nullptr is never returned.
+    //
+    trackerboy::Song* song();
+
     bool isModified() const;
 
     QMutex& mutex();
 
-    QUndoStack& undoStack();
+    QUndoGroup* undoGroup();
+
+    QUndoStack* undoStack();
 
     //
-    // Reset the module. The undo stack is cleared and the module is cleaned.
-    // The reloaded signal is then emitted.
+    // Reset the module. All undo stacks are deleted and the module is cleaned.
+    // The reloaded signal is then emitted. This method is called when the
+    // module is cleared (File > New) or a module is loaded (File > Open).
     //
     void reset();
+
+    //
+    // Adds a QUndoStack for a song. Called by SongListModel when adding/duplicating
+    // a song
+    //
+    void addSong();
+
+    //
+    // Removes a song's QUndoStack. Called by SongListModel when removing a song
+    //
+    void removeSong(int index);
+
+    //
+    // Sets the current song for editing. The song's QUndoStack becomes the
+    // active stack for this class's QUndoGroup. The songChanged signal is
+    // also emitted, informing models of the change.
+    //
+    void setSong(int index);
 
     // Editing ---------------------------------------------------------------
 
@@ -112,14 +141,30 @@ signals:
     //
     void reloaded();
 
+    //
+    // Emitted when the current song has changed. Also emitted when the module
+    // has been reset.
+    //
+    void songChanged();
+
 private:
+
+    //
+    // initialize the undo stack vector to the given size. Existing stacks are
+    // reused, their contents are just cleared.
+    //
+    void resizeUndoStacks(int size);
 
     Q_DISABLE_COPY(Module)
 
     trackerboy::Module mModule;
 
     QMutex mMutex;
-    QUndoStack mUndoStack;
+    QUndoGroup *mUndoGroup;
+
+    QVector<QUndoStack*> mSongUndoStacks;
+
+    std::shared_ptr<trackerboy::Song> mSong;
 
     // permanent dirty flag. Not all edits to the document can be undone. When such
     // edit occurs, this flag is set to true. It is reset when the document is

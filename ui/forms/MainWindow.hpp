@@ -197,7 +197,7 @@ private:
     InstrumentListModel *mInstrumentModel;
     OrderModel *mOrderModel;
     SongModel *mSongModel;
-    PatternModel *mPatternModel;
+    //PatternModel *mPatternModel;
     WaveListModel *mWaveModel;
 
     //Renderer mRenderer;

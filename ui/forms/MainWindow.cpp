@@ -37,7 +37,7 @@ MainWindow::MainWindow() :
     mInstrumentModel = new InstrumentListModel(*mModule, this);
     mOrderModel = new OrderModel(*mModule, this);
     mSongModel = new SongModel(*mModule, this);
-    mPatternModel = new PatternModel(*mModule, *mOrderModel, *mSongModel, this);
+    //mPatternModel = new PatternModel(*mModule, *mOrderModel, *mSongModel, this);
     mWaveModel = new WaveListModel(*mModule, this);
 
     setupUi();
@@ -203,7 +203,7 @@ void MainWindow::setupUi() {
     // DOCKS =================================================================
 
     mDockHistory = makeDock(tr("History"), QStringLiteral("DockHistory"));
-    auto undoView = new QUndoView(&mModule->undoStack(), mDockHistory);
+    auto undoView = new QUndoView(mModule->undoGroup(), mDockHistory);
     mDockHistory->setWidget(undoView);
 
     // TOOLBARS ==============================================================

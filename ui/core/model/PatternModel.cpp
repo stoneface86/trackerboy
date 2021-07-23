@@ -25,7 +25,7 @@ PatternModel::PatternModel(Module &mod, OrderModel &orderModel, SongModel &songM
     mTrackerRow(0),
     mTrackerPattern(0),
     mPatternPrev(),
-    mPatternCurr(mod.data().song().getPattern(0)),
+    mPatternCurr(mod.song()->getPattern(0)),
     mPatternNext(),
     mHasSelection(false),
     mSelection()
@@ -55,7 +55,7 @@ PatternModel::PatternModel(Module &mod, OrderModel &orderModel, SongModel &songM
 
 void PatternModel::reload() {
     // patternCurr was invalidated
-    mPatternCurr = mModule.data().song().getPattern(0);
+    mPatternCurr = mModule.song()->getPattern(0);
     mCursorPattern = -1;
     setCursorPattern(0);
     setCursor(PatternCursor(0, 0, 0));
@@ -974,7 +974,7 @@ void PatternModel::setNote(std::optional<uint8_t> note, std::optional<uint8_t> i
         } else {
             cmd->setText(tr("Clear note"));
         }
-        mModule.undoStack().push(cmd);
+        mModule.undoStack()->push(cmd);
 
         
     }
@@ -1005,7 +1005,7 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
         } else {
             cmd->setText(tr("clear instrument"));
         }
-        mModule.undoStack().push(cmd);
+        mModule.undoStack()->push(cmd);
     }
 }
 
@@ -1065,7 +1065,7 @@ void PatternModel::setEffectParam(uint8_t nibble) {
                 oldEffect.param
             );
             cmd->setText(tr("edit effect parameter"));
-            mModule.undoStack().push(cmd);
+            mModule.undoStack()->push(cmd);
         }
     }
         
@@ -1078,7 +1078,7 @@ void PatternModel::deleteSelection() {
         if (!selectionDataIsEmpty()) {
             auto cmd = new DeleteSelectionCmd(*this);
             cmd->setText(tr("Clear selection"));
-            mModule.undoStack().push(cmd);
+            mModule.undoStack()->push(cmd);
         }
     } else {
         switch (mCursor.column) {
@@ -1104,7 +1104,7 @@ void PatternModel::transpose(int amount) {
         if (hasSelection()) {
             auto cmd = new TransposeCmd(*this, (int8_t)amount);
             cmd->setText(tr("transpose selection"));
-            mModule.undoStack().push(cmd);
+            mModule.undoStack()->push(cmd);
         } else {
             auto &rowdata = cursorTrackRow();
             auto rowcopy = rowdata;
@@ -1113,7 +1113,7 @@ void PatternModel::transpose(int amount) {
             if (rowcopy.note != rowdata.note) {
                 auto cmd = new NoteEditCmd(*this, rowcopy.note, rowdata.note);
                 cmd->setText(tr("transpose note"));
-                mModule.undoStack().push(cmd);
+                mModule.undoStack()->push(cmd);
             }
 
         }
@@ -1127,7 +1127,7 @@ void PatternModel::reverse() {
         if (iter.rows() > 1) {
             auto cmd = new ReverseCmd(*this);
             cmd->setText("reverse");
-            mModule.undoStack().push(cmd);
+            mModule.undoStack()->push(cmd);
         }
     }
 }
@@ -1151,5 +1151,5 @@ void PatternModel::moveSelection(PatternCursor pos) {
 void PatternModel::paste(PatternClip const& clip, bool mix) {
     auto cmd = new PasteCmd(*this, clip, mCursor, mix);
     cmd->setText(tr("paste"));
-    mModule.undoStack().push(cmd);
+    mModule.undoStack()->push(cmd);
 }

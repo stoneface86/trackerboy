@@ -43,8 +43,9 @@ class Module {
 
 public:
 
+    // rule-of-zero
+
     Module() noexcept;
-    ~Module() noexcept;
 
     void clear() noexcept;
 

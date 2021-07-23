@@ -86,14 +86,14 @@ void MainWindow::createActions() {
     // > Edit ================================================================
     auto menuEdit = menubar->addMenu(tr("&Edit"));
 
-    auto &undoStack = mModule->undoStack();
-    act = undoStack.createUndoAction(this);
+    auto undoGroup = mModule->undoGroup();
+    act = undoGroup->createUndoAction(this);
     act->setIcon(IconManager::getIcon(Icons::editUndo));
     act->setShortcut(QKeySequence::Undo);
     mToolbarEdit->addAction(act);
     menuEdit->addAction(act);
 
-    act = undoStack.createRedoAction(this);
+    act = undoGroup->createRedoAction(this);
     act->setIcon(IconManager::getIcon(Icons::editRedo));
     act->setShortcut(QKeySequence::Redo);
     mToolbarEdit->addAction(act);
@@ -211,8 +211,8 @@ void MainWindow::createActions() {
     act = setupAction(menuTracker, tr("Record"), tr("Toggles record mode"), Icons::trackerRecord, QKeySequence(Qt::Key_Space));
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
-    lazyconnect(act, toggled, mPatternModel, setRecord);
-    lazyconnect(mPatternModel, recordingChanged, act, setChecked);
+    //lazyconnect(act, toggled, mPatternModel, setRecord);
+    //lazyconnect(mPatternModel, recordingChanged, act, setChecked);
 
     menuTracker->addSeparator(); // -------------------------------------------
 
@@ -231,7 +231,7 @@ void MainWindow::createActions() {
     mActionFollowMode->setCheckable(true);
     mActionFollowMode->setChecked(true);
     mToolbarTracker->addAction(mActionFollowMode);
-    lazyconnect(mActionFollowMode, toggled, mPatternModel, setFollowing);
+    //lazyconnect(mActionFollowMode, toggled, mPatternModel, setFollowing);
 
     // > View =================================================================
     auto menuView = menubar->addMenu(tr("&View"));

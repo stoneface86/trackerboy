@@ -169,11 +169,13 @@ private:
 OrderModel::OrderModel(Module &mod, QObject *parent) :
     QAbstractTableModel(parent),
     mModule(mod),
-    mOrder(&mod.data().song().order()),
+    mOrder(&mod.song()->order()),
     mCurrentRow(0),
     mCurrentTrack(0),
     mCanSelect(true)
 {
+
+    connect(&mod, &Module::songChanged, this, &OrderModel::reload);
 }
 
 uint8_t OrderModel::currentPattern() {
@@ -224,9 +226,10 @@ void OrderModel::selectTrack(int track) {
 
 void OrderModel::reload() {
     beginResetModel();
+    mOrder = &mModule.song()->order();
     endResetModel();
-    //doSelectPattern(0);
-    //doSelectTrack(0);
+    doSelectPattern(0);
+    doSelectTrack(0);
 }
 
 void OrderModel::setSelection(QItemSelection const &selection, uint8_t id) {
@@ -316,7 +319,7 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
                 (*mOrder)[(uint8_t)row][track]
             );
             cmd->setText(tr("Set track in pattern #%1\nSet track").arg(row));
-            mModule.undoStack().push(cmd);
+            mModule.undoStack()->push(cmd);
 
             emit patternsChanged();
             return true;
@@ -331,19 +334,19 @@ bool OrderModel::setData(const QModelIndex &index, const QVariant &value, int ro
 void OrderModel::insert() {
     auto cmd = new OrderInsertCommand(*this, mCurrentRow, 1);
     cmd->setText(tr("Insert pattern at #%1\nInsert pattern").arg(mCurrentRow));
-    mModule.undoStack().push(cmd);
+    mModule.undoStack()->push(cmd);
 }
 
 void OrderModel::remove() {
     auto cmd = new OrderRemoveCommand(*this, mCurrentRow, 1);
     cmd->setText(tr("Remove pattern #%1\nRemove pattern").arg(mCurrentRow));
-    mModule.undoStack().push(cmd);
+    mModule.undoStack()->push(cmd);
 }
 
 void OrderModel::duplicate() {
     auto cmd = new OrderDuplicateCommand(*this, mCurrentRow);
     cmd->setText(tr("Duplicate pattern #%1\nDuplicate order").arg(mCurrentRow));
-    mModule.undoStack().push(cmd);
+    mModule.undoStack()->push(cmd);
 }
 
 void OrderModel::moveUp() {
@@ -351,14 +354,14 @@ void OrderModel::moveUp() {
     auto prev = (uint8_t)(mCurrentRow - 1);
     auto cmd = new OrderSwapCommand(*this, mCurrentRow, prev);
     cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern up").arg(mCurrentRow).arg(prev));
-    mModule.undoStack().push(cmd);
+    mModule.undoStack()->push(cmd);
 }
 
 void OrderModel::moveDown() {
     auto next = (uint8_t)(mCurrentRow + 1);
     auto cmd = new OrderSwapCommand(*this, mCurrentRow, next);
     cmd->setText(tr("Move pattern #%1 -> #%2\nMove pattern down").arg(mCurrentRow).arg(next));
-    mModule.undoStack().push(cmd);
+    mModule.undoStack()->push(cmd);
 
 }
 
@@ -378,7 +381,7 @@ void OrderModel::setPatternCount(int count) {
 
     if (cmd != nullptr) {
         cmd->setText(tr("Set pattern count to %1\nSet patterns").arg(count));
-        mModule.undoStack().push(cmd);
+        mModule.undoStack()->push(cmd);
     }
 }
 
@@ -387,7 +390,7 @@ void OrderModel::setPatternCount(int count) {
 
 template <OrderModel::ModifyMode mode>
 void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option) {
-    auto &stack = mModule.undoStack();
+    auto stack = mModule.undoStack();
 
     QString operationStr;
     if constexpr (mode == ModifyMode::set) {
@@ -399,21 +402,21 @@ void OrderModel::modifySelection(QItemSelection const &selection, uint8_t option
     }
 
 
-    stack.beginMacro(operationStr);
+    stack->beginMacro(operationStr);
 
     if (selection.isEmpty()) {
         // no selection, modify the current cell
-        modifyCell<mode>(stack, mCurrentRow, mCurrentTrack, option);
+        modifyCell<mode>(*stack, mCurrentRow, mCurrentTrack, option);
     } else {
         // modify all cells in the selection
         for (auto range : selection) {
             for (auto const &index : range.indexes()) {
-                modifyCell<mode>(stack, (uint8_t)index.row(), (uint8_t)index.column(), option);
+                modifyCell<mode>(*stack, (uint8_t)index.row(), (uint8_t)index.column(), option);
             }
         }
     }
 
-    stack.endMacro();
+    stack->endMacro();
 }
 
 template <OrderModel::ModifyMode mode>

@@ -86,4 +86,4 @@ if (ENABLE_TESTS)
     
     
 
-endif (TRACKERBOY_ENABLE_TESTS)
+endif ()

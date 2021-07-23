@@ -9,36 +9,36 @@ SongModel::SongModel(Module &mod, QObject *parent) :
 }
 
 void SongModel::reload() {
-    auto &song = mModule.data().song();
-    emit rowsPerBeatChanged(song.rowsPerBeat());
-    emit rowsPerMeasureChanged(song.rowsPerMeasure());
-    emit speedChanged((int)song.speed());
-    emit patternSizeChanged(song.patterns().rowSize());
+    auto song = mModule.song();
+    emit rowsPerBeatChanged(song->rowsPerBeat());
+    emit rowsPerMeasureChanged(song->rowsPerMeasure());
+    emit speedChanged((int)song->speed());
+    emit patternSizeChanged(song->patterns().rowSize());
 }
 
 int SongModel::rowsPerBeat() {
-    return mModule.data().song().rowsPerBeat();
+    return mModule.song()->rowsPerBeat();
 }
 
 int SongModel::rowsPerMeasure() {
-    return mModule.data().song().rowsPerMeasure();
+    return mModule.song()->rowsPerMeasure();
 }
 
 int SongModel::speed() {
-    return mModule.data().song().speed();
+    return mModule.song()->speed();
 }
 
 int SongModel::patternSize() {
-    return mModule.data().song().patterns().rowSize();
+    return mModule.song()->patterns().rowSize();
 }
 
 void SongModel::setRowsPerBeat(int rpb) {
-    auto &song = mModule.data().song();
+    auto song = mModule.song();
 
-    if (song.rowsPerBeat() != (uint8_t)rpb) {
+    if (song->rowsPerBeat() != (uint8_t)rpb) {
         {
             auto ctx = mModule.permanentEdit();
-            song.setRowsPerBeat((uint8_t)rpb);
+            song->setRowsPerBeat((uint8_t)rpb);
         }
         emit rowsPerBeatChanged(rpb);
     }
@@ -46,31 +46,31 @@ void SongModel::setRowsPerBeat(int rpb) {
 }
 
 void SongModel::setRowsPerMeasure(int rpm) {
-    auto &song = mModule.data().song();
+    auto song = mModule.song();
 
-    if (song.rowsPerMeasure() != (uint8_t)rpm) {
+    if (song->rowsPerMeasure() != (uint8_t)rpm) {
         {
             auto ctx = mModule.permanentEdit();
-            song.setRowsPerMeasure((uint8_t)rpm);
+            song->setRowsPerMeasure((uint8_t)rpm);
         }
         emit rowsPerMeasureChanged(rpm);
     }
 }
 
 void SongModel::setSpeed(int speed) {
-    auto &song = mModule.data().song();
+    auto song = mModule.song();
 
-    if (song.speed() != (trackerboy::Speed)speed) {
+    if (song->speed() != (trackerboy::Speed)speed) {
         {
             auto ctx = mModule.permanentEdit();
-            song.setSpeed((trackerboy::Speed)speed);
+            song->setSpeed((trackerboy::Speed)speed);
         }
         emit speedChanged(speed);
     }
 }
 
 void SongModel::setPatternSize(int rows) {
-    auto &pm = mModule.data().song().patterns();
+    auto &pm = mModule.song()->patterns();
 
     if (pm.rowSize() != (uint16_t)rows) {
         {

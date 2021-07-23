@@ -29,9 +29,6 @@ Module::Module() noexcept :
 {
 }
 
-Module::~Module() noexcept {
-}
-
 void Module::clear() noexcept {
     mVersion = VERSION;
     mRevision = FILE_REVISION;
@@ -607,7 +604,7 @@ FormatError Module::deserialize(std::istream &stream) noexcept {
                 return FormatError::invalid;
             }
         }
-            
+
 
     } catch (IOError const& err) {
         (void)err;
