@@ -113,27 +113,27 @@ bool MainWindow::onFileSaveAs() {
 }
 
 void MainWindow::onSongOrderInsert() {
-    mOrderModel->insert();
+    //mOrderModel->insert();
     updateOrderActions();
 }
 
 void MainWindow::onSongOrderRemove() {
-    mOrderModel->remove();
+    //mOrderModel->remove();
     updateOrderActions();
 }
 
 void MainWindow::onSongOrderDuplicate() {
-    mOrderModel->duplicate();
+    //mOrderModel->duplicate();
     updateOrderActions();
 }
 
 void MainWindow::onSongOrderMoveUp() {
-    mOrderModel->moveUp();
+    //mOrderModel->moveUp();
     updateOrderActions();
 }
 
 void MainWindow::onSongOrderMoveDown() {
-    mOrderModel->moveDown();
+    //mOrderModel->moveDown();
     updateOrderActions();
 }
 
@@ -190,7 +190,7 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         ));
 
         //mPatternEditor.setColors(appearance.colors);
-        OrderModel::setRowColor(appearance.colors[+Color::row]);
+        //OrderModel::setRowColor(appearance.colors[+Color::row]);
     }
 
     if (categories.testFlag(Config::CategoryKeyboard)) {

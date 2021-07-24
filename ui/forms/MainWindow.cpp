@@ -35,7 +35,6 @@ MainWindow::MainWindow() :
     // create models
     mModule = new Module(this);
     mInstrumentModel = new InstrumentListModel(*mModule, this);
-    mOrderModel = new OrderModel(*mModule, this);
     mSongModel = new SongModel(*mModule, this);
     //mPatternModel = new PatternModel(*mModule, *mOrderModel, *mSongModel, this);
     mWaveModel = new WaveListModel(*mModule, this);
@@ -195,7 +194,7 @@ void MainWindow::setupUi() {
     layout->addStretch(1); // temporary
     centralWidget->setLayout(layout);
 
-    mSidebar->orderEditor()->setModel(mOrderModel);
+    //mSidebar->orderEditor()->setModel(mOrderModel);
     mSidebar->songEditor()->setModel(mSongModel);
 
     setCentralWidget(centralWidget);
@@ -384,7 +383,7 @@ void MainWindow::setupUi() {
     connect(mModule, &Module::modifiedChanged, this, &MainWindow::setWindowModified);
     // connect(&mActions[ActionEditKeyRepetition], &QAction::toggled, &mDocument, &ModuleDocument::setKeyRepetition);
 
-    connect(mOrderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
+    //connect(mOrderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
     updateOrderActions();
 
     // connect(&mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
@@ -456,12 +455,12 @@ void MainWindow::updateWindowTitle() {
 }
 
 void MainWindow::updateOrderActions() {
-    bool canInsert = mOrderModel->canInsert();
-    mActionOrderInsert->setEnabled(canInsert);
-    mActionOrderDuplicate->setEnabled(canInsert);
-    mActionOrderRemove->setEnabled(mOrderModel->canRemove());
-    mActionOrderMoveUp->setEnabled(mOrderModel->canMoveUp());
-    mActionOrderMoveDown->setEnabled(mOrderModel->canMoveDown());
+    // bool canInsert = mOrderModel->canInsert();
+    // mActionOrderInsert->setEnabled(canInsert);
+    // mActionOrderDuplicate->setEnabled(canInsert);
+    // mActionOrderRemove->setEnabled(mOrderModel->canRemove());
+    // mActionOrderMoveUp->setEnabled(mOrderModel->canMoveUp());
+    // mActionOrderMoveDown->setEnabled(mOrderModel->canMoveDown());
 }
 
 void MainWindow::setPlayingStatus(PlayingStatusText type) {

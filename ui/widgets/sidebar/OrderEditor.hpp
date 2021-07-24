@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "core/model/OrderModel.hpp"
 #include "widgets/CustomSpinBox.hpp"
 
 #include <QTableView>
@@ -17,8 +16,6 @@ public:
 
     explicit OrderEditor(QWidget *parent = nullptr);
 
-    void setModel(OrderModel *model);
-
 
 signals:
     //
@@ -30,11 +27,7 @@ signals:
 
 private:
 
-    void currentIndexChanged(QModelIndex const& index);
-    void currentChanged(QModelIndex const &current, QModelIndex const &prev);
-    void selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
-
-    OrderModel *mOrderModel;
+    Q_DISABLE_COPY(OrderEditor)
 
     CustomSpinBox *mSetSpin;
     QTableView *mOrderView;

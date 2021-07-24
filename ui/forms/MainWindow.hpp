@@ -4,7 +4,6 @@
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
 #include "core/model/InstrumentListModel.hpp"
-#include "core/model/OrderModel.hpp"
 #include "core/model/SongModel.hpp"
 #include "core/model/PatternModel.hpp"
 #include "core/model/WaveListModel.hpp"
@@ -195,7 +194,6 @@ private:
     ModuleFile mModuleFile;
 
     InstrumentListModel *mInstrumentModel;
-    OrderModel *mOrderModel;
     SongModel *mSongModel;
     //PatternModel *mPatternModel;
     WaveListModel *mWaveModel;
