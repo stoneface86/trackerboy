@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     Q_INIT_RESOURCE(stylesheets);
 
     // register types for signals
-    //qRegisterMetaType<ChannelOutput::Flags>("OutputFlags");
+    qRegisterMetaType<ChannelOutput::Flags>("ChannelOutput::Flags");
     qRegisterMetaType<PatternModel::CursorChangeFlags>("CursorChangeFlags");
 
     // use a custom message handler for logging to file

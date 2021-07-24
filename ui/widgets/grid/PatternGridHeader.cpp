@@ -5,15 +5,14 @@
 #include <QMouseEvent>
 #include <QtDebug>
 
-PatternGridHeader::PatternGridHeader(Document &document, QWidget *parent) :
+PatternGridHeader::PatternGridHeader(QWidget *parent) :
     QWidget(parent),
-    mDocument(document),
     mOffset(0),
     mRownoWidth(0),
     mTrackWidth(0),
     mHeaderFont(QStringLiteral(":/images/gridHeaderFont.bmp")),
     mTrackHover(HOVER_NONE),
-    mTrackFlags(Document::AllOn),
+    mTrackFlags(ChannelOutput::AllOn),
     mColorForeground(),
     mColorHover(),
     mColorDisabled(),
@@ -22,8 +21,6 @@ PatternGridHeader::PatternGridHeader(Document &document, QWidget *parent) :
     setFixedHeight(HEIGHT);
     setAutoFillBackground(true);
     setMouseTracking(true);
-
-    connect(&document, &Document::channelOutputChanged, this, &PatternGridHeader::setOutputFlags);
 }
 
 void PatternGridHeader::setColors(ColorTable const& colorTable) {
@@ -121,13 +118,12 @@ void PatternGridHeader::mouseDoubleClickEvent(QMouseEvent *evt) {
 
         if (mTrackFlags == 0) {
             // unsolo
-            mTrackFlags = Document::AllOn;
+            mTrackFlags = ChannelOutput::AllOn;
         } else {
             // solo
-            mTrackFlags = (Document::OutputFlag)(1 << mTrackHover);
+            mTrackFlags = (ChannelOutput::Flag)(1 << mTrackHover);
         }
-        mDocument.setChannelOutput(mTrackFlags);
-
+        emit outputChanged(mTrackFlags);
         update();
     }
 }
@@ -151,8 +147,8 @@ void PatternGridHeader::mouseMoveEvent(QMouseEvent *evt) {
 void PatternGridHeader::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton && mTrackHover != HOVER_NONE) {
         // user clicked on a track header either to mute or unmute the channel
-        mTrackFlags ^= (Document::OutputFlag)(1 << mTrackHover);
-        mDocument.setChannelOutput(mTrackFlags);
+        mTrackFlags ^= (ChannelOutput::Flag)(1 << mTrackHover);
+        emit outputChanged(mTrackFlags);
         update();
     }
 }
@@ -164,9 +160,10 @@ void PatternGridHeader::setTrackHover(int hover) {
     }
 }
 
-void PatternGridHeader::setOutputFlags(Document::OutputFlags flags) {
+void PatternGridHeader::setOutputFlags(ChannelOutput::Flags flags) {
     if (mTrackFlags != flags) {
         mTrackFlags = flags;
+        emit outputChanged(flags);
         update();
     }
 }

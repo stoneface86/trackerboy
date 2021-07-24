@@ -104,26 +104,26 @@ void MainWindow::createActions() {
 
     act = setupAction(menuEdit, tr("C&ut"), tr("Copies and deletes selection to the clipboard"), Icons::editCut, QKeySequence::Cut);
     mToolbarEdit->addAction(act);
-    //connectActionTo(act, mPatternEditor, cut);
+    connectActionTo(act, mPatternEditor, cut);
 
     act = setupAction(menuEdit, tr("&Copy"), tr("Copies selected rows to the clipboard"), Icons::editCopy, QKeySequence::Copy);
     mToolbarEdit->addAction(act);
-    //connectActionTo(act, mPatternEditor, copy);
+    connectActionTo(act, mPatternEditor, copy);
     
     act = setupAction(menuEdit, tr("&Paste"), tr("Pastes contents at the cursor"), Icons::editPaste, QKeySequence::Paste);
     mToolbarEdit->addAction(act);
-    //connectActionTo(act, mPatternEditor, paste);
+    connectActionTo(act, mPatternEditor, paste);
     
     act = setupAction(menuEdit, tr("Paste &Mix"), tr("Pastes contents at the cursor, merging with existing rows"), tr("Ctrl+M"));
-    //connectActionTo(act, mPatternEditor, pasteMix);
+    connectActionTo(act, mPatternEditor, pasteMix);
 
     act = setupAction(menuEdit, tr("&Erase"), tr("Erases selection contents"), QKeySequence::Delete);
-    //connectActionTo(act, mPatternEditor, erase);
+    connectActionTo(act, mPatternEditor, erase);
     
     menuEdit->addSeparator(); // ---------------------------------------------
 
     act = setupAction(menuEdit, tr("&Select All"), tr("Selects entire track/pattern"), QKeySequence::SelectAll);
-    //connectActionTo(act, mPatternEditor, selectAll);
+    connectActionTo(act, mPatternEditor, selectAll);
 
     menuEdit->addSeparator(); // ----------------------------------------------
 
@@ -131,22 +131,22 @@ void MainWindow::createActions() {
     auto menuEditTranspose = menuEdit->addMenu(tr("Transpose"));
     
     act = setupAction(menuEditTranspose, tr("Decrease note"), tr("Decreases note/notes by 1 step"));
-    //connectActionTo(act, mPatternEditor, decreaseNote);
+    connectActionTo(act, mPatternEditor, decreaseNote);
     
     act = setupAction(menuEditTranspose, tr("Increase note"), tr("Increases note/notes by 1 step"));
-    //connectActionTo(act, mPatternEditor, increaseNote);
+    connectActionTo(act, mPatternEditor, increaseNote);
     
     act = setupAction(menuEditTranspose, tr("Decrease octave"), tr("Decreases note/notes by 12 steps"));
-    //connectActionTo(act, mPatternEditor, decreaseOctave);
+    connectActionTo(act, mPatternEditor, decreaseOctave);
     
     act = setupAction(menuEditTranspose, tr("Increase octave"), tr("Increases note/notes by 12 steps"));
-    //connectActionTo(act, mPatternEditor, increaseOctave);
+    connectActionTo(act, mPatternEditor, increaseOctave);
 
     act = setupAction(menuEditTranspose, tr("Custom..."), tr("Transpose by a custom amount"), tr("Ctrl+T"));
-    //connectActionTo(act, mPatternEditor, transpose);
+    connectActionTo(act, mPatternEditor, transpose);
 
     setupAction(menuEdit, tr("&Reverse"), tr("Reverses selected rows"), tr("Ctrl+R"));
-    //connectActionTo(act, mPatternEditor, reverse);
+    connectActionTo(act, mPatternEditor, reverse);
 
     menuEdit->addSeparator(); // ----------------------------------------------
 
@@ -154,9 +154,7 @@ void MainWindow::createActions() {
     act->setCheckable(true);
     act->setChecked(true);
     mToolbarInput->addAction(act);
-    //connect(act, &QAction::toggled, ???)
-    // keyRepetition setting was originally stored in ModuleDocument (gone), we'll need a new
-    // class to handle application settings like these
+    lazyconnect(act, toggled, mPatternEditor, setKeyRepeat);
 
     // > Song =================================================================
 
@@ -211,7 +209,7 @@ void MainWindow::createActions() {
     act = setupAction(menuTracker, tr("Record"), tr("Toggles record mode"), Icons::trackerRecord, QKeySequence(Qt::Key_Space));
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
-    //lazyconnect(act, toggled, mPatternModel, setRecord);
+    lazyconnect(act, toggled, mPatternModel, setRecord);
     //lazyconnect(mPatternModel, recordingChanged, act, setChecked);
 
     menuTracker->addSeparator(); // -------------------------------------------

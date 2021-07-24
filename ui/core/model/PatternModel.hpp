@@ -1,10 +1,8 @@
 
 #pragma once
 
+#include "core/model/SongModel.hpp"
 #include "core/Module.hpp"
-
-class OrderModel;
-class SongModel;
 
 #include "core/clipboard/PatternClip.hpp"
 #include "core/PatternCursor.hpp"
@@ -42,10 +40,8 @@ public:
     };
 
 
-    explicit PatternModel(Module &mod, OrderModel &orderModel, SongModel &songModel, QObject *parent = nullptr);
+    explicit PatternModel(Module &mod, SongModel &songModel, QObject *parent = nullptr);
     virtual ~PatternModel() = default;
-
-    void reload();
 
     // Data Access ============================================================
 
@@ -65,6 +61,8 @@ public:
 
     int cursorTrack() const;
 
+    int cursorPattern() const;
+
     PatternCursor cursor() const;
 
     int trackerCursorRow() const;
@@ -78,6 +76,8 @@ public:
 
     void setTrackerCursor(int row, int pattern);
     void setPlaying(bool playing);
+
+    int patterns() const;
 
     // Selection ==============================================================
 
@@ -180,6 +180,7 @@ public slots:
     void setCursorRow(int row);
     void setCursorColumn(int column);
     void setCursorTrack(int track);
+    void setCursorPattern(int pattern);
 
     void setCursor(PatternCursor const cursor);
 
@@ -189,11 +190,8 @@ public slots:
 
     void setPreviewEnable(bool previews);
 
-private slots:
-    // connected to OrderModel's patternChanged signal
-    void setCursorPattern(int pattern);
-
 private:
+
 
     // QUndoCommand command classes
     friend class TrackEditCmd;
@@ -205,6 +203,9 @@ private:
 
     Q_DISABLE_COPY(PatternModel)
 
+    // get the source of the model's data (the current song)
+    trackerboy::Song* source() const;
+    
     void setCursorRowImpl(int row, CursorChangeFlags &flags);
     void setCursorColumnImpl(int col, CursorChangeFlags &flags);
     void setCursorTrackImpl(int track, CursorChangeFlags &flags);
@@ -224,7 +225,6 @@ private:
     bool selectionDataIsEmpty();
 
     Module &mModule;
-    OrderModel &mOrderModel; // Temporary: break up OrderModel
 
     PatternCursor mCursor;
     int mCursorPattern;

@@ -3,9 +3,11 @@
 
 #include "core/model/InstrumentChoiceModel.hpp"
 #include "misc/IconManager.hpp"
+#include "misc/connectutils.hpp"
 
 #include <QApplication>
 #include <QSettings>
+#include <QShortcut>
 #include <QScreen>
 #include <QMenu>
 #include <QStatusBar>
@@ -36,7 +38,7 @@ MainWindow::MainWindow() :
     mModule = new Module(this);
     mInstrumentModel = new InstrumentListModel(*mModule, this);
     mSongModel = new SongModel(*mModule, this);
-    //mPatternModel = new PatternModel(*mModule, *mOrderModel, *mSongModel, this);
+    mPatternModel = new PatternModel(*mModule, *mSongModel, this);
     mWaveModel = new WaveListModel(*mModule, this);
 
     setupUi();
@@ -132,6 +134,11 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
     
 }
 
+void MainWindow::showEvent(QShowEvent *evt) {
+    Q_UNUSED(evt)
+    mPatternEditor->setFocus();
+}
+
 // PRIVATE METHODS -----------------------------------------------------------
 
 bool MainWindow::maybeSave() {
@@ -190,14 +197,24 @@ void MainWindow::setupUi() {
     auto centralWidget = new QWidget(this);
     auto layout = new QHBoxLayout;
     mSidebar = new Sidebar;
+    mPatternEditor = new PatternEditor(mPianoInput);
+    mPatternEditor->setModel(mPatternModel);
     layout->addWidget(mSidebar);
-    layout->addStretch(1); // temporary
+    layout->addWidget(mPatternEditor, 1);
     centralWidget->setLayout(layout);
 
     //mSidebar->orderEditor()->setModel(mOrderModel);
     mSidebar->songEditor()->setModel(mSongModel);
 
     setCentralWidget(centralWidget);
+
+    {
+        auto grid = mPatternEditor->grid();
+        grid->setFirstHighlight(mSongModel->rowsPerBeat());
+        grid->setSecondHighlight(mSongModel->rowsPerMeasure());
+        lazyconnect(mSongModel, rowsPerBeatChanged, grid, setFirstHighlight);
+        lazyconnect(mSongModel, rowsPerMeasureChanged, grid, setSecondHighlight);
+    }
 
     // DOCKS =================================================================
 
@@ -247,6 +264,26 @@ void MainWindow::setupUi() {
 
     // mPlayAndStopShortcut.setKey(QKeySequence(Qt::Key_Return));
     // mPlayAndStopShortcut.setContext(Qt::WidgetWithChildrenShortcut);
+
+    QShortcut *shortcut;
+
+    shortcut = new QShortcut(tr("Ctrl+Left"), this);
+    lazyconnect(shortcut, activated, this, previousInstrument);
+
+    shortcut = new QShortcut(tr("Ctrl+Right"), this);
+    lazyconnect(shortcut, activated, this, nextInstrument);
+
+    shortcut = new QShortcut(tr("Ctrl+Up"), this);
+    lazyconnect(shortcut, activated, this, previousPattern);
+    
+    shortcut = new QShortcut(tr("Ctrl+Down"), this);
+    lazyconnect(shortcut, activated, this, nextPattern);
+
+    shortcut = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Asterisk), this);
+    lazyconnect(shortcut, activated, this, increaseOctave);
+    
+    shortcut = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Slash), this);
+    lazyconnect(shortcut, activated, this, decreaseOctave);
 
     // STATUSBAR ==============================================================
 

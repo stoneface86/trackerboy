@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/Document.hpp"
+#include "core/model/PatternModel.hpp"
 #include "core/ColorTable.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
@@ -28,8 +28,8 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(PatternGridHeader &header, Document &document, QWidget *parent = nullptr);
-    ~PatternGrid() = default;
+    explicit PatternGrid(PatternGridHeader &header, QWidget *parent = nullptr);
+    virtual ~PatternGrid() = default;
 
     // Settings
 
@@ -38,6 +38,8 @@ public:
     //
     void setColors(ColorTable const& colors);
 
+    void setModel(PatternModel *model);
+
     // show pattern data for the previous and next patterns
     //void setPreviewEnable(bool previews);
 
@@ -45,6 +47,11 @@ public:
     void setShowFlats(bool showFlats);
 
     void setEditorFocus(bool focus);
+
+public slots:
+    void setFirstHighlight(int highlight);
+
+    void setSecondHighlight(int highlight);
 
 protected:
 
@@ -77,8 +84,7 @@ private slots:
 
     void updateCursor(PatternModel::CursorChangeFlags flags);
 
-    void setFirstHighlight(int highlight);
-    void setSecondHighlight(int highlight);
+    
 
 private:
     Q_DISABLE_COPY(PatternGrid)
@@ -104,8 +110,8 @@ private:
 
     void calculateTrackerRow();
 
-    Document &mDocument;
     PatternGridHeader &mHeader;
+    PatternModel *mModel;
     PatternPainter mPainter;
 
     bool mSelecting;

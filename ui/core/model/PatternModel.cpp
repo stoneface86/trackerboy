@@ -1,10 +1,7 @@
 
-#include "trackerboy/note.hpp"
-
-#include "core/clipboard/PatternClip.hpp"
 #include "core/model/PatternModel.hpp"
-#include "core/model/OrderModel.hpp"
-#include "core/model/SongModel.hpp"
+
+#include "trackerboy/note.hpp"
 
 #include <QUndoCommand>
 #include <QtDebug>
@@ -12,10 +9,9 @@
 #include <algorithm>
 #include <memory>
 
-PatternModel::PatternModel(Module &mod, OrderModel &orderModel, SongModel &songModel, QObject *parent) :
+PatternModel::PatternModel(Module &mod, SongModel &songModel, QObject *parent) :
     QObject(parent),
     mModule(mod),
-    mOrderModel(orderModel),
     mCursor(),
     mCursorPattern(0),
     mRecording(false),
@@ -31,16 +27,6 @@ PatternModel::PatternModel(Module &mod, OrderModel &orderModel, SongModel &songM
     mSelection()
 {
 
-    // TODO: Make these connections in MainWindow    
-    // OrderModel must be initialized first in order for this to work!
-    connect(&orderModel, &OrderModel::currentPatternChanged, this, &PatternModel::setCursorPattern);
-    connect(&orderModel, &OrderModel::currentTrackChanged, this, &PatternModel::setCursorTrack);
-    connect(&orderModel, &OrderModel::patternsChanged, this, [this]() {
-        CursorChangeFlags flags = CursorUnchanged;
-        setPatterns(mCursorPattern, flags);
-        emitIfChanged(flags);
-    });
-
     connect(&songModel, &SongModel::patternSizeChanged, this,
         [this](int rows) {
             CursorChangeFlags flags = CursorUnchanged;
@@ -51,17 +37,16 @@ PatternModel::PatternModel(Module &mod, OrderModel &orderModel, SongModel &songM
             setPatterns(mCursorPattern, flags);
             emitIfChanged(flags);
         });
-}
 
-void PatternModel::reload() {
-    // patternCurr was invalidated
-    mPatternCurr = mModule.song()->getPattern(0);
-    mCursorPattern = -1;
-    setCursorPattern(0);
-    setCursor(PatternCursor(0, 0, 0));
-    deselect();
-    mTrackerRow = 0;
-    mTrackerPattern = 0;
+    connect(&mModule, &Module::songChanged, this,
+        [this]() {
+            mCursorPattern = -1;
+            setCursorPattern(0);
+            setCursor(PatternCursor(0, 0, 0));
+            deselect();
+            mTrackerRow = 0;
+            mTrackerPattern = 0;
+        });
 }
 
 trackerboy::Pattern* PatternModel::previousPattern() {
@@ -92,6 +77,10 @@ int PatternModel::cursorTrack() const {
     return mCursor.track;
 }
 
+int PatternModel::cursorPattern() const {
+    return mCursorPattern;
+}
+
 int PatternModel::trackerCursorRow() const {
     return mTrackerRow;
 }
@@ -110,6 +99,10 @@ bool PatternModel::isFollowing() const {
 
 bool PatternModel::isPlaying() const {
     return mPlaying;
+}
+
+int PatternModel::patterns() const {
+    return source()->order().size();
 }
 
 bool PatternModel::hasSelection() const {
@@ -250,7 +243,7 @@ void PatternModel::setCursorRowImpl(int row, CursorChangeFlags &flags) {
         // go to the previous pattern or wrap around to the last one
         int prevPattern;
         if (mCursorPattern == 0) {
-            prevPattern = mOrderModel.rowCount() - 1;
+            prevPattern = patterns() - 1;
         } else {
             prevPattern = mCursorPattern - 1;
         }
@@ -261,7 +254,7 @@ void PatternModel::setCursorRowImpl(int row, CursorChangeFlags &flags) {
         // go to the next pattern or wrap around to the first one
         row -= mPatternCurr.totalRows();
         auto nextPattern = mCursorPattern + 1;
-        if (nextPattern == mOrderModel.rowCount()) {
+        if (nextPattern == patterns()) {
             nextPattern = 0;
         }
         setCursorPatternImpl(nextPattern, flags);
@@ -324,7 +317,6 @@ void PatternModel::setCursorTrackImpl(int track, CursorChangeFlags &flags) {
 
     if (track != mCursor.track) {
         mCursor.track = track;
-        mOrderModel.selectTrack(track);
         flags |= CursorTrackChanged;
     }
 }
@@ -352,7 +344,6 @@ void PatternModel::setCursorPatternImpl(int pattern, CursorChangeFlags &flags) {
     }
 
     mCursorPattern = pattern;
-    mOrderModel.selectPattern(pattern);
     setPatterns(pattern, flags);
     deselect();
 }
@@ -370,7 +361,6 @@ void PatternModel::setTrackerCursor(int row, int pattern) {
 
     if (changed) {
         if (mFollowing) {
-            mOrderModel.selectPattern(pattern);
             CursorChangeFlags flags = CursorUnchanged;
             setCursorRowImpl(row, flags);
             emitIfChanged(flags);
@@ -401,7 +391,7 @@ void PatternModel::setPreviewEnable(bool enable) {
     if (mShowPreviews != enable) {
         mShowPreviews = enable;
         if (enable) {
-            setPreviewPatterns(mOrderModel.currentPattern());
+            setPreviewPatterns(mCursorPattern);
         } else {
             mPatternPrev.reset();
             mPatternNext.reset();
@@ -410,11 +400,15 @@ void PatternModel::setPreviewEnable(bool enable) {
     }
 }
 
+trackerboy::Song* PatternModel::source() const {
+    return mModule.song();
+}
+
 void PatternModel::setPatterns(int pattern, CursorChangeFlags &flags) {
     if (mShowPreviews) {
         setPreviewPatterns(pattern);
     }
-    auto &song = mModule.data().song();
+    auto song = source();
 
     if (mShowPreviews) {
         setPreviewPatterns(pattern);
@@ -422,7 +416,7 @@ void PatternModel::setPatterns(int pattern, CursorChangeFlags &flags) {
 
     // update the current pattern
     auto oldsize = (int)mPatternCurr.totalRows();
-    mPatternCurr = song.getPattern(pattern);
+    mPatternCurr = song->getPattern(pattern);
     auto newsize = (int)mPatternCurr.totalRows();
 
     if (oldsize != newsize) {
@@ -444,17 +438,17 @@ void PatternModel::emitIfChanged(CursorChangeFlags flags) {
 }
 
 void PatternModel::setPreviewPatterns(int pattern) {
-    auto &song = mModule.data().song();
+    auto song = source();
     // get the previous pattern for preview
     if (pattern > 0) {
-        mPatternPrev.emplace(song.getPattern(pattern - 1));
+        mPatternPrev.emplace(song->getPattern(pattern - 1));
     } else {
         mPatternPrev.reset();
     }
     // get the next pattern for preview
     auto nextPattern = pattern + 1;
-    if (nextPattern < song.order().size()) {
-        mPatternNext.emplace(song.getPattern(nextPattern));
+    if (nextPattern < patterns()) {
+        mPatternNext.emplace(song->getPattern(nextPattern));
     } else {
         mPatternNext.reset();
     }
@@ -588,7 +582,7 @@ public:
 
 protected:
     trackerboy::TrackRow& getRow() {
-        return mModel.mModule.data().song().getRow(
+        return mModel.source()->getRow(
             static_cast<trackerboy::ChType>(mTrack),
             mPattern,
             (uint16_t)mRow
@@ -599,7 +593,7 @@ protected:
 
 private:
     void setData(uint8_t data) {
-        auto &rowdata = mModel.mModule.data().song().getRow(
+        auto &rowdata = mModel.source()->getRow(
             static_cast<trackerboy::ChType>(mTrack),
             mPattern,
             (uint16_t)mRow
@@ -697,7 +691,7 @@ protected:
     }
 
     void restore(bool update) {
-        auto pattern = mModel.mModule.data().song().getPattern(mPattern);
+        auto pattern = mModel.source()->getPattern(mPattern);
         {
             auto ctx = mModel.mModule.edit();
             mClip.restore(pattern);
@@ -722,7 +716,7 @@ public:
             auto ctx = mModel.mModule.edit();
             // clear all set data in the selection
             auto iter = mClip.selection().iterator();
-            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
+            auto pattern = mModel.source()->getPattern(mPattern);
 
             for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
                 auto tmeta = iter.getTrackMeta(track);
@@ -790,7 +784,7 @@ public:
     virtual void redo() override {
         {
             auto ctx = mModel.mModule.edit();
-            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
+            auto pattern = mModel.source()->getPattern(mPattern);
             mSrc.paste(pattern, mPos, mMix);
         }
 
@@ -800,7 +794,7 @@ public:
     virtual void undo() override {
         {
             auto ctx = mModel.mModule.edit();
-            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
+            auto pattern = mModel.source()->getPattern(mPattern);
             mPast.restore(pattern);
         }
 
@@ -826,7 +820,7 @@ public:
         {
             auto ctx = mModel.mModule.edit();
             auto iter = mClip.selection().iterator();
-            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
+            auto pattern = mModel.source()->getPattern(mPattern);
 
             for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
                 auto tmeta = iter.getTrackMeta(track);
@@ -882,7 +876,7 @@ private:
         {
             auto ctx = mModel.mModule.edit();
             auto iter = mSelection.iterator();
-            auto pattern = mModel.mModule.data().song().getPattern(mPattern);
+            auto pattern = mModel.source()->getPattern(mPattern);
 
             auto midpoint = iter.rowStart() + (iter.rows() / 2);
             for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
@@ -1021,27 +1015,27 @@ void PatternModel::setEffectType(trackerboy::EffectType type) {
             static_cast<uint8_t>(effect.type)
         );
 
-        auto &stack = mModule.undoStack();
+        auto stack = mModule.undoStack();
         if (type == trackerboy::EffectType::noEffect) {
 
             static auto CLEAR_EFFECT_STR = QT_TR_NOOP("clear effect");
 
             // we also need to clear the parameter
             if (effect.param != 0) {
-                stack.beginMacro(tr(CLEAR_EFFECT_STR));
-                stack.push(cmd);
-                stack.push(new EffectParamEditCmd(
+                stack->beginMacro(tr(CLEAR_EFFECT_STR));
+                stack->push(cmd);
+                stack->push(new EffectParamEditCmd(
                     *this, (uint8_t)effectNo, 0, effect.param
                 ));
-                stack.endMacro();
+                stack->endMacro();
             } else {
                 cmd->setText(tr(CLEAR_EFFECT_STR));
-                stack.push(cmd);
+                stack->push(cmd);
             }
             
         } else {
             cmd->setText(tr("set effect type"));
-            stack.push(cmd);
+            stack->push(cmd);
         }
     }
 
@@ -1134,13 +1128,13 @@ void PatternModel::reverse() {
 
 void PatternModel::moveSelection(PatternCursor pos) {
     if (mHasSelection) {
-        auto &undoStack = mModule.undoStack();
+        auto undoStack = mModule.undoStack();
 
-        undoStack.beginMacro(tr("move selection"));
+        undoStack->beginMacro(tr("move selection"));
         auto toMove = clip();
-        undoStack.push(new DeleteSelectionCmd(*this));
-        undoStack.push(new PasteCmd(*this, toMove, pos, false));
-        undoStack.endMacro();
+        undoStack->push(new DeleteSelectionCmd(*this));
+        undoStack->push(new PasteCmd(*this, toMove, pos, false));
+        undoStack->endMacro();
 
         mSelection.moveTo(pos);
         mSelection.clamp((int)mPatternCurr.totalRows() - 1);

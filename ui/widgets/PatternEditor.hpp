@@ -8,7 +8,6 @@
 #include "widgets/grid/PatternGridHeader.hpp"
 
 #include <QFrame>
-#include <QGridLayout>
 #include <QScrollBar>
 
 #include <array>
@@ -21,12 +20,14 @@ class PatternEditor : public QFrame, public IMidiReceiver {
 
 public:
 
-    explicit PatternEditor(ModuleDocument &document, PianoInput const& input, QWidget *parent = nullptr);
+    explicit PatternEditor(PianoInput const& input, QWidget *parent = nullptr);
     virtual ~PatternEditor() = default;
 
-    PatternGrid& grid();
+    PatternGrid* grid();
 
     void setColors(ColorTable const& colors);
+
+    void setModel(PatternModel *model);
 
     virtual void midiNoteOn(int note) override;
 
@@ -35,13 +36,6 @@ public:
     virtual bool event(QEvent *evt) override;
 
 signals:
-
-    void changeOctave(int octave);
-
-    void nextInstrument();
-
-    void previousInstrument();
-
     void previewNote(int note, int track, int instrument);
 
     void stopNotePreview();
@@ -50,7 +44,11 @@ public slots:
 
     //void setDocument(ModuleDocument *doc);
 
+    void setEditStep(int step);
+
     void setInstrument(int index);
+
+    void setKeyRepeat(bool repeat);
 
     void cut();
 
@@ -108,21 +106,23 @@ private:
     Q_DISABLE_COPY(PatternEditor)
 
     PianoInput const& mPianoIn;
-    ModuleDocument &mDocument;
+    PatternModel *mModel;
 
-    QGridLayout mLayout;
-        PatternGridHeader mGridHeader;
-        PatternGrid mGrid;
-        QScrollBar mHScroll;
-        QScrollBar mVScroll;
+    PatternGridHeader *mGridHeader;
+    PatternGrid *mGrid;
+    QScrollBar *mHScroll;
+    QScrollBar *mVScroll;
 
     int mWheel;
     int mPageStep;
+    int mEditStep;
 
     int mPreviewKey;
 
     bool mSpeedLock;
     bool mScrollLock;
+
+    bool mKeyRepeat;
 
     PatternClipboard mClipboard;
 

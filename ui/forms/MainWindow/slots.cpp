@@ -189,7 +189,7 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
             QString::number(appearance.font.pointSize())
         ));
 
-        //mPatternEditor.setColors(appearance.colors);
+        mPatternEditor->setColors(appearance.colors);
         //OrderModel::setRowColor(appearance.colors[+Color::row]);
     }
 
@@ -336,3 +336,28 @@ void MainWindow::onFrameSync() {
 
     // mLastEngineFrame = frame;
 }
+
+void MainWindow::previousInstrument() {
+
+}
+
+void MainWindow::nextInstrument() {
+
+}
+
+void MainWindow::previousPattern() {
+
+}
+
+void MainWindow::nextPattern() {
+
+}
+
+void MainWindow::increaseOctave() {
+
+}
+
+void MainWindow::decreaseOctave() {
+
+}
+

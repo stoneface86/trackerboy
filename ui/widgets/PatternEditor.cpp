@@ -98,64 +98,74 @@ static std::optional<uint8_t> keyToHex(int const key) {
 // +----------------------------------+--+
 
 
-PatternEditor::PatternEditor(ModuleDocument &document, PianoInput const& input, QWidget *parent) :
+PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
     QFrame(parent),
     mPianoIn(input),
-    mDocument(document),
-    mLayout(),
-    mGridHeader(document),
-    mGrid(mGridHeader, document),
-    mHScroll(Qt::Horizontal),
-    mVScroll(Qt::Vertical),
+    mModel(nullptr),
     mWheel(0),
     mPageStep(4),
+    mEditStep(1),
     mSpeedLock(false),
     mScrollLock(false),
+    mKeyRepeat(true),
     mClipboard(),
     mInstrument()
 {
     setFrameStyle(QFrame::StyledPanel);
     setFocusPolicy(Qt::StrongFocus);
 
-    mHScroll.setMinimum(0);
-    mHScroll.setMaximum(PatternCursor::MAX_COLUMNS * PatternCursor::MAX_TRACKS - 1);
-    mHScroll.setPageStep(1);
+    auto layout = new QGridLayout;
+    mGridHeader = new PatternGridHeader(this);
+    mGrid = new PatternGrid(*mGridHeader, this);
+    mHScroll = new QScrollBar(Qt::Horizontal);
+    mVScroll = new QScrollBar(Qt::Vertical);
 
-    mLayout.addWidget(&mGridHeader,     0, 0);
-    mLayout.addWidget(&mGrid,           1, 0);
-    mLayout.addWidget(&mVScroll,        0, 1, 2, 1);
-    mLayout.addWidget(&mHScroll,        2, 0);
-    mLayout.setSpacing(0);
-    mLayout.setMargin(0);
-    setLayout(&mLayout);
+
+    mHScroll->setMinimum(0);
+    mHScroll->setMaximum(PatternCursor::MAX_COLUMNS * PatternCursor::MAX_TRACKS - 1);
+    mHScroll->setPageStep(1);
+
+    layout->addWidget(mGridHeader,     0, 0);
+    layout->addWidget(mGrid,           1, 0);
+    layout->addWidget(mVScroll,        0, 1, 2, 1);
+    layout->addWidget(mHScroll,        2, 0);
+    layout->setSpacing(0);
+    layout->setMargin(0);
+    setLayout(layout);
 
     // connections
 
-    connect(&mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
-    connect(&mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
-
-    auto &patternModel = document.patternModel();
-    // scrollbars
-    mVScroll.setMaximum((int)patternModel.currentPattern().totalRows() - 1);
-    updateScrollbars(PatternModel::CursorRowChanged | PatternModel::CursorColumnChanged);
-    connect(&mVScroll, &QScrollBar::valueChanged, &patternModel, &PatternModel::setCursorRow);
-    connect(&mHScroll, &QScrollBar::valueChanged, this, &PatternEditor::setCursorFromHScroll);
-    connect(&patternModel, &PatternModel::cursorChanged, this, &PatternEditor::updateScrollbars);
-
-    connect(&patternModel, &PatternModel::patternSizeChanged, this,
-        [this](int rows) {
-            mVScroll.setMaximum(rows - 1);
-        });
-
+    connect(mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
+    connect(mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 }
 
-PatternGrid& PatternEditor::grid() {
+PatternGrid* PatternEditor::grid() {
     return mGrid;
 }
 
 void PatternEditor::setColors(ColorTable const& colors) {
-    mGridHeader.setColors(colors);
-    mGrid.setColors(colors);
+    mGridHeader->setColors(colors);
+    mGrid->setColors(colors);
+}
+
+void PatternEditor::setModel(PatternModel *model) {
+    Q_ASSERT(mModel == nullptr && model);
+
+    mModel = model;
+    mGrid->setModel(model);
+
+    // scrollbars
+    mVScroll->setMaximum((int)model->currentPattern().totalRows() - 1);
+    updateScrollbars(PatternModel::CursorRowChanged | PatternModel::CursorColumnChanged);
+    connect(mVScroll, &QScrollBar::valueChanged, model, &PatternModel::setCursorRow);
+    connect(mHScroll, &QScrollBar::valueChanged, this, &PatternEditor::setCursorFromHScroll);
+    connect(model, &PatternModel::cursorChanged, this, &PatternEditor::updateScrollbars);
+
+    connect(model, &PatternModel::patternSizeChanged, this,
+        [this](int rows) {
+            mVScroll->setMaximum(rows - 1);
+        });
+
 }
 
 bool PatternEditor::event(QEvent *evt)  {
@@ -167,7 +177,7 @@ bool PatternEditor::event(QEvent *evt)  {
         if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
             // intercept tab presses
             int amount = key == Qt::Key_Backtab ? -1 : 1;
-            mDocument.patternModel().moveCursorTrack(amount);
+            mModel->moveCursorTrack(amount);
             return true;
         }
     }
@@ -177,12 +187,12 @@ bool PatternEditor::event(QEvent *evt)  {
 
 void PatternEditor::focusInEvent(QFocusEvent *evt) {
     Q_UNUSED(evt)
-    mGrid.setEditorFocus(true);
+    mGrid->setEditorFocus(true);
 }
 
 void PatternEditor::focusOutEvent(QFocusEvent *evt) {
     Q_UNUSED(evt)
-    mGrid.setEditorFocus(false);
+    mGrid->setEditorFocus(false);
 }
 
 void PatternEditor::keyPressEvent(QKeyEvent *evt) {
@@ -190,88 +200,54 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     auto const modifiers = evt->modifiers();
     int const key = evt->key();
 
-    auto const controlDown = modifiers.testFlag(Qt::ControlModifier);
-    auto const shiftDown = modifiers.testFlag(Qt::ShiftModifier);
 
-    auto selectionMode = shiftDown ? PatternModel::SelectionModify : PatternModel::SelectionRemove;
-    
-    auto &patternModel = mDocument.patternModel();
-    auto &orderModel = mDocument.orderModel();
+    // ignore this event if CTRL is present (conflicts with shortcuts)
+    if (modifiers.testFlag(Qt::ControlModifier)) {
+        QWidget::keyPressEvent(evt);
+        return;
+    }
 
+    auto selectionMode = modifiers.testFlag(Qt::ShiftModifier) ?
+                         PatternModel::SelectionModify : // shift is down, modify the selection
+                         PatternModel::SelectionRemove;  // no shift, remove the selection
+
+    // navigation keys
     // Up/Down/Left/Right - move cursor by 1 (also selects if shift is down)
     // PgUp/PgDn - move cursor by page step (also selects if shift is down)
-    // Ctrl+Up/Ctrl+Down - select current instrument
-    // Ctrl+Left/Ctrl+Right - select current pattern
-    // Tab/Shift-Tab - move cursor to next/previous track
-    // Numpad / * - decrease or increase octave
+    // Tab/Shift+Tab - move cursor to next/previous track (not handled here)
     
     // navigation keys / non-edit keys
     // these keys also ignore the key repetition setting (they always repeat)
     switch (key) {
         case Qt::Key_Left:
-            if (controlDown) {
-                orderModel.selectPattern(orderModel.currentPattern() - 1);
-            } else {
-                patternModel.moveCursorColumn(-1, selectionMode);
-
-            }
+            mModel->moveCursorColumn(-1, selectionMode);
             return;
         case Qt::Key_Right:
-            if (controlDown) {
-                orderModel.selectPattern(orderModel.currentPattern() + 1);
-            } else {
-                patternModel.moveCursorColumn(1, selectionMode);
-            }
+            mModel->moveCursorColumn(1, selectionMode);
             return;
         case Qt::Key_Up:
-            if (controlDown) {
-                emit nextInstrument();
-            } else {
-                patternModel.moveCursorRow(-1, selectionMode);
-            }
+            mModel->moveCursorRow(-1, selectionMode);
             return;
         case Qt::Key_Down:
-            if (controlDown) {
-                emit previousInstrument();
-            } else {
-                patternModel.moveCursorRow(1, selectionMode);
-            }
+            mModel->moveCursorRow(1, selectionMode);
             return;
         case Qt::Key_PageDown:
-            patternModel.moveCursorRow(mPageStep, selectionMode);
+            mModel->moveCursorRow(mPageStep, selectionMode);
             return;
         case Qt::Key_PageUp:
-            patternModel.moveCursorRow(-mPageStep, selectionMode);
+            mModel->moveCursorRow(-mPageStep, selectionMode);
             return;
-        case Qt::Key_Asterisk:
-            if (modifiers.testFlag(Qt::KeypadModifier)) {
-                emit changeOctave(mPianoIn.octave() + 1);
-                return;
-            }
-            break;
-        case Qt::Key_Slash:
-            if (modifiers.testFlag(Qt::KeypadModifier)) {
-                emit changeOctave(mPianoIn.octave() - 1);
-                return;
-            }
-            break;
     }
 
-    if (evt->isAutoRepeat() && !mDocument.keyRepetition()) {
+    if (evt->isAutoRepeat() && !mKeyRepeat) {
         QWidget::keyPressEvent(evt);
         return; // key repetition disabled, ignore this event
     }
 
-    // ignore this event if CTRL is present (conflicts with shortcuts)
-    if (controlDown) {
-        QWidget::keyPressEvent(evt);
-        return;
-    }
-
-    auto const recording = patternModel.isRecording();
+    auto const recording = mModel->isRecording();
     bool validKey = false;
 
-    switch (patternModel.cursorColumn()) {
+    switch (mModel->cursorColumn()) {
         case PatternCursor::ColumnNote: {
             auto note = mPianoIn.keyToNote(key);
             
@@ -279,11 +255,11 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
                 if (*note != trackerboy::NOTE_CUT) {
                     if (mPreviewKey != key) {
                         mPreviewKey = key;
-                        emit previewNote(*note, patternModel.cursorTrack(), mInstrument.value_or(-1));
+                        emit previewNote(*note, mModel->cursorTrack(), mInstrument.value_or(-1));
                     }
                 }
                 if (recording) {
-                    patternModel.setNote(note, mInstrument);
+                    mModel->setNote(note, mInstrument);
                 }
                 validKey = true;
             }
@@ -298,7 +274,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             auto effectType = keyToEffectType(key);
             if (effectType) {
                 if (recording) {
-                    patternModel.setEffectType(*effectType);
+                    mModel->setEffectType(*effectType);
                 }
                 validKey = true;
             }
@@ -309,7 +285,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             auto hex = keyToHex(key);
             if (hex) {
                 if (recording) {
-                    patternModel.setInstrument(hex);
+                    mModel->setInstrument(hex);
                 }
                 validKey = true;
             }
@@ -326,7 +302,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             auto hex = keyToHex(key);
             if (hex) {
                 if (recording) {
-                    patternModel.setEffectParam(*hex);
+                    mModel->setEffectParam(*hex);
                 }
                 validKey = true;
             }
@@ -366,8 +342,7 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
     }
 
     if (amount) {
-        auto &patternModel = mDocument.patternModel();
-        patternModel.moveCursorRow(amount);
+        mModel->moveCursorRow(amount);
     }
 
     evt->accept();
@@ -376,10 +351,10 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
 void PatternEditor::hscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mDocument.patternModel().moveCursorColumn(1);
+            mModel->moveCursorColumn(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mDocument.patternModel().moveCursorColumn(-1);
+            mModel->moveCursorColumn(-1);
             break;
         default:
             break;
@@ -388,37 +363,43 @@ void PatternEditor::hscrollAction(int action) {
 
 void PatternEditor::vscrollAction(int action) {
 
-    auto &patternModel = mDocument.patternModel();
-
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            patternModel.moveCursorRow(1);
+            mModel->moveCursorRow(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            patternModel.moveCursorRow(-1);
+            mModel->moveCursorRow(-1);
             break;
         default:
             break;
     }
 }
 
+void PatternEditor::setEditStep(int step) {
+    mEditStep = step;
+}
+
 void PatternEditor::setInstrument(int index) {
     // index should never be -1 since the instrument combobox will always have
     // an option but just in case treat it as 0
-    if (index <= 0) {
-        mInstrument.reset();
-    } else {
-        mInstrument = mDocument.instrumentModel().id(index - 1);
-    }
+    // if (index <= 0) {
+    //     mInstrument.reset();
+    // } else {
+    //     mInstrument = mDocument.instrumentModel().id(index - 1);
+    // }
+}
+
+void PatternEditor::setKeyRepeat(bool repeat) {
+    mKeyRepeat = repeat;
 }
 
 void PatternEditor::cut() {
     copy();
-    mDocument.patternModel().deleteSelection();
+    mModel->deleteSelection();
 }
 
 void PatternEditor::copy() {
-    auto clip = mDocument.patternModel().clip();
+    auto clip = mModel->clip();
     mClipboard.setClip(clip);
 }
 
@@ -433,36 +414,36 @@ void PatternEditor::pasteMix() {
 void PatternEditor::pasteImpl(bool mix) {
     if (mClipboard.hasClip()) {
         auto &clip = mClipboard.clip();
-        mDocument.patternModel().paste(clip, mix);
+        mModel->paste(clip, mix);
     }
 }
 
 void PatternEditor::erase() {
 
-    mDocument.patternModel().deleteSelection();
-    if (!mDocument.patternModel().hasSelection()) {
+    mModel->deleteSelection();
+    if (!mModel->hasSelection()) {
         stepDown();
     }
 }
 
 void PatternEditor::selectAll() {
-    mDocument.patternModel().selectAll();
+    mModel->selectAll();
 }
 
 void PatternEditor::increaseNote() {
-    mDocument.patternModel().transpose(1);
+    mModel->transpose(1);
 }
 
 void PatternEditor::decreaseNote() {
-    mDocument.patternModel().transpose(-1);
+    mModel->transpose(-1);
 }
 
 void PatternEditor::increaseOctave() {
-    mDocument.patternModel().transpose(12);
+    mModel->transpose(12);
 }
 
 void PatternEditor::decreaseOctave() {
-    mDocument.patternModel().transpose(-12);
+    mModel->transpose(-12);
 }
 
 void PatternEditor::transpose() {
@@ -486,16 +467,16 @@ void PatternEditor::transpose() {
     connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
 
     if (dialog.exec() == QDialog::Accepted) {
-        mDocument.patternModel().transpose(transposeSpin.value());
+        mModel->transpose(transposeSpin.value());
     }
 }
 
 void PatternEditor::reverse() {
-    mDocument.patternModel().reverse();
+    mModel->reverse();
 }
 
 void PatternEditor::stepDown() {
-    mDocument.patternModel().moveCursorRow(mDocument.editStep());
+    mModel->moveCursorRow(mEditStep);
 }
 
 void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {
@@ -503,13 +484,13 @@ void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {
     if (!mScrollLock) {
         mScrollLock = true;
 
-        auto cursor = mDocument.patternModel().cursor();
+        auto cursor = mModel->cursor();
         if (flags.testFlag(PatternModel::CursorRowChanged)) {
-            mVScroll.setValue(cursor.row);
+            mVScroll->setValue(cursor.row);
         }
 
         if (flags & (PatternModel::CursorTrackChanged | PatternModel::CursorColumnChanged)) {
-            mHScroll.setValue(cursor.track * PatternCursor::MAX_COLUMNS + cursor.column);
+            mHScroll->setValue(cursor.track * PatternCursor::MAX_COLUMNS + cursor.column);
         }
 
         mScrollLock = false;
@@ -520,24 +501,22 @@ void PatternEditor::setCursorFromHScroll(int value) {
     if (!mScrollLock) {
         mScrollLock = true;
 
-        auto &patternModel = mDocument.patternModel();
-        auto cursor = patternModel.cursor();
+        auto cursor = mModel->cursor();
         cursor.column = value % PatternCursor::MAX_COLUMNS;
         cursor.track = value / PatternCursor::MAX_COLUMNS;
-        patternModel.setCursor(cursor);
+        mModel->setCursor(cursor);
 
         mScrollLock = false;
     }
 }
 
 void PatternEditor::midiNoteOn(int note) {
-    auto &patternModel = mDocument.patternModel();
-    if (patternModel.isRecording()) {
-        patternModel.setNote((uint8_t)note, mInstrument);
+    if (mModel->isRecording()) {
+        mModel->setNote((uint8_t)note, mInstrument);
         stepDown();
     }
 
-    emit previewNote(note, patternModel.cursorTrack(), mInstrument.value_or(-1));
+    emit previewNote(note, mModel->cursorTrack(), mInstrument.value_or(-1));
 
 }
 

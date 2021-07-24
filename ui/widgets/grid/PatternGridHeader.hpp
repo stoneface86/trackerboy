@@ -1,8 +1,8 @@
 
 #pragma once
 
+#include "core/ChannelOutput.hpp"
 #include "core/ColorTable.hpp"
-#include "core/Document.hpp"
 
 #include <QBitmap>
 #include <QPixmap>
@@ -14,13 +14,16 @@ class PatternGridHeader : public QWidget {
 
 public:
 
-    PatternGridHeader(Document &document, QWidget *parent = nullptr);
+    PatternGridHeader(QWidget *parent = nullptr);
 
     void setColors(ColorTable const& colorTable);
 
     void setWidths(int rownoWidth, int trackWidth);
 
     void setOffset(int offset);
+
+signals:
+    void outputChanged(ChannelOutput::Flags flags);
 
 protected:
 
@@ -44,11 +47,9 @@ private:
 
     static constexpr int HOVER_NONE = -1;
 
-    void setOutputFlags(Document::OutputFlags flags);
+    void setOutputFlags(ChannelOutput::Flags flags);
 
     void setTrackHover(int hover);
-
-    Document &mDocument;
 
     int mOffset;
     int mRownoWidth;
@@ -60,7 +61,7 @@ private:
     // header stuff
     int mTrackHover;
 
-    Document::OutputFlags mTrackFlags;
+    ChannelOutput::Flags mTrackFlags;
 
     QColor mColorForeground;
     QColor mColorHover;

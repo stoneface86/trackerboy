@@ -16,7 +16,7 @@
 #include "forms/ConfigDialog.hpp"
 //#include "widgets/editors/InstrumentEditor.hpp"
 //#include "widgets/editors/WaveEditor.hpp"
-//#include "widgets/PatternEditor.hpp"
+#include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 
 #include "trackerboy/engine/Frame.hpp"
@@ -44,6 +44,8 @@ public:
 protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;
+
+    virtual void showEvent(QShowEvent *evt) override;
 
 private slots:
 
@@ -76,6 +78,14 @@ private slots:
     void onAudioError();
     void onAudioStop();
     void onFrameSync();
+
+    // shortcut slots
+    void previousInstrument();
+    void nextInstrument();
+    void previousPattern();
+    void nextPattern();
+    void increaseOctave();
+    void decreaseOctave();
 
     // implementation in MainWindow/slots.cpp - END ---------------------------
 
@@ -195,7 +205,7 @@ private:
 
     InstrumentListModel *mInstrumentModel;
     SongModel *mSongModel;
-    //PatternModel *mPatternModel;
+    PatternModel *mPatternModel;
     WaveListModel *mWaveModel;
 
     //Renderer mRenderer;
@@ -241,7 +251,7 @@ private:
 
     // widgets
     Sidebar *mSidebar;
-    //PatternEditor *mPatternEditor;
+    PatternEditor *mPatternEditor;
 
     // statusbar widgets
     QLabel *mStatusRenderer;
