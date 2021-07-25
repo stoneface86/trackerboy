@@ -21,6 +21,7 @@ enum class Icons : int {
     itemRemove,
     itemDuplicate,
     itemImport,
+    itemEdit,
     trackerPlay,
     trackerRestart,
     trackerPlayRow,

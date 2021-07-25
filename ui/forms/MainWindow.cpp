@@ -4,6 +4,7 @@
 #include "core/model/InstrumentChoiceModel.hpp"
 #include "misc/IconManager.hpp"
 #include "misc/connectutils.hpp"
+#include "widgets/docks/TableDock.hpp"
 
 #include <QApplication>
 #include <QSettings>
@@ -93,6 +94,8 @@ MainWindow::MainWindow() :
         // addDockWidget(Qt::LeftDockWidgetArea, mDockInstrumentEditor);
         // addDockWidget(Qt::LeftDockWidgetArea, mDockWaveformEditor);
         addDockWidget(Qt::LeftDockWidgetArea, mDockHistory);
+        addDockWidget(Qt::LeftDockWidgetArea, mDockInstruments);
+        addDockWidget(Qt::LeftDockWidgetArea, mDockWaveforms);
         restoreState(windowState);
     }
 
@@ -222,6 +225,14 @@ void MainWindow::setupUi() {
     auto undoView = new QUndoView(mModule->undoGroup(), mDockHistory);
     mDockHistory->setWidget(undoView);
 
+    mDockInstruments = makeDock(tr("Instruments"), QStringLiteral("DockInstruments"));
+    auto instruments = new TableDock(*mInstrumentModel, tr("Ctrl+I"), tr("instrument"), mDockInstruments);
+    mDockInstruments->setWidget(instruments);
+
+    mDockWaveforms = makeDock(tr("Waveforms"), QStringLiteral("DockWaveforms"));
+    auto waveforms = new TableDock(*mWaveModel, tr("Ctrl+W"), tr("waveform"), mDockWaveforms);
+    mDockWaveforms->setWidget(waveforms);
+
     // TOOLBARS ==============================================================
 
     mToolbarFile = makeToolbar(tr("File"), QStringLiteral("ToolbarFile"));
@@ -252,7 +263,7 @@ void MainWindow::setupUi() {
 
     // ACTIONS ===============================================================
 
-    createActions();
+    createActions(instruments->tableActions(), waveforms->tableActions());
 
     mToolbarSong->addAction(mActionOrderInsert);
     mToolbarSong->addAction(mActionOrderRemove);
@@ -474,6 +485,14 @@ void MainWindow::initState() {
     addDockWidget(Qt::RightDockWidgetArea, mDockHistory);
     mDockHistory->setFloating(true);
     mDockHistory->hide();
+
+    addDockWidget(Qt::RightDockWidgetArea, mDockInstruments);
+    mDockInstruments->setFloating(true);
+    mDockInstruments->hide();
+
+    addDockWidget(Qt::RightDockWidgetArea, mDockWaveforms);
+    mDockWaveforms->setFloating(true);
+    mDockWaveforms->hide();
 }
 
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {

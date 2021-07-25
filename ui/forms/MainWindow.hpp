@@ -16,6 +16,7 @@
 #include "forms/ConfigDialog.hpp"
 //#include "widgets/editors/InstrumentEditor.hpp"
 //#include "widgets/editors/WaveEditor.hpp"
+#include "misc/TableActions.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 
@@ -111,7 +112,7 @@ private:
     //
     // Creates all actions used by the application
     //
-    void createActions();
+    void createActions(TableActions const& instrumentActions, TableActions const& waveformActions);
 
     //
     // Setups the View menu in the given QMenu instance.
@@ -122,7 +123,12 @@ private:
     // Adds order actions to the given menu
     //
     void setupSongMenu(QMenu *menu);
-    
+
+    //
+    // setups the menu with actions for table operations using the given model
+    //
+    void setupTableMenu(QMenu *menu, TableActions const& actions);
+
     // implementation in MainWindow/actions.cpp - END -------------------------
 
     //
@@ -247,6 +253,8 @@ private:
 
     //QDockWidget *mDockInstrumentEditor;
     //QDockWidget *mDockWaveformEditor;
+    QDockWidget *mDockInstruments;
+    QDockWidget *mDockWaveforms;
     QDockWidget *mDockHistory;
 
     // widgets

@@ -9,6 +9,7 @@
 #include <QObject>
 #include <QUndoGroup>
 #include <QUndoStack>
+#include <QVector>
 
 //
 // Container class for a trackerboy::Module. Also contains a QMutex and

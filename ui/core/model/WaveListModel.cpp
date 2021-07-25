@@ -12,9 +12,9 @@ QIcon WaveListModel::iconData(uint8_t id) const {
 }
 
 trackerboy::Waveform* WaveListModel::currentWaveform() {
-    if (mCurrentIndex == -1) {
+    //if (mCurrentIndex == -1) {
         return nullptr;
-    } else {
-        return static_cast<trackerboy::WaveformTable&>(mBaseTable)[id(mCurrentIndex)];
-    }
+    //} else {
+    //    return static_cast<trackerboy::WaveformTable&>(mBaseTable)[id(mCurrentIndex)];
+    //}
 }

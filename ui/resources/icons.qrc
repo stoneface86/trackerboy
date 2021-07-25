@@ -29,7 +29,8 @@
     <file>icons/itemDuplicate-disabled.png</file>
     <file>icons/itemImport.png</file>
     <file>icons/itemImport-disabled.png</file>
-
+    <file>icons/itemEdit.png</file>
+    <file>icons/itemEdit-disabled.png</file>
     <file>icons/trackerPlay.png</file>
     <file>icons/trackerPlay-disabled.png</file>
     <file>icons/trackerPlayRow.png</file>

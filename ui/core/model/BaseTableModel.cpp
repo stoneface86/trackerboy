@@ -20,18 +20,18 @@ BaseTableModel::BaseTableModel(Module &mod, trackerboy::BaseTable& table, QStrin
     QAbstractListModel(parent),
     mModule(mod),
     mBaseTable(table),
-    mCurrentIndex(-1),
     mItems(),
     mDefaultName(defaultName),
     mShouldCommit(false)
 {
+    connect(&mod, &Module::reloaded, this, &BaseTableModel::reload);
 }
 
 BaseTableModel::~BaseTableModel() {
 
 }
 
-bool BaseTableModel::canDuplicate() const {
+bool BaseTableModel::canAdd() const {
     return mBaseTable.size() != trackerboy::BaseTable::MAX_SIZE;
 }
 
@@ -56,11 +56,6 @@ void BaseTableModel::reload() {
         if (item != nullptr) {
             mItems.emplace_back(*item);
         }
-    }
-    if (mItems.size() > 0) {
-        mCurrentIndex = 0;
-    } else {
-        mCurrentIndex = -1;
     }
 
     endResetModel();
@@ -88,14 +83,6 @@ QVariant BaseTableModel::data(const QModelIndex &index, int role) const {
     }
 
     return QVariant();
-}
-
-int BaseTableModel::currentIndex() const noexcept {
-    return mCurrentIndex;
-}
-
-void BaseTableModel::setCurrentIndex(int index) {
-    mCurrentIndex = index;
 }
 
 uint8_t BaseTableModel::id(int index) {

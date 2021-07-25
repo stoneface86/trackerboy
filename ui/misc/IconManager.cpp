@@ -83,6 +83,10 @@ QIcon const& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/itemImport.png"));
                 iconRef.addFile(QStringLiteral(":/icons/itemImport-disabled.png"), QSize(), QIcon::Disabled);
                 break;
+            case Icons::itemEdit:
+                iconRef.addFile(QStringLiteral(":/icons/itemEdit.png"));
+                iconRef.addFile(QStringLiteral(":/icons/itemEdit-disabled.png"), QSize(), QIcon::Disabled);
+                break;
             case Icons::trackerPlay:
                 iconRef.addFile(QStringLiteral(":/icons/trackerPlay.png"));
                 iconRef.addFile(QStringLiteral(":/icons/trackerPlay-disabled.png"), QSize(), QIcon::Disabled);

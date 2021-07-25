@@ -18,7 +18,7 @@ public:
 
     virtual ~BaseTableModel();
 
-    bool canDuplicate() const;
+    bool canAdd() const;
 
     // resets the model. called when the document is reset or loaded a
     // module from a file
@@ -31,8 +31,6 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
     virtual QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const override;
-
-    int currentIndex() const noexcept;
 
     // adds a new item, if there was no items prior then this one is selected
     int add();
@@ -49,10 +47,6 @@ public:
 
     void rename(int index, const QString &name);
 
-public slots:
-
-    void setCurrentIndex(int index);
-
 
 protected:
     BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName, QObject *parent = nullptr);
@@ -61,8 +55,6 @@ protected:
 
     Module &mModule;
     trackerboy::BaseTable& mBaseTable;
-
-    int mCurrentIndex;
 
 private:
     Q_DISABLE_COPY(BaseTableModel)

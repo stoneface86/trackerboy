@@ -43,7 +43,7 @@ static QAction* createAction(QWidget *parent, QString const& text, QString const
     return act;
 }
 
-void MainWindow::createActions() {
+void MainWindow::createActions(TableActions const& instrumentActions, TableActions const& waveformActions) {
 
     auto menubar = menuBar();
     QAction *act;
@@ -176,6 +176,16 @@ void MainWindow::createActions() {
     auto menuSong = menubar->addMenu(tr("&Song"));
     setupSongMenu(menuSong);
 
+    // > Instrument ===========================================================
+    auto menuInstrument = menubar->addMenu(tr("Instrument"));
+
+    setupTableMenu(menuInstrument, instrumentActions);
+
+    // > Waveform =============================================================
+    auto menuWaveform = menubar->addMenu(tr("Waveform"));
+
+    setupTableMenu(menuWaveform, waveformActions);
+
     // > Tracker ==============================================================
     auto menuTracker = menubar->addMenu(tr("&Tracker"));
 
@@ -286,6 +296,8 @@ void MainWindow::setupSongMenu(QMenu *menu) {
 void MainWindow::setupViewMenu(QMenu *menu) {
     // menu->addAction(mDockInstrumentEditor->toggleViewAction());
     // menu->addAction(mDockWaveformEditor->toggleViewAction());
+    menu->addAction(mDockInstruments->toggleViewAction());
+    menu->addAction(mDockWaveforms->toggleViewAction());
     menu->addAction(mDockHistory->toggleViewAction());
     menu->addSeparator();
     auto toolbarMenu = menu->addMenu(tr("Toolbars"));
@@ -301,4 +313,21 @@ void MainWindow::setupViewMenu(QMenu *menu) {
     }
     menu->addSeparator();   
     menu->addAction(mActionViewReset);
+}
+
+void MainWindow::setupTableMenu(QMenu *menu, TableActions const& actions) {
+
+    menu->addAction(actions.add);
+    menu->addAction(actions.remove);
+    menu->addAction(actions.duplicate);
+
+    menu->addSeparator();
+    
+    menu->addAction(actions.importFile);
+    menu->addAction(actions.exportFile);
+
+    menu->addSeparator();
+    
+    menu->addAction(actions.edit);
+
 }

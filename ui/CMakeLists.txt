@@ -75,6 +75,7 @@ set(UI_SRC
     "widgets/config/MidiConfigTab.cpp"
     "widgets/config/SoundConfigTab.cpp"
     "widgets/config/SoundQualityPreview.cpp"
+    "widgets/docks/TableDock.cpp"
     #"widgets/editors/BaseEditor.cpp"
     #"widgets/editors/InstrumentEditor.cpp"
     #"widgets/editors/WaveEditor.cpp"
