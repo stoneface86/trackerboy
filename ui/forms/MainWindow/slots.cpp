@@ -16,7 +16,7 @@ void MainWindow::onFileNew() {
         return;
     }
 
-    //mRenderer.forceStop();
+    mRenderer->forceStop();
 
     mModule->clear();
 
@@ -41,7 +41,7 @@ void MainWindow::onFileOpen() {
         return;
     }
 
-    //mRenderer.forceStop();
+    mRenderer->forceStop();
 
     bool opened = mModuleFile.open(path, *mModule);
 
@@ -137,6 +137,57 @@ void MainWindow::onSongOrderMoveDown() {
     updateOrderActions();
 }
 
+bool MainWindow::checkAndStepOut() {
+    if (mRenderer->isStepping()) {
+        mRenderer->stepOut();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void MainWindow::onTrackerPlay() {
+    if (!checkAndStepOut()) {
+        mRenderer->play(mPatternModel->cursorPattern(), 0, false);
+    }
+}
+
+void MainWindow::onTrackerPlayAtStart() {
+    mRenderer->play(0, 0, false);
+}
+
+void MainWindow::onTrackerPlayFromCursor() {
+    if (!checkAndStepOut()) {
+        mRenderer->play(mPatternModel->cursorPattern(), mPatternModel->cursorRow(), false);
+    }
+    
+}
+
+void MainWindow::onTrackerStep() {
+    if (mRenderer->isStepping()) {
+        mRenderer->stepNextFrame();
+    } else {
+        mRenderer->play(mPatternModel->cursorPattern(), mPatternModel->cursorRow(), true);
+    }
+}
+
+void MainWindow::onTrackerStop() {
+    mRenderer->stopMusic();
+}
+
+void MainWindow::onTrackerSolo() {
+
+}
+
+void MainWindow::onTrackerToggleOutput() {
+
+}
+
+void MainWindow::onTrackerKill() {
+    mRenderer->forceStop();
+}
+
+
 void MainWindow::onViewResetLayout() {
     // remove everything
     removeToolBar(mToolbarFile);
@@ -154,21 +205,21 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
         mStatusSamplerate->setText(tr("%1 Hz").arg(samplerate));
 
-        // mErrorSinceLastConfig = !mRenderer.setConfig(sound);
-        // if (mErrorSinceLastConfig) {
-        //     setPlayingStatus(PlayingStatusText::error);
-        //     if (isVisible()) {
-        //         QMessageBox msgbox(this);
-        //         msgbox.setIcon(QMessageBox::Critical);
-        //         msgbox.setText(tr("Could not initialize device"));
-        //         msgbox.setInformativeText(tr("The configured device could not be initialized. Playback is disabled."));
-        //         settingsMessageBox(msgbox);
-        //     }
-        // } else {
-        //     if (!mRenderer.isRunning()) {
-        //         setPlayingStatus(PlayingStatusText::ready);
-        //     }
-        // }
+        mErrorSinceLastConfig = !mRenderer->setConfig(sound);
+        if (mErrorSinceLastConfig) {
+            setPlayingStatus(PlayingStatusText::error);
+            if (isVisible()) {
+                QMessageBox msgbox(this);
+                msgbox.setIcon(QMessageBox::Critical);
+                msgbox.setText(tr("Could not initialize device"));
+                msgbox.setInformativeText(tr("The configured device could not be initialized. Playback is disabled."));
+                settingsMessageBox(msgbox);
+            }
+        } else {
+            if (!mRenderer->isRunning()) {
+                setPlayingStatus(PlayingStatusText::ready);
+            }
+        }
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
@@ -221,11 +272,11 @@ void MainWindow::showAboutDialog() {
 }
 
 void MainWindow::showAudioDiag() {
-    // if (mAudioDiag == nullptr) {
-    //     mAudioDiag = new AudioDiagDialog(mRenderer, this);
-    // }
+    if (mAudioDiag == nullptr) {
+        mAudioDiag = new AudioDiagDialog(*mRenderer, this);
+    }
 
-    // mAudioDiag->show();
+    mAudioDiag->show();
 }
 
 void MainWindow::showConfigDialog() {
@@ -247,9 +298,9 @@ void MainWindow::showExportWavDialog() {
 }
 
 void MainWindow::onAudioStart() {
-    // if (!mRenderer.isRunning()) {
-    //     return;
-    // }
+    if (!mRenderer->isRunning()) {
+        return;
+    }
 
     mLastEngineFrame = {};
     mFrameSkip = 0;
@@ -274,9 +325,9 @@ void MainWindow::onAudioError() {
 }
 
 void MainWindow::onAudioStop() {
-    // if (mRenderer.isRunning()) {
-    //     return; // sometimes it takes too long for this signal to get here
-    // }
+    if (mRenderer->isRunning()) {
+        return; // sometimes it takes too long for this signal to get here
+    }
 
     if (!mErrorSinceLastConfig) {
         setPlayingStatus(PlayingStatusText::ready);
@@ -288,76 +339,87 @@ void MainWindow::onFrameSync() {
     // sync is a bit misleading here, as this slot is called when this frame
     // is in process of being bufferred. It is not the current frame being played out.
 
-    // auto frame = mRenderer.currentFrame();
+    auto frame = mRenderer->currentFrame();
 
-    // // check if the player position changed
-    // if (frame.startedNewRow) {        
-    //     // update tracker position
-    //     mDocument.patternModel().setTrackerCursor(frame.row, frame.order);
+    // check if the player position changed
+    if (frame.startedNewRow) {        
+        // update tracker position
+        mPatternModel->setTrackerCursor(frame.row, frame.order);
 
-    //     // update position status
-    //     mStatusPos.setText(QStringLiteral("%1 / %2")
-    //         .arg(frame.order, 2, 10, QChar('0'))
-    //         .arg(frame.row, 2, 10, QChar('0')));
-    // }
+        // update position status
+        mStatusPos->setText(QStringLiteral("%1 / %2")
+            .arg(frame.order, 2, 10, QChar('0'))
+            .arg(frame.row, 2, 10, QChar('0')));
+    }
 
-    // // check if the speed changed
-    // if (mLastEngineFrame.speed != frame.speed) {
-    //     auto speedF = trackerboy::speedToFloat(frame.speed);
-    //     // update speed status
-    //     mStatusSpeed.setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
-    //     auto tempo = trackerboy::speedToTempo(speedF, mDocument.songModel().rowsPerBeat());
-    //     mStatusTempo.setText(tr("%1 BPM").arg(tempo, 0, 'f', 2));
-    // }
+    // check if the speed changed
+    if (mLastEngineFrame.speed != frame.speed) {
+        auto speedF = trackerboy::speedToFloat(frame.speed);
+        // update speed status
+        mStatusSpeed->setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+        auto tempo = trackerboy::speedToTempo(speedF,  mSongModel->rowsPerBeat());
+        mStatusTempo->setText(tr("%1 BPM").arg(tempo, 0, 'f', 2));
+    }
 
-    // constexpr auto FRAME_SKIP = 30;
+    constexpr auto FRAME_SKIP = 30;
 
-    // if (mLastEngineFrame.time != frame.time) {
-    //     // determine elapsed time
-    //     if (mFrameSkip == 0) {
+    if (mLastEngineFrame.time != frame.time) {
+        // determine elapsed time
+        if (mFrameSkip == 0) {
 
-    //         auto framerate = mDocument.framerate();
-    //         int elapsed = frame.time / framerate;
-    //         int secs = elapsed;
-    //         int mins = secs / 60;
-    //         secs = secs % 60;
+            //auto framerate = mDocument.framerate();
+            int elapsed = frame.time / 60;
+            int secs = elapsed;
+            int mins = secs / 60;
+            secs = secs % 60;
 
-    //         QString str = QStringLiteral("%1:%2")
-    //             .arg(mins, 2, 10, QChar('0'))
-    //             .arg(secs, 2, 10, QChar('0'));
-    //         mStatusElapsed.setText(str);
+            QString str = QStringLiteral("%1:%2")
+                .arg(mins, 2, 10, QChar('0'))
+                .arg(secs, 2, 10, QChar('0'));
+            mStatusElapsed->setText(str);
 
 
-    //         mFrameSkip = FRAME_SKIP;
-    //     } else {
-    //         --mFrameSkip;
-    //     }
-    // }
+            mFrameSkip = FRAME_SKIP;
+        } else {
+            --mFrameSkip;
+        }
+    }
 
-    // mLastEngineFrame = frame;
+    mLastEngineFrame = frame;
 }
 
 void MainWindow::previousInstrument() {
-
+    // TODO
 }
 
 void MainWindow::nextInstrument() {
-
+    // TODO
 }
 
 void MainWindow::previousPattern() {
-
+    // TODO
 }
 
 void MainWindow::nextPattern() {
-
+    // TODO
 }
 
 void MainWindow::increaseOctave() {
-
+    // TODO
 }
 
 void MainWindow::decreaseOctave() {
-
+    // TODO
 }
 
+void MainWindow::playOrStop() {
+    if (mRenderer->isRunning()) {
+        onTrackerStop();
+    } else {
+        onTrackerPlay();
+    }
+}
+
+void MainWindow::onPreviewNote() {
+    // TODO
+}

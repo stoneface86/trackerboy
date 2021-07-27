@@ -39,21 +39,18 @@ TableDock::TableDock(
     act = toolbar->addAction(tr("Add"));
     act->setIcon(IconManager::getIcon(Icons::itemAdd));
     act->setStatusTip(tr("Adds a new %1").arg(typeName));
-    act->setEnabled(model.canAdd());
     connectActionToThis(act, add);
     mActions.add = act;
     
     act = toolbar->addAction(tr("Remove"));
     act->setIcon(IconManager::getIcon(Icons::itemRemove));
     act->setStatusTip(tr("Removes the current %1").arg(typeName));
-    act->setEnabled(model.canRemove());
     connectActionToThis(act, remove);
     mActions.remove = act;
 
     act = toolbar->addAction(tr("Duplicate"));
     act->setIcon(IconManager::getIcon(Icons::itemDuplicate));
     act->setStatusTip(tr("Adds a copy of the current %1").arg(typeName));
-    act->setEnabled(model.canDuplicate());
     connectActionToThis(act, duplicate);
     mActions.duplicate = act;
     
@@ -73,8 +70,9 @@ TableDock::TableDock(
     act->setIcon(IconManager::getIcon(Icons::itemEdit));
     act->setStatusTip(tr("Edit the current %1").arg(typeName));
     act->setShortcut(editorShortcut);
-    act->setEnabled(false);
     mActions.edit = act;
+
+    updateActions();
 
     // act = toolbar->addAction(tr("Vertical"));
     // act->setCheckable(true);

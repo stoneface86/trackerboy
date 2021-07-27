@@ -69,6 +69,11 @@ public:
     //
     trackerboy::Song* song();
 
+    //
+    // Gets shared ownership of the current song.
+    //
+    std::shared_ptr<trackerboy::Song> songShared();
+
     bool isModified() const;
 
     QMutex& mutex();

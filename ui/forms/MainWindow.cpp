@@ -28,7 +28,6 @@ MainWindow::MainWindow() :
     mPianoInput(),
     mModule(),
     mModuleFile(),
-    //mRenderer(mDocument),
     mErrorSinceLastConfig(false),
     mAboutDialog(nullptr),
     mAudioDiag(nullptr),
@@ -41,6 +40,8 @@ MainWindow::MainWindow() :
     mSongModel = new SongModel(*mModule, this);
     mPatternModel = new PatternModel(*mModule, *mSongModel, this);
     mWaveModel = new WaveListModel(*mModule, this);
+
+    mRenderer = new Renderer(*mModule, this);
 
     setupUi();
 
@@ -242,14 +243,19 @@ void MainWindow::setupUi() {
     mToolbarInput = makeToolbar(tr("Input"), QStringLiteral("ToolbarInput"));
     mToolbarInstrument = makeToolbar(tr("Instrument"), QStringLiteral("ToolbarInstrument"));
 
-    mOctaveSpin = new QSpinBox(mToolbarInput);
-    mOctaveSpin->setRange(2, 8);
-    mOctaveSpin->setValue(mPianoInput.octave());
+    auto octaveSpin = new QSpinBox(mToolbarInput);
+    octaveSpin->setRange(2, 8);
+    octaveSpin->setValue(mPianoInput.octave());
+    connect(octaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, 
+        [this](int octave) {
+            mPianoInput.setOctave(octave);
+        });
     auto editStepSpin = new QSpinBox(mToolbarInput);
     editStepSpin->setRange(0, 255);
     editStepSpin->setValue(1);
+    connect(editStepSpin, qOverload<int>(&QSpinBox::valueChanged), mPatternEditor, &PatternEditor::setEditStep);
     mToolbarInput->addWidget(new QLabel(tr("Octave"), mToolbarInput));
-    mToolbarInput->addWidget(mOctaveSpin);
+    mToolbarInput->addWidget(octaveSpin);
     mToolbarInput->addWidget(new QLabel(tr("Edit step"), mToolbarInput));
     mToolbarInput->addWidget(editStepSpin);
     mToolbarInput->addSeparator();
@@ -273,9 +279,6 @@ void MainWindow::setupUi() {
 
     // SHORTCUTS =============================================================
 
-    // mPlayAndStopShortcut.setKey(QKeySequence(Qt::Key_Return));
-    // mPlayAndStopShortcut.setContext(Qt::WidgetWithChildrenShortcut);
-
     QShortcut *shortcut;
 
     shortcut = new QShortcut(tr("Ctrl+Left"), this);
@@ -295,6 +298,10 @@ void MainWindow::setupUi() {
     
     shortcut = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Slash), this);
     lazyconnect(shortcut, activated, this, decreaseOctave);
+
+    shortcut = new QShortcut(QKeySequence(Qt::Key_Return), mPatternEditor);
+    shortcut->setContext(Qt::WidgetWithChildrenShortcut);
+    lazyconnect(shortcut, activated, this, playOrStop);
 
     // STATUSBAR ==============================================================
 
@@ -362,14 +369,6 @@ void MainWindow::setupUi() {
     //     connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
     // }
 
-    connect(mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, 
-        [this](int octave) {
-            mPianoInput.setOctave(octave);
-        });
-    // connect(&mPatternEditor, &PatternEditor::changeOctave, &mOctaveSpin, &QSpinBox::setValue);
-
-    // connect(&mEditStepSpin, qOverload<int>(&QSpinBox::valueChanged), &mDocument, &ModuleDocument::setEditStep);
-    // connect(&mInstrumentCombo, qOverload<int>(&QComboBox::currentIndexChanged), &mPatternEditor, &PatternEditor::setInstrument);
 
     // connect(&mPatternEditor, &PatternEditor::nextInstrument, this,
     //     [this]() {
@@ -386,7 +385,8 @@ void MainWindow::setupUi() {
     //         }
     //     });
 
-    connect(mSidebar->orderEditor(), &OrderEditor::popupMenuAt, this,
+    auto orderEditor = mSidebar->orderEditor();
+    connect(orderEditor, &OrderEditor::popupMenuAt, this,
         [this](QPoint const& pos) {
             if (mSongOrderContextMenu == nullptr) {
                 mSongOrderContextMenu = new QMenu(this);
@@ -394,22 +394,10 @@ void MainWindow::setupUi() {
             }
             mSongOrderContextMenu->popup(pos);
         });
+    lazyconnect(orderEditor, jumpToPattern, mRenderer, jumpToPattern);
 
-    // connect(&mSidebar, &Sidebar::patternJumpRequested, &mRenderer, &Renderer::jumpToPattern);
-
-
-    // connect(&mPatternEditor, &PatternEditor::previewNote, &mRenderer, &Renderer::previewNote, Qt::DirectConnection);
-    // connect(&mPatternEditor, &PatternEditor::stopNotePreview, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
-    
-
-    // connect(&mPlayAndStopShortcut, &QShortcut::activated, this,
-    //     [this]() {
-    //         if (mRenderer.isRunning()) {
-    //             mActions[ActionTrackerStop].trigger();
-    //         } else {
-    //             mActions[ActionTrackerPlay].trigger();
-    //         }
-    //     });
+    lazyconnect(mPatternEditor, previewNote, this, onPreviewNote);
+    lazyconnect(mPatternEditor, stopNotePreview, mRenderer, stopPreview);
 
     connect(&mMidi, &Midi::error, this,
         [this]() {
@@ -429,17 +417,20 @@ void MainWindow::setupUi() {
         });
 
     connect(mModule, &Module::modifiedChanged, this, &MainWindow::setWindowModified);
-    // connect(&mActions[ActionEditKeyRepetition], &QAction::toggled, &mDocument, &ModuleDocument::setKeyRepetition);
 
     //connect(mOrderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
     updateOrderActions();
 
-    // connect(&mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
-    // connect(&mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
-    // connect(&mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
-    // connect(&mRenderer, &Renderer::frameSync, this, &MainWindow::onFrameSync);
+    connect(mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
+    connect(mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
+    connect(mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
+    connect(mRenderer, &Renderer::frameSync, this, &MainWindow::onFrameSync);
     
-    // connect(&mRenderer, &Renderer::updateVisualizers, &mSidebar.scope(), qOverload<>(&AudioScope::update));
+    auto scope = mSidebar->scope();
+    scope->setBuffer(&mRenderer->visualizerBuffer());
+    connect(mRenderer, &Renderer::updateVisualizers, scope, qOverload<>(&AudioScope::update));
+
+    lazyconnect(mRenderer, isPlayingChanged, mPatternModel, setPlaying);
 
     auto app = static_cast<QApplication*>(QApplication::instance());
     connect(app, &QApplication::focusChanged, this, &MainWindow::handleFocusChange);

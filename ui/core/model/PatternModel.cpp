@@ -362,6 +362,7 @@ void PatternModel::setTrackerCursor(int row, int pattern) {
     if (changed) {
         if (mFollowing) {
             CursorChangeFlags flags = CursorUnchanged;
+            setCursorPatternImpl(pattern, flags);
             setCursorRowImpl(row, flags);
             emitIfChanged(flags);
         }

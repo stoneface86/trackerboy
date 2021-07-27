@@ -22,4 +22,8 @@ public:
         return &mRef;
     }
 
+private:
+    // disable copy semantics, as copying a QMutexLocker makes no sense
+    Q_DISABLE_COPY(Locked)
+
 };

@@ -7,29 +7,27 @@
 BaseEditor::BaseEditor(PianoInput const& input, QString typeName, QWidget *parent) :
     QWidget(parent),
     mDocument(nullptr),
-    mSignalsEnabled(true),
-    mLayout(),
-    mTableLayout(),
-    mToolbar(),
-    mCombo(),
-    mNameLabel(tr("Name:")),
-    mNameEdit(),
-    mEditorWidget(),
-    mPiano(input)
+    mSignalsEnabled(true)
 {
 
-    // layout
-    mTableLayout.addWidget(&mToolbar);
-    mTableLayout.addWidget(&mCombo, 1);
-    mTableLayout.addWidget(&mNameLabel);
-    mTableLayout.addWidget(&mNameEdit, 1);
+    mToolbar = new QToolBar;
+    mCombo = new QComboBox;
+    mEditorWidget = new QWidget;
+    mPiano = new PianoWidget(input);
 
-    mLayout.addLayout(&mTableLayout);
-    mLayout.addWidget(&mEditorWidget, 1);
-    mLayout.addWidget(&mPiano);
-    setLayout(&mLayout);
+    auto tableLayout = new QHBoxLayout;
+    tableLayout->addWidget(mToolbar);
+    tableLayout->addWidget(mCombo, 1);
+    tableLayout->addWidget(new QLabel(tr("Name:")));
+    tableLayout->addWidget(mNameEdit, 1);
 
-    mNameEdit.setEnabled(false);
+    auto layout = new QVBoxLayout;
+    layout->addLayout(tableLayout);
+    layout->addWidget(mEditorWidget, 1);
+    layout->addWidget(mPiano);
+    setLayout(layout);
+
+    mNameEdit->setEnabled(false);
 
     // actions
     mActionAdd.setText(tr("Add"));

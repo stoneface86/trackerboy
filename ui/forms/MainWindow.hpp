@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/audio/Renderer.hpp"
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
 #include "core/model/InstrumentListModel.hpp"
@@ -63,6 +64,15 @@ private slots:
     void onSongOrderDuplicate();
     void onSongOrderMoveUp();
     void onSongOrderMoveDown();
+
+    void onTrackerPlay();
+    void onTrackerPlayAtStart();
+    void onTrackerPlayFromCursor();
+    void onTrackerStep();
+    void onTrackerStop();
+    void onTrackerSolo();
+    void onTrackerToggleOutput();
+    void onTrackerKill();
     
     void onViewResetLayout();
 
@@ -87,6 +97,10 @@ private slots:
     void nextPattern();
     void increaseOctave();
     void decreaseOctave();
+    void playOrStop();
+
+    // misc slots
+    void onPreviewNote();
 
     // implementation in MainWindow/slots.cpp - END ---------------------------
 
@@ -106,6 +120,13 @@ private:
     // takes ownership of the toolbar.
     //
     QToolBar* makeToolbar(QString const& title, QString const& objname);
+
+    //
+    // Utility function for tracker play slots. Checks if the renderer is
+    // stepping and if so, steps out. Does nothing otherwise. true is returned
+    // if the renderer was stepped out, false otherwise.
+    //
+    bool checkAndStepOut();
 
     // implementation in MainWindow/actions.cpp - BEGIN -----------------------
 
@@ -214,7 +235,7 @@ private:
     PatternModel *mPatternModel;
     WaveListModel *mWaveModel;
 
-    //Renderer mRenderer;
+    Renderer *mRenderer;
 
     bool mErrorSinceLastConfig;
     trackerboy::Frame mLastEngineFrame;
@@ -232,7 +253,6 @@ private:
     QToolBar *mToolbarSong;
     QToolBar *mToolbarTracker;
     QToolBar *mToolbarInput;
-        QSpinBox *mOctaveSpin;
     QToolBar *mToolbarInstrument;
         QComboBox *mInstrumentCombo;
 
@@ -268,8 +288,6 @@ private:
     QLabel *mStatusElapsed;
     QLabel *mStatusPos;
     QLabel *mStatusSamplerate;
-
-    //QShortcut mPlayAndStopShortcut;
 
 
 };

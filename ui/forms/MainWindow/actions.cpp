@@ -191,55 +191,54 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     act = setupAction(menuTracker, tr("&Play"), tr("Resume playing or play the song from the current position"), Icons::trackerPlay);
     mToolbarTracker->addAction(act);
-    //connectActionTo(act, mRenderer, play);
+    connectActionToThis(act, onTrackerPlay);
 
     act = setupAction(menuTracker, tr("Play from start"), tr("Begin playback of the song from the start"), Icons::trackerRestart, QKeySequence(Qt::Key_F5));
     mToolbarTracker->addAction(act);
-    //connectActionTo(act, mRenderer, playAtStart);
+    connectActionToThis(act, onTrackerPlayAtStart);
 
     act = setupAction(menuTracker, tr("Play at cursor"), tr("Begin playback from the cursor"), Icons::trackerPlayRow, QKeySequence(Qt::Key_F6));
     mToolbarTracker->addAction(act);
-    //connectActionTo(act, mRenderer, playFromCursor);
+    connectActionToThis(act, onTrackerPlayFromCursor);
 
     act = setupAction(menuTracker, tr("Step row"), tr("Play and hold the row at the cursor"), Icons::trackerStepRow, QKeySequence(Qt::Key_F7));
     mToolbarTracker->addAction(act);
-    //connectActionTo(act, mRenderer, stepFromCursor);
+    connectActionToThis(act, onTrackerStep);
 
     act = setupAction(menuTracker, tr("&Stop"), tr("Stop playing"), Icons::trackerStop, QKeySequence(Qt::Key_F8));
     mToolbarTracker->addAction(act);
-    //connectActionTo(act, mRenderer, stopMusic);
+    connectActionToThis(act, onTrackerStop);
 
     mToolbarTracker->addSeparator();
 
     act = setupAction(menuTracker, "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat, QKeySequence(Qt::Key_F9));
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
-    //lazyconnect(act, toggled, mRenderer, setPatternRepeat);
+    lazyconnect(act, toggled, mRenderer, setPatternRepeat);
 
     act = setupAction(menuTracker, tr("Record"), tr("Toggles record mode"), Icons::trackerRecord, QKeySequence(Qt::Key_Space));
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
     lazyconnect(act, toggled, mPatternModel, setRecord);
-    //lazyconnect(mPatternModel, recordingChanged, act, setChecked);
 
     menuTracker->addSeparator(); // -------------------------------------------
 
     act = setupAction(menuTracker, tr("Toggle channel output"), tr("Enables/disables sound output for the current track"), QKeySequence(Qt::Key_F10));
-    // connectActionTo(act, ???);
+    connectActionToThis(act, onTrackerToggleOutput);
 
     act = setupAction(menuTracker, tr("Solo"), tr("Solos the current track"), QKeySequence(Qt::Key_F11));
-    // connectActionTo(act, ???);
+    connectActionToThis(act, onTrackerSolo);
 
     menuTracker->addSeparator(); // -------------------------------------------
 
     act = setupAction(menuTracker, tr("&Kill sound"), tr("Immediately stops sound output"), QKeySequence(Qt::Key_F12));
-    //connectActionTo(act, mRenderer, forceStop);
+    connectActionToThis(act, onTrackerKill);
 
     mActionFollowMode = createAction(this, tr("Follow-mode"), tr("Toggles follow mode"), Qt::Key_ScrollLock);
     mActionFollowMode->setCheckable(true);
     mActionFollowMode->setChecked(true);
     mToolbarTracker->addAction(mActionFollowMode);
-    //lazyconnect(mActionFollowMode, toggled, mPatternModel, setFollowing);
+    lazyconnect(mActionFollowMode, toggled, mPatternModel, setFollowing);
 
     // > View =================================================================
     auto menuView = menubar->addMenu(tr("&View"));

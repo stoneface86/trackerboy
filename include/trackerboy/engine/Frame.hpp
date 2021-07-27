@@ -34,7 +34,7 @@ namespace trackerboy {
 struct Frame {
 
     constexpr Frame() :
-        halted(false),
+        halted(true),
         startedNewRow(false),
         startedNewPattern(false),
         speed(0),

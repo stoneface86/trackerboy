@@ -51,7 +51,7 @@ public:
 
     };
 
-    Renderer(QObject *parent = nullptr);
+    explicit Renderer(Module &mod, QObject *parent = nullptr);
     ~Renderer();
 
     // DIAGNOSTICS ====
@@ -71,6 +71,16 @@ public:
     // Determines if the renderer is renderering sound.
     //
     bool isRunning();
+
+    //
+    // Determines if the renderer is in step-mode
+    //
+    bool isStepping();
+
+    //
+    // Determines if the renderer is playing music
+    //
+    bool isPlaying();
 
     //
     // Gets a copy of the current engine frame.
@@ -97,6 +107,11 @@ signals:
     // Signal emitted when the audio callback thread was stopped.
     //
     void audioStopped();
+
+    //
+    // Emitted when music has started/stopped playing
+    //
+    void isPlayingChanged(bool playing);
 
     //
     // An error occurred during audio playback.
@@ -134,13 +149,12 @@ public slots:
     // waveform preview
     void previewWaveform(quint8 note);
 
-    void play();
+    void play(int pattern, int row, bool stepmode);
 
-    void playAtStart();
+    void stepNextFrame();
 
-    void playFromCursor();
+    void stepOut();
 
-    void stepFromCursor();
 
     //
     // Jumps to the given pattern if currently playing music
@@ -164,8 +178,9 @@ private slots:
     //
     // Enables/Disables channel output for music playback
     //
-    void setChannelOutput(ChannelOutput::Flags flags);
+    //void setChannelOutput(ChannelOutput::Flags flags);
 
+    void setSong();
    
 
 private:
@@ -187,12 +202,14 @@ private:
 
     struct RenderContext {
         // the current module
-        Module *mod;
+        Module &mod;
 
         // indicates if step mode is enabled
         bool stepping;
         // determines if the engine should step (ignored when mStepping = false)
         bool step;
+
+        std::shared_ptr<trackerboy::Song> song;
 
         trackerboy::Synth synth;
         trackerboy::GbApu apu;
@@ -219,21 +236,23 @@ private:
         Clock::duration periodTime; // time difference between the last period and the current one
         size_t writesSinceLastPeriod; // number of samples written for the last period
 
-        RenderContext();
+        RenderContext(Module &mod);
     };
 
     // type alias for mutually exclusive access to the RenderContext
     using Handle = Locked<RenderContext>;
 
     // sets up the engine to play starting at the given pattern and row
-    void playMusic(Handle &handle, int pattern, int row, bool stepping = false);
+    void _play(Handle &handle, int pattern, int row, bool stepping = false);
+
+    void _stopMusic(Handle &handle);
 
     // utility function for preview slots
     void resetPreview(Handle &handle);
 
     void previewNoteOrInstrument(int note, int track = -1, int instrument = -1);
 
-    void _setChannelOutput(Handle &handle, ChannelOutput::Flags flags);
+    //void _setChannelOutput(Handle &handle, ChannelOutput::Flags flags);
 
     // stream management -----------------------------------------------------
 

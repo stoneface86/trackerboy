@@ -27,7 +27,7 @@ include_directories(
 set(UI_SRC
     "core/audio/AudioProber.cpp"
     "core/audio/AudioStream.cpp"
-    #"core/audio/Renderer.cpp"
+    "core/audio/Renderer.cpp"
     "core/audio/Ringbuffer.cpp"
     "core/audio/VisualizerBuffer.cpp"
     "core/clipboard/PatternClip.cpp"
@@ -58,7 +58,7 @@ set(UI_SRC
     "forms/MainWindow/actions.cpp"
     "forms/MainWindow/slots.cpp"
     "forms/AboutDialog.cpp"
-    #"forms/AudioDiagDialog.cpp"
+    "forms/AudioDiagDialog.cpp"
     "forms/ConfigDialog.cpp"
     #"forms/ExportWavDialog.cpp"
     "forms/MainWindow.cpp"

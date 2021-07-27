@@ -29,13 +29,14 @@
 // get what it needs and there are now gaps in the playback.
 
 
-Renderer::RenderContext::RenderContext() :
-    document(nullptr),
+Renderer::RenderContext::RenderContext(Module &mod) :
+    mod(mod),
     stepping(false),
     step(false),
+    song(nullptr),
     synth(44100),
     apu(synth.apu()),
-    engine(apu, &doc.mod()),
+    engine(apu, &mod.data()),
     ip(),
     previewState(PreviewState::none),
     previewChannel(trackerboy::ChType::ch1),
@@ -51,13 +52,13 @@ Renderer::RenderContext::RenderContext() :
 
 
 
-Renderer::Renderer(QObject *parent) :
+Renderer::Renderer(Module &mod, QObject *parent) :
     QObject(parent),
     mTimerThread(),
     mTimer(new FastTimer),
     mStream(),
     mVisBuffer(),
-    mContext()
+    mContext(mod)
 {
     mTimer->setCallback(timerCallback, this);
     mTimer->moveToThread(&mTimerThread);
@@ -70,6 +71,9 @@ Renderer::Renderer(QObject *parent) :
             auto handle = mContext.access();
             stopRender(handle, true);
         });
+
+    connect(&mod, &Module::songChanged, this, &Renderer::setSong);
+    setSong();
 }
 
 Renderer::~Renderer() {
@@ -81,6 +85,23 @@ Renderer::~Renderer() {
 
     mTimerThread.quit();
     mTimerThread.wait();
+}
+
+void Renderer::setSong() {
+    auto ctx = mContext.access();
+    ctx->song = ctx->mod.songShared();
+    ctx->engine.setSong(ctx->song.get());
+
+    // if we are playing, restart playback from the start with the new song
+    // if we are stepping, stop playback
+
+    if (mStream.isRunning()) {
+        if (ctx->stepping) {
+            _stopMusic(ctx);
+        } else {
+            _play(ctx, 0, 0, false);
+        }
+    }
 }
 
 Renderer::Diagnostics Renderer::diagnostics() {
@@ -107,6 +128,14 @@ Guarded<VisualizerBuffer>& Renderer::visualizerBuffer() {
 
 bool Renderer::isRunning() {
     return mStream.isRunning();
+}
+
+bool Renderer::isStepping() {
+    return mContext.access()->stepping;
+}
+
+bool Renderer::isPlaying() {
+    return !mContext.access()->currentEngineFrame.halted;
 }
 
 trackerboy::Frame Renderer::currentFrame() {
@@ -233,54 +262,29 @@ void Renderer::clearDiagnostics() {
     mStream.resetUnderruns();
 }
 
-void Renderer::play() {
+void Renderer::play(int pattern, int row, bool stepmode) {
 
+    if (mStream.isEnabled()) {
+        auto handle = mContext.access();
+        _play(handle, pattern, row, stepmode);
+    }
+}
+
+
+void Renderer::stepNextFrame() {
+    
     if (mStream.isEnabled()) {
         auto handle = mContext.access();
         if (handle->stepping) {
-            // stop step mode
-            handle->stepping = false;
-        } else {
-            playMusic(handle, handle->document.orderModel().currentPattern(), 0);
-        }
-    }
-}
-
-void Renderer::playAtStart() {
-    
-    if (mStream.isEnabled()) {
-        auto handle = mContext.access();
-        playMusic(handle, 0, 0);
-    }
-}
-
-void Renderer::playFromCursor() {
-    
-    if (mStream.isEnabled()) {
-        auto handle = mContext.access();
-        playMusic(
-            handle,
-            handle->document.orderModel().currentPattern(),
-            handle->document.patternModel().cursorRow()
-        );
-    }
-}
-
-void Renderer::stepFromCursor() {
-    
-    if (mStream.isEnabled()) {
-        auto handle = mContext.access();
-        if (!handle->stepping) {
-            playMusic(
-                handle,
-                handle->document.orderModel().currentPattern(), 
-                handle->document.patternModel().cursorRow(), 
-                true
-            );
+            handle->step = true;
         }
 
-        handle->step = true;
+    }
+}
 
+void Renderer::stepOut() {
+    if (mStream.isEnabled()) {
+        mContext.access()->stepping = false;
     }
 }
 
@@ -300,42 +304,42 @@ void Renderer::setPatternRepeat(bool repeat) {
 
 void Renderer::previewNoteOrInstrument(int note, int track, int instrument) {
     
-    if (mStream.isEnabled()) {
-        auto handle = mContext.access();
-        switch (handle->previewState) {
-            case PreviewState::waveform:
-                resetPreview(handle);
-                [[fallthrough]];
-            case PreviewState::none: {
+    // if (mStream.isEnabled()) {
+    //     auto handle = mContext.access();
+    //     switch (handle->previewState) {
+    //         case PreviewState::waveform:
+    //             resetPreview(handle);
+    //             [[fallthrough]];
+    //         case PreviewState::none: {
 
-                std::shared_ptr<trackerboy::Instrument> inst = nullptr;
-                if (track == -1) {
-                    // instrument preview
-                    // set instrument preview's instrument to the current one
-                    inst = handle->document.instrumentModel().currentInstrument();
-                    handle->previewChannel = inst->channel();
-                } else {
-                    // note preview
-                    if (instrument != -1) {
-                        inst = handle->document.mod().instrumentTable().getShared((uint8_t)instrument);
-                    }
-                    handle->previewChannel = static_cast<trackerboy::ChType>(track);
-                }
-                handle->ip.setInstrument(std::move(inst), handle->previewChannel);
+    //             std::shared_ptr<trackerboy::Instrument> inst = nullptr;
+    //             if (track == -1) {
+    //                 // instrument preview
+    //                 // set instrument preview's instrument to the current one
+    //                 inst = handle->document.instrumentModel().currentInstrument();
+    //                 handle->previewChannel = inst->channel();
+    //             } else {
+    //                 // note preview
+    //                 if (instrument != -1) {
+    //                     inst = handle->document.mod().instrumentTable().getShared((uint8_t)instrument);
+    //                 }
+    //                 handle->previewChannel = static_cast<trackerboy::ChType>(track);
+    //             }
+    //             handle->ip.setInstrument(std::move(inst), handle->previewChannel);
 
-                handle->previewState = PreviewState::instrument;
-                // unlock the channel for preview
-                handle->engine.unlock(handle->previewChannel);
-            }
-                [[fallthrough]];
-            case PreviewState::instrument:
-                // update the current note
-                handle->ip.play((uint8_t)note);
-                break;
-        }
+    //             handle->previewState = PreviewState::instrument;
+    //             // unlock the channel for preview
+    //             handle->engine.unlock(handle->previewChannel);
+    //         }
+    //             [[fallthrough]];
+    //         case PreviewState::instrument:
+    //             // update the current note
+    //             handle->ip.play((uint8_t)note);
+    //             break;
+    //     }
 
-        beginRender(handle);
-    }
+    //     beginRender(handle);
+    // }
 }
 
 void Renderer::previewInstrument(quint8 note) {
@@ -347,43 +351,43 @@ void Renderer::previewNote(int note, int track, int instrument) {
 }
 
 void Renderer::previewWaveform(quint8 note) {
-    if (mStream.isEnabled()) {
-        // state changes
-        // instrument -> none -> waveform
+    // if (mStream.isEnabled()) {
+    //     // state changes
+    //     // instrument -> none -> waveform
 
-        if (note > trackerboy::NOTE_LAST) {
-            // should never happen, but clamp just in case
-            note = trackerboy::NOTE_LAST;
-        }
-        auto freq = trackerboy::NOTE_FREQ_TABLE[note];
+    //     if (note > trackerboy::NOTE_LAST) {
+    //         // should never happen, but clamp just in case
+    //         note = trackerboy::NOTE_LAST;
+    //     }
+    //     auto freq = trackerboy::NOTE_FREQ_TABLE[note];
 
-        auto handle = mContext.access();
-        switch (handle->previewState) {
-            case PreviewState::instrument:
-                resetPreview(handle);
-                [[fallthrough]];
-            case PreviewState::none: {
-                handle->previewState = PreviewState::waveform;
-                handle->previewChannel = trackerboy::ChType::ch3;
-                // unlock the channel, no longer effected by music
-                handle->engine.unlock(trackerboy::ChType::ch3);
+    //     auto handle = mContext.access();
+    //     switch (handle->previewState) {
+    //         case PreviewState::instrument:
+    //             resetPreview(handle);
+    //             [[fallthrough]];
+    //         case PreviewState::none: {
+    //             handle->previewState = PreviewState::waveform;
+    //             handle->previewChannel = trackerboy::ChType::ch3;
+    //             // unlock the channel, no longer effected by music
+    //             handle->engine.unlock(trackerboy::ChType::ch3);
 
-                trackerboy::ChannelState state(trackerboy::ChType::ch3);
-                state.playing = true;
-                state.frequency = freq;
-                state.envelope = handle->document.waveModel().currentWaveform()->id();
-                trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(handle->apu, handle->document.mod().waveformTable(), state);
-                break;
-            }
-            case PreviewState::waveform:
-                // already previewing, just update the frequency
-                handle->apu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
-                handle->apu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
-                break;
-        }
+    //             trackerboy::ChannelState state(trackerboy::ChType::ch3);
+    //             state.playing = true;
+    //             state.frequency = freq;
+    //             state.envelope = handle->document.waveModel().currentWaveform()->id();
+    //             trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(handle->apu, handle->document.mod().waveformTable(), state);
+    //             break;
+    //         }
+    //         case PreviewState::waveform:
+    //             // already previewing, just update the frequency
+    //             handle->apu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
+    //             handle->apu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
+    //             break;
+    //     }
 
-        beginRender(handle);
-    }
+    //     beginRender(handle);
+    // }
 }
 
 void Renderer::stopPreview() {
@@ -401,10 +405,14 @@ void Renderer::stopMusic() {
     
     if (mStream.isEnabled()) {
         auto handle = mContext.access();
-        handle->engine.halt();
-        handle->stepping = false;
+        _stopMusic(handle);
     }
 
+}
+
+void Renderer::_stopMusic(Handle &handle) {
+    handle->engine.halt();
+    handle->stepping = false;
 }
 
 void Renderer::forceStop() {
@@ -420,11 +428,11 @@ void Renderer::forceStop() {
     }
 }
 
-void Renderer::playMusic(Handle &handle, int orderNo, int rowNo, bool stepping) {
+void Renderer::_play(Handle &handle, int orderNo, int rowNo, bool stepping) {
 
-    //handle->document.patternModel().setPlaying(true);
     handle->engine.play(orderNo, rowNo);
     handle->stepping = stepping;
+    handle->step = stepping;
     beginRender(handle);
 
 }
@@ -436,24 +444,24 @@ void Renderer::resetPreview(Handle &handle) {
     handle->previewState = PreviewState::none;
 }
 
-void Renderer::setChannelOutput(Document::OutputFlags flags) {
-    auto handle = mContext.access();
-    _setChannelOutput(handle, flags);
-}
+// void Renderer::setChannelOutput(Document::OutputFlags flags) {
+//     auto handle = mContext.access();
+//     _setChannelOutput(handle, flags);
+// }
 
-void Renderer::_setChannelOutput(Handle &handle, Document::OutputFlags flags) {
-    int flag = Document::CH1;
-    for (int i = 0; i < 4; ++i) {
-        auto ch = static_cast<trackerboy::ChType>(i);
-        if (flags.testFlag((Document::OutputFlag)(flag))) {
-            handle->engine.lock(ch);
-        } else {
-            // channel is disabled, keep unlocked
-            handle->engine.unlock(ch);
-        }
-        flag <<= 1;
-    }
-}
+// void Renderer::_setChannelOutput(Handle &handle, Document::OutputFlags flags) {
+//     int flag = Document::CH1;
+//     for (int i = 0; i < 4; ++i) {
+//         auto ch = static_cast<trackerboy::ChType>(i);
+//         if (flags.testFlag((Document::OutputFlag)(flag))) {
+//             handle->engine.lock(ch);
+//         } else {
+//             // channel is disabled, keep unlocked
+//             handle->engine.unlock(ch);
+//         }
+//         flag <<= 1;
+//     }
+// }
 
 void Renderer::timerCallback(void *userData) {
     // called by FastTimer 
@@ -504,6 +512,7 @@ void Renderer::render() {
 
     
     auto frame = handle->currentEngineFrame;
+    auto const haltedBefore = frame.halted;
 
     // cache a ref to the apu, we'll be using it often
     auto &apu = handle->synth.apu();
@@ -546,7 +555,7 @@ void Renderer::render() {
                     if (!handle->stepping || handle->step) {
                         
                         {
-                            auto locker = handle->document.locker();
+                            QMutexLocker locker(&handle->mod.mutex());
                             handle->engine.step(frame);
                         }
                         
@@ -556,11 +565,11 @@ void Renderer::render() {
                     }
 
                     if (handle->previewState == PreviewState::instrument) {
-                        auto &mod = handle->document.mod();
+                        auto &mod = handle->mod.data();
                         trackerboy::RuntimeContext rc(handle->apu, mod.instrumentTable(), mod.waveformTable());
                         
                         {
-                            auto locker = handle->document.locker();
+                            QMutexLocker locker(&handle->mod.mutex());
                             handle->ip.step(rc);
                         }
                     }
@@ -601,6 +610,10 @@ void Renderer::render() {
     if (newFrame) {
         handle->currentEngineFrame = frame;
         handle.unlock(); // always unlock before emitting signals
+        if (haltedBefore != frame.halted) {
+            qDebug() << !frame.halted;
+            emit isPlayingChanged(!frame.halted);
+        }
         emit frameSync();
     }
 

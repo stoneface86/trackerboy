@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "core/Document.hpp"
 #include "widgets/PianoWidget.hpp"
 
 #include <QAction>
@@ -19,7 +18,7 @@ class BaseEditor : public QWidget {
 
 public:
 
-    PianoWidget& piano();
+    PianoWidget* piano();
 
 public slots:
     
@@ -39,12 +38,9 @@ protected:
 
     virtual BaseTableModel* getModel(Document &doc) = 0;
 
-    Document *document();
 
 protected:
     virtual void setCurrentItem(int index) = 0;
-
-    virtual void documentChanged(Document *doc);
 
 private slots:
 
@@ -64,14 +60,11 @@ private:
 
     bool mSignalsEnabled;
 
-    QVBoxLayout mLayout;
-        QHBoxLayout mTableLayout;
-            QToolBar mToolbar;
-            QComboBox mCombo;
-            QLabel mNameLabel;
-            QLineEdit mNameEdit;
-        QWidget mEditorWidget;
-        PianoWidget mPiano;
+    QToolBar *mToolbar;
+    QComboBox *mCombo;
+    QLineEdit *mNameEdit;
+    QWidget *mEditorWidget;
+    PianoWidget *mPiano;
 
     // actions
     QAction mActionAdd;
