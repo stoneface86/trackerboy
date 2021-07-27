@@ -31,7 +31,7 @@ public:
 
 
 signals:
-    void edit();
+    void selectedItemChanged(int index);
 
 private:
 

@@ -38,7 +38,6 @@ set(UI_SRC
     "core/model/graph/SequenceModel.cpp"
     "core/model/graph/WaveModel.cpp"
     "core/model/BaseTableModel.cpp"
-    "core/model/InstrumentChoiceModel.cpp"
     "core/model/InstrumentListModel.cpp"
     #"core/model/ModuleModel.cpp"
     #"core/model/OrderModel.cpp"

@@ -194,7 +194,6 @@ void MainWindow::onViewResetLayout() {
     removeToolBar(mToolbarEdit);
     removeToolBar(mToolbarTracker);
     removeToolBar(mToolbarInput);
-    removeToolBar(mToolbarInstrument);
 
     initState();
 }
@@ -418,8 +417,4 @@ void MainWindow::playOrStop() {
     } else {
         onTrackerPlay();
     }
-}
-
-void MainWindow::onPreviewNote() {
-    // TODO
 }

@@ -94,7 +94,15 @@ public:
     //
     bool setConfig(Config::Sound const& config);
 
-    void setModule(Module *mod);
+    //
+    // Changes the note being previewed for an instrument/waveform preview.
+    // If there is no current preview this function does nothing.
+    //
+    void setPreviewNote(int note);
+
+    void instrumentPreview(int note, int track, int instrument);
+
+    void waveformPreview(int note, int waveId);
 
 signals:
 
@@ -137,17 +145,6 @@ public slots:
     // repeated.
     //
     void setPatternRepeat(bool repeat);
-
-    // instrument preview
-    void previewInstrument(quint8 note);
-
-    //
-    // Previews a note on the given track using the given instrument.
-    //
-    void previewNote(int note, int track, int instrument);
-
-    // waveform preview
-    void previewWaveform(quint8 note);
 
     void play(int pattern, int row, bool stepmode);
 

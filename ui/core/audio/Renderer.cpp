@@ -302,92 +302,92 @@ void Renderer::setPatternRepeat(bool repeat) {
     }
 }
 
-void Renderer::previewNoteOrInstrument(int note, int track, int instrument) {
-    
-    // if (mStream.isEnabled()) {
-    //     auto handle = mContext.access();
-    //     switch (handle->previewState) {
-    //         case PreviewState::waveform:
-    //             resetPreview(handle);
-    //             [[fallthrough]];
-    //         case PreviewState::none: {
-
-    //             std::shared_ptr<trackerboy::Instrument> inst = nullptr;
-    //             if (track == -1) {
-    //                 // instrument preview
-    //                 // set instrument preview's instrument to the current one
-    //                 inst = handle->document.instrumentModel().currentInstrument();
-    //                 handle->previewChannel = inst->channel();
-    //             } else {
-    //                 // note preview
-    //                 if (instrument != -1) {
-    //                     inst = handle->document.mod().instrumentTable().getShared((uint8_t)instrument);
-    //                 }
-    //                 handle->previewChannel = static_cast<trackerboy::ChType>(track);
-    //             }
-    //             handle->ip.setInstrument(std::move(inst), handle->previewChannel);
-
-    //             handle->previewState = PreviewState::instrument;
-    //             // unlock the channel for preview
-    //             handle->engine.unlock(handle->previewChannel);
-    //         }
-    //             [[fallthrough]];
-    //         case PreviewState::instrument:
-    //             // update the current note
-    //             handle->ip.play((uint8_t)note);
-    //             break;
-    //     }
-
-    //     beginRender(handle);
-    // }
+void Renderer::setPreviewNote(int note) {
+    if (mStream.isEnabled()) {
+        auto ctx = mContext.access();
+        switch (ctx->previewState) {
+            case PreviewState::waveform: {
+                if (note > trackerboy::NOTE_LAST) {
+                    // should never happen, but clamp just in case
+                    note = trackerboy::NOTE_LAST;
+                }
+                auto freq = trackerboy::NOTE_FREQ_TABLE[note];
+                ctx->apu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
+                ctx->apu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
+                break;
+            }
+            case PreviewState::instrument:
+                // update the current note
+                ctx->ip.play((uint8_t)note);
+                break;
+            default:
+                break;
+        
+        }
+    }
 }
 
-void Renderer::previewInstrument(quint8 note) {
-    previewNoteOrInstrument(note);
+void Renderer::instrumentPreview(int note, int track, int instrumentId) {
+    if (mStream.isEnabled()) {
+        auto ctx = mContext.access();
+        switch (ctx->previewState) {
+            case PreviewState::instrument:
+            case PreviewState::waveform:
+                resetPreview(ctx);
+                [[fallthrough]];
+            case PreviewState::none: {
+                auto const& itable = ctx->mod.data().instrumentTable();
+                std::shared_ptr<trackerboy::Instrument> inst = nullptr;
+                if (instrumentId != -1) {
+                    inst = itable.getShared((uint8_t)instrumentId);
+                }
+
+                if (track == -1) {
+                    // instrument preview
+                    Q_ASSERT(inst != nullptr); // must have an instrument
+                    ctx->previewChannel = inst->channel();
+                } else {
+                    // note preview
+                    ctx->previewChannel = static_cast<trackerboy::ChType>(track);
+                }
+
+                ctx->ip.setInstrument(std::move(inst), ctx->previewChannel);
+
+                ctx->previewState = PreviewState::instrument;
+                // unlock the channel for preview
+                ctx->engine.unlock(ctx->previewChannel);
+                ctx->ip.play((uint8_t)note);
+                break;
+            }
+        }
+        beginRender(ctx);
+    }
 }
 
-void Renderer::previewNote(int note, int track, int instrument) {
-    previewNoteOrInstrument(note, track, instrument);
-}
+void Renderer::waveformPreview(int note, int waveId) {
+    if (mStream.isEnabled()) {
+        auto ctx = mContext.access();
+        switch (ctx->previewState) {
+            case PreviewState::instrument:
+            case PreviewState::waveform:
+                resetPreview(ctx);
+                [[fallthrough]];
+            case PreviewState::none:
+                ctx->previewState = PreviewState::waveform;
+                ctx->previewChannel = trackerboy::ChType::ch3;
+                // unlock the channel, no longer effected by music
+                ctx->engine.unlock(trackerboy::ChType::ch3);
 
-void Renderer::previewWaveform(quint8 note) {
-    // if (mStream.isEnabled()) {
-    //     // state changes
-    //     // instrument -> none -> waveform
-
-    //     if (note > trackerboy::NOTE_LAST) {
-    //         // should never happen, but clamp just in case
-    //         note = trackerboy::NOTE_LAST;
-    //     }
-    //     auto freq = trackerboy::NOTE_FREQ_TABLE[note];
-
-    //     auto handle = mContext.access();
-    //     switch (handle->previewState) {
-    //         case PreviewState::instrument:
-    //             resetPreview(handle);
-    //             [[fallthrough]];
-    //         case PreviewState::none: {
-    //             handle->previewState = PreviewState::waveform;
-    //             handle->previewChannel = trackerboy::ChType::ch3;
-    //             // unlock the channel, no longer effected by music
-    //             handle->engine.unlock(trackerboy::ChType::ch3);
-
-    //             trackerboy::ChannelState state(trackerboy::ChType::ch3);
-    //             state.playing = true;
-    //             state.frequency = freq;
-    //             state.envelope = handle->document.waveModel().currentWaveform()->id();
-    //             trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(handle->apu, handle->document.mod().waveformTable(), state);
-    //             break;
-    //         }
-    //         case PreviewState::waveform:
-    //             // already previewing, just update the frequency
-    //             handle->apu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
-    //             handle->apu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
-    //             break;
-    //     }
-
-    //     beginRender(handle);
-    // }
+                trackerboy::ChannelState state(trackerboy::ChType::ch3);
+                state.playing = true;
+                state.frequency = trackerboy::NOTE_FREQ_TABLE[note];
+                state.envelope = (uint8_t)waveId;
+                trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(
+                    ctx->apu, ctx->mod.data().waveformTable(), state
+                );
+                break;
+        }
+    }
 }
 
 void Renderer::stopPreview() {
@@ -611,7 +611,6 @@ void Renderer::render() {
         handle->currentEngineFrame = frame;
         handle.unlock(); // always unlock before emitting signals
         if (haltedBefore != frame.halted) {
-            qDebug() << !frame.halted;
             emit isPlayingChanged(!frame.halted);
         }
         emit frameSync();

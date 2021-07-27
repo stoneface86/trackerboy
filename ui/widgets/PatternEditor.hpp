@@ -11,6 +11,7 @@
 #include <QScrollBar>
 
 #include <array>
+#include <cstdint>
 #include <optional>
 
 
@@ -42,11 +43,9 @@ signals:
 
 public slots:
 
-    //void setDocument(ModuleDocument *doc);
-
     void setEditStep(int step);
 
-    void setInstrument(int index);
+    void setInstrument(int id);
 
     void setKeyRepeat(bool repeat);
 

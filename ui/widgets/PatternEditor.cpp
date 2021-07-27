@@ -379,14 +379,12 @@ void PatternEditor::setEditStep(int step) {
     mEditStep = step;
 }
 
-void PatternEditor::setInstrument(int index) {
-    // index should never be -1 since the instrument combobox will always have
-    // an option but just in case treat it as 0
-    // if (index <= 0) {
-    //     mInstrument.reset();
-    // } else {
-    //     mInstrument = mDocument.instrumentModel().id(index - 1);
-    // }
+void PatternEditor::setInstrument(int id) {
+    if (id == -1) {
+        mInstrument.reset();
+    } else {
+        mInstrument = (uint8_t)id;
+    }
 }
 
 void PatternEditor::setKeyRepeat(bool repeat) {

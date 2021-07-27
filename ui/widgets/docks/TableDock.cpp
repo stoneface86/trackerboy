@@ -132,6 +132,7 @@ void TableDock::remove() {
     mModel.remove(mSelectedItem);
     if (mSelectedItem == mModel.rowCount()) {
         --mSelectedItem;
+        emit selectedItemChanged(mSelectedItem);
     }
     updateActions();
 }
@@ -145,6 +146,7 @@ void TableDock::setSelected(int index) {
     if (mSelectedItem != index) {
         bool hadItem = mSelectedItem != -1;
         mSelectedItem = index;
+        emit selectedItemChanged(index);
         if ((index != -1) != hadItem) {
             updateActions();
         }

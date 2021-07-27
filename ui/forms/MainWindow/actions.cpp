@@ -305,8 +305,7 @@ void MainWindow::setupViewMenu(QMenu *menu) {
             mToolbarEdit, 
             mToolbarSong,
             mToolbarTracker,
-            mToolbarInput,
-            mToolbarInstrument
+            mToolbarInput
         }) {
         toolbarMenu->addAction(toolbar->toggleViewAction());
     }

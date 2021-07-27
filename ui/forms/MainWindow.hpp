@@ -99,9 +99,6 @@ private slots:
     void decreaseOctave();
     void playOrStop();
 
-    // misc slots
-    void onPreviewNote();
-
     // implementation in MainWindow/slots.cpp - END ---------------------------
 
 private:
@@ -253,8 +250,6 @@ private:
     QToolBar *mToolbarSong;
     QToolBar *mToolbarTracker;
     QToolBar *mToolbarInput;
-    QToolBar *mToolbarInstrument;
-        QComboBox *mInstrumentCombo;
 
     // actions shared by multiple menus (parented by MainWindow)
     QAction *mActionOrderInsert;

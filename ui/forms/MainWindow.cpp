@@ -1,7 +1,6 @@
 
 #include "MainWindow.hpp"
 
-#include "core/model/InstrumentChoiceModel.hpp"
 #include "misc/IconManager.hpp"
 #include "misc/connectutils.hpp"
 #include "widgets/docks/TableDock.hpp"
@@ -91,7 +90,6 @@ MainWindow::MainWindow() :
         addToolBar(mToolbarSong);
         addToolBar(mToolbarTracker);
         addToolBar(mToolbarInput);
-        addToolBar(mToolbarInstrument);
         // addDockWidget(Qt::LeftDockWidgetArea, mDockInstrumentEditor);
         // addDockWidget(Qt::LeftDockWidgetArea, mDockWaveformEditor);
         addDockWidget(Qt::LeftDockWidgetArea, mDockHistory);
@@ -228,6 +226,14 @@ void MainWindow::setupUi() {
 
     mDockInstruments = makeDock(tr("Instruments"), QStringLiteral("DockInstruments"));
     auto instruments = new TableDock(*mInstrumentModel, tr("Ctrl+I"), tr("instrument"), mDockInstruments);
+    connect(instruments, &TableDock::selectedItemChanged, this,
+        [this](int index) {
+            int id = -1;
+            if (index != -1) {
+                id = mInstrumentModel->id(index);
+            }
+            mPatternEditor->setInstrument(id);
+        });
     mDockInstruments->setWidget(instruments);
 
     mDockWaveforms = makeDock(tr("Waveforms"), QStringLiteral("DockWaveforms"));
@@ -241,7 +247,6 @@ void MainWindow::setupUi() {
     mToolbarSong = makeToolbar(tr("Song"), QStringLiteral("ToolbarSong"));
     mToolbarTracker = makeToolbar(tr("Tracker"), QStringLiteral("ToolbarTracker"));
     mToolbarInput = makeToolbar(tr("Input"), QStringLiteral("ToolbarInput"));
-    mToolbarInstrument = makeToolbar(tr("Instrument"), QStringLiteral("ToolbarInstrument"));
 
     auto octaveSpin = new QSpinBox(mToolbarInput);
     octaveSpin->setRange(2, 8);
@@ -259,13 +264,6 @@ void MainWindow::setupUi() {
     mToolbarInput->addWidget(new QLabel(tr("Edit step"), mToolbarInput));
     mToolbarInput->addWidget(editStepSpin);
     mToolbarInput->addSeparator();
-
-    mInstrumentCombo = new QComboBox(mToolbarInstrument);
-    auto model = new InstrumentChoiceModel(mInstrumentCombo);
-    model->setModel(mInstrumentModel);
-    mInstrumentCombo->setMinimumWidth(200);
-    mInstrumentCombo->setModel(model);
-    mToolbarInstrument->addWidget(mInstrumentCombo);
 
     // ACTIONS ===============================================================
 
@@ -396,7 +394,7 @@ void MainWindow::setupUi() {
         });
     lazyconnect(orderEditor, jumpToPattern, mRenderer, jumpToPattern);
 
-    lazyconnect(mPatternEditor, previewNote, this, onPreviewNote);
+    lazyconnect(mPatternEditor, previewNote, mRenderer, instrumentPreview);
     lazyconnect(mPatternEditor, stopNotePreview, mRenderer, stopPreview);
 
     connect(&mMidi, &Midi::error, this,
@@ -461,9 +459,6 @@ void MainWindow::initState() {
 
     addToolBar(Qt::TopToolBarArea, mToolbarInput);
     mToolbarInput->show();
-
-    addToolBar(Qt::TopToolBarArea, mToolbarInstrument);
-    mToolbarInstrument->show();
 
     // addDockWidget(Qt::RightDockWidgetArea, mDockInstrumentEditor);
     // mDockInstrumentEditor->setFloating(true);
