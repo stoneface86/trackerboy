@@ -95,6 +95,13 @@ Here is a table of options that can be used when building.
 | ENABLE_DEMO  | BOOL | OFF     | If enabled, the demo programs will be built. |
 | ENABLE_TESTS | BOOL | ON      | Enables unit testing                         |
 | ENABLE_UI    | BOOL | ON      | Enables building of the trackerboy ui        |
+| ENABLE_UNITY | BOOL | OFF     | Enables unity builds (requires cmake 3.16)   |
+
+Unity builds should only be used if you are just building trackerboy. It is
+not recommended to have this enabled when developing.
+
+Unity builds will be required for release builds to ensure space-efficient
+binaries.
 
 ## Compilers
 

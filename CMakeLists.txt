@@ -32,12 +32,28 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 option(ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
 option(ENABLE_TESTS "Enable unit tests" ON)
 option(ENABLE_UI "Enable building of the main trackerboy application" ON)
+option(ENABLE_UNITY "Enable unity builds" OFF)
 
 if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+    set(BUILD_ARCH "x86")
     set(BUILD_IS_32BIT TRUE)
 else ()
+    set(BUILD_ARCH "x64")
     set(BUILD_IS_32BIT FALSE)
 endif ()
+
+#
+# Sets the UNITY_BUILD property to ON for the given target if:
+#  1. ENABLE_UNITY is ON
+#  2. CMake version is >= 3.16
+#
+function (unityBuildable target)
+    if (${CMAKE_VERSION} VERSION_GREATER "3.15")
+        if (ENABLE_UNITY)
+            set_target_properties(${target} PROPERTIES UNITY_BUILD ON)
+        endif ()
+    endif ()
+endfunction ()
 
 include_directories(
     "include"
@@ -189,3 +205,19 @@ endif()
 if (ENABLE_DEMO)
     add_subdirectory(demo)
 endif ()
+
+# ============================================================================
+# Information
+# ============================================================================
+
+message("\n"
+	"Configuration summary\n"
+	"---------------------\n"
+	" * Install directory           : ${CMAKE_INSTALL_PREFIX}\n"
+	" * Build type                  : ${CMAKE_BUILD_TYPE}\n"
+    " * Architecture                : ${BUILD_ARCH}\n"
+	" * Demos                       : ${ENABLE_DEMO}\n"
+	" * Tests                       : ${ENABLE_TESTS}\n"
+	" * UI                          : ${ENABLE_UI}\n"
+	" * Unity build                 : ${ENABLE_UNITY}\n"
+)

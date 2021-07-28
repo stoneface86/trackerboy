@@ -106,6 +106,8 @@ target_link_libraries(ui PUBLIC
     trackerboyWarnings
 )
 
+unityBuildable(ui)
+
 if (NOT ${DEBUG_BUILD})
     target_compile_definitions(ui PUBLIC QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
 endif ()
@@ -125,11 +127,7 @@ set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 #
 if (NOT DEFINED WINDEPLOYQT-NOTFOUND)
     set(DEPLOY_DIR_NAME "${PROJECT_AND_VERSION_NAME}-win")
-    if (${BUILD_IS_32BIT})
-        string(APPEND DEPLOY_DIR_NAME "-x86")
-    else ()
-        string(APPEND DEPLOY_DIR_NAME "-x64")
-    endif ()
+    string(APPEND DEPLOY_DIR_NAME "-${BUILD_ARCH}")
     # directory for deployment
     set(DEPLOY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${DEPLOY_DIR_NAME}")
     # deploy target is a zip of the directory contents created by windeployqt
