@@ -387,6 +387,7 @@ void Renderer::waveformPreview(int note, int waveId) {
                 );
                 break;
         }
+        beginRender(ctx);
     }
 }
 

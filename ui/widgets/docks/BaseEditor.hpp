@@ -17,6 +17,8 @@ class BaseEditor : public QWidget {
 public:
 
     PianoWidget* piano();
+    
+    int currentItem() const;
 
 public slots:
 
@@ -34,11 +36,6 @@ protected:
     );
 
     QWidget* editorWidget();
-
-
-
-protected:
-    int currentItem() const;
 
     virtual void setCurrentItem(int index) = 0;
     

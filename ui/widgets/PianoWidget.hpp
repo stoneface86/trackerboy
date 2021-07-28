@@ -25,7 +25,7 @@ public:
     PianoWidget(PianoInput const& input, QWidget *parent = nullptr);
     virtual ~PianoWidget() = default;
 
-    void play(trackerboy::Note note);
+    void play(int note);
     void release();
 
     virtual void midiNoteOn(int note) override;
@@ -33,7 +33,8 @@ public:
     virtual void midiNoteOff() override;
 
 signals:
-    void keyDown(quint8 note);
+    void keyDown(int note);
+    void keyChange(int note);
     void keyUp();
 
 
@@ -49,7 +50,7 @@ protected:
 private:
     Q_DISABLE_COPY(PianoWidget)
     
-    trackerboy::Note getNoteFromMouse(int x, int y);
+    int getNoteFromMouse(int x, int y);
     
     struct Pixmaps {
         QPixmap whiteKeyDown;
@@ -63,7 +64,7 @@ private:
     static std::optional<Pixmaps> mPixmaps;
 
     bool mIsKeyDown;
-    trackerboy::Note mNote;
+    int mNote;
 
     PianoInput const& mInput;
     int mLastKeyPressed;

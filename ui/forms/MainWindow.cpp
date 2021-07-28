@@ -368,41 +368,36 @@ void MainWindow::setupUi() {
     // CONNECTIONS ============================================================
 
     // editors
-    // {
-    //     auto &piano = mInstrumentEditor.piano();
-    //     connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewInstrument, Qt::DirectConnection);
-    //     connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
-    // }
+    {
+        auto piano = instrumentEditor->piano();
+        connect(piano, &PianoWidget::keyDown, this,
+            [this, instrumentEditor](int note) {
+                auto item = instrumentEditor->currentItem();
+                if (item != -1) {
+                    mRenderer->instrumentPreview(note, -1, mInstrumentModel->id(item));
+                }
+            });
+        lazyconnect(piano, keyChange, mRenderer, setPreviewNote);
+        lazyconnect(piano, keyUp, mRenderer, stopPreview);
+    }
 
-    // connect(&mInstrumentEditor, &InstrumentEditor::openWaveEditor, this,
-    //     [this](int index) {
-    //         mWaveEditor.openItem(index);
-    //         mDockWaveformEditor.show();
-    //         mDockWaveformEditor.raise();
-    //         mDockWaveformEditor.activateWindow();
-    //     });
+    connect(instrumentEditor, &InstrumentEditor::openWaveEditor, this,
+        [this](int index) {
+            openEditor(mDockWaveformEditor, index);
+        });
 
-    // {
-    //     auto &piano = mWaveEditor.piano();
-    //     connect(&piano, &PianoWidget::keyDown, &mRenderer, &Renderer::previewWaveform, Qt::DirectConnection);
-    //     connect(&piano, &PianoWidget::keyUp, &mRenderer, &Renderer::stopPreview, Qt::DirectConnection);
-    // }
-
-
-    // connect(&mPatternEditor, &PatternEditor::nextInstrument, this,
-    //     [this]() {
-    //         auto index = mInstrumentCombo.currentIndex() + 1;
-    //         if (index < mInstrumentCombo.count()) {
-    //             mInstrumentCombo.setCurrentIndex(index);
-    //         }
-    //     });
-    // connect(&mPatternEditor, &PatternEditor::previousInstrument, this,
-    //     [this]() {
-    //         auto index = mInstrumentCombo.currentIndex() - 1;
-    //         if (index >= 0) {
-    //             mInstrumentCombo.setCurrentIndex(index);
-    //         }
-    //     });
+    {
+        auto piano = waveEditor->piano();
+        connect(piano, &PianoWidget::keyDown, this,
+            [this, waveEditor](int note) {
+                auto item = waveEditor->currentItem();
+                if (item != -1) {
+                    mRenderer->waveformPreview(note, mWaveModel->id(item));
+                }
+            });
+        lazyconnect(piano, keyChange, mRenderer, setPreviewNote);
+        lazyconnect(piano, keyUp, mRenderer, stopPreview);
+    }
 
     auto orderEditor = mSidebar->orderEditor();
     connect(orderEditor, &OrderEditor::popupMenuAt, this,
@@ -570,7 +565,6 @@ void MainWindow::disableMidi(bool causedByError) {
 
 void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
     Q_UNUSED(oldWidget)
-    Q_UNUSED(newWidget)
 
     // this handler is for determining where MIDI events will go, based on
     // who has focus. If MIDI is disabled we don't need to do anything
@@ -585,41 +579,41 @@ void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
     // that check for FocusIn and FocusOut events, which we could emit a
     // signal for these and the MainWindow would handle them appropriately.
 
-    // if (mMidi.isEnabled()) {
-    //     if (QApplication::activeModalWidget()) {
-    //         return; // ignore if a dialog is open
-    //     }
+    if (mMidi.isEnabled()) {
+        if (QApplication::activeModalWidget()) {
+            return; // ignore if a dialog is open
+        }
 
-    //     // MIDI events by default go to the pattern editor
-    //     IMidiReceiver *receiver = &mPatternEditor;
+        // MIDI events by default go to the pattern editor
+        IMidiReceiver *receiver = mPatternEditor;
 
-    //     QWidget *widget = newWidget;
-    //     while (widget) {
-    //         // search if this widget's parent is the instrument or waveform editor dock
-    //         // if it is, midi events will go to the editor's piano widget
-    //         if (widget == &mDockWaveformEditor) {
-    //             receiver = &mWaveEditor.piano();
-    //             break;
-    //         } else if (widget == &mDockInstrumentEditor) {
-    //             receiver = &mInstrumentEditor.piano();
-    //             break;
-    //         }
-    //         widget = widget->parentWidget();
-    //     }
+        QWidget *widget = newWidget;
+        while (widget) {
+            // search if this widget's parent is the instrument or waveform editor dock
+            // if it is, midi events will go to the editor's piano widget
+            if (widget == mDockWaveformEditor) {
+                receiver = static_cast<WaveEditor*>(mDockWaveformEditor->widget())->piano();
+                break;
+            } else if (widget == mDockInstrumentEditor) {
+                receiver = static_cast<InstrumentEditor*>(mDockInstrumentEditor->widget())->piano();
+                break;
+            }
+            widget = widget->parentWidget();
+        }
 
-    //     if (mMidiReceiver != receiver) {
-    //         // change the receiver
-    //         if (mMidiNoteDown) {
-    //             // force the note off
-    //             // if we don't do this, the previous receiver won't get the next noteOff message
-    //             // and the note will be held indefinitely
-    //             mMidiReceiver->midiNoteOff();
-    //             mMidiNoteDown = false;
-    //         }
-    //         mMidiReceiver = receiver;
+        if (mMidiReceiver != receiver) {
+            // change the receiver
+            if (mMidiNoteDown) {
+                // force the note off
+                // if we don't do this, the previous receiver won't get the next noteOff message
+                // and the note will be held indefinitely
+                mMidiReceiver->midiNoteOff();
+                mMidiNoteDown = false;
+            }
+            mMidiReceiver = receiver;
 
-    //     }
-    // }
+        }
+    }
 
 }
 

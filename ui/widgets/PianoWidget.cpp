@@ -98,11 +98,15 @@ PianoWidget::PianoWidget(PianoInput const& input, QWidget *parent) :
     setFixedHeight(PIANO_HEIGHT);
 }
 
-void PianoWidget::play(trackerboy::Note note) {
-    mIsKeyDown = true;
+void PianoWidget::play(int note) {
     mNote = note;
     update();
-    emit keyDown(mNote);
+    if (mIsKeyDown) {
+        emit keyChange(mNote);
+    } else {
+        mIsKeyDown = true;
+        emit keyDown(mNote);
+    }
 }
 
 void PianoWidget::release() {
@@ -113,7 +117,7 @@ void PianoWidget::release() {
 
 void PianoWidget::midiNoteOn(int note) {
     if (isEnabled()) {
-        play((trackerboy::Note)note);
+        play(note);
     }
 }
 
@@ -229,7 +233,7 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
 
 
 
-trackerboy::Note PianoWidget::getNoteFromMouse(int x, int y) {
+int PianoWidget::getNoteFromMouse(int x, int y) {
     bool isBlack = false;
     int wkeyInOctave = x / WKEY_WIDTH;
     int octave = wkeyInOctave / N_WHITEKEYS;
@@ -263,6 +267,6 @@ trackerboy::Note PianoWidget::getNoteFromMouse(int x, int y) {
         note += WHITEKEY_TO_NOTE[wkeyInOctave];
     }
 
-    return static_cast<trackerboy::Note>(note);
+    return note;
 }
 
