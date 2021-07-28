@@ -15,8 +15,6 @@
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
-//#include "widgets/editors/InstrumentEditor.hpp"
-//#include "widgets/editors/WaveEditor.hpp"
 #include "misc/TableActions.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
@@ -210,6 +208,8 @@ private:
     //
     void disableMidi(bool causedByError);
 
+    void openEditor(QDockWidget *editor, int item);
+
     QString const mUntitledString;
 
     #ifdef QT_DEBUG
@@ -266,8 +266,8 @@ private:
 
     // dock widgets
 
-    //QDockWidget *mDockInstrumentEditor;
-    //QDockWidget *mDockWaveformEditor;
+    QDockWidget *mDockInstrumentEditor;
+    QDockWidget *mDockWaveformEditor;
     QDockWidget *mDockInstruments;
     QDockWidget *mDockWaveforms;
     QDockWidget *mDockHistory;

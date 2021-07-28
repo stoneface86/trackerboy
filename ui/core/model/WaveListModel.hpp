@@ -16,12 +16,14 @@ class WaveListModel : public BaseTableModel {
 public:
     WaveListModel(Module &mod, QObject *parent = nullptr);
 
-    trackerboy::Waveform* currentWaveform();
+    std::shared_ptr<trackerboy::Waveform> getShared(int index);
     
 protected:
     virtual QIcon iconData(uint8_t id) const override;
 
 private:
     Q_DISABLE_COPY(WaveListModel)
+
+    trackerboy::WaveformTable& table() noexcept;
 
 };

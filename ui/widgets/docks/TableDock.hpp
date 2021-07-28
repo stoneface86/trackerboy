@@ -33,6 +33,8 @@ public:
 signals:
     void selectedItemChanged(int index);
 
+    void edit(int index);
+
 private:
 
     void updateActions();

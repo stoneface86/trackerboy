@@ -17,14 +17,17 @@ class InstrumentListModel : public BaseTableModel {
 public:
     InstrumentListModel(Module &mod, QObject *parent = nullptr);
 
-    std::shared_ptr<trackerboy::Instrument> currentInstrument();
+    std::shared_ptr<trackerboy::Instrument> getShared(int index);
 
-    void updateChannelIcon();
+    void updateChannelIcon(int index);
 
 protected:
     virtual QIcon iconData(uint8_t id) const override;
 
 private:
     Q_DISABLE_COPY(InstrumentListModel)
+
+    trackerboy::InstrumentTable& table() noexcept;
+    trackerboy::InstrumentTable const& table() const noexcept;
 
 };

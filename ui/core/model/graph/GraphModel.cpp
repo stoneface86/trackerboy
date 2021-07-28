@@ -1,10 +1,8 @@
 
 #include "core/model/graph/GraphModel.hpp"
 
-GraphModel::GraphModel(QObject *parent) :
-    QObject(parent)
+GraphModel::GraphModel(Module &mod, QObject *parent) :
+    QObject(parent),
+    mModule(mod)
 {
 }
-
-
-

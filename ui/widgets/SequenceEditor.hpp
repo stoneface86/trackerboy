@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/Module.hpp"
 #include "core/model/graph/SequenceModel.hpp"
 #include "widgets/GraphEdit.hpp"
 
@@ -19,11 +20,13 @@ class SequenceEditor : public QWidget {
     Q_OBJECT
 
 public:
-    explicit SequenceEditor(size_t sequenceIndex, QWidget *parent = nullptr);
+    SequenceEditor(
+        Module &mod,
+        size_t sequenceIndex,
+        QWidget *parent = nullptr
+    );
 
-    void setInstrument(ModuleDocument *doc, trackerboy::Instrument *instrument);
-
-    void removeInstrument();
+    void setInstrument(trackerboy::Instrument *instrument);
 
 private:
     void convertEditToSequence();
@@ -33,15 +36,11 @@ private:
     Q_DISABLE_COPY(SequenceEditor)
 
 
-    SequenceModel mModel;
+    SequenceModel *mModel;
     size_t const mSequenceIndex;
 
-    QVBoxLayout mLayout;
-        GraphEdit mGraph;
-        QHBoxLayout mSizeLayout;
-            QLabel mSizeLabel;
-            QSpinBox mSizeSpin;
-            QLineEdit mSequenceInput;
+    GraphEdit *mGraph;
+    QLineEdit *mSequenceInput;
 
     bool mIgnoreUpdates;
     bool mEditDirty;

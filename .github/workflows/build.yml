@@ -76,3 +76,10 @@ jobs:
     
     - name: build
       run: cmake --build "${{ env.CMAKE_BUILD_DIR }}"
+    
+    - name: Upload vcpkg-manifest-log
+      uses: actions/upload-artifact@v2
+      with:
+        name: vcpkg-manifest-log
+        path: ${{ env.CMAKE_BUILD_DIR }}/vcpkg-manifest-install.log
+        retention-days: 1

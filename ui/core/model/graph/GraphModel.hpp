@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "core/Module.hpp"
+
 #include <QObject>
 
 //
@@ -27,7 +29,9 @@ signals:
     void dataChanged();
 
 protected:
-    explicit GraphModel(QObject *parent = nullptr);
+    explicit GraphModel(Module &mod, QObject *parent = nullptr);
+
+    Module &mModule;
 
 private:
 

@@ -70,6 +70,10 @@ TableDock::TableDock(
     act->setIcon(IconManager::getIcon(Icons::itemEdit));
     act->setStatusTip(tr("Edit the current %1").arg(typeName));
     act->setShortcut(editorShortcut);
+    connect(act, &QAction::triggered, this,
+        [this]() {
+            emit edit(mSelectedItem);
+        });
     mActions.edit = act;
 
     updateActions();
@@ -111,6 +115,11 @@ TableDock::TableDock(
         [this]() {
             // the selectionChanged signal is not fired when the model resets
             setSelected(-1);
+        });
+
+    connect(mView, &QListView::doubleClicked, this,
+        [this](QModelIndex const& index) {
+            emit edit(index.row());
         });
 
 }

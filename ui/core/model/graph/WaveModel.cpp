@@ -1,9 +1,8 @@
 
 #include "core/model/graph/WaveModel.hpp"
 
-WaveModel::WaveModel(QObject *parent) :
-    GraphModel(parent),
-    mModule(nullptr),
+WaveModel::WaveModel(Module &mod, QObject *parent) :
+    GraphModel(mod, parent),
     mWaveform(nullptr)
 {
 }
@@ -37,10 +36,10 @@ WaveModel::DataType WaveModel::dataAt(int i) {
 }
 
 void WaveModel::setData(int i, DataType data) {
+    
     WaveIndex wi(i);
-
     {
-        auto ctx = mModule->permanentEdit();
+        auto ctx = mModule.permanentEdit();
         auto &samplepairRef = mWaveform->operator[](wi.index);
         auto samplepair = samplepairRef;
         if (wi.isLowNibble) {
@@ -57,8 +56,7 @@ void WaveModel::setData(int i, DataType data) {
 
 }
 
-void WaveModel::setWaveform(Module *mod, trackerboy::Waveform *waveform) {
-    mModule = mod;
+void WaveModel::setWaveform(trackerboy::Waveform *waveform) {
     auto oldwave = mWaveform;
     mWaveform = waveform;
 
@@ -72,7 +70,7 @@ void WaveModel::setWaveform(Module *mod, trackerboy::Waveform *waveform) {
 
 void WaveModel::setWaveformData(trackerboy::Waveform::Data const& data) {
     {
-        auto ctx = mModule->permanentEdit();
+        auto ctx = mModule.permanentEdit();
         std::copy(data.begin(), data.end(), mWaveform->data().begin());
     }
 
@@ -80,13 +78,12 @@ void WaveModel::setWaveformData(trackerboy::Waveform::Data const& data) {
 }
 
 void WaveModel::setDataFromString(QString const& str) {
-    if (mModule) {
-        {
-            auto ctx = mModule->permanentEdit();
-            mWaveform->fromString(str.toStdString());
-        }
-        emit dataChanged();
+ 
+    {
+        auto ctx = mModule.permanentEdit();
+        mWaveform->fromString(str.toStdString());
     }
+    emit dataChanged();
 }
 
 QString WaveModel::waveformToString() {
@@ -96,7 +93,7 @@ QString WaveModel::waveformToString() {
 
 void WaveModel::clear() {
     {
-        auto ctx = mModule->permanentEdit();
+        auto ctx = mModule.permanentEdit();
         mWaveform->data().fill((uint8_t)0);
     }
     emit dataChanged();

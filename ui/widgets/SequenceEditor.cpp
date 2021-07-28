@@ -8,68 +8,70 @@
 
 //#define PROFILE_STRING_CONVERSION
 
-SequenceEditor::SequenceEditor(size_t sequenceIndex, QWidget *parent) :
+SequenceEditor::SequenceEditor(
+    Module &mod,
+    size_t sequenceIndex,
+    QWidget *parent
+) :
     QWidget(parent),
-    mModel(),
+    mModel(nullptr),
     mSequenceIndex(sequenceIndex),
-    mLayout(),
-    mGraph(mModel),
-    mSizeLayout(),
-    mSizeLabel(tr("Size")),
-    mSizeSpin(),
-    mSequenceInput(),
+    mGraph(nullptr),
+    mSequenceInput(nullptr),
     mIgnoreUpdates(false),
     mEditDirty(false)
 {
+    mModel = new SequenceModel(mod, this);
+
+    mGraph = new GraphEdit(*mModel);
     switch (sequenceIndex) {
         case trackerboy::Instrument::SEQUENCE_ARP:
-            mGraph.setViewMode(GraphEdit::ArpeggioView);
+            mGraph->setViewMode(GraphEdit::ArpeggioView);
             break;
         case trackerboy::Instrument::SEQUENCE_PANNING:
-            mGraph.setViewMode(GraphEdit::PanningView);
+            mGraph->setViewMode(GraphEdit::PanningView);
             break;
         case trackerboy::Instrument::SEQUENCE_PITCH:
-            mGraph.setViewMode(GraphEdit::PitchView);
+            mGraph->setViewMode(GraphEdit::PitchView);
             break;
         case trackerboy::Instrument::SEQUENCE_TIMBRE:
-            mGraph.setViewMode(GraphEdit::TimbreView);
+            mGraph->setViewMode(GraphEdit::TimbreView);
             break;
         default:
             qFatal("Invalid sequence parameter given");
     }
 
-    mSizeLayout.addWidget(&mSizeLabel);
-    mSizeLayout.addWidget(&mSizeSpin);
-    mSizeLayout.addWidget(&mSequenceInput, 1);
+    auto layout = new QVBoxLayout;
+    auto sizeLayout = new QHBoxLayout;
+    auto sizeSpin = new QSpinBox;
+    mSequenceInput = new QLineEdit;
+    sizeLayout->addWidget(new QLabel(tr("Size")));
+    sizeLayout->addWidget(sizeSpin);
+    sizeLayout->addWidget(mSequenceInput, 1);
+    layout->addWidget(mGraph, 1);
+    layout->addLayout(sizeLayout);
+    setLayout(layout);
 
-    mLayout.addWidget(&mGraph, 1);
-    mLayout.addLayout(&mSizeLayout);
-    setLayout(&mLayout);
+    sizeSpin->setRange(0, (int)trackerboy::Sequence::MAX_SIZE);
 
-    mSizeSpin.setRange(0, (int)trackerboy::Sequence::MAX_SIZE);
+    connect(sizeSpin, qOverload<int>(&QSpinBox::valueChanged), mModel, &SequenceModel::setSize);
+    connect(mModel, &SequenceModel::countChanged, sizeSpin, &QSpinBox::setValue);
 
-    connect(&mSizeSpin, qOverload<int>(&QSpinBox::valueChanged), &mModel, &SequenceModel::setSize);
-    connect(&mModel, &SequenceModel::countChanged, &mSizeSpin, &QSpinBox::setValue);
-
-    connect(&mModel, &SequenceModel::dataChanged, this, &SequenceEditor::updateString);
-    connect(&mModel, &SequenceModel::countChanged, this, &SequenceEditor::updateString);
-    connect(&mSequenceInput, &QLineEdit::editingFinished, this, &SequenceEditor::convertEditToSequence);
-    connect(&mSequenceInput, &QLineEdit::textEdited, this,
+    connect(mModel, &SequenceModel::dataChanged, this, &SequenceEditor::updateString);
+    connect(mModel, &SequenceModel::countChanged, this, &SequenceEditor::updateString);
+    connect(mSequenceInput, &QLineEdit::editingFinished, this, &SequenceEditor::convertEditToSequence);
+    connect(mSequenceInput, &QLineEdit::textEdited, this,
         [this]() {
             mEditDirty = true;
         });
 }
 
-void SequenceEditor::setInstrument(ModuleDocument *doc, trackerboy::Instrument *instrument) {
-    if (instrument && doc) {
-        mModel.setSequence(doc, &instrument->sequence(mSequenceIndex));
+void SequenceEditor::setInstrument(trackerboy::Instrument *instrument) {
+    if (instrument) {
+        mModel->setSequence(&instrument->sequence(mSequenceIndex));
     } else {
-        removeInstrument();
+        mModel->setSequence(nullptr);
     }
-}
-
-void SequenceEditor::removeInstrument() {
-    mModel.removeSequence();
 }
 
 void SequenceEditor::convertEditToSequence() {
@@ -84,12 +86,12 @@ void SequenceEditor::convertEditToSequence() {
 
     mEditDirty = false;
 
-    auto const str = mSequenceInput.text();
+    auto const str = mSequenceInput->text();
     auto tokens = str.splitRef(' ');
     std::vector<uint8_t> newdata;
 
-    auto min = mGraph.minimumValue();
-    auto max = mGraph.maximumValue();
+    auto min = mGraph->minimumValue();
+    auto max = mGraph->maximumValue();
 
     size_t index = 0;
     std::optional<uint8_t> loopIndex;
@@ -118,11 +120,11 @@ void SequenceEditor::convertEditToSequence() {
     #endif
 
     mIgnoreUpdates = true;
-    mModel.replaceData(newdata);
+    mModel->replaceData(newdata);
     if (loopIndex) {
-        mModel.setLoop(*loopIndex);
+        mModel->setLoop(*loopIndex);
     } else {
-        mModel.removeLoop();
+        mModel->removeLoop();
     }
     mIgnoreUpdates = false;
     updateString();
@@ -144,7 +146,7 @@ void SequenceEditor::updateString() {
     timer.start();
     #endif
 
-    auto sequence = mModel.sequence();
+    auto sequence = mModel->sequence();
 
     if (sequence) {
         auto const& sequenceData = sequence->data();
@@ -168,12 +170,12 @@ void SequenceEditor::updateString() {
                 str.append(' ');
             }
             str.chop(1);
-            mSequenceInput.setText(str);
+            mSequenceInput->setText(str);
         } else {
-            mSequenceInput.clear();
+            mSequenceInput->clear();
         }
     } else {
-        mSequenceInput.clear();
+        mSequenceInput->clear();
     }
 
     #ifdef PROFILE_STRING_CONVERSION

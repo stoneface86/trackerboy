@@ -293,8 +293,8 @@ void MainWindow::setupSongMenu(QMenu *menu) {
 }
 
 void MainWindow::setupViewMenu(QMenu *menu) {
-    // menu->addAction(mDockInstrumentEditor->toggleViewAction());
-    // menu->addAction(mDockWaveformEditor->toggleViewAction());
+    menu->addAction(mDockInstrumentEditor->toggleViewAction());
+    menu->addAction(mDockWaveformEditor->toggleViewAction());
     menu->addAction(mDockInstruments->toggleViewAction());
     menu->addAction(mDockWaveforms->toggleViewAction());
     menu->addAction(mDockHistory->toggleViewAction());

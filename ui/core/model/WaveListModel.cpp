@@ -11,10 +11,16 @@ QIcon WaveListModel::iconData(uint8_t id) const {
     return QIcon();
 }
 
-trackerboy::Waveform* WaveListModel::currentWaveform() {
-    //if (mCurrentIndex == -1) {
+std::shared_ptr<trackerboy::Waveform> WaveListModel::getShared(int index) {
+
+    if (index == -1) {
+        // index invalid, return nullptr
         return nullptr;
-    //} else {
-    //    return static_cast<trackerboy::WaveformTable&>(mBaseTable)[id(mCurrentIndex)];
-    //}
+    } else {
+        return table().getShared(id(index));
+    }
+}
+
+trackerboy::WaveformTable& WaveListModel::table() noexcept {
+    return static_cast<trackerboy::WaveformTable&>(mBaseTable);
 }

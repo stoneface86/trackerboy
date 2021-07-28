@@ -1,9 +1,8 @@
 
 #include "core/model/graph/SequenceModel.hpp"
 
-SequenceModel::SequenceModel(QObject *parent) :
-    GraphModel(parent),
-    mModule(nullptr),
+SequenceModel::SequenceModel(Module &mod, QObject *parent) :
+    GraphModel(mod, parent),
     mSequence(nullptr)
 {
 }
@@ -18,7 +17,7 @@ SequenceModel::DataType SequenceModel::dataAt(int index) {
 
 void SequenceModel::setData(int index, DataType data) {
     {
-        auto ctx = mModule->permanentEdit();
+        auto ctx = mModule.permanentEdit();
         mSequence->data()[index] = data;
     }
 
@@ -28,20 +27,19 @@ void SequenceModel::setData(int index, DataType data) {
 void SequenceModel::setSize(int size) {
     if (count() != size) {
         {
-            auto ctx = mModule->permanentEdit();
+            auto ctx = mModule.permanentEdit();
             mSequence->resize((size_t)size);
         }
         emit countChanged(size);
     }
 }
 
-void SequenceModel::setSequence(Module *mod, trackerboy::Sequence *seq) {
+void SequenceModel::setSequence(trackerboy::Sequence *seq) {
     if (mSequence == seq) {
         return;
     }
 
     auto curCount = count();
-    mModule = mod;
     mSequence = seq;
     emit dataChanged();
 
@@ -52,19 +50,6 @@ void SequenceModel::setSequence(Module *mod, trackerboy::Sequence *seq) {
 
 }
 
-void SequenceModel::removeSequence() {
-    bool hadSequence = mSequence != nullptr;
-    if (hadSequence) {
-        auto _count = count();
-        mModule = nullptr;
-        mSequence = nullptr;
-        emit dataChanged();
-        if (_count != 0) {
-            emit countChanged(0);
-        }
-    }
-}
-
 trackerboy::Sequence* SequenceModel::sequence() const {
     return mSequence;
 }
@@ -72,7 +57,7 @@ trackerboy::Sequence* SequenceModel::sequence() const {
 void SequenceModel::replaceData(std::vector<uint8_t> const& data) {
     size_t oldsize;
     {
-        auto ctx = mModule->permanentEdit();
+        auto ctx = mModule.permanentEdit();
         auto &seqdata = mSequence->data();
         oldsize = seqdata.size();
         seqdata = data;
@@ -88,7 +73,7 @@ void SequenceModel::replaceData(std::vector<uint8_t> const& data) {
 void SequenceModel::setLoop(uint8_t loop) {
     if (mSequence->loop() != loop) {
         {
-            auto ctx = mModule->permanentEdit();
+            auto ctx = mModule.permanentEdit();
             mSequence->setLoop(loop);
         }
     }
@@ -97,7 +82,7 @@ void SequenceModel::setLoop(uint8_t loop) {
 void SequenceModel::removeLoop() {
     if (mSequence->loop()) {
         {
-            auto ctx = mModule->permanentEdit();
+            auto ctx = mModule.permanentEdit();
             mSequence->removeLoop();
         }
     }

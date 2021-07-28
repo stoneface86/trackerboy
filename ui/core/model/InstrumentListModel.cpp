@@ -10,7 +10,7 @@ InstrumentListModel::InstrumentListModel(Module &mod, QObject *parent) :
 
 
 QIcon InstrumentListModel::iconData(uint8_t id) const {
-    auto ch = static_cast<trackerboy::Instrument const*>(mBaseTable.get(id))->channel();
+    auto ch = table().get(id)->channel();
     Icons icons;
     switch (ch) {
         case trackerboy::ChType::ch1:
@@ -31,15 +31,23 @@ QIcon InstrumentListModel::iconData(uint8_t id) const {
     return IconManager::getIcon(icons);
 }
 
-std::shared_ptr<trackerboy::Instrument> InstrumentListModel::currentInstrument() {
-    //if (mCurrentIndex == -1) {
+std::shared_ptr<trackerboy::Instrument> InstrumentListModel::getShared(int index) {
+    if (index == -1) {
         return nullptr;
-    //} else {
-    //    return static_cast<trackerboy::InstrumentTable const&>(mBaseTable).getShared(id(mCurrentIndex));
-    //}
+    } else {
+        return table().getShared(id(index));
+    }
 }
 
-void InstrumentListModel::updateChannelIcon() {
-    //auto index = createIndex(mCurrentIndex, 0);
-    //emit dataChanged(index, index, { Qt::DecorationRole });
+void InstrumentListModel::updateChannelIcon(int index) {
+    auto modelIndex = createIndex(index, 0);
+    emit dataChanged(modelIndex, modelIndex, { Qt::DecorationRole });
+}
+
+trackerboy::InstrumentTable& InstrumentListModel::table() noexcept {
+    return static_cast<trackerboy::InstrumentTable&>(mBaseTable);
+}
+
+trackerboy::InstrumentTable const& InstrumentListModel::table() const noexcept {
+    return static_cast<trackerboy::InstrumentTable const&>(mBaseTable);
 }

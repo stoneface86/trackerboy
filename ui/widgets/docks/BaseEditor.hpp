@@ -1,14 +1,12 @@
 
 #pragma once
 
+#include "core/model/BaseTableModel.hpp"
+#include "core/Module.hpp"
 #include "widgets/PianoWidget.hpp"
 
-#include <QAction>
 #include <QComboBox>
-#include <QHBoxLayout>
-#include <QLabel>
 #include <QLineEdit>
-#include <QToolBar>
 #include <QWidget>
 
 
@@ -21,8 +19,6 @@ public:
     PianoWidget* piano();
 
 public slots:
-    
-    void setDocument(Document *document);
 
     //
     // Opens the item at the given index for editing
@@ -31,16 +27,22 @@ public slots:
 
 protected:
 
-    explicit BaseEditor(PianoInput const& input, QString typeName, QWidget *parent = nullptr);
+    explicit BaseEditor(
+        BaseTableModel &model,
+        PianoInput const& input,
+        QWidget *parent = nullptr
+    );
 
-    QWidget& editorWidget();
+    QWidget* editorWidget();
 
-
-    virtual BaseTableModel* getModel(Document &doc) = 0;
 
 
 protected:
+    int currentItem() const;
+
     virtual void setCurrentItem(int index) = 0;
+    
+    BaseTableModel &mModel;
 
 private slots:
 
@@ -48,29 +50,11 @@ private slots:
 
     void onNameEdited(QString const& name);
 
-    void add();
-
-    void remove();
-
-    void duplicate();
-
 private:
 
-    Document *mDocument;
-
-    bool mSignalsEnabled;
-
-    QToolBar *mToolbar;
     QComboBox *mCombo;
     QLineEdit *mNameEdit;
     QWidget *mEditorWidget;
     PianoWidget *mPiano;
-
-    // actions
-    QAction mActionAdd;
-    QAction mActionRemove;
-    QAction mActionDuplicate;
-    QAction mActionImport;
-    QAction mActionExport;
 
 };
