@@ -4,8 +4,10 @@
 
 SongModel::SongModel(Module &mod, QObject *parent) :
     QObject(parent),
-    mModule(mod)
+    mModule(mod),
+    mTempo(0.0f)
 {
+    connect(&mod, &Module::reloaded, this, &SongModel::reload);
 }
 
 void SongModel::reload() {
@@ -14,6 +16,7 @@ void SongModel::reload() {
     emit rowsPerMeasureChanged(song->rowsPerMeasure());
     emit speedChanged((int)song->speed());
     emit patternSizeChanged(song->patterns().rowSize());
+    calcTempo(true);
 }
 
 int SongModel::rowsPerBeat() {
@@ -40,6 +43,7 @@ void SongModel::setRowsPerBeat(int rpb) {
             auto ctx = mModule.permanentEdit();
             song->setRowsPerBeat((uint8_t)rpb);
         }
+        calcTempo();
         emit rowsPerBeatChanged(rpb);
     }
 
@@ -65,8 +69,13 @@ void SongModel::setSpeed(int speed) {
             auto ctx = mModule.permanentEdit();
             song->setSpeed((trackerboy::Speed)speed);
         }
+        calcTempo();
         emit speedChanged(speed);
     }
+}
+
+void SongModel::setSpeedFromTempo(int tempo) {
+    setSpeed(mModule.song()->estimateSpeed(tempo, mModule.data().framerate()));
 }
 
 void SongModel::setPatternSize(int rows) {
@@ -78,5 +87,13 @@ void SongModel::setPatternSize(int rows) {
             pm.setRowSize((uint16_t)rows);
         }
         emit patternSizeChanged(rows);
+    }
+}
+
+void SongModel::calcTempo(bool notify) {
+    auto tempo = mModule.song()->tempo(mModule.data().framerate());
+    if (notify || !qFuzzyCompare(tempo, mTempo)) {
+        mTempo = tempo;
+        emit tempoChanged(tempo);
     }
 }

@@ -74,6 +74,12 @@ public:
 
     void setSpeed(Speed speed);
 
+    //
+    // Calculates a speed setting from the given tempo and framerate. The
+    // estimated speed is rounded and clamped to the minimum and maximum values.
+    //
+    Speed estimateSpeed(float tempo, float framerate = GB_FRAMERATE_DMG) const noexcept;
+
     float tempo(float framerate = GB_FRAMERATE_DMG) const noexcept;
 
 private:

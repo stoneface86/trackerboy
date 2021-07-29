@@ -23,11 +23,7 @@ public:
 
     void setModel(SongModel *model);
 
-
 private:
-    void setTempoLabel(float tempo);
-
-    float calcActualTempo(float speed);
 
     SongModel *mSongModel;
 
@@ -35,10 +31,7 @@ private:
     QSpinBox *mRowsPerMeasureSpin;
     CustomSpinBox *mSpeedSpin;
     QLabel *mSpeedLabel;
-    QSpinBox *mTempoSpin;
     QLabel *mTempoLabel;
     QSpinBox *mPatternSizeSpin;
-
-    bool mSpeedLock;
 
 };

@@ -130,6 +130,12 @@ void Song::setSpeed(Speed speed) {
     mSpeed = speed;
 }
 
+Speed Song::estimateSpeed(float tempo, float framerate) const noexcept {
+    auto speedFloat = (framerate * 60.0f) / (tempo * mRowsPerBeat);
+    auto speed = (Speed)roundf(speedFloat * (1 << SPEED_FRACTION_BITS));
+    return std::clamp(speed, SPEED_MIN, SPEED_MAX);
+}
+
 float Song::tempo(float framerate) const noexcept {
     float speed = static_cast<float>(mSpeed >> 4);
     speed += static_cast<float>(mSpeed & 0xF) / 16.0f;

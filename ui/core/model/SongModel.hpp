@@ -22,6 +22,7 @@ public:
     int rowsPerBeat();
     int rowsPerMeasure();
     int speed();
+    float tempo();
     int patternSize();
 
 signals:
@@ -30,17 +31,22 @@ signals:
     void speedChanged(int speed);
     void rowsPerBeatChanged(int rpb);
     void rowsPerMeasureChanged(int rpm);
+    void tempoChanged(float tempo);
 
 public slots:
 
     void setRowsPerBeat(int rpb);
     void setRowsPerMeasure(int rpm);
     void setSpeed(int speed);
+    void setSpeedFromTempo(int tempo);
     void setPatternSize(int rows);
 
 private:
 
+    void calcTempo(bool notify = false);
+
     Module &mModule;
+    float mTempo;
 
 
 };
