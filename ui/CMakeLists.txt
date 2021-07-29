@@ -59,6 +59,7 @@ set(UI_SRC
     "forms/ConfigDialog.cpp"
     #"forms/ExportWavDialog.cpp"
     "forms/MainWindow.cpp"
+    "forms/TempoCalculator.cpp"
     
     "misc/IconManager.cpp"
     "misc/utils.cpp"
@@ -92,6 +93,8 @@ set(UI_SRC
     "widgets/PianoWidget.cpp"
     "widgets/SequenceEditor.cpp"
     "widgets/Sidebar.cpp"
+    "widgets/SpeedLabel.cpp"
+    "widgets/TempoLabel.cpp"
 )
 
 #

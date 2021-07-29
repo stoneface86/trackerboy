@@ -35,6 +35,10 @@ int SongModel::patternSize() {
     return mModule.song()->patterns().rowSize();
 }
 
+trackerboy::Speed SongModel::estimateSpeed(int tempo) {
+    return mModule.song()->estimateSpeed(tempo, mModule.data().framerate());
+}
+
 void SongModel::setRowsPerBeat(int rpb) {
     auto song = mModule.song();
 

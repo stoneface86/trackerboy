@@ -25,6 +25,8 @@ public:
     float tempo();
     int patternSize();
 
+    trackerboy::Speed estimateSpeed(int tempo);
+
 signals:
 
     void patternSizeChanged(int rows);

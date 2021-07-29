@@ -11,8 +11,8 @@ SongEditor::SongEditor(QWidget *parent) :
     mRowsPerBeatSpin(new QSpinBox),
     mRowsPerMeasureSpin(new QSpinBox),
     mSpeedSpin(new CustomSpinBox),
-    mSpeedLabel(new QLabel),
-    mTempoLabel(new QLabel),
+    mSpeedLabel(new SpeedLabel),
+    mTempoLabel(new TempoLabel),
     mPatternSizeSpin(new QSpinBox)
 {
 
@@ -79,13 +79,10 @@ void SongEditor::setModel(SongModel *model) {
             mSpeedSpin->setValue(speed);
 
             auto speedFloat = trackerboy::speedToFloat((trackerboy::Speed)speed);
-            mSpeedLabel->setText(tr("%1 FPR").arg(speedFloat, 0, 'f', 3));
+            mSpeedLabel->setSpeed(speedFloat);
         });
 
-    connect(model, &SongModel::tempoChanged, this,
-        [this](float tempo) {
-            mTempoLabel->setText(tr("%1 BPM").arg(tempo, 0, 'f', 2));
-        });
+    connect(model, &SongModel::tempoChanged, mTempoLabel, &TempoLabel::setTempo);
 
     connect(model, &SongModel::patternSizeChanged, this,
         [this](int rows) {

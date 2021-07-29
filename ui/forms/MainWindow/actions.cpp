@@ -176,6 +176,11 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     auto menuSong = menubar->addMenu(tr("&Song"));
     setupSongMenu(menuSong);
 
+    menuSong->addSeparator();
+
+    act = setupAction(menuSong, tr("Tempo calculator..."), tr("Shows the tempo calculator dialog"));
+    connectActionToThis(act, showTempoCalculator);
+
     // > Instrument ===========================================================
     auto menuInstrument = menubar->addMenu(tr("Instrument"));
 

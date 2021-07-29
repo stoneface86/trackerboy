@@ -15,6 +15,7 @@
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
+#include "forms/TempoCalculator.hpp"
 #include "misc/TableActions.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
@@ -82,6 +83,7 @@ private slots:
     void showAudioDiag();
     void showConfigDialog();
     void showExportWavDialog();
+    void showTempoCalculator();
 
     void onAudioStart();
     void onAudioError();
@@ -242,7 +244,7 @@ private:
     AboutDialog *mAboutDialog;
     AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;
-
+    TempoCalculator *mTempoCalc;
 
     // toolbars
     QToolBar *mToolbarFile;
@@ -278,8 +280,8 @@ private:
 
     // statusbar widgets
     QLabel *mStatusRenderer;
-    QLabel *mStatusSpeed;
-    QLabel *mStatusTempo;
+    SpeedLabel *mStatusSpeed;
+    TempoLabel *mStatusTempo;
     QLabel *mStatusElapsed;
     QLabel *mStatusPos;
     QLabel *mStatusSamplerate;

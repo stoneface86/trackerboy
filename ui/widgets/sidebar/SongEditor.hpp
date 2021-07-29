@@ -4,6 +4,8 @@
 #include "core/model/SongModel.hpp"
 
 #include "widgets/CustomSpinBox.hpp"
+#include "widgets/SpeedLabel.hpp"
+#include "widgets/TempoLabel.hpp"
 
 #include <QLabel>
 #include <QSpinBox>
@@ -30,8 +32,8 @@ private:
     QSpinBox *mRowsPerBeatSpin;
     QSpinBox *mRowsPerMeasureSpin;
     CustomSpinBox *mSpeedSpin;
-    QLabel *mSpeedLabel;
-    QLabel *mTempoLabel;
+    SpeedLabel *mSpeedLabel;
+    TempoLabel *mTempoLabel;
     QSpinBox *mPatternSizeSpin;
 
 };

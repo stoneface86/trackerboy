@@ -296,6 +296,13 @@ void MainWindow::showExportWavDialog() {
     // delete dialog;
 }
 
+void MainWindow::showTempoCalculator() {
+    if (mTempoCalc == nullptr) {
+        mTempoCalc = new TempoCalculator(*mSongModel, this);
+    }
+    mTempoCalc->show();
+}
+
 void MainWindow::onAudioStart() {
     if (!mRenderer->isRunning()) {
         return;
@@ -355,9 +362,9 @@ void MainWindow::onFrameSync() {
     if (mLastEngineFrame.speed != frame.speed) {
         auto speedF = trackerboy::speedToFloat(frame.speed);
         // update speed status
-        mStatusSpeed->setText(tr("%1 FPR").arg(speedF, 0, 'f', 3));
+        mStatusSpeed->setSpeed(speedF);
         auto tempo = trackerboy::speedToTempo(speedF,  mSongModel->rowsPerBeat());
-        mStatusTempo->setText(tr("%1 BPM").arg(tempo, 0, 'f', 2));
+        mStatusTempo->setTempo(tempo);
     }
 
     constexpr auto FRAME_SKIP = 30;

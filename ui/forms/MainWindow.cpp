@@ -3,8 +3,8 @@
 
 #include "misc/IconManager.hpp"
 #include "misc/connectutils.hpp"
-#include "widgets/docks/TableDock.hpp"
 #include "widgets/docks/InstrumentEditor.hpp"
+#include "widgets/docks/TableDock.hpp"
 #include "widgets/docks/WaveEditor.hpp"
 
 #include <QApplication>
@@ -32,7 +32,8 @@ MainWindow::MainWindow() :
     mErrorSinceLastConfig(false),
     mAboutDialog(nullptr),
     mAudioDiag(nullptr),
-    mConfigDialog(nullptr)
+    mConfigDialog(nullptr),
+    mTempoCalc(nullptr)
 {
 
     // create models
@@ -327,8 +328,8 @@ void MainWindow::setupUi() {
     auto statusbar = statusBar();
 
     mStatusRenderer = new QLabel(statusbar);
-    mStatusSpeed = new QLabel(statusbar);
-    mStatusTempo = new QLabel(statusbar);
+    mStatusSpeed = new SpeedLabel(statusbar);
+    mStatusTempo = new TempoLabel(statusbar);
     mStatusElapsed = new QLabel(statusbar);
     mStatusPos = new QLabel(statusbar);
     mStatusSamplerate = new QLabel(statusbar);
@@ -342,8 +343,8 @@ void MainWindow::setupUi() {
 
     for (auto label : { 
             mStatusRenderer,
-            mStatusSpeed,
-            mStatusTempo,
+            (QLabel*)mStatusSpeed,
+            (QLabel*)mStatusTempo,
             mStatusElapsed,
             mStatusPos,
             mStatusSamplerate
@@ -359,8 +360,6 @@ void MainWindow::setupUi() {
 
     // default statuses
     setPlayingStatus(PlayingStatusText::ready);
-    mStatusSpeed->setText(tr("6.000 FPR"));
-    mStatusTempo->setText(tr("150 BPM"));
     mStatusElapsed->setText(QStringLiteral("00:00"));
     mStatusPos->setText(QStringLiteral("00 / 00"));
     // no need to set samplerate, it is done so in onConfigApplied
