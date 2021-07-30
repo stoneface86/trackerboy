@@ -3,7 +3,6 @@
 #include "core/audio/AudioProber.hpp"
 #include "core/samplerates.hpp"
 
-#include <QMutexLocker>
 #include <QtDebug>
 
 #include <algorithm>

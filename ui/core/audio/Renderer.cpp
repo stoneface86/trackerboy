@@ -4,22 +4,14 @@
 
 #include "trackerboy/engine/ChannelControl.hpp"
 
-#include <QApplication>
-#include <QDeadlineTimer>
 #include <QMutexLocker>
-#include <QTimerEvent>
-#include <QtDebug>
-
-#include <algorithm>
-#include <chrono>
-#include <type_traits>
 
 //static auto LOG_PREFIX = "[Renderer]";
 
 
 // Renderer Notes
 //
-// This class is reponsible for rendering audio in real time.The Renderer synthesizes
+// This class is reponsible for rendering audio in real time. The Renderer synthesizes
 // audio for playback which is then played out to speakers via the audio callback function.
 // Synthesized audio is put into an AudioStream's ringbuffer. This buffer is filled
 // completely every period, which is by default 5 ms. The audio callback takes what it

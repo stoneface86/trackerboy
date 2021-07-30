@@ -3,7 +3,6 @@
 
 #include "miniaudio.h"
 
-#include <QMutex>
 #include <QStringList>
 
 #include <memory>
@@ -42,8 +41,16 @@ public:
     //
     int indexOfDevice(int backendIndex, ma_device_id const& id) const;
 
+    //
+    // Gets the ma_context for the given backend index. nullptr is returned
+    // if the backend index is invalid.
+    //
     ma_context* context(int backendIndex);
 
+    //
+    // Gets the device ID for the given device. nullptr is returned if the
+    // device or backend index is invalid.
+    //
     ma_device_id* deviceId(int backendIndex, int deviceIndex);
 
     //

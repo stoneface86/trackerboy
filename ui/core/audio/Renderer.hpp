@@ -18,14 +18,10 @@
 #include "trackerboy/Synth.hpp"
 #include "trackerboy/note.hpp"
 
-#include <QMutex>
 #include <QObject>
 #include <QThread>
-#include <QWaitCondition>
 
-#include <cstddef>
 #include <chrono>
-#include <memory>
 #include <optional>
 
 //
@@ -56,16 +52,16 @@ public:
 
     // DIAGNOSTICS ====
 
+    //
+    // Gets current diagnostic data
+    //
     Diagnostics diagnostics();
 
+    //
+    // Accessor for the visualizer buffer. The updateVisualizers() signal is
+    // emitted when this buffer is modified.
+    //
     Guarded<VisualizerBuffer>& visualizerBuffer();
-
-    //
-    // Determines whether the renderer is enabled. The renderer is enabled if
-    // the sound device was successfully configured. The renderer is disabled
-    // if an audio error occurs during render.
-    //
-    //bool isEnabled();
 
     //
     // Determines if the renderer is renderering sound.
@@ -100,8 +96,17 @@ public:
     //
     void setPreviewNote(int note);
 
+    //
+    // Begins renderering an instrument or note preview. For note previews,
+    // track must be 0-3. For instrument previews, track must be -1 and
+    // instrument must be between 0 and 63 (instrument id).
+    //
     void instrumentPreview(int note, int track, int instrument);
 
+    //
+    // Begins renderering a waveform preview. CH3 is unlocked and loaded with
+    // the given waveform using the waveId.
+    //
     void waveformPreview(int note, int waveId);
 
 signals:
@@ -127,7 +132,7 @@ signals:
     void audioError();
 
     //
-    // emitted when a new frame is rendererd
+    // emitted when a new frame is renderered
     //
     void frameSync();
 
@@ -138,6 +143,9 @@ signals:
 
 public slots:
 
+    //
+    // Clears counters in the diagnostic data
+    //
     void clearDiagnostics();
 
     //
@@ -146,12 +154,22 @@ public slots:
     //
     void setPatternRepeat(bool repeat);
 
+    //
+    // Begin playing music from the current pattern and row. stepmode determines
+    // if the renderer will "step" rows.
+    //
     void play(int pattern, int row, bool stepmode);
 
+    //
+    // If the renderer is in step mode, the next row will be stepped on next
+    // render call.
+    //
     void stepNextFrame();
 
+    //
+    // Takes the renderer out of step mode and plays music normally.
+    //
     void stepOut();
-
 
     //
     // Jumps to the given pattern if currently playing music
@@ -164,10 +182,15 @@ public slots:
     void stopPreview();
 
     //
-    // Stops music playback by halting the engine
+    // Stops music playback by halting the engine. Sound playback will cease
+    // once the buffer has drained.
     //
     void stopMusic();
 
+    //
+    // Force stop of the current renderer immediately. Rendered audio to be
+    // played out is lost.
+    //
     void forceStop();
 
 private slots:
@@ -177,13 +200,14 @@ private slots:
     //
     //void setChannelOutput(ChannelOutput::Flags flags);
 
+    //
+    // invoked when the current song being edited has changed. If music is
+    // currently playing, the renderer will begin playing on the new song.
+    //
     void setSong();
-   
 
 private:
     Q_DISABLE_COPY(Renderer)
-
-    
 
     enum class PreviewState {
         none,
@@ -197,6 +221,10 @@ private:
         stopped     // no longer renderering anything, do nothing when render is called
     };
 
+    //
+    // This struct contains shared data between the GUI thread and the
+    // render thread.
+    //
     struct RenderContext {
         // the current module
         Module &mod;
@@ -264,6 +292,8 @@ private:
     //
     // Fills the playback buffer with newly renderered samples. Stops rendering
     // if there is no work to do and the buffer has drained completely.
+    //
+    // This function is called periodically from a separate thread.
     //
     void render();
 

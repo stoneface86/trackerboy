@@ -1,11 +1,9 @@
 
 #include "core/audio/AudioProber.hpp"
 
-#include <array>
-
-#include <QMutexLocker>
 #include <QtDebug>
 
+#include <array>
 
 //
 // logging callback for miniaudio, redirects to Qt's message logging utility
