@@ -125,7 +125,9 @@ AudioProber::AudioProber() :
     ma_get_enabled_backends(backendArr.data(), backendArr.size(), &count);
 
     for (size_t i = 0; i < count; ++i) {
-        mContexts.emplace_back(backendArr[i]);
+        auto const backend = backendArr[i];
+        mContexts.emplace_back(backend);
+        mBackendNames.append(QString::fromUtf8(ma_get_backend_name(backend)));
     }
 
 }
@@ -170,13 +172,7 @@ ma_device_id* AudioProber::deviceId(int backendIndex, int deviceIndex) {
 }
 
 QStringList AudioProber::backendNames() const {
-
-    QStringList list;
-    for (auto const& context : mContexts) {
-        auto name = ma_get_backend_name(context.backend());
-        list.append(QString::fromUtf8(name));
-    }
-    return list;
+    return mBackendNames;
 }
 
 QStringList AudioProber::deviceNames(int backendIndex) const {

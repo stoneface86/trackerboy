@@ -33,6 +33,8 @@ public:
     //
     int indexOfBackend(ma_backend backend) const;
 
+    int indexOfBackend(QString const& name) const;
+
     //
     // Gets the index of the device with the given name in the given backendIndex
     // -1 is returned if the device was not found. This function does not
@@ -122,6 +124,8 @@ private:
         //ma_uint32 mDeviceCount;
 
     };
+
+    QStringList mBackendNames;
 
     std::vector<Context> mContexts;
 
