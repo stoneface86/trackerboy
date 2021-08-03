@@ -22,14 +22,16 @@ class PatternEditor : public QFrame, public IMidiReceiver {
 
 public:
 
-    explicit PatternEditor(PianoInput const& input, QWidget *parent = nullptr);
+    PatternEditor(
+        PianoInput const& input,
+        PatternModel &model,
+        QWidget *parent = nullptr
+    );
     virtual ~PatternEditor() = default;
 
     PatternGrid* grid();
 
     void setColors(Palette const& colors);
-
-    void setModel(PatternModel *model);
 
     virtual void midiNoteOn(int note) override;
 
@@ -106,7 +108,7 @@ private:
     Q_DISABLE_COPY(PatternEditor)
 
     PianoInput const& mPianoIn;
-    PatternModel *mModel;
+    PatternModel &mModel;
 
     PatternGridHeader *mGridHeader;
     PatternGrid *mGrid;

@@ -202,8 +202,7 @@ void MainWindow::setupUi() {
     auto centralWidget = new QWidget(this);
     auto layout = new QHBoxLayout;
     mSidebar = new Sidebar;
-    mPatternEditor = new PatternEditor(mPianoInput);
-    mPatternEditor->setModel(mPatternModel);
+    mPatternEditor = new PatternEditor(mPianoInput, *mPatternModel);
     layout->addWidget(mSidebar);
     layout->addWidget(mPatternEditor, 1);
     centralWidget->setLayout(layout);

@@ -28,17 +28,16 @@ class PatternGrid : public QWidget {
 
 public:
 
-    explicit PatternGrid(PatternGridHeader &header, QWidget *parent = nullptr);
+    PatternGrid(
+        PatternGridHeader &header,
+        PatternModel &model,
+        QWidget *parent = nullptr
+    );
     virtual ~PatternGrid() = default;
 
+    void setColors(Palette const& pal);
+
     // Settings
-
-    //
-    // set color scheme, grid is redrawn afterwards
-    //
-    void setColors(Palette const& colors);
-
-    void setModel(PatternModel *model);
 
     // show pattern data for the previous and next patterns
     //void setPreviewEnable(bool previews);
@@ -111,7 +110,7 @@ private:
     void calculateTrackerRow();
 
     PatternGridHeader &mHeader;
-    PatternModel *mModel;
+    PatternModel &mModel;
     PatternPainter mPainter;
 
     bool mSelecting;

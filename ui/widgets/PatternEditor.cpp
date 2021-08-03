@@ -98,10 +98,14 @@ static std::optional<uint8_t> keyToHex(int const key) {
 // +----------------------------------+--+
 
 
-PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
+PatternEditor::PatternEditor(
+    PianoInput const& input,
+    PatternModel &model,
+    QWidget *parent
+) :
     QFrame(parent),
     mPianoIn(input),
-    mModel(nullptr),
+    mModel(model),
     mWheel(0),
     mPageStep(4),
     mEditStep(1),
@@ -116,7 +120,7 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
 
     auto layout = new QGridLayout;
     mGridHeader = new PatternGridHeader(this);
-    mGrid = new PatternGrid(*mGridHeader, this);
+    mGrid = new PatternGrid(*mGridHeader, model, this);
     mHScroll = new QScrollBar(Qt::Horizontal);
     mVScroll = new QScrollBar(Qt::Vertical);
 
@@ -135,6 +139,18 @@ PatternEditor::PatternEditor(PianoInput const& input, QWidget *parent) :
 
     // connections
 
+    // scrollbars
+    mVScroll->setMaximum((int)model.currentPattern().totalRows() - 1);
+    updateScrollbars(PatternModel::CursorRowChanged | PatternModel::CursorColumnChanged);
+    connect(mVScroll, &QScrollBar::valueChanged, &model, &PatternModel::setCursorRow);
+    connect(mHScroll, &QScrollBar::valueChanged, this, &PatternEditor::setCursorFromHScroll);
+    connect(&model, &PatternModel::cursorChanged, this, &PatternEditor::updateScrollbars);
+
+    connect(&model, &PatternModel::patternSizeChanged, this,
+        [this](int rows) {
+            mVScroll->setMaximum(rows - 1);
+        });
+
     connect(mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
     connect(mHScroll, &QScrollBar::actionTriggered, this, &PatternEditor::hscrollAction);
 }
@@ -148,26 +164,6 @@ void PatternEditor::setColors(Palette const& colors) {
     mGrid->setColors(colors);
 }
 
-void PatternEditor::setModel(PatternModel *model) {
-    Q_ASSERT(mModel == nullptr && model);
-
-    mModel = model;
-    mGrid->setModel(model);
-
-    // scrollbars
-    mVScroll->setMaximum((int)model->currentPattern().totalRows() - 1);
-    updateScrollbars(PatternModel::CursorRowChanged | PatternModel::CursorColumnChanged);
-    connect(mVScroll, &QScrollBar::valueChanged, model, &PatternModel::setCursorRow);
-    connect(mHScroll, &QScrollBar::valueChanged, this, &PatternEditor::setCursorFromHScroll);
-    connect(model, &PatternModel::cursorChanged, this, &PatternEditor::updateScrollbars);
-
-    connect(model, &PatternModel::patternSizeChanged, this,
-        [this](int rows) {
-            mVScroll->setMaximum(rows - 1);
-        });
-
-}
-
 bool PatternEditor::event(QEvent *evt)  {
     if (evt->type() == QEvent::KeyPress) {
         auto keyEvt = static_cast<QKeyEvent*>(evt);
@@ -177,7 +173,7 @@ bool PatternEditor::event(QEvent *evt)  {
         if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
             // intercept tab presses
             int amount = key == Qt::Key_Backtab ? -1 : 1;
-            mModel->moveCursorTrack(amount);
+            mModel.moveCursorTrack(amount);
             return true;
         }
     }
@@ -220,22 +216,22 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     // these keys also ignore the key repetition setting (they always repeat)
     switch (key) {
         case Qt::Key_Left:
-            mModel->moveCursorColumn(-1, selectionMode);
+            mModel.moveCursorColumn(-1, selectionMode);
             return;
         case Qt::Key_Right:
-            mModel->moveCursorColumn(1, selectionMode);
+            mModel.moveCursorColumn(1, selectionMode);
             return;
         case Qt::Key_Up:
-            mModel->moveCursorRow(-1, selectionMode);
+            mModel.moveCursorRow(-1, selectionMode);
             return;
         case Qt::Key_Down:
-            mModel->moveCursorRow(1, selectionMode);
+            mModel.moveCursorRow(1, selectionMode);
             return;
         case Qt::Key_PageDown:
-            mModel->moveCursorRow(mPageStep, selectionMode);
+            mModel.moveCursorRow(mPageStep, selectionMode);
             return;
         case Qt::Key_PageUp:
-            mModel->moveCursorRow(-mPageStep, selectionMode);
+            mModel.moveCursorRow(-mPageStep, selectionMode);
             return;
     }
 
@@ -244,10 +240,10 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         return; // key repetition disabled, ignore this event
     }
 
-    auto const recording = mModel->isRecording();
+    auto const recording = mModel.isRecording();
     bool validKey = false;
 
-    switch (mModel->cursorColumn()) {
+    switch (mModel.cursorColumn()) {
         case PatternCursor::ColumnNote: {
             auto note = mPianoIn.keyToNote(key);
             
@@ -255,11 +251,11 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
                 if (*note != trackerboy::NOTE_CUT) {
                     if (mPreviewKey != key) {
                         mPreviewKey = key;
-                        emit previewNote(*note, mModel->cursorTrack(), mInstrument.value_or(-1));
+                        emit previewNote(*note, mModel.cursorTrack(), mInstrument.value_or(-1));
                     }
                 }
                 if (recording) {
-                    mModel->setNote(note, mInstrument);
+                    mModel.setNote(note, mInstrument);
                 }
                 validKey = true;
             }
@@ -274,7 +270,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             auto effectType = keyToEffectType(key);
             if (effectType) {
                 if (recording) {
-                    mModel->setEffectType(*effectType);
+                    mModel.setEffectType(*effectType);
                 }
                 validKey = true;
             }
@@ -285,7 +281,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             auto hex = keyToHex(key);
             if (hex) {
                 if (recording) {
-                    mModel->setInstrument(hex);
+                    mModel.setInstrument(hex);
                 }
                 validKey = true;
             }
@@ -302,7 +298,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
             auto hex = keyToHex(key);
             if (hex) {
                 if (recording) {
-                    mModel->setEffectParam(*hex);
+                    mModel.setEffectParam(*hex);
                 }
                 validKey = true;
             }
@@ -342,7 +338,7 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
     }
 
     if (amount) {
-        mModel->moveCursorRow(amount);
+        mModel.moveCursorRow(amount);
     }
 
     evt->accept();
@@ -351,10 +347,10 @@ void PatternEditor::wheelEvent(QWheelEvent *evt) {
 void PatternEditor::hscrollAction(int action) {
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mModel->moveCursorColumn(1);
+            mModel.moveCursorColumn(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mModel->moveCursorColumn(-1);
+            mModel.moveCursorColumn(-1);
             break;
         default:
             break;
@@ -365,10 +361,10 @@ void PatternEditor::vscrollAction(int action) {
 
     switch (action) {
         case QAbstractSlider::SliderSingleStepAdd:
-            mModel->moveCursorRow(1);
+            mModel.moveCursorRow(1);
             break;
         case QAbstractSlider::SliderSingleStepSub:
-            mModel->moveCursorRow(-1);
+            mModel.moveCursorRow(-1);
             break;
         default:
             break;
@@ -393,11 +389,11 @@ void PatternEditor::setKeyRepeat(bool repeat) {
 
 void PatternEditor::cut() {
     copy();
-    mModel->deleteSelection();
+    mModel.deleteSelection();
 }
 
 void PatternEditor::copy() {
-    auto clip = mModel->clip();
+    auto clip = mModel.clip();
     mClipboard.setClip(clip);
 }
 
@@ -412,36 +408,36 @@ void PatternEditor::pasteMix() {
 void PatternEditor::pasteImpl(bool mix) {
     if (mClipboard.hasClip()) {
         auto &clip = mClipboard.clip();
-        mModel->paste(clip, mix);
+        mModel.paste(clip, mix);
     }
 }
 
 void PatternEditor::erase() {
 
-    mModel->deleteSelection();
-    if (!mModel->hasSelection()) {
+    mModel.deleteSelection();
+    if (!mModel.hasSelection()) {
         stepDown();
     }
 }
 
 void PatternEditor::selectAll() {
-    mModel->selectAll();
+    mModel.selectAll();
 }
 
 void PatternEditor::increaseNote() {
-    mModel->transpose(1);
+    mModel.transpose(1);
 }
 
 void PatternEditor::decreaseNote() {
-    mModel->transpose(-1);
+    mModel.transpose(-1);
 }
 
 void PatternEditor::increaseOctave() {
-    mModel->transpose(12);
+    mModel.transpose(12);
 }
 
 void PatternEditor::decreaseOctave() {
-    mModel->transpose(-12);
+    mModel.transpose(-12);
 }
 
 void PatternEditor::transpose() {
@@ -465,16 +461,16 @@ void PatternEditor::transpose() {
     connect(&buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
 
     if (dialog.exec() == QDialog::Accepted) {
-        mModel->transpose(transposeSpin.value());
+        mModel.transpose(transposeSpin.value());
     }
 }
 
 void PatternEditor::reverse() {
-    mModel->reverse();
+    mModel.reverse();
 }
 
 void PatternEditor::stepDown() {
-    mModel->moveCursorRow(mEditStep);
+    mModel.moveCursorRow(mEditStep);
 }
 
 void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {
@@ -482,7 +478,7 @@ void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {
     if (!mScrollLock) {
         mScrollLock = true;
 
-        auto cursor = mModel->cursor();
+        auto cursor = mModel.cursor();
         if (flags.testFlag(PatternModel::CursorRowChanged)) {
             mVScroll->setValue(cursor.row);
         }
@@ -499,22 +495,22 @@ void PatternEditor::setCursorFromHScroll(int value) {
     if (!mScrollLock) {
         mScrollLock = true;
 
-        auto cursor = mModel->cursor();
+        auto cursor = mModel.cursor();
         cursor.column = value % PatternCursor::MAX_COLUMNS;
         cursor.track = value / PatternCursor::MAX_COLUMNS;
-        mModel->setCursor(cursor);
+        mModel.setCursor(cursor);
 
         mScrollLock = false;
     }
 }
 
 void PatternEditor::midiNoteOn(int note) {
-    if (mModel->isRecording()) {
-        mModel->setNote((uint8_t)note, mInstrument);
+    if (mModel.isRecording()) {
+        mModel.setNote((uint8_t)note, mInstrument);
         stepDown();
     }
 
-    emit previewNote(note, mModel->cursorTrack(), mInstrument.value_or(-1));
+    emit previewNote(note, mModel.cursorTrack(), mInstrument.value_or(-1));
 
 }
 
