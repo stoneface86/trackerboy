@@ -16,8 +16,15 @@
 #include <QtDebug>
 #include <QUndoView>
 
+#define TU MainWindowTU
+
+namespace TU {
+
+static auto const KEY_MAIN_WINDOW = QStringLiteral("MainWindow");
 static auto const KEY_WINDOW_STATE = QStringLiteral("windowState");
 static auto const KEY_GEOMETRY = QStringLiteral("geometry");
+
+}
 
 MainWindow::MainWindow() :
     QMainWindow(),
@@ -53,9 +60,10 @@ MainWindow::MainWindow() :
     setWindowIcon(IconManager::getAppIcon());
 
     QSettings settings;
+    settings.beginGroup(TU::KEY_MAIN_WINDOW);
 
     // restore geomtry from the last session
-    auto const geometry = settings.value(KEY_GEOMETRY, QByteArray()).toByteArray();
+    auto const geometry = settings.value(TU::KEY_GEOMETRY, QByteArray()).toByteArray();
 
     if (geometry.isEmpty()) {
         // no saved geometry, initialize it
@@ -83,7 +91,7 @@ MainWindow::MainWindow() :
     }
 
     // restore window state if it exists
-    auto const windowState = settings.value(KEY_WINDOW_STATE).toByteArray();
+    auto const windowState = settings.value(TU::KEY_WINDOW_STATE).toByteArray();
     if (windowState.isEmpty()) {
         // default layout
         initState();
@@ -126,8 +134,9 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
         if (mSaveConfig) {
         #endif
             QSettings settings;
-            settings.setValue(KEY_GEOMETRY, saveGeometry());
-            settings.setValue(KEY_WINDOW_STATE, saveState());
+            settings.beginGroup(TU::KEY_MAIN_WINDOW);
+            settings.setValue(TU::KEY_GEOMETRY, saveGeometry());
+            settings.setValue(TU::KEY_WINDOW_STATE, saveState());
         #ifdef QT_DEBUG
         }
         #endif
@@ -624,3 +633,5 @@ void MainWindow::openEditor(QDockWidget *editorDock, int item) {
         editorDock->activateWindow();
     }
 }
+
+#undef TU
