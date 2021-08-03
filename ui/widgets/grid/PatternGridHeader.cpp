@@ -23,15 +23,15 @@ PatternGridHeader::PatternGridHeader(QWidget *parent) :
     setMouseTracking(true);
 }
 
-void PatternGridHeader::setColors(ColorTable const& colorTable) {
+void PatternGridHeader::setColors(Palette const& colorTable) {
     
     auto pal = palette();
-    pal.setColor(backgroundRole(), colorTable[+Color::headerBackground]);
+    pal.setColor(backgroundRole(), colorTable[Palette::ColorHeaderBackground]);
     setPalette(pal);
-    mColorForeground = colorTable[+Color::headerForeground];
-    mColorHover = colorTable[+Color::headerHover];
-    mColorDisabled = colorTable[+Color::headerDisabled];
-    mColorLine = colorTable[+Color::line];
+    mColorForeground = colorTable[Palette::ColorHeaderForeground];
+    mColorHover = colorTable[Palette::ColorHeaderHover];
+    mColorDisabled = colorTable[Palette::ColorHeaderDisabled];
+    mColorLine = colorTable[Palette::ColorLine];
 
     update();
 }

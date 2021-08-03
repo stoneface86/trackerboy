@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/model/PatternModel.hpp"
-#include "core/ColorTable.hpp"
+#include "core/Palette.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 #include "widgets/grid/PatternPainter.hpp"
@@ -36,7 +36,7 @@ public:
     //
     // set color scheme, grid is redrawn afterwards
     //
-    void setColors(ColorTable const& colors);
+    void setColors(Palette const& colors);
 
     void setModel(PatternModel *model);
 

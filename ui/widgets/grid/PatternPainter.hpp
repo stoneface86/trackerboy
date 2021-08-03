@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/ColorTable.hpp"
+#include "core/Palette.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 
@@ -39,7 +39,7 @@ public:
 
     QRect selectionRectangle(PatternSelection const& selection);
 
-    void setColors(ColorTable const& colors);
+    void setColors(Palette const& colors);
 
     void setFont(QFont const& font);
 

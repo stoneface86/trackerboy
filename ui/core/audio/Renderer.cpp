@@ -135,7 +135,7 @@ trackerboy::Frame Renderer::currentFrame() {
     return handle->currentEngineFrame;
 }
 
-bool Renderer::setConfig(Config::Sound const &soundConfig) {
+bool Renderer::setConfig(SoundConfig const &soundConfig) {
 
     // if there is rendering going at on when this function is called it will
     // resume with a slight gap in playback if the config applied without error,
@@ -151,7 +151,7 @@ bool Renderer::setConfig(Config::Sound const &soundConfig) {
 
     if (mStream.isEnabled()) {
 
-        mTimer->setInterval(soundConfig.period, Qt::PreciseTimer);
+        mTimer->setInterval(soundConfig.period(), Qt::PreciseTimer);
         
 
         // update the synthesizer (the guard isn't necessary here but we'll use it anyways)
@@ -159,12 +159,12 @@ bool Renderer::setConfig(Config::Sound const &soundConfig) {
             auto handle = mContext.access();
             
             bool reloadRegisters = false;
-            auto const samplerate = SAMPLERATE_TABLE[soundConfig.samplerateIndex];
+            auto const samplerate = soundConfig.samplerate();
             if (samplerate != handle->synth.samplerate()) {
                 handle->synth.setSamplingRate(samplerate);
                 reloadRegisters = wasRunning;
             }
-            handle->synth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality));
+            handle->synth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality()));
             handle->synth.setupBuffers();
 
             if (reloadRegisters) {

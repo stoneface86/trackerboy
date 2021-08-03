@@ -180,24 +180,24 @@ void PatternPainter::setFlats(bool flats) {
     mDisplayFlats = flats;
 }
 
-void PatternPainter::setColors(ColorTable const& colors) {
-    mForegroundColors[0] = colors[+Color::foreground];
-    mForegroundColors[1] = colors[+Color::foregroundHighlight1];
-    mForegroundColors[2] = colors[+Color::foregroundHighlight2];
-    mBackgroundColors[0] = colors[+Color::background];
-    mBackgroundColors[1] = colors[+Color::backgroundHighlight1];
-    mBackgroundColors[2] = colors[+Color::backgroundHighlight2];
-    mColorInstrument = colors[+Color::instrument];
-    mColorEffect = colors[+Color::effectType];
-    mColorSelection = colors[+Color::selection];
+void PatternPainter::setColors(Palette const& colors) {
+    mForegroundColors[0] = colors[Palette::ColorForeground];
+    mForegroundColors[1] = colors[Palette::ColorForegroundHighlight1];
+    mForegroundColors[2] = colors[Palette::ColorForegroundHighlight2];
+    mBackgroundColors[0] = colors[Palette::ColorBackground];
+    mBackgroundColors[1] = colors[Palette::ColorBackgroundHighlight1];
+    mBackgroundColors[2] = colors[Palette::ColorBackgroundHighlight2];
+    mColorInstrument     = colors[Palette::ColorInstrument];
+    mColorEffect         = colors[Palette::ColorEffectType];
+    mColorSelection      = colors[Palette::ColorSelection];
     mColorSelection.setAlpha(200);
-    mColorCursor = colors[+Color::cursor];
+    mColorCursor         = colors[Palette::ColorCursor];
     mColorCursor.setAlpha(128);
-    mColorLine = colors[+Color::line];
+    mColorLine           = colors[Palette::ColorLine];
 
-    mRowColors[0] = colors[+Color::row];
-    mRowColors[1] = colors[+Color::rowEdit];
-    mRowColors[2] = colors[+Color::rowPlayer];
+    mRowColors[0] = colors[Palette::ColorRow];
+    mRowColors[1] = colors[Palette::ColorRowEdit];
+    mRowColors[2] = colors[Palette::ColorRowPlayer];
     for (auto &color : mRowColors) {
         color.setAlpha(128);
     }

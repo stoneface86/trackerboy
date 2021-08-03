@@ -56,28 +56,29 @@ MidiConfigTab::MidiConfigTab(QWidget *parent) :
 
 }
 
-void MidiConfigTab::apply(Config::Midi &midiConfig) {
-    midiConfig.enabled = mMidiGroup.isChecked();
-    if (midiConfig.enabled) {
-        midiConfig.backendIndex = mApiCombo.currentIndex();
-        midiConfig.portIndex = mPortCombo.currentIndex();
+void MidiConfigTab::apply(MidiConfig &midiConfig) {
+    auto const enabled = mMidiGroup.isChecked();
+    midiConfig.setEnabled(enabled);
+    if (enabled) {
+        midiConfig.setBackendIndex(mApiCombo.currentIndex());
+        midiConfig.setPortIndex(mPortCombo.currentIndex());
     }
 
     clean();
 }
 
-void MidiConfigTab::resetControls(Config::Midi const& midiConfig) {
+void MidiConfigTab::resetControls(MidiConfig const& midiConfig) {
 
 
     auto &prober = MidiProber::instance();
 
-    if (mApiCombo.currentIndex() != midiConfig.backendIndex) {
-        prober.setBackend(midiConfig.backendIndex);
-        mApiCombo.setCurrentIndex(midiConfig.backendIndex);
+    if (mApiCombo.currentIndex() != midiConfig.backendIndex()) {
+        prober.setBackend(midiConfig.backendIndex());
+        mApiCombo.setCurrentIndex(midiConfig.backendIndex());
     }
 
-    mPortCombo.setCurrentIndex(midiConfig.portIndex);
-    mMidiGroup.setChecked(midiConfig.enabled);
+    mPortCombo.setCurrentIndex(midiConfig.portIndex());
+    mMidiGroup.setChecked(midiConfig.isEnabled());
 
     clean();
 }

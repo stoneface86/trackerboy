@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/Config.hpp"
+#include "core/config/SoundConfig.hpp"
 #include "core/audio/Ringbuffer.hpp"
 
 #include "miniaudio.h"
@@ -9,6 +9,7 @@
 #include <QObject>
 
 #include <atomic>
+#include <memory>
 #include <cstdint>
 
 //
@@ -48,7 +49,7 @@ public:
     //
     // NOTE: this function should only be called from the GUI thread
     //
-    void setConfig(Config::Sound const& config);
+    void setConfig(SoundConfig const& config);
 
     //
     // Currently unused

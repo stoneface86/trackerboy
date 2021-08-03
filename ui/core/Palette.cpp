@@ -3,6 +3,10 @@
 
 #include "core/config/keys.hpp"
 
+#include <QtDebug>
+
+#include <array>
+
 Palette::Palette() :
     mData{
         QColor( 24,  24,  24),
@@ -23,18 +27,23 @@ Palette::Palette() :
         QColor(  8,  24,  32),
         QColor(136, 192, 112),
         QColor( 52, 104,  86)
-    }
+    },
+    mDefault(true)
 {
 
 }
 
-
-QColor& Palette::operator[](Color color) {
+QColor const& Palette::operator[](Color color) const {
     return mData[color];
 }
 
-QColor const& Palette::operator[](Color color) const {
-    return mData[color];
+bool Palette::isDefault() const {
+    return mDefault;
+}
+
+void Palette::setColor(Color color, QColor value) {
+    mData[color] = value;
+    mDefault = false;
 }
 
 //
@@ -71,12 +80,16 @@ static_assert(ColorKeys.size() == Palette::ColorCount, "ColorKeys.size() does no
 
 
 void Palette::readSettings(QSettings &settings) {
+
+    // QSettings has no way of checking if a group exists, so we have to read
+    // all color keys even if the user is using the default :(
+
     settings.beginGroup(Keys::Palette);
 
     for (int i = 0; i < ColorCount; ++i) {
         if (settings.contains(ColorKeys[i])) {
             QColor color(settings.value(ColorKeys[i]).toString());
-            mData[i] = color;
+            setColor((Color)i, color);            
         }
     }
 
@@ -84,6 +97,9 @@ void Palette::readSettings(QSettings &settings) {
 }
 
 void Palette::writeSettings(QSettings &settings) const {
+    if (mDefault) {
+        return; // no need to save palette when it's the default
+    }
 
     settings.beginGroup(Keys::Palette);
     settings.remove(QString()); // remove everything

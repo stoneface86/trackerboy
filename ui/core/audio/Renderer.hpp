@@ -5,7 +5,7 @@
 #include "core/audio/Ringbuffer.hpp"
 #include "core/audio/VisualizerBuffer.hpp"
 #include "core/ChannelOutput.hpp"
-#include "core/Config.hpp"
+#include "core/config/SoundConfig.hpp"
 #include "core/FastTimer.hpp"
 #include "core/Guarded.hpp"
 #include "core/Module.hpp"
@@ -88,7 +88,7 @@ public:
     // cannot be configured, the renderer is disabled. This function must
     // be called from the GUI thread.
     //
-    bool setConfig(Config::Sound const& config);
+    bool setConfig(SoundConfig const& config);
 
     //
     // Changes the note being previewed for an instrument/waveform preview.

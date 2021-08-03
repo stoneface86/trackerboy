@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/ChannelOutput.hpp"
-#include "core/ColorTable.hpp"
+#include "core/Palette.hpp"
 
 #include <QBitmap>
 #include <QPixmap>
@@ -16,7 +16,7 @@ public:
 
     PatternGridHeader(QWidget *parent = nullptr);
 
-    void setColors(ColorTable const& colorTable);
+    void setColors(Palette const& colorTable);
 
     void setWidths(int rownoWidth, int trackWidth);
 

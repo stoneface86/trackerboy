@@ -143,7 +143,7 @@ PatternGrid* PatternEditor::grid() {
     return mGrid;
 }
 
-void PatternEditor::setColors(ColorTable const& colors) {
+void PatternEditor::setColors(Palette const& colors) {
     mGridHeader->setColors(colors);
     mGrid->setColors(colors);
 }

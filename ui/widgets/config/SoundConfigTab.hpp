@@ -23,12 +23,12 @@ class SoundConfigTab : public ConfigTab {
     Q_OBJECT
 
 public:
-    SoundConfigTab(Config &config, QWidget *parent = nullptr);
+    explicit SoundConfigTab(QWidget *parent = nullptr);
     ~SoundConfigTab() = default;
 
-    void apply(Config::Sound &soundConfig);
+    void apply(SoundConfig &soundConfig);
 
-    void resetControls(Config::Sound const& soundConfig);
+    void resetControls(SoundConfig const& soundConfig);
 
 private slots:
 
@@ -46,8 +46,6 @@ private:
     void populateDevices();
 
     void apiChanged(int index);
-
-    Config &mConfig;
 
     QVBoxLayout mLayout;
         QGroupBox mDeviceGroup;

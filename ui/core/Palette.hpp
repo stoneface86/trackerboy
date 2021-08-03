@@ -70,8 +70,22 @@ public:
     //
     Palette();
 
-    QColor& operator[](Color color);
+    //
+    // Access a color setting for the given color index
+    //
     QColor const& operator[](Color color) const;
+
+    //
+    // Returns true if this palette is the default, or has not had any of its
+    // colors modified.
+    //
+    bool isDefault() const;
+
+    //
+    // Sets the color for the given color setting. Calling this method
+    // clears the default property.
+    //
+    void setColor(Color color, QColor value);
 
     //
     // Reads color settings from the given QSettings in the "Palette" group
@@ -86,5 +100,6 @@ public:
 private:
 
     std::array<QColor, ColorCount> mData;
+    bool mDefault;
 
 };

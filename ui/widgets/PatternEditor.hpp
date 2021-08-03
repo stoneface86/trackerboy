@@ -3,6 +3,7 @@
 
 #include "core/clipboard/PatternClipboard.hpp"
 #include "core/midi/IMidiReceiver.hpp"
+#include "core/Palette.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
@@ -26,7 +27,7 @@ public:
 
     PatternGrid* grid();
 
-    void setColors(ColorTable const& colors);
+    void setColors(Palette const& colors);
 
     void setModel(PatternModel *model);
 

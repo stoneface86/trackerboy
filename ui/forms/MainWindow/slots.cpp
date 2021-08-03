@@ -2,7 +2,6 @@
 #include "forms/MainWindow.hpp"
 
 #include "core/midi/MidiProber.hpp"
-#include "core/samplerates.hpp"
 //#include "forms/ExportWavDialog.hpp"
 
 #include <QFileDialog>
@@ -200,9 +199,8 @@ void MainWindow::onViewResetLayout() {
 
 void MainWindow::onConfigApplied(Config::Categories categories) {
     if (categories.testFlag(Config::CategorySound)) {
-        auto &sound = mConfig.sound();
-        auto samplerate = SAMPLERATE_TABLE[sound.samplerateIndex];
-        mStatusSamplerate->setText(tr("%1 Hz").arg(samplerate));
+        auto const& sound = mConfig.sound();
+        mStatusSamplerate->setText(tr("%1 Hz").arg(sound.samplerate()));
 
         mErrorSinceLastConfig = !mRenderer->setConfig(sound);
         if (mErrorSinceLastConfig) {
@@ -222,7 +220,8 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
-        auto &appearance = mConfig.appearance();
+        auto const& appearance = mConfig.appearance();
+        auto const& pal = mConfig.palette();
 
         // see resources/stylesheet.qss
         QFile styleFile(QStringLiteral(":/stylesheet.qss"));
@@ -230,30 +229,31 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
 
         QString stylesheet(styleFile.readAll());
 
+        auto font = appearance.font();
         setStyleSheet(stylesheet.arg(
-            appearance.colors[+Color::background].name(),
-            appearance.colors[+Color::line].name(),
-            appearance.colors[+Color::foreground].name(),
-            appearance.colors[+Color::selection].name(),
-            appearance.font.family(),
-            QString::number(appearance.font.pointSize())
+            pal[Palette::ColorBackground].name(),
+            pal[Palette::ColorLine].name(),
+            pal[Palette::ColorForeground].name(),
+            pal[Palette::ColorSelection].name(),
+            font.family(),
+            QString::number(font.pointSize())
         ));
 
-        mPatternEditor->setColors(appearance.colors);
+        mPatternEditor->setColors(pal);
         //OrderModel::setRowColor(appearance.colors[+Color::row]);
     }
 
     if (categories.testFlag(Config::CategoryKeyboard)) {
-        mPianoInput = mConfig.keyboard().pianoInput;
+        //mPianoInput = mConfig.keyboard().pianoInput;
     }
 
     if (categories.testFlag(Config::CategoryMidi)) {
-        auto midiConfig = mConfig.midi();
+        auto const& midiConfig = mConfig.midi();
         auto &prober = MidiProber::instance();
-        if (!midiConfig.enabled || midiConfig.portIndex == -1) {
+        if (!midiConfig.isEnabled() || midiConfig.portIndex() == -1) {
             mMidi.close();
         } else {
-            auto success = mMidi.setDevice(prober.backend(), midiConfig.portIndex);
+            auto success = mMidi.setDevice(prober.backend(), midiConfig.portIndex());
             if (!success) {
                 disableMidi(false);
             }

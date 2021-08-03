@@ -16,9 +16,9 @@ class MidiConfigTab : public ConfigTab {
 public:
     explicit MidiConfigTab(QWidget *parent = nullptr);
 
-    void apply(Config::Midi &midiConfig);
+    void apply(MidiConfig &midiConfig);
 
-    void resetControls(Config::Midi const& midiConfig);
+    void resetControls(MidiConfig const& midiConfig);
 
 private:
 

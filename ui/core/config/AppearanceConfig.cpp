@@ -44,3 +44,15 @@ void AppearanceConfig::readSettings(QSettings &settings) {
     settings.endGroup();
 
 }
+
+void AppearanceConfig::writeSettings(QSettings &settings) const {
+
+    settings.beginGroup(Keys::Appearance);
+
+    settings.setValue(Keys::font, mFont.family());
+    settings.setValue(Keys::fontSize, mFont.pointSize());
+    settings.setValue(Keys::showFlats, mShowFlats);
+    settings.setValue(Keys::showPreviews, mShowPreviews);
+
+    settings.endGroup();
+}

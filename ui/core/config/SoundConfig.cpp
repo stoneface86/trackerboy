@@ -72,7 +72,7 @@ void SoundConfig::setSamplerate(int samplerate) {
     for (int i = 0; i < N_SAMPLERATES; ++i) {
         if ((int)SAMPLERATE_TABLE[i] == samplerate) {
             mSamplerateIndex = i;
-            break;
+            return;
         }
     }
 
@@ -121,7 +121,7 @@ void SoundConfig::readSettings(QSettings &settings) {
     if (api.isEmpty()) {
         backend = 0; // default to first available
     } else {
-        backend = prober.indexOfBackend(api);
+        backend = prober.backendNames().indexOf(api);
         if (backend == -1) {
             qWarning().noquote() << TU::LOG_PREFIX << "audio API" << api << "not available";
             backend = 0; // default to the first one

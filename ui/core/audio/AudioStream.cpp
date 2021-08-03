@@ -1,7 +1,6 @@
 
 #include "core/audio/AudioStream.hpp"
 #include "core/audio/AudioProber.hpp"
-#include "core/samplerates.hpp"
 
 #include <QtDebug>
 
@@ -57,9 +56,9 @@ AudioRingbuffer::Writer AudioStream::writer() {
     return mBuffer.writer();
 }
 
-void AudioStream::setConfig(Config::Sound const& config) {
+void AudioStream::setConfig(SoundConfig const& config) {
 
-    auto const samplerate = SAMPLERATE_TABLE[config.samplerateIndex];
+    auto const samplerate = config.samplerate();
     
     auto &prober = AudioProber::instance();
     
@@ -71,7 +70,7 @@ void AudioStream::setConfig(Config::Sound const& config) {
     deviceConfig.stopCallback = deviceStopCallback;
     deviceConfig.pUserData = this;
     deviceConfig.sampleRate = samplerate;
-    deviceConfig.playback.pDeviceID = prober.deviceId(config.backendIndex, config.deviceIndex);
+    deviceConfig.playback.pDeviceID = prober.deviceId(config.backendIndex(), config.deviceIndex());
 
     // get the current running state
     // if we are running then we will have to start the newly opened stream
@@ -81,10 +80,10 @@ void AudioStream::setConfig(Config::Sound const& config) {
     disable();
 
     // update buffer size
-    mBuffer.init((size_t)(config.latency * samplerate / 1000));
+    mBuffer.init((size_t)(config.latency() * samplerate / 1000));
 
     // attempt to initialize device
-    auto result = ma_device_init(prober.context(config.backendIndex), &deviceConfig, mDevice.get());
+    auto result = ma_device_init(prober.context(config.backendIndex()), &deviceConfig, mDevice.get());
     if (result != MA_SUCCESS) {
         handleError("could not initialize device:", result);
         return;

@@ -73,12 +73,12 @@ PatternGrid::PatternGrid(PatternGridHeader &header, QWidget *parent) :
 }
 
 
-void PatternGrid::setColors(ColorTable const& colors) {
+void PatternGrid::setColors(Palette const& colors) {
     mPainter.setColors(colors);
 
     // update palette so the background is automatically drawn
     auto pal = palette();
-    pal.setColor(backgroundRole(), colors[+Color::background]);
+    pal.setColor(backgroundRole(), colors[Palette::ColorBackground]);
     setPalette(pal);
 
     // new colors, redraw everything

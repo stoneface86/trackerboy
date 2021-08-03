@@ -12,9 +12,8 @@
 #include <QSignalBlocker>
 
 
-SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
+SoundConfigTab::SoundConfigTab(QWidget *parent) :
     ConfigTab(Config::CategorySound, parent),
-    mConfig(config),
     mLayout(),
     mDeviceGroup(tr("Device")),
     mDeviceLayout(),
@@ -95,14 +94,12 @@ SoundConfigTab::SoundConfigTab(Config &config, QWidget *parent) :
     }
 
     setupTimeSpinbox(mLatencySpin);
-    mLatencySpin.setMinimum(Config::Sound::MIN_LATENCY);
-    mLatencySpin.setMaximum(Config::Sound::MAX_LATENCY);
-    mLatencySpin.setValue(Config::Sound::DEFAULT_LATENCY);
+    mLatencySpin.setMinimum(SoundConfig::MIN_LATENCY);
+    mLatencySpin.setMaximum(SoundConfig::MAX_LATENCY);
 
     setupTimeSpinbox(mPeriodSpin);
-    mPeriodSpin.setMinimum(Config::Sound::MIN_PERIOD);
-    mPeriodSpin.setMaximum(Config::Sound::MAX_PERIOD);
-    mPeriodSpin.setValue(Config::Sound::DEFAULT_PERIOD);
+    mPeriodSpin.setMinimum(SoundConfig::MIN_PERIOD);
+    mPeriodSpin.setMaximum(SoundConfig::MAX_PERIOD);
 
     mLowQualityRadio.setToolTip(tr("Linear interpolation on all channels"));
     mMedQualityRadio.setToolTip(tr("Sinc interpolation on channels 1 and 2, linear interpolation on channels 3 and 4."));
@@ -128,37 +125,37 @@ void SoundConfigTab::setupTimeSpinbox(QSpinBox &spin) {
     spin.setMinimum(1);
 }
 
-void SoundConfigTab::apply(Config::Sound &soundConfig) {
-    soundConfig.backendIndex = mApiCombo.currentIndex();
-    soundConfig.deviceIndex = mDeviceCombo.currentIndex();
-    soundConfig.samplerateIndex = mSamplerateCombo.currentIndex();
+void SoundConfigTab::apply(SoundConfig &soundConfig) {
+    soundConfig.setBackendIndex(mApiCombo.currentIndex());
+    soundConfig.setDeviceIndex(mDeviceCombo.currentIndex());
+    soundConfig.setSamplerateIndex(mSamplerateCombo.currentIndex());
 
-    soundConfig.latency = mLatencySpin.value();
-    soundConfig.period = mPeriodSpin.value();
-    soundConfig.quality = mQualityButtons.checkedId();
+    soundConfig.setLatency(mLatencySpin.value());
+    soundConfig.setPeriod(mPeriodSpin.value());
+    soundConfig.setQuality(mQualityButtons.checkedId());
 
     clean();
 }
 
-void SoundConfigTab::resetControls(Config::Sound const& soundConfig) {
+void SoundConfigTab::resetControls(SoundConfig const& soundConfig) {
 
     {
         QSignalBlocker blocker(&mApiCombo);
-        mApiCombo.setCurrentIndex(soundConfig.backendIndex);
+        mApiCombo.setCurrentIndex(soundConfig.backendIndex());
     }
 
 
     {
         QSignalBlocker blocker(&mDeviceCombo);
         populateDevices();
-        mDeviceCombo.setCurrentIndex(soundConfig.deviceIndex);
+        mDeviceCombo.setCurrentIndex(soundConfig.deviceIndex());
     }
 
-    mSamplerateCombo.setCurrentIndex(soundConfig.samplerateIndex);
+    mSamplerateCombo.setCurrentIndex(soundConfig.samplerateIndex());
 
-    mLatencySpin.setValue(soundConfig.latency);
-    mPeriodSpin.setValue(soundConfig.period);
-    mQualityButtons.button(soundConfig.quality)->setChecked(true);
+    mLatencySpin.setValue(soundConfig.latency());
+    mPeriodSpin.setValue(soundConfig.period());
+    mQualityButtons.button(soundConfig.quality())->setChecked(true);
 
     clean();
 }

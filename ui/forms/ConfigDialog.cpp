@@ -16,7 +16,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     mLayout(),
     mTabs(),
     mTabMidi(),
-    mTabSound(config),
+    mTabSound(),
     mButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply, Qt::Horizontal)
 {
     // layout
@@ -64,11 +64,11 @@ void ConfigDialog::apply() {
     // update all changes to the Config object
 
     if (mDirty.testFlag(Config::CategorySound)) {
-        mTabSound.apply(mConfig.mSound);        
+        mTabSound.apply(mConfig.sound());        
     }
 
     if (mDirty.testFlag(Config::CategoryMidi)) {
-        mTabMidi.apply(mConfig.mMidi);
+        mTabMidi.apply(mConfig.midi());
     }
 
     emit applied(mDirty);
@@ -83,8 +83,8 @@ void ConfigDialog::showEvent(QShowEvent *evt) {
 
 void ConfigDialog::resetControls() {
 
-    mTabSound.resetControls(mConfig.mSound);
-    mTabMidi.resetControls(mConfig.mMidi);
+    mTabSound.resetControls(mConfig.sound());
+    mTabMidi.resetControls(mConfig.midi());
 
     clean();
 }
