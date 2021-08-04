@@ -224,8 +224,6 @@ private:
     IMidiReceiver *mMidiReceiver;
     bool mMidiNoteDown;
 
-    PianoInput mPianoInput;
-
     Module *mModule;
     ModuleFile mModuleFile;
 

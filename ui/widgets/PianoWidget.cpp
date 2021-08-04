@@ -140,7 +140,7 @@ void PianoWidget::keyPressEvent(QKeyEvent *evt) {
     if (!evt->isAutoRepeat()) {
         auto key = evt->key();
         auto note = mInput.keyToNote(key);
-        if (note) {
+        if (note && *note <= trackerboy::NOTE_LAST) {
             mLastKeyPressed = key;
             play(note.value());
             return;

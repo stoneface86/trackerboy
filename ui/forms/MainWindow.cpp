@@ -33,7 +33,6 @@ MainWindow::MainWindow() :
     mMidi(),
     mMidiReceiver(nullptr),
     mMidiNoteDown(false),
-    mPianoInput(),
     mModule(),
     mModuleFile(),
     mErrorSinceLastConfig(false),
@@ -211,7 +210,7 @@ void MainWindow::setupUi() {
     auto centralWidget = new QWidget(this);
     auto layout = new QHBoxLayout;
     mSidebar = new Sidebar;
-    mPatternEditor = new PatternEditor(mPianoInput, *mPatternModel);
+    mPatternEditor = new PatternEditor(mConfig.pianoInput(), *mPatternModel);
     layout->addWidget(mSidebar);
     layout->addWidget(mPatternEditor, 1);
     centralWidget->setLayout(layout);
@@ -256,7 +255,7 @@ void MainWindow::setupUi() {
         *mModule,
         *mInstrumentModel,
         *mWaveModel,
-        mPianoInput,
+        mConfig.pianoInput(),
         mDockInstrumentEditor
     );
     mDockInstrumentEditor->setWidget(instrumentEditor);
@@ -265,7 +264,7 @@ void MainWindow::setupUi() {
     auto waveEditor = new WaveEditor(
         *mModule,
         *mWaveModel,
-        mPianoInput,
+        mConfig.pianoInput(),
         mDockWaveformEditor
     );
     mDockWaveformEditor->setWidget(waveEditor);
@@ -280,10 +279,10 @@ void MainWindow::setupUi() {
 
     auto octaveSpin = new QSpinBox(mToolbarInput);
     octaveSpin->setRange(2, 8);
-    octaveSpin->setValue(mPianoInput.octave());
+    octaveSpin->setValue(mConfig.pianoInput().octave());
     connect(octaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, 
         [this](int octave) {
-            mPianoInput.setOctave(octave);
+            mConfig.pianoInput().setOctave(octave);
         });
     auto editStepSpin = new QSpinBox(mToolbarInput);
     editStepSpin->setRange(0, 255);

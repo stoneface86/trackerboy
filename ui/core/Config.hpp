@@ -60,7 +60,8 @@ public:
     GeneralConfig& general();
     GeneralConfig const& general() const;
 
-    //KeyboardConfig const& keyboard() const;
+    // KeyboardConfig& keyboard();
+    // KeyboardConfig const& keyboard() const;
 
     MidiConfig& midi();
     MidiConfig const& midi() const;
@@ -70,6 +71,9 @@ public:
 
     Palette& palette();
     Palette const& palette() const;
+
+    PianoInput& pianoInput();
+    PianoInput const& pianoInput() const;
 
     //
     // Disables MIDI configuration. This is to be called when a MIDI error occurs with
@@ -83,11 +87,12 @@ private:
     
     AppearanceConfig mAppearance;
     GeneralConfig mGeneral;
-    //KeyboardConfig mKeyboard;
+    // KeyboardConfig mKeyboard;
     MidiConfig mMidi;
     SoundConfig mSound;
 
     Palette mPalette;
+    PianoInput mPianoInput;
 
 };
 

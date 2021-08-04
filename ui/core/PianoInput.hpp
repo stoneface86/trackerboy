@@ -4,6 +4,7 @@
 #include "trackerboy/note.hpp"
 
 #include <QHash>
+#include <QSettings>
 
 #include <array>
 #include <optional>
@@ -16,24 +17,13 @@ class PianoInput {
 
 public:
 
-    // 33 possible bindings
+    enum KeyboardLayout {
+        LayoutQwerty,
+        LayoutQwertz,
+        LayoutAzerty,
+        LayoutCustom
 
-    // octave 0: base octave
-    //        1: base octave + 1
-    //        2: base octave + 2
-
-
-    // OpenMPT
-    // 1 2 3 4 5 6 7 8 9 0 - +  => ... ... ... ... ... ... ... ... ... ... ... ...
-    // Q W E R T Y U I O P [ ]  => C-2 C#2 D-2 D#2 E-2 F-2 F#2 G-2 G#2 A-2 A#2 B-2
-    // A S D F G H J K L ; ' \  => C-1 C#1 D-1 D#1 E-1 F-1 F#1 G-1 G#1 A-1 A#1 B-1
-    // Z X C V B N M , . /      => C-0 C#0 D-0 D#0 E-0 F-0 F#0 G-0 G#0 A-0
-
-    // FamiTracker
-    // 1 2 3 4 5 6 7 8 9 0 - +  => ... C#1 D#1 ... F#1 G#1 A#1 ... C#2 D#2 ... F#2
-    // Q W E R T Y U I O P [ ]  => C-1 D-1 E-1 F-1 G-1 A-1 B-1 C-2 D-2 E-2 F-2 G-2
-    // A S D F G H J K L ; ' \  => ... C#0 D#0 ... F#0 G#0 A#0 ... C#1 D#1 ... ...
-    // Z X C V B N M , . /      => C-0 D-0 E-0 F-0 G-0 A-0 B-0 C-1 D-1 E-1
+    };
 
     // 3 octaves of bindings + note cut
     static constexpr int TOTAL_BINDINGS = 37;
@@ -51,8 +41,22 @@ public:
 
     Bindings const& bindings() const;
 
+    KeyboardLayout layout() const;
+
+    //
+    // Sets the default bindings for the given keyboard layout.
+    //
+    void setLayout(KeyboardLayout layout);
+
+    //
+    // Modifies a binding for the given semitone offset. The keyboard layout is
+    // set to LayoutCustom after calling this function.
+    //
     void bind(int key, int semitoneOffset);
 
+    //
+    // Removes an existing key binding for the given semitone offset
+    //
     void unbind(int semitone);
 
     //
@@ -65,10 +69,18 @@ public:
 
     void setOctave(int octave);
 
+    void readSettings(QSettings &settings);
+
+    void writeSettings(QSettings &settings) const;
+
 private:
+
+    void clearBindings();
 
     // base octave
     int mOctave;
+
+    KeyboardLayout mLayout;
 
     // array of key bindings, with the index being the semitone it is bound to
     Bindings mBindings;
