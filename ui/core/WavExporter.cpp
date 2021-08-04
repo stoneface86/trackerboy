@@ -5,21 +5,21 @@
 
 
 WavExporter::WavExporter(
-    trackerboy::Module const& mod,
-    unsigned samplerate,
+    Module const& mod,
+    int samplerate,
     QObject *parent
 ) :
     QThread(parent),
     mSamplerate(samplerate),
-    mSynth(samplerate, mod.framerate()),
+    mSynth(samplerate, mod.data().framerate()),
     mApu(mSynth.apu()),
-    mEngine(mApu, &mod),
+    mEngine(mApu, &mod.data()),
     mDuration(0),
     mDestination(),
     mFailed(false),
     mAbort(false)
 {
-    mSynth.apu().setVolume(0.707f);
+    mEngine.setSong(mod.song());
 }
 
 void WavExporter::setDuration(trackerboy::Player::Duration duration) {

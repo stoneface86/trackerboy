@@ -1,18 +1,18 @@
 
-#include "core/samplerates.hpp"
 #include "forms/ExportWavDialog.hpp"
-
-#include "core/Config.hpp"
-#include "core/Document.hpp"
-#include "core/WavExporter.hpp"
 
 #include <QFileDialog>
 #include <QFileInfo>
 
-ExportWavDialog::ExportWavDialog(Document &document, Config &config, QWidget *parent) :
+ExportWavDialog::ExportWavDialog(
+    Module const& mod,
+    ModuleFile const& modFile,
+    int samplerate,
+    QWidget *parent
+) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
-    mDocument(document),
-    mConfig(config),
+    mModule(mod),
+    mSamplerate(samplerate),
     mLayout(),
     mDurationGroup(tr("Duration")),
     mDurationLayout(),
@@ -170,12 +170,12 @@ ExportWavDialog::ExportWavDialog(Document &document, Config &config, QWidget *pa
         });
     
     QString destinationName;
-    if (mDocument.hasFile()) {
+    if (modFile.hasFile()) {
         // initialize the destination file with the module filename
-        QFileInfo info(mDocument.filepath());
+        QFileInfo info(modFile.filepath());
         destinationName = info.dir().filePath(info.completeBaseName());
     } else {
-        destinationName = QDir::home().filePath(mDocument.name());
+        destinationName = QDir::home().filePath(modFile.name());
     }
     mFilenameEdit.setText(QStringLiteral("%1.wav").arg(destinationName));
     
@@ -190,7 +190,7 @@ void ExportWavDialog::accept() {
 
     if (!isExporting) {
         if (mExporter == nullptr) {
-            mExporter = new WavExporter(mDocument.mod(), SAMPLERATE_TABLE[mConfig.sound().samplerateIndex], this);
+            mExporter = new WavExporter(mModule, mSamplerate, this);
             connect(mExporter, &WavExporter::progressMax, &mProgress, &QProgressBar::setMaximum);
             connect(mExporter, &WavExporter::progress, &mProgress, &QProgressBar::setValue);
             connect(mExporter, &WavExporter::finished, this,

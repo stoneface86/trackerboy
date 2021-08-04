@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "core/Module.hpp"
+
 #include "trackerboy/Synth.hpp"
 #include "trackerboy/export/Player.hpp"
 
@@ -15,8 +17,8 @@ class WavExporter : public QThread {
 
 public:
     WavExporter(
-        trackerboy::Module const& mod,
-        unsigned samplerate,
+        Module const& mod,
+        int samplerate,
         QObject *parent = nullptr
     );
 
@@ -38,7 +40,7 @@ protected:
 private:
     QMutex mMutex;
 
-    unsigned mSamplerate;
+    int mSamplerate;
     trackerboy::Synth mSynth;
     trackerboy::GbApu mApu;
     trackerboy::Engine mEngine;

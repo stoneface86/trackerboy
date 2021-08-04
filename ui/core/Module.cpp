@@ -58,6 +58,10 @@ trackerboy::Song* Module::song() {
     return mSong.get();
 }
 
+trackerboy::Song const* Module::song() const {
+    return mSong.get();
+}
+
 std::shared_ptr<trackerboy::Song> Module::songShared() {
     return mSong;
 }

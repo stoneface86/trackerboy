@@ -2,7 +2,7 @@
 #include "forms/MainWindow.hpp"
 
 #include "core/midi/MidiProber.hpp"
-//#include "forms/ExportWavDialog.hpp"
+#include "forms/ExportWavDialog.hpp"
 
 #include <QFileDialog>
 
@@ -290,10 +290,10 @@ void MainWindow::showConfigDialog() {
 }
 
 void MainWindow::showExportWavDialog() {
-    // auto dialog = new ExportWavDialog(mDocument, mConfig, this);
-    // dialog->show();
-    // dialog->exec();
-    // delete dialog;
+    auto dialog = new ExportWavDialog(*mModule, mModuleFile, mConfig.sound().samplerate(), this);
+    dialog->show();
+    dialog->exec();
+    delete dialog;
 }
 
 void MainWindow::showTempoCalculator() {

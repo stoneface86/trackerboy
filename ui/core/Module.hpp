@@ -69,6 +69,8 @@ public:
     //
     trackerboy::Song* song();
 
+    trackerboy::Song const* song() const;
+
     //
     // Gets shared ownership of the current song.
     //
