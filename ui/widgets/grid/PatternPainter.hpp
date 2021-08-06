@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/graphics/CellPainter.hpp"
 #include "core/Palette.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
@@ -8,6 +9,7 @@
 #include "trackerboy/data/PatternRow.hpp"
 
 #include <QColor>
+#include <QPen>
 #include <QFont>
 #include <QPainter>
 #include <QWidget>
@@ -15,7 +17,7 @@
 #include <array>
 
 
-class PatternPainter {
+class PatternPainter : public CellPainter {
 
 public:
 
@@ -27,21 +29,18 @@ public:
 
     PatternPainter(QFont const& font);
 
-    int cellHeight() const;
-
-    int cellWidth() const;
-
     int rownoWidth() const;
 
     int trackWidth() const;
 
+    //
+    // Returns true if accidentals will be drawn using flats instead of sharps
+    //
     bool flats() const;
 
     QRect selectionRectangle(PatternSelection const& selection);
 
     void setColors(Palette const& colors);
-
-    void setFont(QFont const& font);
 
     void setFirstHighlight(int interval);
 
@@ -75,7 +74,7 @@ public:
     void drawSelection(QPainter &painter, PatternSelection const& selection);
 
     //
-    // Paints "nothing" or "." for the cell(s)
+    // Paints "nothing" or "-" for the cell(s)
     //
     void drawNone(QPainter &painter, int cells, int xpos, int ypos);
 
@@ -84,25 +83,33 @@ public:
     //
     void drawNote(QPainter &painter, uint8_t note, int xpos, int ypos);
 
-    // low-level draw function. Draws a single character cell at the given x and y position
-    void drawCell(QPainter &painter, char cell, int xpos, int ypos);
+protected:
+
+    virtual void cellSizeChanged(int width, int height) override;
 
 private:
+
+    using NoteTable = std::array<char, 24>;
+
+    static NoteTable const NOTE_TABLE_FLATS;
+    static NoteTable const NOTE_TABLE_SHARPS;
+
+    //
+    // Returns a reference to the cached QPen after setting its color to the
+    // given parameter. Use this function instead of creating a temporary QPen
+    //
+    QPen const& pen(QColor const& color);
 
     int highlightIndex(int rowno);
     
     int mHighlightInterval1;
     int mHighlightInterval2;
 
-    int mCellWidth;
-    int mCellHeight;
-
     int mRownoWidth;
     int mTrackWidth;
     int mPatternWidth;
 
-    bool mDisplayFlats;
-
+    NoteTable const *mNoteTable;
 
     std::array<QColor, 3> mForegroundColors;
     std::array<QColor, 3> mBackgroundColors;
@@ -116,6 +123,10 @@ private:
     QColor mColorLine;
 
     std::array<QColor, 3> mRowColors;
+
+    // pen used in all draw functions, reusing this one prevents the
+    // need to create a temporary
+    QPen mPen;
 
 
 };

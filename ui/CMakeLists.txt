@@ -44,6 +44,8 @@ set(UI_SRC
     "core/config/SoundConfig.hpp"
     "core/clipboard/PatternClip.cpp"
     "core/clipboard/PatternClipboard.cpp"
+    "core/graphics/CellPainter.cpp"
+    "core/graphics/CellPainter.hpp"
     "core/midi/Midi.cpp"
     "core/midi/MidiProber.cpp"
     "core/model/graph/GraphModel.cpp"

@@ -5,29 +5,10 @@
 
 #include "trackerboy/note.hpp"
 
-#include <QFontMetrics>
-#include <QtDebug>
+#define TU PatternPainterTU
+namespace TU {
 
 using namespace PatternConstants;
-
-static const char HEX_TABLE[16] = {
-    '0',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    'A',
-    'B',
-    'C',
-    'D',
-    'E',
-    'F'
-};
 
 // TODO: move this somewhere in the library
 static char effectTypeToChar(trackerboy::EffectType et) {
@@ -80,55 +61,63 @@ static char effectTypeToChar(trackerboy::EffectType et) {
     }
 }
 
-static const char* NOTE_STR_SHARP[] = {
-    "C-",
-    "C#",
-    "D-",
-    "D#",
-    "E-",
-    "F-",
-    "F#",
-    "G-",
-    "G#",
-    "A-",
-    "A#",
-    "B-"
+} // namespace TU
+
+PatternPainter::NoteTable const PatternPainter::NOTE_TABLE_FLATS = {
+    'C', '-',   // note  0: C-
+    'D', 'b',   // note  1: Db
+    'D', '-',   // note  2: D-
+    'E', 'b',   // note  3: Eb
+    'E', '-',   // note  4: E-
+    'F', '-',   // note  5: F-
+    'G', 'b',   // note  6: Gb
+    'G', '-',   // note  7: G-
+    'A', 'b',   // note  8: Ab
+    'A', '-',   // note  9: A-
+    'B', 'b',   // note 10: Bb
+    'B', '-'    // note 11: B-
 };
 
-static const char* NOTE_STR_FLAT[] = {
-    "C-",
-    "Db",
-    "D-",
-    "Eb",
-    "E-",
-    "F-",
-    "Gb",
-    "G-",
-    "Ab",
-    "A-",
-    "Bb",
-    "B-"
+PatternPainter::NoteTable const PatternPainter::NOTE_TABLE_SHARPS = {
+    'C', '-',   // note  0: C-
+    'C', '#',   // note  1: C#
+    'D', '-',   // note  2: D-
+    'D', '#',   // note  3: D#
+    'E', '-',   // note  4: E-
+    'F', '-',   // note  5: F-
+    'F', '#',   // note  6: F#
+    'G', '-',   // note  7: G-
+    'G', '#',   // note  8: G#
+    'A', '-',   // note  9: A-
+    'A', '#',   // note 10: A#
+    'B', '-'    // note 11: B-
 };
+
+// NOTE
+// Do not create temporary QPens! The member variable, mPen, should be used
+// instead when needing to modify QPainter's pen. Doing so will prevent
+// unnecessary heap allocations and improve performance.
+
 
 PatternPainter::PatternPainter(QFont const& font) :
+    CellPainter(),
     mHighlightInterval1(0),
     mHighlightInterval2(0),
-    mCellWidth(0),
-    mCellHeight(0),
     mRownoWidth(0),
     mTrackWidth(0),
     mPatternWidth(0),
-    mDisplayFlats(false)
+    mNoteTable(&NOTE_TABLE_SHARPS),
+    mForegroundColors(),
+    mBackgroundColors(),
+    mColorInstrument(),
+    mColorEffect(),
+    mColorSelection(),
+    mColorCursor(),
+    mColorLine(),
+    mRowColors(),
+    mPen()
 {
     setFont(font);
-}
-
-int PatternPainter::cellHeight() const {
-    return mCellHeight;
-}
-
-int PatternPainter::cellWidth() const {
-    return mCellWidth;
 }
 
 int PatternPainter::rownoWidth() const {
@@ -140,44 +129,29 @@ int PatternPainter::trackWidth() const {
 }
 
 bool PatternPainter::flats() const {
-    return mDisplayFlats;
+    return mNoteTable == &NOTE_TABLE_FLATS;
 }
 
-void PatternPainter::setFont(QFont const& font) {
-    QFontMetrics metrics(font);
+void PatternPainter::cellSizeChanged(int width, int height) {
+    Q_UNUSED(height)
 
-    // hexadecimal, 0-9, A-F
-    // notes A to G, b, #, 2-8
-    // effects: BCDFTEVIHSGL012345PQR
-    static const char PAINTABLE_CHARS[] = "ABCDEFGHTVIHSLPQR0123456789? -#b";
-    constexpr int PAINTABLE_CHARS_COUNT = sizeof(PAINTABLE_CHARS) - 1;
-
-    // get the bounding rect for the string of all paintable characters
-    // tightBoundingRect is used to remove the spacing between lines
-    auto rect = metrics.tightBoundingRect(PAINTABLE_CHARS);
-    // row height is the maximum height with 2 pixels padding for the cursor outline
-    mCellHeight = rect.height() + 2;
-
-    // get the average character width
-    mCellWidth = metrics.size(Qt::TextSingleLine, PAINTABLE_CHARS).width() / PAINTABLE_CHARS_COUNT;
-
-    mRownoWidth = mCellWidth * ROWNO_CELLS;
-    mTrackWidth = mCellWidth * TRACK_CELLS;
+    mRownoWidth = width * TU::ROWNO_CELLS;
+    mTrackWidth = width * TU::TRACK_CELLS;
     mPatternWidth = mTrackWidth * 4;
 }
 
 void PatternPainter::setFirstHighlight(int interval) {
-    assert(interval >= 0);
+    Q_ASSERT(interval >= 0);
     mHighlightInterval1 = interval;
 }
 
 void PatternPainter::setSecondHighlight(int interval) {
-    assert(interval >= 0);
+    Q_ASSERT(interval >= 0);
     mHighlightInterval2 = interval;
 }
 
 void PatternPainter::setFlats(bool flats) {
-    mDisplayFlats = flats;
+    mNoteTable = (flats) ? &NOTE_TABLE_FLATS : &NOTE_TABLE_SHARPS;
 }
 
 void PatternPainter::setColors(Palette const& colors) {
@@ -205,38 +179,45 @@ void PatternPainter::setColors(Palette const& colors) {
 }
 
 void PatternPainter::drawRowBackground(QPainter &painter, RowType type, int row) {
-    auto ypos = row * mCellHeight;
+    auto const _cellHeight = cellHeight();
+
+    auto ypos = row * _cellHeight;
     auto const& color = mRowColors[type];
-    painter.setPen(color);
+    painter.setPen(pen(color));
     auto const lineEnd = mRownoWidth + mPatternWidth;
     painter.drawLine(mRownoWidth, ypos, lineEnd, ypos);
-    painter.fillRect(mRownoWidth, ypos, mPatternWidth, mCellHeight, color);
-    auto bottom = ypos + mCellHeight - 1;
+    painter.fillRect(mRownoWidth, ypos, mPatternWidth, _cellHeight, color);
+    auto bottom = ypos + _cellHeight - 1;
     painter.drawLine(mRownoWidth, bottom, lineEnd, bottom);
 }
 
 void PatternPainter::drawBackground(QPainter &painter, int ypos, int rowStart, int rows) {
+    auto const _cellHeight = cellHeight();
+
     int rowno = rowStart;
     for (int i = 0; i < rows; ++i) {
-        painter.fillRect(mRownoWidth, ypos, mPatternWidth, mCellHeight, mBackgroundColors[highlightIndex(rowno)]);
-        ypos += mCellHeight;
+        painter.fillRect(mRownoWidth, ypos, mPatternWidth, _cellHeight, mBackgroundColors[highlightIndex(rowno)]);
+        ypos += _cellHeight;
         ++rowno;
     }
 }
 
 void PatternPainter::drawCursor(QPainter &painter, PatternCursor cursor) {
-    // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-    int cursorWidth = (cursor.column == PatternCursor::ColumnNote ? 3 : 1) * mCellWidth + 2;
-    int cursorPos = (cursor.track * mTrackWidth) + (TRACK_COLUMN_MAP[cursor.column] * mCellWidth) + mRownoWidth - 1;
+    auto const _cellWidth = cellWidth();
+    auto const _cellHeight = cellHeight();
 
-    int ypos = cursor.row * mCellHeight;
-    painter.fillRect(cursorPos, ypos, cursorWidth, mCellHeight, mColorCursor);
-    painter.setPen(mColorCursor);
-    painter.drawRect(cursorPos, ypos, cursorWidth - 1, mCellHeight - 1);
+    // the width of the cursor is always 1 character unless it is over a note column, then it is 3
+    int cursorWidth = (cursor.column == PatternCursor::ColumnNote ? 3 : 1) * _cellWidth + 2;
+    int cursorPos = (cursor.track * mTrackWidth) + (TU::TRACK_COLUMN_MAP[cursor.column] * _cellWidth) + mRownoWidth - 1;
+
+    int ypos = cursor.row * _cellHeight;
+    painter.fillRect(cursorPos, ypos, cursorWidth, _cellHeight, mColorCursor);
+    painter.setPen(pen(mColorCursor));
+    painter.drawRect(cursorPos, ypos, cursorWidth - 1, _cellHeight - 1);
 }
 
 void PatternPainter::drawLines(QPainter &painter, int height) {
-    painter.setPen(mColorLine);
+    painter.setPen(pen(mColorLine));
     painter.drawLine(0, 0, 0, height);
     int xpos = mRownoWidth;
     for (int i = 0; i != 5; ++i) {
@@ -253,14 +234,17 @@ int PatternPainter::drawRow(
     int ypos
 ) {
 
-    QPen fgpen(mForegroundColors[highlightIndex(rowno)]);
+    auto const _cellWidth = cellWidth();
+    auto const _cellHeight = cellHeight();
+
+    auto const& fgcolor = mForegroundColors[highlightIndex(rowno)];
 
     // text centering
     ypos++;
 
-    painter.setPen(fgpen);
-    painter.drawText(mCellWidth, ypos, mCellWidth * 2, mCellHeight, Qt::AlignBottom, QString("%1").arg(rowno, 2, 16, QLatin1Char('0')).toUpper());
-    int xpos = (TRACK_COLUMN_MAP[PatternCursor::ColumnNote] + ROWNO_CELLS) * mCellWidth;
+    painter.setPen(pen(fgcolor));
+    drawHex(painter, rowno, _cellWidth, ypos);
+    int xpos = (TU::TRACK_COLUMN_MAP[PatternCursor::ColumnNote] + TU::ROWNO_CELLS) * _cellWidth;
     for (int track = 0; track != 4; ++track) {
         auto &trackdata = rowdata[track];
 
@@ -272,141 +256,137 @@ int PatternPainter::drawRow(
         }
 
 
-        xpos += (TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh] - TRACK_COLUMN_MAP[PatternCursor::ColumnNote]) * mCellWidth;
+        xpos += (TU::TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh] - TU::TRACK_COLUMN_MAP[PatternCursor::ColumnNote]) * _cellWidth;
         auto instrument = trackdata.queryInstrument();
         if (instrument) {
-            painter.setPen(mColorInstrument);
-            drawCell(painter, HEX_TABLE[*instrument >> 4], xpos, ypos);
-            drawCell(painter, HEX_TABLE[*instrument & 0xF], xpos + mCellWidth, ypos);
-            painter.setPen(fgpen);
+            painter.setPen(pen(mColorInstrument));
+            drawHex(painter, *instrument, xpos, ypos);
+            painter.setPen(pen(fgcolor));
         } else {
             drawNone(painter, 2, xpos, ypos);
         }
 
-        xpos += (TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type] - TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh]) * mCellWidth;
+        xpos += (TU::TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type] - TU::TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh]) * _cellWidth;
 
         for (int effect = 0; effect < trackerboy::TrackRow::MAX_EFFECTS; ++effect) {
             auto effectdata = trackdata.effects[effect];
             if (effectdata.type != trackerboy::EffectType::noEffect) {
-                painter.setPen(mColorEffect);
+                painter.setPen(pen(mColorEffect));
 
-                drawCell(painter, effectTypeToChar(effectdata.type), xpos, ypos);
-                xpos += mCellWidth;
+                drawCell(painter, TU::effectTypeToChar(effectdata.type), xpos, ypos);
+                xpos += _cellWidth;
 
-                painter.setPen(fgpen);
-                drawCell(painter, HEX_TABLE[effectdata.param >> 4], xpos, ypos);
-                xpos += mCellWidth;
-                drawCell(painter, HEX_TABLE[effectdata.param & 0xF], xpos, ypos);
-                xpos += mCellWidth;
+                painter.setPen(pen(fgcolor));
+                drawHex(painter, effectdata.param, xpos, ypos);
+                xpos += _cellWidth * 2;
             } else {
                 drawNone(painter, 3, xpos, ypos);
-                xpos += mCellWidth * 3;
+                xpos += _cellWidth * 3;
             }
 
-            xpos += mCellWidth;
+            xpos += _cellWidth;
 
         }
 
-        xpos += mCellWidth;
+        xpos += _cellWidth;
     }
 
-    return ypos - 1 + mCellHeight;
+    return ypos - 1 + _cellHeight;
 }
 
 QRect PatternPainter::selectionRectangle(PatternSelection const& selection) {
+    auto const _cellWidth = cellWidth();
+    auto const _cellHeight = cellHeight();
+
     auto iter = selection.iterator();
     int x1;
     {
         int cell;
         switch (iter.columnStart()) {
             case PatternAnchor::SelectNote:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnNote] - 1;
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnNote] - 1;
                 break;
             case PatternAnchor::SelectInstrument:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh];
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh];
                 break;
             case PatternAnchor::SelectEffect1:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type];
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type];
                 break;
             case PatternAnchor::SelectEffect2:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type];
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type];
                 break;
             default:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect3Type];
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnEffect3Type];
                 break;
         }
-        x1 = mRownoWidth + (mCellWidth * ((iter.trackStart() * TRACK_CELLS) + cell));
+        x1 = mRownoWidth + (_cellWidth * ((iter.trackStart() * TU::TRACK_CELLS) + cell));
     }
     int x2;
     {
         int cell;
         switch (iter.columnEnd()) {
             case PatternAnchor::SelectNote:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnNote] + 3;
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnNote] + 3;
                 break;
             case PatternAnchor::SelectInstrument:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh] + 2;
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnInstrumentHigh] + 2;
                 break;
             case PatternAnchor::SelectEffect1:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type] + 3;
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnEffect1Type] + 3;
                 break;
             case PatternAnchor::SelectEffect2:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type] + 3;
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnEffect2Type] + 3;
                 break;
             default:
-                cell = TRACK_COLUMN_MAP[PatternCursor::ColumnEffect3Type] + 4;
+                cell = TU::TRACK_COLUMN_MAP[PatternCursor::ColumnEffect3Type] + 4;
                 break;
         }
-        x2 = mRownoWidth + (mCellWidth * ((iter.trackEnd() * TRACK_CELLS) + cell));
+        x2 = mRownoWidth + (_cellWidth * ((iter.trackEnd() * TU::TRACK_CELLS) + cell));
     }
 
-    return {x1, iter.rowStart() * mCellHeight, x2 - x1, iter.rows() * mCellHeight};
+    return {x1, iter.rowStart() * _cellHeight, x2 - x1, iter.rows() * _cellHeight};
 }
 
 
 void PatternPainter::drawSelection(QPainter &painter, PatternSelection const& selection) {
     painter.fillRect(selectionRectangle(selection), mColorSelection);
-    
-    //painter.setPen(mColorSelection);
-    //painter.drawRect(x1, ypos, width - 1, height - 1);
-
 }
 
 void PatternPainter::drawNote(QPainter &painter, uint8_t note, int xpos, int ypos) {
+    auto const _cellWidth = cellWidth();
 
     if (note == trackerboy::NOTE_CUT) {
-        painter.setBrush(QBrush(painter.pen().color()));
-        painter.drawRect(xpos, ypos + mCellHeight / 2, mCellWidth * 2, 2);
+        painter.fillRect(xpos, ypos + cellHeight() / 2, _cellWidth * 2, 4, painter.pen().color());
     } else {
 
         int octave = note / 12;
         int key = note % 12;
         octave += 2;
 
-        auto notetable = (mDisplayFlats) ? NOTE_STR_FLAT : NOTE_STR_SHARP;
-
-        painter.drawText(xpos, ypos, 3 * mCellWidth, mCellHeight, Qt::AlignBottom,
-            QStringLiteral("%1%2").arg(notetable[key]).arg(octave));
+        auto notestr = mNoteTable->data() + (key * 2);
+        drawCell(painter, *notestr++, xpos, ypos);
+        xpos += _cellWidth;
+        drawCell(painter, *notestr, xpos, ypos);
+        xpos += _cellWidth;
+        drawCell(painter, octave + '0', xpos, ypos);
     }
 }
 
 
 void PatternPainter::drawNone(QPainter &painter, int cells, int xpos, int ypos) {
+    auto const _cellWidth = cellWidth();
+
     xpos += 3;
-    ypos += mCellHeight / 2;
-    int const width = mCellWidth - 6;
+    ypos += cellHeight() / 2;
+    int const width = _cellWidth - 6;
     for (int i = cells; i--; ) {
         painter.drawLine(xpos, ypos, xpos + width, ypos);
-        xpos += mCellWidth;
+        xpos += _cellWidth;
     }
 }
 
-void PatternPainter::drawCell(QPainter &painter, char cell, int xpos, int ypos) {
-    painter.drawText(xpos, ypos, mCellWidth, mCellHeight, Qt::AlignBottom, QString(cell));
-}
-
-
 int PatternPainter::highlightIndex(int rowno) {
+    // this could probably be optimized better
     if (mHighlightInterval2 && rowno % mHighlightInterval2 == 0) {
         return 2;
     } else if (mHighlightInterval1 && rowno % mHighlightInterval1 == 0) {
@@ -416,4 +396,9 @@ int PatternPainter::highlightIndex(int rowno) {
     }
 }
 
+QPen const& PatternPainter::pen(QColor const& color) {
+    mPen.setColor(color);
+    return mPen;
+}
 
+#undef TU
