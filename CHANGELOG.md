@@ -5,12 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
- * Choose which channels to export when exporting to WAV
- * Option to export each channel as separate WAV files
- * Color configuration for the pattern editor and other editors
- * Keyboard binding configuration for the pattern editor
- * Pattern compiler - export module data to assembly
- * Export to .gbs
+### Added
+ - Instrument + Waveform list views for selecting/adding instruments/waveforms
+### Changed
+ - Back to using miniaudio instead of RtAudio for audio playback
+ - Trackerboy is now a SDI instead of MDI (only one module can be open at a time).
+ - Initial window size is set to a maximum of 1280x720
+ - Modules can now store 1-256 songs
+ - File format is now at rev 1
+ - Config file is now more human friendly
+### Removed
+ - Module tree view (replaced by instrument and waveform docks)
+ - Instrument select toolbar
 
 
 ## [0.4.0] - 2021-07-07
