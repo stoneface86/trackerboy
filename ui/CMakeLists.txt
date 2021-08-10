@@ -24,92 +24,116 @@ include_directories(
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-set(UI_SRC
-    "core/audio/AudioProber.cpp"
-    "core/audio/AudioStream.cpp"
-    "core/audio/Renderer.cpp"
-    "core/audio/Ringbuffer.cpp"
-    "core/audio/VisualizerBuffer.cpp"
-    "core/config/AppearanceConfig.cpp"
-    "core/config/AppearanceConfig.hpp"
-    "core/config/GeneralConfig.cpp"
-    "core/config/GeneralConfig.hpp"
-    #"core/config/KeyboardConfig.cpp"
-    #"core/config/KeyboardConfig.hpp"
-    "core/config/keys.hpp"
-    "core/config/keys.cpp"
-    "core/config/MidiConfig.cpp"
-    "core/config/MidiConfig.hpp"
-    "core/config/SoundConfig.cpp"
-    "core/config/SoundConfig.hpp"
-    "core/clipboard/PatternClip.cpp"
-    "core/clipboard/PatternClipboard.cpp"
-    "core/graphics/CellPainter.cpp"
-    "core/graphics/CellPainter.hpp"
-    "core/midi/Midi.cpp"
-    "core/midi/MidiProber.cpp"
-    "core/model/graph/GraphModel.cpp"
-    "core/model/graph/SequenceModel.cpp"
-    "core/model/graph/WaveModel.cpp"
-    "core/model/BaseTableModel.cpp"
-    "core/model/InstrumentListModel.cpp"
-    "core/model/PatternModel.cpp"
-    "core/model/SongListModel.cpp"
-    "core/model/SongModel.cpp"
-    "core/model/WaveListModel.cpp"
-    "core/Config.cpp"
-    "core/FastTimer.cpp"
-    "core/Module.cpp"
-    "core/ModuleFile.cpp"
-    "core/Palette.cpp"
-    "core/PatternSelection.cpp"
-    "core/PianoInput.cpp"
-    "core/samplerates.cpp"
-    "core/WavExporter.cpp"
+#
+# Creates a source list containing the header and source files for each argument
+# given. For regular files, pass the FILE option before the desired argument
+#
+# Example:
+# makeSourceList(srcList foo FILE main.cpp)
+# ${srcList} => "foo.cpp;foo.hpp;main.cpp"
+#
+function(makeSourceList srcVar)
+    set(_LIST "")
+    set(_FILE FALSE)
+    foreach(arg IN ITEMS ${ARGN})
+        if ("${arg}" STREQUAL "FILE")
+            set(_FILE TRUE)
+        else ()
+            if (_FILE)
+                list(APPEND _LIST "${arg}")
+                set(_FILE FALSE)
+            else ()
+                list(APPEND _LIST "${arg}.cpp" "${arg}.hpp")
+            endif ()
+        endif ()
+    endforeach()
+    set(${srcVar} "${_LIST}" PARENT_SCOPE)
+endfunction()
 
-    "forms/MainWindow/actions.cpp"
-    "forms/MainWindow/slots.cpp"
-    "forms/AboutDialog.cpp"
-    "forms/AudioDiagDialog.cpp"
-    "forms/ConfigDialog.cpp"
-    "forms/ExportWavDialog.cpp"
-    "forms/MainWindow.cpp"
-    "forms/TempoCalculator.cpp"
-    
-    "misc/IconManager.cpp"
-    "misc/utils.cpp"
 
-    "resources/fonts.qrc"
-    "resources/icons.qrc"
-    "resources/images.qrc"
-    "resources/stylesheets.qrc"
+# When adding a source+header to the list, just add the filename without the
+# extension. For regular files, or source files with no complementing header,
+# use FILE <filename>
 
-    "widgets/config/ConfigTab.cpp"
-    "widgets/config/MidiConfigTab.cpp"
-    "widgets/config/SoundConfigTab.cpp"
-    "widgets/config/SoundQualityPreview.cpp"
-    "widgets/docks/BaseEditor.cpp"
-    "widgets/docks/InstrumentEditor.cpp"
-    "widgets/docks/TableDock.cpp"
-    "widgets/docks/WaveEditor.cpp"
-    "widgets/grid/layout.cpp"
-    "widgets/grid/PatternGrid.cpp"
-    "widgets/grid/PatternGridHeader.cpp"
-    "widgets/grid/PatternPainter.cpp"
-    "widgets/sidebar/AudioScope.cpp"
-    "widgets/sidebar/OrderEditor.cpp"
-    "widgets/sidebar/SongEditor.cpp"
-    #"widgets/visualizers/PeakMeter.cpp"
-    #"widgets/visualizers/VolumeMeterAnimation.cpp"
-    "widgets/CustomSpinBox.cpp"
-    "widgets/EnvelopeForm.cpp"
-    "widgets/GraphEdit.cpp"
-    "widgets/PatternEditor.cpp"
-    "widgets/PianoWidget.cpp"
-    "widgets/SequenceEditor.cpp"
-    "widgets/Sidebar.cpp"
-    "widgets/SpeedLabel.cpp"
-    "widgets/TempoLabel.cpp"
+makeSourceList(UI_SRC
+    "core/audio/AudioProber"
+    "core/audio/AudioStream"
+    "core/audio/Renderer"
+    "core/audio/Ringbuffer"
+    "core/audio/VisualizerBuffer"
+    "core/config/AppearanceConfig"
+    "core/config/GeneralConfig"
+    #"core/config/KeyboardConfig"
+    "core/config/keys"
+    "core/config/MidiConfig"
+    "core/config/SoundConfig"
+    "core/clipboard/PatternClip"
+    "core/clipboard/PatternClipboard"
+    "core/graphics/CellPainter"
+    "core/midi/Midi"
+    "core/midi/MidiProber"
+    "core/model/graph/GraphModel"
+    "core/model/graph/SequenceModel"
+    "core/model/graph/WaveModel"
+    "core/model/BaseTableModel"
+    "core/model/InstrumentListModel"
+    "core/model/PatternModel"
+    "core/model/SongListModel"
+    "core/model/SongModel"
+    "core/model/WaveListModel"
+    "core/Config"
+    "core/FastTimer"
+    "core/Module"
+    "core/ModuleFile"
+    "core/Palette"
+    "core/PatternSelection"
+    "core/PianoInput"
+    "core/samplerates"
+    "core/WavExporter"
+
+    FILE "forms/MainWindow/actions.cpp"
+    FILE "forms/MainWindow/slots.cpp"
+    "forms/AboutDialog"
+    "forms/AudioDiagDialog"
+    "forms/ConfigDialog"
+    "forms/ExportWavDialog"
+    "forms/MainWindow"
+    "forms/TempoCalculator"
+
+    "misc/IconManager"
+    "misc/utils"
+
+    FILE "resources/fonts.qrc"
+    FILE "resources/icons.qrc"
+    FILE "resources/images.qrc"
+    FILE "resources/stylesheets.qrc"
+
+    "widgets/config/ConfigTab"
+    "widgets/config/MidiConfigTab"
+    "widgets/config/SoundConfigTab"
+    "widgets/config/SoundQualityPreview"
+    "widgets/docks/BaseEditor"
+    "widgets/docks/InstrumentEditor"
+    "widgets/docks/TableDock"
+    "widgets/docks/WaveEditor"
+    "widgets/grid/layout"
+    "widgets/grid/PatternGrid"
+    "widgets/grid/PatternGridHeader"
+    "widgets/grid/PatternPainter"
+    "widgets/sidebar/AudioScope"
+    "widgets/sidebar/OrderEditor"
+    "widgets/sidebar/SongEditor"
+    #"widgets/visualizers/PeakMeter"
+    #"widgets/visualizers/VolumeMeterAnimation"
+    "widgets/CustomSpinBox"
+    "widgets/EnvelopeForm"
+    "widgets/GraphEdit"
+    "widgets/PatternEditor"
+    "widgets/PianoWidget"
+    "widgets/SequenceEditor"
+    "widgets/Sidebar"
+    "widgets/SpeedLabel"
+    "widgets/TempoLabel"
 )
 
 #
