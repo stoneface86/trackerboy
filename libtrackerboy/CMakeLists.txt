@@ -55,7 +55,7 @@ endif ()
 
 if (ENABLE_TESTS)
 
-    set(TEST_SRC_FILES
+    add_executable(test_trackerboy
         "test/data/test_Table.cpp"
         "test/data/test_Module.cpp"
         "test/data/test_PatternMaster.cpp"
@@ -65,27 +65,12 @@ if (ENABLE_TESTS)
 
         "test/internal/test_endian.cpp"
     )
-
-    add_catch_test(TEST_EXE ${TEST_SRC_FILES})
-
-    target_link_libraries(${TEST_EXE} PRIVATE trackerboy)
-
+    target_link_libraries(test_trackerboy PRIVATE trackerboy Catch2Main)
+    target_include_directories(test_trackerboy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     if (IS_BIG_ENDIAN)
-        target_compile_definitions(${TEST_EXE} PRIVATE -DTRACKERBOY_BIG_ENDIAN)
+        target_compile_definitions(test_trackerboy PRIVATE -DTRACKERBOY_BIG_ENDIAN)
     endif ()
 
-    macro(unit_test unit)
-        add_test(NAME ${unit} COMMAND ${TEST_EXE} "[${unit}]")
-    endmacro(unit_test)
-
-    unit_test(Table)
-    unit_test(Module)
-    unit_test(InstrumentRuntime)
-    unit_test(PatternMaster)
-    unit_test(NoteControl)
-    unit_test(Timer)
-    unit_test(endian)
-    
-    
+    catch_discover_tests(test_trackerboy)
 
 endif ()
