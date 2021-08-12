@@ -14,13 +14,17 @@ Requirements:
  * [Miniaudio](https://github.com/mackron/miniaudio)
  * [gbapu](https://github.com/stoneface86/gbapu)
  * [RtMidi](https://github.com/thestk/rtmidi)
+ * (Optional) [Catch2](https://github.com/catchorg/Catch2)
  * Qt v5.12.10 or higher
 
-Miniaudio is included in the repo and gbapu is available via submodule
-so there is no need to install these libraries on your system. All of the
-other requirements can be acquired from vcpkg, or you can provide your own if
-that is preferred. If you choose to not use vcpkg, then cmake will attempt
-to find all required dependencies installed on your system.
+Miniaudio and gbapu are acquired via submodule so there is no need to install
+these libraries on your system. All of the other requirements can be acquired
+from vcpkg, or you can provide your own if that is preferred. If you choose to
+not use vcpkg, then cmake will attempt to find all required dependencies
+installed on your system.
+
+Catch2 is only required for testing. Catch2 is not needed if ENABLE_TESTS is
+set to OFF.
 
 # Recommended build guide
 
@@ -61,7 +65,6 @@ Manifest mode is used, so all you need to do is run cmake with the vcpkg
 toolchain:
 
 ```sh
-mkdir build
 cd build
 cmake -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" ../
 ```
