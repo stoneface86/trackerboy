@@ -55,10 +55,6 @@ function (unityBuildable target)
     endif ()
 endfunction ()
 
-include_directories(
-    "include"
-)
-
 set(PACKAGE_MODE "CONFIG")
 
 if (VCPKG_TOOLCHAIN)

@@ -1,6 +1,54 @@
 
 project("libtrackerboy")
 
+set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
+
+# paths are relative to ${INCLUDE_DIR}/
+set(PUB_HEADERS
+    "trackerboy/data/DataItem.hpp"
+    "trackerboy/data/Instrument.hpp"
+    "trackerboy/data/Module.hpp"
+    "trackerboy/data/Order.hpp"
+    "trackerboy/data/OrderRow.hpp"
+    "trackerboy/data/Pattern.hpp"
+    "trackerboy/data/PatternMaster.hpp"
+    "trackerboy/data/PatternRow.hpp"
+    "trackerboy/data/Sequence.hpp"
+    "trackerboy/data/Song.hpp"
+    "trackerboy/data/SongList.hpp"
+    "trackerboy/data/Table.hpp"
+    "trackerboy/data/Track.hpp"
+    "trackerboy/data/TrackRow.hpp"
+    "trackerboy/data/Waveform.hpp"
+    "trackerboy/engine/ChannelControl.hpp"
+    "trackerboy/engine/ChannelState.hpp"
+    "trackerboy/engine/Engine.hpp"
+    "trackerboy/engine/Frame.hpp"
+    "trackerboy/engine/FrequencyControl.hpp"
+    "trackerboy/engine/GlobalState.hpp"
+    "trackerboy/engine/IApu.hpp"
+    "trackerboy/engine/InstrumentRuntime.hpp"
+    "trackerboy/engine/MusicRuntime.hpp"
+    "trackerboy/engine/Operation.hpp"
+    "trackerboy/engine/RuntimeContext.hpp"
+    "trackerboy/engine/Timer.hpp"
+    "trackerboy/engine/TrackControl.hpp"
+    "trackerboy/export/Player.hpp"
+    "trackerboy/fileformat.hpp"
+    "trackerboy/InstrumentPreview.hpp"
+    "trackerboy/note.hpp"
+    "trackerboy/Synth.hpp"
+    "trackerboy/trackerboy.hpp"
+    "trackerboy/version.hpp"
+)
+
+foreach (arg IN ITEMS ${PUB_HEADERS})
+    list(APPEND _lst "${INCLUDE_DIR}/${arg}")
+endforeach ()
+
+set(PUB_HEADERS "${_lst}")
+unset(_lst)
+
 set(SRC_FILES
     "data/DataItem.cpp"
     "data/Instrument.cpp"
@@ -28,8 +76,9 @@ set(SRC_FILES
     "engine/TrackControl.cpp"
 
     "export/Player.cpp"
-    
-    "internal/endian.cpp"
+
+    "internal/endian.hpp"
+    "internal/enumutils.hpp"
 
     "fileformat.cpp"
     "InstrumentPreview.cpp"
@@ -38,15 +87,22 @@ set(SRC_FILES
     "version.cpp"
 )
 
+if (IS_BIG_ENDIAN)
+    list(APPEND SRC_FILES "internal/endian.cpp")
+endif ()
+
+
 # give version information to version.cpp via preproccessor macros
 set_source_files_properties("version.cpp" PROPERTIES COMPILE_DEFINITIONS "VERSION_MAJOR=${trackerboy_VERSION_MAJOR};VERSION_MINOR=${trackerboy_VERSION_MINOR};VERSION_PATCH=${trackerboy_VERSION_PATCH}")
-add_library("trackerboy" STATIC ${SRC_FILES})
+add_library("trackerboy" STATIC "${SRC_FILES}" "${PUB_HEADERS}")
 
 unityBuildable(trackerboy)
 
-target_include_directories(trackerboy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(trackerboy PUBLIC "${INCLUDE_DIR}")
+target_include_directories(trackerboy PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(trackerboy PRIVATE trackerboyWarnings)
+# gbapu is the default APU implementation
 target_link_libraries(trackerboy PUBLIC gbapu)
 
 if (IS_BIG_ENDIAN)
