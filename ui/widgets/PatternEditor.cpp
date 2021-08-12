@@ -2,7 +2,6 @@
 #include "widgets/PatternEditor.hpp"
 
 #include "misc/utils.hpp"
-#include "widgets/grid/layout.hpp"
 
 #include <QClipboard>
 #include <QDialog>

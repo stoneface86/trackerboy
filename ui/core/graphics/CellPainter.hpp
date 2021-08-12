@@ -19,13 +19,13 @@ public:
 
     void setFont(QFont const& font);
 
-    void drawCell(QPainter &painter, char cell, int xpos, int ypos);
+    //
+    // Draws a cell at the given x and y coordinates. The x position of the
+    // next cell is returned
+    //
+    int drawCell(QPainter &painter, char cell, int xpos, int ypos);
 
-    void drawHex(QPainter &painter, char hex, int xpos, int ypos);
-
-protected:
-
-    virtual void cellSizeChanged(int width, int height);
+    int drawHex(QPainter &painter, char hex, int xpos, int ypos);
 
 private:
 

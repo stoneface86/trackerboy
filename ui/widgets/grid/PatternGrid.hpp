@@ -1,12 +1,12 @@
 
 #pragma once
 
+#include "core/graphics/PatternLayout.hpp"
+#include "core/graphics/PatternPainter.hpp"
 #include "core/model/PatternModel.hpp"
 #include "core/Palette.hpp"
 #include "core/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
-#include "widgets/grid/PatternPainter.hpp"
-#include "widgets/grid/layout.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
 #include "trackerboy/note.hpp"
@@ -111,11 +111,12 @@ private:
 
     PatternGridHeader &mHeader;
     PatternModel &mModel;
+    PatternLayout mLayout;
     PatternPainter mPainter;
 
     bool mSelecting;
 
-    unsigned mVisibleRows; // number of rows visible on the widget
+    int mVisibleRows; // number of rows visible on the widget
     // mVisibleRows * mRowHeight is always >= height()
 
     // cached value of the tracker player position

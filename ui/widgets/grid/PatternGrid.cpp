@@ -1,7 +1,6 @@
 
 #include "core/clipboard/PatternClip.hpp"
 #include "widgets/grid/PatternGrid.hpp"
-#include "widgets/grid/layout.hpp"
 
 #include "trackerboy/note.hpp"
 
@@ -14,8 +13,6 @@
 #include <QUndoCommand>
 
 #include <algorithm>
-
-using namespace PatternConstants;
 
 
 // Philisophy note
@@ -162,16 +159,15 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
     auto const h = height();
     auto const rowHeight = mPainter.cellHeight();
-    unsigned const centerRow = mVisibleRows / 2;
+    auto const centerRow = mVisibleRows / 2;
 
     auto const cursor = mModel.cursor();
     auto patternPrev = mModel.previousPattern();
     auto patternCurr = mModel.currentPattern();
     auto patternNext = mModel.nextPattern();
-    auto const rowsInPrevious = patternPrev ? (int)patternPrev->totalRows() : 0;
-    auto const rowsInCurrent = (int)patternCurr.totalRows();
-    auto const rowsInNext = patternNext ? (int)patternNext->totalRows() : 0;
-    
+    auto const rowsInPrevious = patternPrev ? patternPrev->totalRows() : 0;
+    auto const rowsInCurrent = patternCurr.totalRows();
+    auto const rowsInNext = patternNext ? patternNext->totalRows() : 0;
 
     // Z-order (from back to front)
     // 1. window background (drawn by qwidget)
@@ -199,27 +195,28 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
 
         rowsToDraw = std::min(rowsToDraw, rowMax - relativeRowIndex);
 
-        mPainter.drawBackground(painter, ypos, relativeRowIndex, rowsToDraw);
+        mPainter.drawBackground(painter, mLayout, ypos, relativeRowIndex, rowsToDraw);
 
     }
 
     // [3] current row
     if (mTrackerRow) {
-        mPainter.drawRowBackground(painter, PatternPainter::ROW_PLAYER, *mTrackerRow);
+        mPainter.drawRowBackground(painter, mLayout, PatternPainter::RowPlayer, *mTrackerRow);
     }
     if (mEditorFocus) {
-        mPainter.drawRowBackground(painter, mModel.isRecording() ? PatternPainter::ROW_EDIT : PatternPainter::ROW_CURRENT, centerRow);
+        mPainter.drawRowBackground(painter, mLayout, mModel.isRecording() ? PatternPainter::RowEdit : PatternPainter::RowCurrent, centerRow);
     }
 
     // [4] selection
     if (mModel.hasSelection()) {
         auto selection = mModel.selection();
-        selection.translate(-cursor.row + (int)centerRow);
-        mPainter.drawSelection(painter, selection);
+        selection.translate(-cursor.row + centerRow);
+        auto rect = mLayout.selectionRectangle(selection);
+        mPainter.drawSelection(painter, rect);
     }
 
     // [5] cursor
-    mPainter.drawCursor(painter, PatternCursor(centerRow, cursor.column, cursor.track));
+    mPainter.drawCursor(painter, mLayout, PatternCursor(centerRow, cursor.column, cursor.track));
 
     // [6] text
     {
@@ -230,51 +227,48 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         if (relativeRowIndex < 0) {
             // a negative row index means we draw from the previous pattern
             if (patternPrev) {
-                uint16_t rowno;
+                int rowno;
                 int rowIndexToPrev = relativeRowIndex + rowsInPrevious;
                 if (rowIndexToPrev < 0) {
+                    // clamp
                     rowYpos += -rowIndexToPrev * rowHeight;
                     rowno = 0;
                 } else {
-                    rowno = (uint16_t)rowIndexToPrev;
+                    rowno = rowIndexToPrev;
                 }
                 painter.setOpacity(0.5);
-                do {
-                    rowYpos = mPainter.drawRow(painter, (*patternPrev)[rowno], rowno, rowYpos);
-                    ++rowno;
-                } while (rowno != rowsInPrevious);
+                rowYpos = mPainter.drawPattern(painter, mLayout, *patternPrev, rowno, rowsInPrevious - 1, rowYpos);
                 painter.setOpacity(1.0);
             } else {
                 // previews disabled or we don't have a previous pattern, just skip these rows
                 rowYpos += -relativeRowIndex * rowHeight;
             }
+
             rowsToDraw += relativeRowIndex;
             relativeRowIndex = 0;
         }
 
         // draw the current pattern
-        uint16_t rowno = (uint16_t)relativeRowIndex;
-        do {
-            rowYpos = mPainter.drawRow(painter, patternCurr[rowno], rowno, rowYpos);
-            ++rowno;
-            --rowsToDraw;
-        } while (rowno < rowsInCurrent && rowsToDraw > 0);
+        int rowEnd = relativeRowIndex + rowsToDraw;
+        if (rowEnd >= rowsInCurrent) {
+            rowEnd = rowsInCurrent - 1;
+        }
+        rowYpos = mPainter.drawPattern(painter, mLayout, patternCurr, relativeRowIndex, rowEnd, rowYpos);
+        rowsToDraw -= rowEnd - relativeRowIndex;
 
         if (rowsToDraw > 0 && patternNext) {
             // we have extra rows and a next pattern, draw it
-            rowno = 0;
+            if (rowsToDraw > rowsInNext) {
+                rowsToDraw = rowsInNext;
+            }
             painter.setOpacity(0.5);
-            do {
-                rowYpos = mPainter.drawRow(painter, (*patternNext)[rowno], rowno, rowYpos);
-                ++rowno;
-                --rowsToDraw;
-            } while (rowno < rowsInNext && rowsToDraw > 0);
+            mPainter.drawPattern(painter, mLayout, *patternNext, 0, rowsToDraw - 1, rowYpos);
             painter.setOpacity(1.0);
         }
     }
 
     // [7] lines
-    mPainter.drawLines(painter, h);
+    mPainter.drawLines(painter, mLayout, h);
 
     if (mHasDrag) {
         auto selection = mModel.selection();
@@ -282,8 +276,8 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         pos.row -= mDragRow;
         selection.moveTo(pos);
         selection.clamp(rowsInCurrent - 1);
-        selection.translate((int)centerRow - cursor.row);
-        auto rect = mPainter.selectionRectangle(selection);
+        selection.translate(centerRow - cursor.row);
+        auto rect = mLayout.selectionRectangle(selection);
 
         painter.setPen(Qt::white);
         painter.setCompositionMode(QPainter::RasterOp_SourceXorDestination);
@@ -380,7 +374,7 @@ void PatternGrid::mousePressEvent(QMouseEvent *evt) {
         
         mMousePos = evt->pos();
 
-        if (mMousePos.x() < mPainter.rownoWidth()) {
+        if (mMousePos.x() < mLayout.patternStart()) {
             // select whole rows instead of cells
             mModel.deselect();
             int row = mouseToRow(mMousePos.y());
@@ -430,7 +424,8 @@ void PatternGrid::mouseReleaseEvent(QMouseEvent *evt) {
 // ======================================================= PRIVATE METHODS ===
 
 void PatternGrid::updateCursor(PatternModel::CursorChangeFlags flags) {
-    if (flags.testFlag(PatternModel::CursorRowChanged)) {
+
+    if (flags | (PatternModel::CursorRowChanged | PatternModel::CursorTrackChanged)) {
         updateAll();
     } else {
         updateCursorRow();
@@ -439,7 +434,7 @@ void PatternGrid::updateCursor(PatternModel::CursorChangeFlags flags) {
 
 void PatternGrid::updateCursorRow() {
     auto cellHeight = mPainter.cellHeight();
-    QRect rect(mPainter.rownoWidth(), mVisibleRows / 2 * cellHeight, mPainter.trackWidth() * 4, cellHeight);
+    QRect rect(mLayout.patternStart(), mVisibleRows / 2 * cellHeight, mLayout.rowWidth(), cellHeight);
     update(rect);
 }
 
@@ -469,43 +464,28 @@ void PatternGrid::setSecondHighlight(int highlight) {
 void PatternGrid::fontChanged() {
 
     mVisibleRows = getVisibleRows();
-
-    auto const rownoWidth = mPainter.rownoWidth();
-    auto const trackWidth = mPainter.trackWidth();
-    mHeader.setWidths(rownoWidth, trackWidth);
+    mLayout.setCellSize(mPainter.cellWidth(), mPainter.cellHeight());
+    //auto const rownoWidth = mPainter.rownoWidth();
+    //auto const trackWidth = mPainter.trackWidth();
+    //mHeader.setWidths(rownoWidth, trackWidth);
 }
 
 int PatternGrid::mouseToRow(int const mouseY) {
-    return mModel.cursorRow() + (mouseY / mPainter.cellHeight() - ((int)mVisibleRows / 2));
+    return mModel.cursorRow() + (mouseY / mPainter.cellHeight() - (mVisibleRows / 2));
 }
 
 PatternCursor PatternGrid::mouseToCursor(QPoint const pos) {
-    auto x = pos.x() - mPainter.rownoWidth();
-    int col, track;
-    if (x < 0) {
-        col = -1;
-        track = -1;
-    } else {
-        auto cell = x / mPainter.cellWidth();
-        track = cell / TRACK_CELLS;
-        cell %= TRACK_CELLS;
-        col = TRACK_CELL_MAP[cell];
-
-    }
-
-    return {
-        mouseToRow(pos.y()),
-        col,
-        track
-    };
+    auto cursor = mLayout.mouseToCursor(pos);
+    cursor.row = mouseToRow(pos.y());
+    return cursor;
 }
 
 bool PatternGrid::rowIsValid(int row) {
-    return row >= 0 && row < (int)mModel.currentPattern().totalRows();
+    return row >= 0 && row < mModel.currentPattern().totalRows();
 }
 
 void PatternGrid::clampCursor(PatternCursor &cursor) {
-    cursor.row = std::clamp(cursor.row, 0, (int)mModel.currentPattern().totalRows() - 1);
+    cursor.row = std::clamp(cursor.row, 0, mModel.currentPattern().totalRows() - 1);
     if (cursor.track >= PatternCursor::MAX_TRACKS) {
         cursor.track = PatternCursor::MAX_TRACKS - 1;
         cursor.column = PatternCursor::MAX_COLUMNS - 1;
@@ -536,12 +516,12 @@ void PatternGrid::calculateTrackerRow() {
         if (currentPattern == trackerPattern) {
             trackerRow = trackerRowCursor - (cursorRow - centerRow);
         } else if (patternPrev && trackerPattern == currentPattern - 1) {
-            trackerRow = (centerRow - cursorRow) - ((int)patternPrev->totalRows() - trackerRowCursor);
+            trackerRow = (centerRow - cursorRow) - (patternPrev->totalRows() - trackerRowCursor);
         } else if (patternNext && trackerPattern == currentPattern + 1) {
-            trackerRow = (centerRow - cursorRow) + (int)patternNext->totalRows() + trackerRowCursor;
+            trackerRow = (centerRow - cursorRow) + patternNext->totalRows() + trackerRowCursor;
         }
 
-        if (trackerRow > 0 && trackerRow < (int)mVisibleRows && trackerRow != centerRow) {
+        if (trackerRow > 0 && trackerRow < mVisibleRows && trackerRow != centerRow) {
             mTrackerRow = trackerRow;
             update();
             return;

@@ -59,25 +59,18 @@ void CellPainter::setFont(QFont const& font) {
 
     // get the average character width
     mCellWidth = metrics.size(Qt::TextSingleLine, TU::PAINTABLE_CHARS).width() / TU::PAINTABLE_CHARS_COUNT;
-
-    cellSizeChanged(mCellWidth, mCellHeight);
-}
-
-void CellPainter::cellSizeChanged(int width, int height) {
-    Q_UNUSED(width)
-    Q_UNUSED(height)
-    // do nothing
 }
 
 
-void CellPainter::drawCell(QPainter &painter, char cell, int xpos, int ypos) {
+int CellPainter::drawCell(QPainter &painter, char cell, int xpos, int ypos) {
     mCellScratch[0] = cell;
     painter.drawText(xpos, ypos, mCellWidth, mCellHeight, Qt::AlignBottom, mCellScratch);
+    return xpos + mCellWidth;
 }
 
-void CellPainter::drawHex(QPainter &painter, char hex, int xpos, int ypos) {
-    drawCell(painter, TU::HEX_TABLE[hex >> 4], xpos, ypos);
-    drawCell(painter, TU::HEX_TABLE[hex & 0xF], xpos + mCellWidth, ypos);
+int CellPainter::drawHex(QPainter &painter, char hex, int xpos, int ypos) {
+    xpos = drawCell(painter, TU::HEX_TABLE[hex >> 4], xpos, ypos);
+    return drawCell(painter, TU::HEX_TABLE[hex & 0xF], xpos, ypos);
 }
 
 #undef TU

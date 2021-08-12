@@ -2,11 +2,12 @@
 #pragma once
 
 #include "core/graphics/CellPainter.hpp"
+#include "core/graphics/PatternLayout.hpp"
 #include "core/Palette.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 
-#include "trackerboy/data/PatternRow.hpp"
+#include "trackerboy/data/Pattern.hpp"
 
 #include <QColor>
 #include <QPen>
@@ -22,23 +23,23 @@ class PatternPainter : public CellPainter {
 public:
 
     enum RowType {
-        ROW_CURRENT,
-        ROW_EDIT,
-        ROW_PLAYER
+        RowCurrent,
+        RowEdit,
+        RowPlayer
     };
 
     PatternPainter(QFont const& font);
 
-    int rownoWidth() const;
+    //int rownoWidth() const;
 
-    int trackWidth() const;
+    //int trackWidth() const;
+
+    int patternStartPos() const;
 
     //
     // Returns true if accidentals will be drawn using flats instead of sharps
     //
     bool flats() const;
-
-    QRect selectionRectangle(PatternSelection const& selection);
 
     void setColors(Palette const& colors);
 
@@ -50,42 +51,49 @@ public:
 
     // drawing functions
 
-    void drawBackground(QPainter &painter, int ypos, int rowStart, int rows);
+    //
+    // draws the background for pattern data.
+    //
+    void drawBackground(QPainter &p, PatternLayout const& l, int ypos, int rowStart, int rows) const;
 
-    void drawRowBackground(QPainter &painter, RowType type, int row);
-
-    void drawCursor(QPainter &painter, PatternCursor cursor);
-
-    void drawLines(QPainter &painter, int height);
 
     //
-    // Paints the full row, including the row number, at the given y-position. Returns the
-    // y-position of the next row
+    // Draws the cursor row background or player row background
     //
-    int drawRow(QPainter &textPainter,
-                trackerboy::PatternRow const& rowdata, 
-                int rowno, 
-                int ypos
-                );
-    
+    void drawRowBackground(QPainter &p, PatternLayout const& l, RowType type, int row) const;
+
+    void drawCursor(QPainter &p, PatternLayout const& l, PatternCursor cursor) const;
+
+    void drawLines(QPainter &p, PatternLayout const& l, int height) const;
+
+    //
+    // Draws pattern data from the given pattern and range of rows starting
+    // at the given y position. The y position of the next row is returned
+    //
+    int drawPattern(
+        QPainter &p, PatternLayout const& l,
+        trackerboy::Pattern const& pattern,
+        int rowStart,
+        int rowEnd,
+        int ypos
+    );
+
     //
     // Draws the selection rectangle
     //
-    void drawSelection(QPainter &painter, PatternSelection const& selection);
+    void drawSelection(QPainter &painter, QRect const& rect) const;
 
     //
-    // Paints "nothing" or "-" for the cell(s)
+    // Paints "nothing" or "-" for the cell(s). The x position of the next
+    // cell is returned
     //
-    void drawNone(QPainter &painter, int cells, int xpos, int ypos);
+    int drawNone(QPainter &painter, int cells, int xpos, int ypos);
 
     //
-    // Paints a note at the given x and y position
+    // Paints a note at the given x and y position. The x position of the next
+    // cell is returned.
     //
-    void drawNote(QPainter &painter, uint8_t note, int xpos, int ypos);
-
-protected:
-
-    virtual void cellSizeChanged(int width, int height) override;
+    int drawNote(QPainter &painter, uint8_t note, int xpos, int ypos);
 
 private:
 
@@ -98,22 +106,17 @@ private:
     // Returns a reference to the cached QPen after setting its color to the
     // given parameter. Use this function instead of creating a temporary QPen
     //
-    QPen const& pen(QColor const& color);
+    QPen const& pen(QColor const& color) const;
 
-    int highlightIndex(int rowno);
+    int highlightIndex(int rowno) const;
     
     int mHighlightInterval1;
     int mHighlightInterval2;
-
-    int mRownoWidth;
-    int mTrackWidth;
-    int mPatternWidth;
 
     NoteTable const *mNoteTable;
 
     std::array<QColor, 3> mForegroundColors;
     std::array<QColor, 3> mBackgroundColors;
-
 
     QColor mColorInstrument;
     QColor mColorEffect;
@@ -126,7 +129,7 @@ private:
 
     // pen used in all draw functions, reusing this one prevents the
     // need to create a temporary
-    QPen mPen;
+    mutable QPen mPen;
 
 
 };
