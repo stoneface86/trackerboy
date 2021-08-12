@@ -114,7 +114,8 @@ if (SOUND_REQUIRED)
     # The split version is used to speed up compilation, the single c file gets compiled
     # into a library, miniaudio.
 
-    add_library(miniaudio STATIC "external/miniaudio.c")
+    add_library(miniaudio STATIC "external/miniaudio/extras/miniaudio_split/miniaudio.c")
+    target_include_directories(miniaudio PUBLIC "external/miniaudio/extras/miniaudio_split")
     #
     # add some definitions to cut out stuff we don't need
     #
