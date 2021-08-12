@@ -35,7 +35,8 @@ void InteractiveDemo::audioCallback(ma_device *device, void *out, const void *in
 
 InteractiveDemo::InteractiveDemo() :
     mSynth(DEVICE_SAMPLERATE),
-    mDevice()
+    mDevice(),
+    mLock(ATOMIC_FLAG_INIT)
 {
 }
 
