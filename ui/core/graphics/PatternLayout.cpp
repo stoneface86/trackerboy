@@ -164,6 +164,16 @@ PatternCursor PatternLayout::mouseToCursor(QPoint point) const {
 
 }
 
+int PatternLayout::mouseToTrack(int x) const {
+    x -= mPatternStart;
+    if (x >= 0) {
+        int track = x / mTrackWidth;
+        return track > 3 ? -1 : track;
+    } else {
+        return -1;
+    }
+}
+
 QRect PatternLayout::selectionRectangle(PatternSelection const& selection) const {
 
     auto iter = selection.iterator();

@@ -1,49 +1,56 @@
 
 #include "widgets/grid/PatternGridHeader.hpp"
 
+#include <QFontDatabase>
 #include <QPainter>
 #include <QMouseEvent>
-#include <QtDebug>
+
+#define TU PatternGridHeaderTU
+namespace TU {
+
+}
+
 
 PatternGridHeader::PatternGridHeader(QWidget *parent) :
     QWidget(parent),
-    mOffset(0),
-    mRownoWidth(0),
-    mTrackWidth(0),
-    mHeaderFont(QStringLiteral(":/images/gridHeaderFont.bmp")),
+    mLayout(nullptr),
     mTrackHover(HOVER_NONE),
     mTrackFlags(ChannelOutput::AllOn),
-    mColorForeground(),
-    mColorHover(),
+    mColorBackground(),
+    mColorForeground1(),
+    mColorForeground2(),
+    mColorEnabled(),
     mColorDisabled(),
-    mColorLine()
+    mLinePen()
 {
     setFixedHeight(HEIGHT);
     setAutoFillBackground(true);
     setMouseTracking(true);
+
+    auto _font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+    _font.setPixelSize(12);
+    setFont(_font);
+
+    mLinePen.setWidth(PatternLayout::LINE_WIDTH);
 }
 
 void PatternGridHeader::setColors(Palette const& colorTable) {
     
     auto pal = palette();
-    pal.setColor(backgroundRole(), colorTable[Palette::ColorHeaderBackground]);
+    pal.setColor(backgroundRole(), colorTable[Palette::ColorHeaderBackground2]);
     setPalette(pal);
-    mColorForeground = colorTable[Palette::ColorHeaderForeground];
-    mColorHover = colorTable[Palette::ColorHeaderHover];
+    mColorBackground = colorTable[Palette::ColorHeaderBackground1];
+    mColorForeground1 = colorTable[Palette::ColorHeaderForeground1];
+    mColorForeground2 = colorTable[Palette::ColorHeaderForeground2];
+    mColorEnabled = colorTable[Palette::ColorHeaderEnabled];
     mColorDisabled = colorTable[Palette::ColorHeaderDisabled];
-    mColorLine = colorTable[Palette::ColorLine];
+    mLinePen.setColor(colorTable[Palette::ColorLine]);
 
     update();
 }
 
-void PatternGridHeader::setWidths(int rownoWidth, int trackWidth) {
-    mRownoWidth = rownoWidth;
-    mTrackWidth = trackWidth;
-    update();
-}
-
-void PatternGridHeader::setOffset(int offset) {
-    mOffset = offset;
+void PatternGridHeader::setPatternLayout(const PatternLayout *layout) {
+    mLayout = layout;
     update();
 }
 
@@ -52,57 +59,47 @@ void PatternGridHeader::paintEvent(QPaintEvent *evt) {
 
     Q_UNUSED(evt);
 
+    if (mLayout == nullptr) {
+        return;
+    }
+
     QPainter painter(this);
-    
-    painter.setPen(mColorForeground);
-    painter.drawLine(0, HEIGHT - 2, width(), HEIGHT - 2);
-    
-    
-    painter.translate(QPoint(mOffset, 0));
+    QPen textPen(mColorForeground1);
 
-   
+    auto const h = height();
 
-    // disabled tracks
-    
-    int xpos = mRownoWidth;
-    for (int i = 0; i != 4; ++i) {
-        if (!(mTrackFlags & (1 << i))) {
-            painter.fillRect(xpos, 0, mTrackWidth, HEIGHT, mColorDisabled);
+    int xpos = mLayout->patternStart() - PatternLayout::LINE_WIDTH;
+    for (int track = 0; track < 4; ++track) {
+
+        auto const trackWidth = mLayout->trackWidth(track);
+
+        painter.setPen(mLinePen);
+        painter.drawLine(xpos, 0, xpos, h);
+        xpos += PatternLayout::LINE_WIDTH;
+
+        // background color
+        painter.fillRect(xpos + 1, 0, trackWidth - 1, h, mColorBackground);
+
+        bool const isPlaying = (mTrackFlags & (1 << track));
+        auto const& statusColor = isPlaying ? mColorEnabled : mColorDisabled;
+        auto const contentX = xpos + 3;
+        auto const contentWidth = trackWidth - 5;
+        painter.fillRect(contentX, 2, contentWidth, 4, statusColor);
+
+        if (mTrackHover == track) {
+            painter.fillRect(contentX, h - 2, contentWidth, 1, statusColor);
         }
-        xpos += mTrackWidth;
-    }
-    
-    
 
-    painter.translate(QPoint(mRownoWidth, 0));
+        // text
+        painter.setPen(textPen);
+        constexpr int textY = 8;
+        painter.drawText(contentX, textY, contentWidth, 12, Qt::AlignCenter, QStringLiteral("CH%1").arg(track + 1));
 
-    xpos = 2;
-    for (int i = 0; i != 4; ++i) {
-        // draw "CH"
-        painter.drawPixmap(xpos, 4, mHeaderFont, 0, 0, FONT_WIDTH * 2, FONT_HEIGHT);
-
-        // draw number
-        painter.drawPixmap(xpos + (FONT_WIDTH * 2), 4, mHeaderFont, FONT_WIDTH * (2 + i), 0, FONT_WIDTH, FONT_HEIGHT);
-        xpos += mTrackWidth;
+        xpos += trackWidth;
     }
 
-    // lines
-    xpos = 0;
-    painter.setPen(mColorLine);
-    for (int i = 0; i != 5; ++i) {
-        painter.drawLine(xpos, 0, xpos, HEIGHT);
-        xpos += mTrackWidth;
-    }
-
-
-    // highlight
-    if (mTrackHover != HOVER_NONE) {
-        painter.setPen(mColorHover);
-        int trackBegin = mTrackWidth * mTrackHover;
-        int trackEnd = trackBegin + mTrackWidth;
-        painter.drawLine(trackBegin, HEIGHT - 1, trackEnd, HEIGHT - 1);
-
-    }
+    painter.setPen(mLinePen);
+    painter.drawLine(xpos, 0, xpos, h);
     
 
 }
@@ -130,18 +127,11 @@ void PatternGridHeader::mouseDoubleClickEvent(QMouseEvent *evt) {
 
 void PatternGridHeader::mouseMoveEvent(QMouseEvent *evt) {
 
-    int mx = evt->x();
-
-    // translate the x coordinate so that 0 = track 1
-    int translated = mx - mOffset - mRownoWidth;
-    int hover;
-
-    if (translated > 0 && translated < mTrackWidth * 4) {
-        hover = translated / mTrackWidth;
-    } else {
-        hover = HOVER_NONE;
+    if (mLayout == nullptr) {
+        return;
     }
-    setTrackHover(hover);
+
+    setTrackHover(mLayout->mouseToTrack(evt->x()));
 }
 
 void PatternGridHeader::mousePressEvent(QMouseEvent *evt) {
@@ -167,3 +157,5 @@ void PatternGridHeader::setOutputFlags(ChannelOutput::Flags flags) {
         update();
     }
 }
+
+#undef TU

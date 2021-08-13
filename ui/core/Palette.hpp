@@ -57,9 +57,11 @@ public:
 
         ColorLine,
 
-        ColorHeaderBackground,
-        ColorHeaderForeground,
-        ColorHeaderHover,
+        ColorHeaderBackground1,
+        ColorHeaderBackground2,
+        ColorHeaderForeground1,
+        ColorHeaderForeground2,
+        ColorHeaderEnabled,
         ColorHeaderDisabled,
 
         ColorCount

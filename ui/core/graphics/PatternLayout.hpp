@@ -71,6 +71,8 @@ public:
     //
     PatternCursor mouseToCursor(QPoint point) const;
 
+    int mouseToTrack(int x) const;
+
     //
     // Converts the pattern selection to a rectangle for painting. 
     //

@@ -33,7 +33,7 @@ public:
         PatternModel &model,
         QWidget *parent = nullptr
     );
-    virtual ~PatternGrid() = default;
+    virtual ~PatternGrid();
 
     void setColors(Palette const& pal);
 
@@ -44,6 +44,11 @@ public:
 
     // if true then flats will be shown instead of sharps
     void setShowFlats(bool showFlats);
+
+    //
+    // If this setting is true, a shadow is drawn from under the grid header.
+    //
+    void setShowShadow(bool shadow);
 
     void setEditorFocus(bool focus);
 
@@ -114,6 +119,8 @@ private:
     PatternLayout mLayout;
     PatternPainter mPainter;
 
+    bool mShowShadow;
+
     bool mSelecting;
 
     int mVisibleRows; // number of rows visible on the widget
@@ -148,6 +155,8 @@ private:
     int mDragRow;
 
     MouseOperation mMouseOp;
+
+
 
 };
 

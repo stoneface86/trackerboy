@@ -44,6 +44,7 @@ PatternGrid::PatternGrid(
     mHeader(header),
     mModel(model),
     mPainter(font()),
+    mShowShadow(true),
     mSelecting(false),
     mVisibleRows(0),
     mEditorFocus(false),
@@ -72,8 +73,13 @@ PatternGrid::PatternGrid(
     connect(&model, &PatternModel::trackerCursorChanged, this, &PatternGrid::calculateTrackerRow);
     connect(&model, &PatternModel::playingChanged, this, &PatternGrid::setPlaying);
 
+
+    header.setPatternLayout(&mLayout);
 }
 
+PatternGrid::~PatternGrid() {
+    mHeader.setLayout(nullptr);
+}
 
 void PatternGrid::setColors(Palette const& colors) {
     mPainter.setColors(colors);
@@ -90,6 +96,13 @@ void PatternGrid::setColors(Palette const& colors) {
 void PatternGrid::setShowFlats(bool showFlats) {
     if (showFlats != mPainter.flats()) {
         mPainter.setFlats(showFlats);
+        update();
+    }
+}
+
+void PatternGrid::setShowShadow(bool shadow) {
+    if (shadow != mShowShadow) {
+        mShowShadow = shadow;
         update();
     }
 }
@@ -284,6 +297,14 @@ void PatternGrid::paintEvent(QPaintEvent *evt) {
         painter.drawRect(rect);
     }
 
+
+    // drop shadow from header
+    if (mShowShadow) {
+        auto const w = width();
+        painter.fillRect(0, 0, w, 1, QColor(0, 0, 0, 180));
+        painter.fillRect(0, 1, w, 1, QColor(0, 0, 0, 120));
+        painter.fillRect(0, 2, w, 1, QColor(0, 0, 0, 60));
+    }
 }
 
 void PatternGrid::resizeEvent(QResizeEvent *evt) {

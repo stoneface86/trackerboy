@@ -1,11 +1,11 @@
 
 #pragma once
 
+#include "core/graphics/PatternLayout.hpp"
 #include "core/ChannelOutput.hpp"
 #include "core/Palette.hpp"
 
-#include <QBitmap>
-#include <QPixmap>
+#include <QPen>
 #include <QWidget>
 
 class PatternGridHeader : public QWidget {
@@ -18,54 +18,48 @@ public:
 
     void setColors(Palette const& colorTable);
 
-    void setWidths(int rownoWidth, int trackWidth);
-
-    void setOffset(int offset);
+    void setPatternLayout(PatternLayout const* layout);
 
 signals:
     void outputChanged(ChannelOutput::Flags flags);
 
 protected:
 
-    void paintEvent(QPaintEvent *evt) override;
+    virtual void paintEvent(QPaintEvent *evt) override;
 
-    void leaveEvent(QEvent *evt) override;
+    virtual void leaveEvent(QEvent *evt) override;
 
-    void mouseDoubleClickEvent(QMouseEvent *evt) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent *evt) override;
 
-    void mouseMoveEvent(QMouseEvent *evt) override;
+    virtual void mouseMoveEvent(QMouseEvent *evt) override;
 
-    void mousePressEvent(QMouseEvent *evt) override;
+    virtual void mousePressEvent(QMouseEvent *evt) override;
 
 
 private:
     Q_DISABLE_COPY(PatternGridHeader)
 
-    static constexpr int HEIGHT = 32;
-    static constexpr int FONT_WIDTH = 7;
-    static constexpr int FONT_HEIGHT = 11;
-
+    static constexpr int HEIGHT = 36;
     static constexpr int HOVER_NONE = -1;
 
     void setOutputFlags(ChannelOutput::Flags flags);
 
     void setTrackHover(int hover);
 
-    int mOffset;
-    int mRownoWidth;
-    int mTrackWidth;
-
-    // 1bpp font 7x11, used for the Header
-    QBitmap mHeaderFont;
+    PatternLayout const* mLayout;
 
     // header stuff
     int mTrackHover;
 
     ChannelOutput::Flags mTrackFlags;
 
-    QColor mColorForeground;
-    QColor mColorHover;
+    QColor mColorBackground;
+    QColor mColorForeground1;
+    QColor mColorForeground2;
+
+    QColor mColorEnabled;
     QColor mColorDisabled;
-    QColor mColorLine;
+
+    QPen mLinePen;
 
 };
