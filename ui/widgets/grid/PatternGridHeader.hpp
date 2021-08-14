@@ -20,10 +20,18 @@ public:
 
     void setPatternLayout(PatternLayout const* layout);
 
+    void toggleTrack(int track);
+
+    void soloTrack(int track);
+
+    void unmuteAll();
+
 signals:
     void outputChanged(ChannelOutput::Flags flags);
 
 protected:
+
+    virtual void contextMenuEvent(QContextMenuEvent *evt) override;
 
     virtual void paintEvent(QPaintEvent *evt) override;
 

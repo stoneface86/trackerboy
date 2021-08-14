@@ -437,24 +437,24 @@ void Renderer::resetPreview(Handle &handle) {
     handle->previewState = PreviewState::none;
 }
 
-// void Renderer::setChannelOutput(Document::OutputFlags flags) {
-//     auto handle = mContext.access();
-//     _setChannelOutput(handle, flags);
-// }
+ void Renderer::setChannelOutput(ChannelOutput::Flags flags) {
+     auto ctx = mContext.access();
+     _setChannelOutput(ctx, flags);
+ }
 
-// void Renderer::_setChannelOutput(Handle &handle, Document::OutputFlags flags) {
-//     int flag = Document::CH1;
-//     for (int i = 0; i < 4; ++i) {
-//         auto ch = static_cast<trackerboy::ChType>(i);
-//         if (flags.testFlag((Document::OutputFlag)(flag))) {
-//             handle->engine.lock(ch);
-//         } else {
-//             // channel is disabled, keep unlocked
-//             handle->engine.unlock(ch);
-//         }
-//         flag <<= 1;
-//     }
-// }
+ void Renderer::_setChannelOutput(Handle &handle, ChannelOutput::Flags flags) {
+     int flag = ChannelOutput::CH1;
+     for (int i = 0; i < 4; ++i) {
+         auto ch = static_cast<trackerboy::ChType>(i);
+         if (flags.testFlag((ChannelOutput::Flag)(flag))) {
+             handle->engine.lock(ch);
+         } else {
+             // channel is disabled, keep unlocked
+             handle->engine.unlock(ch);
+         }
+         flag <<= 1;
+     }
+ }
 
 void Renderer::timerCallback(void *userData) {
     // called by FastTimer 

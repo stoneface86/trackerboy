@@ -175,11 +175,11 @@ void MainWindow::onTrackerStop() {
 }
 
 void MainWindow::onTrackerSolo() {
-
+    mPatternEditor->gridHeader()->soloTrack(mPatternModel->cursorTrack());
 }
 
 void MainWindow::onTrackerToggleOutput() {
-
+    mPatternEditor->gridHeader()->toggleTrack(mPatternModel->cursorTrack());
 }
 
 void MainWindow::onTrackerKill() {

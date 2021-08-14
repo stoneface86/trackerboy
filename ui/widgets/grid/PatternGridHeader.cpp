@@ -1,12 +1,16 @@
 
 #include "widgets/grid/PatternGridHeader.hpp"
 
+#include <QContextMenuEvent>
 #include <QFontDatabase>
 #include <QPainter>
 #include <QMouseEvent>
+#include <QMenu>
+#include <QtDebug>
 
 #define TU PatternGridHeaderTU
 namespace TU {
+
 
 }
 
@@ -54,6 +58,61 @@ void PatternGridHeader::setPatternLayout(const PatternLayout *layout) {
     update();
 }
 
+void PatternGridHeader::toggleTrack(int track) {
+    mTrackFlags ^= (ChannelOutput::Flag)(1 << track);
+    emit outputChanged(mTrackFlags);
+    update();
+}
+
+void PatternGridHeader::soloTrack(int track) {
+    auto soloFlag = (ChannelOutput::Flag)(1 << track);
+    if (soloFlag == mTrackFlags) {
+        // unsolo
+        mTrackFlags = ChannelOutput::AllOn;
+    } else {
+        // solo
+        mTrackFlags = soloFlag;
+    }
+    emit outputChanged(mTrackFlags);
+    update();
+}
+
+void PatternGridHeader::unmuteAll() {
+    if (mTrackFlags != ChannelOutput::AllOn) {
+        mTrackFlags = ChannelOutput::AllOn;
+        emit outputChanged(mTrackFlags);
+        update();
+    }
+}
+
+void PatternGridHeader::contextMenuEvent(QContextMenuEvent *evt) {
+    auto menu = new QMenu(this);
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+
+    QAction *act;
+
+    if (mTrackHover != HOVER_NONE) {
+        // add actions for the current track
+        auto channelNum = mTrackHover + 1;
+        auto trackHover = mTrackHover;
+        act = menu->addAction(tr("Toggle channel %1").arg(channelNum));
+        connect(act, &QAction::triggered, this,
+            [this, trackHover]() {
+                toggleTrack(trackHover);
+            });
+        act = menu->addAction(tr("Solo channel %1").arg(channelNum));
+        connect(act, &QAction::triggered, this,
+            [this, trackHover]() {
+                soloTrack(trackHover);
+            });
+        menu->addSeparator();
+    }
+
+    act = menu->addAction(tr("Unmute all channels"));
+    connect(act, &QAction::triggered, this, &PatternGridHeader::unmuteAll);
+
+    menu->popup(evt->globalPos());
+}
 
 void PatternGridHeader::paintEvent(QPaintEvent *evt) {
 
@@ -137,9 +196,7 @@ void PatternGridHeader::mouseMoveEvent(QMouseEvent *evt) {
 void PatternGridHeader::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton && mTrackHover != HOVER_NONE) {
         // user clicked on a track header either to mute or unmute the channel
-        mTrackFlags ^= (ChannelOutput::Flag)(1 << mTrackHover);
-        emit outputChanged(mTrackFlags);
-        update();
+        toggleTrack(mTrackHover);
     }
 }
 
@@ -157,5 +214,6 @@ void PatternGridHeader::setOutputFlags(ChannelOutput::Flags flags) {
         update();
     }
 }
+
 
 #undef TU

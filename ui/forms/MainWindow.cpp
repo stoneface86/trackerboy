@@ -461,6 +461,8 @@ void MainWindow::setupUi() {
             openEditor(mDockWaveformEditor, item);
         });
 
+    connect(mPatternEditor->gridHeader(), &PatternGridHeader::outputChanged, mRenderer, &Renderer::setChannelOutput);
+
     auto app = static_cast<QApplication*>(QApplication::instance());
     connect(app, &QApplication::focusChanged, this, &MainWindow::handleFocusChange);
 

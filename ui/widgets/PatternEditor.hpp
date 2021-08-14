@@ -31,6 +31,8 @@ public:
 
     PatternGrid* grid();
 
+    PatternGridHeader* gridHeader();
+
     void setColors(Palette const& colors);
 
     virtual void midiNoteOn(int note) override;

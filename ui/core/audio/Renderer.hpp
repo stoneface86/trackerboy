@@ -193,12 +193,9 @@ public slots:
     //
     void forceStop();
 
-private slots:
+    void setChannelOutput(ChannelOutput::Flags output);
 
-    //
-    // Enables/Disables channel output for music playback
-    //
-    //void setChannelOutput(ChannelOutput::Flags flags);
+private slots:
 
     //
     // invoked when the current song being edited has changed. If music is
@@ -277,7 +274,7 @@ private:
 
     void previewNoteOrInstrument(int note, int track = -1, int instrument = -1);
 
-    //void _setChannelOutput(Handle &handle, ChannelOutput::Flags flags);
+    void _setChannelOutput(Handle &handle, ChannelOutput::Flags flags);
 
     // stream management -----------------------------------------------------
 

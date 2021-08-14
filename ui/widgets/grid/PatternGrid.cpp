@@ -78,7 +78,7 @@ PatternGrid::PatternGrid(
 }
 
 PatternGrid::~PatternGrid() {
-    mHeader.setLayout(nullptr);
+    //mHeader.setPatternLayout(nullptr);
 }
 
 void PatternGrid::setColors(Palette const& colors) {
