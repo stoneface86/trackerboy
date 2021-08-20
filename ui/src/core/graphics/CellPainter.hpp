@@ -25,7 +25,7 @@ public:
     //
     int drawCell(QPainter &painter, char cell, int xpos, int ypos);
 
-    int drawHex(QPainter &painter, char hex, int xpos, int ypos);
+    int drawHex(QPainter &painter, int hex, int xpos, int ypos);
 
 private:
 

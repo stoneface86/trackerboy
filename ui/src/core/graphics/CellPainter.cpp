@@ -68,8 +68,8 @@ int CellPainter::drawCell(QPainter &painter, char cell, int xpos, int ypos) {
     return xpos + mCellWidth;
 }
 
-int CellPainter::drawHex(QPainter &painter, char hex, int xpos, int ypos) {
-    xpos = drawCell(painter, TU::HEX_TABLE[hex >> 4], xpos, ypos);
+int CellPainter::drawHex(QPainter &painter, int hex, int xpos, int ypos) {
+    xpos = drawCell(painter, TU::HEX_TABLE[(hex >> 4) & 0xF], xpos, ypos);
     return drawCell(painter, TU::HEX_TABLE[hex & 0xF], xpos, ypos);
 }
 
