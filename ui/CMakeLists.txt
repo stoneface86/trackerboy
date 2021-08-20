@@ -10,7 +10,7 @@ get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
 
 if (WIN32)
     set(GUI_TYPE WIN32)
-    set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
+    set(WINDOWS_APPICON_RC "src/resources/icons/app/appicon.rc")
     find_program(WINDEPLOYQT windeployqt HINTS "${_qt_bin_dir}")
 elseif (APPLE)
     set(GUI_TYPE MACOSX_BUNDLE)
@@ -154,7 +154,7 @@ if (VCPKG_TOOLCHAIN)
     # hack
     # the toolchain should do this but it does not for some reason ?
     # might just be a problem with the rtmidi port
-    target_include_directories(ui PRIVATE "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
+    target_include_directories(ui PUBLIC "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
 endif ()
 
 unityBuildable(ui)
