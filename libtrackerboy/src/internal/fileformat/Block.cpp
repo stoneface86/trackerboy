@@ -23,13 +23,13 @@ BlockId InputBlock::begin() {
     BlockId id;
     mStream.read(reinterpret_cast<char*>(&id), sizeof(id));
     if (!mStream.good()) {
-        throw IOError();
+        return 0;
     }
 
     BlockSize size;
     mStream.read(reinterpret_cast<char*>(&size), sizeof(size));
     if (!mStream.good()) {
-        throw IOError();
+        return 0;
     }
     mSize = correctEndian(size);
     mPosition = 0;
@@ -54,9 +54,6 @@ void InputBlock::read(size_t count, char *data) {
     }
 
     mStream.read(data, count);
-    if (!mStream.good()) {
-        throw IOError();
-    }
     mPosition = newpos;
 }
 
@@ -72,17 +69,11 @@ OutputBlock::OutputBlock(std::ostream &stream) :
 void OutputBlock::begin(BlockId id) {
     BlockId idOut = correctEndian(id);
     mStream.write(reinterpret_cast<const char*>(&idOut), sizeof(idOut));
-    if (!mStream.good()) {
-        throw IOError();
-    }
 
     mLengthPos = mStream.tellp();
 
     uint32_t size = 0;
     mStream.write(reinterpret_cast<const char*>(&size), sizeof(size));
-    if (!mStream.good()) {
-        throw IOError();
-    }
 
     mSize = 0;
 }
@@ -97,9 +88,6 @@ void OutputBlock::finish() {
         mStream.seekp(mLengthPos);
         BlockSize size = correctEndian((uint32_t)mSize);
         mStream.write(reinterpret_cast<const char*>(&size), sizeof(size));
-        if (!mStream.good()) {
-            throw IOError();
-        }
 
         mStream.seekp(oldpos);
     }
@@ -108,9 +96,6 @@ void OutputBlock::finish() {
 template <>
 void OutputBlock::write(size_t count, const char* data) {
     mStream.write(data, count);
-    if (!mStream.good()) {
-        throw IOError();
-    }
     mSize += count;
 }
 

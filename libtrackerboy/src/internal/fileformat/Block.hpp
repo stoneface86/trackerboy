@@ -13,10 +13,6 @@
 
 namespace trackerboy {
 
-class IOError : public std::exception {
-
-};
-
 class BoundsError : public std::exception {
 
 };

@@ -64,16 +64,21 @@ FormatError readPayloadImpl(Module &mod, InputBlock &block, T& handler, Ts&... h
 
 template <class... Ts>
 FormatError readPayload(Module &mod, std::istream &stream, Ts&... handlers) {
+    auto const exceptions = stream.exceptions();
+    stream.exceptions(std::ios_base::failbit | std::ios_base::badbit | std::ios_base::eofbit);
+
+    FormatError error;
     InputBlock block(stream);
     try {
-        return readPayloadImpl(mod, block, handlers...);
-    } catch (IOError const& err) {
-        (void)err;
-        return FormatError::readError;
-    } catch (BoundsError const& err) {
-        (void)err;
-        return FormatError::invalid;
+        error = readPayloadImpl(mod, block, handlers...);
+    } catch (std::ios_base::failure const&) {
+        error = FormatError::readError;
+    } catch (BoundsError const&) {
+        error = FormatError::invalid;
     }
+
+    stream.exceptions(exceptions);
+    return error;
 }
 
 
@@ -95,15 +100,19 @@ void writePayloadImpl(Module const& mod, OutputBlock &block, T& handler, Ts&... 
 
 template <class... Ts>
 bool writePayload(Module const& mod, std::ostream &stream, Ts&... handlers) {
+    auto const exceptions = stream.exceptions();
+    stream.exceptions(std::ios_base::failbit | std::ios_base::badbit | std::ios_base::eofbit);
+    
+    bool success = true;
     OutputBlock block(stream);
     try {
         writePayloadImpl(mod, block, handlers...);
-    } catch (IOError const& err) {
-        (void)err;
-        return false;
+    } catch (std::ios_base::failure const&) {
+        success = false;
     }
 
-    return true;
+    stream.exceptions(exceptions); // restore the stream's exception mask
+    return success;
 }
 
 

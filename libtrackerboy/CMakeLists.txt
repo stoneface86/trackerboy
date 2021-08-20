@@ -127,6 +127,7 @@ if (ENABLE_TESTS)
         "test/engine/test_Timer.cpp"
 
         "test/internal/test_endian.cpp"
+        "test/internal/fileformat/test_Block.cpp"
     )
     target_link_libraries(test_trackerboy PRIVATE trackerboy Catch2Main)
     target_include_directories(test_trackerboy PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
