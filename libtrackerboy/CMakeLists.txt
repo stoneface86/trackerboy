@@ -1,122 +1,112 @@
 
 project("libtrackerboy")
 
-set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
-
-# paths are relative to ${INCLUDE_DIR}/
 set(PUB_HEADERS
-    "trackerboy/data/DataItem.hpp"
-    "trackerboy/data/InfoStr.hpp"
-    "trackerboy/data/Instrument.hpp"
-    "trackerboy/data/Module.hpp"
-    "trackerboy/data/Order.hpp"
-    "trackerboy/data/OrderRow.hpp"
-    "trackerboy/data/Pattern.hpp"
-    "trackerboy/data/PatternMaster.hpp"
-    "trackerboy/data/PatternRow.hpp"
-    "trackerboy/data/Sequence.hpp"
-    "trackerboy/data/Song.hpp"
-    "trackerboy/data/SongList.hpp"
-    "trackerboy/data/Table.hpp"
-    "trackerboy/data/Track.hpp"
-    "trackerboy/data/TrackRow.hpp"
-    "trackerboy/data/Waveform.hpp"
-    "trackerboy/engine/ChannelControl.hpp"
-    "trackerboy/engine/ChannelState.hpp"
-    "trackerboy/engine/Engine.hpp"
-    "trackerboy/engine/Frame.hpp"
-    "trackerboy/engine/FrequencyControl.hpp"
-    "trackerboy/engine/GlobalState.hpp"
-    "trackerboy/engine/IApu.hpp"
-    "trackerboy/engine/InstrumentRuntime.hpp"
-    "trackerboy/engine/MusicRuntime.hpp"
-    "trackerboy/engine/Operation.hpp"
-    "trackerboy/engine/RuntimeContext.hpp"
-    "trackerboy/engine/Timer.hpp"
-    "trackerboy/engine/TrackControl.hpp"
-    "trackerboy/export/Player.hpp"
-    "trackerboy/InstrumentPreview.hpp"
-    "trackerboy/note.hpp"
-    "trackerboy/Synth.hpp"
-    "trackerboy/trackerboy.hpp"
-    "trackerboy/version.hpp"
+    "include/trackerboy/data/DataItem.hpp"
+    "include/trackerboy/data/InfoStr.hpp"
+    "include/trackerboy/data/Instrument.hpp"
+    "include/trackerboy/data/Module.hpp"
+    "include/trackerboy/data/Order.hpp"
+    "include/trackerboy/data/OrderRow.hpp"
+    "include/trackerboy/data/Pattern.hpp"
+    "include/trackerboy/data/PatternMaster.hpp"
+    "include/trackerboy/data/PatternRow.hpp"
+    "include/trackerboy/data/Sequence.hpp"
+    "include/trackerboy/data/Song.hpp"
+    "include/trackerboy/data/SongList.hpp"
+    "include/trackerboy/data/Table.hpp"
+    "include/trackerboy/data/Track.hpp"
+    "include/trackerboy/data/TrackRow.hpp"
+    "include/trackerboy/data/Waveform.hpp"
+    "include/trackerboy/engine/ChannelControl.hpp"
+    "include/trackerboy/engine/ChannelState.hpp"
+    "include/trackerboy/engine/Engine.hpp"
+    "include/trackerboy/engine/Frame.hpp"
+    "include/trackerboy/engine/FrequencyControl.hpp"
+    "include/trackerboy/engine/GlobalState.hpp"
+    "include/trackerboy/engine/IApu.hpp"
+    "include/trackerboy/engine/InstrumentRuntime.hpp"
+    "include/trackerboy/engine/MusicRuntime.hpp"
+    "include/trackerboy/engine/Operation.hpp"
+    "include/trackerboy/engine/RuntimeContext.hpp"
+    "include/trackerboy/engine/Timer.hpp"
+    "include/trackerboy/engine/TrackControl.hpp"
+    "include/trackerboy/export/Player.hpp"
+    "include/trackerboy/InstrumentPreview.hpp"
+    "include/trackerboy/note.hpp"
+    "include/trackerboy/Synth.hpp"
+    "include/trackerboy/trackerboy.hpp"
+    "include/trackerboy/version.hpp"
 )
 
-foreach (arg IN ITEMS ${PUB_HEADERS})
-    list(APPEND _lst "${INCLUDE_DIR}/${arg}")
-endforeach ()
-
-set(PUB_HEADERS "${_lst}")
-unset(_lst)
-
 set(SRC_FILES
-    "data/DataItem.cpp"
-    "data/InfoStr.cpp"
-    "data/Instrument.cpp"
-    "data/Module.cpp"
-    "data/Order.cpp"
-    "data/Pattern.cpp"
-    "data/PatternMaster.cpp"
-    "data/Sequence.cpp"
-    "data/Song.cpp"
-    "data/SongList.cpp"
-    "data/Table.cpp"
-    "data/Track.cpp"
-    "data/TrackRow.cpp"
-    "data/Waveform.cpp"
+    "src/data/DataItem.cpp"
+    "src/data/InfoStr.cpp"
+    "src/data/Instrument.cpp"
+    "src/data/Module.cpp"
+    "src/data/Order.cpp"
+    "src/data/Pattern.cpp"
+    "src/data/PatternMaster.cpp"
+    "src/data/Sequence.cpp"
+    "src/data/Song.cpp"
+    "src/data/SongList.cpp"
+    "src/data/Table.cpp"
+    "src/data/Track.cpp"
+    "src/data/TrackRow.cpp"
+    "src/data/Waveform.cpp"
 
-    "engine/ChannelControl.cpp"
-    "engine/Engine.cpp"
-    "engine/FrequencyControl.cpp"
-    "engine/IApu.cpp"
-    "engine/InstrumentRuntime.cpp"
-    "engine/MusicRuntime.cpp"
-    "engine/Operation.cpp"
-    "engine/RuntimeContext.cpp"
-    "engine/Timer.cpp"
-    "engine/TrackControl.cpp"
+    "src/engine/ChannelControl.cpp"
+    "src/engine/Engine.cpp"
+    "src/engine/FrequencyControl.cpp"
+    "src/engine/IApu.cpp"
+    "src/engine/InstrumentRuntime.cpp"
+    "src/engine/MusicRuntime.cpp"
+    "src/engine/Operation.cpp"
+    "src/engine/RuntimeContext.cpp"
+    "src/engine/Timer.cpp"
+    "src/engine/TrackControl.cpp"
 
-    "export/Player.cpp"
+    "src/export/Player.cpp"
     
-    "internal/fileformat/payload/deserializePayload0.cpp"
-    "internal/fileformat/payload/deserializePayload1.cpp"
-    "internal/fileformat/payload/payload.hpp"
-    "internal/fileformat/payload/PayloadHandler.hpp"
-    "internal/fileformat/payload/serializePayload.cpp"
-    "internal/fileformat/payload/handlers/CommHandler.cpp"
-    "internal/fileformat/payload/handlers/CommHandler.hpp"
-    "internal/fileformat/payload/handlers/InstHandler.cpp"
-    "internal/fileformat/payload/handlers/InstHandler.hpp"
-    "internal/fileformat/payload/handlers/SongHandler.cpp"
-    "internal/fileformat/payload/handlers/SongHandler.hpp"
-    "internal/fileformat/payload/handlers/WaveHandler.cpp"
-    "internal/fileformat/payload/handlers/WaveHandler.hpp"
-    "internal/fileformat/Block.hpp"
-    "internal/fileformat/Block.cpp"
-    "internal/fileformat/fileformat.hpp"
-    "internal/fileformat/fileformat.cpp"
-    "internal/endian.hpp"
-    "internal/enumutils.hpp"
+    "src/internal/fileformat/payload/deserializePayload0.cpp"
+    "src/internal/fileformat/payload/deserializePayload1.cpp"
+    "src/internal/fileformat/payload/payload.hpp"
+    "src/internal/fileformat/payload/PayloadHandler.hpp"
+    "src/internal/fileformat/payload/serializePayload.cpp"
+    "src/internal/fileformat/payload/handlers/CommHandler.cpp"
+    "src/internal/fileformat/payload/handlers/CommHandler.hpp"
+    "src/internal/fileformat/payload/handlers/InstHandler.cpp"
+    "src/internal/fileformat/payload/handlers/InstHandler.hpp"
+    "src/internal/fileformat/payload/handlers/SongHandler.cpp"
+    "src/internal/fileformat/payload/handlers/SongHandler.hpp"
+    "src/internal/fileformat/payload/handlers/WaveHandler.cpp"
+    "src/internal/fileformat/payload/handlers/WaveHandler.hpp"
+    "src/internal/fileformat/Block.hpp"
+    "src/internal/fileformat/Block.cpp"
+    "src/internal/fileformat/fileformat.hpp"
+    "src/internal/fileformat/fileformat.cpp"
+    "src/internal/endian.hpp"
+    "src/internal/enumutils.hpp"
     
-    "InstrumentPreview.cpp"
-    "note.cpp"
-    "Synth.cpp"
-    "version.cpp"
+    "src/InstrumentPreview.cpp"
+    "src/note.cpp"
+    "src/Synth.cpp"
+    "src/version.cpp"
 )
 
 if (IS_BIG_ENDIAN)
-    list(APPEND SRC_FILES "internal/endian.cpp")
+    list(APPEND SRC_FILES "src/internal/endian.cpp")
 endif ()
 
 
 # give version information to version.cpp via preproccessor macros
-set_source_files_properties("version.cpp" PROPERTIES COMPILE_DEFINITIONS "VERSION_MAJOR=${trackerboy_VERSION_MAJOR};VERSION_MINOR=${trackerboy_VERSION_MINOR};VERSION_PATCH=${trackerboy_VERSION_PATCH}")
+set_source_files_properties("src/version.cpp" PROPERTIES COMPILE_DEFINITIONS "VERSION_MAJOR=${trackerboy_VERSION_MAJOR};VERSION_MINOR=${trackerboy_VERSION_MINOR};VERSION_PATCH=${trackerboy_VERSION_PATCH}")
 add_library("trackerboy" STATIC "${SRC_FILES}" "${PUB_HEADERS}")
 
 unityBuildable(trackerboy)
 
-target_include_directories(trackerboy PUBLIC "${INCLUDE_DIR}")
-target_include_directories(trackerboy PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(trackerboy PUBLIC "include")
+target_include_directories(trackerboy PRIVATE "src")
 
 target_link_libraries(trackerboy PRIVATE trackerboyWarnings)
 # gbapu is the default APU implementation
@@ -139,7 +129,7 @@ if (ENABLE_TESTS)
         "test/internal/test_endian.cpp"
     )
     target_link_libraries(test_trackerboy PRIVATE trackerboy Catch2Main)
-    target_include_directories(test_trackerboy PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    target_include_directories(test_trackerboy PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
     if (IS_BIG_ENDIAN)
         target_compile_definitions(test_trackerboy PRIVATE -DTRACKERBOY_BIG_ENDIAN)
     endif ()
