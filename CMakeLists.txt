@@ -58,10 +58,6 @@ endfunction ()
 set(PACKAGE_MODE "CONFIG")
 
 if (VCPKG_TOOLCHAIN)
-    # hack
-    # the toolchain should do this but it does not for some reason ?
-    # might just be a problem with the rtmidi port
-    include_directories("${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
     unset(USE_FIND_SCRIPTS)
 else ()
     # not using vcpkg, unset this setting

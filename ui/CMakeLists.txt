@@ -150,6 +150,12 @@ target_link_libraries(ui PUBLIC
     trackerboyWarnings
 )
 target_include_directories(ui PUBLIC "src")
+if (VCPKG_TOOLCHAIN)
+    # hack
+    # the toolchain should do this but it does not for some reason ?
+    # might just be a problem with the rtmidi port
+    target_include_directories(ui PRIVATE "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
+endif ()
 
 unityBuildable(ui)
 
