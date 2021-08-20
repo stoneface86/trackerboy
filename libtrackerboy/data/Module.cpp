@@ -292,7 +292,7 @@ FormatError Module::serialize(std::ostream &stream) const noexcept {
     // add a terminator, the signature reversed
     Signature terminator;
     std::copy(FILE_SIGNATURE.rbegin(), FILE_SIGNATURE.rend(), terminator.begin());
-    stream.write(terminator.begin(), terminator.size());
+    stream.write(terminator.data(), terminator.size());
     if (!stream.good()) {
         return FormatError::writeError;
     }

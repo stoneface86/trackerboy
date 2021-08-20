@@ -60,6 +60,9 @@ private:
 
 };
 
+template <>
+void InputBlock::read(size_t count, char *data);
+
 //
 // Class for writing data and encapsulating it in a "block"
 // A block contains a 4-byte id and a 4-byte size.
@@ -95,7 +98,8 @@ private:
 
 };
 
-
+template <>
+void OutputBlock::write(size_t count, const char *data);
 
 
 
