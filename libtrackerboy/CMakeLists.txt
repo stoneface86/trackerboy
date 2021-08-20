@@ -6,6 +6,7 @@ set(INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 # paths are relative to ${INCLUDE_DIR}/
 set(PUB_HEADERS
     "trackerboy/data/DataItem.hpp"
+    "trackerboy/data/InfoStr.hpp"
     "trackerboy/data/Instrument.hpp"
     "trackerboy/data/Module.hpp"
     "trackerboy/data/Order.hpp"
@@ -34,7 +35,6 @@ set(PUB_HEADERS
     "trackerboy/engine/Timer.hpp"
     "trackerboy/engine/TrackControl.hpp"
     "trackerboy/export/Player.hpp"
-    "trackerboy/fileformat.hpp"
     "trackerboy/InstrumentPreview.hpp"
     "trackerboy/note.hpp"
     "trackerboy/Synth.hpp"
@@ -51,6 +51,7 @@ unset(_lst)
 
 set(SRC_FILES
     "data/DataItem.cpp"
+    "data/InfoStr.cpp"
     "data/Instrument.cpp"
     "data/Module.cpp"
     "data/Order.cpp"
@@ -76,11 +77,27 @@ set(SRC_FILES
     "engine/TrackControl.cpp"
 
     "export/Player.cpp"
-
+    
+    "internal/fileformat/payload/deserializePayload0.cpp"
+    "internal/fileformat/payload/deserializePayload1.cpp"
+    "internal/fileformat/payload/payload.hpp"
+    "internal/fileformat/payload/PayloadHandler.hpp"
+    "internal/fileformat/payload/serializePayload.cpp"
+    "internal/fileformat/payload/handlers/CommHandler.cpp"
+    "internal/fileformat/payload/handlers/CommHandler.hpp"
+    "internal/fileformat/payload/handlers/InstHandler.cpp"
+    "internal/fileformat/payload/handlers/InstHandler.hpp"
+    "internal/fileformat/payload/handlers/SongHandler.cpp"
+    "internal/fileformat/payload/handlers/SongHandler.hpp"
+    "internal/fileformat/payload/handlers/WaveHandler.cpp"
+    "internal/fileformat/payload/handlers/WaveHandler.hpp"
+    "internal/fileformat/Block.hpp"
+    "internal/fileformat/Block.cpp"
+    "internal/fileformat/fileformat.hpp"
+    "internal/fileformat/fileformat.cpp"
     "internal/endian.hpp"
     "internal/enumutils.hpp"
-
-    "fileformat.cpp"
+    
     "InstrumentPreview.cpp"
     "note.cpp"
     "Synth.cpp"

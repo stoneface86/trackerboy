@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include "trackerboy/fileformat.hpp"
-
 #include <cstdint>
 #include <string>
 

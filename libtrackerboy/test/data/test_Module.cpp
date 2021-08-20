@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "trackerboy/data/Module.hpp"
+#include "internal/fileformat/fileformat.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -7,6 +8,7 @@
 
 using namespace trackerboy;
 
+// these tests suck and should be rewritten
 
 TEST_CASE("Module::clear resets the module to its initialized state", "[Module]") {
     Module init;
@@ -30,12 +32,13 @@ TEST_CASE("Module::clear resets the module to its initialized state", "[Module]"
 
 
 TEST_CASE("Module::serialize writes a valid header", "[Module]") {
-    Header sample = { 0 };
-    std::copy(FILE_SIGNATURE, FILE_SIGNATURE + Header::SIGNATURE_SIZE, sample.signature);
-    sample.versionMajor = VERSION.major;
-    sample.versionMinor = VERSION.minor;
-    sample.versionPatch = VERSION.patch;
-    sample.revision = FILE_REVISION;
+    Header sample;
+    sample.current.signature = FILE_SIGNATURE;
+    sample.current.versionMajor = VERSION.major;
+    sample.current.versionMinor = VERSION.minor;
+    sample.current.versionPatch = VERSION.patch;
+    sample.current.revMajor = FILE_REVISION_MAJOR;
+    sample.current.revMinor = FILE_REVISION_MINOR;
 
 
     std::string sampleData(sizeof(sample) + 10, '\0');
@@ -62,12 +65,12 @@ TEST_CASE("Module::deserialize returns error", "[Module]") {
     FormatError expected;
 
     SECTION("when the signature is invalid") {
-        header->signature[0] = ~FILE_SIGNATURE[0];
+        header->current.signature[0] = ~FILE_SIGNATURE[0];
         expected = FormatError::invalidSignature;
     }
 
     SECTION("when the file has a future revision") {
-        header->revision++;
+        header->current.revMajor++;
         expected = FormatError::invalidRevision;
     }
 
@@ -96,6 +99,8 @@ TEST_CASE("Module save/load equivalence", "[Module]") {
     REQUIRE(modReadIn.artist() == mod.artist());
     REQUIRE(modReadIn.copyright() == mod.copyright());
     REQUIRE(modReadIn.version() == mod.version());
-    REQUIRE(modReadIn.revision() == mod.revision());
+    REQUIRE(modReadIn.revisionMajor() == mod.revisionMajor());
+    REQUIRE(modReadIn.revisionMinor() == mod.revisionMinor());
+
     
 }

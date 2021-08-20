@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "trackerboy/data/InfoStr.hpp"
 #include "trackerboy/data/Table.hpp"
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/SongList.hpp"
@@ -51,17 +52,19 @@ public:
 
     // header information
 
-    std::string const& artist() const noexcept;
+    InfoStr const& artist() const noexcept;
 
-    std::string const& title() const noexcept;
+    InfoStr const& title() const noexcept;
 
-    std::string const& copyright() const noexcept;
+    InfoStr const& copyright() const noexcept;
 
     std::string const& comments() const noexcept;
 
     Version version() const noexcept;
 
-    uint8_t revision() const noexcept;
+    uint8_t revisionMajor() const noexcept;
+
+    uint8_t revisionMinor() const noexcept;
 
     float framerate() const noexcept;
 
@@ -84,13 +87,14 @@ public:
 
     FormatError serialize(std::ostream &stream) const noexcept;
 
-    void setArtist(std::string const& artist) noexcept;
+    void setArtist(InfoStr const& artist) noexcept;
 
-    void setTitle(std::string const& title) noexcept;
+    void setTitle(InfoStr const& title) noexcept;
 
-    void setCopyright(std::string const& copyright) noexcept;
+    void setCopyright(InfoStr const& copyright) noexcept;
 
     void setComments(std::string const& comments) noexcept;
+    void setComments(std::string&& comments) noexcept;
 
     void setFramerate(System system) noexcept;
 
@@ -105,11 +109,12 @@ private:
 
     // header settings
     Version mVersion;
-    uint8_t mRevision;
+    uint8_t mRevisionMajor;
+    uint8_t mRevisionMinor;
     // information about the module (same format as *.gbs)
-    std::string mTitle;
-    std::string mArtist;
-    std::string mCopyright;
+    InfoStr mTitle;
+    InfoStr mArtist;
+    InfoStr mCopyright;
 
     // user comments/info about the module itself
     std::string mComments;

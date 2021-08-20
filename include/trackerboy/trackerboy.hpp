@@ -92,6 +92,18 @@ enum class Panning : uint8_t {
     middle
 };
 
+enum class FormatError {
+    none,                   // no error
+    invalidSignature,       // signature does not match
+    invalidRevision,        // unsupported file revision
+    cannotUpgrade,          // module from previous revision is not upgradable
+    duplicateId,            // two instruments/waveforms with the same id
+    invalid,                // data format is invalid
+    unknownChannel,         // unknown channel id for track data
+    readError,              // read error occurred
+    writeError              // write error occurred
+};
+
 template <typename T>
 constexpr T GB_CLOCK_SPEED = T(4194304);
 
