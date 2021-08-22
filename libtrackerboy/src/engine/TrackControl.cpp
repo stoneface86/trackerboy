@@ -68,15 +68,15 @@ void TrackControl::step(RuntimeContext const &rc, ChannelState &state, GlobalSta
             }
 
             if (mOp.envelope) {
-                mEnvelope = *mOp.envelope;
+                state.envelope = mEnvelope = *mOp.envelope;
             }
 
             if (mOp.timbre) {
-                mTimbre = *mOp.timbre;
+                state.timbre = mTimbre = *mOp.timbre;
             }
 
             if (mOp.panning) {
-                mPanning = *mOp.panning;
+                state.panning = mPanning = *mOp.panning;
             }
 
             if (mOp.note) {
