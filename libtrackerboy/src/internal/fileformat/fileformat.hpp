@@ -92,6 +92,8 @@ namespace trackerboy {
 //
 
 using Signature = std::array<char, 12>;
+using FormatMajor = uint8_t;
+using FormatMinor = uint8_t;
 
 #pragma pack(push, 1)
 
@@ -127,8 +129,8 @@ struct Header1 {
     uint32_t versionMajor;
     uint32_t versionMinor;
     uint32_t versionPatch;
-    uint8_t revMajor;
-    uint8_t revMinor;
+    FormatMajor revMajor;
+    FormatMinor revMinor;
     uint16_t reserved;
 
     InfoStr title;
@@ -207,14 +209,14 @@ extern Signature const FILE_SIGNATURE;
 // breaking change is implemented in the file format. Changes such as a change to the layout
 // of the payload or header.
 //
-static constexpr uint8_t FILE_REVISION_MAJOR = 1;
+static constexpr FormatMajor FILE_REVISION_MAJOR = 1;
 
 //
 // Current minor revision number of the file format. Incremented whenever a non-breaking change
 // is implemented in the format. Changes such as adding/removing extended commands to the
 // payload or utilizing a reserved field in the header.
 //
-static constexpr uint8_t FILE_REVISION_MINOR = 0;
+static constexpr FormatMinor FILE_REVISION_MINOR = 0;
 
 // most counter fields in the file format range from 1-256, but use a single byte for encoding
 // the counter is biased by subtracting 1 such that 1...256 is represented by 0...255
@@ -252,7 +254,7 @@ bool upgradeHeader(Header &header) noexcept;
 //  - moved system and customFramerate fields after wcount
 //  - remove INDX block from payload
 //  - INST and WAVE blocks contain a single instrument and waveform, respectively
-//  - Block data format now uses command sequences
+//  - SONG blocks begin with the song's name
 //  - String encoding now specified, Header strings use ASCII, everything else uses UTF-8
 //  - Payload is now terminated with a reversed signature - "\0YOBREKCART\0"
 //

@@ -5,14 +5,12 @@
 #include "internal/fileformat/payload/handlers/SongHandler.hpp"
 #include "internal/fileformat/payload/handlers/WaveHandler.hpp"
 
-#include <array>
-
 namespace trackerboy {
 
 FormatError deserializePayload1(Module &mod, Header &header, std::istream &stream) noexcept {
 
     CommHandler comm;
-    SongHandler song(unbias<size_t>(header.current.scount));
+    SongHandler song(unbias<size_t>(header.current.scount), 1);
     InstHandler inst(header.current.icount);
     WaveHandler wave(header.current.wcount);
     return readPayload(mod, stream, comm, song, inst, wave);
@@ -21,4 +19,3 @@ FormatError deserializePayload1(Module &mod, Header &header, std::istream &strea
 
 }
 
-#undef TU

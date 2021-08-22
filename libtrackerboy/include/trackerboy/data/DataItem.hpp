@@ -46,6 +46,7 @@ public:
     std::string const& name() const noexcept;
     
     void setName(std::string const& name) noexcept;
+    void setName(std::string&& name) noexcept;
 
     void setId(uint8_t id) noexcept;
 

@@ -70,6 +70,7 @@ set(SRC_FILES
     
     "src/internal/fileformat/payload/deserializePayload0.cpp"
     "src/internal/fileformat/payload/deserializePayload1.cpp"
+    "src/internal/fileformat/payload/payload.cpp"
     "src/internal/fileformat/payload/payload.hpp"
     "src/internal/fileformat/payload/PayloadHandler.hpp"
     "src/internal/fileformat/payload/serializePayload.cpp"
@@ -79,6 +80,7 @@ set(SRC_FILES
     "src/internal/fileformat/payload/handlers/InstHandler.hpp"
     "src/internal/fileformat/payload/handlers/SongHandler.cpp"
     "src/internal/fileformat/payload/handlers/SongHandler.hpp"
+    "src/internal/fileformat/payload/handlers/TableHandler.hpp"
     "src/internal/fileformat/payload/handlers/WaveHandler.cpp"
     "src/internal/fileformat/payload/handlers/WaveHandler.hpp"
     "src/internal/fileformat/Block.hpp"

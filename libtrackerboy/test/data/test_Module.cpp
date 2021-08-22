@@ -30,28 +30,6 @@ TEST_CASE("Module::clear resets the module to its initialized state", "[Module]"
 
 }
 
-
-TEST_CASE("Module::serialize writes a valid header", "[Module]") {
-    Header sample;
-    sample.current.signature = FILE_SIGNATURE;
-    sample.current.versionMajor = VERSION.major;
-    sample.current.versionMinor = VERSION.minor;
-    sample.current.versionPatch = VERSION.patch;
-    sample.current.revMajor = FILE_REVISION_MAJOR;
-    sample.current.revMinor = FILE_REVISION_MINOR;
-
-
-    std::string sampleData(sizeof(sample) + 10, '\0');
-    memcpy(sampleData.data(), &sample, sizeof(sample));
-
-    Module mod;
-    std::ostringstream out(std::ios::out | std::ios::binary);
-
-    REQUIRE(mod.serialize(out) == FormatError::none);
-    REQUIRE(memcmp(out.str().c_str(), sampleData.c_str(), sizeof(sample)) == 0);
-
-}
-
 TEST_CASE("Module::deserialize returns error", "[Module]") {
     Module mod;
     std::istringstream in(std::ios::in | std::ios::binary);

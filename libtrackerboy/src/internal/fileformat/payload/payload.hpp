@@ -26,6 +26,19 @@ FormatError deserializePayload1(Module &mod, Header &header, std::istream &strea
 //
 bool serializePayload(Module const& mod, std::ostream &stream) noexcept;
 
+// string serialization
+// format used is a 2-byte size prefix followed by the string data
+// UTF-8 encoding is assumed but not enforced
+
+std::string deserializeString(InputBlock &block);
+
+void serializeString(OutputBlock &block, std::string const& str);
+
+
+void serializeItem(OutputBlock &block, DataItem const& item);
+
+
+
 
 template <class T>
 FormatError readPayloadImpl(Module &mod, InputBlock &block, T& handler) {

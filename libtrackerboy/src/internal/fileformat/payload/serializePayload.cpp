@@ -11,7 +11,7 @@ namespace trackerboy {
 bool serializePayload(Module const& mod, std::ostream &stream) noexcept {
 
     CommHandler comm;
-    SongHandler song(mod.songs().size());
+    SongHandler song(mod.songs().size(), FILE_REVISION_MAJOR);
     InstHandler inst(mod.instrumentTable().size());
     WaveHandler wave(mod.waveformTable().size());
     return writePayload(mod, stream, comm, song, inst, wave);

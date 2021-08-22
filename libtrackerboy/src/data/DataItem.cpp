@@ -35,5 +35,9 @@ void DataItem::setName(std::string const& name) noexcept {
     mName = name;
 }
 
+void DataItem::setName(std::string&& name) noexcept {
+    mName = std::move(name);
+}
+
 
 }
