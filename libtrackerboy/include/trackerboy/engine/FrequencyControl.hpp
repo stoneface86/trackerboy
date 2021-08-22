@@ -59,7 +59,7 @@ public:
 
     void apply(Operation const& op) noexcept;
 
-    void useInstrument(Instrument const& instrument) noexcept;
+    void useInstrument(Instrument const* instrument) noexcept;
 
     void step() noexcept;
 

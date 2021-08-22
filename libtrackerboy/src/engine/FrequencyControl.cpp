@@ -231,8 +231,12 @@ void FrequencyControl::apply(Operation const& op) noexcept {
 
 }
 
-void FrequencyControl::useInstrument(Instrument const& instrument) noexcept {
-    mContext.emplace(instrument);
+void FrequencyControl::useInstrument(Instrument const* instrument) noexcept {
+    if (instrument) {
+        mContext.emplace(*instrument);
+    } else {
+        mContext.reset();
+    }
 }
 
 void FrequencyControl::step() noexcept {

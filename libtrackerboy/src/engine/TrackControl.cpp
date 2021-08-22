@@ -95,7 +95,7 @@ void TrackControl::step(RuntimeContext const &rc, ChannelState &state, GlobalSta
             if (restartIr && mInstrument) {
                 // restart the instrument runtime
                 mIr.emplace(*mInstrument);
-                mFc.useInstrument(*mInstrument);
+                mFc.useInstrument(mInstrument.get());
             }
 
             mFc.apply(mOp);

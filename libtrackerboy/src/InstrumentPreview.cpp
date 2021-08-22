@@ -20,6 +20,8 @@ InstrumentPreview::InstrumentPreview() :
 }
 
 void InstrumentPreview::setInstrument(std::shared_ptr<Instrument> instrument, std::optional<ChType> ch) {
+    // ensure that the previous instrument is no longer used anywhere else after
+    // hitting this assignment.
     mInstrument = std::move(instrument);
     if (mInstrument) {
         mCh = ch.value_or(mInstrument->channel());
@@ -110,9 +112,8 @@ void InstrumentPreview::restart() {
     mRetrigger = true;
     if (mInstrument) {
         mIr.emplace(*mInstrument);
-        mToneFc.useInstrument(*mInstrument);
-        mNoiseFc.useInstrument(*mInstrument);
     }
+    mFc->useInstrument(mInstrument.get());
 }
 
 }
