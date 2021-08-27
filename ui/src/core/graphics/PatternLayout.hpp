@@ -4,6 +4,8 @@
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 
+#include "trackerboy/trackerboy.hpp"
+
 #include <QPoint>
 #include <QRect>
 
@@ -39,6 +41,17 @@ public:
     void setCellSize(int width, int height);
 
     //
+    // Gets the number of effects visible for the given track
+    //
+    int effectsVisible(int track) const;
+
+    //
+    // Sets the count of effects visible for the given track. track must be
+    // from 0-3 and count must be from 1-3.
+    //
+    void setEffectsVisible(int track, int count);
+
+    //
     // X-position of where to start painting pattern data.
     //
     int patternStart() const;
@@ -71,6 +84,10 @@ public:
     //
     PatternCursor mouseToCursor(QPoint point) const;
 
+    //
+    // convert mouse x position to a track, -1 if x is < patternStart() and
+    // 4 is returned if x is > patternStart() + rowWidth()
+    //
     int mouseToTrack(int x) const;
 
     //
@@ -79,14 +96,19 @@ public:
     QRect selectionRectangle(PatternSelection const& selection) const;
 
 private:
+    int maxColumnInTrack(int track) const;
 
     int mCellWidth;     // width of a cell/char
     int mCellHeight;    // height of a cell/char
 
-    int mPatternStart;  // starting x-position to draw patterns
-    int mTrackWidth;    // width of a single track
+    // pre-computed widths of each track
+    std::array<int, 4> mTrackWidths;
+    // starting x-positions of each track (the last element is the boundary of the pattern)
+    std::array<int, 5> mTrackStarts;
 
     int mPatternWidth;
+
+    trackerboy::EffectCounts mEffectCounts;
 
     // column dividers, used for converting a mouse coordinate to column
     // example, | is a divider (NNN - note, I - instrument cell, E - effect cell)

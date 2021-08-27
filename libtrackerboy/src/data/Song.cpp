@@ -17,7 +17,8 @@ Song::Song() :
     mOrder(),
     mRowsPerBeat(DEFAULT_RPB),
     mRowsPerMeasure(DEFAULT_RPM),
-    mSpeed(DEFAULT_SPEED)
+    mSpeed(DEFAULT_SPEED),
+    mEffectCounts{1, 1, 1, 1}
 {
 }
 
@@ -27,7 +28,8 @@ Song::Song(const Song &song) :
     mOrder(song.mOrder),
     mRowsPerBeat(song.mRowsPerBeat),
     mRowsPerMeasure(song.mRowsPerMeasure),
-    mSpeed(song.mSpeed)
+    mSpeed(song.mSpeed),
+    mEffectCounts(song.mEffectCounts)
 {
 }
 
@@ -44,6 +46,7 @@ void Song::reset() noexcept {
     mOrder[0] = { 0 };
     mMaster.clear();
     mMaster.setRowSize(DEFAULT_ROWS);
+    mEffectCounts.fill(1);
 }
 
 int Song::rowsPerBeat() const noexcept {
@@ -59,6 +62,9 @@ Speed Song::speed() const noexcept {
     return mSpeed;
 }
 
+EffectCounts Song::effectCounts() const noexcept {
+    return mEffectCounts;
+}
 
 Order& Song::order() noexcept {
     return mOrder;
@@ -127,6 +133,10 @@ void Song::setSpeed(Speed speed) {
         throw std::invalid_argument("speed out of range");
     }
     mSpeed = speed;
+}
+
+void Song::setEffectCounts(EffectCounts counts) {
+    mEffectCounts = counts;
 }
 
 Speed Song::estimateSpeed(float tempo, float framerate) const noexcept {

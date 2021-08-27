@@ -26,7 +26,7 @@ PatternModel::PatternModel(Module &mod, SongModel &songModel, QObject *parent) :
     mHasSelection(false),
     mSelection()
 {
-
+    setMaxColumns();
     connect(&songModel, &SongModel::patternSizeChanged, this,
         [this](int rows) {
             CursorChangeFlags flags = CursorUnchanged;
@@ -46,6 +46,8 @@ PatternModel::PatternModel(Module &mod, SongModel &songModel, QObject *parent) :
             deselect();
             mTrackerRow = 0;
             mTrackerPattern = 0;
+            setMaxColumns();
+            emit effectsVisibleChanged();
         });
 }
 
@@ -71,6 +73,15 @@ int PatternModel::cursorRow() const {
 
 int PatternModel::cursorColumn() const {
     return mCursor.column;
+}
+
+int PatternModel::cursorAbsoluteColumn() const {
+    int absolute = std::accumulate(
+        mMaxColumns.begin(),
+        mMaxColumns.begin() + mCursor.track,
+        0
+    );
+    return absolute + mCursor.column;
 }
 
 int PatternModel::cursorTrack() const {
@@ -103,6 +114,14 @@ bool PatternModel::isPlaying() const {
 
 int PatternModel::patterns() const {
     return source()->order().size();
+}
+
+int PatternModel::totalColumns() const {
+    return std::accumulate(mMaxColumns.begin(), mMaxColumns.end(), 0);
+}
+
+trackerboy::EffectCounts PatternModel::effectsVisible() const {
+    return source()->effectCounts();
 }
 
 bool PatternModel::hasSelection() const {
@@ -275,20 +294,36 @@ void PatternModel::setCursorColumn(int column) {
     emitIfChanged(flags);
 }
 
+void PatternModel::setCursorAbsoluteColumn(int absolute) {
+    // find the track
+    int track = -1;
+    for (auto max : mMaxColumns) {
+        ++track;
+        if (absolute < max) {
+            break;
+        }
+        absolute -= max;
+    }
+
+    setCursorTrack(track);
+    setCursorColumn(absolute);
+}
+
 void PatternModel::setCursorColumnImpl(int column, CursorChangeFlags &flags) {
     if (column == mCursor.column) {
         return;
     }
 
     if (column < 0) {
-        column = -column;
-        auto tracks = 1 + (column / PatternCursor::MAX_COLUMNS);
-        column = PatternCursor::MAX_COLUMNS - (column % PatternCursor::MAX_COLUMNS);
-        setCursorTrackImpl(mCursor.track - tracks, flags);
-    } else if (column >= PatternCursor::MAX_COLUMNS) {
-        auto tracks = column / PatternCursor::MAX_COLUMNS;
-        column = column % PatternCursor::MAX_COLUMNS;
-        setCursorTrackImpl(mCursor.track + tracks, flags);
+        auto track = mCursor.track - 1;
+        if (track < 0) {
+            track = PatternCursor::MAX_TRACKS - 1;
+        }
+        column = mMaxColumns[track] - 1;
+        setCursorTrackImpl(track, flags);
+    } else if (column >= mMaxColumns[mCursor.track]) {
+        column = 0;
+        setCursorTrackImpl(mCursor.track + 1, flags);
     }
 
     if (mCursor.column != column) {
@@ -531,6 +566,17 @@ trackerboy::TrackRow const& PatternModel::cursorTrackRow() {
         static_cast<trackerboy::ChType>(mCursor.track),
         (uint16_t)mCursor.row
     );
+}
+
+void PatternModel::setMaxColumns() {
+    auto counts = source()->effectCounts();
+    int sum = 0;
+    for (size_t i = 0; i < counts.size(); ++i) {
+        int max = (counts[i] * 3) + 3;
+        mMaxColumns[i] = max;
+        sum += max;
+    }
+    emit totalColumnsChanged(sum);
 }
 
 // editing ====================================================================
@@ -1147,4 +1193,36 @@ void PatternModel::paste(PatternClip const& clip, bool mix) {
     auto cmd = new PasteCmd(*this, clip, mCursor, mix);
     cmd->setText(tr("paste"));
     mModule.undoStack()->push(cmd);
+}
+
+bool PatternModel::showEffect(int track) {
+    return addEffects(track, 1);
+}
+
+bool PatternModel::hideEffect(int track) {
+    return addEffects(track, -1);
+}
+
+bool PatternModel::addEffects(int track, int effectsToAdd) {
+    // assumption: effectsToAdd is never 0
+    auto counts = source()->effectCounts();
+    auto &trackCount = counts[track];
+    trackCount += effectsToAdd;
+    if (trackCount >= 1 && trackCount <= 3) {
+
+        {
+            // technically a permanent edit, but we don't want this change to
+            // effect the document's modified state
+            auto editor = mModule.edit();
+            source()->setEffectCounts(counts);
+        }
+        emit effectsVisibleChanged();
+
+        mMaxColumns[track] += effectsToAdd * 3;
+        emit totalColumnsChanged(totalColumns());
+        return trackCount == 2;
+    }
+
+    return false;
+
 }

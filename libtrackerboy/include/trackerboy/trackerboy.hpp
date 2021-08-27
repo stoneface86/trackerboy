@@ -27,6 +27,7 @@
 #pragma once
 
 #include <type_traits>
+#include <array>
 #include <cstdint>
 #include <cstddef>
 
@@ -85,6 +86,8 @@ enum class EffectType : uint8_t {
 
 };
 
+
+
 enum class Panning : uint8_t {
     mute,
     left,
@@ -112,6 +115,14 @@ constexpr float GB_FRAMERATE_SGB = 61.1f;
 
 // each channel has 5 registers
 constexpr unsigned GB_CHANNEL_REGS = 5;
+
+constexpr int GB_CHANNELS = 4;
+
+//
+// Data type for the count of effects used for each channel. This type is
+// purely informational/visual and has no effect on music playback.
+//
+using EffectCounts = std::array<char, GB_CHANNELS>;
 
 //
 // Maximum frequency setting for channels 1, 2 and 3

@@ -14,6 +14,7 @@
 #include <QObject>
 #include <QRect>
 
+#include <array>
 #include <optional>
 
 //
@@ -59,6 +60,12 @@ public:
 
     int cursorColumn() const;
 
+    //
+    // Absolute column, includes the sum of the columns in the tracks
+    // before it, used exclusively by the PatternEditor horizontal scrollbar
+    //
+    int cursorAbsoluteColumn() const;
+
     int cursorTrack() const;
 
     int cursorPattern() const;
@@ -78,6 +85,10 @@ public:
     void setPlaying(bool playing);
 
     int patterns() const;
+
+    int totalColumns() const;
+
+    trackerboy::EffectCounts effectsVisible() const;
 
     // Selection ==============================================================
 
@@ -155,6 +166,10 @@ public:
 
     void paste(PatternClip const& clip, bool mix);
 
+    bool showEffect(int track);
+
+    bool hideEffect(int track);
+
 signals:
     void cursorChanged(CursorChangeFlags flags);
 
@@ -171,6 +186,10 @@ signals:
     //
     void invalidated();
 
+    void effectsVisibleChanged();
+
+    void totalColumnsChanged(int columns);
+
 public slots:
 
     void moveCursorRow(int amount, SelectMode mode = SelectionKeep);
@@ -179,6 +198,7 @@ public slots:
 
     void setCursorRow(int row);
     void setCursorColumn(int column);
+    void setCursorAbsoluteColumn(int column);
     void setCursorTrack(int track);
     void setCursorPattern(int pattern);
 
@@ -218,6 +238,10 @@ private:
 
     int cursorEffectNo();
 
+    void setMaxColumns();
+
+    bool addEffects(int track, int effectsToAdd);
+
     trackerboy::TrackRow const& cursorTrackRow();
 
     void invalidate(int pattern, bool updatePatterns);
@@ -243,6 +267,8 @@ private:
 
     bool mHasSelection;
     PatternSelection mSelection;
+
+    std::array<int, 4> mMaxColumns;
 
 };
 

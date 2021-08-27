@@ -73,6 +73,19 @@ PatternGrid::PatternGrid(
     connect(&model, &PatternModel::trackerCursorChanged, this, &PatternGrid::calculateTrackerRow);
     connect(&model, &PatternModel::playingChanged, this, &PatternGrid::setPlaying);
 
+    connect(&model, &PatternModel::effectsVisibleChanged, this,
+        [this]() {
+            // update the layout
+            auto counts = mModel.effectsVisible();
+            for (size_t i = 0; i < counts.size(); ++i) {
+                mLayout.setEffectsVisible(i, counts[i]);
+            }
+            // redraw everything
+            update();
+            mHeader.update();
+
+        });
+
 
     header.setPatternLayout(&mLayout);
 }
@@ -329,7 +342,6 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
         return;
     }
 
-    
     auto pos = evt->pos();
 
     switch (mMouseOp) {
@@ -390,9 +402,6 @@ void PatternGrid::mouseMoveEvent(QMouseEvent *evt) {
 void PatternGrid::mousePressEvent(QMouseEvent *evt) {
     if (evt->button() == Qt::LeftButton) {
 
-        
-        
-        
         mMousePos = evt->pos();
 
         if (mMousePos.x() < mLayout.patternStart()) {

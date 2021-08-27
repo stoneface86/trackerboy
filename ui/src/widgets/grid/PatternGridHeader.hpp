@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/model/PatternModel.hpp"
 #include "core/graphics/PatternLayout.hpp"
 #include "core/ChannelOutput.hpp"
 #include "core/Palette.hpp"
@@ -14,7 +15,7 @@ class PatternGridHeader : public QWidget {
 
 public:
 
-    PatternGridHeader(QWidget *parent = nullptr);
+    PatternGridHeader(PatternModel &model, QWidget *parent = nullptr);
 
     void setColors(Palette const& colorTable);
 
@@ -47,6 +48,12 @@ protected:
 private:
     Q_DISABLE_COPY(PatternGridHeader)
 
+    enum class HoverKind {
+        track,          // mouse is over the track
+        addEffect,      // mouse is over the add effect (plus) button
+        removeEffect    // mouse is over the remove effect (minus) button
+    };
+
     static constexpr int HEIGHT = 36;
     static constexpr int HOVER_NONE = -1;
 
@@ -54,10 +61,14 @@ private:
 
     void setTrackHover(int hover);
 
+    void setHoverKind(HoverKind kind);
+
+    PatternModel &mModel;
     PatternLayout const* mLayout;
 
     // header stuff
     int mTrackHover;
+    HoverKind mHoverKind;
 
     ChannelOutput::Flags mTrackFlags;
 

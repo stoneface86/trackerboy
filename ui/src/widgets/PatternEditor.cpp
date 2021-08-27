@@ -9,6 +9,7 @@
 #include <QGuiApplication>
 #include <QGridLayout>
 #include <QLabel>
+#include <QSignalBlocker>
 #include <QSpinBox>
 #include <QVBoxLayout>
 #include <QtDebug>
@@ -108,8 +109,7 @@ PatternEditor::PatternEditor(
     mWheel(0),
     mPageStep(4),
     mEditStep(1),
-    mSpeedLock(false),
-    mScrollLock(false),
+    mIgnoreCursorChanges(false),
     mKeyRepeat(true),
     mClipboard(),
     mInstrument()
@@ -118,14 +118,14 @@ PatternEditor::PatternEditor(
     setFocusPolicy(Qt::StrongFocus);
 
     auto layout = new QGridLayout;
-    mGridHeader = new PatternGridHeader(this);
+    mGridHeader = new PatternGridHeader(model, this);
     mGrid = new PatternGrid(*mGridHeader, model, this);
     mHScroll = new QScrollBar(Qt::Horizontal);
     mVScroll = new QScrollBar(Qt::Vertical);
 
 
     mHScroll->setMinimum(0);
-    mHScroll->setMaximum(PatternCursor::MAX_COLUMNS * PatternCursor::MAX_TRACKS - 1);
+    mHScroll->setMaximum(model.totalColumns() - 1);
     mHScroll->setPageStep(1);
 
     layout->addWidget(mGridHeader,     0, 0);
@@ -148,6 +148,10 @@ PatternEditor::PatternEditor(
     connect(&model, &PatternModel::patternSizeChanged, this,
         [this](int rows) {
             mVScroll->setMaximum(rows - 1);
+        });
+    connect(&model, &PatternModel::totalColumnsChanged, this,
+        [this](int columns) {
+            mHScroll->setMaximum(columns - 1);
         });
 
     connect(mVScroll, &QScrollBar::actionTriggered, this, &PatternEditor::vscrollAction);
@@ -477,34 +481,30 @@ void PatternEditor::stepDown() {
 }
 
 void PatternEditor::updateScrollbars(PatternModel::CursorChangeFlags flags) {
-
-    if (!mScrollLock) {
-        mScrollLock = true;
-
-        auto cursor = mModel.cursor();
-        if (flags.testFlag(PatternModel::CursorRowChanged)) {
-            mVScroll->setValue(cursor.row);
-        }
-
-        if (flags & (PatternModel::CursorTrackChanged | PatternModel::CursorColumnChanged)) {
-            mHScroll->setValue(cursor.track * PatternCursor::MAX_COLUMNS + cursor.column);
-        }
-
-        mScrollLock = false;
+    if (mIgnoreCursorChanges) {
+        // we are currently changing the cursor, ignore updates from the model
+        // as it is being changed.
+        return;
     }
+
+    if (flags.testFlag(PatternModel::CursorRowChanged)) {
+        QSignalBlocker blocker(mVScroll);
+        mVScroll->setValue(mModel.cursorRow());
+    }
+
+    if (flags & (PatternModel::CursorTrackChanged | PatternModel::CursorColumnChanged)) {
+        QSignalBlocker blocker(mHScroll);
+        mHScroll->setValue(mModel.cursorAbsoluteColumn());
+    }
+
 }
 
 void PatternEditor::setCursorFromHScroll(int value) {
-    if (!mScrollLock) {
-        mScrollLock = true;
 
-        auto cursor = mModel.cursor();
-        cursor.column = value % PatternCursor::MAX_COLUMNS;
-        cursor.track = value / PatternCursor::MAX_COLUMNS;
-        mModel.setCursor(cursor);
+    mIgnoreCursorChanges = true;
+    mModel.setCursorAbsoluteColumn(value);
+    mIgnoreCursorChanges = false;
 
-        mScrollLock = false;
-    }
 }
 
 void PatternEditor::midiNoteOn(int note) {

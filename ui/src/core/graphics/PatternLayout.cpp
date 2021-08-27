@@ -64,9 +64,8 @@ int locateSelect(int selectColumn, int cellWidth) {
 PatternLayout::PatternLayout() :
     mCellWidth(0),
     mCellHeight(0),
-    mPatternStart(0),
-    mTrackWidth(0),
-    mPatternWidth(0)
+    mPatternWidth(0),
+    mEffectCounts{1, 1, 1, 1}
 {
 }
 
@@ -80,14 +79,28 @@ void PatternLayout::setCellSize(int width, int height) {
         // X : hex cell
         // | : line
 
-        mPatternStart = (SPACING * 2) + (width * 2) + LINE_WIDTH;
-
         // track width calculation
         // _NNN_II_EXX_EXX_EXX_
         // 6 spacings
         // 14 cells
-        mTrackWidth = (SPACING * 6) + (width * 14);
-        mPatternWidth = mTrackWidth * 4 + (LINE_WIDTH * 3);
+        auto const minWidth = (SPACING * 3) + (5 * width);
+        auto const effectWidth = SPACING + (3 * width);
+        mPatternWidth = (LINE_WIDTH * 3);
+        for (size_t i = 0; i < mTrackWidths.size(); ++i) {
+            int trackWidth = minWidth + (effectWidth * mEffectCounts[i]);
+            mPatternWidth += trackWidth;
+            mTrackWidths[i] = trackWidth;
+        }
+
+        {
+            int x = (SPACING * 2) + (width * 2) + LINE_WIDTH;
+            mTrackStarts[0] = x;
+            for (size_t i = 1; i < mTrackStarts.size(); ++i) {
+                x += mTrackWidths[i - 1] + LINE_WIDTH;
+                mTrackStarts[i] = x;
+                
+            }
+        }
 
         constexpr auto HALF_SPACING = SPACING / 2;
         #define calcDiv(column, spacing) \
@@ -111,15 +124,39 @@ void PatternLayout::setCellSize(int width, int height) {
     mCellHeight = height;
 }
 
+int PatternLayout::effectsVisible(int track) const {
+    return mEffectCounts[track];
+}
+
+void PatternLayout::setEffectsVisible(int track, int count) {
+    Q_ASSERT(track >= 0 && track < PatternCursor::MAX_TRACKS);
+    Q_ASSERT(count >= 1 && count <= 3);
+
+    int countDiff = count - mEffectCounts[track];
+    if (countDiff) {
+        mEffectCounts[track] = (char)count;
+
+        // calculate width difference
+        // reminder: an effect column is 3 cells and a spacing
+        int diff = (mCellWidth * 3 + SPACING) * countDiff;
+        // update width for the track
+        mTrackWidths[track] += diff;
+
+        // recalculate starting positions, add the difference to all tracks
+        // ahead of this one
+        for (auto iter = mTrackStarts.begin() + track + 1; iter != mTrackStarts.end(); ++iter) {
+            *iter += diff;
+        }
+        mPatternWidth += diff;
+    }
+}
+
 int PatternLayout::patternStart() const {
-    return mPatternStart;
+    return mTrackStarts[0];
 }
 
 int PatternLayout::trackWidth(int track) const {
-    (void)track;
-    // currently all tracks have the same width, this will change once
-    // dynamic effect column counts are implemented
-    return mTrackWidth;
+    return mTrackWidths[track];
 }
 
 int PatternLayout::rowWidth() const {
@@ -128,7 +165,7 @@ int PatternLayout::rowWidth() const {
 
 int PatternLayout::trackToX(int track) const {
     Q_ASSERT(track >= 0 && track < PatternCursor::MAX_TRACKS);
-    return mPatternStart + ((mTrackWidth + LINE_WIDTH) * track);
+    return mTrackStarts[track];
 }
 
 int PatternLayout::columnToX(int column) const {
@@ -138,22 +175,27 @@ int PatternLayout::columnToX(int column) const {
 
 PatternCursor PatternLayout::mouseToCursor(QPoint point) const {
 
-    auto x = point.x() - mPatternStart;
+    auto x = point.x();
 
-    // since all tracks are the same width, we can just divide to find
-    // the track, this won't work for dynamic effect column counts.
-    int track = x / mTrackWidth;
-    int xInTrack = x % mTrackWidth;
-    int column = 0;
+    int track = mouseToTrack(x);
+    int column = -1;
 
-    // linear search from start of array
-    // would be faster (on average) to start in the middle but whatever
-    for (auto const div : mColumnDivs) {
-        if (xInTrack < div) {
-            break;
+    if (track >= 0 && track < PatternCursor::MAX_TRACKS) {
+        column = 0;
+        int xInTrack = x - mTrackStarts[track];
+        // linear search from start of array
+        // would be faster (on average) to start in the middle but whatever (see mouseToTrack implementation)
+        // Optimize if this is a hot path
+        for (auto const div : mColumnDivs) {
+            if (xInTrack < div) {
+                break;
+            }
+            ++column;
         }
-        ++column;
+        column = std::min(maxColumnInTrack(track), column);
+        
     }
+
     return {
         0,
         column,
@@ -165,13 +207,24 @@ PatternCursor PatternLayout::mouseToCursor(QPoint point) const {
 }
 
 int PatternLayout::mouseToTrack(int x) const {
-    x -= mPatternStart;
-    if (x >= 0) {
-        int track = x / mTrackWidth;
-        return track > 3 ? -1 : track;
+    // starting in the middle results in 2-3 branches
+    if (x >= mTrackStarts[2]) {
+        if (x < mTrackStarts[3]) {
+            return 2;
+        } else if (x < mTrackStarts[4]) {
+            return 3;
+        }
+
+        return 4;
     } else {
+        if (x >= mTrackStarts[1]) {
+            return 1;
+        } else if (x >= mTrackStarts[0]) {
+            return 0;
+        }
         return -1;
     }
+    
 }
 
 QRect PatternLayout::selectionRectangle(PatternSelection const& selection) const {
@@ -179,11 +232,13 @@ QRect PatternLayout::selectionRectangle(PatternSelection const& selection) const
     auto iter = selection.iterator();
 
     int x1 = TU::locateSelect(iter.columnStart(), mCellWidth) - SPACING;
-    int x2 = TU::locateSelect(iter.columnEnd(), mCellWidth) + SPACING;
+    auto const maxSelect = mEffectCounts[iter.trackEnd()] + PatternAnchor::SelectInstrument;
+    auto const endSelect = std::min(maxSelect, iter.columnEnd());
+    int x2 = TU::locateSelect(endSelect, mCellWidth) + SPACING;
     x2 += mCellWidth * TU::SELECT_WIDTHS[iter.columnEnd()];
 
-    x1 += mPatternStart + (iter.trackStart() * (mTrackWidth + LINE_WIDTH));
-    x2 += mPatternStart + (iter.trackEnd() * (mTrackWidth + LINE_WIDTH));
+    x1 += mTrackStarts[iter.trackStart()];
+    x2 += mTrackStarts[iter.trackEnd()];
 
     return {
         x1,
@@ -191,6 +246,22 @@ QRect PatternLayout::selectionRectangle(PatternSelection const& selection) const
         x2 - x1,
         iter.rows() * mCellHeight
     };
+}
+
+int PatternLayout::maxColumnInTrack(int track) const {
+    // columns in a track:
+    // 1 - note
+    // 2 - instrument hi/low
+    // 3 - effect 1
+    // 3 - effect 2
+    // 3 - effect 3
+
+    // then the maximum column in a track is given by
+    // note + instrument + (n * effect) - 1
+    // ==> 1 + 2 + 3n - 1
+    // ==> 3n + 2
+    // where n is the number of effects visible
+    return mEffectCounts[track] * 3 + 2;
 }
 
 #undef TU

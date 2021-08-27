@@ -9,6 +9,24 @@ namespace trackerboy {
 #define TU SongHandlerTU
 namespace TU {
 
+// packs a 4-byte effect count type into a single byte
+
+uint8_t packEffectCounts(EffectCounts counts) {
+    return (uint8_t)counts[0]
+           | ((uint8_t)counts[1] << 2)
+           | ((uint8_t)counts[2] << 4)
+           | ((uint8_t)counts[3] << 6);
+}
+
+EffectCounts unpackEffectCounts(uint8_t packed) {
+    return {
+        (char)(packed & 0x3),
+        (char)((packed >> 2) & 0x3),
+        (char)((packed >> 4) & 0x3),
+        (char)((packed >> 6) & 0x3)
+    };
+}
+
 #pragma pack(push, 1)
 
 struct SongFormat {
@@ -60,6 +78,13 @@ FormatError SongHandler::processIn(Module &mod, InputBlock &block, size_t index)
     song->setRowsPerBeat(songFormat.rowsPerBeat);
     song->setRowsPerMeasure(songFormat.rowsPerMeasure);
     song->setSpeed(songFormat.speed);
+
+    if (mMajor > 0) {
+        uint8_t effectCounts;
+        block.read(effectCounts);
+        song->setEffectCounts(TU::unpackEffectCounts(effectCounts));
+    }
+
 
     auto &pm = song->patterns();
     auto const rowsPerTrack = unbias<uint16_t>(songFormat.rowsPerTrack);
@@ -124,6 +149,11 @@ void SongHandler::processOut(Module const& mod, OutputBlock &block, size_t index
     songHeader.rowsPerTrack = bias(pm.rowSize());
     songHeader.numberOfTracks = correctEndian((uint16_t)pm.tracks());
     block.write(songHeader);
+
+    if (mMajor > 0) {
+        uint8_t effectCounts = TU::packEffectCounts(song->effectCounts());
+        block.write(effectCounts);
+    }
 
     // write out song order
     for (auto &orderRow : order.data()) {

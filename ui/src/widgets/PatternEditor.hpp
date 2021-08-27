@@ -122,9 +122,8 @@ private:
     int mEditStep;
 
     int mPreviewKey;
-
-    bool mSpeedLock;
-    bool mScrollLock;
+    
+    bool mIgnoreCursorChanges;
 
     bool mKeyRepeat;
 

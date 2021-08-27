@@ -256,7 +256,8 @@ int PatternPainter::drawPattern(
 
             xpos += PatternLayout::SPACING;
 
-            for (int effect = 0; effect < 3; ++effect) {
+            auto const effectsVisible = l.effectsVisible(track);
+            for (int effect = 0; effect < effectsVisible; ++effect) {
                 auto effectdata = trackdata.effects[effect];
                 if (effectdata.type != trackerboy::EffectType::noEffect) {
                     p.setPen(pen(mColorEffect));

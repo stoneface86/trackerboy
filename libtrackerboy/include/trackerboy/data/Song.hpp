@@ -37,7 +37,6 @@ class Song : public DataItem {
 
 public:
 
-
     static constexpr int DEFAULT_RPB = 4;
     static constexpr int DEFAULT_RPM = 16;
     // Tempo = 150, RPB = 4  => 6.0 frames per row
@@ -57,6 +56,8 @@ public:
 
     Speed speed() const noexcept;
 
+    EffectCounts effectCounts() const noexcept;
+
     Order& order() noexcept;
     Order const& order() const noexcept;
 
@@ -73,6 +74,8 @@ public:
     void setRowsPerMeasure(int rowsPerMeasure);
 
     void setSpeed(Speed speed);
+
+    void setEffectCounts(EffectCounts counts);
 
     //
     // Calculates a speed setting from the given tempo and framerate. The
@@ -104,6 +107,8 @@ private:
     // 4.875: 4, 5, 5, 5, 5, 5, 5, 4, ...
 
     Speed mSpeed; // frames per row
+
+    EffectCounts mEffectCounts;
 
 };
 
