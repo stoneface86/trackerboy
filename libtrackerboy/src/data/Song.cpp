@@ -18,7 +18,7 @@ Song::Song() :
     mRowsPerBeat(DEFAULT_RPB),
     mRowsPerMeasure(DEFAULT_RPM),
     mSpeed(DEFAULT_SPEED),
-    mEffectCounts{1, 1, 1, 1}
+    mEffectCounts(DEFAULT_EFFECT_COUNTS)
 {
 }
 
@@ -46,7 +46,7 @@ void Song::reset() noexcept {
     mOrder[0] = { 0 };
     mMaster.clear();
     mMaster.setRowSize(DEFAULT_ROWS);
-    mEffectCounts.fill(1);
+    mEffectCounts = DEFAULT_EFFECT_COUNTS;
 }
 
 int Song::rowsPerBeat() const noexcept {

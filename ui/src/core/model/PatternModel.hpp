@@ -166,9 +166,9 @@ public:
 
     void paste(PatternClip const& clip, bool mix);
 
-    bool showEffect(int track);
+    void showEffect(int track);
 
-    bool hideEffect(int track);
+    void hideEffect(int track);
 
 signals:
     void cursorChanged(CursorChangeFlags flags);
@@ -240,7 +240,11 @@ private:
 
     void setMaxColumns();
 
-    bool addEffects(int track, int effectsToAdd);
+    //
+    // Shows/hides a given number of effects for the track. The new count of
+    // effects visible is returned
+    //
+    int addEffects(int track, int effectsToAdd);
 
     trackerboy::TrackRow const& cursorTrackRow();
 

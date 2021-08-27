@@ -124,6 +124,8 @@ constexpr int GB_CHANNELS = 4;
 //
 using EffectCounts = std::array<char, GB_CHANNELS>;
 
+constexpr EffectCounts DEFAULT_EFFECT_COUNTS = { 2, 2, 2, 2 };
+
 //
 // Maximum frequency setting for channels 1, 2 and 3
 //

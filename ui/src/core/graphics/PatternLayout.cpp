@@ -65,7 +65,7 @@ PatternLayout::PatternLayout() :
     mCellWidth(0),
     mCellHeight(0),
     mPatternWidth(0),
-    mEffectCounts{1, 1, 1, 1}
+    mEffectCounts(trackerboy::DEFAULT_EFFECT_COUNTS)
 {
 }
 

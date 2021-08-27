@@ -1195,15 +1195,30 @@ void PatternModel::paste(PatternClip const& clip, bool mix) {
     mModule.undoStack()->push(cmd);
 }
 
-bool PatternModel::showEffect(int track) {
-    return addEffects(track, 1);
+void PatternModel::showEffect(int track) {
+    addEffects(track, 1);
 }
 
-bool PatternModel::hideEffect(int track) {
-    return addEffects(track, -1);
+void PatternModel::hideEffect(int track) {
+    auto trackCount = addEffects(track, -1);
+    if (mCursor.track == track && mCursor.column >= mMaxColumns[track]) {
+        // the cursor column is no longer reachable, move it the last available one
+        setCursorColumn(mMaxColumns[track] - 1);
+    }
+    if (mHasSelection) {
+        auto iter = mSelection.iterator();
+        auto maxSelect = trackCount + PatternAnchor::SelectInstrument;
+        if (iter.trackStart() == track
+            && iter.columnStart() > maxSelect
+            && iter.trackEnd() == track
+            && iter.columnEnd() > maxSelect) {
+                // this selection is no longer reachable, deselect it
+                deselect();
+            }
+    }
 }
 
-bool PatternModel::addEffects(int track, int effectsToAdd) {
+int PatternModel::addEffects(int track, int effectsToAdd) {
     // assumption: effectsToAdd is never 0
     auto counts = source()->effectCounts();
     auto &trackCount = counts[track];
@@ -1218,11 +1233,9 @@ bool PatternModel::addEffects(int track, int effectsToAdd) {
         }
         emit effectsVisibleChanged();
 
-        mMaxColumns[track] += effectsToAdd * 3;
+        mMaxColumns[track] += effectsToAdd * 3;        
         emit totalColumnsChanged(totalColumns());
-        return trackCount == 2;
     }
-
-    return false;
+    return trackCount;
 
 }
