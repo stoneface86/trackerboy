@@ -272,6 +272,11 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
         settings.clear();
     });
 
+    act = setupAction(menuHelpDebug, tr("Panic"), tr("Forces a fatal error to occur"));
+    connect(act, &QAction::triggered, this, [this]() {
+        qFatal("panic requested");
+    });
+
     #endif
 
     act = setupAction(menuHelp, tr("Audio diagnostics..."), tr("Shows the audio diagnostics dialog"));

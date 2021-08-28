@@ -30,6 +30,13 @@ public:
     bool save(QString const& filename, Module &mod);
 
     //
+    // Saves a copy of the given module data using this module's file info.
+    // The file path of the saved copy is returned on success, amy empty string is
+    // returned on failure.
+    //
+    QString crashSave(Module const &mod);
+
+    //
     // Gets the last error that occurred from saving or loading. If no such
     // error occurred, FormatError::none is returned
     //

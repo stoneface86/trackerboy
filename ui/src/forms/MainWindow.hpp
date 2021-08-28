@@ -42,6 +42,11 @@ public:
 
     QMenu* createPopupMenu() override;
 
+    //
+    // A crash has occurred, attempt to save a copy of the current module
+    //
+    void panic(QString const& msg);
+
 protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;

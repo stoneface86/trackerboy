@@ -126,6 +126,32 @@ QMenu* MainWindow::createPopupMenu() {
     return menu;
 }
 
+void MainWindow::panic(QString const& msg) {
+    // this function is called from our custom message handler for fatal
+    // messages. Shows the fatal error to the user and attempts to save the
+    // current module if it was modified.
+
+    QString moduleSaveResult;
+    if (mModule->isModified()) {
+        auto path = mModuleFile.crashSave(*mModule);
+        if (path.isEmpty()) {
+            moduleSaveResult = tr("Unable to save a copy of the module");
+        } else {
+            moduleSaveResult = tr("A copy of the module has been saved to:\n%1").arg(path);
+        }
+    }
+
+    QMessageBox msgbox(this);
+    msgbox.setIcon(QMessageBox::Critical);
+    msgbox.setText(tr("An unexpected error has occurred:"));
+    if (moduleSaveResult.isEmpty()) {
+        msgbox.setInformativeText(msg);
+    } else {
+        msgbox.setInformativeText(tr("%1\n\n%2").arg(msg, moduleSaveResult));
+    }
+    msgbox.exec();
+}
+
 void MainWindow::closeEvent(QCloseEvent *evt) {
     if (maybeSave()) {
         // user saved or discarded changes, close the window

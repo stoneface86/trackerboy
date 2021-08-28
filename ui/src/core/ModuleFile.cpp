@@ -1,6 +1,8 @@
 
 #include "core/ModuleFile.hpp"
 
+#include <QDateTime>
+#include <QDir>
 #include <QFileInfo>
 
 #include <fstream>
@@ -52,6 +54,43 @@ bool ModuleFile::save(QString const& filename, Module &mod) {
 
     return result;
    
+}
+
+QString ModuleFile::crashSave(Module const& mod) {
+    // attempt to save a copy of the module
+    // the copy is the same path of the module, but with .crash-%1 appended
+    // where %1 is an ISO 8601 timestamp
+    QString copyPath;
+    if (hasFile()) {
+        QFileInfo info(mFilepath);
+        copyPath = info.dir().filePath(info.baseName());
+    } else {
+        copyPath = mFilename;
+    }
+    copyPath.append(QStringLiteral(".crash-%1.tbm").arg(
+        QDateTime::currentDateTime().toString(Qt::ISODate)
+    ));
+
+    // This approach uses the same directory as the module file, which will
+    // fail if we don't have write permissions in this directory. Might be worth
+    // checking beforehand and use a fall-back location if this is the case
+    // (perhaps the user's home directory)
+
+    // for modules without a path, the file gets saved in the current directory
+
+    // in the case of collisions, the file will be overwritten. Should be
+    // extremely unlikely due to the timestamp being added to the filename
+
+    std::ofstream stream(copyPath.toStdString(), std::ios::binary | std::ios::out);
+    if (stream.good()) {
+        if (mod.data().serialize(stream) == trackerboy::FormatError::none) {
+            // success! return the path of the saved file
+            return copyPath;
+        }
+    }
+
+    // we either could not open the stream or an error occurred during serialization
+    return {};
 }
 
 trackerboy::FormatError ModuleFile::lastError() const {

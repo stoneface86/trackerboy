@@ -10,7 +10,10 @@
 
 #include <QFile>
 #include <QTextStream>
+#include <QStringBuilder>
+#include <QPointer>
 
+#include <iostream>
 #include <chrono>
 #include <memory>
 #include <new>
@@ -18,54 +21,52 @@
 constexpr int EXIT_BAD_ALLOC = 1;
 
 //
-// fuction pointer for the default qt message handler. We need to use a variable here
-// since it's definition is not part of the Qt public API.
+// Singleton class for a custom Qt message handler. This message handler wraps
+// the default handler and calls MainWindow::panic for QtFatalMsg messages.
 //
-static QtMessageHandler DEFAULT_MESSAGE_HANDLER;
+class MessageHandler {
 
-//
-// Custom message handler that logs to file and to stderr/console via Qt's default handler
-//
-static void messageHandler(QtMsgType type, QMessageLogContext const& context, QString const& txt) {
+public:
 
-    // temporary, for release we will log to the application data directory
-    QFile outfile("log.txt");
-    outfile.open(QIODevice::WriteOnly | QIODevice::Append);
-
-    QTextStream stream(&outfile);
-    stream << QDateTime::currentDateTime().toString(QStringLiteral("yyyy/MM/dd hh:mm:ss"));
-
-    stream << " [";
-    switch (type) {
-        case QtDebugMsg:
-            stream << "DEBUG";
-            break;
-        case QtWarningMsg:
-            stream << "WARNING";
-            break;
-        case QtCriticalMsg:
-            stream << "CRITICAL";
-            break;
-        case QtFatalMsg:
-            stream << "FATAL";
-            // the default handler will do the abort
-            break;
-        case QtInfoMsg:
-            stream << "INFO";
-            break;
-        default:
-            break;
+    static MessageHandler& instance() {
+        static MessageHandler instance;
+        return instance;
     }
 
-    // Qt::endl was added in 5.14 so we cannot use it (maintain compatibility with Qt 5.12 and up)
-    // instead we write a newline and flush the stream
-    //stream << "] " << txt << Qt::endl;
-    stream << "] " << txt << "\n";
-    stream.flush();
-    
-    DEFAULT_MESSAGE_HANDLER(type, context, txt);
-}
+    void registerHandler() {
+        mDefaultHandler = qInstallMessageHandler(message);
+    }
 
+    void setWindow(MainWindow *window) {
+        mWindow = window;
+    }
+
+
+private:
+    MessageHandler() :
+        mDefaultHandler(nullptr)
+    {
+    }
+
+    static void message(QtMsgType type, QMessageLogContext const& context, QString const& txt) {
+        instance()._message(type, context, txt);
+    }
+
+    void _message(QtMsgType type, QMessageLogContext const& context, QString const& txt) {
+
+        if (type == QtFatalMsg && mWindow) {
+            // force the window to save a copy of the module if needed
+            mWindow->panic(txt);
+        }
+        
+        // let qt's default handler do everything else
+        mDefaultHandler(type, context, txt);
+    }
+
+    QPointer<MainWindow> mWindow;
+    QtMessageHandler mDefaultHandler;
+
+};
 
 int main(int argc, char *argv[]) {
 
@@ -90,12 +91,13 @@ int main(int argc, char *argv[]) {
     qRegisterMetaType<PatternModel::CursorChangeFlags>("CursorChangeFlags");
 
     // use a custom message handler for logging to file
-    DEFAULT_MESSAGE_HANDLER = qInstallMessageHandler(messageHandler);
+    MessageHandler::instance().registerHandler();
 
     // add the default font for the pattern editor
     QFontDatabase::addApplicationFont(":/CascadiaMono.ttf");
    
     std::unique_ptr<MainWindow> win(new MainWindow);
+    MessageHandler::instance().setWindow(win.get());
     win->show();
 
     #ifndef QT_NO_INFO_OUTPUT
