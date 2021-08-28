@@ -10,7 +10,8 @@ InfoStr::InfoStr(std::string const& str) noexcept {
 }
 
 InfoStr::InfoStr(const char *str) noexcept {
-    strncpy(data(), str, size());
+    auto len = std::min(strlen(str), size());
+    std::copy_n(str, len, data());
 }
 
 InfoStr& InfoStr::operator=(std::string const& str) noexcept {

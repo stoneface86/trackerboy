@@ -34,6 +34,7 @@ void SongListModel::commit() {
 }
 
 int SongListModel::rowCount(QModelIndex const& index) const {
+    Q_UNUSED(index)
     return (int)mSongData.size();
 }
 
@@ -97,7 +98,7 @@ void SongListModel::remove(int index) {
 }
 
 void SongListModel::moveUp(int index) {
-
+    Q_UNUSED(index)
     
 }
 

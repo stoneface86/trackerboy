@@ -65,7 +65,7 @@ SongHandler::SongHandler(size_t count, FormatMajor major) :
 
 FormatError SongHandler::processIn(Module &mod, InputBlock &block, size_t index) {
 
-    auto song = mod.songs().get(index);
+    auto song = mod.songs().get((int)index);
 
     if (mMajor > 0) {
         // starting in major 1, SONG blocks begin with the song's name
@@ -131,7 +131,7 @@ FormatError SongHandler::processIn(Module &mod, InputBlock &block, size_t index)
 void SongHandler::processOut(Module const& mod, OutputBlock &block, size_t index) {
 
     // get the song
-    auto song = mod.songs().get(index);
+    auto song = mod.songs().get((int)index);
 
     // write the name
     if (mMajor > 0) {

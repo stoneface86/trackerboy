@@ -1,7 +1,8 @@
 
 #include "core/audio/Ringbuffer.hpp"
 
-#include <cassert>
+#include <QtGlobal>
+
 #include <cstdint>
 #include <cstring>
 
@@ -43,13 +44,14 @@ size_t RingbufferBase::read(void *data, size_t sizeInBytes) {
     void *src;
     
     auto result = ma_rb_acquire_read(&mRingbuffer, &bytesToRead, &src);
-    assert(result == MA_SUCCESS);
+    Q_ASSERT(result == MA_SUCCESS);
 
     memcpy(data, src, bytesToRead);
     
     result = ma_rb_commit_read(&mRingbuffer, bytesToRead, src);
-    assert(result == MA_SUCCESS || result == MA_AT_END);
+    Q_ASSERT(result == MA_SUCCESS || result == MA_AT_END);
     
+    Q_UNUSED(result)
     return bytesToRead;
 }
 
@@ -58,13 +60,14 @@ size_t RingbufferBase::write(void const *data, size_t sizeInBytes) {
     size_t bytesToWrite = sizeInBytes;
 
     auto result = ma_rb_acquire_write(&mRingbuffer, &bytesToWrite, &dest);
-    assert(result == MA_SUCCESS);
+    Q_ASSERT(result == MA_SUCCESS);
 
     memcpy(dest, data, bytesToWrite);
     
     result = ma_rb_commit_write(&mRingbuffer, bytesToWrite, dest);
-    assert(result == MA_SUCCESS || result == MA_AT_END);
+    Q_ASSERT(result == MA_SUCCESS || result == MA_AT_END);
     
+    Q_UNUSED(result)
     return bytesToWrite;
 }
 
@@ -112,25 +115,29 @@ size_t RingbufferBase::fullWrite(void const *buf, size_t sizeInBytes) {
 void* RingbufferBase::acquireRead(size_t &outSize) {
     void *buf;
     auto result = ma_rb_acquire_read(&mRingbuffer, &outSize, &buf);
-    assert(result == MA_SUCCESS);
+    Q_ASSERT(result == MA_SUCCESS);
+    Q_UNUSED(result)
     return buf;
 }
 
 void RingbufferBase::commitRead(void *buf, size_t size) {
     auto result = ma_rb_commit_read(&mRingbuffer, size, buf);
-    assert(result == MA_SUCCESS);
+    Q_ASSERT(result == MA_SUCCESS);
+    Q_UNUSED(result)
 }
 
 void* RingbufferBase::acquireWrite(size_t &outSize) {
     void *buf;
     auto result = ma_rb_acquire_write(&mRingbuffer, &outSize, &buf);
-    assert(result == MA_SUCCESS);
+    Q_ASSERT(result == MA_SUCCESS);
+    Q_UNUSED(result)
     return buf;
 }
 
 void RingbufferBase::commitWrite(void *buf, size_t size) {
     auto result = ma_rb_commit_write(&mRingbuffer, size, buf);
-    assert(result == MA_SUCCESS);
+    Q_ASSERT(result == MA_SUCCESS);
+    Q_UNUSED(result)
 }
 
 size_t RingbufferBase::availableRead() {
@@ -142,11 +149,15 @@ size_t RingbufferBase::availableWrite() {
 }
 
 void RingbufferBase::seekRead(size_t bytes) {
-    assert(ma_rb_seek_read(&mRingbuffer, bytes) == MA_SUCCESS);
+    auto result = ma_rb_seek_read(&mRingbuffer, bytes);
+    Q_ASSERT(result == MA_SUCCESS);
+    Q_UNUSED(result)
 }
 
 void RingbufferBase::seekWrite(size_t bytes) {
-    assert(ma_rb_seek_write(&mRingbuffer, bytes) == MA_SUCCESS);
+    auto result = ma_rb_seek_write(&mRingbuffer, bytes);
+    Q_ASSERT(result == MA_SUCCESS);
+    Q_UNUSED(result)
 }
 
 void RingbufferBase::reset() {

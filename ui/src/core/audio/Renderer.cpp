@@ -161,7 +161,7 @@ bool Renderer::setConfig(SoundConfig const &soundConfig) {
             bool reloadRegisters = false;
             auto const samplerate = soundConfig.samplerate();
             if (samplerate != handle->synth.samplerate()) {
-                handle->synth.setSamplingRate(samplerate);
+                handle->synth.setSamplerate(samplerate);
                 reloadRegisters = wasRunning;
             }
             handle->synth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality()));

@@ -55,7 +55,7 @@ ExportWavDialog::ExportWavDialog(
         check.setChecked(true);
         mChannelSelectLayout.addWidget(&check);
         connect(&check, &QCheckBox::toggled, this,
-            [this, &check](bool toggled) {
+            [this](bool toggled) {
                 if (toggled) {
                     for (auto &box : mChannelChecks) {
                         box.setEnabled(true);

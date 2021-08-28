@@ -32,7 +32,8 @@ TrackRow& Pattern::getTrackRow(ChType ch, int row) {
         case ChType::ch3:
             track = mTrack3;
             break;
-        case ChType::ch4:
+        default:
+            // default is used because gcc complains that track may be uninitialized
             track = mTrack4;
             break;
     }

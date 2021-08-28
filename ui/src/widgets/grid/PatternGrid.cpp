@@ -78,7 +78,7 @@ PatternGrid::PatternGrid(
             // update the layout
             auto counts = mModel.effectsVisible();
             for (size_t i = 0; i < counts.size(); ++i) {
-                mLayout.setEffectsVisible(i, counts[i]);
+                mLayout.setEffectsVisible((int)i, counts[i]);
             }
             // redraw everything
             update();

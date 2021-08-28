@@ -7,9 +7,9 @@
 namespace trackerboy {
 
 
-Synth::Synth(unsigned samplingRate, float framerate) noexcept :
-    mApu(samplingRate, static_cast<size_t>(samplingRate / framerate) + 1),
-    mSamplerate(samplingRate),
+Synth::Synth(int samplerate, float framerate) noexcept :
+    mApu(samplerate, static_cast<size_t>(samplerate / framerate) + 1),
+    mSamplerate(samplerate),
     mFramerate(framerate),
     mCyclesPerFrame(gbapu::constants::CLOCK_SPEED<float> / mFramerate),
     mCycleOffset(0.0f),
@@ -58,13 +58,13 @@ void Synth::setFramerate(float framerate) {
     }
 }
 
-unsigned Synth::samplerate() const noexcept {
+int Synth::samplerate() const noexcept {
     return mSamplerate;
 }
 
-void Synth::setSamplingRate(unsigned samplingRate) {
-    if (mSamplerate != samplingRate) {
-        mSamplerate = samplingRate;
+void Synth::setSamplerate(int samplerate) {
+    if (mSamplerate != samplerate) {
+        mSamplerate = samplerate;
         mResizeRequired = true;
     }
 }

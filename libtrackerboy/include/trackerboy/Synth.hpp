@@ -28,22 +28,18 @@
 
 #include "gbapu.hpp"
 
-#include <cstdint>
-#include <memory>
-#include <vector>
-
 namespace trackerboy {
 
 class Synth {
     
 public:
 
-    Synth(unsigned samplingRate, float framerate = GB_FRAMERATE_DMG) noexcept;
+    Synth(int samplerate, float framerate = GB_FRAMERATE_DMG) noexcept;
     ~Synth() = default;
 
     gbapu::Apu& apu() noexcept;
 
-    unsigned samplerate() const noexcept;
+    int samplerate() const noexcept;
 
     //
     // Returns the minimum number of samples per frame. Frame sizes alternate between
@@ -67,7 +63,7 @@ public:
     //
     void setFramerate(float framerate);
 
-    void setSamplingRate(unsigned samplingRate);
+    void setSamplerate(int samplerate);
 
     void setupBuffers();
 
@@ -76,7 +72,7 @@ private:
     gbapu::Apu mApu;
     
     // output sampling rate
-    unsigned mSamplerate;
+    int mSamplerate;
     // interrupt rate of the gameboy VBlank interrupt
     float mFramerate;
 
