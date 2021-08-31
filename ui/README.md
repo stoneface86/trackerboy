@@ -12,6 +12,7 @@ by default).
     * `core/` - Application core internals, non-ui classes
         * `audio/` - audio-related code: rendering, data buffers, device management, etc
         * `clipboard/` - clipboard management and clipboard data classes
+        * `commands/` - QUndoCommand subclasses used by model classes
         * `config/` - Config class components (see core/Config.hpp)
         * `graphics/` - Utility code for use in paint events / QPainter
         * `midi/` - MIDI handling and device management

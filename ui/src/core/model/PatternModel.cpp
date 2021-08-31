@@ -1,5 +1,10 @@
 
 #include "core/model/PatternModel.hpp"
+#include "core/commands/EraseCmd.hpp"
+#include "core/commands/PasteCmd.hpp"
+#include "core/commands/ReverseCmd.hpp"
+#include "core/commands/TrackEditCmd.hpp"
+#include "core/commands/TransposeCmd.hpp"
 
 #include "trackerboy/note.hpp"
 
@@ -8,6 +13,20 @@
 
 #include <algorithm>
 #include <memory>
+
+#define TU PatternModelTU
+namespace TU {
+
+static uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
+    if (highNibble) {
+        return (value & 0x0F) | (nibble << 4);
+    } else {
+        return (value & 0xF0) | (nibble);
+    }
+}
+
+}
+
 
 PatternModel::PatternModel(Module &mod, SongModel &songModel, QObject *parent) :
     QObject(parent),
@@ -591,391 +610,6 @@ void PatternModel::setMaxColumns() {
 
 // editing ====================================================================
 
-static uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
-    if (highNibble) {
-        return (value & 0x0F) | (nibble << 4);
-    } else {
-        return (value & 0xF0) | (nibble);
-    }
-}
-
-static constexpr bool effectTypeRequiresUpdate(trackerboy::EffectType type) {
-    // these effects shorten the length of a pattern which when set/removed
-    // will require a recount
-    return type == trackerboy::EffectType::patternHalt ||
-           type == trackerboy::EffectType::patternSkip ||
-           type == trackerboy::EffectType::patternGoto;
-}
-
-class TrackEditCmd : public QUndoCommand {
-
-protected:
-    PatternModel &mModel;
-    uint8_t const mTrack;
-    uint8_t const mPattern;
-    uint8_t const mRow;
-    uint8_t const mNewData;
-    uint8_t const mOldData;
-
-public:
-    TrackEditCmd(PatternModel &model, uint8_t dataNew, uint8_t dataOld, QUndoCommand *parent = nullptr) :
-        QUndoCommand(parent),
-        mModel(model),
-        mTrack((uint8_t)(model.mCursor.track)),
-        mPattern((uint8_t)model.mCursorPattern),
-        mRow((uint8_t)model.mCursor.row),
-        mNewData(dataNew),
-        mOldData(dataOld)
-    {
-    }
-
-    virtual void redo() override {
-        setData(mNewData);
-    }
-
-    virtual void undo() override {
-        setData(mOldData);
-    }
-
-protected:
-    trackerboy::TrackRow& getRow() {
-        return mModel.source()->getRow(
-            static_cast<trackerboy::ChType>(mTrack),
-            mPattern,
-            (uint16_t)mRow
-        );
-    }
-
-    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) = 0;
-
-private:
-    void setData(uint8_t data) {
-        auto &rowdata = mModel.source()->getRow(
-            static_cast<trackerboy::ChType>(mTrack),
-            mPattern,
-            (uint16_t)mRow
-        );
-
-        bool update;
-        {
-            auto ctx = mModel.mModule.edit();
-            update = edit(rowdata, data);
-        }
-
-        mModel.invalidate(mPattern, update);
-
-    }
-
-};
-
-class NoteEditCmd : public TrackEditCmd {
-
-    using TrackEditCmd::TrackEditCmd;
-
-protected:
-    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
-        rowdata.note = data;
-        return false;
-    }
-};
-
-class InstrumentEditCmd : public TrackEditCmd {
-
-    using TrackEditCmd::TrackEditCmd;
-
-protected:
-    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
-        rowdata.instrumentId = data;
-        return false;
-    }
-
-};
-
-class EffectEditCmd : public TrackEditCmd {
-
-public:
-    EffectEditCmd(PatternModel &model, uint8_t effectNo, uint8_t newData, uint8_t oldData, QUndoCommand *parent = nullptr) :
-        TrackEditCmd(model, newData, oldData, parent),
-        mEffectNo(effectNo)
-    {
-    }
-
-protected:
-    uint8_t const mEffectNo;
-};
-
-class EffectTypeEditCmd : public EffectEditCmd {
-
-    using EffectEditCmd::EffectEditCmd;
-
-protected:
-    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
-        auto &effect = rowdata.effects[mEffectNo];
-        auto oldtype = effect.type;
-        auto type = static_cast<trackerboy::EffectType>(data);
-        effect.type = type;
-        return effectTypeRequiresUpdate(type) || effectTypeRequiresUpdate(oldtype);
-    }
-
-};
-
-class EffectParamEditCmd : public EffectEditCmd {
-
-    using EffectEditCmd::EffectEditCmd;
-
-protected:
-    virtual bool edit(trackerboy::TrackRow &rowdata, uint8_t data) override {
-        rowdata.effects[mEffectNo].param = data;
-        return false;
-    }
-
-};
-
-
-class SelectionCmd : public QUndoCommand {
-
-protected:
-    PatternModel &mModel;
-    uint8_t mPattern;
-    PatternClip mClip;
-
-    explicit SelectionCmd(PatternModel &model) :
-        mModel(model),
-        mPattern((uint8_t)model.mCursorPattern),
-        mClip()
-    {
-        mClip.save(model.mPatternCurr, model.mSelection);
-    }
-
-    void restore(bool update) {
-        auto pattern = mModel.source()->getPattern(mPattern);
-        {
-            auto ctx = mModel.mModule.edit();
-            mClip.restore(pattern);
-        }
-
-        mModel.invalidate(mPattern, update);
-    }
-
-};
-
-class DeleteSelectionCmd : public SelectionCmd {
-
-public:
-
-    DeleteSelectionCmd(PatternModel &model) :
-        SelectionCmd(model)
-    {
-    }
-
-    virtual void redo() override {
-        {
-            auto ctx = mModel.mModule.edit();
-            // clear all set data in the selection
-            auto iter = mClip.selection().iterator();
-            auto pattern = mModel.source()->getPattern(mPattern);
-
-            for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
-                auto tmeta = iter.getTrackMeta(track);
-                for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
-                    auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                    if (tmeta.hasColumn<PatternAnchor::SelectNote>()) {
-                        rowdata.note = 0;
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectInstrument>()) {
-                        rowdata.instrumentId = 0;
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectEffect1>()) {
-                        rowdata.effects[0] = trackerboy::NO_EFFECT;
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectEffect2>()) {
-                        rowdata.effects[1] = trackerboy::NO_EFFECT;
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectEffect3>()) {
-                        rowdata.effects[2] = trackerboy::NO_EFFECT;
-                    }
-                }
-            }
-
-        }
-
-        mModel.invalidate(mPattern, true);
-    }
-
-    virtual void undo() override {
-        restore(true);
-    }
-
-
-};
-
-class PasteCmd : public QUndoCommand {
-
-    PatternModel &mModel;
-    PatternClip mSrc;
-    PatternClip mPast;
-    PatternCursor mPos;
-    uint8_t mPattern;
-    bool mMix;
-
-public:
-    PasteCmd(PatternModel &model, PatternClip const& clip, PatternCursor pos, bool mix) :
-        QUndoCommand(),
-        mModel(model),
-        mSrc(clip),
-        mPast(),
-        mPos(pos),
-        mPattern((uint8_t)model.mCursorPattern),
-        mMix(mix)
-    {
-        auto region = mSrc.selection();
-        region.moveTo(pos);
-        region.clamp(model.mPatternCurr.size() - 1);
-        mPast.save(model.mPatternCurr, region);
-    }
-
-    virtual void redo() override {
-        {
-            auto ctx = mModel.mModule.edit();
-            auto pattern = mModel.source()->getPattern(mPattern);
-            mSrc.paste(pattern, mPos, mMix);
-        }
-
-        mModel.invalidate(mPattern, true);
-    }
-
-    virtual void undo() override {
-        {
-            auto ctx = mModel.mModule.edit();
-            auto pattern = mModel.source()->getPattern(mPattern);
-            mPast.restore(pattern);
-        }
-
-        mModel.invalidate(mPattern, true);
-    }
-
-};
-
-
-class TransposeCmd : public SelectionCmd {
-
-    int8_t mTransposeAmount; // semitones to transpose all notes by
-
-public:
-
-    explicit TransposeCmd(PatternModel &model, int8_t transposeAmount) :
-        SelectionCmd(model),
-        mTransposeAmount(transposeAmount)
-    {
-    }
-
-    virtual void redo() override {
-        {
-            auto ctx = mModel.mModule.edit();
-            auto iter = mClip.selection().iterator();
-            auto pattern = mModel.source()->getPattern(mPattern);
-
-            for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
-                auto tmeta = iter.getTrackMeta(track);
-                if (!tmeta.hasColumn<PatternAnchor::SelectNote>()) {
-                    continue;
-                }
-
-                for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
-                    auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                    rowdata.transpose(mTransposeAmount);
-                }
-            }
-        }
-
-        mModel.invalidate(mPattern, false);
-    }
-
-    virtual void undo() override {
-        restore(false);
-    }
-
-};
-
-// reverse applies to a selection, but we do not inherit SelectionCmd, as its
-// redo/undo actions are the same (no need to save a chunk of the selection)
-class ReverseCmd : public QUndoCommand {
-
-    PatternModel &mModel;
-    PatternSelection mSelection;
-    uint8_t mPattern;
-
-public:
-
-    explicit ReverseCmd(PatternModel &model) :
-        mModel(model),
-        mSelection(model.mSelection),
-        mPattern((uint8_t)model.mCursorPattern)
-    {
-    }
-
-    virtual void redo() override {
-        reverse();
-    }
-
-    virtual void undo() override {
-        // same as redo() since reversing is an involutory function
-        reverse();
-    }
-
-private:
-
-    void reverse() {
-        {
-            auto ctx = mModel.mModule.edit();
-            auto iter = mSelection.iterator();
-            auto pattern = mModel.source()->getPattern(mPattern);
-
-            auto midpoint = iter.rowStart() + (iter.rows() / 2);
-            for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
-                auto tmeta = iter.getTrackMeta(track);
-
-                int lastRow = iter.rowEnd();
-                for (auto row = iter.rowStart(); row < midpoint; ++row) {
-                    auto &first = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                    auto &last = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)lastRow);
-
-                    // inefficient, but works
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectNote>()) {
-                        std::swap(first.note, last.note);
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectInstrument>()) {
-                        std::swap(first.instrumentId, last.instrumentId);
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectEffect1>()) {
-                        std::swap(first.effects[0], last.effects[0]);
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectEffect2>()) {
-                        std::swap(first.effects[1], last.effects[1]);
-                    }
-
-                    if (tmeta.hasColumn<PatternAnchor::SelectEffect3>()) {
-                        std::swap(first.effects[2], last.effects[2]);
-                    }
-
-                    --lastRow;
-                }
-            }
-        }
-        mModel.invalidate(mPattern, true);
-    }
-
-};
-
-
 void PatternModel::setNote(std::optional<uint8_t> note, std::optional<uint8_t> instrument) {
         
     auto &rowdata = cursorTrackRow();
@@ -1039,7 +673,7 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
     std::optional<uint8_t> newInstrument;
     if (nibble) {
         bool const highNibble = mCursor.column == PatternCursor::ColumnInstrumentHigh;
-        newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
+        newInstrument = TU::replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
         if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
             return;
         }
@@ -1107,7 +741,7 @@ void PatternModel::setEffectParam(uint8_t nibble) {
         bool isHighNibble = mCursor.column == PatternCursor::ColumnEffect1ArgHigh ||
                             mCursor.column == PatternCursor::ColumnEffect2ArgHigh ||
                             mCursor.column == PatternCursor::ColumnEffect3ArgHigh;
-        auto newParam = replaceNibble(oldEffect.param, nibble, isHighNibble);
+        auto newParam = TU::replaceNibble(oldEffect.param, nibble, isHighNibble);
         if (newParam != oldEffect.param) {
             auto cmd = new EffectParamEditCmd(
                 *this,
@@ -1127,7 +761,7 @@ void PatternModel::deleteSelection() {
     if (hasSelection()) {
         // check if the selection actually has data
         if (!selectionDataIsEmpty()) {
-            auto cmd = new DeleteSelectionCmd(*this);
+            auto cmd = new EraseCmd(*this);
             cmd->setText(tr("Clear selection"));
             mModule.undoStack()->push(cmd);
         }
@@ -1189,7 +823,7 @@ void PatternModel::moveSelection(PatternCursor pos) {
 
         undoStack->beginMacro(tr("move selection"));
         auto toMove = clip();
-        undoStack->push(new DeleteSelectionCmd(*this));
+        undoStack->push(new EraseCmd(*this));
         undoStack->push(new PasteCmd(*this, toMove, pos, false));
         undoStack->endMacro();
 
@@ -1249,3 +883,5 @@ int PatternModel::addEffects(int track, int effectsToAdd) {
     return trackCount;
 
 }
+
+#undef TU

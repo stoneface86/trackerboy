@@ -7,13 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - Instrument + Waveform list views for selecting/adding instruments/waveforms
+ - Effect columns can now be hidden/added for each track
+ - Multiple song support, modules can now store 1-256 songs
+ - Backwards compatibilty for 0.0 (Rev A) modules
+ - Tempo calculator dialog (Song > Tempo calculator...)
+ - Crash handler. Attempts to save a copy of the module after a fatal error
 ### Changed
  - Back to using miniaudio instead of RtAudio for audio playback
- - Trackerboy is now a SDI instead of MDI (only one module can be open at a time).
+ - Trackerboy is now SDI instead of MDI (only one module can be open at a time).
  - Initial window size is set to a maximum of 1280x720
- - Modules can now store 1-256 songs
- - File format is now at rev 1
+ - Module file format is now at 1.0 (Rev B)
  - Config file is now more human friendly
+ - Redesigned header for the pattern editor
+ - Rewrote OrderEditor using a custom widget instead of QTableView + OrderModel
+### Fixed
+ - issue #2 - Exx not taking immediate effect
+ - issue #3 - PulseAudio hang
 ### Removed
  - Module tree view (replaced by instrument and waveform docks)
  - Instrument select toolbar

@@ -221,7 +221,7 @@ private:
     // QUndoCommand command classes
     friend class TrackEditCmd;
     friend class SelectionCmd;
-    friend class DeleteSelectionCmd;
+    friend class EraseCmd;
     friend class PasteCmd;
     friend class TransposeCmd;
     friend class ReverseCmd;
