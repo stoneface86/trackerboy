@@ -1,8 +1,8 @@
 
 #include "widgets/docks/TableDock.hpp"
 
-#include "misc/IconManager.hpp"
-#include "misc/connectutils.hpp"
+#include "core/misc/connectutils.hpp"
+#include "core/IconManager.hpp"
 
 #include <QBoxLayout>
 #include <QToolBar>

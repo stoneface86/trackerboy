@@ -71,6 +71,8 @@ makeSourceList(UI_SRC
     FILE "src/core/midi/IMidiReceiver.hpp"
     "src/core/midi/Midi"
     "src/core/midi/MidiProber"
+    FILE "src/core/misc/connectutils.hpp"
+    FILE "src/core/misc/TableActions.hpp"
     "src/core/misc/utils"
     "src/core/model/graph/GraphModel"
     "src/core/model/graph/SequenceModel"
@@ -85,6 +87,7 @@ makeSourceList(UI_SRC
     "src/core/Config"
     "src/core/FastTimer"
     FILE "src/core/Guarded.hpp"
+    "src/core/IconManager"
     FILE "src/core/Locked.hpp"
     "src/core/Module"
     "src/core/ModuleFile"
@@ -103,11 +106,6 @@ makeSourceList(UI_SRC
     "src/forms/ExportWavDialog"
     "src/forms/MainWindow"
     "src/forms/TempoCalculator"
-
-    FILE "src/misc/connectutils.hpp"
-    "src/misc/IconManager"
-    FILE "src/misc/TableActions.hpp"
-    "src/misc/utils"
 
     FILE "src/resources/fonts.qrc"
     FILE "src/resources/icons.qrc"

@@ -1,8 +1,8 @@
 
 #include "MainWindow.hpp"
 
-#include "misc/IconManager.hpp"
-#include "misc/connectutils.hpp"
+#include "core/misc/connectutils.hpp"
+#include "core/IconManager.hpp"
 #include "widgets/docks/InstrumentEditor.hpp"
 #include "widgets/docks/TableDock.hpp"
 #include "widgets/docks/WaveEditor.hpp"

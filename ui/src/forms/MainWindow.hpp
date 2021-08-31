@@ -4,6 +4,7 @@
 #include "core/audio/Renderer.hpp"
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
+#include "core/misc/TableActions.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/SongModel.hpp"
 #include "core/model/PatternModel.hpp"
@@ -16,7 +17,6 @@
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
 #include "forms/TempoCalculator.hpp"
-#include "misc/TableActions.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 

@@ -1,7 +1,6 @@
 
 #include "widgets/PatternEditor.hpp"
 
-#include "misc/utils.hpp"
 #include "core/misc/utils.hpp"
 
 #include <QClipboard>

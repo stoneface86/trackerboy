@@ -1,5 +1,5 @@
 
-#include "misc/IconManager.hpp"
+#include "core/IconManager.hpp"
 
 #include <type_traits>
 

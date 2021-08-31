@@ -1,8 +1,8 @@
 
 #include "forms/MainWindow.hpp"
 
-#include "misc/connectutils.hpp"
-#include "misc/IconManager.hpp"
+#include "core/misc/connectutils.hpp"
+#include "core/IconManager.hpp"
 
 #include <QAction>
 #include <QApplication>

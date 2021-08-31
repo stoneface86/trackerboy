@@ -1,6 +1,6 @@
 
 #include "core/model/InstrumentListModel.hpp"
-#include "misc/IconManager.hpp"
+#include "core/IconManager.hpp"
 
 
 InstrumentListModel::InstrumentListModel(Module &mod, QObject *parent) :

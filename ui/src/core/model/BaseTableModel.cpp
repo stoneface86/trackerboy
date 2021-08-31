@@ -1,6 +1,6 @@
 
 #include "core/model/BaseTableModel.hpp"
-#include "misc/IconManager.hpp"
+#include "core/IconManager.hpp"
 
 #include <QStringBuilder>
 

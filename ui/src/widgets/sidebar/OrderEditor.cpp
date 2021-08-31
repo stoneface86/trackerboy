@@ -1,7 +1,6 @@
 
 #include "widgets/sidebar/OrderEditor.hpp"
-
-#include "misc/utils.hpp"
+#include "core/IconManager.hpp"
 
 #include <QAction>
 #include <QHBoxLayout>
@@ -38,10 +37,12 @@ OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
     setLayout(layout);
     
     
-    auto incrementAction = new QAction(this);
-    auto decrementAction = new QAction(this);
-    setupAction(*incrementAction, "Increment selection", "Increments all selected cells by 1", Icons::increment);
-    setupAction(*decrementAction, "Decrement selection", "Decrements all selected cells by 1", Icons::decrement);
+    auto incrementAction = new QAction(tr("Increment selection"), this);
+    incrementAction->setStatusTip(tr("Increments all selected cells by 1"));
+    incrementAction->setIcon(IconManager::getIcon(Icons::increment));
+    auto decrementAction = new QAction(tr("Decrement selection"), this);
+    decrementAction->setStatusTip(tr("Decrements all selected cells by 1"));
+    decrementAction->setIcon(IconManager::getIcon(Icons::decrement));
     toolbar->addAction(incrementAction);
     toolbar->addAction(decrementAction);
     toolbar->setIconSize(IconManager::size());
