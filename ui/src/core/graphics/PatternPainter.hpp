@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/graphics/CachedPen.hpp"
 #include "core/graphics/CellPainter.hpp"
 #include "core/graphics/PatternLayout.hpp"
 #include "core/Palette.hpp"
@@ -10,7 +11,6 @@
 #include "trackerboy/data/Pattern.hpp"
 
 #include <QColor>
-#include <QPen>
 #include <QFont>
 #include <QPainter>
 #include <QWidget>
@@ -29,12 +29,6 @@ public:
     };
 
     PatternPainter(QFont const& font);
-
-    //int rownoWidth() const;
-
-    //int trackWidth() const;
-
-    int patternStartPos() const;
 
     //
     // Returns true if accidentals will be drawn using flats instead of sharps
@@ -76,7 +70,7 @@ public:
         int rowStart,
         int rowEnd,
         int ypos
-    );
+    ) const;
 
     //
     // Draws the selection rectangle
@@ -87,13 +81,13 @@ public:
     // Paints "nothing" or "-" for the cell(s). The x position of the next
     // cell is returned
     //
-    int drawNone(QPainter &painter, int cells, int xpos, int ypos);
+    int drawNone(QPainter &painter, int cells, int xpos, int ypos) const;
 
     //
     // Paints a note at the given x and y position. The x position of the next
     // cell is returned.
     //
-    int drawNote(QPainter &painter, uint8_t note, int xpos, int ypos);
+    int drawNote(QPainter &painter, uint8_t note, int xpos, int ypos) const;
 
 private:
 
@@ -101,12 +95,6 @@ private:
 
     static NoteTable const NOTE_TABLE_FLATS;
     static NoteTable const NOTE_TABLE_SHARPS;
-
-    //
-    // Returns a reference to the cached QPen after setting its color to the
-    // given parameter. Use this function instead of creating a temporary QPen
-    //
-    QPen const& pen(QColor const& color) const;
 
     int highlightIndex(int rowno) const;
     
@@ -127,9 +115,7 @@ private:
 
     std::array<QColor, 3> mRowColors;
 
-    // pen used in all draw functions, reusing this one prevents the
-    // need to create a temporary
-    mutable QPen mPen;
+    CachedPen mutable mPen;
 
 
 };

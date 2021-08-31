@@ -23,9 +23,9 @@ public:
     // Draws a cell at the given x and y coordinates. The x position of the
     // next cell is returned
     //
-    int drawCell(QPainter &painter, char cell, int xpos, int ypos);
+    int drawCell(QPainter &painter, char cell, int xpos, int ypos) const;
 
-    int drawHex(QPainter &painter, int hex, int xpos, int ypos);
+    int drawHex(QPainter &painter, int hex, int xpos, int ypos) const;
 
     //
     // Determines the number of rows that can fit in the given height. The
@@ -41,7 +41,7 @@ private:
     // 1-character string used by drawCell
     // this way we don't have to create a temporary QString every call
     // unnecessary if QString has small string optimization (don't think it does)
-    QString mCellScratch;
+    QString mutable mCellScratch;
 
 
 };

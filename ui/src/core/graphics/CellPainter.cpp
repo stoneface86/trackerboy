@@ -62,13 +62,13 @@ void CellPainter::setFont(QFont const& font) {
 }
 
 
-int CellPainter::drawCell(QPainter &painter, char cell, int xpos, int ypos) {
+int CellPainter::drawCell(QPainter &painter, char cell, int xpos, int ypos) const {
     mCellScratch[0] = cell;
     painter.drawText(xpos, ypos, mCellWidth, mCellHeight, Qt::AlignBottom, mCellScratch);
     return xpos + mCellWidth;
 }
 
-int CellPainter::drawHex(QPainter &painter, int hex, int xpos, int ypos) {
+int CellPainter::drawHex(QPainter &painter, int hex, int xpos, int ypos) const {
     xpos = drawCell(painter, TU::HEX_TABLE[(hex >> 4) & 0xF], xpos, ypos);
     return drawCell(painter, TU::HEX_TABLE[hex & 0xF], xpos, ypos);
 }

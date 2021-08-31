@@ -100,8 +100,6 @@ PatternPainter::PatternPainter(QFont const& font) :
     CellPainter(),
     mHighlightInterval1(0),
     mHighlightInterval2(0),
-    //mTrackWidth(0),
-    //mPatternWidth(0),
     mNoteTable(&NOTE_TABLE_SHARPS),
     mForegroundColors(),
     mBackgroundColors(),
@@ -163,7 +161,7 @@ void PatternPainter::drawRowBackground(QPainter &p, PatternLayout const& l, RowT
     auto ypos = row * _cellHeight;
 
     auto const& color = mRowColors[type];
-    p.setPen(pen(color));
+    p.setPen(mPen.get(color));
     
     auto const start = l.patternStart();
     auto const rowWidth = l.rowWidth();
@@ -198,12 +196,12 @@ void PatternPainter::drawCursor(QPainter &p, PatternLayout const& l, PatternCurs
 
     int ypos = cursor.row * _cellHeight;
     p.fillRect(cursorPos, ypos, cursorWidth, _cellHeight, mColorCursor);
-    p.setPen(pen(mColorCursor));
+    p.setPen(mPen.get(mColorCursor));
     p.drawRect(cursorPos, ypos, cursorWidth - 1, _cellHeight - 1);
 }
 
 void PatternPainter::drawLines(QPainter &p, PatternLayout const& l, int height) const {
-    p.setPen(pen(mColorLine));
+    p.setPen(mPen.get(mColorLine));
     p.drawLine(0, 0, 0, height);
     int xpos = l.patternStart() - PatternLayout::LINE_WIDTH;
     p.drawLine(xpos, 0, xpos, height);
@@ -222,7 +220,7 @@ int PatternPainter::drawPattern(
     int rowStart,
     int rowEnd,
     int ypos
-) {
+) const {
     auto const _cellHeight = cellHeight();
     auto const start = l.patternStart();
 
@@ -231,7 +229,7 @@ int PatternPainter::drawPattern(
 
     for (int rowno = rowStart; rowno <= rowEnd; ++rowno) {
         auto const& fgcolor = mForegroundColors[highlightIndex(rowno)];
-        p.setPen(pen(fgcolor));
+        p.setPen(mPen.get(fgcolor));
         drawHex(p, rowno, PatternLayout::SPACING, ypos);
         int xpos = start + PatternLayout::SPACING;
         for (int track = 0; track <= 3; ++track) {
@@ -247,9 +245,9 @@ int PatternPainter::drawPattern(
             xpos += PatternLayout::SPACING;
             auto instrument = trackdata.queryInstrument();
             if (instrument) {
-                p.setPen(pen(mColorInstrument));
+                p.setPen(mPen.get(mColorInstrument));
                 xpos = drawHex(p, *instrument, xpos, ypos);
-                p.setPen(pen(fgcolor));
+                p.setPen(mPen.get(fgcolor));
             } else {
                 xpos = drawNone(p, 2, xpos, ypos);
             }
@@ -260,11 +258,11 @@ int PatternPainter::drawPattern(
             for (int effect = 0; effect < effectsVisible; ++effect) {
                 auto effectdata = trackdata.effects[effect];
                 if (effectdata.type != trackerboy::EffectType::noEffect) {
-                    p.setPen(pen(mColorEffect));
+                    p.setPen(mPen.get(mColorEffect));
 
                     xpos = drawCell(p, TU::effectTypeToChar(effectdata.type), xpos, ypos);
 
-                    p.setPen(pen(fgcolor));
+                    p.setPen(mPen.get(fgcolor));
                     xpos = drawHex(p, effectdata.param, xpos, ypos);
                 } else {
                     xpos = drawNone(p, 3, xpos, ypos);
@@ -287,7 +285,7 @@ void PatternPainter::drawSelection(QPainter &painter, QRect const& rect) const {
     painter.fillRect(rect, mColorSelection);
 }
 
-int PatternPainter::drawNote(QPainter &painter, uint8_t note, int xpos, int ypos) {
+int PatternPainter::drawNote(QPainter &painter, uint8_t note, int xpos, int ypos) const {
     auto const _cellWidth = cellWidth();
 
     if (note == trackerboy::NOTE_CUT) {
@@ -307,7 +305,7 @@ int PatternPainter::drawNote(QPainter &painter, uint8_t note, int xpos, int ypos
 }
 
 
-int PatternPainter::drawNone(QPainter &painter, int cells, int xpos, int ypos) {
+int PatternPainter::drawNone(QPainter &painter, int cells, int xpos, int ypos) const {
     auto const _cellWidth = cellWidth();
 
     xpos += 3;
@@ -329,11 +327,6 @@ int PatternPainter::highlightIndex(int rowno) const {
     } else {
         return 0;
     }
-}
-
-QPen const& PatternPainter::pen(QColor const& color) const {
-    mPen.setColor(color);
-    return mPen;
 }
 
 #undef TU
