@@ -1,8 +1,10 @@
 
 #pragma once
 
-#include "widgets/CustomSpinBox.hpp"
+#include "core/model/PatternModel.hpp"
+#include "widgets/sidebar/OrderGrid.hpp"
 
+#include <QCheckBox>
 #include <QTableView>
 
 //
@@ -14,8 +16,9 @@ class OrderEditor : public QWidget {
 
 public:
 
-    explicit OrderEditor(QWidget *parent = nullptr);
+    explicit OrderEditor(PatternModel &model, QWidget *parent = nullptr);
 
+    OrderGrid* grid();
 
 signals:
     //
@@ -23,12 +26,16 @@ signals:
     //
     void popupMenuAt(QPoint const& pos);
 
-    void jumpToPattern(int pattern);
+protected:
+
+    virtual void wheelEvent(QWheelEvent *evt) override;
 
 private:
 
     Q_DISABLE_COPY(OrderEditor)
 
-    CustomSpinBox *mSetSpin;
-    QTableView *mOrderView;
+    QCheckBox *mChangeAll;
+    OrderGrid *mGrid;
+
+    QScrollBar *mScrollbar;
 };

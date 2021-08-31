@@ -193,7 +193,7 @@ void PatternPainter::drawCursor(QPainter &p, PatternLayout const& l, PatternCurs
     auto const _cellHeight = cellHeight();
 
     // the width of the cursor is always 1 character unless it is over a note column, then it is 3
-    int cursorWidth = (cursor.column == PatternCursor::ColumnNote ? 3 : 1) * _cellWidth + 2;
+    int cursorWidth = (cursor.column == PatternCursor::ColumnNote ? 3 : 1) * _cellWidth;
     int cursorPos = l.trackToX(cursor.track) + l.columnToX(cursor.column);
 
     int ypos = cursor.row * _cellHeight;

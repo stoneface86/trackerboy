@@ -99,11 +99,6 @@ private:
     //
     void fontChanged();
 
-    //
-    // Calculates the number of rows we can draw on this widget
-    //
-    unsigned getVisibleRows();
-
     int mouseToRow(int const mouseY);
 
     PatternCursor mouseToCursor(QPoint const pos);

@@ -326,7 +326,7 @@ void PatternGrid::resizeEvent(QResizeEvent *evt) {
     auto newSize = evt->size();
 
     if (newSize.height() != oldSize.height()) {
-        mVisibleRows = getVisibleRows();
+        mVisibleRows = mPainter.calculateRowsAvailable(newSize.height());
         calculateTrackerRow();
         
     }
@@ -493,7 +493,7 @@ void PatternGrid::setSecondHighlight(int highlight) {
 
 void PatternGrid::fontChanged() {
 
-    mVisibleRows = getVisibleRows();
+    mVisibleRows = mPainter.calculateRowsAvailable(height());
     mLayout.setCellSize(mPainter.cellWidth(), mPainter.cellHeight());
     //auto const rownoWidth = mPainter.rownoWidth();
     //auto const trackWidth = mPainter.trackWidth();
@@ -523,12 +523,6 @@ void PatternGrid::clampCursor(PatternCursor &cursor) {
         cursor.track = 0;
         cursor.column = 0;
     }
-}
-
-unsigned PatternGrid::getVisibleRows() {
-    auto h = height();
-    // integer division, rounding up
-    return (h - 1) / mPainter.cellHeight() + 1;
 }
 
 void PatternGrid::calculateTrackerRow() {

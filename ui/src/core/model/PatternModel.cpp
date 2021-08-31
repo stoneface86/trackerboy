@@ -48,6 +48,7 @@ PatternModel::PatternModel(Module &mod, SongModel &songModel, QObject *parent) :
             mTrackerPattern = 0;
             setMaxColumns();
             emit effectsVisibleChanged();
+            emit patternCountChanged(patterns());
         });
 }
 
@@ -61,6 +62,10 @@ trackerboy::Pattern& PatternModel::currentPattern() {
 
 trackerboy::Pattern* PatternModel::nextPattern() {
     return mPatternNext ? &*mPatternNext : nullptr;
+}
+
+trackerboy::Order const& PatternModel::order() const {
+    return source()->order();
 }
 
 PatternCursor PatternModel::cursor() const {
@@ -367,6 +372,9 @@ void PatternModel::setCursor(PatternCursor const cursor) {
 }
 
 void PatternModel::setCursorPattern(int pattern) {
+    if (pattern < 0 || pattern >= patterns()) {
+        return;
+    }
 
     CursorChangeFlags flags = CursorUnchanged;
     setCursorPatternImpl(pattern, flags);
@@ -380,6 +388,7 @@ void PatternModel::setCursorPatternImpl(int pattern, CursorChangeFlags &flags) {
 
     mCursorPattern = pattern;
     setPatterns(pattern, flags);
+    emit cursorPatternChanged(pattern);
     deselect();
 }
 
@@ -387,6 +396,7 @@ void PatternModel::setTrackerCursor(int row, int pattern) {
     bool changed = false;
     if (mTrackerPattern != pattern) {
         mTrackerPattern = pattern;
+        emit trackerCursorPatternChanged(pattern);
         changed = true;
     }
     if (mTrackerRow != row) {

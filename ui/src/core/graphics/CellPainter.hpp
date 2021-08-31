@@ -27,6 +27,12 @@ public:
 
     int drawHex(QPainter &painter, int hex, int xpos, int ypos);
 
+    //
+    // Determines the number of rows that can fit in the given height. The
+    // result is rounded up, so this function will always return a number >= 1.
+    //
+    int calculateRowsAvailable(int height) const;
+
 private:
 
     int mCellHeight;

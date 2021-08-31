@@ -223,24 +223,14 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto const& appearance = mConfig.appearance();
         auto const& pal = mConfig.palette();
 
-        // see resources/stylesheet.qss
-        QFile styleFile(QStringLiteral(":/stylesheet.qss"));
-        styleFile.open(QFile::ReadOnly);
-
-        QString stylesheet(styleFile.readAll());
-
         auto font = appearance.font();
-        setStyleSheet(stylesheet.arg(
-            pal[Palette::ColorBackground].name(),
-            pal[Palette::ColorLine].name(),
-            pal[Palette::ColorForeground].name(),
-            pal[Palette::ColorSelection].name(),
-            font.family(),
-            QString::number(font.pointSize())
-        ));
-
+        
+        mPatternEditor->setFont(font);
         mPatternEditor->setColors(pal);
-        //OrderModel::setRowColor(appearance.colors[+Color::row]);
+
+        auto orderGrid = mSidebar->orderEditor()->grid();
+        orderGrid->setFont(font);
+        orderGrid->setColors(pal);
     }
 
     if (categories.testFlag(Config::CategoryKeyboard)) {

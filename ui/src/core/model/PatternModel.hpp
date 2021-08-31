@@ -54,6 +54,8 @@ public:
 
     trackerboy::Pattern* nextPattern();
 
+    trackerboy::Order const& order() const;
+
     // Properties =============================================================
 
     int cursorRow() const;
@@ -172,9 +174,12 @@ public:
 
 signals:
     void cursorChanged(CursorChangeFlags flags);
+    void cursorPatternChanged(int pattern);
 
     void patternSizeChanged(int rows);
+    void patternCountChanged(int patterns);
     void trackerCursorChanged(int row, int pattern);
+    void trackerCursorPatternChanged(int pattern);
     void playingChanged(bool playing);
     void recordingChanged(bool recording);
 

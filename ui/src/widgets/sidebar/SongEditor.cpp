@@ -5,9 +5,9 @@
 
 #include <cmath>
 
-SongEditor::SongEditor(QWidget *parent) :
+SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     QWidget(parent),
-    mSongModel(nullptr),
+    mSongModel(model),
     mRowsPerBeatSpin(new QSpinBox),
     mRowsPerMeasureSpin(new QSpinBox),
     mSpeedSpin(new CustomSpinBox),
@@ -54,26 +54,20 @@ SongEditor::SongEditor(QWidget *parent) :
 
     connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), mRowsPerMeasureSpin, &QSpinBox::setMinimum);
     connect(mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), mRowsPerBeatSpin, &QSpinBox::setMaximum);
-}
 
-void SongEditor::setModel(SongModel *model) {
-    Q_ASSERT(mSongModel == nullptr && model);
-
-    mSongModel = model;
-
-    connect(model, &SongModel::rowsPerBeatChanged, this,
+    connect(&model, &SongModel::rowsPerBeatChanged, this,
         [this](int rpb) {
             QSignalBlocker blocker(mRowsPerBeatSpin);
             mRowsPerBeatSpin->setValue(rpb);
         });
 
-    connect(model, &SongModel::rowsPerMeasureChanged, this,
+    connect(&model, &SongModel::rowsPerMeasureChanged, this,
         [this](int rpm) {
             QSignalBlocker blocker(mRowsPerMeasureSpin);
             mRowsPerMeasureSpin->setValue(rpm);
         });
 
-    connect(model, &SongModel::speedChanged, this,
+    connect(&model, &SongModel::speedChanged, this,
         [this](int speed) {
             QSignalBlocker blocker(mSpeedSpin);
             mSpeedSpin->setValue(speed);
@@ -82,18 +76,20 @@ void SongEditor::setModel(SongModel *model) {
             mSpeedLabel->setSpeed(speedFloat);
         });
 
-    connect(model, &SongModel::tempoChanged, mTempoLabel, &TempoLabel::setTempo);
+    connect(&model, &SongModel::tempoChanged, mTempoLabel, &TempoLabel::setTempo);
 
-    connect(model, &SongModel::patternSizeChanged, this,
+    connect(&model, &SongModel::patternSizeChanged, this,
         [this](int rows) {
             QSignalBlocker blocker(mPatternSizeSpin);
             mPatternSizeSpin->setValue(rows);
         });
 
-    model->reload();
+    model.reload();
     
-    connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), model, &SongModel::setRowsPerBeat);
-    connect(mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), model, &SongModel::setRowsPerMeasure);
-    connect(mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), model, &SongModel::setSpeed);
-    connect(mPatternSizeSpin, qOverload<int>(&QSpinBox::valueChanged), model, &SongModel::setPatternSize);
+    connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setRowsPerBeat);
+    connect(mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setRowsPerMeasure);
+    connect(mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setSpeed);
+    connect(mPatternSizeSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setPatternSize);
+
+
 }

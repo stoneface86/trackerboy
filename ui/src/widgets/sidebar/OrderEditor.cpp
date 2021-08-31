@@ -10,24 +10,31 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QScrollBar>
+#include <QWheelEvent>
 
-OrderEditor::OrderEditor(QWidget *parent) :
+OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
     QWidget(parent),
-    mSetSpin(new CustomSpinBox),
-    mOrderView(new QTableView)
+    mChangeAll(nullptr),
+    mGrid(nullptr),
+    mScrollbar(nullptr)
 {
-
-    auto layout = new QVBoxLayout;
-
     auto toolbarLayout = new QHBoxLayout;
     auto toolbar = new QToolBar;
-    auto setButton = new QPushButton(tr("Set"));
+    mChangeAll = new QCheckBox(tr("Change all"));
     toolbarLayout->addWidget(toolbar, 1);
-    toolbarLayout->addWidget(mSetSpin);
-    toolbarLayout->addWidget(setButton);
+    toolbarLayout->addWidget(mChangeAll);
     
+    mGrid = new OrderGrid(model);
+    auto gridLayout = new QHBoxLayout;
+    mScrollbar = new QScrollBar(Qt::Vertical);
+    gridLayout->addWidget(mGrid, 1);
+    gridLayout->addWidget(mScrollbar);
+    gridLayout->setSpacing(0);
+
+    auto layout = new QVBoxLayout;
     layout->addLayout(toolbarLayout);
-    layout->addWidget(mOrderView, 1);
+    layout->addLayout(gridLayout, 1);
     setLayout(layout);
     
     
@@ -39,23 +46,16 @@ OrderEditor::OrderEditor(QWidget *parent) :
     toolbar->addAction(decrementAction);
     toolbar->setIconSize(IconManager::size());
 
-    setButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-
-    mOrderView->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
-    connect(mOrderView, &QTableView::customContextMenuRequested, this,
-        [this](QPoint const& pos) {
-            QPoint mapped = mOrderView->viewport()->mapToGlobal(pos);
-            emit popupMenuAt(mapped);
+    mScrollbar->setRange(0, model.patterns() - 1);
+    mScrollbar->setPageStep(1);
+    connect(mScrollbar, &QScrollBar::valueChanged, &model, &PatternModel::setCursorPattern);
+    connect(&model, &PatternModel::cursorPatternChanged, mScrollbar, &QScrollBar::setValue);
+    connect(&model, &PatternModel::patternCountChanged, this,
+        [this](int count) {
+            mScrollbar->setMaximum(count - 1);
         });
-    mOrderView->setTabKeyNavigation(false);
-    auto headerView = mOrderView->horizontalHeader();
-    headerView->setSectionResizeMode(QHeaderView::ResizeMode::Stretch);
-
-    auto verticalHeader = mOrderView->verticalHeader();
-    verticalHeader->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
-    verticalHeader->setMinimumSectionSize(-1);
-    verticalHeader->setDefaultSectionSize(verticalHeader->minimumSectionSize());
-
+    
+    connect(mChangeAll, &QCheckBox::toggled, mGrid, &OrderGrid::setChangeAll);
     // connect(incrementAction, &QAction::triggered, this,
     //     [this]() {
             
@@ -71,4 +71,15 @@ OrderEditor::OrderEditor(QWidget *parent) :
     //     });
 
 
+}
+
+OrderGrid* OrderEditor::grid() {
+    return mGrid;
+}
+
+void OrderEditor::wheelEvent(QWheelEvent *evt) {
+    // pass this event to the scrollbar if the mouse is under the grid
+    if (mGrid->underMouse()) {
+        mScrollbar->event(evt);
+    }
 }

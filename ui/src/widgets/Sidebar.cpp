@@ -4,11 +4,11 @@
 #include <QGroupBox>
 #include <QVBoxLayout>
 
-Sidebar::Sidebar(QWidget *parent) :
+Sidebar::Sidebar(PatternModel &patternModel, SongModel &songModel, QWidget *parent) :
     QWidget(parent),
     mScope(new AudioScope),
-    mOrderEditor(new OrderEditor),
-    mSongEditor(new SongEditor)
+    mOrderEditor(new OrderEditor(patternModel)),
+    mSongEditor(new SongEditor(songModel))
 {
 
     auto layout = new QVBoxLayout;

@@ -17,7 +17,7 @@ class Sidebar : public QWidget {
 
 public:
 
-    explicit Sidebar(QWidget *parent = nullptr);
+    explicit Sidebar(PatternModel &patternModel, SongModel &songModel, QWidget *parent = nullptr);
 
     AudioScope* scope();
 

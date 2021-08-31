@@ -20,14 +20,11 @@ class SongEditor : public QWidget {
 
 public:
 
-    explicit SongEditor(QWidget *parent = nullptr);
-    virtual ~SongEditor() = default;
-
-    void setModel(SongModel *model);
+    explicit SongEditor(SongModel &model, QWidget *parent = nullptr);
 
 private:
 
-    SongModel *mSongModel;
+    SongModel &mSongModel;
 
     QSpinBox *mRowsPerBeatSpin;
     QSpinBox *mRowsPerMeasureSpin;
