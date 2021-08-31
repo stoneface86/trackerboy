@@ -73,13 +73,10 @@ jobs:
     - name: configure
       run: |
         cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DENABLE_UNITY=ON
-    
-    - name: upload vpkg log on failure
-      uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: ${{ runner.os }}-vcpkg-log
-        path: ${{ env.CMAKE_BUILD_DIR }}/vcpkg-manifest-install.log
+
+    # - name: dump vcpkg log on failure
+    #   if: ${{ failure() }}
+    #   run: cat ${{ env.CMAKE_BUILD_DIR }}/vcpkg-manifest-install.log
     
     - name: build
       run: cmake --build "${{ env.CMAKE_BUILD_DIR }}"
