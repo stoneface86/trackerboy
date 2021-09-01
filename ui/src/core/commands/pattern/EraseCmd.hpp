@@ -3,7 +3,7 @@
 
 class PatternModel;
 
-#include "core/commands/SelectionCmd.hpp"
+#include "core/commands/pattern/SelectionCmd.hpp"
 
 //
 // Command for erasing the contents of a selection

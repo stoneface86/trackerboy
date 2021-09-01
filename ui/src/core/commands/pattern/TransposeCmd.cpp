@@ -1,5 +1,5 @@
 
-#include "core/commands/TransposeCmd.hpp"
+#include "core/commands/pattern/TransposeCmd.hpp"
 #include "core/model/PatternModel.hpp"
 
 

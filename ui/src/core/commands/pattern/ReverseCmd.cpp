@@ -1,5 +1,5 @@
 
-#include "core/commands/ReverseCmd.hpp"
+#include "core/commands/pattern/ReverseCmd.hpp"
 #include "core/model/PatternModel.hpp"
 
 

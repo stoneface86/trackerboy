@@ -1,5 +1,5 @@
 
-#include "core/commands/TrackEditCmd.hpp"
+#include "core/commands/pattern/TrackEditCmd.hpp"
 
 #include "core/model/PatternModel.hpp"
 

@@ -1,5 +1,5 @@
 
-#include "core/commands/EraseCmd.hpp"
+#include "core/commands/pattern/EraseCmd.hpp"
 #include "core/model/PatternModel.hpp"
 
 EraseCmd::EraseCmd(PatternModel &model) :

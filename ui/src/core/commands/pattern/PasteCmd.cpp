@@ -1,5 +1,5 @@
 
-#include "core/commands/PasteCmd.hpp"
+#include "core/commands/pattern/PasteCmd.hpp"
 #include "core/model/PatternModel.hpp"
 
 PasteCmd::PasteCmd(

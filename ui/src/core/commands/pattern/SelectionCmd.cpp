@@ -1,5 +1,5 @@
 
-#include "core/commands/SelectionCmd.hpp"
+#include "core/commands/pattern/SelectionCmd.hpp"
 
 #include "core/model/PatternModel.hpp"
 
