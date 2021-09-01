@@ -109,6 +109,12 @@ public:
     //
     void setSong(int index);
 
+    //
+    // Call this before saving module data. Just emits the aboutToSave signal
+    // so that models can write any uncommitted data to the module.
+    //
+    void beginSave();
+
     // Editing ---------------------------------------------------------------
 
     //
@@ -151,9 +157,15 @@ signals:
 
     //
     // Emitted when the current song has changed. Also emitted when the module
-    // has been reset.
+    // has been reset. Models should respond to either reloaded or songChanged, not both.
     //
     void songChanged();
+
+    //
+    // Emitted before saving the module to a file, models should respond to the signal
+    // if they have any uncommitted changes to make.
+    //
+    void aboutToSave();
 
 private:
 

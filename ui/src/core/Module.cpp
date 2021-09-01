@@ -132,6 +132,10 @@ void Module::setSong(int index) {
     emit songChanged();
 }
 
+void Module::beginSave() {
+    emit aboutToSave();
+}
+
 void Module::resizeUndoStacks(int count) {
     int oldcount = mSongUndoStacks.size();
     int endIndexToClear = oldcount;

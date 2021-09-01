@@ -34,7 +34,7 @@ public:
     // The file path of the saved copy is returned on success, amy empty string is
     // returned on failure.
     //
-    QString crashSave(Module const &mod);
+    QString crashSave(Module &mod);
 
     //
     // Gets the last error that occurred from saving or loading. If no such

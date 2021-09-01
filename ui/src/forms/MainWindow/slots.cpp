@@ -83,7 +83,6 @@ void MainWindow::onFileOpen() {
 
 bool MainWindow::onFileSave() {
     if (mModuleFile.hasFile()) {
-        commitModels();
         return mModuleFile.save(*mModule);
     } else {
         return onFileSaveAs();
@@ -102,7 +101,6 @@ bool MainWindow::onFileSaveAs() {
         return false;
     }
 
-    commitModels();
     auto result = mModuleFile.save(path, *mModule);
     if (result) {
         // the document has a new name, update the window title

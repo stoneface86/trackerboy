@@ -38,6 +38,7 @@ void Module::clear() noexcept {
     mArtist.clear();
     mCopyright.clear();
     mSongs.clear();
+    mComments.clear();
     mInstrumentTable.clear();
     mWaveformTable.clear();
     mSystem = System::dmg;

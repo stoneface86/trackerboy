@@ -115,6 +115,10 @@ private:
         error
     };
 
+    //
+    // Creates a new dock widget with the given title and object name. This
+    // class takes ownership of the returned dock widget.
+    //
     QDockWidget* makeDock(QString const& title, QString const& objname);
 
     //
@@ -165,8 +169,6 @@ private:
     // false is returned for all other cases
     //
     bool maybeSave();
-
-    void commitModels();
 
     //
     // Setups the UI, should only be called once and by the constructor
@@ -271,6 +273,7 @@ private:
     QDockWidget *mDockInstruments;
     QDockWidget *mDockWaveforms;
     QDockWidget *mDockHistory;
+    QDockWidget *mDockComments;
 
     // widgets
     Sidebar *mSidebar;

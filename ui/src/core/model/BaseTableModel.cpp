@@ -25,6 +25,7 @@ BaseTableModel::BaseTableModel(Module &mod, trackerboy::BaseTable& table, QStrin
     mShouldCommit(false)
 {
     connect(&mod, &Module::reloaded, this, &BaseTableModel::reload);
+    connect(&mod, &Module::aboutToSave, this, &BaseTableModel::commit);
 }
 
 BaseTableModel::~BaseTableModel() {

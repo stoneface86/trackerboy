@@ -12,6 +12,7 @@
 #include <QShortcut>
 #include <QScreen>
 #include <QMenu>
+#include <QPlainTextEdit>
 #include <QStatusBar>
 #include <QtDebug>
 #include <QUndoView>
@@ -23,6 +24,11 @@ namespace TU {
 static auto const KEY_MAIN_WINDOW = QStringLiteral("MainWindow");
 static auto const KEY_WINDOW_STATE = QStringLiteral("windowState");
 static auto const KEY_GEOMETRY = QStringLiteral("geometry");
+
+//
+// increment this constant when adding new docks or toolbars
+//
+static constexpr int WINDOW_STATE_VERSION = 1;
 
 }
 
@@ -105,7 +111,10 @@ MainWindow::MainWindow() :
         addDockWidget(Qt::LeftDockWidgetArea, mDockHistory);
         addDockWidget(Qt::LeftDockWidgetArea, mDockInstruments);
         addDockWidget(Qt::LeftDockWidgetArea, mDockWaveforms);
-        restoreState(windowState);
+        addDockWidget(Qt::LeftDockWidgetArea, mDockComments);
+        if (!restoreState(windowState, TU::WINDOW_STATE_VERSION)) {
+            initState();
+        }
     }
 
     mModuleFile.setName(mUntitledString);
@@ -171,7 +180,7 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
             QSettings settings;
             settings.beginGroup(TU::KEY_MAIN_WINDOW);
             settings.setValue(TU::KEY_GEOMETRY, saveGeometry());
-            settings.setValue(TU::KEY_WINDOW_STATE, saveState());
+            settings.setValue(TU::KEY_WINDOW_STATE, saveState(TU::WINDOW_STATE_VERSION));
         #ifdef QT_DEBUG
         }
         #endif
@@ -216,14 +225,6 @@ bool MainWindow::maybeSave() {
     }
 
     return true;
-}
-
-void MainWindow::commitModels() {
-    // libtrackerboy uses std::string, models use QString
-    // models use a QString version of the underlying std::string data
-    // commiting converts the QString data (if needed) to std::string
-    mInstrumentModel->commit();
-    mWaveModel->commit();
 }
 
 QDockWidget* MainWindow::makeDock(QString const& title, QString const& objname) {
@@ -301,6 +302,25 @@ void MainWindow::setupUi() {
         mDockWaveformEditor
     );
     mDockWaveformEditor->setWidget(waveEditor);
+
+    mDockComments = makeDock(tr("Comments"), QStringLiteral("DockComments"));
+    auto commentsEdit = new QPlainTextEdit(mDockComments);
+    mDockComments->setWidget(commentsEdit);
+    mDockComments->setAllowedAreas(Qt::NoDockWidgetArea);
+    lazyconnect(commentsEdit, textChanged, mModule, makeDirty);
+    connect(mModule, &Module::aboutToSave, this,
+        [this, commentsEdit]() {
+            // set the module's comment data from commentEdit's text
+            auto editor = mModule->permanentEdit();
+            mModule->data().setComments(commentsEdit->toPlainText().toStdString());
+        });
+    connect(mModule, &Module::reloaded, this,
+        [this, commentsEdit]() {
+            // set the commentEdit's text with the module's comment data
+            QSignalBlocker blocker(commentsEdit); // prevents the textChanged signal from firing
+            commentsEdit->setPlainText(QString::fromStdString(mModule->data().comments()));
+        });
+
 
     // TOOLBARS ==============================================================
 
@@ -564,6 +584,10 @@ void MainWindow::initState() {
     addDockWidget(Qt::RightDockWidgetArea, mDockWaveforms);
     mDockWaveforms->setFloating(true);
     mDockWaveforms->hide();
+
+    addDockWidget(Qt::RightDockWidgetArea, mDockComments);
+    mDockComments->setFloating(true);
+    mDockComments->hide();
 }
 
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {

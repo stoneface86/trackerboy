@@ -273,7 +273,7 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     });
 
     act = setupAction(menuHelpDebug, tr("Panic"), tr("Forces a fatal error to occur"));
-    connect(act, &QAction::triggered, this, [this]() {
+    connect(act, &QAction::triggered, this, []() {
         qFatal("panic requested");
     });
 
@@ -303,6 +303,7 @@ void MainWindow::setupSongMenu(QMenu *menu) {
 }
 
 void MainWindow::setupViewMenu(QMenu *menu) {
+    menu->addAction(mDockComments->toggleViewAction());
     menu->addAction(mDockInstrumentEditor->toggleViewAction());
     menu->addAction(mDockWaveformEditor->toggleViewAction());
     menu->addAction(mDockInstruments->toggleViewAction());

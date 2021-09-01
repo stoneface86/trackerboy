@@ -56,7 +56,7 @@ bool ModuleFile::save(QString const& filename, Module &mod) {
    
 }
 
-QString ModuleFile::crashSave(Module const& mod) {
+QString ModuleFile::crashSave(Module &mod) {
     // attempt to save a copy of the module
     // the copy is the same path of the module, but with .crash-%1 appended
     // where %1 is an ISO 8601 timestamp
@@ -83,6 +83,7 @@ QString ModuleFile::crashSave(Module const& mod) {
 
     std::ofstream stream(copyPath.toStdString(), std::ios::binary | std::ios::out);
     if (stream.good()) {
+        mod.beginSave();
         if (mod.data().serialize(stream) == trackerboy::FormatError::none) {
             // success! return the path of the saved file
             return copyPath;
@@ -123,6 +124,7 @@ bool ModuleFile::doSave(QString const& filename, Module &mod) {
     bool success = false;
     std::ofstream out(filename.toStdString(), std::ios::binary | std::ios::out);
     if (out.good()) {
+        mod.beginSave();
         success = mod.data().serialize(out) == trackerboy::FormatError::none;
         if (success) {
             mod.clean();

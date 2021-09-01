@@ -16,6 +16,7 @@ SongListModel::SongListModel(Module &mod, QObject *parent) :
     mSongData()
 {
     connect(&mod, &Module::reloaded, this, &SongListModel::reload);
+    connect(&mod, &Module::aboutToSave, this, &SongListModel::commit);
     reload();
 }
 
