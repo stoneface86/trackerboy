@@ -1,10 +1,16 @@
 
 #include "core/model/PatternModel.hpp"
+#include "core/commands/order/OrderEditCmd.hpp"
+#include "core/commands/order/OrderDuplicateCmd.hpp"
+#include "core/commands/order/OrderInsertCmd.hpp"
+#include "core/commands/order/OrderRemoveCmd.hpp"
+#include "core/commands/order/OrderSwapCmd.hpp"
 #include "core/commands/EraseCmd.hpp"
 #include "core/commands/PasteCmd.hpp"
 #include "core/commands/ReverseCmd.hpp"
 #include "core/commands/TrackEditCmd.hpp"
 #include "core/commands/TransposeCmd.hpp"
+#include "core/misc/utils.hpp"
 
 #include "trackerboy/note.hpp"
 
@@ -16,14 +22,6 @@
 
 #define TU PatternModelTU
 namespace TU {
-
-static uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
-    if (highNibble) {
-        return (value & 0x0F) | (nibble << 4);
-    } else {
-        return (value & 0xF0) | (nibble);
-    }
-}
 
 }
 
@@ -83,8 +81,16 @@ trackerboy::Pattern* PatternModel::nextPattern() {
     return mPatternNext ? &*mPatternNext : nullptr;
 }
 
+trackerboy::Order& PatternModel::order() {
+    return source()->order();
+}
+
 trackerboy::Order const& PatternModel::order() const {
     return source()->order();
+}
+
+trackerboy::OrderRow PatternModel::currentOrderRow() const {
+    return order()[mCursorPattern];
 }
 
 PatternCursor PatternModel::cursor() const {
@@ -275,6 +281,7 @@ void PatternModel::setCursorRow(int row) {
     setCursorRowImpl(row, flags);
     emitIfChanged(flags);
 }
+
 void PatternModel::setCursorRowImpl(int row, CursorChangeFlags &flags) {
     if (row == mCursor.row) {
         return;
@@ -470,9 +477,7 @@ trackerboy::Song* PatternModel::source() const {
 }
 
 void PatternModel::setPatterns(int pattern, CursorChangeFlags &flags) {
-    if (mShowPreviews) {
-        setPreviewPatterns(pattern);
-    }
+
     auto song = source();
 
     if (mShowPreviews) {
@@ -480,9 +485,9 @@ void PatternModel::setPatterns(int pattern, CursorChangeFlags &flags) {
     }
 
     // update the current pattern
-    auto oldsize = (int)mPatternCurr.totalRows();
+    auto oldsize = mPatternCurr.totalRows();
     mPatternCurr = song->getPattern(pattern);
-    auto newsize = (int)mPatternCurr.totalRows();
+    auto newsize = mPatternCurr.totalRows();
 
     if (oldsize != newsize) {
         emit patternSizeChanged(newsize);
@@ -673,7 +678,7 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
     std::optional<uint8_t> newInstrument;
     if (nibble) {
         bool const highNibble = mCursor.column == PatternCursor::ColumnInstrumentHigh;
-        newInstrument = TU::replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
+        newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
         if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
             return;
         }
@@ -741,7 +746,7 @@ void PatternModel::setEffectParam(uint8_t nibble) {
         bool isHighNibble = mCursor.column == PatternCursor::ColumnEffect1ArgHigh ||
                             mCursor.column == PatternCursor::ColumnEffect2ArgHigh ||
                             mCursor.column == PatternCursor::ColumnEffect3ArgHigh;
-        auto newParam = TU::replaceNibble(oldEffect.param, nibble, isHighNibble);
+        auto newParam = replaceNibble(oldEffect.param, nibble, isHighNibble);
         if (newParam != oldEffect.param) {
             auto cmd = new EffectParamEditCmd(
                 *this,
@@ -839,6 +844,44 @@ void PatternModel::paste(PatternClip const& clip, bool mix) {
     mModule.undoStack()->push(cmd);
 }
 
+void PatternModel::setOrderRow(trackerboy::OrderRow row) {
+    if (order()[mCursorPattern] != row) {
+        auto cmd = new OrderEditCmd(*this, row, mCursorPattern);
+        cmd->setText(tr("edit order #%1").arg(mCursorPattern));
+        mModule.undoStack()->push(cmd);
+    }
+}
+
+void PatternModel::insertOrder() {
+    auto cmd = new OrderInsertCmd(*this, mCursorPattern);
+    cmd->setText(tr("insert order #%1").arg(mCursorPattern));
+    mModule.undoStack()->push(cmd);
+}
+
+void PatternModel::removeOrder() {
+    auto cmd = new OrderRemoveCmd(*this, mCursorPattern);
+    cmd->setText(tr("remove order #%1").arg(mCursorPattern));
+    mModule.undoStack()->push(cmd);
+}
+
+void PatternModel::duplicateOrder() {
+    auto cmd = new OrderDuplicateCmd(*this, mCursorPattern);
+    cmd->setText(tr("duplicate order #%1").arg(mCursorPattern));
+    mModule.undoStack()->push(cmd);
+}
+
+void PatternModel::moveOrderUp() {
+    auto cmd = new OrderSwapCmd(*this, mCursorPattern, mCursorPattern - 1);
+    cmd->setText((tr("move order up")));
+    mModule.undoStack()->push(cmd);
+}
+
+void PatternModel::moveOrderDown() {
+    auto cmd = new OrderSwapCmd(*this, mCursorPattern, mCursorPattern + 1);
+    cmd->setText((tr("move order down")));
+    mModule.undoStack()->push(cmd);
+}
+
 void PatternModel::showEffect(int track) {
     addEffects(track, 1);
 }
@@ -883,5 +926,39 @@ int PatternModel::addEffects(int track, int effectsToAdd) {
     return trackCount;
 
 }
+
+void PatternModel::insertOrderImpl(const trackerboy::OrderRow &row, int before) {
+    auto &_order = order();
+    {
+        auto editor = mModule.edit();
+        _order.insert(before, row);
+    }
+
+    emit patternCountChanged(_order.size());
+    if (mCursorPattern == before) {
+        invalidate(before, true);
+    } else {
+        setCursorPattern(before);
+    }
+
+}
+
+void PatternModel::removeOrderImpl(int at) {
+    auto &_order = order();
+    {
+        auto editor = mModule.edit();
+        _order.remove(at);
+    }
+
+    auto count = _order.size();
+    if (mCursorPattern >= count) {
+        setCursorPattern(count - 1);
+    } else {
+        invalidate(at, true);
+    }
+    emit patternCountChanged(count);
+}
+
+
 
 #undef TU

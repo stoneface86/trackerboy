@@ -26,6 +26,10 @@ public:
 public slots:
     void setChangeAll(bool changeAll);
 
+    void decrement();
+
+    void increment();
+
 signals:
     void patternJump(int pattern);
 
@@ -53,6 +57,8 @@ private:
     int rowsVisisble() const;
 
     int cursorX() const;
+
+    void incDec(int amount);
 
     //
     // Recalculate the range of rows to draw on this widget. Call this when

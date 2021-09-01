@@ -111,31 +111,6 @@ bool MainWindow::onFileSaveAs() {
     return result;
 }
 
-void MainWindow::onSongOrderInsert() {
-    //mOrderModel->insert();
-    updateOrderActions();
-}
-
-void MainWindow::onSongOrderRemove() {
-    //mOrderModel->remove();
-    updateOrderActions();
-}
-
-void MainWindow::onSongOrderDuplicate() {
-    //mOrderModel->duplicate();
-    updateOrderActions();
-}
-
-void MainWindow::onSongOrderMoveUp() {
-    //mOrderModel->moveUp();
-    updateOrderActions();
-}
-
-void MainWindow::onSongOrderMoveDown() {
-    //mOrderModel->moveDown();
-    updateOrderActions();
-}
-
 bool MainWindow::checkAndStepOut() {
     if (mRenderer->isStepping()) {
         mRenderer->stepOut();
@@ -414,4 +389,16 @@ void MainWindow::playOrStop() {
     } else {
         onTrackerPlay();
     }
+}
+
+void MainWindow::onPatternCountChanged(int count) {
+    bool canInsert = count < (int)trackerboy::MAX_PATTERNS;
+    mActionOrderInsert->setEnabled(canInsert);
+    mActionOrderRemove->setEnabled(count > 1);
+    mActionOrderDuplicate->setEnabled(canInsert);
+}
+
+void MainWindow::onPatternCursorChanged(int pattern) {
+    mActionOrderMoveUp->setEnabled(pattern > 0);
+    mActionOrderMoveDown->setEnabled(pattern != mPatternModel->patterns() - 1);
 }

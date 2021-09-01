@@ -9,6 +9,8 @@
 #include <QPainter>
 #include <QtDebug>
 
+#include <algorithm>
+
 // layout of the order grid
 // _XX_|0110220330440
 // XX: row number, 2 cells
@@ -54,6 +56,7 @@ OrderGrid::OrderGrid(PatternModel &model, QWidget *parent) :
     
     connect(&model, &PatternModel::playingChanged, this, qOverload<>(&OrderGrid::update));
     connect(&model, &PatternModel::trackerCursorPatternChanged, this, qOverload<>(&OrderGrid::update));
+    connect(&model, &PatternModel::invalidated, this, qOverload<>(&OrderGrid::update));
 }
 
 void OrderGrid::setColors(Palette const& colors) {
@@ -77,6 +80,30 @@ void OrderGrid::setChangeAll(bool changeAll) {
         mChangeAll = changeAll;
         update();
     }
+}
+
+void OrderGrid::decrement() {
+    incDec(-1);
+}
+
+void OrderGrid::increment() {
+    incDec(1);
+}
+
+void OrderGrid::incDec(int amount) {
+    auto row = mModel.currentOrderRow();
+
+    auto addId = [amount](uint8_t &id) {
+        id = (uint8_t)std::clamp((int)id + amount, 0, 0xFF);
+    };
+    
+    if (mChangeAll) {
+        std::for_each(row.begin(), row.end(), addId);
+    } else {
+        addId(row[mModel.cursorTrack()]);
+    }
+
+    mModel.setOrderRow(row);
 }
 
 void OrderGrid::changeEvent(QEvent *evt) {
@@ -126,7 +153,16 @@ void OrderGrid::keyPressEvent(QKeyEvent *evt) {
     // check if hex digit was pressed
     auto hex = keyToHex(key);
     if (hex) {
-
+        auto row = mModel.currentOrderRow();
+        if (mChangeAll) {
+            for (auto &id : row) {
+                id = replaceNibble(id, *hex, mHighNibble);
+            }
+        } else {
+            auto &id = row[mModel.cursorTrack()];
+            id = replaceNibble(id, *hex, mHighNibble);
+        }
+        mModel.setOrderRow(row);
         return;
     }
 

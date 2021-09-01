@@ -12,3 +12,11 @@ std::optional<uint8_t> keyToHex(int const key) {
         return std::nullopt;
     }
 }
+
+uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
+    if (highNibble) {
+        return (value & 0x0F) | (nibble << 4);
+    } else {
+        return (value & 0xF0) | (nibble);
+    }
+}

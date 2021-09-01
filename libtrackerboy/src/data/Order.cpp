@@ -47,7 +47,9 @@ void Order::insert(OrderRow const& data) {
 
 void Order::insert(int before, OrderRow const& data) {
     assertCanInsert();
-    checkIndex(before);
+    if (before < 0 || before > (int)mTable.size()) {
+        badIndex();
+    }
     mTable.insert(mTable.begin() + before, data);
 }
 
@@ -61,6 +63,26 @@ void Order::insert(int before, OrderRow const *data, int count) {
         throw std::runtime_error("cannot insert: maximum number of patterns");
     }
     mTable.insert(mTable.begin() + before, data, data + count);
+}
+
+OrderRow Order::nextUnused() const noexcept {
+
+    OrderRow autoRow;
+
+    for (size_t track = 0; track < 4; ++track) {
+        
+        std::array<char, 256> idmap{};
+        for (auto const& row : mTable) {
+            idmap[row[track]] = 1; // mark this id as used
+        }
+
+        auto begin = idmap.begin();
+        auto end = idmap.end();
+        auto iter = std::find(begin, end, 0); // find the first 0
+        autoRow[track] = iter == end ? (uint8_t)0 : (uint8_t)(iter - begin);
+
+    }
+    return autoRow;
 }
 
 //
@@ -148,8 +170,12 @@ void Order::assertCanSetData(std::vector<OrderRow> const& data) {
 
 void Order::checkIndex(int index) {
     if (index < 0 || index >= (int)mTable.size()) {
-        throw std::invalid_argument("pattern index is invalid");
+        badIndex();
     }
+}
+
+void Order::badIndex() {
+    throw std::invalid_argument("pattern index is invalid");
 }
 
 }

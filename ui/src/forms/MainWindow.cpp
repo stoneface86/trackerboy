@@ -488,9 +488,6 @@ void MainWindow::setupUi() {
 
     connect(mModule, &Module::modifiedChanged, this, &MainWindow::setWindowModified);
 
-    //connect(mOrderModel, &OrderModel::currentPatternChanged, this, &MainWindow::updateOrderActions);
-    updateOrderActions();
-
     connect(mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);
     connect(mRenderer, &Renderer::audioError, this, &MainWindow::onAudioError);
@@ -513,9 +510,14 @@ void MainWindow::setupUi() {
 
     connect(mPatternEditor->gridHeader(), &PatternGridHeader::outputChanged, mRenderer, &Renderer::setChannelOutput);
 
+    lazyconnect(mPatternModel, patternCountChanged, this, onPatternCountChanged);
+    lazyconnect(mPatternModel, cursorPatternChanged, this, onPatternCursorChanged);
+
     auto app = static_cast<QApplication*>(QApplication::instance());
     connect(app, &QApplication::focusChanged, this, &MainWindow::handleFocusChange);
 
+    onPatternCountChanged(mPatternModel->patterns());
+    onPatternCursorChanged(mPatternModel->cursorPattern());
 }
 
 void MainWindow::initState() {
@@ -577,15 +579,6 @@ void MainWindow::settingsMessageBox(QMessageBox &msgbox) {
 
 void MainWindow::updateWindowTitle() {
     setWindowTitle(QStringLiteral("%1[*] - Trackerboy").arg(mModuleFile.name()));
-}
-
-void MainWindow::updateOrderActions() {
-    // bool canInsert = mOrderModel->canInsert();
-    // mActionOrderInsert->setEnabled(canInsert);
-    // mActionOrderDuplicate->setEnabled(canInsert);
-    // mActionOrderRemove->setEnabled(mOrderModel->canRemove());
-    // mActionOrderMoveUp->setEnabled(mOrderModel->canMoveUp());
-    // mActionOrderMoveDown->setEnabled(mOrderModel->canMoveDown());
 }
 
 void MainWindow::setPlayingStatus(PlayingStatusText type) {

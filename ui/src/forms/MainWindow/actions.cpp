@@ -159,19 +159,19 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     // > Song =================================================================
 
     mActionOrderInsert = createAction(this, tr("&Insert order row"), tr("Inserts a new order at the current pattern"), Icons::itemAdd);
-    connectActionToThis(mActionOrderInsert, onSongOrderInsert);
+    connectActionTo(mActionOrderInsert, mPatternModel, insertOrder);
     
     mActionOrderRemove = createAction(this, tr("&Remove order row"), tr("Removes the order at the current pattern"), Icons::itemRemove);
-    connectActionToThis(mActionOrderRemove, onSongOrderRemove);
+    connectActionTo(mActionOrderRemove, mPatternModel, removeOrder);
 
     mActionOrderDuplicate = createAction(this, tr("&Duplicate order row"), tr("Duplicates the order at the current pattern"), Icons::itemDuplicate);
-    connectActionToThis(mActionOrderDuplicate, onSongOrderDuplicate);
+    connectActionTo(mActionOrderDuplicate, mPatternModel, duplicateOrder);
 
     mActionOrderMoveUp = createAction(this, tr("Move order &up"), tr("Moves the order up 1"), Icons::moveUp);
-    connectActionToThis(mActionOrderMoveUp, onSongOrderMoveUp);
+    connectActionTo(mActionOrderMoveUp, mPatternModel, moveOrderUp);
 
     mActionOrderMoveDown = createAction(this, tr("Move order dow&n"), tr("Moves the order down 1"), Icons::moveDown);
-    connectActionToThis(mActionOrderMoveDown, onSongOrderMoveDown);
+    connectActionTo(mActionOrderMoveDown, mPatternModel, moveOrderDown);
 
     auto menuSong = menubar->addMenu(tr("&Song"));
     setupSongMenu(menuSong);

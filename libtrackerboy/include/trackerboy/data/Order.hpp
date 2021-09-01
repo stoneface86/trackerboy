@@ -27,6 +27,12 @@ public:
     std::vector<OrderRow>& data() noexcept;
 
     //
+    // Calculates an OrderRow with each track id being the smallest unused in
+    // the order
+    //
+    OrderRow nextUnused() const noexcept;
+
+    //
     // Inserts a pattern at the end of the order
     //
     void insert(OrderRow const& data);
@@ -68,6 +74,8 @@ public:
 private:
     void assertCanSetData(std::vector<OrderRow> const& row);
     void assertCanInsert();
+
+    void badIndex();
 
     void checkIndex(int index);
 

@@ -63,12 +63,6 @@ private slots:
     bool onFileSave();
     bool onFileSaveAs();
 
-    void onSongOrderInsert();
-    void onSongOrderRemove();
-    void onSongOrderDuplicate();
-    void onSongOrderMoveUp();
-    void onSongOrderMoveDown();
-
     void onTrackerPlay();
     void onTrackerPlayAtStart();
     void onTrackerPlayFromCursor();
@@ -103,6 +97,12 @@ private slots:
     void increaseOctave();
     void decreaseOctave();
     void playOrStop();
+
+    // misc slots
+
+    // these slots update order actions
+    void onPatternCountChanged(int count);
+    void onPatternCursorChanged(int pattern);
 
     // implementation in MainWindow/slots.cpp - END ---------------------------
 
@@ -188,11 +188,6 @@ private:
     // Sets the window title using the current filename
     //
     void updateWindowTitle();
-
-    //
-    // Updates action enabled state for order actions
-    //
-    void updateOrderActions();
 
     //
     // Sets the playing status text in statusbar

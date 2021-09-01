@@ -46,7 +46,7 @@ public:
 
     // Data Access ============================================================
 
-    // TODO: should probably make these const
+    // TODO: make these accessors private (for command classes), add public const versions
 
     trackerboy::Pattern* previousPattern();
 
@@ -54,7 +54,10 @@ public:
 
     trackerboy::Pattern* nextPattern();
 
+    trackerboy::Order& order();
     trackerboy::Order const& order() const;
+
+    trackerboy::OrderRow currentOrderRow() const;
 
     // Properties =============================================================
 
@@ -168,8 +171,51 @@ public:
 
     void paste(PatternClip const& clip, bool mix);
 
+    // order
+
+    //
+    // Replaces the current order row with the given one
+    //
+    void setOrderRow(trackerboy::OrderRow row);
+
+    //
+    // Removes the current order
+    //
+    void removeOrder();
+
+    //
+    // Inserts an empty order at the cursor position
+    //
+    void insertOrder();
+
+    //
+    // Inserts a copy of the current order
+    //
+    void duplicateOrder();
+
+    //
+    // Moves the current order up in the list by swapping it with the previous one
+    //
+    void moveOrderUp();
+
+    //
+    // Moves the current order down in the list by swapping it with the next one
+    //
+    void moveOrderDown();
+
+    //
+    // Resize the order to the given count. Count must be >= 1 and <= 256
+    //
+    void setOrderCount(int count);
+
+    //
+    // Makes an effect column visible for the track
+    //
     void showEffect(int track);
 
+    //
+    // Hides the last effect column for the track
+    //
     void hideEffect(int track);
 
 signals:
@@ -225,6 +271,11 @@ private:
     friend class PasteCmd;
     friend class TransposeCmd;
     friend class ReverseCmd;
+    friend class OrderEditCmd;
+    friend class OrderInsertCmd;
+    friend class OrderRemoveCmd;
+    friend class OrderDuplicateCmd;
+    friend class OrderSwapCmd;
 
     Q_DISABLE_COPY(PatternModel)
 
@@ -256,6 +307,10 @@ private:
     void invalidate(int pattern, bool updatePatterns);
 
     bool selectionDataIsEmpty();
+
+    // called by insert, remove and duplicate commands
+    void insertOrderImpl(trackerboy::OrderRow const& row, int before);
+    void removeOrderImpl(int at);
 
     Module &mModule;
 
