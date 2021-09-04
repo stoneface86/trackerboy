@@ -6,8 +6,14 @@
 #include "forms/ModulePropertiesDialog.hpp"
 
 #include <QFileDialog>
+#include <QStringBuilder>
+
+#define TU MainWindowTU
+namespace TU {
 
 static const char* MODULE_FILE_FILTER = QT_TR_NOOP("Trackerboy module (*.tbm)");
+
+}
 
 // action slots
 
@@ -34,7 +40,7 @@ void MainWindow::onFileOpen() {
         this,
         tr("Open module"),
         "",
-        tr(MODULE_FILE_FILTER)
+        tr(TU::MODULE_FILE_FILTER)
     );
 
     if (path.isEmpty()) {
@@ -91,11 +97,19 @@ bool MainWindow::onFileSave() {
 }
 
 bool MainWindow::onFileSaveAs() {
-     auto path = QFileDialog::getSaveFileName(
+
+    QString curPath;
+    if (mModuleFile.hasFile()) {
+        curPath = mModuleFile.filepath();
+    } else {
+        curPath = mModuleFile.name() % QStringLiteral(".tbm");
+    }
+
+    auto path = QFileDialog::getSaveFileName(
         this,
         tr("Save module"),
-        "",
-        tr(MODULE_FILE_FILTER)
+        curPath,
+        tr(TU::MODULE_FILE_FILTER)
         );
 
     if (path.isEmpty()) {
@@ -422,3 +436,5 @@ void MainWindow::onPatternCursorChanged(int pattern) {
     mActionOrderMoveUp->setEnabled(pattern > 0);
     mActionOrderMoveDown->setEnabled(pattern != mPatternModel->patterns() - 1);
 }
+
+#undef TU
