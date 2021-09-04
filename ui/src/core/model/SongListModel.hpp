@@ -5,17 +5,22 @@
 
 #include <QAbstractListModel>
 
+#include <memory>
 #include <vector>
 
+//
+// List model for the song list.
+//
 class SongListModel : public QAbstractListModel {
 
     Q_OBJECT
 
 public:
     explicit SongListModel(Module &mod, QObject *parent = nullptr);
-    virtual ~SongListModel() = default;
 
     void commit();
+
+    virtual Qt::ItemFlags flags(QModelIndex const& index) const override;
 
     virtual int rowCount(QModelIndex const& index = QModelIndex()) const override;
 
@@ -40,10 +45,18 @@ private slots:
 
 private:
 
+    //
+    // Meta-info struct for a single song. Contains a QString version of the name with modified flag
+    // and a QUndoStack.
+    //
     struct SongMeta {
         QString name;
         bool shouldCommit;
 
+        // use existing QString, shouldCommit is set to true
+        SongMeta(QString const& str);
+
+        // convert in name from song, shouldCommit is set to false
         SongMeta(std::string const& name);
     };
 

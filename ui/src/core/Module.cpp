@@ -23,11 +23,12 @@ Module::Module(QObject *parent) :
     mModule(),
     mMutex(),
     mUndoGroup(new QUndoGroup(this)),
-    mSongUndoStacks(),
+    mUndoStacks(),
     mSong(),
     mPermaDirty(false),
     mModified(false)
 {
+    nameFirstSong();
     reset();
 
     connect(mUndoGroup, &QUndoGroup::cleanChanged, this,
@@ -41,8 +42,11 @@ Module::Module(QObject *parent) :
 }
 
 void Module::clear() {
+    // clear song history
+    mUndoStacks.clear();
+
     mModule.clear();
-    
+    nameFirstSong();
     reset();
 }
 
@@ -83,7 +87,7 @@ QUndoStack* Module::undoStack() {
 }
 
 void Module::reset() {
-    resizeUndoStacks(mModule.songs().size());
+
     setSong(0);
     clean();
     emit reloaded();
@@ -103,7 +107,7 @@ void Module::clean() {
         mModified = false;
         emit modifiedChanged(false);
     }
-    for (auto stack : mSongUndoStacks) {
+    for (auto stack : mUndoGroup->stacks()) {
         stack->setClean();
     }
 }
@@ -118,45 +122,37 @@ void Module::makeDirty() {
     }
 }
 
-void Module::addSong() {
-    mSongUndoStacks.append(new QUndoStack(mUndoGroup));
-}
-
-void Module::removeSong(int index) {
-    delete mSongUndoStacks.takeAt(index);
-}
-
 void Module::setSong(int index) {
     mSong = mModule.songs().getShared(index);
-    mUndoGroup->setActiveStack(mSongUndoStacks.at(index));
+
+    QUndoStack *stack;
+    auto iter = mUndoStacks.find(mSong.get());
+    if (iter != mUndoStacks.end()) {
+        // contain the existing stack
+        stack = iter->second.get();
+    } else {
+        // no history for this song yet, create it and add to group
+        stack = new QUndoStack(this);
+        mUndoGroup->addStack(stack);
+        mUndoStacks.emplace(mSong.get(), stack);
+    }
+    mUndoGroup->setActiveStack(stack);
     emit songChanged();
+}
+
+void Module::removeHistory(trackerboy::Song *song) {
+    mUndoStacks.erase(song);
 }
 
 void Module::beginSave() {
     emit aboutToSave();
 }
 
-void Module::resizeUndoStacks(int count) {
-    int oldcount = mSongUndoStacks.size();
-    int endIndexToClear = oldcount;
-    
-    if (count < oldcount) {
-        // shrink, delete and remove the undo stacks
-        for (int i = count; i < oldcount; ++i) {
-            delete mSongUndoStacks[i];
-        }
-        mSongUndoStacks.resize(count);
-        endIndexToClear = count;
-    } else if (count > oldcount) {
-        // enlarge, alloc and add the new stacks
-        for (int i = count - oldcount; i > 0; --i) {
-            addSong();
-        }
-    }
+QString Module::defaultSongName() const {
+    return tr("New song");
+}
 
-    // clear the already allocated stacks
-    for (int i = 0; i < endIndexToClear; ++i) {
-        mSongUndoStacks[i]->clear();
-    }
-    
+void Module::nameFirstSong() {
+    // excuse the jank
+    mModule.songs().get(0)->setName(defaultSongName().toStdString());
 }

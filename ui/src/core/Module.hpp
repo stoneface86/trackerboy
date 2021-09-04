@@ -9,7 +9,9 @@
 #include <QObject>
 #include <QUndoGroup>
 #include <QUndoStack>
-#include <QVector>
+
+#include <unordered_map>
+#include <memory>
 
 //
 // Container class for a trackerboy::Module. Also contains a QMutex and
@@ -52,7 +54,6 @@ public:
     };
 
     explicit Module(QObject *parent = nullptr);
-    virtual ~Module() = default;
 
     //
     // Clears all data within the module and returns it to its default
@@ -92,17 +93,6 @@ public:
     void reset();
 
     //
-    // Adds a QUndoStack for a song. Called by SongListModel when adding/duplicating
-    // a song
-    //
-    void addSong();
-
-    //
-    // Removes a song's QUndoStack. Called by SongListModel when removing a song
-    //
-    void removeSong(int index);
-
-    //
     // Sets the current song for editing. The song's QUndoStack becomes the
     // active stack for this class's QUndoGroup. The songChanged signal is
     // also emitted, informing models of the change.
@@ -140,6 +130,16 @@ public:
     //
     void clean();
 
+    //
+    // Removes undo history for the given song.
+    //
+    void removeHistory(trackerboy::Song *song);
+
+    //
+    // Gets the default song name for new songs.
+    //
+    QString defaultSongName() const;
+
 signals:
     //
     // emitted when the clean state or modified state of the module changes.
@@ -169,20 +169,18 @@ signals:
 
 private:
 
-    //
-    // initialize the undo stack vector to the given size. Existing stacks are
-    // reused, their contents are just cleared.
-    //
-    void resizeUndoStacks(int size);
-
     Q_DISABLE_COPY(Module)
+
+    void nameFirstSong();
 
     trackerboy::Module mModule;
 
     QMutex mMutex;
     QUndoGroup *mUndoGroup;
 
-    QVector<QUndoStack*> mSongUndoStacks;
+    // each Song has its own QUndoStack and is created when the user selects the song
+    // for editing
+    std::unordered_map<trackerboy::Song*, std::unique_ptr<QUndoStack> > mUndoStacks;
 
     std::shared_ptr<trackerboy::Song> mSong;
 

@@ -109,6 +109,12 @@ public:
     //
     void waveformPreview(int note, int waveId);
 
+    //
+    // Update the framerate used by the synth. Call this when the module's framerate
+    // changes.
+    //
+    void updateFramerate();
+
 signals:
 
     //

@@ -10,12 +10,20 @@ InfoStr::InfoStr(std::string const& str) noexcept {
 }
 
 InfoStr::InfoStr(const char *str) noexcept {
-    auto len = std::min(strlen(str), size());
-    std::copy_n(str, len, data());
+    operator=(str);
 }
 
 InfoStr& InfoStr::operator=(std::string const& str) noexcept {
-    std::copy_n(str.cbegin(), std::min(size(), str.size()), begin());
+    auto _size = std::min(size(), str.size());
+    std::copy_n(str.cbegin(), _size, begin());
+    std::fill(begin() + _size, end(), '\0');
+    return *this;
+}
+
+InfoStr& InfoStr::operator=(const char *str) noexcept {
+    auto len = std::min(strlen(str), size());
+    std::copy_n(str, len, data());
+    std::fill(begin() + len, end(), '\0');
     return *this;
 }
 
@@ -25,6 +33,14 @@ void InfoStr::clear() noexcept {
 
 std::string InfoStr::toString() const noexcept {
     return { data(), size() };
+}
+
+size_t InfoStr::length() const noexcept {
+    if (*rbegin() != '\0') {
+        return size();
+    } else {
+        return strlen(data());
+    }
 }
 
 }

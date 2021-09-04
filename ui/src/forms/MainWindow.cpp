@@ -51,6 +51,7 @@ MainWindow::MainWindow() :
     // create models
     mModule = new Module(this);
     mInstrumentModel = new InstrumentListModel(*mModule, this);
+    mSongListModel = new SongListModel(*mModule, this);
     mSongModel = new SongModel(*mModule, this);
     mPatternModel = new PatternModel(*mModule, *mSongModel, this);
     mWaveModel = new WaveListModel(*mModule, this);

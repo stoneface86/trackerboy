@@ -383,6 +383,12 @@ void Renderer::waveformPreview(int note, int waveId) {
     }
 }
 
+void Renderer::updateFramerate() {
+    auto ctx = mContext.access();
+    ctx->synth.setFramerate(ctx->mod.data().framerate());
+    ctx->synth.setupBuffers();
+}
+
 void Renderer::stopPreview() {
 
     if (mStream.isEnabled()) {

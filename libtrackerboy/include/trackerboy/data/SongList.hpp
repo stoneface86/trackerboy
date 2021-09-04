@@ -20,7 +20,6 @@ class SongList {
 public:
 
     explicit SongList();
-    ~SongList() = default;
 
     //
     // Creates a new song and appends it to the end of the list. The newly

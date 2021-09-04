@@ -7,6 +7,7 @@
 #include "core/misc/TableActions.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/SongModel.hpp"
+#include "core/model/SongListModel.hpp"
 #include "core/model/PatternModel.hpp"
 #include "core/model/WaveListModel.hpp"
 #include "core/Config.hpp"
@@ -62,6 +63,8 @@ private slots:
     void onFileOpen();
     bool onFileSave();
     bool onFileSaveAs();
+
+    void onModuleModuleProperties();
 
     void onTrackerPlay();
     void onTrackerPlayAtStart();
@@ -230,6 +233,7 @@ private:
     ModuleFile mModuleFile;
 
     InstrumentListModel *mInstrumentModel;
+    SongListModel *mSongListModel;
     SongModel *mSongModel;
     PatternModel *mPatternModel;
     WaveListModel *mWaveModel;

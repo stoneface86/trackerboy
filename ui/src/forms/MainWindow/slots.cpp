@@ -3,6 +3,7 @@
 
 #include "core/midi/MidiProber.hpp"
 #include "forms/ExportWavDialog.hpp"
+#include "forms/ModulePropertiesDialog.hpp"
 
 #include <QFileDialog>
 
@@ -107,6 +108,18 @@ bool MainWindow::onFileSaveAs() {
         updateWindowTitle();
     }
     return result;
+}
+
+void MainWindow::onModuleModuleProperties() {
+    mRenderer->forceStop();
+
+    ModulePropertiesDialog diag(*mModule, *mSongListModel, this);
+    diag.show();
+    int code = diag.exec();
+
+    if (code == ModulePropertiesDialog::AcceptedSystemChange) {
+        mRenderer->updateFramerate();
+    }
 }
 
 bool MainWindow::checkAndStepOut() {
@@ -297,6 +310,8 @@ void MainWindow::onAudioStop() {
     if (mRenderer->isRunning()) {
         return; // sometimes it takes too long for this signal to get here
     }
+
+    mPatternModel->setPlaying(false);
 
     if (!mErrorSinceLastConfig) {
         setPlayingStatus(PlayingStatusText::ready);

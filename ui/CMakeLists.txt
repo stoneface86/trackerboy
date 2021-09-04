@@ -91,8 +91,9 @@ makeSourceList(UI_SRC
     "src/core/model/BaseTableModel"
     "src/core/model/InstrumentListModel"
     "src/core/model/PatternModel"
-    "src/core/model/SongListModel"
+    "src/core/model/NumberedProxyModel"
     "src/core/model/SongModel"
+    "src/core/model/SongListModel"
     "src/core/model/WaveListModel"
     FILE "src/core/ChannelOutput.hpp"
     "src/core/Config"
@@ -116,6 +117,7 @@ makeSourceList(UI_SRC
     "src/forms/ConfigDialog"
     "src/forms/ExportWavDialog"
     "src/forms/MainWindow"
+    "src/forms/ModulePropertiesDialog"
     "src/forms/TempoCalculator"
 
     FILE "src/resources/fonts.qrc"

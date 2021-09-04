@@ -19,9 +19,16 @@ public:
 
     InfoStr& operator=(std::string const& str) noexcept;
 
+    InfoStr& operator=(const char *str) noexcept;
+
     void clear() noexcept;
 
     std::string toString() const noexcept;
+
+    //
+    // Length of the string, always <= size()
+    //
+    size_t length() const noexcept;
 
 };
 

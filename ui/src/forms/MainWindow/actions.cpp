@@ -156,6 +156,13 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     mToolbarInput->addAction(act);
     lazyconnect(act, toggled, mPatternEditor, setKeyRepeat);
 
+    // > Module ===============================================================
+
+    auto menuModule = menubar->addMenu(tr("Module"));
+
+    act = setupAction(menuModule, tr("Module properties..."), tr("Opens the module properties dialog"));
+    connectActionToThis(act, onModuleModuleProperties);
+
     // > Song =================================================================
 
     mActionOrderInsert = createAction(this, tr("&Insert order row"), tr("Inserts a new order at the current pattern"), Icons::itemAdd);
