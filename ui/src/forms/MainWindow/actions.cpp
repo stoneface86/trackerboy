@@ -160,6 +160,9 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     auto menuModule = menubar->addMenu(tr("Module"));
 
+    act = setupAction(menuModule, tr("Comments..."), tr("Shows comments about the module"));
+    connectActionToThis(act, onModuleComments);
+
     act = setupAction(menuModule, tr("Module properties..."), tr("Opens the module properties dialog"));
     connectActionToThis(act, onModuleModuleProperties);
 
@@ -310,7 +313,6 @@ void MainWindow::setupSongMenu(QMenu *menu) {
 }
 
 void MainWindow::setupViewMenu(QMenu *menu) {
-    menu->addAction(mDockComments->toggleViewAction());
     menu->addAction(mDockInstrumentEditor->toggleViewAction());
     menu->addAction(mDockWaveformEditor->toggleViewAction());
     menu->addAction(mDockInstruments->toggleViewAction());

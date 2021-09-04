@@ -45,7 +45,8 @@ MainWindow::MainWindow() :
     mAboutDialog(nullptr),
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
-    mTempoCalc(nullptr)
+    mTempoCalc(nullptr),
+    mCommentsDialog(nullptr)
 {
 
     // create models
@@ -112,7 +113,6 @@ MainWindow::MainWindow() :
         addDockWidget(Qt::LeftDockWidgetArea, mDockHistory);
         addDockWidget(Qt::LeftDockWidgetArea, mDockInstruments);
         addDockWidget(Qt::LeftDockWidgetArea, mDockWaveforms);
-        addDockWidget(Qt::LeftDockWidgetArea, mDockComments);
         if (!restoreState(windowState, TU::WINDOW_STATE_VERSION)) {
             initState();
         }
@@ -303,25 +303,6 @@ void MainWindow::setupUi() {
         mDockWaveformEditor
     );
     mDockWaveformEditor->setWidget(waveEditor);
-
-    mDockComments = makeDock(tr("Comments"), QStringLiteral("DockComments"));
-    auto commentsEdit = new QPlainTextEdit(mDockComments);
-    mDockComments->setWidget(commentsEdit);
-    mDockComments->setAllowedAreas(Qt::NoDockWidgetArea);
-    lazyconnect(commentsEdit, textChanged, mModule, makeDirty);
-    connect(mModule, &Module::aboutToSave, this,
-        [this, commentsEdit]() {
-            // set the module's comment data from commentEdit's text
-            auto editor = mModule->permanentEdit();
-            mModule->data().setComments(commentsEdit->toPlainText().toStdString());
-        });
-    connect(mModule, &Module::reloaded, this,
-        [this, commentsEdit]() {
-            // set the commentEdit's text with the module's comment data
-            QSignalBlocker blocker(commentsEdit); // prevents the textChanged signal from firing
-            commentsEdit->setPlainText(QString::fromStdString(mModule->data().comments()));
-        });
-
 
     // TOOLBARS ==============================================================
 
@@ -585,10 +566,6 @@ void MainWindow::initState() {
     addDockWidget(Qt::RightDockWidgetArea, mDockWaveforms);
     mDockWaveforms->setFloating(true);
     mDockWaveforms->hide();
-
-    addDockWidget(Qt::RightDockWidgetArea, mDockComments);
-    mDockComments->setFloating(true);
-    mDockComments->hide();
 }
 
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {

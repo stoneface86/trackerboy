@@ -110,6 +110,13 @@ bool MainWindow::onFileSaveAs() {
     return result;
 }
 
+void MainWindow::onModuleComments() {
+    if (mCommentsDialog == nullptr) {
+        mCommentsDialog = new CommentsDialog(*mModule, this);
+    }
+    mCommentsDialog->show();
+}
+
 void MainWindow::onModuleModuleProperties() {
     mRenderer->forceStop();
 

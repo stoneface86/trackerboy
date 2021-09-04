@@ -18,6 +18,7 @@
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
 #include "forms/TempoCalculator.hpp"
+#include "forms/CommentsDialog.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 
@@ -64,6 +65,7 @@ private slots:
     bool onFileSave();
     bool onFileSaveAs();
 
+    void onModuleComments();
     void onModuleModuleProperties();
 
     void onTrackerPlay();
@@ -249,6 +251,7 @@ private:
     AudioDiagDialog *mAudioDiag;
     ConfigDialog *mConfigDialog;
     TempoCalculator *mTempoCalc;
+    CommentsDialog *mCommentsDialog;
 
     // toolbars
     QToolBar *mToolbarFile;
@@ -277,7 +280,6 @@ private:
     QDockWidget *mDockInstruments;
     QDockWidget *mDockWaveforms;
     QDockWidget *mDockHistory;
-    QDockWidget *mDockComments;
 
     // widgets
     Sidebar *mSidebar;

@@ -114,6 +114,7 @@ makeSourceList(UI_SRC
     FILE "src/forms/MainWindow/slots.cpp"
     "src/forms/AboutDialog"
     "src/forms/AudioDiagDialog"
+    "src/forms/CommentsDialog"
     "src/forms/ConfigDialog"
     "src/forms/ExportWavDialog"
     "src/forms/MainWindow"
