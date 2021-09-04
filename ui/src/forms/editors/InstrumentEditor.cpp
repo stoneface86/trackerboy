@@ -1,5 +1,5 @@
 
-#include "widgets/docks/InstrumentEditor.hpp"
+#include "forms/editors/InstrumentEditor.hpp"
 
 #include <QSignalBlocker>
 
@@ -30,7 +30,7 @@ InstrumentEditor::InstrumentEditor(
     mSequenceEditors(),
     mInstrument(nullptr)
 {
-
+    setWindowTitle(tr("Instrument editor"));
     auto channelGroup = new QGroupBox(tr("Channel"));
     {
         auto layout = new QVBoxLayout;
@@ -179,7 +179,10 @@ void InstrumentEditor::setCurrentItem(int index) {
         }
         {
             QSignalBlocker blocker(mSetEnvelopeCheck);
-            mSetEnvelopeCheck->setChecked(mInstrument->hasEnvelope());
+            bool const hasEnvelope = mInstrument->hasEnvelope();
+            mSetEnvelopeCheck->setChecked(hasEnvelope);
+            mEnvelopeGroup->setEnabled(hasEnvelope);
+            mWaveformGroup->setEnabled(hasEnvelope);
         }
 
         auto envelope = mInstrument->envelope();

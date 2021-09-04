@@ -1,5 +1,5 @@
 
-#include "widgets/docks/WaveEditor.hpp"
+#include "forms/editors/WaveEditor.hpp"
 
 #include <QtDebug>
 #include <QFontDatabase>
@@ -36,7 +36,7 @@ WaveEditor::WaveEditor(
     mWaveEditedFromText(false),
     mWaveform(nullptr)
 {
-
+    setWindowTitle(tr("Wave editor"));
     mWaveModel = new WaveModel(mod, this);
 
     auto presetLayout = new QHBoxLayout;

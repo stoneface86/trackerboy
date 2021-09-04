@@ -7,10 +7,10 @@
 
 #include <QComboBox>
 #include <QLineEdit>
-#include <QWidget>
+#include <QDialog>
 
 
-class BaseEditor : public QWidget {
+class BaseEditor : public QDialog {
 
     Q_OBJECT
 
@@ -19,6 +19,13 @@ public:
     PianoWidget* piano();
     
     int currentItem() const;
+
+    // needed because we can't call virtual functions in BaseEditor's constructor
+    void init();
+
+protected:
+
+    virtual void showEvent(QShowEvent *evt) override;
 
 public slots:
 
@@ -53,5 +60,7 @@ private:
     QLineEdit *mNameEdit;
     QWidget *mEditorWidget;
     PianoWidget *mPiano;
+
+    bool mShown;
 
 };

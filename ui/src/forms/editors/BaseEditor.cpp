@@ -1,5 +1,5 @@
 
-#include "widgets/docks/BaseEditor.hpp"
+#include "forms/editors/BaseEditor.hpp"
 
 #include <QSignalBlocker>
 #include <QHBoxLayout>
@@ -11,8 +11,9 @@ BaseEditor::BaseEditor(
     PianoInput const& input, 
     QWidget *parent
 ) :
-    QWidget(parent),
-    mModel(model)
+    QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
+    mModel(model),
+    mShown(false)
 {
 
     mCombo = new QComboBox;
@@ -29,6 +30,7 @@ BaseEditor::BaseEditor(
     layout->addLayout(tableLayout);
     layout->addWidget(mEditorWidget, 1);
     layout->addWidget(mPiano);
+    layout->setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
     setLayout(layout);
 
     mCombo->setModel(&model);
@@ -53,6 +55,7 @@ PianoWidget* BaseEditor::piano() {
 
 void BaseEditor::openItem(int index) {
     mCombo->setCurrentIndex(index);
+    raise();
 }
 
 QWidget* BaseEditor::editorWidget() {
@@ -61,6 +64,24 @@ QWidget* BaseEditor::editorWidget() {
 
 int BaseEditor::currentItem() const {
     return mCombo->currentIndex();
+}
+
+void BaseEditor::init() {
+    onIndexChanged(mCombo->currentIndex());
+}
+
+void BaseEditor::showEvent(QShowEvent *evt) {
+    if (mShown) {
+        // accepting the event prevents the dialog from being centered within the
+        // parent widget (MainWindow).
+
+        // this way the dialog "remembers" its geometry
+        evt->accept();
+    } else {
+        // dialog hasn't been shown yet, center it within the parent widget
+        mShown = true;
+        QDialog::showEvent(evt);
+    }
 }
 
 void BaseEditor::onIndexChanged(int index) {
@@ -73,6 +94,9 @@ void BaseEditor::onIndexChanged(int index) {
     }
     setEnabled(hasIndex);
     setCurrentItem(index);
+    if (!hasIndex) {
+        hide();
+    }
 }
 
 void BaseEditor::onNameEdited(QString const& name) {

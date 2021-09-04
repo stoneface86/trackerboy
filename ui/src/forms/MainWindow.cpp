@@ -3,9 +3,7 @@
 
 #include "core/misc/connectutils.hpp"
 #include "core/IconManager.hpp"
-#include "widgets/docks/InstrumentEditor.hpp"
 #include "widgets/docks/TableDock.hpp"
-#include "widgets/docks/WaveEditor.hpp"
 
 #include <QApplication>
 #include <QSettings>
@@ -46,7 +44,9 @@ MainWindow::MainWindow() :
     mAudioDiag(nullptr),
     mConfigDialog(nullptr),
     mTempoCalc(nullptr),
-    mCommentsDialog(nullptr)
+    mCommentsDialog(nullptr),
+    mInstrumentEditor(nullptr),
+    mWaveEditor(nullptr)
 {
 
     // create models
@@ -108,8 +108,6 @@ MainWindow::MainWindow() :
         addToolBar(mToolbarSong);
         addToolBar(mToolbarTracker);
         addToolBar(mToolbarInput);
-        addDockWidget(Qt::LeftDockWidgetArea, mDockInstrumentEditor);
-        addDockWidget(Qt::LeftDockWidgetArea, mDockWaveformEditor);
         addDockWidget(Qt::LeftDockWidgetArea, mDockHistory);
         addDockWidget(Qt::LeftDockWidgetArea, mDockInstruments);
         addDockWidget(Qt::LeftDockWidgetArea, mDockWaveforms);
@@ -285,25 +283,6 @@ void MainWindow::setupUi() {
     auto waveforms = new TableDock(*mWaveModel, tr("Ctrl+W"), tr("waveform"), mDockWaveforms);
     mDockWaveforms->setWidget(waveforms);
 
-    mDockInstrumentEditor = makeDock(tr("Instrument editor"), QStringLiteral("DockInstrumentEditor"));
-    auto instrumentEditor = new InstrumentEditor(
-        *mModule,
-        *mInstrumentModel,
-        *mWaveModel,
-        mConfig.pianoInput(),
-        mDockInstrumentEditor
-    );
-    mDockInstrumentEditor->setWidget(instrumentEditor);
-
-    mDockWaveformEditor = makeDock(tr("Waveform editor"), QStringLiteral("DockWaveformEditor"));
-    auto waveEditor = new WaveEditor(
-        *mModule,
-        *mWaveModel,
-        mConfig.pianoInput(),
-        mDockWaveformEditor
-    );
-    mDockWaveformEditor->setWidget(waveEditor);
-
     // TOOLBARS ==============================================================
 
     mToolbarFile = makeToolbar(tr("File"), QStringLiteral("ToolbarFile"));
@@ -408,38 +387,6 @@ void MainWindow::setupUi() {
 
     // CONNECTIONS ============================================================
 
-    // editors
-    {
-        auto piano = instrumentEditor->piano();
-        connect(piano, &PianoWidget::keyDown, this,
-            [this, instrumentEditor](int note) {
-                auto item = instrumentEditor->currentItem();
-                if (item != -1) {
-                    mRenderer->instrumentPreview(note, -1, mInstrumentModel->id(item));
-                }
-            });
-        lazyconnect(piano, keyChange, mRenderer, setPreviewNote);
-        lazyconnect(piano, keyUp, mRenderer, stopPreview);
-    }
-
-    connect(instrumentEditor, &InstrumentEditor::openWaveEditor, this,
-        [this](int index) {
-            openEditor(mDockWaveformEditor, index);
-        });
-
-    {
-        auto piano = waveEditor->piano();
-        connect(piano, &PianoWidget::keyDown, this,
-            [this, waveEditor](int note) {
-                auto item = waveEditor->currentItem();
-                if (item != -1) {
-                    mRenderer->waveformPreview(note, mWaveModel->id(item));
-                }
-            });
-        lazyconnect(piano, keyChange, mRenderer, setPreviewNote);
-        lazyconnect(piano, keyUp, mRenderer, stopPreview);
-    }
-
     auto orderEditor = mSidebar->orderEditor();
     connect(orderEditor, &OrderEditor::popupMenuAt, this,
         [this](QPoint const& pos) {
@@ -501,14 +448,8 @@ void MainWindow::setupUi() {
 
     lazyconnect(mRenderer, isPlayingChanged, mPatternModel, setPlaying);
 
-    connect(instruments, &TableDock::edit, this,
-        [this](int item) {
-            openEditor(mDockInstrumentEditor, item);
-        });
-    connect(waveforms, &TableDock::edit, this,
-        [this](int item) {
-            openEditor(mDockWaveformEditor, item);
-        });
+    lazyconnect(instruments, edit, this, editInstrument);
+    lazyconnect(waveforms, edit, this, editWaveform);
 
     connect(mPatternEditor->gridHeader(), &PatternGridHeader::outputChanged, mRenderer, &Renderer::setChannelOutput);
 
@@ -546,14 +487,6 @@ void MainWindow::initState() {
 
     addToolBar(Qt::TopToolBarArea, mToolbarInput);
     mToolbarInput->show();
-
-    addDockWidget(Qt::RightDockWidgetArea, mDockInstrumentEditor);
-    mDockInstrumentEditor->setFloating(true);
-    mDockInstrumentEditor->hide();
-
-    addDockWidget(Qt::RightDockWidgetArea, mDockWaveformEditor);
-    mDockWaveformEditor->setFloating(true);
-    mDockWaveformEditor->hide();
 
     addDockWidget(Qt::RightDockWidgetArea, mDockHistory);
     mDockHistory->setFloating(true);
@@ -644,11 +577,11 @@ void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
         while (widget) {
             // search if this widget's parent is the instrument or waveform editor dock
             // if it is, midi events will go to the editor's piano widget
-            if (widget == mDockWaveformEditor) {
-                receiver = static_cast<WaveEditor*>(mDockWaveformEditor->widget())->piano();
+            if (widget == mWaveEditor) {
+                receiver = mWaveEditor->piano();
                 break;
-            } else if (widget == mDockInstrumentEditor) {
-                receiver = static_cast<InstrumentEditor*>(mDockInstrumentEditor->widget())->piano();
+            } else if (widget == mInstrumentEditor) {
+                receiver = mInstrumentEditor->piano();
                 break;
             }
             widget = widget->parentWidget();
@@ -668,16 +601,6 @@ void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
         }
     }
 
-}
-
-void MainWindow::openEditor(QDockWidget *editorDock, int item) {
-    auto editor = qobject_cast<BaseEditor*>(editorDock->widget());
-    if (editor) {
-        editor->openItem(item);
-        editorDock->show();
-        editorDock->raise();
-        editorDock->activateWindow();
-    }
 }
 
 #undef TU

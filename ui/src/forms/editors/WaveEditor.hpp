@@ -3,7 +3,7 @@
 
 #include "core/model/graph/WaveModel.hpp"
 #include "core/model/WaveListModel.hpp"
-#include "widgets/docks/BaseEditor.hpp"
+#include "forms/editors/BaseEditor.hpp"
 #include "widgets/GraphEdit.hpp"
 
 #include <QHBoxLayout>

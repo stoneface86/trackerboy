@@ -2,6 +2,7 @@
 #include "forms/MainWindow.hpp"
 
 #include "core/midi/MidiProber.hpp"
+#include "core/misc/connectutils.hpp"
 #include "forms/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
 
@@ -300,6 +301,45 @@ void MainWindow::showTempoCalculator() {
     mTempoCalc->show();
 }
 
+void MainWindow::showInstrumentEditor() {
+    if (mInstrumentEditor == nullptr) {
+        mInstrumentEditor = new InstrumentEditor(*mModule, *mInstrumentModel, *mWaveModel, mConfig.pianoInput(), this);
+        mInstrumentEditor->init();
+        auto piano = mInstrumentEditor->piano();
+        connect(piano, &PianoWidget::keyDown, this,
+            [this](int note) {
+                auto item = mInstrumentEditor->currentItem();
+                if (item != -1) {
+                    mRenderer->instrumentPreview(note, -1, mInstrumentModel->id(item));
+                }
+            });
+
+        lazyconnect(piano, keyChange, mRenderer, setPreviewNote);
+        lazyconnect(piano, keyUp, mRenderer, stopPreview);
+        lazyconnect(mInstrumentEditor, openWaveEditor, this, editWaveform);
+    }
+
+    mInstrumentEditor->show();
+}
+
+void MainWindow::showWaveEditor() {
+    if (mWaveEditor == nullptr) {
+        mWaveEditor = new WaveEditor(*mModule, *mWaveModel, mConfig.pianoInput(), this);
+        mWaveEditor->init();
+        auto piano = mWaveEditor->piano();
+        connect(piano, &PianoWidget::keyDown, this,
+            [this](int note) {
+                auto item = mWaveEditor->currentItem();
+                if (item != -1) {
+                    mRenderer->waveformPreview(note, mWaveModel->id(item));
+                }
+            });
+        lazyconnect(piano, keyChange, mRenderer, setPreviewNote);
+        lazyconnect(piano, keyUp, mRenderer, stopPreview);
+    }
+    mWaveEditor->show();
+}
+
 void MainWindow::onAudioStart() {
     if (!mRenderer->isRunning()) {
         return;
@@ -435,6 +475,16 @@ void MainWindow::onPatternCountChanged(int count) {
 void MainWindow::onPatternCursorChanged(int pattern) {
     mActionOrderMoveUp->setEnabled(pattern > 0);
     mActionOrderMoveDown->setEnabled(pattern != mPatternModel->patterns() - 1);
+}
+
+void MainWindow::editInstrument(int item) {
+    showInstrumentEditor();
+    mInstrumentEditor->openItem(item);
+}
+
+void MainWindow::editWaveform(int item) {
+    showWaveEditor();
+    mWaveEditor->openItem(item);
 }
 
 #undef TU

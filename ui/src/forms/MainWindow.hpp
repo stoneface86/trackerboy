@@ -14,6 +14,8 @@
 #include "core/Module.hpp"
 #include "core/ModuleFile.hpp"
 #include "core/PianoInput.hpp"
+#include "forms/editors/InstrumentEditor.hpp"
+#include "forms/editors/WaveEditor.hpp"
 #include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/ConfigDialog.hpp"
@@ -88,6 +90,8 @@ private slots:
     void showConfigDialog();
     void showExportWavDialog();
     void showTempoCalculator();
+    void showInstrumentEditor();
+    void showWaveEditor();
 
     void onAudioStart();
     void onAudioError();
@@ -108,6 +112,9 @@ private slots:
     // these slots update order actions
     void onPatternCountChanged(int count);
     void onPatternCursorChanged(int pattern);
+
+    void editInstrument(int item);
+    void editWaveform(int item);
 
     // implementation in MainWindow/slots.cpp - END ---------------------------
 
@@ -217,8 +224,6 @@ private:
     //
     void disableMidi(bool causedByError);
 
-    void openEditor(QDockWidget *editor, int item);
-
     QString const mUntitledString;
 
     #ifdef QT_DEBUG
@@ -252,6 +257,8 @@ private:
     ConfigDialog *mConfigDialog;
     TempoCalculator *mTempoCalc;
     CommentsDialog *mCommentsDialog;
+    InstrumentEditor *mInstrumentEditor;
+    WaveEditor *mWaveEditor;
 
     // toolbars
     QToolBar *mToolbarFile;
@@ -275,8 +282,6 @@ private:
 
     // dock widgets
 
-    QDockWidget *mDockInstrumentEditor;
-    QDockWidget *mDockWaveformEditor;
     QDockWidget *mDockInstruments;
     QDockWidget *mDockWaveforms;
     QDockWidget *mDockHistory;

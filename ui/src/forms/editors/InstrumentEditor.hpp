@@ -4,7 +4,7 @@
 #include "core/model/graph/SequenceModel.hpp"
 #include "core/model/InstrumentListModel.hpp"
 #include "core/model/WaveListModel.hpp"
-#include "widgets/docks/BaseEditor.hpp"
+#include "forms/editors/BaseEditor.hpp"
 #include "widgets/EnvelopeForm.hpp"
 #include "widgets/SequenceEditor.hpp"
 
