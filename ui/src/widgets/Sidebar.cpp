@@ -1,6 +1,7 @@
 
 #include "widgets/Sidebar.hpp"
 #include "core/misc/connectutils.hpp"
+#include "core/IconManager.hpp"
 
 #include <QGroupBox>
 #include <QVBoxLayout>
@@ -45,14 +46,33 @@ Sidebar::Sidebar(
 
     setLayout(layout);
 
+
+    mNextAction = new QAction(tr("Next song"), this);
+    mNextAction->setStatusTip(tr("Selects the next song in the list"));
+    mNextAction->setIcon(IconManager::getIcon(Icons::next));
+    connectActionToThis(mNextAction, nextSong);
+
+    mPrevAction = new QAction(tr("Previous song"), this);
+    mPrevAction->setStatusTip(tr("Selects the previous song in the list"));
+    mPrevAction->setIcon(IconManager::getIcon(Icons::prev));
+    connectActionToThis(mPrevAction, previousSong);
+
     lazyconnect(&mod, reloaded, this, reload);
     connect(mSongChooser, qOverload<int>(&QComboBox::currentIndexChanged), this,
-        [&mod](int index) {
+        [this, &mod](int index) {
             if (index != -1) {
                 // index should never be -1 with our model but check just in case
                 mod.setSong(index);
             }
+            updateActions();
         });
+
+    lazyconnect(&songListModel, rowsInserted, this, updateActions);
+    lazyconnect(&songListModel, rowsRemoved, this, updateActions);
+    lazyconnect(&songListModel, rowsMoved, this, updateActions);
+
+
+    updateActions();
 }
 
 AudioScope* Sidebar::scope() {
@@ -67,7 +87,33 @@ SongEditor* Sidebar::songEditor() {
     return mSongEditor;
 }
 
+QAction* Sidebar::previousSongAction() {
+    return mPrevAction;
+}
+
+QAction* Sidebar::nextSongAction() {
+    return mNextAction;
+}
+
+void Sidebar::nextSong() {
+    mSongChooser->setCurrentIndex(mSongChooser->currentIndex() + 1);
+}
+
+void Sidebar::previousSong() {
+    mSongChooser->setCurrentIndex(mSongChooser->currentIndex() - 1);
+}
+
 void Sidebar::reload() {
-    QSignalBlocker blocker(mSongChooser);
-    mSongChooser->setCurrentIndex(0);
+    {
+        QSignalBlocker blocker(mSongChooser);
+        mSongChooser->setCurrentIndex(0);
+    }
+    updateActions();
+}
+
+void Sidebar::updateActions() {
+    auto const current = mSongChooser->currentIndex();
+
+    mPrevAction->setEnabled(current > 0);
+    mNextAction->setEnabled(current != -1 && current != mSongChooser->count() - 1);
 }

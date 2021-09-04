@@ -141,6 +141,14 @@ QIcon const& IconManager::getIcon(Icons icon) {
                 iconRef.addFile(QStringLiteral(":/icons/moveDown.png"));
                 iconRef.addFile(QStringLiteral(":/icons/moveDown-disabled.png"), QSize(), QIcon::Disabled);
                 break;
+            case Icons::next:
+                iconRef.addFile(QStringLiteral(":/icons/next.png"));
+                iconRef.addFile(QStringLiteral(":/icons/next-disabled.png"), QSize(), QIcon::Disabled);
+                break;
+            case Icons::prev:
+                iconRef.addFile(QStringLiteral(":/icons/prev.png"));
+                iconRef.addFile(QStringLiteral(":/icons/prev-disabled.png"), QSize(), QIcon::Disabled);
+                break;
             default:
                 break;
         }

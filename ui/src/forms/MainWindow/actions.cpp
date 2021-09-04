@@ -160,6 +160,12 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     auto menuModule = menubar->addMenu(tr("Module"));
 
+    menuModule->addAction(mSidebar->previousSongAction());
+
+    menuModule->addAction(mSidebar->nextSongAction());
+
+    menuModule->addSeparator(); // --------------------------------------------
+
     act = setupAction(menuModule, tr("Comments..."), tr("Shows comments about the module"));
     connectActionToThis(act, onModuleComments);
 
@@ -235,6 +241,9 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
     lazyconnect(act, toggled, mPatternModel, setRecord);
+
+    mToolbarTracker->addAction(mSidebar->previousSongAction());
+    mToolbarTracker->addAction(mSidebar->nextSongAction());
 
     menuTracker->addSeparator(); // -------------------------------------------
 
