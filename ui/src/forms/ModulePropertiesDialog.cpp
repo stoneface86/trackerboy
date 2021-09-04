@@ -1,7 +1,6 @@
 
 #include "forms/ModulePropertiesDialog.hpp"
 #include "core/misc/connectutils.hpp"
-#include "core/model/NumberedProxyModel.hpp"
 
 #include <QGroupBox>
 #include <QCheckBox>
@@ -197,9 +196,7 @@ ModulePropertiesDialog::ModulePropertiesDialog(Module &mod, SongListModel &model
     // song list group
     auto songListGroup = new QGroupBox(tr("Song list"));
     auto songListLayout = new QHBoxLayout;
-    auto proxy = new NumberedProxyModel(this);
-    proxy->setSourceModel(&model);
-    mSongList->setModel(proxy);
+    mSongList->setModel(&model);
 
     auto songButtonLayout = new QVBoxLayout;
     songButtonLayout->addWidget(mAddButton);

@@ -60,8 +60,14 @@ QVariant SongListModel::data(QModelIndex const& index, int role) const {
     if (index.isValid()) {
         switch (role) {
             case Qt::DisplayRole:
-            case Qt::EditRole:
-                return mSongData[index.row()].name;
+            case Qt::EditRole: {
+                auto const& meta = mSongData[index.row()];
+                if (role == Qt::DisplayRole) {
+                    return QStringLiteral("%1# %2").arg(QString::number(index.row() + 1), meta.name);
+                } else {
+                    return meta.name;
+                }
+            }
             default:
                 break;
         }

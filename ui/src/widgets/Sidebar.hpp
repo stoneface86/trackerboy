@@ -1,10 +1,12 @@
 
 #pragma once
 
+#include "core/model/SongListModel.hpp"
 #include "widgets/sidebar/AudioScope.hpp"
 #include "widgets/sidebar/OrderEditor.hpp"
 #include "widgets/sidebar/SongEditor.hpp"
 
+#include <QComboBox>
 #include <QWidget>
 
 //
@@ -17,7 +19,13 @@ class Sidebar : public QWidget {
 
 public:
 
-    explicit Sidebar(PatternModel &patternModel, SongModel &songModel, QWidget *parent = nullptr);
+    explicit Sidebar(
+        Module &mod,
+        PatternModel &patternModel,
+        SongListModel &songListModel,
+        SongModel &songModel,
+        QWidget *parent = nullptr
+    );
 
     AudioScope* scope();
 
@@ -25,10 +33,17 @@ public:
 
     SongEditor* songEditor();
 
+private slots:
+
+    void reload();
+
 private:
+
+    Q_DISABLE_COPY(Sidebar)
 
     AudioScope *mScope;
     OrderEditor *mOrderEditor;
     SongEditor *mSongEditor;
+    QComboBox *mSongChooser;
 
 };

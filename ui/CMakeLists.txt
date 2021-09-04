@@ -91,7 +91,6 @@ makeSourceList(UI_SRC
     "src/core/model/BaseTableModel"
     "src/core/model/InstrumentListModel"
     "src/core/model/PatternModel"
-    "src/core/model/NumberedProxyModel"
     "src/core/model/SongModel"
     "src/core/model/SongListModel"
     "src/core/model/WaveListModel"

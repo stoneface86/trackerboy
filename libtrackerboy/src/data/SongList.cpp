@@ -63,7 +63,7 @@ void SongList::moveUp(int index) {
     }
 
     auto iter = mContainer.begin() + index;
-    std::iter_swap(iter, --iter);
+    std::iter_swap(iter, iter - 1);
 
 }
 
@@ -73,7 +73,7 @@ void SongList::moveDown(int index) {
     }
 
     auto iter = mContainer.begin() + index;
-    std::iter_swap(iter, ++iter);
+    std::iter_swap(iter, iter + 1);
 }
 
 int SongList::size() const {
