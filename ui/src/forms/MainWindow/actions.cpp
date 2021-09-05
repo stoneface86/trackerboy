@@ -71,6 +71,19 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     act = setupAction(menuFile, tr("Export to WAV..."), tr("Exports the module to a WAV file"));
     connectActionToThis(act, showExportWavDialog);
 
+    mRecentFilesSeparator = menuFile->addSeparator(); // ---------------------
+    mRecentFilesSeparator->setVisible(false);
+
+    // recent files
+    for (auto &recent : mRecentFilesActions) {
+        recent = new QAction(this);
+        recent->setVisible(false);
+        menuFile->addAction(recent);
+        connectActionToThis(recent, onFileRecent);
+    }
+
+    updateRecentFiles();
+
     menuFile->addSeparator(); // ---------------------------------------------
     
     act = setupAction(menuFile, tr("&Configuration..."), tr("Change application settings"), Icons::fileConfig);

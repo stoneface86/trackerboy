@@ -6,6 +6,7 @@
 #include "forms/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
 
+#include <QApplication>
 #include <QFileDialog>
 #include <QStringBuilder>
 
@@ -48,15 +49,24 @@ void MainWindow::onFileOpen() {
         return;
     }
 
+    openFile(path);
+
+}
+
+void MainWindow::openFile(QString const& path) {
     mRenderer->forceStop();
 
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     bool opened = mModuleFile.open(path, *mModule);
+    QApplication::restoreOverrideCursor();
 
-    if (!opened) {
+    if (opened) {
+        pushRecentFile(path);
+    } else {
         QMessageBox msgbox;
         msgbox.setIcon(QMessageBox::Critical);
         msgbox.setText(tr("Could not open module"));
-        
+
         auto error = mModuleFile.lastError();
         switch (error) {
             case trackerboy::FormatError::invalidSignature:
@@ -77,16 +87,15 @@ void MainWindow::onFileOpen() {
                 msgbox.setInformativeText(tr("The file could not be read"));
                 break;
         }
-        
+
 
         msgbox.exec();
         mModuleFile.setName(mUntitledString);
-        
+
     }
 
     // update window title with document name
     updateWindowTitle();
-
 }
 
 bool MainWindow::onFileSave() {
@@ -119,10 +128,32 @@ bool MainWindow::onFileSaveAs() {
 
     auto result = mModuleFile.save(path, *mModule);
     if (result) {
+        pushRecentFile(path);
         // the document has a new name, update the window title
         updateWindowTitle();
+    } else {
+        QMessageBox::critical(
+            this,
+            tr("Save failed"),
+            tr("The module could not be written")
+        );
     }
     return result;
+}
+
+void MainWindow::onFileRecent() {
+
+    // sender should always be a QAction in the mRecentFilesActions array,
+    // but check anyways
+    auto action = qobject_cast<QAction*>(sender());
+    if (action) {
+        // the filename to open is stored in action's status tip
+        auto path = action->statusTip();
+        if (!path.isEmpty() && maybeSave()) {
+            openFile(path);
+        }
+    }
+
 }
 
 void MainWindow::onModuleComments() {

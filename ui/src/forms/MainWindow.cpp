@@ -6,6 +6,7 @@
 #include "widgets/docks/TableDock.hpp"
 
 #include <QApplication>
+#include <QFileInfo>
 #include <QSettings>
 #include <QShortcut>
 #include <QScreen>
@@ -22,6 +23,8 @@ namespace TU {
 static auto const KEY_MAIN_WINDOW = QStringLiteral("MainWindow");
 static auto const KEY_WINDOW_STATE = QStringLiteral("windowState");
 static auto const KEY_GEOMETRY = QStringLiteral("geometry");
+
+static auto const KEY_RECENT_FILES = QStringLiteral("recentFiles");
 
 //
 // increment this constant when adding new docks or toolbars
@@ -601,6 +604,65 @@ void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
         }
     }
 
+}
+
+namespace TU {
+
+//
+// Makes the size of the given list no larger than max
+//
+static void minimizeList(QStringList &list, int max) {
+    while (list.size() > max) {
+        list.takeLast();
+    }
+}
+
+}
+
+void MainWindow::pushRecentFile(const QString &file) {
+    QSettings settings;
+    settings.beginGroup(TU::KEY_MAIN_WINDOW);
+
+    auto list = settings.value(TU::KEY_RECENT_FILES).toStringList();
+    // remove duplicate(s)
+    list.removeAll(file);
+    list.prepend(file);
+    TU::minimizeList(list, (int)mRecentFilesActions.size());
+
+    settings.setValue(TU::KEY_RECENT_FILES, list);
+    updateRecentFiles(list);
+
+}
+
+void MainWindow::updateRecentFiles() {
+    QSettings settings;
+    settings.beginGroup(TU::KEY_MAIN_WINDOW);
+    auto list = settings.value(TU::KEY_RECENT_FILES).toStringList();
+    TU::minimizeList(list, (int)mRecentFilesActions.size());
+    updateRecentFiles(list);
+}
+
+void MainWindow::updateRecentFiles(const QStringList &list) {
+
+    int const size = list.size();
+    mRecentFilesSeparator->setVisible(size > 0);
+
+    int i = 0;
+    for (auto const& filename : list) {
+        QFileInfo info(filename);
+        QString text = tr("&%1 %2").arg(QString::number(i + 1), info.fileName());
+        auto act = mRecentFilesActions[i];
+        act->setText(text);
+        act->setStatusTip(filename); // put the full filename in the statusbar in case of duplicates
+        act->setVisible(true);
+
+        ++i;
+    }
+
+
+    for (auto iter = mRecentFilesActions.begin() + size; iter != mRecentFilesActions.end(); ++iter) {
+        (*iter)->setVisible(false);
+    }
 }
 
 #undef TU

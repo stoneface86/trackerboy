@@ -80,6 +80,8 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     QCoreApplication::setOrganizationName("Trackerboy");
     QCoreApplication::setApplicationName("Trackerboy");
+    // use INI on all systems, much easier to edit by hand
+    QSettings::setDefaultFormat(QSettings::IniFormat);
 
     Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(icons);

@@ -66,6 +66,7 @@ private slots:
     void onFileOpen();
     bool onFileSave();
     bool onFileSaveAs();
+    void onFileRecent();
 
     void onModuleComments();
     void onModuleModuleProperties();
@@ -115,6 +116,9 @@ private slots:
 
     void editInstrument(int item);
     void editWaveform(int item);
+
+    // not a slot, but used by onFileOpen and onFileRecent
+    void openFile(QString const& path);
 
     // implementation in MainWindow/slots.cpp - END ---------------------------
 
@@ -224,6 +228,22 @@ private:
     //
     void disableMidi(bool causedByError);
 
+    //
+    // Pushes the given filename to the recent files list. Each file that is
+    // successfully opened and newly saved files should get added to this list
+    //
+    void pushRecentFile(QString const& file);
+
+    //
+    // Updates the recent files actions with the list stored in the config
+    //
+    void updateRecentFiles();
+
+    //
+    // Updates the recent files actions using the given list of filenames
+    //
+    void updateRecentFiles(QStringList const& list);
+
     QString const mUntitledString;
 
     #ifdef QT_DEBUG
@@ -279,6 +299,10 @@ private:
     QAction *mActionFollowMode;
 
     QMenu *mSongOrderContextMenu;
+
+    // recent file actions
+    std::array<QAction*, 9> mRecentFilesActions;
+    QAction* mRecentFilesSeparator;
 
     // dock widgets
 
