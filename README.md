@@ -23,7 +23,7 @@ My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
 
 v0.4.0 is now available.
 
-![Demo](/.github/demo.gif)
+![Demo](/.github/screenshot-v0.5.0.png)
 
  Post-release features:
  * Sound effects
