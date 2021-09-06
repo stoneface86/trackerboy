@@ -12,16 +12,11 @@ else ()
     find_package(RtMidi CONFIG REQUIRED)
 endif ()
 
-get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
-get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-
 if (WIN32)
     set(GUI_TYPE WIN32)
     set(WINDOWS_APPICON_RC "src/resources/icons/app/appicon.rc")
-    find_program(WINDEPLOYQT windeployqt HINTS "${_qt_bin_dir}")
 elseif (APPLE)
     set(GUI_TYPE MACOSX_BUNDLE)
-    find_program(MACDEPLOYQT macdeployqt HINTS "${_qt_bin_dir}")
 else ()
     set(GUI_TYPE "")
 endif ()
@@ -203,28 +198,82 @@ set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 #
 # Deployment
 #
-if (NOT DEFINED WINDEPLOYQT-NOTFOUND)
-    set(DEPLOY_DIR_NAME "${PROJECT_AND_VERSION_NAME}-win")
-    string(APPEND DEPLOY_DIR_NAME "-${BUILD_ARCH}")
-    # directory for deployment
-    set(DEPLOY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${DEPLOY_DIR_NAME}")
-    # deploy target is a zip of the directory contents created by windeployqt
-    set(DEPLOY_TARGET "${DEPLOY_DIR_NAME}.zip")
-    add_custom_command(
-        OUTPUT ${DEPLOY_TARGET}
-        COMMAND ${WINDEPLOYQT} --dir ${DEPLOY_DIR} --no-translations --no-svg --no-angle --no-system-d3d-compiler --no-opengl-sw "$<TARGET_FILE:trackerboy_ui>"
-        COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" ${DEPLOY_DIR}
-        COMMAND ${CMAKE_COMMAND} -E tar "cfv" ${DEPLOY_TARGET} --format=zip ${DEPLOY_DIR}
-        COMMAND ${CMAKE_COMMAND} -E rm -r ${DEPLOY_DIR}
-        DEPENDS trackerboy_ui
-    )
+
+set(DEPLOY_DIR "${CMAKE_CURRENT_BINARY_DIR}/deploy")
+set(DEPLOY_TARGET "deploy_timestamp")
+set(HAS_DEPLOYMENT FALSE)
+
+get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
+get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+
+if (WIN32)
+    find_program(WINDEPLOYQT windeployqt HINTS "${_qt_bin_dir}")
+    if (WINDEPLOYQT)
+        set(HAS_DEPLOYMENT TRUE)
+
+        add_custom_command(
+            OUTPUT ${DEPLOY_TARGET}
+            COMMAND ${WINDEPLOYQT} --dir ${DEPLOY_DIR} --no-translations --no-svg --no-angle --no-system-d3d-compiler --no-opengl-sw "$<TARGET_FILE:trackerboy_ui>"
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" ${DEPLOY_DIR}
+            COMMAND ${CMAKE_COMMAND} -E touch ${DEPLOY_TARGET}
+            DEPENDS trackerboy_ui
+        )
+        add_custom_target(deploy DEPENDS ${DEPLOY_TARGET})
+    endif ()
+
+elseif (APPLE)
+
+    # needs some testing
+    find_program(MACDEPLOYQT macdeployqt HINTS "${_qt_bin_dir}")
+    if (MACDEPLOYQT)
+        set(HAS_DEPLOYMENT TRUE)
+
+        add_custom_command(
+            OUTPUT ${DEPLOY_TARGET}
+            COMMAND ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" "${MACDEPLOYQT}" "$<TARGET_FILE:trackerboy_ui>" -dmg
+            COMMAND ${CMAKE_COMMAND} -E touch ${DEPLOY_TARGET}
+            DEPENDS trackerboy_ui
+        )
+    endif ()
+
+
+elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+
+    find_program(LINUXDEPLOYQT linuxdeployqt)
+    if (LINUXDEPLOYQT)
+        set(HAS_DEPLOYMENT TRUE)
+
+        add_custom_command(
+            OUTPUT ${DEPLOY_TARGET}
+            COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/bin"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/lib"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/share/applications"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/share/icons/hicolor/256x256"
+            COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" "AppDir/usr/bin"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/icons/app/appicon-256.png" "AppDir/usr/share/icons/hicolor/256x256/trackerboy.png"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/trackerboy.desktop" "AppDir/usr/share/applications"
+            COMMAND ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" "${LINUXDEPLOYQT}" "${CMAKE_CURRENT_BINARY_DIR}/AppDir/usr/share/applications/trackerboy.desktop" -appimage -qmake="${_qmake_executable}"
+            COMMAND ${CMAKE_COMMAND} -E touch ${DEPLOY_TARGET}
+            DEPENDS trackerboy_ui
+        )
+    endif ()
+
+endif ()
+
+if (HAS_DEPLOYMENT)
+    configure_file("${CMAKE_SOURCE_DIR}/LICENSE" "${DEPLOY_DIR}/LICENSE" COPYONLY)
+    configure_file("${CMAKE_SOURCE_DIR}/CHANGELOG.md" "${DEPLOY_DIR}/CHANGELOG.md" COPYONLY)
     add_custom_target(deploy DEPENDS ${DEPLOY_TARGET})
+else ()
+    # cannot deploy to this system
+    # provide a deploy target that returns an error code
+    add_custom_target(
+        deploy
+        ${CMAKE_COMMAND} -E echo "no deployment possible"
+        COMMAND ${CMAKE_COMMAND} -E false
+    )
+endif ()
 
-elseif (NOT DEFINED MACDEPLOYQT-NOTFOUND)
-
-endif()
-
-# also need to handle deployment for linux, qt doesn't provide a tool for linux unfortunately
 
 #
 # test programs

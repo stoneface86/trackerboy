@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: Build (${{ matrix.os }}, ${{ matrix.arch }})
+    name: ${{ env.TRIPLET }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
@@ -95,8 +95,26 @@ jobs:
       run: cmake --build "${{ env.CMAKE_BUILD_DIR }}"
 
     - name: test
-      continue-on-error: true
       run: |
         cd "${{ env.CMAKE_BUILD_DIR }}"
         ctest
+
+    # Downloads the latest linuxdeployqt exe and puts it in the PATH
+    - name: Get linuxdeployqt
+      if: ${{ matrix.platform == "linux" }}
+      run: |
+        mkdir tools
+        cd tools
+        wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -O linuxdeployqt
+        chmod a+x linuxdeployqt
+        export PATH="$PATH:$(realpath ..)"
+    
+    - name: deploy
+      run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target deploy
+
+    - name: upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: trackerboy-nightly-${{ env.TRIPLET }}
+        path: ${{ env.CMAKE_BUILD_DIR }}/ui/deploy/
 

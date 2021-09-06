@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Trackerboy
+Comment=Gameboy music tracker
+Exec=trackerboy
+Icon=trackerboy
+Categories=Audio;AudioVideo;
