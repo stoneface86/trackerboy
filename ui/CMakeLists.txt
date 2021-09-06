@@ -4,6 +4,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
+option(FIND_RTMIDI OFF)
+
+if (FIND_RTMIDI)
+    find_package(RtMidi MODULE REQUIRED)
+else ()
+    find_package(RtMidi CONFIG REQUIRED)
+endif ()
 
 get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
 get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
@@ -235,3 +242,5 @@ target_link_libraries(test_AudioStream PRIVATE ui)
 #    trackerboy
 #    Qt5::Widgets
 #)
+
+install(TARGETS trackerboy_ui RUNTIME DESTINATION bin)

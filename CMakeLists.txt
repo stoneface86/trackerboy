@@ -5,7 +5,7 @@
 # See README.md for details on building
 #
 
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.9)
 
 # use our custom triplet settings
 # - static libraries except for Qt
@@ -29,7 +29,7 @@ set(PROJECT_AND_VERSION_NAME "${PROJECT_NAME}-v${PROJECT_VERSION_MAJOR}.${PROJEC
 # uncomment if we need some cmake modules (none currently)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 
-option(ENABLE_DEMO "Enable building of demo programs (requires portaudio)" OFF)
+option(ENABLE_DEMO "Enable building of demo programs (requires miniaudio)" OFF)
 option(ENABLE_TESTS "Enable unit tests" ON)
 option(ENABLE_UI "Enable building of the main trackerboy application" ON)
 option(ENABLE_UNITY "Enable unity builds" OFF)
@@ -55,18 +55,10 @@ function (unityBuildable target)
     endif ()
 endfunction ()
 
-set(PACKAGE_MODE "CONFIG")
-
-if (VCPKG_TOOLCHAIN)
-    unset(USE_FIND_SCRIPTS)
-else ()
+if (NOT VCPKG_TOOLCHAIN)
     # not using vcpkg, unset this setting
     unset(VCPKG_OVERLAY_TRIPLETS)
     unset(VCPKG_OVERLAY_PORTS)
-
-    if (DEFINED USE_FIND_SCRIPTS)
-        set(PACKAGE_MODE "MODULE")
-    endif ()
 endif ()
 
 if (ENABLE_DEMO OR ENABLE_UI)
@@ -75,13 +67,26 @@ else ()
     set(SOUND_REQUIRED FALSE)
 endif ()
 
-set(RTMIDI_REQUIRED ${ENABLE_UI})
-
+# assume Debug if CMAKE_BUILD_TYPE was not provided
 if (NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE MATCHES "Debug")
     set(DEBUG_BUILD TRUE)
 else ()
     set(DEBUG_BUILD FALSE)
 endif ()
+
+# enable LTO for non-debug builds
+if (NOT DEBUG_BUILD)
+    message(CHECK_START "checking if LTO is supported")
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipoSupported OUTPUT output)
+    if (ipoSupported)
+        message(CHECK_PASS "yes")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else ()
+        message(CHECK_FAIL "no")
+    endif ()
+endif()
+
 
 # ============================================================================
 # Dependencies
@@ -93,10 +98,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # gbapu is required for libtrackerboy, which is always built
 add_subdirectory(external/gbapu)
-
-if (RTMIDI_REQUIRED)
-    find_package(RtMidi ${PACKAGE_MODE} REQUIRED)
-endif ()
 
 # sound related dependencies for demo and ui projects
 if (SOUND_REQUIRED)
@@ -139,16 +140,13 @@ if (SOUND_REQUIRED)
 endif ()
 
 if (ENABLE_TESTS)
-    find_package(Catch2 ${PACKAGE_MODE} REQUIRED)
+    find_package(Catch2 CONFIG REQUIRED)
     include(CTest)
     include(Catch)
     add_library(Catch2Main STATIC "external/catch.cpp")
     target_link_libraries(Catch2Main PUBLIC Catch2::Catch2)
     enable_testing()
 endif ()
-
-include(TestBigEndian)
-TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
 
 # global warning flags
 add_library(trackerboyWarnings INTERFACE)
@@ -194,14 +192,15 @@ endif ()
 # Information
 # ============================================================================
 
-message("\n"
-	"Configuration summary\n"
-	"---------------------\n"
-	" * Install directory           : ${CMAKE_INSTALL_PREFIX}\n"
-	" * Build type                  : ${CMAKE_BUILD_TYPE}\n"
+message(
+    "\n"
+    "Configuration summary\n"
+    "---------------------\n"
+    " * Install directory           : ${CMAKE_INSTALL_PREFIX}\n"
+    " * Build type                  : ${CMAKE_BUILD_TYPE}\n"
     " * Architecture                : ${BUILD_ARCH}\n"
-	" * Demos                       : ${ENABLE_DEMO}\n"
-	" * Tests                       : ${ENABLE_TESTS}\n"
-	" * UI                          : ${ENABLE_UI}\n"
-	" * Unity build                 : ${ENABLE_UNITY}\n"
+    " * Demos                       : ${ENABLE_DEMO}\n"
+    " * Tests                       : ${ENABLE_TESTS}\n"
+    " * UI                          : ${ENABLE_UI}\n"
+    " * Unity build                 : ${ENABLE_UNITY}\n"
 )

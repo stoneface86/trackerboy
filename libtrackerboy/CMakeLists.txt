@@ -96,6 +96,9 @@ set(SRC_FILES
     "src/version.cpp"
 )
 
+include(TestBigEndian)
+TEST_BIG_ENDIAN(IS_BIG_ENDIAN)
+
 if (IS_BIG_ENDIAN)
     list(APPEND SRC_FILES "src/internal/endian.cpp")
 endif ()
