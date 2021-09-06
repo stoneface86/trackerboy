@@ -158,6 +158,13 @@ makeSourceList(UI_SRC
     "src/widgets/TempoLabel"
 )
 
+# https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake/4318642#4318642
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+
+configure_file("src/GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
+list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" "src/GitSHA1.hpp")
+
 #
 # ui library
 #

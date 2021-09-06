@@ -1,5 +1,6 @@
 
 #include "forms/AboutDialog.hpp"
+#include "GitSHA1.hpp"
 
 #include "trackerboy/version.hpp"
 
@@ -48,12 +49,15 @@ R"bodystr(
 <br/>
 <span>Repo - <a href="https://github.com/stoneface86/trackerboy">https://github.com/stoneface86/trackerboy</a></span>
 <br/>
+<span>Commit: %4</span>
+<br/>
 <p>This software is licensed under the MIT License.</p>
 </body>
 </html>
 )bodystr").arg(trackerboy::VERSION.major)
           .arg(trackerboy::VERSION.minor)
-          .arg(trackerboy::VERSION.patch));
+          .arg(trackerboy::VERSION.patch)
+          .arg(QString::fromUtf8(GIT_SHA1)));
 
     mButtons.addButton(QDialogButtonBox::Close);
 
