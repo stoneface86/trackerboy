@@ -250,4 +250,8 @@ target_link_libraries(test_AudioStream PRIVATE ui)
 #    Qt5::Widgets
 #)
 
-install(TARGETS trackerboy_ui RUNTIME DESTINATION bin)
+install(
+    TARGETS trackerboy_ui
+    RUNTIME DESTINATION bin
+    BUNDLE DESTINATION bin
+)
