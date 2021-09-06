@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Backwards compatibilty for 0.0 (Rev A) modules
  - Tempo calculator dialog (Song > Tempo calculator...)
  - Crash handler. Attempts to save a copy of the module after a fatal error
+ - Module properties dialog for editing the song list, module information and
+   framerate/system.
+ - Song next/previous actions for changing the current song
+ - Song selector in Sidebar for selecting the current song
+ - Comments dialog for editing module comments
+ - File menu now shows a list of recently opened/saved modules
 ### Changed
  - Back to using miniaudio instead of RtAudio for audio playback
  - Trackerboy is now SDI instead of MDI (only one module can be open at a time).
@@ -19,13 +25,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Module file format is now at 1.0 (Rev B)
  - Config file is now more human friendly
  - Redesigned header for the pattern editor
+ - Reduced spacing between columns in pattern editor
  - Rewrote OrderEditor using a custom widget instead of QTableView + OrderModel
+ - Instrument and Waveform editors are now dialogs instead of docks.
 ### Fixed
- - issue #2 - Exx not taking immediate effect
+ - issue #2 - Exx not taking immediate effect (also fixes V0x and I0x not
+              taking immediate effect as well)
  - issue #3 - PulseAudio hang
 ### Removed
  - Module tree view (replaced by instrument and waveform docks)
- - Instrument select toolbar
+ - Instrument select toolbar (functionality replaced by selecting an instrument
+   in the instruments dock)
+ - Patterns and Tempo spinboxes in Song settings editor
 
 
 ## [0.4.0] - 2021-07-07
