@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: ${{ env.TRIPLET }}
+    name: ${{ matrix.arch }}-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: false
