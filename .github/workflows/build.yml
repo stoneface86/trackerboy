@@ -101,7 +101,7 @@ jobs:
 
     # Downloads the latest linuxdeployqt exe and puts it in the PATH
     - name: Get linuxdeployqt
-      if: ${{ matrix.platform == "linux" }}
+      if: ${{ runner.os == 'Linux'}}
       run: |
         mkdir tools
         cd tools
