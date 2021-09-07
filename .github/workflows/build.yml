@@ -12,29 +12,29 @@ on:
 jobs:
   build:
     name: ${{ matrix.arch }}-${{ matrix.platform }}
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         # 64-bit: macos, ubuntu and windows
         # 32-bit: windows
         include:
-          - os: macos
+          - os: macos-latest
             arch: x64
             platform: osx
             qt-arch: ''
             
-          - os: ubuntu
+          - os: ubuntu-18.04
             arch: x64
             platform: linux
             qt-arch: ''
           
-          - os: windows
+          - os: windows-latest
             arch: x86
             platform: windows
             qt-arch: win32_msvc2017
           
-          - os: windows
+          - os: windows-latest
             arch: x64
             platform: windows
             qt-arch: win64_msvc2017_64
@@ -87,15 +87,14 @@ jobs:
         version: 5.12.10
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
-    # Downloads the latest linuxdeployqt exe and puts it in the PATH
+    # Downloads the latest linuxdeployqt
     - name: Get linuxdeployqt
       if: ${{ runner.os == 'Linux'}}
       run: |
-        mkdir tools
-        cd tools
+        mkdir "${{ github.workspace }}/tools"
+        cd "${{ github.workspace }}/tools"
         wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
         chmod a+x linuxdeployqt
-        echo "{PATH}={$PATH:$(realpath ..)}" >> $GITHUB_ENV
 
     - name: configure
       run: |

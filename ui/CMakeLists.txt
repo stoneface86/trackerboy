@@ -238,7 +238,7 @@ elseif (APPLE)
 
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
-    find_program(LINUXDEPLOYQT linuxdeployqt)
+    find_program(LINUXDEPLOYQT linuxdeployqt HINTS "${CMAKE_SOURCE_DIR}/tools")
     if (LINUXDEPLOYQT)
         set(HAS_DEPLOYMENT TRUE)
 
