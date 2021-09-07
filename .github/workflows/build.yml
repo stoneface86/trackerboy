@@ -23,7 +23,9 @@ jobs:
             arch: x64
             platform: osx
             qt-arch: ''
-            
+          
+          # 18.04 is used because linuxdeployqt requires the oldest LTS version
+          # for binary compatibility with older systems
           - os: ubuntu-18.04
             arch: x64
             platform: linux
@@ -50,10 +52,15 @@ jobs:
     
     - name: Install dependencies (Linux)
       # building rtmidi with ALSA support requires libsound2-dev
+      # we will also need to download linuxdeployqt
       if: ${{ runner.os == 'Linux'}}
       run: |
         sudo apt-get update
         sudo apt-get install libasound2-dev
+        mkdir "${{ github.workspace }}/tools"
+        cd "${{ github.workspace }}/tools"
+        wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
+        chmod a+x linuxdeployqt
 
     - uses: lukka/get-cmake@latest
 
@@ -86,15 +93,6 @@ jobs:
         arch: ${{ matrix.qt-arch }}
         version: 5.12.10
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
-
-    # Downloads the latest linuxdeployqt
-    - name: Get linuxdeployqt
-      if: ${{ runner.os == 'Linux'}}
-      run: |
-        mkdir "${{ github.workspace }}/tools"
-        cd "${{ github.workspace }}/tools"
-        wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
-        chmod a+x linuxdeployqt
 
     - name: configure
       run: |

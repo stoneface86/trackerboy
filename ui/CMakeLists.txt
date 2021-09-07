@@ -200,7 +200,6 @@ set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 #
 
 set(DEPLOY_DIR "${CMAKE_CURRENT_BINARY_DIR}/deploy")
-set(DEPLOY_TARGET "deploy_timestamp")
 set(HAS_DEPLOYMENT FALSE)
 
 get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
@@ -210,7 +209,9 @@ if (WIN32)
     find_program(WINDEPLOYQT windeployqt HINTS "${_qt_bin_dir}")
     if (WINDEPLOYQT)
         set(HAS_DEPLOYMENT TRUE)
-
+        # windeployqt doesn't create anything, just dumps dlls into the directory
+        # use a timestamp file as a target
+        set(DEPLOY_TARGET "deploy_timestamp")
         add_custom_command(
             OUTPUT ${DEPLOY_TARGET}
             COMMAND ${WINDEPLOYQT} --dir ${DEPLOY_DIR} --no-translations --no-svg --no-angle --no-system-d3d-compiler --no-opengl-sw "$<TARGET_FILE:trackerboy_ui>"
@@ -222,15 +223,16 @@ if (WIN32)
 
 elseif (APPLE)
 
-    # needs some testing
     find_program(MACDEPLOYQT macdeployqt HINTS "${_qt_bin_dir}")
     if (MACDEPLOYQT)
         set(HAS_DEPLOYMENT TRUE)
 
+        # macdeployqt creates a dmg in the same directory as the bundle
+        set(DEPLOY_TARGET "${DEPLOY_DIR}/trackerboy.dmg")
         add_custom_command(
             OUTPUT ${DEPLOY_TARGET}
-            COMMAND ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" "${MACDEPLOYQT}" "$<TARGET_FILE:trackerboy_ui>" -dmg
-            COMMAND ${CMAKE_COMMAND} -E touch ${DEPLOY_TARGET}
+            COMMAND "${MACDEPLOYQT}" "$<TARGET_BUNDLE_DIR:trackerboy_ui>" -dmg
+            COMMAND ${CMAKE_COMMAND} -E rename "trackerboy.dmg" "${DEPLOY_TARGET}"
             DEPENDS trackerboy_ui
         )
     endif ()
@@ -238,10 +240,23 @@ elseif (APPLE)
 
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
+    # CI will download the tool into the tools folder in the source tree
+    # you can do the same if deploying manually, or by just having it in your PATH
     find_program(LINUXDEPLOYQT linuxdeployqt HINTS "${CMAKE_SOURCE_DIR}/tools")
     if (LINUXDEPLOYQT)
         set(HAS_DEPLOYMENT TRUE)
 
+        # linuxdeployqt creates an AppImage file with the following naming scheme:
+        #  <Appname>-<version>-<arch>.AppImage
+        # version is omitted if environment variable VERSION is unset and we are not in the repo folder
+        # otherwise it gets the value of $VERSION or the result of `git rev-parse --short HEAD` if unset
+        #
+        # linuxdeployqt offers no way to override this, and the dev seems adamant to keeping it this way so...
+        #
+        # this will be the filename of the generated AppImage
+        set(_linuxdeployqtOut "Trackerboy-v${CMAKE_PROJECT_VERSION}-x86_64.AppImage")
+
+        set(DEPLOY_TARGET "${DEPLOY_DIR}/${_linuxdeployqtOut}")
         add_custom_command(
             OUTPUT ${DEPLOY_TARGET}
             COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/bin"
@@ -251,8 +266,7 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
             COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" "AppDir/usr/bin"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/icons/app/appicon-256.png" "AppDir/usr/share/icons/hicolor/256x256/trackerboy.png"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/trackerboy.desktop" "AppDir/usr/share/applications"
-            COMMAND ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" "${LINUXDEPLOYQT}" "${CMAKE_CURRENT_BINARY_DIR}/AppDir/usr/share/applications/trackerboy.desktop" -appimage -qmake="${_qmake_executable}"
-            COMMAND ${CMAKE_COMMAND} -E touch ${DEPLOY_TARGET}
+            COMMAND ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" ${CMAKE_COMMAND} -E env VERSION="v${CMAKE_PROJECT_VERSION}" "${LINUXDEPLOYQT}" "${CMAKE_CURRENT_BINARY_DIR}/AppDir/usr/share/applications/trackerboy.desktop" -appimage -qmake="${_qmake_executable}"
             DEPENDS trackerboy_ui
         )
     endif ()
@@ -260,12 +274,15 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif ()
 
 if (HAS_DEPLOYMENT)
+    # documentation, example modules, etc can be copied over here as well
+    # for now just include the CHANGELOG and LICENSE
     configure_file("${CMAKE_SOURCE_DIR}/LICENSE" "${DEPLOY_DIR}/LICENSE" COPYONLY)
     configure_file("${CMAKE_SOURCE_DIR}/CHANGELOG.md" "${DEPLOY_DIR}/CHANGELOG.md" COPYONLY)
     add_custom_target(deploy DEPENDS ${DEPLOY_TARGET})
 else ()
     # cannot deploy to this system
     # provide a deploy target that returns an error code
+    # a bit more informative than error for a missing target
     add_custom_target(
         deploy
         ${CMAKE_COMMAND} -E echo "no deployment possible"
