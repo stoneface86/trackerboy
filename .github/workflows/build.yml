@@ -95,7 +95,7 @@ jobs:
         cd tools
         wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
         chmod a+x linuxdeployqt
-        export PATH="$PATH:$(realpath ..)"
+        echo "{PATH}={$PATH:$(realpath ..)}" >> $GITHUB_ENV
 
     - name: configure
       run: |
