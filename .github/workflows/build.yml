@@ -86,7 +86,17 @@ jobs:
         arch: ${{ matrix.qt-arch }}
         version: 5.12.10
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
-    
+
+    # Downloads the latest linuxdeployqt exe and puts it in the PATH
+    - name: Get linuxdeployqt
+      if: ${{ runner.os == 'Linux'}}
+      run: |
+        mkdir tools
+        cd tools
+        wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
+        chmod a+x linuxdeployqt
+        export PATH="$PATH:$(realpath ..)"
+
     - name: configure
       run: |
         cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DENABLE_UNITY=ON
@@ -99,16 +109,6 @@ jobs:
         cd "${{ env.CMAKE_BUILD_DIR }}"
         ctest
 
-    # Downloads the latest linuxdeployqt exe and puts it in the PATH
-    - name: Get linuxdeployqt
-      if: ${{ runner.os == 'Linux'}}
-      run: |
-        mkdir tools
-        cd tools
-        wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -O linuxdeployqt
-        chmod a+x linuxdeployqt
-        export PATH="$PATH:$(realpath ..)"
-    
     - name: deploy
       run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target deploy
 

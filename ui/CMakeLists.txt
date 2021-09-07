@@ -218,7 +218,6 @@ if (WIN32)
             COMMAND ${CMAKE_COMMAND} -E touch ${DEPLOY_TARGET}
             DEPENDS trackerboy_ui
         )
-        add_custom_target(deploy DEPENDS ${DEPLOY_TARGET})
     endif ()
 
 elseif (APPLE)
