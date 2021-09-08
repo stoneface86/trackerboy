@@ -27,7 +27,7 @@
 #include "trackerboy/data/DataItem.hpp"
 #include "trackerboy/data/Order.hpp"
 #include "trackerboy/data/OrderRow.hpp"
-#include "trackerboy/data/PatternMaster.hpp"
+#include "trackerboy/data/PatternMap.hpp"
 #include "trackerboy/trackerboy.hpp"
 
 namespace trackerboy {
@@ -44,11 +44,9 @@ public:
     static constexpr uint16_t DEFAULT_ROWS = 64;
 
     Song();
+
+    // consider removal: implicit copy constructor has equivalent behavior
     Song(const Song &song);
-
-    ~Song();
-
-    void reset() noexcept;
 
     int rowsPerBeat() const noexcept;
 
@@ -61,8 +59,8 @@ public:
     Order& order() noexcept;
     Order const& order() const noexcept;
 
-    PatternMaster& patterns() noexcept;
-    PatternMaster const& patterns() const noexcept;
+    PatternMap& patterns() noexcept;
+    PatternMap const& patterns() const noexcept;
 
     Pattern getPattern(int orderNo);
 
@@ -89,7 +87,7 @@ private:
 
     //void calcSpeed();
 
-    PatternMaster mMaster;
+    PatternMap mMap;
     Order mOrder;
 
     int mRowsPerBeat;

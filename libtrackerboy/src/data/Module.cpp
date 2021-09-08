@@ -65,11 +65,11 @@ Version Module::version() const noexcept {
     return mVersion;
 }
 
-uint8_t Module::revisionMajor() const noexcept {
+int Module::revisionMajor() const noexcept {
     return mRevisionMajor;
 }
 
-uint8_t Module::revisionMinor() const noexcept {
+int Module::revisionMinor() const noexcept {
     return mRevisionMinor;
 }
 

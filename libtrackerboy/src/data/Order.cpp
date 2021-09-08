@@ -85,41 +85,6 @@ OrderRow Order::nextUnused() const noexcept {
     return autoRow;
 }
 
-//
-// moves an element in a container to a new position, while reordering
-// all elements within range.
-//
-// example
-// let vec = {1, 2, 3, 4};
-//
-// moveElement(vec, 1, 3);
-// vec -> { 2, 3, 4, 1 }
-//
-// moveElement(vec, 2, 0);
-// vec -> { 3, 1, 2, 4 }
-//
-//
-template <class Container>
-void moveElement(Container &cont, int from, int to) {
-    if (from == to) {
-        return;
-    } else if (from < to) {
-        auto begin = cont.begin();
-        auto start = begin + from;
-        std::rotate(start, start + 1, begin + to + 1);
-    } else {
-        auto end = cont.rend();
-        auto start = end - from;
-        std::rotate(start, start - 1, end - to - 1);
-    }
-}
-
-void Order::move(int from, int to) {
-    checkIndex(from);
-    checkIndex(to);
-    moveElement(mTable, from, to);
-}
-
 void Order::remove(int pattern, int count) {
     if (count > 0) {
         if ((int)mTable.size() <= count) {

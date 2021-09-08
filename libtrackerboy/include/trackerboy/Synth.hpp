@@ -35,7 +35,6 @@ class Synth {
 public:
 
     Synth(int samplerate, float framerate = GB_FRAMERATE_DMG) noexcept;
-    ~Synth() = default;
 
     gbapu::Apu& apu() noexcept;
 

@@ -84,10 +84,13 @@ enum class EffectType : uint8_t {
     noteSlideUp,                            // * Qxy note slide up
     noteSlideDown                           // * Rxy note slide down
 
+    // add new effects here! this way older modules will still be compatible
+
 };
 
-
-
+//
+// Possible values for the I0x effect (set panning)
+//
 enum class Panning : uint8_t {
     mute,
     left,
@@ -95,6 +98,9 @@ enum class Panning : uint8_t {
     middle
 };
 
+//
+// Error return type for module serialization/deserialization
+//
 enum class FormatError {
     none,                   // no error
     invalidSignature,       // signature does not match
@@ -107,24 +113,31 @@ enum class FormatError {
     writeError              // write error occurred
 };
 
+//
+// Gameboy clock speed constant, 4194304 Hz
+//
 template <typename T>
 constexpr T GB_CLOCK_SPEED = T(4194304);
 
+//
+// VBlank interrupt rate for DMG systems (Game Boy / Game Boy Color)
+//
 constexpr float GB_FRAMERATE_DMG = 59.7f;
+
+//
+// VBlank interrupt rate for SGB systems (Super Game Boy)
+//
 constexpr float GB_FRAMERATE_SGB = 61.1f;
 
+//
 // each channel has 5 registers
+//
 constexpr unsigned GB_CHANNEL_REGS = 5;
 
+//
+// 4 sound channels
+//
 constexpr int GB_CHANNELS = 4;
-
-//
-// Data type for the count of effects used for each channel. This type is
-// purely informational/visual and has no effect on music playback.
-//
-using EffectCounts = std::array<char, GB_CHANNELS>;
-
-constexpr EffectCounts DEFAULT_EFFECT_COUNTS = { 2, 2, 2, 2 };
 
 //
 // Maximum frequency setting for channels 1, 2 and 3
@@ -136,6 +149,18 @@ constexpr uint16_t GB_MAX_FREQUENCY = 2047;
 //
 constexpr size_t GB_WAVERAM_SIZE = 16;
 
+
+//
+// Data type for the count of effects used for each channel. This type is
+// purely informational/visual and has no effect on music playback.
+//
+using EffectCounts = std::array<char, GB_CHANNELS>;
+
+//
+// 2 effect columns for each channel are shown by default
+//
+constexpr EffectCounts DEFAULT_EFFECT_COUNTS = { 2, 2, 2, 2 };
+
 //
 // The speed type determines the tempo during pattern playback. Its unit is
 // frames per row in Q4.4 format. Speeds with a fractional component will
@@ -143,6 +168,10 @@ constexpr size_t GB_WAVERAM_SIZE = 16;
 //
 using Speed = uint8_t;
 
+//
+// Number of fractional bits in the Speed type. Speed is Q4.4 so there are
+// 4 fractional bits and 4 integral bits.
+//
 static constexpr unsigned SPEED_FRACTION_BITS = 4;
 
 // minimum possible speed, 1.0 frames per row
@@ -151,17 +180,48 @@ static constexpr Speed SPEED_MIN = (Speed)(1 << SPEED_FRACTION_BITS);
 // maximum possible speed, 15.0 frames per row
 static constexpr Speed SPEED_MAX = (Speed)(~((1 << SPEED_FRACTION_BITS) - 1));
 
+//
+// Converts the fixed point speed to floating point
+//
 constexpr float speedToFloat(Speed speed) {
     return speed * (1.0f / (1 << SPEED_FRACTION_BITS));
 }
 
+//
+// Converts speed to tempo (also converts tempo to speed, if replacing speed with tempo)
+//
 constexpr float speedToTempo(float speed, int rowsPerBeat = 4, float framerate = GB_FRAMERATE_DMG) {
     return (framerate * 60.0f) / (speed * rowsPerBeat);
 }
 
+//
+// Determines if the given effect type will shorten the length of a pattern
+// if used.
+//
+constexpr bool effectTypeShortensPattern(trackerboy::EffectType type) {
+    // these effects shorten the length of a pattern which when set/removed
+    // will require a recount
+    return type == trackerboy::EffectType::patternHalt ||
+           type == trackerboy::EffectType::patternSkip ||
+           type == trackerboy::EffectType::patternGoto;
+}
+
+
 constexpr size_t TABLE_SIZE = 64;
+
+//
+// Maximum number of instruments allowed in a module
+//
 constexpr size_t MAX_INSTRUMENTS = TABLE_SIZE;
+
+//
+// Maximum number of waveforms allowed in a module
+//
 constexpr size_t MAX_WAVEFORMS = TABLE_SIZE;
+
+//
+// Max number of patterns/orders in a song
+//
 constexpr size_t MAX_PATTERNS = 256;
 
 

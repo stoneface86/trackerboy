@@ -88,7 +88,7 @@ FormatError SongHandler::processIn(Module &mod, InputBlock &block, size_t index)
 
     auto &pm = song->patterns();
     auto const rowsPerTrack = unbias<uint16_t>(songFormat.rowsPerTrack);
-    pm.setRowSize(rowsPerTrack);
+    pm.setLength(rowsPerTrack);
 
     // read in the order
     {
@@ -146,7 +146,7 @@ void SongHandler::processOut(Module const& mod, OutputBlock &block, size_t index
     songHeader.rowsPerMeasure = (uint8_t)song->rowsPerMeasure();
     songHeader.speed = song->speed();
     songHeader.patternCount = bias(order.size());
-    songHeader.rowsPerTrack = bias(pm.rowSize());
+    songHeader.rowsPerTrack = bias(pm.length());
     songHeader.numberOfTracks = correctEndian((uint16_t)pm.tracks());
     block.write(songHeader);
 

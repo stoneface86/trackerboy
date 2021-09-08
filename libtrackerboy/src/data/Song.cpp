@@ -13,7 +13,7 @@ namespace trackerboy {
 
 Song::Song() :
     DataItem(),
-    mMaster(DEFAULT_ROWS),
+    mMap(DEFAULT_ROWS),
     mOrder(),
     mRowsPerBeat(DEFAULT_RPB),
     mRowsPerMeasure(DEFAULT_RPM),
@@ -24,29 +24,13 @@ Song::Song() :
 
 Song::Song(const Song &song) :
     DataItem(song),
-    mMaster(song.mMaster),
+    mMap(song.mMap),
     mOrder(song.mOrder),
     mRowsPerBeat(song.mRowsPerBeat),
     mRowsPerMeasure(song.mRowsPerMeasure),
     mSpeed(song.mSpeed),
     mEffectCounts(song.mEffectCounts)
 {
-}
-
-Song::~Song() {
-
-}
-
-void Song::reset() noexcept {
-
-    mRowsPerBeat = DEFAULT_RPB;
-    mRowsPerMeasure = DEFAULT_RPM;
-    mSpeed = DEFAULT_SPEED;
-    mOrder.resize(1);
-    mOrder[0] = { 0 };
-    mMaster.clear();
-    mMaster.setRowSize(DEFAULT_ROWS);
-    mEffectCounts = DEFAULT_EFFECT_COUNTS;
 }
 
 int Song::rowsPerBeat() const noexcept {
@@ -74,12 +58,12 @@ Order const& Song::order() const noexcept {
     return mOrder;
 }
 
-PatternMaster& Song::patterns() noexcept {
-    return mMaster;
+PatternMap& Song::patterns() noexcept {
+    return mMap;
 }
 
-PatternMaster const& Song::patterns() const noexcept {
-    return mMaster;
+PatternMap const& Song::patterns() const noexcept {
+    return mMap;
 }
 
 Pattern Song::getPattern(int orderNo) {
@@ -87,22 +71,16 @@ Pattern Song::getPattern(int orderNo) {
         throw std::invalid_argument("order does not exist");
     }
 
-    auto &order = mOrder[orderNo];
-    return mMaster.getPattern(
-        order[0],
-        order[1],
-        order[2],
-        order[3]
-    );
+    return mMap.getPattern(mOrder[orderNo]);
 }
 
 TrackRow& Song::getRow(ChType ch, int order, int row) {
-    auto &track = mMaster.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
+    auto &track = mMap.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
     return track[row];
 }
 
 TrackRow Song::getRow(ChType ch, int order, int row) const {
-    auto track = mMaster.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
+    auto track = mMap.getTrack(ch, mOrder[order][static_cast<int>(ch)]);
     if (track) {
         return (*track)[row];
     } else {
@@ -140,15 +118,13 @@ void Song::setEffectCounts(EffectCounts counts) {
 }
 
 Speed Song::estimateSpeed(float tempo, float framerate) const noexcept {
-    auto speedFloat = (framerate * 60.0f) / (tempo * mRowsPerBeat);
+    auto speedFloat = speedToTempo(tempo, mRowsPerBeat, framerate);
     auto speed = (Speed)roundf(speedFloat * (1 << SPEED_FRACTION_BITS));
     return std::clamp(speed, SPEED_MIN, SPEED_MAX);
 }
 
 float Song::tempo(float framerate) const noexcept {
-    float speed = static_cast<float>(mSpeed >> 4);
-    speed += static_cast<float>(mSpeed & 0xF) / 16.0f;
-    return (60.0f * framerate) / (mRowsPerBeat * speed);
+    return speedToTempo(speedToFloat(mSpeed), mRowsPerBeat, framerate);
 }
 
 }

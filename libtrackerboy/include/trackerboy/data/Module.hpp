@@ -26,16 +26,13 @@
 
 #include "trackerboy/data/InfoStr.hpp"
 #include "trackerboy/data/Table.hpp"
-#include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/SongList.hpp"
 #include "trackerboy/version.hpp"
 
 #include <cstddef>
 #include <istream>
-#include <memory>
 #include <ostream>
 #include <string>
-#include <vector>
 
 namespace trackerboy {
 
@@ -62,9 +59,9 @@ public:
 
     Version version() const noexcept;
 
-    uint8_t revisionMajor() const noexcept;
+    int revisionMajor() const noexcept;
 
-    uint8_t revisionMinor() const noexcept;
+    int revisionMinor() const noexcept;
 
     float framerate() const noexcept;
 
@@ -109,8 +106,8 @@ private:
 
     // header settings
     Version mVersion;
-    uint8_t mRevisionMajor;
-    uint8_t mRevisionMinor;
+    int mRevisionMajor;
+    int mRevisionMinor;
     // information about the module (same format as *.gbs)
     InfoStr mTitle;
     InfoStr mArtist;

@@ -15,7 +15,7 @@ void SongModel::reload() {
     emit rowsPerBeatChanged(song->rowsPerBeat());
     emit rowsPerMeasureChanged(song->rowsPerMeasure());
     emit speedChanged((int)song->speed());
-    emit patternSizeChanged(song->patterns().rowSize());
+    emit patternSizeChanged(song->patterns().length());
     calcTempo(true);
 }
 
@@ -32,7 +32,7 @@ int SongModel::speed() {
 }
 
 int SongModel::patternSize() {
-    return mModule.song()->patterns().rowSize();
+    return mModule.song()->patterns().length();
 }
 
 trackerboy::Speed SongModel::estimateSpeed(int tempo) {
@@ -85,10 +85,10 @@ void SongModel::setSpeedFromTempo(int tempo) {
 void SongModel::setPatternSize(int rows) {
     auto &pm = mModule.song()->patterns();
 
-    if (pm.rowSize() != (uint16_t)rows) {
+    if (pm.length() != (uint16_t)rows) {
         {
             auto ctx = mModule.permanentEdit();
-            pm.setRowSize((uint16_t)rows);
+            pm.setLength((uint16_t)rows);
         }
         emit patternSizeChanged(rows);
     }

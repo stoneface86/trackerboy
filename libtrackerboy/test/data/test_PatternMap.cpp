@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include "trackerboy/data/PatternMaster.hpp"
+#include "trackerboy/data/PatternMap.hpp"
 
 using namespace trackerboy;
 
@@ -60,7 +60,7 @@ TEST_CASE("setRowSize resizes all Tracks", "[PatternMaster]") {
     constexpr uint16_t OLD_SIZE = 64;
     constexpr uint16_t NEW_SIZE = 32;
     
-    PatternMaster pm(OLD_SIZE);
+    PatternMap pm(OLD_SIZE);
     pm.getTrack(ChType::ch1, 0);
     pm.getTrack(ChType::ch2, 1);
     pm.getTrack(ChType::ch3, 4);
@@ -74,9 +74,9 @@ TEST_CASE("setRowSize resizes all Tracks", "[PatternMaster]") {
         }
     }
 
-    REQUIRE(pm.rowSize() == OLD_SIZE);
-    REQUIRE_NOTHROW(pm.setRowSize(NEW_SIZE));
-    REQUIRE(pm.rowSize() == NEW_SIZE);
+    REQUIRE(pm.length() == OLD_SIZE);
+    REQUIRE_NOTHROW(pm.setLength(NEW_SIZE));
+    REQUIRE(pm.length() == NEW_SIZE);
 
     for (uint8_t i = 0; i != 4; ++i) {
         auto begin = pm.tracksBegin(static_cast<ChType>(i));

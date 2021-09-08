@@ -6,14 +6,6 @@
 #define TU TrackEditCmdTU
 namespace TU {
 
-static constexpr bool effectTypeRequiresUpdate(trackerboy::EffectType type) {
-    // these effects shorten the length of a pattern which when set/removed
-    // will require a recount
-    return type == trackerboy::EffectType::patternHalt ||
-           type == trackerboy::EffectType::patternSkip ||
-           type == trackerboy::EffectType::patternGoto;
-}
-
 }
 
 
@@ -99,7 +91,7 @@ bool EffectTypeEditCmd::edit(trackerboy::TrackRow &rowdata, uint8_t data)  {
     auto oldtype = effect.type;
     auto type = static_cast<trackerboy::EffectType>(data);
     effect.type = type;
-    return TU::effectTypeRequiresUpdate(type) || TU::effectTypeRequiresUpdate(oldtype);
+    return trackerboy::effectTypeShortensPattern(type) || trackerboy::effectTypeShortensPattern(oldtype);
 }
 
 // ===

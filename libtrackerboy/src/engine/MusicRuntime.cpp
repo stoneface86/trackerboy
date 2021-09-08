@@ -162,7 +162,7 @@ bool MusicRuntime::step(RuntimeContext const& rc, Frame &frame) {
 
     if (mTimer.step()) {
         // timer overflow, advance row counter
-        if (++mRowCounter >= mSong.patterns().rowSize()) {
+        if (++mRowCounter >= mSong.patterns().length()) {
             // end of pattern
             if (mGlobal.patternCommand == Operation::PatternCommand::none) {
                 // load the next one if no command was set

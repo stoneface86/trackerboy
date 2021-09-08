@@ -59,7 +59,7 @@ void Engine::play(int orderNo, int patternRow) {
         if (orderNo < 0 || orderNo >= song.order().size()) {
             throw std::invalid_argument("cannot play order, order does not exist");
         }
-        if (patternRow < 0 || patternRow >= song.patterns().rowSize()) {
+        if (patternRow < 0 || patternRow >= song.patterns().length()) {
             throw std::invalid_argument("cannot start at given row, exceeds pattern size");
         }
 

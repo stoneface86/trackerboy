@@ -9,7 +9,7 @@ set(PUB_HEADERS
     "include/trackerboy/data/Order.hpp"
     "include/trackerboy/data/OrderRow.hpp"
     "include/trackerboy/data/Pattern.hpp"
-    "include/trackerboy/data/PatternMaster.hpp"
+    "include/trackerboy/data/PatternMap.hpp"
     "include/trackerboy/data/PatternRow.hpp"
     "include/trackerboy/data/Sequence.hpp"
     "include/trackerboy/data/Song.hpp"
@@ -46,7 +46,7 @@ set(SRC_FILES
     "src/data/Module.cpp"
     "src/data/Order.cpp"
     "src/data/Pattern.cpp"
-    "src/data/PatternMaster.cpp"
+    "src/data/PatternMap.cpp"
     "src/data/Sequence.cpp"
     "src/data/Song.cpp"
     "src/data/SongList.cpp"
@@ -126,7 +126,7 @@ if (ENABLE_TESTS)
     add_executable(test_trackerboy
         "test/data/test_Table.cpp"
         "test/data/test_Module.cpp"
-        "test/data/test_PatternMaster.cpp"
+        "test/data/test_PatternMap.cpp"
         
         "test/engine/test_InstrumentRuntime.cpp"
         "test/engine/test_Timer.cpp"

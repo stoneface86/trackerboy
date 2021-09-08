@@ -1,5 +1,5 @@
 
-#include "trackerboy/data/PatternMaster.hpp"
+#include "trackerboy/data/PatternMap.hpp"
 
 #include "internal/enumutils.hpp"
 
@@ -8,7 +8,7 @@
 namespace trackerboy {
 
 
-PatternMaster::PatternMaster(int rows) :
+PatternMap::PatternMap(int rows) :
     mRows(rows)
 {
     if (rows <= 0 || rows > MAX_ROWS) {
@@ -16,7 +16,7 @@ PatternMaster::PatternMaster(int rows) :
     }
 }
 
-PatternMaster::PatternMaster(const PatternMaster &master) :
+PatternMap::PatternMap(const PatternMap &master) :
     mRows(master.mRows),
     mMap{
         Data(master.mMap[0]),
@@ -27,43 +27,41 @@ PatternMaster::PatternMaster(const PatternMaster &master) :
 {
 }
 
-void PatternMaster::clear() {
+void PatternMap::clear() {
     for (auto &trackMap : mMap) {
         trackMap.clear();
     }
 }
 
-int PatternMaster::rowSize() const noexcept {
+int PatternMap::length() const noexcept {
     return mRows;
 }
 
 
-Pattern PatternMaster::getPattern(uint8_t track1, uint8_t track2, uint8_t track3, uint8_t track4) {
+Pattern PatternMap::getPattern(OrderRow row) {
     return {
-        getTrack(ChType::ch1, track1),
-        getTrack(ChType::ch2, track2),
-        getTrack(ChType::ch3, track3),
-        getTrack(ChType::ch4, track4)
+        getTrack(ChType::ch1, row[0]),
+        getTrack(ChType::ch2, row[1]),
+        getTrack(ChType::ch3, row[2]),
+        getTrack(ChType::ch4, row[3])
     };
 }
 
-Track& PatternMaster::getTrack(ChType ch, uint8_t track) {
+Track& PatternMap::getTrack(ChType ch, uint8_t track) {
     auto &chMap = mMap[static_cast<size_t>(ch)];
     auto iter = chMap.find(track);
 
     if (iter == chMap.end()) {
         // track does not exist, add it
-        //TrackData data(mRows);
         
         chMap.emplace(track, mRows);
         iter = chMap.find(track);
     }
 
     return iter->second;
-    //return Track(iter->second.begin(), iter->second.end());
 }
 
-Track const* PatternMaster::getTrack(ChType ch, uint8_t track) const {
+Track const* PatternMap::getTrack(ChType ch, uint8_t track) const {
     auto &chMap = mMap[static_cast<size_t>(ch)];
     auto iter = chMap.find(track);
 
@@ -74,13 +72,12 @@ Track const* PatternMaster::getTrack(ChType ch, uint8_t track) const {
     }
 }
 
-void PatternMaster::remove(ChType ch, uint8_t track) {
-    //uint16_t trackIndex = trackId(ch, track);
+void PatternMap::remove(ChType ch, uint8_t track) {
     auto &chMap = mMap[static_cast<size_t>(ch)];
     chMap.erase(track);
 }
 
-void PatternMaster::setRowSize(int newsize) {
+void PatternMap::setLength(int newsize) {
     if (newsize <= 0 || newsize > MAX_ROWS) {
         throw std::invalid_argument("invalid row size given");
     }
@@ -93,7 +90,7 @@ void PatternMaster::setRowSize(int newsize) {
     }
 }
 
-size_t PatternMaster::tracks(ChType ch) const noexcept {
+size_t PatternMap::tracks(ChType ch) const noexcept {
     size_t count = 0;
     for (auto track : mMap[static_cast<size_t>(ch)]) {
         if (track.second.rowCount() != 0) {
@@ -103,7 +100,7 @@ size_t PatternMaster::tracks(ChType ch) const noexcept {
     return count;
 }
 
-size_t PatternMaster::tracks() const noexcept {
+size_t PatternMap::tracks() const noexcept {
     return tracks(ChType::ch1) + tracks(ChType::ch2) + tracks(ChType::ch3) + tracks(ChType::ch4);
     //return mMap[+ChType::ch1].size() +
     //       mMap[+ChType::ch2].size() +
@@ -111,19 +108,19 @@ size_t PatternMaster::tracks() const noexcept {
     //       mMap[+ChType::ch4].size();
 }
 
-PatternMaster::Data::iterator PatternMaster::tracksBegin(ChType ch) {
+PatternMap::Data::iterator PatternMap::tracksBegin(ChType ch) {
     return mMap[static_cast<size_t>(ch)].begin();
 }
 
-PatternMaster::Data::const_iterator PatternMaster::tracksBegin(ChType ch) const {
+PatternMap::Data::const_iterator PatternMap::tracksBegin(ChType ch) const {
     return mMap[static_cast<size_t>(ch)].begin();
 }
 
-PatternMaster::Data::iterator PatternMaster::tracksEnd(ChType ch) {
+PatternMap::Data::iterator PatternMap::tracksEnd(ChType ch) {
     return mMap[static_cast<size_t>(ch)].end();
 }
 
-PatternMaster::Data::const_iterator PatternMaster::tracksEnd(ChType ch) const {
+PatternMap::Data::const_iterator PatternMap::tracksEnd(ChType ch) const {
     return mMap[static_cast<size_t>(ch)].end();
 }
 
