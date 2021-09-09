@@ -18,7 +18,7 @@ jobs:
     name: Draft github release
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps-get-version.outputs.version }}
+      version: ${{ steps.get-version.outputs.version }}
     steps:
       - name: Get version
         id: get-version
@@ -107,7 +107,7 @@ jobs:
         id: archive
         shell: bash
         run: |
-          if [ ${{ os.runner }} == 'Linux' ]; then
+          if [ ${{ runner.os }} == 'Linux' ]; then
             echo "::set-output name=format::tar"
             EXT="tar.gz"
           else
