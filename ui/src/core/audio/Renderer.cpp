@@ -50,6 +50,7 @@ Renderer::Renderer(Module &mod, QObject *parent) :
     mTimer(new FastTimer),
     mStream(),
     mVisBuffer(),
+    mOutputFlags(ChannelOutput::AllOn),
     mContext(mod)
 {
     mTimer->setCallback(timerCallback, this);
@@ -430,6 +431,7 @@ void Renderer::forceStop() {
 void Renderer::_play(Handle &handle, int orderNo, int rowNo, bool stepping) {
 
     handle->engine.play(orderNo, rowNo);
+    _setChannelOutput(handle, mOutputFlags);
     handle->stepping = stepping;
     handle->step = stepping;
     beginRender(handle);
@@ -444,6 +446,7 @@ void Renderer::resetPreview(Handle &handle) {
 }
 
  void Renderer::setChannelOutput(ChannelOutput::Flags flags) {
+     mOutputFlags = flags;
      auto ctx = mContext.access();
      _setChannelOutput(ctx, flags);
  }

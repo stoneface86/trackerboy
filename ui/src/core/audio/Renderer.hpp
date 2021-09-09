@@ -313,6 +313,8 @@ private:
     AudioStream mStream;
     Guarded<VisualizerBuffer> mVisBuffer;
 
+    ChannelOutput::Flags mOutputFlags;
+
     //
     // All variables accessible from multiple threads are stored in the RenderContext
     // struct, access to them is guarded by a mutex.
