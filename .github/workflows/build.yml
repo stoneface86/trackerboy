@@ -44,6 +44,7 @@ jobs:
       CMAKE_BUILD_DIR: ${{ github.workspace }}/build
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       TRIPLET: ${{ matrix.arch }}-${{ matrix.platform }}
+      QT_VERSION: 5.12.10
         
     steps:
     - uses: actions/checkout@v2
@@ -54,13 +55,7 @@ jobs:
       # building rtmidi with ALSA support requires libsound2-dev
       # we will also need to download linuxdeployqt
       if: ${{ runner.os == 'Linux'}}
-      run: |
-        sudo apt-get update
-        sudo apt-get install libasound2-dev
-        mkdir "${{ github.workspace }}/tools"
-        cd "${{ github.workspace }}/tools"
-        wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
-        chmod a+x linuxdeployqt
+      run: ${{ github.workspace }}/.github/scripts/linuxdeps.sh "${{ github.workspace }}/tools"
 
     - uses: lukka/get-cmake@latest
 
@@ -85,26 +80,27 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ../Qt
-        key: ${{ runner.os }}-${{ matrix.arch }}-QtCache
+        key: ${{ runner.os }}-${{ matrix.arch }}-${{ env.QT_VERSION }}-QtCache
     
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
         arch: ${{ matrix.qt-arch }}
-        version: 5.12.10
+        version: ${{ env.QT_VERSION }}
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
     - name: configure
       run: |
-        cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DENABLE_UNITY=ON
+        cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja \
+              -DCMAKE_BUILD_TYPE=${{ needs.version.outputs.cmake-build-type }} \
+              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" \
+              -DENABLE_UNITY=ON
     
     - name: build
-      run: cmake --build "${{ env.CMAKE_BUILD_DIR }}"
+      run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target all
 
     - name: test
-      run: |
-        cd "${{ env.CMAKE_BUILD_DIR }}"
-        ctest
+      run: cd "${{ env.CMAKE_BUILD_DIR }}" && ctest
 
     - name: deploy
       run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target deploy
@@ -114,4 +110,3 @@ jobs:
       with:
         name: trackerboy-nightly-${{ env.TRIPLET }}
         path: ${{ env.CMAKE_BUILD_DIR }}/ui/deploy/
-
