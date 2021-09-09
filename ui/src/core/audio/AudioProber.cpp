@@ -22,13 +22,14 @@ void logCallback(ma_context* pContext, ma_device* pDevice, ma_uint32 logLevel, c
 
 AudioProber::Context::Context(ma_backend backend) :
     mContext(),
+    mInitialized(false),
     mBackend(backend),
     mDevices()
 {
 }
 
 AudioProber::Context::~Context() {
-    if (mContext != nullptr) {
+    if (mContext != nullptr && mInitialized) {
         ma_context_uninit(mContext.get());
     }
 }
@@ -40,12 +41,10 @@ ma_backend AudioProber::Context::backend() const {
 ma_context* AudioProber::Context::get() {
     if (mContext == nullptr) {
         mContext.reset(new ma_context);
-
-        auto config = ma_context_config_init();
-        config.logCallback = logCallback;
-        ma_context_init(&mBackend, 1, &config, mContext.get());
         probe();
     }
+
+
     return mContext.get();
 }
 
@@ -55,6 +54,10 @@ ma_device_id* AudioProber::Context::id(int deviceIndex) {
     }
 
     return &mDevices[deviceIndex - 1].id;
+}
+
+bool AudioProber::Context::initialized() const {
+    return mInitialized;
 }
 
 int AudioProber::Context::findDevice(ma_device_id const& id) const {
@@ -107,12 +110,31 @@ void AudioProber::Context::probe() {
         return;
     }
 
+    if (!mInitialized) {
+        // context not initialized, attempt to do so and log error on failure
+
+        auto config = ma_context_config_init();
+        config.logCallback = logCallback;
+        auto result = ma_context_init(&mBackend, 1, &config, mContext.get());
+        if (result == MA_SUCCESS) {
+            mInitialized = true;
+        } else {
+            qCritical().nospace() << "Failed to initialize audio backend '"
+                                  << ma_get_backend_name(mBackend) << "': "
+                                  << ma_result_description(result);
+            // no context, nothing to probe
+            return;
+        }
+
+    }
+
     mDevices.clear();
     auto result = ma_context_enumerate_devices(mContext.get(), enumerateCallback, this);
 
     if (result != MA_SUCCESS) {
         mDevices.clear();
     }
+
 }
 
 
@@ -144,6 +166,14 @@ int AudioProber::indexOfBackend(ma_backend backend) const {
     }
     return -1;
 
+}
+
+bool AudioProber::backendInitialized(int backend) const {
+    if (indexIsInvalid(backend)) {
+        return false;
+    }
+
+    return mContexts[backend].initialized();
 }
 
 int AudioProber::indexOfDevice(int backendIndex, ma_device_id const& id) const {

@@ -36,6 +36,11 @@ public:
     int indexOfBackend(QString const& name) const;
 
     //
+    // Returns true if the backend was successfully initialized
+    //
+    bool backendInitialized(int backend) const;
+
+    //
     // Gets the index of the device with the given name in the given backendIndex
     // -1 is returned if the device was not found. This function does not
     // probe the backend before searching, so be sure to probe before calling this
@@ -97,6 +102,8 @@ private:
 
         ma_device_id* id(int deviceIndex);
 
+        bool initialized() const;
+
         int findDevice(ma_device_id const& id) const;
 
         QStringList deviceNames() const;
@@ -116,6 +123,7 @@ private:
         
 
         std::unique_ptr<ma_context> mContext;
+        bool mInitialized;
         ma_backend const mBackend;
 
         std::vector<ma_device_info> mDevices;

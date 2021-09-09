@@ -58,6 +58,7 @@ private:
                 QComboBox mDeviceCombo;
                 // row 2
                 QHBoxLayout mRescanLayout;
+                    QLabel mApiErrorLabel;
                     QPushButton mRescanButton;
                 // row 3
                 QLabel mLatencyLabel;

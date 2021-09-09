@@ -22,6 +22,7 @@ SoundConfigTab::SoundConfigTab(QWidget *parent) :
     mDeviceLabel(tr("Device")),
     mDeviceCombo(),
     mRescanLayout(),
+    mApiErrorLabel(tr("API unavailable")),
     mRescanButton(tr("Rescan")),
     mLatencyLabel(tr("Buffer size")),
     mLatencySpin(),
@@ -44,7 +45,10 @@ SoundConfigTab::SoundConfigTab(QWidget *parent) :
 {
     // layout
     mRescanLayout.addStretch();
+    mRescanLayout.addWidget(&mApiErrorLabel);
+    mRescanLayout.addStretch(1);
     mRescanLayout.addWidget(&mRescanButton);
+    mApiErrorLabel.setVisible(false);
 
     mDeviceLayout.addWidget(&mApiLabel,         0, 0);
     mDeviceLayout.addWidget(&mApiCombo,         0, 1);
@@ -52,7 +56,7 @@ SoundConfigTab::SoundConfigTab(QWidget *parent) :
     mDeviceLayout.addWidget(&mDeviceLabel,      1, 0);
     mDeviceLayout.addWidget(&mDeviceCombo,      1, 1);
 
-    mDeviceLayout.addLayout(&mRescanLayout,     2, 0, 1, 2);
+    mDeviceLayout.addLayout(&mRescanLayout,     2, 1);
 
     mDeviceLayout.addWidget(&mLatencyLabel,     3, 0);
     mDeviceLayout.addWidget(&mLatencySpin,      3, 1);
@@ -172,6 +176,7 @@ void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
 void SoundConfigTab::apiChanged(int index) {
     Q_UNUSED(index)
     rescan(true); // new api selected, pick the default device
+    mApiErrorLabel.setVisible(!AudioProber::instance().backendInitialized(index));
     setDirty();
 }
 
