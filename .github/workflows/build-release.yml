@@ -10,7 +10,7 @@ on:
   push:
     tags:
       - testtag
-      - v[0-9]+.[0-9]+.[0-9]+
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
 
@@ -25,15 +25,18 @@ jobs:
         run: echo "::set-output name=version::${GITHUB_REF/refs\/tags\//}"
       
       - name: Draft release
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
           body: |
             Make sure to test each package before publishing this draft.
             If all is good, replace this text with the changelog and publish.
+
+            If a build failed for a platform or there's an issue with any of the
+            packages, delete this draft and the tag and try again after making
+            any necessary fixes.
           draft: true
           name: Trackerboy ${{ steps.get-version.outputs.version }}
           prerelease: ${{ startsWith( 'v0.', steps.get-version.outputs.version ) }}
-          token: ${{ secrets.GITHUB_TOKEN }}
 
   release:
     name: Release ${{ matrix.arch }}-${{ matrix.platform }}
@@ -90,7 +93,9 @@ jobs:
         run: |
           cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake"
           cmake --build build
-          (cd build; ctest)
+          cd build
+          ctest
+          cd ..
           cmake --build build --target deploy
     
       # windows and macos get a zip of the deploy folder
@@ -107,28 +112,23 @@ jobs:
         id: archive
         shell: bash
         run: |
-          if [ ${{ runner.os }} == 'Linux' ]; then
+          if [ '${{ runner.os }}' == 'Linux' ]; then
             echo "::set-output name=format::tar"
             EXT="tar.gz"
           else
             echo "::set-output name=format::zip"
             EXT="zip"
           fi
-          echo "::set-output name=filename::trackerboy-${{ needs.draft-release.outputs.version }}-${{ env.TRIPLET }}.$EXT"
+          echo "::set-output name=filename::trackerboy-${{ needs.draft-release.outputs.version }}-${{ matrix.arch }}-${{ matrix.platform }}.$EXT"
 
       - name: Packaging
         uses: thedoctor0/zip-release@master
         with:
           type: ${{ steps.archive.outputs.format }}
-          filename: ${{ steps.archive.outputs.filename }}
+          filename: ../${{ steps.archive.outputs.filename }}
           directory: ${{ github.workspace }}/build/ui/deploy
       
       - name: Upload package to release
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v1
         with:
-          omitNameDuringUpdate: true
-          omitBodyDuringUpdate: true
-          omitPrereleaseDuringUpdate: true
-          draft: true
-          artifacts: ${{ github.workspace }}/build/ui/deploy/${{ steps.archive.outputs.filename }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ github.workspace }}/build/ui/${{ steps.archive.outputs.filename }}
