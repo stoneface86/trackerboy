@@ -67,6 +67,7 @@ jobs:
             qt-arch: win64_msvc2019_64
     env:
       QT_VERSION: 5.15.2
+      TRIPLET: ${{ matrix.arch }}-${{ matrix.platform }}
     
     steps:
       - uses: actions/checkout@v2
@@ -79,14 +80,34 @@ jobs:
   
       - uses: lukka/get-cmake@latest
 
+      - name: Restore vcpkg
+        uses: actions/cache@v2
+        with:
+          path: |
+            build/vcpkg_installed/
+            vcpkg
+            !vcpkg/buildtrees
+            !vcpkg/packages
+            !vcpkg/downloads
+          key: |
+            ${{ hashFiles( 'vcpkg.json' ) }}-${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}-${{ env.TRIPLET }}-invalidate
+
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
       
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v1
+        with:
+          path: ../Qt
+          key: ${{ runner.os }}-${{ matrix.arch }}-${{ env.QT_VERSION }}-QtCache
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
           arch: ${{ matrix.qt-arch }}
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
           version: ${{ env.QT_VERSION }}
       
       - name: Build
@@ -119,7 +140,7 @@ jobs:
             echo "::set-output name=format::zip"
             EXT="zip"
           fi
-          echo "::set-output name=filename::trackerboy-${{ needs.draft-release.outputs.version }}-${{ matrix.arch }}-${{ matrix.platform }}.$EXT"
+          echo "::set-output name=filename::trackerboy-${{ needs.draft-release.outputs.version }}-${{ env.TRIPLET }}.$EXT"
 
       - name: Packaging
         uses: thedoctor0/zip-release@master
@@ -131,4 +152,5 @@ jobs:
       - name: Upload package to release
         uses: softprops/action-gh-release@v1
         with:
+          draft: true
           files: ${{ github.workspace }}/build/ui/${{ steps.archive.outputs.filename }}
