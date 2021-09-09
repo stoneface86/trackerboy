@@ -1,0 +1,134 @@
+
+#
+# workflow for releases
+# triggered when a tag with a semantic version is pushed
+# builds release binaries and drafts a release
+#
+
+name: build-release
+on:
+  push:
+    tags:
+      - testtag
+      - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+
+  draft-release:
+    name: Draft github release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps-get-version.outputs.version }}
+    steps:
+      - name: Get version
+        id: get-version
+        run: echo "::set-output name=version::${GITHUB_REF/refs\/tags\//}"
+      
+      - name: Draft release
+        uses: ncipollo/release-action@v1
+        with:
+          body: |
+            Make sure to test each package before publishing this draft.
+            If all is good, replace this text with the changelog and publish.
+          draft: true
+          name: Trackerboy ${{ steps.get-version.outputs.version }}
+          prerelease: ${{ startsWith( 'v0.', steps.get-version.outputs.version ) }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    name: Release ${{ matrix.arch }}-${{ matrix.platform }}
+    needs: draft-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            arch: x64
+            platform: osx
+            qt-arch: ''
+          
+          - os: ubuntu-18.04
+            arch: x64
+            platform: linux
+            qt-arch: ''
+          
+          - os: windows-latest
+            arch: x86
+            platform: windows
+            qt-arch: win32_msvc2019
+          
+          - os: windows-latest
+            arch: x64
+            platform: windows
+            qt-arch: win64_msvc2019_64
+    env:
+      QT_VERSION: 5.15.2
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      
+      - name: Install dependencies (Linux)
+        if: ${{ runner.os == 'Linux'}}
+        run: ${{ github.workspace }}/.github/scripts/linuxdeps.sh "${{ github.workspace }}/tools"
+  
+      - uses: lukka/get-cmake@latest
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
+      
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          arch: ${{ matrix.qt-arch }}
+          version: ${{ env.QT_VERSION }}
+      
+      - name: Build
+        run: |
+          cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake"
+          cmake --build build
+          (cd build; ctest)
+          cmake --build build --target deploy
+    
+      # windows and macos get a zip of the deploy folder
+      # linux gets a tarball
+      # both archives will have the following naming scheme:
+      # trackerboy-[version]-[arch]-[platform].[zip|tar.gz]
+      # examples:
+      # trackerboy-v0.5.0-x64-windows.zip
+      # trackerboy-v0.5.0-x86-windows.zip
+      # trackerboy-v0.5.0-x64-linux.tar.gz
+      # trackerboy-v0.5.0-x64-osx.zip
+
+      - name: determine archive format
+        id: archive
+        shell: bash
+        run: |
+          if [ ${{ os.runner }} == 'Linux' ]; then
+            echo "::set-output name=format::tar"
+            EXT="tar.gz"
+          else
+            echo "::set-output name=format::zip"
+            EXT="zip"
+          fi
+          echo "::set-output name=filename::trackerboy-${{ needs.draft-release.outputs.version }}-${{ env.TRIPLET }}.$EXT"
+
+      - name: Packaging
+        uses: thedoctor0/zip-release@master
+        with:
+          type: ${{ steps.archive.outputs.format }}
+          filename: ${{ steps.archive.outputs.filename }}
+          directory: ${{ github.workspace }}/build/ui/deploy
+      
+      - name: Upload package to release
+        uses: ncipollo/release-action@v1
+        with:
+          omitNameDuringUpdate: true
+          omitBodyDuringUpdate: true
+          omitPrereleaseDuringUpdate: true
+          draft: true
+          artifacts: ${{ github.workspace }}/build/ui/deploy/${{ steps.archive.outputs.filename }}
+          token: ${{ secrets.GITHUB_TOKEN }}
