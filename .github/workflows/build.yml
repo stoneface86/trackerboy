@@ -90,11 +90,8 @@ jobs:
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
     - name: configure
-      run: >
-        cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja
-              -DCMAKE_BUILD_TYPE=Debug
-              -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
-              -DENABLE_UNITY=ON
+      run: |
+        cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DENABLE_UNITY=ON
     
     - name: build
       run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target all
