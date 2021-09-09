@@ -17,7 +17,7 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
 {
 
     auto layout = new QGridLayout;
-    auto label = new QLabel(tr("Rows/Beat"));
+    auto label = new QLabel(tr("Rows/beat"));
     label->setBuddy(mRowsPerBeatSpin);
     layout->addWidget(label, 0, 0);
     layout->addWidget(mRowsPerBeatSpin, 0, 1);

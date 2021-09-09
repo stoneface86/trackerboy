@@ -23,8 +23,8 @@ Palette::Palette() :
         QColor( 69,  69,  80), // ColorSelection
         QColor(192, 192, 192), // ColorCursor
         QColor( 64,  64,  64), // ColorLine
-        QColor( 54,  57,  63), // ColorHeaderBackground1
-        QColor( 47,  49,  54), // ColorHeaderBackground2
+        QColor( 48,  48,  48), // ColorHeaderBackground1
+        QColor( 40,  40,  40), // ColorHeaderBackground2
         QColor(240, 240, 240), // ColorHeaderForeground1
         QColor(192, 192, 192), // ColorHeaderForeground2
         QColor(153, 229,  80), // ColorHeaderEnabled
