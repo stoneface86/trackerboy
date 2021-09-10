@@ -151,6 +151,14 @@ void TableDock::duplicate() {
     updateActions();
 }
 
+int TableDock::selectedItem() const {
+    return mSelectedItem;
+}
+
+void TableDock::setSelectedItem(int item) {
+    mView->selectionModel()->select(mModel.index(item), QItemSelectionModel::ClearAndSelect);
+}
+
 void TableDock::setSelected(int index) {
     if (mSelectedItem != index) {
         bool hadItem = mSelectedItem != -1;

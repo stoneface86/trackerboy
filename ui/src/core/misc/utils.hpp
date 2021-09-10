@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <QObject>
+
 #include <optional>
 #include <cstdint>
 
@@ -18,3 +20,9 @@ std::optional<uint8_t> keyToHex(int const key);
 //
 uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble);
 
+//
+// Returns true if the given QObject's thread affinity is the same
+// thread as the caller. If true is returned, then it is typically
+// safe to modify the object without synchronization primitives.
+//
+bool objectInCurrentThread(QObject const& object);

@@ -308,9 +308,9 @@ private:
     // class members ---------------------------------------------------------
 
     QThread mTimerThread;
-    FastTimer *mTimer;
+    FastTimer *mTimer;      // thread-safe: yes
 
-    AudioStream mStream;
+    AudioStream mStream;    // thread-safe: no
     Guarded<VisualizerBuffer> mVisBuffer;
 
     ChannelOutput::Flags mOutputFlags;

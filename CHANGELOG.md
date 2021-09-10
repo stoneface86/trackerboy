@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Reduced spacing between columns in pattern editor
  - Rewrote OrderEditor using a custom widget instead of QTableView + OrderModel
  - Instrument and Waveform editors are now dialogs instead of docks.
+ - Octave decrease/increase shortcut changed from numpad / * to Ctrl+[ and Ctrl+]
 ### Fixed
  - issue #2 - Exx not taking immediate effect (also fixes V0x and I0x not
               taking immediate effect as well)

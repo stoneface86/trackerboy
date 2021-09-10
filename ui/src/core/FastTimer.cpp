@@ -1,5 +1,6 @@
 
 #include "core/FastTimer.hpp"
+#include "core/misc/utils.hpp"
 
 #include <QMutexLocker>
 #include <QTimerEvent>
@@ -57,13 +58,9 @@ void FastTimer::timerEvent(QTimerEvent *evt) {
 
 }
 
-bool FastTimer::isThreadSafe() const {
-    return thread() == QThread::currentThread();
-}
-
 
 void FastTimer::start() {
-    if (isThreadSafe()) {
+    if (objectInCurrentThread(*this)) {
         QMutexLocker locker(&mMutex);
         _stopTimer();
         _startTimer();
@@ -74,7 +71,7 @@ void FastTimer::start() {
 }
 
 void FastTimer::stop() {
-    if (isThreadSafe()) {
+    if (objectInCurrentThread(*this)) {
         QMutexLocker locker(&mMutex);
         _stopTimer();
     } else {

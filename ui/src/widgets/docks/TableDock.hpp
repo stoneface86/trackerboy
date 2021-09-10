@@ -29,6 +29,10 @@ public:
 
     void duplicate();
 
+    int selectedItem() const;
+
+    void setSelectedItem(int item);
+
 
 signals:
     void selectedItemChanged(int index);

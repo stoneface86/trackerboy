@@ -41,8 +41,6 @@ protected:
 
 private:
 
-    bool isThreadSafe() const;
-
     void _startTimer();
 
     void _stopTimer();

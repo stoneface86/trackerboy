@@ -1,10 +1,12 @@
 
 #include "core/audio/Renderer.hpp"
 #include "core/samplerates.hpp"
+#include "core/misc/utils.hpp"
 
 #include "trackerboy/engine/ChannelControl.hpp"
 
 #include <QMutexLocker>
+#include <QtDebug>
 
 //static auto LOG_PREFIX = "[Renderer]";
 
@@ -225,26 +227,43 @@ void Renderer::beginRender(Handle &handle) {
 void Renderer::stopRender(Handle &handle, bool aborted) {
 
     handle->state = State::stopped;
-    
-    mTimer->stop();
-
-    auto success = mStream.stop();
-
     handle.unlock();
 
-    mVisBuffer.access()->clear();
-    emit updateVisualizers();
+    // this lambda must only be called from the same thread as the Renderer
+    auto stopRender_ = [this, aborted]() {
+        mTimer->stop();
 
-    if (aborted) {
-        mStream.disable();
-        emit audioError();
-    } else {
-        if (success) {
-            emit audioStopped();
-        } else {
+        auto success = mStream.stop();
+
+        mVisBuffer.access()->clear();
+        emit updateVisualizers();
+
+        if (aborted) {
+            mStream.disable();
             emit audioError();
+        } else {
+            if (success) {
+                emit audioStopped();
+            } else {
+                emit audioError();
+            }
         }
+    };
+
+    // determine if we are in the GUI thread (same thread as the Renderer)
+    // this function is mostly called from the timer thread, occurs when:
+    //  - the buffer has drained and we are stopping
+    //  - the watchdog timer has exceeded 1 second (unknown problem with device)
+    // for these cases we need to invoke the lambda in the GUI thread (AudioStream is not thread-safe)
+
+    if (objectInCurrentThread(*this)) {
+        stopRender_();
+    } else {
+        // stopRender was called from mTimerThread, invoke the lambda in the renderer's thread
+        QMetaObject::invokeMethod(this, stopRender_);
     }
+
+
 }
 
 

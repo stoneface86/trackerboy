@@ -294,10 +294,10 @@ void MainWindow::setupUi() {
     mToolbarTracker = makeToolbar(tr("Tracker"), QStringLiteral("ToolbarTracker"));
     mToolbarInput = makeToolbar(tr("Input"), QStringLiteral("ToolbarInput"));
 
-    auto octaveSpin = new QSpinBox(mToolbarInput);
-    octaveSpin->setRange(2, 8);
-    octaveSpin->setValue(mConfig.pianoInput().octave());
-    connect(octaveSpin, qOverload<int>(&QSpinBox::valueChanged), this, 
+    mOctaveSpin = new QSpinBox(mToolbarInput);
+    mOctaveSpin->setRange(2, 8);
+    mOctaveSpin->setValue(mConfig.pianoInput().octave());
+    connect(mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this,
         [this](int octave) {
             mConfig.pianoInput().setOctave(octave);
         });
@@ -306,7 +306,7 @@ void MainWindow::setupUi() {
     editStepSpin->setValue(1);
     connect(editStepSpin, qOverload<int>(&QSpinBox::valueChanged), mPatternEditor, &PatternEditor::setEditStep);
     mToolbarInput->addWidget(new QLabel(tr("Octave"), mToolbarInput));
-    mToolbarInput->addWidget(octaveSpin);
+    mToolbarInput->addWidget(mOctaveSpin);
     mToolbarInput->addWidget(new QLabel(tr("Edit step"), mToolbarInput));
     mToolbarInput->addWidget(editStepSpin);
     mToolbarInput->addSeparator();
@@ -337,10 +337,10 @@ void MainWindow::setupUi() {
     shortcut = new QShortcut(tr("Ctrl+Down"), this);
     lazyconnect(shortcut, activated, this, nextPattern);
 
-    shortcut = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Asterisk), this);
+    shortcut = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_BracketRight), this);
     lazyconnect(shortcut, activated, this, increaseOctave);
     
-    shortcut = new QShortcut(QKeySequence(Qt::KeypadModifier | Qt::Key_Slash), this);
+    shortcut = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_BracketLeft), this);
     lazyconnect(shortcut, activated, this, decreaseOctave);
 
     shortcut = new QShortcut(QKeySequence(Qt::Key_Return), mPatternEditor);

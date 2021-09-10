@@ -5,6 +5,7 @@
 #include "core/misc/connectutils.hpp"
 #include "forms/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
+#include "widgets/docks/TableDock.hpp"
 
 #include <QApplication>
 #include <QFileDialog>
@@ -464,28 +465,39 @@ void MainWindow::onFrameSync() {
     mLastEngineFrame = frame;
 }
 
+namespace TU {
+
+void incrementSelectedItemInTableDock(QDockWidget *dock, int amount) {
+    auto table = qobject_cast<TableDock*>(dock->widget());
+    if (table) {
+        table->setSelectedItem(table->selectedItem() + amount);
+    }
+}
+
+}
+
 void MainWindow::previousInstrument() {
-    // TODO
+    TU::incrementSelectedItemInTableDock(mDockInstruments, -1);
 }
 
 void MainWindow::nextInstrument() {
-    // TODO
+    TU::incrementSelectedItemInTableDock(mDockInstruments, 1);
 }
 
 void MainWindow::previousPattern() {
-    // TODO
+    mPatternModel->setCursorPattern(mPatternModel->cursorPattern() - 1);
 }
 
 void MainWindow::nextPattern() {
-    // TODO
+    mPatternModel->setCursorPattern(mPatternModel->cursorPattern() + 1);
 }
 
 void MainWindow::increaseOctave() {
-    // TODO
+    mOctaveSpin->setValue(mOctaveSpin->value() + 1);
 }
 
 void MainWindow::decreaseOctave() {
-    // TODO
+    mOctaveSpin->setValue(mOctaveSpin->value() - 1);
 }
 
 void MainWindow::playOrStop() {

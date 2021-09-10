@@ -286,6 +286,7 @@ private:
     QToolBar *mToolbarSong;
     QToolBar *mToolbarTracker;
     QToolBar *mToolbarInput;
+        QSpinBox *mOctaveSpin;
 
     // actions shared by multiple menus (parented by MainWindow)
     QAction *mActionOrderInsert;
