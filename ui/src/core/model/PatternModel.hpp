@@ -219,7 +219,7 @@ public:
     void hideEffect(int track);
 
 signals:
-    void cursorChanged(CursorChangeFlags flags);
+    void cursorChanged(PatternModel::CursorChangeFlags flags);
     void cursorPatternChanged(int pattern);
 
     void patternSizeChanged(int rows);
@@ -243,8 +243,8 @@ signals:
 
 public slots:
 
-    void moveCursorRow(int amount, SelectMode mode = SelectionKeep);
-    void moveCursorColumn(int amount, SelectMode mode = SelectionKeep);
+    void moveCursorRow(int amount, PatternModel::SelectMode mode = SelectionKeep);
+    void moveCursorColumn(int amount, PatternModel::SelectMode mode = SelectionKeep);
     void moveCursorTrack(int amount);
 
     void setCursorRow(int row);

@@ -92,7 +92,7 @@ void PatternMap::setLength(int newsize) {
 
 size_t PatternMap::tracks(ChType ch) const noexcept {
     size_t count = 0;
-    for (auto track : mMap[static_cast<size_t>(ch)]) {
+    for (auto const& track : mMap[static_cast<size_t>(ch)]) {
         if (track.second.rowCount() != 0) {
             ++count;
         }

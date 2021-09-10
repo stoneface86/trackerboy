@@ -96,7 +96,7 @@ void SequenceEditor::convertEditToSequence() {
     size_t index = 0;
     std::optional<uint8_t> loopIndex;
 
-    for (auto token : tokens) {
+    for (auto const& token : tokens) {
         if (token.size() > 0) {
             if (token[0] == '|') {
                 // set loop index

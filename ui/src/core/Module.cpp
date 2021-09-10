@@ -107,7 +107,8 @@ void Module::clean() {
         mModified = false;
         emit modifiedChanged(false);
     }
-    for (auto stack : mUndoGroup->stacks()) {
+    auto const stacks = mUndoGroup->stacks();
+    for (auto stack : stacks) {
         stack->setClean();
     }
 }

@@ -33,10 +33,6 @@ public:
         return instance;
     }
 
-    void registerHandler() {
-        mDefaultHandler = qInstallMessageHandler(message);
-    }
-
     void setWindow(MainWindow *window) {
         mWindow = window;
     }
@@ -44,7 +40,7 @@ public:
 
 private:
     MessageHandler() :
-        mDefaultHandler(nullptr)
+        mDefaultHandler(qInstallMessageHandler(message))
     {
     }
 
@@ -91,8 +87,8 @@ int main(int argc, char *argv[]) {
     qRegisterMetaType<ChannelOutput::Flags>("ChannelOutput::Flags");
     qRegisterMetaType<PatternModel::CursorChangeFlags>("CursorChangeFlags");
 
-    // use a custom message handler for logging to file
-    MessageHandler::instance().registerHandler();
+    // instantiate the custom message handler for logging to file
+    MessageHandler::instance();
 
     // add the default font for the pattern editor
     QFontDatabase::addApplicationFont(":/CascadiaMono.ttf");

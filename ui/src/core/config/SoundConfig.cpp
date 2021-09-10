@@ -162,7 +162,7 @@ void SoundConfig::writeSettings(QSettings &settings) const {
     QString api;
     auto &prober = AudioProber::instance();
     if (mBackendIndex != -1) {
-        api = prober.backendNames()[mBackendIndex];
+        api = prober.backendNames().at(mBackendIndex);
     }
     settings.setValue(Keys::api, api);
 

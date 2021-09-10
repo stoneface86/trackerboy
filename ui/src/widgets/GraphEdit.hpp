@@ -11,10 +11,6 @@
 class GraphEdit : public QAbstractScrollArea {
 
     Q_OBJECT
-    Q_PROPERTY(QColor lineColor READ lineColor WRITE setLineColor)
-    Q_PROPERTY(QColor sampleColor READ sampleColor WRITE setSampleColor)
-    Q_PROPERTY(QColor alternateColor READ alternateColor WRITE setAlternateColor)
-    Q_PROPERTY(ViewMode viewMode READ viewMode WRITE setViewMode)
 
 public:
 

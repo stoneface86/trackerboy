@@ -324,7 +324,6 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
                 continue;
             }
             auto ypos = sample * mCellHeight;
-            QRect rect(xpos, ypos, mCellWidth, mCellHeight);
             painter.fillRect(xpos, ypos, mCellWidth - 1, mCellHeight - 1, mSampleColor);
         }
     }
