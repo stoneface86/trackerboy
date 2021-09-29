@@ -3,7 +3,6 @@
     "description": "Gameboy/Gameboy Color music tracker",
     "version": "0.5.0",
     "dependencies": [
-        "catch2",
         "rtmidi"
     ]
 }

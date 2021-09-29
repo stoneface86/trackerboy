@@ -3,14 +3,7 @@ project(src CXX)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
-option(FIND_RTMIDI "Use a find script to locate the system installed RtMidi" OFF)
-
-if (FIND_RTMIDI)
-    find_package(RtMidi MODULE REQUIRED)
-else ()
-    find_package(RtMidi CONFIG REQUIRED)
-endif ()
+find_package(RtMidi REQUIRED)
 
 if (WIN32)
     set(GUI_TYPE WIN32)
@@ -313,31 +306,6 @@ if (ENABLE_DEPLOYMENT)
     endif ()
 
 endif ()
-
-
-#
-# test programs
-# These small programs are used to test specific parts of the UI instead of building the entire thing
-# Essentially unit tests, but without the automation
-#
-
-#add_executable(test_BaseEditor ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_BaseEditor.cpp")
-#target_link_libraries(test_BaseEditor PRIVATE ui)
-
-#add_executable(test_OrderWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_OrderWidget.cpp")
-#target_link_libraries(test_OrderWidget PRIVATE ui)
-
-#add_executable(test_PianoWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_PianoWidget.cpp")
-#target_link_libraries(test_PianoWidget PRIVATE ui)
-
-#add_executable(test_AudioStream ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_AudioStream.cpp")
-#target_link_libraries(test_AudioStream PRIVATE ui)
-
-#add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
-#target_link_libraries(test_pattern_painter
-#    trackerboy
-#    Qt5::Widgets
-#)
 
 install(
     TARGETS trackerboy_ui

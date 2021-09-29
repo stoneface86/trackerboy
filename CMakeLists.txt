@@ -25,9 +25,9 @@ project (
 
 # uncomment if we need some cmake modules (none currently)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
+# use CONFIG mode first, fallback to MODULE
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
-#option(ENABLE_DEMO "Enable building of demo programs (requires miniaudio)" OFF)
-#option(ENABLE_TESTS "Enable unit tests" ON)
 option(ENABLE_UNITY "Enable unity builds" OFF)
 
 if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
@@ -68,11 +68,6 @@ endif()
 # ============================================================================
 # Dependencies
 # ============================================================================
-
-# C++17 is required
-# use target_compile_features instead of this global setting
-#set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # main library for trackerboy (provided via submodule in external/libtrackerboy)
 set(LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY})
@@ -117,14 +112,7 @@ if (UNIX AND NOT APPLE)
 endif ()
 
 
-#if (ENABLE_TESTS)
-#    find_package(Catch2 CONFIG REQUIRED)
-#    include(CTest)
-#    include(Catch)
-#    add_library(Catch2Main STATIC "external/catch.cpp")
-#    target_link_libraries(Catch2Main PUBLIC Catch2::Catch2)
-#    enable_testing()
-#endif ()
+include(CTest)
 
 # ============================================================================
 # Sub-projects
@@ -135,12 +123,9 @@ endif ()
 #
 add_subdirectory(src)
 
-#
-# Demo programs (optional)
-#
-#if (ENABLE_DEMO)
-#    add_subdirectory(demo)
-#endif ()
+if (BUILD_TESTING)
+    add_subdirectory(test)
+endif ()
 
 # ============================================================================
 # Information
@@ -153,7 +138,6 @@ message(
     " * Install directory           : ${CMAKE_INSTALL_PREFIX}\n"
     " * Build type                  : ${CMAKE_BUILD_TYPE}\n"
     " * Architecture                : ${BUILD_ARCH}\n"
-#    " * Demos                       : ${ENABLE_DEMO}\n"
-#    " * Tests                       : ${ENABLE_TESTS}\n"
+    " * Tests                       : ${BUILD_TESTING}\n"
     " * Unity build                 : ${ENABLE_UNITY}\n"
 )

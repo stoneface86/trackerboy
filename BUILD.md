@@ -12,18 +12,14 @@ Requirements:
  * C/C++ compiler with the C++17 standard or later
  * CMake 3.9 or higher
  * [Miniaudio](https://github.com/mackron/miniaudio)
- * [gbapu](https://github.com/stoneface86/gbapu)
+ * [libtrackerboy](https://github.com/stoneface86/libtrackerboy)
  * [RtMidi](https://github.com/thestk/rtmidi)
- * (Optional) [Catch2](https://github.com/catchorg/Catch2)
  * Qt v5.12.10 or higher
 
-Miniaudio and gbapu are acquired via submodule so there is no need to install
-these libraries on your system. All of the other requirements can be acquired
-from vcpkg, or you can provide your own if that is preferred. Some action on
-your part may be necessary when not using vcpkg.
-
-Catch2 is only required for testing. Catch2 is not needed if ENABLE_TESTS is
-set to OFF.
+Miniaudio and libtrackerboy are acquired via submodule so there is no need to
+install these libraries on your system. All of the other requirements can be
+acquired from vcpkg, or you can provide your own if that is preferred. Some
+action on your part may be necessary when not using vcpkg.
 
 # Recommended build guide
 
@@ -81,25 +77,21 @@ sudo apt install libasound2-dev
 
 # Alternative building
 
-When not using vcpkg, you must provide the cmake packages for RtMidi (and optionally, Catch2)
-yourself. To do so you must acquire the source, build and install using cmake. Then either define
-CMAKE_PREFIX_PATH or <package_name>_DIR with the location of the installed packages.
-
-Or, you can enable the FIND_RTMIDI option and cmake will search your system
-for RtMidi installed on your system. The RtMidi find script is located in the
-[cmake](./cmake) folder.
+When not using vcpkg, you must provide the cmake packages for RtMidi yourself.
+To do so you must acquire the source, build and install using cmake. Or, you
+can install the library via your system package manager and the
+[FindRtMidi.cmake](./cmake/FindRtMidi.cmake) script should be able to locate
+it.
 
 ## Options
 
 Here is a table of options that can be used when building.
 
-| Option       | Type | Default | Description                                         |
-|--------------|------|---------|-----------------------------------------------------|
-| ENABLE_DEMO  | BOOL | OFF     | If enabled, the demo programs will be built.        |
-| ENABLE_TESTS | BOOL | ON      | Enables unit testing                                |
-| ENABLE_UI    | BOOL | ON      | Enables building of the trackerboy ui               |
-| ENABLE_UNITY | BOOL | OFF     | Enables unity builds (requires cmake 3.16)          |
-| FIND_RTMIDI  | BOOL | OFF     | If enabled, cmake will search the system for RtMidi |
+| Option            | Type | Default | Description                                         |
+|-------------------|------|---------|-----------------------------------------------------|
+| BUILD_TESTING     | BOOL | ON      | Enables unit testing                                |
+| ENABLE_UNITY      | BOOL | OFF     | Enables unity builds (requires cmake 3.16)          |
+| ENABLE_DEPLOYMENT | BOOL | OFF     | Enables the deploy target                           |
 
 Unity builds should only be used if you are just building trackerboy. It is
 not recommended to have this enabled when developing.
