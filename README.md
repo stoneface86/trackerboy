@@ -1,4 +1,4 @@
-![Trackerboy](/ui/src/resources/images/logo.png)
+![Trackerboy](/src/resources/images/logo.png)
 ---
 
 [![build-lib][build-badge]][build-link]

@@ -2,22 +2,29 @@
 #include "forms/MainWindow.hpp"
 
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QDateTime>
 #include <QFontDatabase>
+#include <QFile>
+#include <QFileInfo>
 #include <QElapsedTimer>
 #include <QMessageBox>
-#include <QtDebug>
-
-#include <QFile>
-#include <QTextStream>
-#include <QStringBuilder>
 #include <QPointer>
+#include <QStringBuilder>
+#include <QtDebug>
+#include <QTextStream>
 
 #include <iostream>
 #include <chrono>
 #include <memory>
 #include <new>
+#include <cstdio>
 
+#include "version.hpp"
+
+
+
+constexpr int EXIT_BAD_ARGUMENTS = -1;
 constexpr int EXIT_BAD_ALLOC = 1;
 
 //
@@ -76,8 +83,36 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     QCoreApplication::setOrganizationName("Trackerboy");
     QCoreApplication::setApplicationName("Trackerboy");
+    QCoreApplication::setApplicationVersion(VERSION_STR);
     // use INI on all systems, much easier to edit by hand
     QSettings::setDefaultFormat(QSettings::IniFormat);
+
+#define main_tr(str) QCoreApplication::translate("main", str)
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription(main_tr("Game Boy music tracker"));
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addPositionalArgument("[module_file]", main_tr("(Optional) the module file to open"));
+
+    parser.process(app);
+
+    QString fileToOpen;
+    auto const positionals = parser.positionalArguments();
+    switch (positionals.size()) {
+        case 0:
+            break;
+        case 1:
+            fileToOpen = positionals[0];
+            break;
+        default:
+            // we could just only take the first argument and ignore the rest
+            // but I prefer to be strict
+            fputs("too many arguments given\n", stderr);
+            fputs(qPrintable(parser.helpText()), stderr);
+
+            return EXIT_BAD_ARGUMENTS;
+    }
 
     Q_INIT_RESOURCE(fonts);
     Q_INIT_RESOURCE(icons);
@@ -93,9 +128,29 @@ int main(int argc, char *argv[]) {
     // add the default font for the pattern editor
     QFontDatabase::addApplicationFont(":/CascadiaMono.ttf");
    
-    std::unique_ptr<MainWindow> win(new MainWindow);
+    auto win = std::make_unique<MainWindow>();
     MessageHandler::instance().setWindow(win.get());
     win->show();
+
+    if (!fileToOpen.isEmpty()) {
+        QFileInfo info(fileToOpen);
+        if (!info.exists()) {
+            QMessageBox::critical(
+                win.get(),
+                main_tr("File does not exist"),
+                main_tr("The module could not be opened because the file does not exist")
+            );
+        } else if (!info.isFile()) {
+            QMessageBox::critical(
+                win.get(),
+                main_tr("Invalid filename"),
+                main_tr("The module could not be opened because it is not a file")
+            );
+        } else {
+            win->openFile(fileToOpen);
+        }
+    }
+
 
     #ifndef QT_NO_INFO_OUTPUT
     qInfo() << "Launch time: " << timer.elapsed() << " ms";

@@ -50,6 +50,8 @@ public:
     //
     void panic(QString const& msg);
 
+    void openFile(QString const& filepath);
+
 protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;
@@ -115,9 +117,6 @@ private slots:
 
     void editInstrument(int item);
     void editWaveform(int item);
-
-    // not a slot, but used by onFileOpen and onFileRecent
-    void openFile(QString const& path);
 
     // implementation in MainWindow/slots.cpp - END ---------------------------
 
