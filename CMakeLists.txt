@@ -23,15 +23,11 @@ project (
     LANGUAGES C CXX
 )
 
-# combines the project name and version, ie trackerboy-v1.1.2
-set(PROJECT_AND_VERSION_NAME "${PROJECT_NAME}-v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-
 # uncomment if we need some cmake modules (none currently)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 
-option(ENABLE_DEMO "Enable building of demo programs (requires miniaudio)" OFF)
-option(ENABLE_TESTS "Enable unit tests" ON)
-option(ENABLE_UI "Enable building of the main trackerboy application" ON)
+#option(ENABLE_DEMO "Enable building of demo programs (requires miniaudio)" OFF)
+#option(ENABLE_TESTS "Enable unit tests" ON)
 option(ENABLE_UNITY "Enable unity builds" OFF)
 
 if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
@@ -93,60 +89,61 @@ endif()
 # ============================================================================
 
 # C++17 is required
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# use target_compile_features instead of this global setting
+#set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# gbapu is required for libtrackerboy, which is always built
-add_subdirectory(external/gbapu)
+# main library for trackerboy (provided via submodule in external/libtrackerboy)
+set(LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY})
+add_subdirectory(external/libtrackerboy)
 
-# sound related dependencies for demo and ui projects
-if (SOUND_REQUIRED)
+# Miniaudio library (provided via submodule in external/miniaudio)
 
-    # Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
-    # we'll have to DIY it then.
-    # The split version is used to speed up compilation, the single c file gets compiled
-    # into a library, miniaudio.
+# Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
+# we'll have to DIY it then.
+# The split version is used to speed up compilation, the single c file gets compiled
+# into a library, miniaudio.
 
-    add_library(miniaudio STATIC "external/miniaudio/extras/miniaudio_split/miniaudio.c")
-    target_include_directories(miniaudio PUBLIC "external/miniaudio/extras/miniaudio_split")
-    #
-    # add some definitions to cut out stuff we don't need
-    #
-    target_compile_definitions(miniaudio PUBLIC
-        MA_NO_MP3           # No MP3 decoding
-        MA_NO_FLAC          # No FLAC decoding
-        MA_NO_GENERATION    # No waveform generators
-        MA_NO_CUSTOM        # No custom backend
-    )
-    if (DEBUG_BUILD)
-        # MA_LOG_LEVEL_INFO for debug builds
-        target_compile_definitions(miniaudio PRIVATE MA_LOG_LEVEL=3)
-    endif ()
-    # miniaudio dependencies
-    # windows: none
-    # mac: none
-    # linux: pthreads, libm, libdl
-    # bsd: pthreads, libm
-    if (UNIX AND NOT APPLE)
-       set(THREADS_PREFER_PTHREAD_FLAG ON)
-       find_package(Threads REQUIRED)
-       find_library(LIB_M m)
-       if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-           find_library(LIB_DL dl)
-           target_link_libraries(miniaudio PRIVATE ${LIB_DL})
-       endif ()
-       target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
-    endif ()
+add_library(miniaudio STATIC "external/miniaudio/extras/miniaudio_split/miniaudio.c")
+target_include_directories(miniaudio PUBLIC "external/miniaudio/extras/miniaudio_split")
+#
+# add some definitions to cut out stuff we don't need
+#
+target_compile_definitions(miniaudio PUBLIC
+    MA_NO_MP3           # No MP3 decoding
+    MA_NO_FLAC          # No FLAC decoding
+    MA_NO_GENERATION    # No waveform generators
+    MA_NO_CUSTOM        # No custom backend
+)
+if (DEBUG_BUILD)
+    # MA_LOG_LEVEL_INFO for debug builds
+    target_compile_definitions(miniaudio PRIVATE MA_LOG_LEVEL=3)
+endif ()
+# miniaudio dependencies
+# windows: none
+# mac: none
+# linux: pthreads, libm, libdl
+# bsd: pthreads, libm
+if (UNIX AND NOT APPLE)
+   set(THREADS_PREFER_PTHREAD_FLAG ON)
+   find_package(Threads REQUIRED)
+   find_library(LIB_M m)
+   if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+       find_library(LIB_DL dl)
+       target_link_libraries(miniaudio PRIVATE ${LIB_DL})
+   endif ()
+   target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
 endif ()
 
-if (ENABLE_TESTS)
-    find_package(Catch2 CONFIG REQUIRED)
-    include(CTest)
-    include(Catch)
-    add_library(Catch2Main STATIC "external/catch.cpp")
-    target_link_libraries(Catch2Main PUBLIC Catch2::Catch2)
-    enable_testing()
-endif ()
+
+#if (ENABLE_TESTS)
+#    find_package(Catch2 CONFIG REQUIRED)
+#    include(CTest)
+#    include(Catch)
+#    add_library(Catch2Main STATIC "external/catch.cpp")
+#    target_link_libraries(Catch2Main PUBLIC Catch2::Catch2)
+#    enable_testing()
+#endif ()
 
 # global warning flags
 add_library(trackerboyWarnings INTERFACE)
@@ -169,17 +166,11 @@ endif ()
 # Sub-projects
 # ============================================================================
 
-#
-# libtrackerboy, main library used by ui and demo programs
-#
-add_subdirectory(libtrackerboy)
 
 #
-# Main program (optional)
+# Main program
 #
-if (ENABLE_UI)
-    add_subdirectory(ui)
-endif()
+add_subdirectory(src)
 
 #
 # Demo programs (optional)

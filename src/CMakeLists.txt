@@ -1,4 +1,4 @@
-project(ui CXX)
+project(src CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -14,7 +14,7 @@ endif ()
 
 if (WIN32)
     set(GUI_TYPE WIN32)
-    set(WINDOWS_APPICON_RC "src/resources/icons/app/appicon.rc")
+    set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
 elseif (APPLE)
     set(GUI_TYPE MACOSX_BUNDLE)
 else ()
@@ -53,112 +53,112 @@ endfunction()
 # use FILE <filename>
 
 makeSourceList(UI_SRC
-    "src/core/audio/AudioProber"
-    "src/core/audio/AudioStream"
-    "src/core/audio/Renderer"
-    "src/core/audio/Ringbuffer"
-    "src/core/audio/VisualizerBuffer"
-    "src/core/clipboard/PatternClip"
-    "src/core/clipboard/PatternClipboard"
-    "src/core/commands/order/OrderDuplicateCmd"
-    "src/core/commands/order/OrderEditCmd"
-    "src/core/commands/order/OrderInsertCmd"
-    "src/core/commands/order/OrderRemoveCmd"
-    "src/core/commands/order/OrderSwapCmd"
-    "src/core/commands/pattern/EraseCmd"
-    "src/core/commands/pattern/PasteCmd"
-    "src/core/commands/pattern/ReverseCmd"
-    "src/core/commands/pattern/SelectionCmd"
-    "src/core/commands/pattern/TrackEditCmd"
-    "src/core/commands/pattern/TransposeCmd"
-    "src/core/config/AppearanceConfig"
-    "src/core/config/GeneralConfig"
-    #"src/core/config/KeyboardConfig"
-    "src/core/config/keys"
-    "src/core/config/MidiConfig"
-    "src/core/config/SoundConfig"
-    "src/core/graphics/CachedPen"
-    "src/core/graphics/CellPainter"
-    "src/core/graphics/PatternLayout"
-    "src/core/graphics/PatternPainter"
-    FILE "src/core/midi/IMidiReceiver.hpp"
-    "src/core/midi/Midi"
-    "src/core/midi/MidiProber"
-    FILE "src/core/misc/connectutils.hpp"
-    FILE "src/core/misc/TableActions.hpp"
-    "src/core/misc/utils"
-    "src/core/model/graph/GraphModel"
-    "src/core/model/graph/SequenceModel"
-    "src/core/model/graph/WaveModel"
-    "src/core/model/BaseTableModel"
-    "src/core/model/InstrumentListModel"
-    "src/core/model/PatternModel"
-    "src/core/model/SongModel"
-    "src/core/model/SongListModel"
-    "src/core/model/WaveListModel"
-    FILE "src/core/ChannelOutput.hpp"
-    "src/core/Config"
-    "src/core/FastTimer"
-    FILE "src/core/Guarded.hpp"
-    "src/core/IconManager"
-    FILE "src/core/Locked.hpp"
-    "src/core/Module"
-    "src/core/ModuleFile"
-    "src/core/Palette"
-    FILE "src/core/PatternCursor.hpp"
-    "src/core/PatternSelection"
-    "src/core/PianoInput"
-    "src/core/samplerates"
-    "src/core/WavExporter"
+    "core/audio/AudioProber"
+    "core/audio/AudioStream"
+    "core/audio/Renderer"
+    "core/audio/Ringbuffer"
+    "core/audio/VisualizerBuffer"
+    "core/clipboard/PatternClip"
+    "core/clipboard/PatternClipboard"
+    "core/commands/order/OrderDuplicateCmd"
+    "core/commands/order/OrderEditCmd"
+    "core/commands/order/OrderInsertCmd"
+    "core/commands/order/OrderRemoveCmd"
+    "core/commands/order/OrderSwapCmd"
+    "core/commands/pattern/EraseCmd"
+    "core/commands/pattern/PasteCmd"
+    "core/commands/pattern/ReverseCmd"
+    "core/commands/pattern/SelectionCmd"
+    "core/commands/pattern/TrackEditCmd"
+    "core/commands/pattern/TransposeCmd"
+    "core/config/AppearanceConfig"
+    "core/config/GeneralConfig"
+    #"core/config/KeyboardConfig"
+    "core/config/keys"
+    "core/config/MidiConfig"
+    "core/config/SoundConfig"
+    "core/graphics/CachedPen"
+    "core/graphics/CellPainter"
+    "core/graphics/PatternLayout"
+    "core/graphics/PatternPainter"
+    FILE "core/midi/IMidiReceiver.hpp"
+    "core/midi/Midi"
+    "core/midi/MidiProber"
+    FILE "core/misc/connectutils.hpp"
+    FILE "core/misc/TableActions.hpp"
+    "core/misc/utils"
+    "core/model/graph/GraphModel"
+    "core/model/graph/SequenceModel"
+    "core/model/graph/WaveModel"
+    "core/model/BaseTableModel"
+    "core/model/InstrumentListModel"
+    "core/model/PatternModel"
+    "core/model/SongModel"
+    "core/model/SongListModel"
+    "core/model/WaveListModel"
+    FILE "core/ChannelOutput.hpp"
+    "core/Config"
+    "core/FastTimer"
+    FILE "core/Guarded.hpp"
+    "core/IconManager"
+    FILE "core/Locked.hpp"
+    "core/Module"
+    "core/ModuleFile"
+    "core/Palette"
+    FILE "core/PatternCursor.hpp"
+    "core/PatternSelection"
+    "core/PianoInput"
+    "core/samplerates"
+    "core/WavExporter"
 
-    "src/forms/editors/BaseEditor"
-    "src/forms/editors/InstrumentEditor"
-    "src/forms/editors/WaveEditor"
-    FILE "src/forms/MainWindow/actions.cpp"
-    FILE "src/forms/MainWindow/slots.cpp"
-    "src/forms/AboutDialog"
-    "src/forms/AudioDiagDialog"
-    "src/forms/CommentsDialog"
-    "src/forms/ConfigDialog"
-    "src/forms/ExportWavDialog"
-    "src/forms/MainWindow"
-    "src/forms/ModulePropertiesDialog"
-    "src/forms/TempoCalculator"
+    "forms/editors/BaseEditor"
+    "forms/editors/InstrumentEditor"
+    "forms/editors/WaveEditor"
+    FILE "forms/MainWindow/actions.cpp"
+    FILE "forms/MainWindow/slots.cpp"
+    "forms/AboutDialog"
+    "forms/AudioDiagDialog"
+    "forms/CommentsDialog"
+    "forms/ConfigDialog"
+    "forms/ExportWavDialog"
+    "forms/MainWindow"
+    "forms/ModulePropertiesDialog"
+    "forms/TempoCalculator"
 
-    FILE "src/resources/fonts.qrc"
-    FILE "src/resources/icons.qrc"
-    FILE "src/resources/images.qrc"
+    FILE "resources/fonts.qrc"
+    FILE "resources/icons.qrc"
+    FILE "resources/images.qrc"
 
-    "src/widgets/config/ConfigTab"
-    "src/widgets/config/MidiConfigTab"
-    "src/widgets/config/SoundConfigTab"
-    "src/widgets/config/SoundQualityPreview"
-    "src/widgets/docks/TableDock"
-    "src/widgets/grid/PatternGrid"
-    "src/widgets/grid/PatternGridHeader"
-    "src/widgets/sidebar/AudioScope"
-    "src/widgets/sidebar/OrderEditor"
-    "src/widgets/sidebar/OrderGrid"
-    "src/widgets/sidebar/SongEditor"
-    #"src/widgets/visualizers/PeakMeter"
-    #"src/widgets/visualizers/VolumeMeterAnimation"
-    "src/widgets/CustomSpinBox"
-    "src/widgets/EnvelopeForm"
-    "src/widgets/GraphEdit"
-    "src/widgets/PatternEditor"
-    "src/widgets/PianoWidget"
-    "src/widgets/SequenceEditor"
-    "src/widgets/Sidebar"
-    "src/widgets/SpeedLabel"
-    "src/widgets/TempoLabel"
+    "widgets/config/ConfigTab"
+    "widgets/config/MidiConfigTab"
+    "widgets/config/SoundConfigTab"
+    "widgets/config/SoundQualityPreview"
+    "widgets/docks/TableDock"
+    "widgets/grid/PatternGrid"
+    "widgets/grid/PatternGridHeader"
+    "widgets/sidebar/AudioScope"
+    "widgets/sidebar/OrderEditor"
+    "widgets/sidebar/OrderGrid"
+    "widgets/sidebar/SongEditor"
+    #"widgets/visualizers/PeakMeter"
+    #"widgets/visualizers/VolumeMeterAnimation"
+    "widgets/CustomSpinBox"
+    "widgets/EnvelopeForm"
+    "widgets/GraphEdit"
+    "widgets/PatternEditor"
+    "widgets/PianoWidget"
+    "widgets/SequenceEditor"
+    "widgets/Sidebar"
+    "widgets/SpeedLabel"
+    "widgets/TempoLabel"
 )
 
 # https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake/4318642#4318642
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
-configure_file("src/GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
-list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" "src/GitSHA1.hpp")
+configure_file("GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
+list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" "GitSHA1.hpp")
 
 #
 # ui library
@@ -190,7 +190,7 @@ endif ()
 # Target for the main ui, trackerboy_ui. We cannot use trackerboy as that name is used
 # for libtrackerboy. However, the resulting executable is named trackerboy, not trackerboy_ui
 #
-add_executable(trackerboy_ui ${GUI_TYPE} "src/main.cpp" ${WINDOWS_APPICON_RC})
+add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" ${WINDOWS_APPICON_RC})
 target_link_libraries(trackerboy_ui PRIVATE ui)
 # output executable is "trackerboy" and not "trackerboy_ui"
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
@@ -268,7 +268,7 @@ if (ENABLE_DEPLOYMENT)
                 COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/share/applications"
                 COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/share/icons/hicolor/256x256"
                 COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" "AppDir/usr/bin"
-                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/src/resources/icons/app/appicon-256.png" "AppDir/usr/share/icons/hicolor/256x256/trackerboy.png"
+                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app/appicon-256.png" "AppDir/usr/share/icons/hicolor/256x256/trackerboy.png"
                 COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/trackerboy.desktop" "AppDir/usr/share/applications"
                 COMMAND ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" ${CMAKE_COMMAND} -E env VERSION="v${CMAKE_PROJECT_VERSION}" "${LINUXDEPLOYQT}" "${CMAKE_CURRENT_BINARY_DIR}/AppDir/usr/share/applications/trackerboy.desktop" -appimage -qmake="${_qmake_executable}"
                 DEPENDS trackerboy_ui
@@ -303,17 +303,17 @@ endif ()
 # Essentially unit tests, but without the automation
 #
 
-add_executable(test_BaseEditor ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_BaseEditor.cpp")
-target_link_libraries(test_BaseEditor PRIVATE ui)
+#add_executable(test_BaseEditor ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_BaseEditor.cpp")
+#target_link_libraries(test_BaseEditor PRIVATE ui)
 
-add_executable(test_OrderWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_OrderWidget.cpp")
-target_link_libraries(test_OrderWidget PRIVATE ui)
+#add_executable(test_OrderWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_OrderWidget.cpp")
+#target_link_libraries(test_OrderWidget PRIVATE ui)
 
-add_executable(test_PianoWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_PianoWidget.cpp")
-target_link_libraries(test_PianoWidget PRIVATE ui)
+#add_executable(test_PianoWidget ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_PianoWidget.cpp")
+#target_link_libraries(test_PianoWidget PRIVATE ui)
 
-add_executable(test_AudioStream ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_AudioStream.cpp")
-target_link_libraries(test_AudioStream PRIVATE ui)
+#add_executable(test_AudioStream ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_AudioStream.cpp")
+#target_link_libraries(test_AudioStream PRIVATE ui)
 
 #add_executable(test_pattern_painter ${GUI_TYPE} EXCLUDE_FROM_ALL "test/test_pattern_painter.cpp" )
 #target_link_libraries(test_pattern_painter
