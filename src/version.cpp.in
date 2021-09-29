@@ -1,0 +1,2 @@
+
+const char* VERSION_STR = "@CMAKE_PROJECT_VERSION@";

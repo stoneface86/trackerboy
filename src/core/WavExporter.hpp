@@ -3,8 +3,9 @@
 
 #include "core/Module.hpp"
 
-#include "trackerboy/Synth.hpp"
+#include "trackerboy/apu/DefaultApu.hpp"
 #include "trackerboy/export/Player.hpp"
+#include "trackerboy/Synth.hpp"
 
 #include <QThread>
 #include <QMutex>
@@ -41,8 +42,8 @@ private:
     QMutex mMutex;
 
     int mSamplerate;
+    trackerboy::DefaultApu mApu;
     trackerboy::Synth mSynth;
-    trackerboy::GbApu mApu;
     trackerboy::Engine mEngine;
 
     trackerboy::Player::Duration mDuration;

@@ -3,8 +3,6 @@
 #include "core/samplerates.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
 
-#include "gbapu.hpp"
-
 #include <array>
 #include <optional>
 #include <cmath>
@@ -109,9 +107,9 @@ SoundConfigTab::SoundConfigTab(QWidget *parent) :
     mMedQualityRadio.setToolTip(tr("Sinc interpolation on channels 1 and 2, linear interpolation on channels 3 and 4."));
     mHighQualityRadio.setToolTip(tr("Sinc interpolation on all channels"));
     
-    mQualityButtons.addButton(&mLowQualityRadio, (int)gbapu::Apu::Quality::low);
-    mQualityButtons.addButton(&mMedQualityRadio, (int)gbapu::Apu::Quality::medium);
-    mQualityButtons.addButton(&mHighQualityRadio, (int)gbapu::Apu::Quality::high);
+    mQualityButtons.addButton(&mLowQualityRadio, 0);
+    mQualityButtons.addButton(&mMedQualityRadio, 1);
+    mQualityButtons.addButton(&mHighQualityRadio, 2);
 
     // any changes made by the user will mark this tab as "dirty"
     connect(&mSamplerateCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty);
@@ -166,9 +164,9 @@ void SoundConfigTab::resetControls(SoundConfig const& soundConfig) {
 
 void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
     if (checked) {
-        auto id = mQualityButtons.id(btn);
-        mPreview12.setHighQuality(id != (int)gbapu::Apu::Quality::low);
-        mPreview34.setHighQuality(id == (int)gbapu::Apu::Quality::high);
+        //auto id = mQualityButtons.id(btn);
+        //mPreview12.setHighQuality(id != (int)gbapu::Apu::Quality::low);
+        //mPreview34.setHighQuality(id == (int)gbapu::Apu::Quality::high);
         setDirty();
     }
 }

@@ -1,8 +1,7 @@
 
 #include "forms/AboutDialog.hpp"
 #include "GitSHA1.hpp"
-
-#include "trackerboy/version.hpp"
+#include "version.hpp"
 
 AboutDialog::AboutDialog(QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
@@ -42,22 +41,19 @@ AboutDialog::AboutDialog(QWidget *parent) :
 R"bodystr(
 <html><head/>
 <body>
-<h1>Trackerboy v%1.%2.%3</h1>
+<h1>Trackerboy v%1</h1>
 <h3> A Gameboy/Gameboy Color music tracker</h3>
 <h3>Copyright (C) 2019-2021 stoneface86</h3>
 <br/>
 <br/>
 <span>Repo - <a href="https://github.com/stoneface86/trackerboy">https://github.com/stoneface86/trackerboy</a></span>
 <br/>
-<span>Commit: %4</span>
+<span>Commit: %2</span>
 <br/>
 <p>This software is licensed under the MIT License.</p>
 </body>
 </html>
-)bodystr").arg(trackerboy::VERSION.major)
-          .arg(trackerboy::VERSION.minor)
-          .arg(trackerboy::VERSION.patch)
-          .arg(QString::fromUtf8(GIT_SHA1)));
+)bodystr").arg(QString::fromLatin1(VERSION_STR), QString::fromUtf8(GIT_SHA1)));
 
     mButtons.addButton(QDialogButtonBox::Close);
 

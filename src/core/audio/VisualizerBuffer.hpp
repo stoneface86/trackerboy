@@ -39,7 +39,7 @@ public:
 
     size_t size() const;
 
-    void read(size_t index, int16_t &outLeft, int16_t &outRight);
+    void read(size_t index, float &outLeft, float &outRight);
 
     //
     // Computes the average left and right samples for the given index and bin
@@ -57,12 +57,12 @@ public:
     //
     void beginWrite(size_t amount);
 
-    void write(int16_t buf[], size_t amount);
+    void write(float buf[], size_t amount);
 
 
 private:
 
-    std::unique_ptr<int16_t[]> mBufferData;
+    std::unique_ptr<float[]> mBufferData;
     size_t mBufferSize;
 
     size_t mIndex;

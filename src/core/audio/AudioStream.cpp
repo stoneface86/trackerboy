@@ -63,8 +63,8 @@ void AudioStream::setConfig(SoundConfig const& config) {
     auto &prober = AudioProber::instance();
     
     auto deviceConfig = ma_device_config_init(ma_device_type_playback);
-    // always 16-bit stereo format
-    deviceConfig.playback.format = ma_format_s16;
+    // always 32-bit float stereo format
+    deviceConfig.playback.format = ma_format_f32;
     deviceConfig.playback.channels = 2;
     deviceConfig.dataCallback = deviceDataCallback;
     deviceConfig.stopCallback = deviceStopCallback;
@@ -141,12 +141,12 @@ void AudioStream::deviceDataCallback(ma_device *device, void *out, const void *i
     Q_UNUSED(in)
 
     static_cast<AudioStream*>(device->pUserData)->handleData(
-        static_cast<int16_t*>(out),
+        static_cast<float*>(out),
         (size_t)frames
     );
 }
 
-void AudioStream::handleData(int16_t *out, size_t frames) {
+void AudioStream::handleData(float *out, size_t frames) {
     if (mPlaybackDelay) {
         auto samples = std::min(mPlaybackDelay, frames);
         frames -= samples;

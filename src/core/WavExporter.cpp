@@ -3,6 +3,8 @@
 
 #include "miniaudio.h"
 
+#include <memory>
+
 
 WavExporter::WavExporter(
     Module const& mod,
@@ -11,8 +13,8 @@ WavExporter::WavExporter(
 ) :
     QThread(parent),
     mSamplerate(samplerate),
-    mSynth(samplerate, mod.data().framerate()),
-    mApu(mSynth.apu()),
+    mApu(),
+    mSynth(mApu, samplerate, mod.data().framerate()),
     mEngine(mApu, &mod.data()),
     mDuration(0),
     mDestination(),
@@ -45,7 +47,7 @@ void WavExporter::run() {
     trackerboy::Player player(mEngine);
     player.start(mDuration);
 
-    ma_encoder_config config = ma_encoder_config_init(ma_resource_format_wav, ma_format_s16, 2, mSamplerate);
+    ma_encoder_config config = ma_encoder_config_init(ma_resource_format_wav, ma_format_f32, 2, mSamplerate);
     ma_encoder encoder;
 
     auto dest = mDestination.toLatin1();
@@ -56,13 +58,12 @@ void WavExporter::run() {
     }
 
     // temporary buffer for transferring samples from apu to the wav file
-    std::vector<int16_t> buffer;
-    buffer.resize(mSynth.framesize() * 2);
+    auto buffersize = mSynth.framesize() * 2;
+    auto buffer = std::make_unique<float[]>(buffersize);
 
     emit progressMax(player.progressMax());
     auto lastProgress = player.progress();
     emit progress(lastProgress);
-    auto &apu = mSynth.apu();
 
     for (;;) {
 
@@ -86,10 +87,10 @@ void WavExporter::run() {
         }
         mSynth.run();
 
-        auto samplesRead = apu.readSamples(buffer.data(), buffer.size());
+        auto samplesRead = mApu.readSamples(buffer.get(), mSynth.framesize());
 
         size_t toWrite = samplesRead;
-        auto dataPtr = buffer.data();
+        auto dataPtr = buffer.get();
         while (toWrite) {
             auto written = ma_encoder_write_pcm_frames(&encoder, dataPtr, toWrite);
             toWrite -= written;

@@ -5,7 +5,7 @@
 # See README.md for details on building
 #
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.9...3.21)
 
 # use our custom triplet settings
 # - static libraries except for Qt
@@ -38,29 +38,10 @@ else ()
     set(BUILD_IS_32BIT FALSE)
 endif ()
 
-#
-# Sets the UNITY_BUILD property to ON for the given target if:
-#  1. ENABLE_UNITY is ON
-#  2. CMake version is >= 3.16
-#
-function (unityBuildable target)
-    if (${CMAKE_VERSION} VERSION_GREATER "3.15")
-        if (ENABLE_UNITY)
-            set_target_properties(${target} PROPERTIES UNITY_BUILD ON)
-        endif ()
-    endif ()
-endfunction ()
-
 if (NOT VCPKG_TOOLCHAIN)
     # not using vcpkg, unset this setting
     unset(VCPKG_OVERLAY_TRIPLETS)
     unset(VCPKG_OVERLAY_PORTS)
-endif ()
-
-if (ENABLE_DEMO OR ENABLE_UI)
-    set(SOUND_REQUIRED TRUE)
-else ()
-    set(SOUND_REQUIRED FALSE)
 endif ()
 
 # assume Debug if CMAKE_BUILD_TYPE was not provided
@@ -145,27 +126,9 @@ endif ()
 #    enable_testing()
 #endif ()
 
-# global warning flags
-add_library(trackerboyWarnings INTERFACE)
-if (MSVC)
-    target_compile_options(trackerboyWarnings INTERFACE
-        /W4
-        /experimental:external /external:W0 /external:anglebrackets
-    )
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    # -Wno-missing-field-initializers prevents warnings when zero-initializing a struct
-    target_compile_options(trackerboyWarnings INTERFACE
-        -Wall
-        -Wextra
-        -pedantic
-        -Wno-missing-field-initializers
-    )
-endif ()
-
 # ============================================================================
 # Sub-projects
 # ============================================================================
-
 
 #
 # Main program
@@ -175,9 +138,9 @@ add_subdirectory(src)
 #
 # Demo programs (optional)
 #
-if (ENABLE_DEMO)
-    add_subdirectory(demo)
-endif ()
+#if (ENABLE_DEMO)
+#    add_subdirectory(demo)
+#endif ()
 
 # ============================================================================
 # Information
@@ -190,8 +153,7 @@ message(
     " * Install directory           : ${CMAKE_INSTALL_PREFIX}\n"
     " * Build type                  : ${CMAKE_BUILD_TYPE}\n"
     " * Architecture                : ${BUILD_ARCH}\n"
-    " * Demos                       : ${ENABLE_DEMO}\n"
-    " * Tests                       : ${ENABLE_TESTS}\n"
-    " * UI                          : ${ENABLE_UI}\n"
+#    " * Demos                       : ${ENABLE_DEMO}\n"
+#    " * Tests                       : ${ENABLE_TESTS}\n"
     " * Unity build                 : ${ENABLE_UNITY}\n"
 )

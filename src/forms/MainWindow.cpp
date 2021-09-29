@@ -4,6 +4,7 @@
 #include "core/misc/connectutils.hpp"
 #include "core/IconManager.hpp"
 #include "widgets/docks/TableDock.hpp"
+#include "version.hpp"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -377,10 +378,7 @@ void MainWindow::setupUi() {
         statusbar->addPermanentWidget(label);
     }
 
-    statusbar->showMessage(tr("Trackerboy v%1.%2.%3")
-        .arg(trackerboy::VERSION.major)
-        .arg(trackerboy::VERSION.minor)
-        .arg(trackerboy::VERSION.patch));
+    statusbar->showMessage(tr("Trackerboy v%1").arg(QString::fromLatin1(VERSION_STR)));
 
     // default statuses
     setPlayingStatus(PlayingStatusText::ready);

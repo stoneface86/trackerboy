@@ -16,8 +16,6 @@ class BaseTableModel : public QAbstractListModel {
 
 public:
 
-    virtual ~BaseTableModel();
-
     bool canAdd() const;
 
     // resets the model. called when the document is reset or loaded a
@@ -41,20 +39,38 @@ public:
 
     QString name(int index);
 
-    uint8_t id(int index);
+    int id(int index);
 
-    int lookupId(uint8_t id);
+    int lookupId(int id);
 
     void rename(int index, const QString &name);
 
+    void updateChannelIcon(int index);
+
 
 protected:
-    BaseTableModel(Module &mod, trackerboy::BaseTable& table, QString defaultName, QObject *parent = nullptr);
+    BaseTableModel(Module &mod, QString defaultName, QObject *parent = nullptr);
 
-    virtual QIcon iconData(uint8_t id) const = 0;
+    virtual QIcon iconData(int id) const = 0;
+
+    virtual void commitName(int id, std::string &&name) = 0;
+
+    //
+    // Gets the source name for the id, if the id doesn't exist then
+    // nullptr is returned
+    //
+    virtual std::string const* sourceName(int id) = 0;
+
+    //
+    // Adds a new item into the source table, the item's id is returned
+    //
+    virtual int sourceAdd() = 0;
+
+    virtual int sourceDuplicate(int id) = 0;
+
+    virtual void sourceRemove(int id) = 0;
 
     Module &mModule;
-    trackerboy::BaseTable& mBaseTable;
 
 private:
     Q_DISABLE_COPY(BaseTableModel)
@@ -63,16 +79,7 @@ private:
     // this way we don't have to convert to and from std::string when
     // displaying/editing names. The conversion only occurs on reload
     // and commit
-    struct ModelData {
-
-        ModelData(uint8_t id, QString name);
-        explicit ModelData(trackerboy::DataItem const& item);
-
-        uint8_t id;
-        QString name;
-
-
-    };
+    using ModelData = std::pair<int, QString>;
 
     int insertData(ModelData const& data);
 

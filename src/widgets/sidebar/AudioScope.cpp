@@ -112,6 +112,6 @@ void AudioScope::sample(Locked<VisualizerBuffer> &handle, float index, float rat
     float left, right;
     handle->averageSample(index, ratio, left, right);
 
-    outLeft = WAVE_LEFT_AXIS - (left / (65536.0f / WAVE_HEIGHT));
-    outRight = WAVE_RIGHT_AXIS - (right / (65536.0f / WAVE_HEIGHT));
+    outLeft = WAVE_LEFT_AXIS - (left / (2.0f / WAVE_HEIGHT));
+    outRight = WAVE_RIGHT_AXIS - (right / (2.0f / WAVE_HEIGHT));
 }

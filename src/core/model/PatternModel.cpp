@@ -679,7 +679,7 @@ void PatternModel::setInstrument(std::optional<uint8_t> nibble) {
     if (nibble) {
         bool const highNibble = mCursor.column == PatternCursor::ColumnInstrumentHigh;
         newInstrument = replaceNibble(oldInstrument.value_or((uint8_t)0), *nibble, highNibble);
-        if (*newInstrument >= trackerboy::MAX_INSTRUMENTS) {
+        if (*newInstrument >= trackerboy::InstrumentTable::MAX_SIZE) {
             return;
         }
     }

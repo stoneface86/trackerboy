@@ -14,7 +14,7 @@ VisualizerBuffer::VisualizerBuffer() :
 }
 
 void VisualizerBuffer::clear() {
-    std::fill_n(mBufferData.get(), mBufferSize * 2, (int16_t)0);
+    std::fill_n(mBufferData.get(), mBufferSize * 2, 0.0f);
     mIndex = 0;
     mIgnoreCounter = 0;
 }
@@ -25,7 +25,7 @@ void VisualizerBuffer::resize(size_t size) {
         mBufferSize = size;
 
         auto samples = size * 2;
-        mBufferData.reset(new int16_t[samples]);
+        mBufferData = std::make_unique<float[]>(samples);
 
         // resize the buffer clears it
         clear();
@@ -37,7 +37,7 @@ size_t VisualizerBuffer::size() const {
 }
 
 
-void VisualizerBuffer::read(size_t index, int16_t &outLeft, int16_t &outRight) {
+void VisualizerBuffer::read(size_t index, float &outLeft, float &outRight) {
     Q_ASSERT(index < mBufferSize);
 
     index = (index + mIndex) % mBufferSize;
@@ -56,8 +56,8 @@ void VisualizerBuffer::averageSample(float index, float bin, float &outLeft, flo
     size_t bufIndex = (mIndex + (size_t)index) % mBufferSize;
     auto buf = mBufferData.get() + (bufIndex * 2);
 
-    int sumLeft = 0;
-    int sumRight = 0;
+    float sumLeft = 0.0f;
+    float sumRight = 0.0f;
     for (int i = 0; i < samples; ++i) {
         sumLeft += *buf++;
         sumRight += *buf++;
@@ -81,7 +81,7 @@ void VisualizerBuffer::beginWrite(size_t amount) {
     }
 }
 
-void VisualizerBuffer::write(int16_t buf[], size_t amount) {
+void VisualizerBuffer::write(float buf[], size_t amount) {
 
     auto ignoring = std::min(mIgnoreCounter, amount);
     amount -= ignoring;

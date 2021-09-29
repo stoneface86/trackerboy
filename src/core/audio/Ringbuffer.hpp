@@ -188,4 +188,4 @@ public:
 //
 // ringbuffer typedef for audio used in the application
 //
-using AudioRingbuffer = Ringbuffer<int16_t, 2>;
+using AudioRingbuffer = Ringbuffer<float, 2>;

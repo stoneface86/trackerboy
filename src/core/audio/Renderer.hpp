@@ -10,6 +10,7 @@
 #include "core/Guarded.hpp"
 #include "core/Module.hpp"
 
+#include "trackerboy/apu/DefaultApu.hpp"
 #include "trackerboy/data/Song.hpp"
 #include "trackerboy/data/Instrument.hpp"
 #include "trackerboy/data/Waveform.hpp"
@@ -239,8 +240,8 @@ private:
 
         std::shared_ptr<trackerboy::Song> song;
 
+        trackerboy::DefaultApu apu;
         trackerboy::Synth synth;
-        trackerboy::GbApu apu;
         //trackerboy::RuntimeContext mRc;
         // read access to the current song, wave table and instrument table
         trackerboy::Engine engine;

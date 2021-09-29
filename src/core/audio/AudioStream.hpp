@@ -107,7 +107,7 @@ private:
     void handleError(const char *msg, ma_result err);
 
     static void deviceDataCallback(ma_device *device, void *out, const void *in, ma_uint32 frames);
-    void handleData(int16_t *out, size_t frames);
+    void handleData(float *out, size_t frames);
 
     static void deviceStopCallback(ma_device *device);
     void handleStop();

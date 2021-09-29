@@ -28,8 +28,8 @@ Renderer::RenderContext::RenderContext(Module &mod) :
     stepping(false),
     step(false),
     song(nullptr),
-    synth(44100),
-    apu(synth.apu()),
+    apu(),
+    synth(apu, 44100),
     engine(apu, &mod.data()),
     ip(),
     previewState(PreviewState::none),
@@ -167,7 +167,7 @@ bool Renderer::setConfig(SoundConfig const &soundConfig) {
                 handle->synth.setSamplerate(samplerate);
                 reloadRegisters = wasRunning;
             }
-            handle->synth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality()));
+            //handle->synth.apu().setQuality(static_cast<gbapu::Apu::Quality>(soundConfig.quality()));
             handle->synth.setupBuffers();
 
             if (reloadRegisters) {
@@ -319,13 +319,9 @@ void Renderer::setPreviewNote(int note) {
         auto ctx = mContext.access();
         switch (ctx->previewState) {
             case PreviewState::waveform: {
-                if (note > trackerboy::NOTE_LAST) {
-                    // should never happen, but clamp just in case
-                    note = trackerboy::NOTE_LAST;
-                }
-                auto freq = trackerboy::NOTE_FREQ_TABLE[note];
-                ctx->apu.writeRegister(gbapu::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
-                ctx->apu.writeRegister(gbapu::Apu::REG_NR34, (uint8_t)(freq >> 8));
+                auto freq = trackerboy::lookupToneNote(note);
+                ctx->apu.writeRegister(trackerboy::Apu::REG_NR33, (uint8_t)(freq & 0xFF));
+                ctx->apu.writeRegister(trackerboy::Apu::REG_NR34, (uint8_t)(freq >> 8));
                 break;
             }
             case PreviewState::instrument:
@@ -349,7 +345,7 @@ void Renderer::instrumentPreview(int note, int track, int instrumentId) {
                 [[fallthrough]];
             case PreviewState::none: {
                 auto const& itable = ctx->mod.data().instrumentTable();
-                std::shared_ptr<trackerboy::Instrument> inst = nullptr;
+                std::shared_ptr<const trackerboy::Instrument> inst = nullptr;
                 if (instrumentId != -1) {
                     inst = itable.getShared((uint8_t)instrumentId);
                 }
@@ -392,7 +388,7 @@ void Renderer::waveformPreview(int note, int waveId) {
 
                 trackerboy::ChannelState state(trackerboy::ChType::ch3);
                 state.playing = true;
-                state.frequency = trackerboy::NOTE_FREQ_TABLE[note];
+                state.frequency = trackerboy::lookupToneNote(note);
                 state.envelope = (uint8_t)waveId;
                 trackerboy::ChannelControl<trackerboy::ChType::ch3>::init(
                     ctx->apu, ctx->mod.data().waveformTable(), state
@@ -536,7 +532,7 @@ void Renderer::render() {
     auto const haltedBefore = frame.halted;
 
     // cache a ref to the apu, we'll be using it often
-    auto &apu = handle->synth.apu();
+    auto &apu = handle->apu;
 
     bool newFrame = false;
 
@@ -555,7 +551,7 @@ void Renderer::render() {
 
         } else {
 
-            if (apu.availableSamples() == 0) {
+            if (apu.samplesAvailable() == 0) {
                 // new frame
 
                 if (handle->state == State::stopping) {
@@ -587,7 +583,7 @@ void Renderer::render() {
 
                     if (handle->previewState == PreviewState::instrument) {
                         auto &mod = handle->mod.data();
-                        trackerboy::RuntimeContext rc(handle->apu, mod.instrumentTable(), mod.waveformTable());
+                        trackerboy::RuntimeContext rc(apu, mod.instrumentTable(), mod.waveformTable());
                         
                         {
                             QMutexLocker locker(&handle->mod.mutex());
@@ -607,7 +603,7 @@ void Renderer::render() {
 
             }
 
-            size_t toWrite = std::min(framesToRender, apu.availableSamples());
+            size_t toWrite = std::min(framesToRender, apu.samplesAvailable());
             auto writePtr = writer.acquireWrite(toWrite);
             
             // read from the apu to the ringbuffer

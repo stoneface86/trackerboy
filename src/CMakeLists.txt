@@ -91,11 +91,10 @@ makeSourceList(UI_SRC
     "core/model/graph/SequenceModel"
     "core/model/graph/WaveModel"
     "core/model/BaseTableModel"
-    "core/model/InstrumentListModel"
     "core/model/PatternModel"
     "core/model/SongModel"
     "core/model/SongListModel"
-    "core/model/WaveListModel"
+    "core/model/TableModel"
     FILE "core/ChannelOutput.hpp"
     "core/Config"
     "core/FastTimer"
@@ -160,6 +159,9 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 configure_file("GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
 list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" "GitSHA1.hpp")
 
+configure_file("version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
+list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" "version.hpp")
+
 #
 # ui library
 #
@@ -169,9 +171,23 @@ target_link_libraries(ui PUBLIC
     miniaudio
     RtMidi::rtmidi
     Qt5::Widgets
-    trackerboyWarnings
 )
-target_include_directories(ui PUBLIC "src")
+target_compile_features(ui PUBLIC cxx_std_17)
+target_include_directories(ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+if (MSVC)
+    target_compile_options(ui PUBLIC
+        /W4
+        /experimental:external /external:W0 /external:anglebrackets
+    )
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # -Wno-missing-field-initializers prevents warnings when zero-initializing a struct
+    target_compile_options(ui PUBLIC
+        -Wall
+        -Wextra
+        -pedantic
+        -Wno-missing-field-initializers
+    )
+endif ()
 if (VCPKG_TOOLCHAIN)
     # hack
     # the toolchain should do this but it does not for some reason ?
@@ -179,7 +195,9 @@ if (VCPKG_TOOLCHAIN)
     target_include_directories(ui PUBLIC "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
 endif ()
 
-unityBuildable(ui)
+if (ENABLE_UNITY AND ${CMAKE_VERSION} VERSION_GREATER "3.15")
+    set_target_properties(ui PROPERTIES UNITY_BUILD ON)
+endif ()
 
 if (NOT ${DEBUG_BUILD})
     target_compile_definitions(ui PUBLIC QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
