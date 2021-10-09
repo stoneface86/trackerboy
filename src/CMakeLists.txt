@@ -3,7 +3,12 @@ project(src CXX)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(RtMidi REQUIRED)
+
+find_package(RtMidi CONFIG)
+if (NOT RtMidi_FOUND)
+    # try again using the find script
+    find_package(RtMidi MODULE REQUIRED)
+endif ()
 
 if (WIN32)
     set(GUI_TYPE WIN32)

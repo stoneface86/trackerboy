@@ -1,6 +1,4 @@
 
-# This workflow is inspired by https://github.com/lukka/CppBuildTasks-Validation/blob/master/.github/workflows/hosted-pure-workflow.yml
-
 name: build
 on:
   push:
@@ -9,68 +7,71 @@ on:
       - develop
     tags-ignore: '**'
 
+env:
+  QT_VERSION: 5.12.10
+
 jobs:
-  build:
-    name: ${{ matrix.arch }}-${{ matrix.platform }}
-    runs-on: ${{ matrix.os }}
+  build-linux:
+    runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[no build]')"
     strategy:
       fail-fast: false
-      matrix:
-        # 64-bit: macos, ubuntu and windows
-        # 32-bit: windows
-        include:
-          - os: macos-latest
-            arch: x64
-            platform: osx
-            qt-arch: ''
-          
-          # 18.04 is used because linuxdeployqt requires the oldest LTS version
-          # for binary compatibility with older systems
-          - os: ubuntu-18.04
-            arch: x64
-            platform: linux
-            qt-arch: ''
-          
-          - os: windows-latest
-            arch: x86
-            platform: windows
-            qt-arch: win32_msvc2017
-          
-          - os: windows-latest
-            arch: x64
-            platform: windows
-            qt-arch: win64_msvc2017_64
-    env:
-      CMAKE_BUILD_DIR: ${{ github.workspace }}/build
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
-      TRIPLET: ${{ matrix.arch }}-${{ matrix.platform }}
-      QT_VERSION: 5.12.10
+    steps:
+
+    - uses: actions/checkout@v2
+       with:
+         submodules: true
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y librtmidi-dev
+
+    - uses: lukka/get-cmake@latest
+
+    - name: Cache Qt
+      id: cache-qt
+      uses: actions/cache@v1
+      with:
+        path: ../Qt
+        key: ${{ runner.os }}-${{ env.QT_VERSION }}-QtCache
+    
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: ${{ env.QT_VERSION }}
+        cached: ${{ steps.cache-qt.outputs.cache-hit }}
+
+    - name: configure
+      run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY
+    
+    - name: build
+      run: cmake --build build --target all
+    
+    - name: test
+      run: |
+        cd build
+        ctest
+
+  build-windows:
+    name: ${{ matrix.arch }}
+    runs-on: windows-latest
+    if: "!contains(github.event.head_commit.message, '[no build]')"
+    strategy:
+      fail-fast: false
+      include:
+        - arch: x64
+          qt-arch: win64_msvc2017_64
+        - arch: x86
+          qt-arch: win32_msvc2017
+
         
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    
-    - name: Install dependencies (Linux)
-      # building rtmidi with ALSA support requires libsound2-dev
-      # we will also need to download linuxdeployqt
-      if: ${{ runner.os == 'Linux'}}
-      run: ${{ github.workspace }}/.github/scripts/linuxdeps.sh "${{ github.workspace }}/tools"
 
     - uses: lukka/get-cmake@latest
-
-    - name: Restore vcpkg
-      uses: actions/cache@v2
-      with:
-        path: |
-          ${{ env.CMAKE_BUILD_DIR }}/vcpkg_installed/
-          ${{ env.VCPKG_ROOT }}
-          !${{ env.VCPKG_ROOT }}/buildtrees
-          !${{ env.VCPKG_ROOT }}/packages
-          !${{ env.VCPKG_ROOT }}/downloads
-        key: |
-          ${{ hashFiles( 'vcpkg.json' ) }}-${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}-${{ env.TRIPLET }}-invalidate
 
     - uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -91,20 +92,12 @@ jobs:
         cached: ${{ steps.cache-qt.outputs.cache-hit }}
 
     - name: configure
-      run: |
-        cmake -S "${{ github.workspace }}" -B "${{ env.CMAKE_BUILD_DIR }}" -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON
+      run: cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_INSTALLATION_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DENABLE_UNITY=ON
     
     - name: build
-      run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target all
+      run: cmake --build build --target all
 
     - name: test
-      run: cd "${{ env.CMAKE_BUILD_DIR }}" && ctest
-
-    - name: deploy
-      run: cmake --build "${{ env.CMAKE_BUILD_DIR }}" --target deploy
-
-    - name: upload
-      uses: actions/upload-artifact@v2
-      with:
-        name: trackerboy-nightly-${{ env.TRIPLET }}
-        path: ${{ env.CMAKE_BUILD_DIR }}/ui/deploy/
+      run: |
+        cd build
+        ctest

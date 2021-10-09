@@ -1,14 +1,11 @@
 
-# Ui project
+# src/
 
-This subdirectory contains the ui project. You can build this project via the
-root CMakeLists.txt, with `ENABLE_UI` option set to ON. (note: ENABLE_UI is ON
-by default).
+This folder contains all the source code for the trackerboy application.
 
 ## Organization
 
 * `src/`
-    * `ui/`
     * `core/` - Application core internals, non-ui classes
         * `audio/` - audio-related code: rendering, data buffers, device management, etc
         * `clipboard/` - clipboard management and clipboard data classes

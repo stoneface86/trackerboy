@@ -18,70 +18,69 @@ Requirements:
 
 Miniaudio and libtrackerboy are acquired via submodule so there is no need to
 install these libraries on your system. All of the other requirements can be
-acquired from vcpkg, or you can provide your own if that is preferred. Some
-action on your part may be necessary when not using vcpkg.
+acquired from vcpkg, or you can provide your own if that is preferred.
 
 # Recommended build guide
 
-## 1. Clone the repository
+## 1. Install Qt / dependencies
 
-```sh
-git clone --recursive https://github.com/stoneface86/trackerboy
-```
-
-## 2. Install Qt
-
-If you are building the ui, you will need to install Qt5. Note that Qt5 is not
+You will need to install the Qt5 development libraries. Note that Qt5 is not
 listed as a dependency in the vcpkg manifest as there are better ways of
 acquiring it. Here are a couple ways to get it:
  * Install via the official Qt installer (requires Qt account)
- * Install via [aqtinstall](https://github.com/miurahr/aqtinstall) (does not require Qt account)
+ * Install via [aqtinstall](https://github.com/miurahr/aqtinstall)
  * Install via your OS's package manager
  * Install via vcpkg (slow, not recommended)
 
-If you choose to install via vcpkg, you will need to bootstrap the one provided
-in the submodule first before configuring. I do not recommend installing from
-vcpkg as it builds from source, which can take hours depending on your machine.
-(Also requires several GB of disk space).
+ I do not recommend installing from vcpkg as it builds from source, which can
+ take hours depending on your machine. (Also requires several GB of disk space).
 
-I recommend aqtinstall, as it's simple to use and is the most flexible. Simply
-choose the version you want and where to install it. Easy, and works on all
-platforms.
+I recommend using your system's package manager or aqtinstall if your system
+does not have a package manager.
 
 Depending on how you installed qt, you may have to set CMAKE_PREFIX_PATH to
 your Qt installation when configuring, simply pass
 `-DCMAKE_PREFIX_PATH="path/to/qt"` when running cmake. See these
 [instructions](https://doc.qt.io/qt-5/cmake-get-started.html) for more details.
 
-## 3. Configure
-
-The rest of the required libraries are acquired via [vcpkg](https://vcpkg.io/en/index.html).
-Manifest mode is used, so all you need to do is run cmake with the vcpkg
-toolchain:
+## 2. Clone the repository
 
 ```sh
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" ../
+git clone --recursive https://github.com/stoneface86/trackerboy
+cd trackerboy
 ```
 
-You should then be able to build the project.
+## 3. Build
 
-### Notes
+Configure using cmake for a release or debug build.
 
-You may need to install the ALSA development libraries when building on linux
-
-For apt based distros:
+For a release build (users):
 ```sh
-sudo apt install libasound2-dev
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON
 ```
 
-# Alternative building
+For a debug build (developers):
+```sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+```
 
-When not using vcpkg, you must provide the cmake packages for RtMidi yourself.
-To do so you must acquire the source, build and install using cmake. Or, you
-can install the library via your system package manager and the
-[FindRtMidi.cmake](./cmake/FindRtMidi.cmake) script should be able to locate
-it.
+Then build:
+```sh
+cmake --build build --target all
+```
+
+For vcpkg users, specify the toolchain file from your vcpkg installation when
+configuring:
+```sh
+... -DCMAKE_TOOLCHAIN_FILE="<VCPKG_ROOT>/scripts/buildsystems/vcpkg.cmake"
+```
+
+## 4. (Optional) install
+
+Depending on your CMAKE_INSTALL_PREFIX, you may need administrator priviledges
+```sh
+cmake --build build --target install
+```
 
 ## Options
 
