@@ -59,11 +59,12 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[no build]')"
     strategy:
       fail-fast: false
-      include:
-        - arch: x64
-          qt-arch: win64_msvc2017_64
-        - arch: x86
-          qt-arch: win32_msvc2017
+      matrix:
+        include:
+          - arch: x64
+            qt-arch: win64_msvc2017_64
+          - arch: x86
+            qt-arch: win32_msvc2017
 
         
     steps:
