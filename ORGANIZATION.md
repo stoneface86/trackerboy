@@ -1,16 +1,10 @@
-# Source Code Organization
-
-Individual components of this repo is organized into projects.
-Each project has a CMakeLists.txt, private header files and source files, and
-unit test code. 
+# Source Code Organization 
 
 Directories
- * `demo/`: Source code for the demo project, Contains programs demonstrating the use of the library (portaudio is required)
- * `external/`: required dependencies/libraries
- * `include/`: public header files for trackerboy and other libraries go here
- * `libtrackerboy/`: Source code for the trackerboy library project
- * `misc/`: miscellaneous stuff
- * `ui/`: Source code for the ui project. Contains the main user interface for trackerboy
+ * `build/`: build directory, contents are not tracked by git
+ * `cmake/`: CMake modules and utilities
+ * `src/`: Source code
+ * `test/`: Unit testing code
 
 
 ## Build system
@@ -21,9 +15,5 @@ the source list in alphabetical order when adding your file.
 
 ## Unit testing
 
-Unit test code follows this naming scheme: `test_<module>.cpp`. Where
-module is the name of the unit you are testing. This file resides in the
-test directory, with similar subdirectory organization as the module you
-are testing.
-
-Catch2 is used as the unit testing framework.
+Qt Test is used as the unit testing framework. Unit test code resides in the
+`test/` folder.

@@ -7,12 +7,6 @@
 
 cmake_minimum_required(VERSION 3.9...3.21)
 
-# use our custom triplet settings
-# - static libraries except for Qt
-# - dynamic CRT
-set(VCPKG_OVERLAY_TRIPLETS "${CMAKE_SOURCE_DIR}/vcpkg-overlays/triplets")
-set(VCPKG_OVERLAY_PORTS "${CMAKE_SOURCE_DIR}/vcpkg-overlays/ports")
-
 # removes default /W3 flag for MSVC 
 # https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/CompilerOverrides.cmake")
@@ -25,8 +19,6 @@ project (
 
 # uncomment if we need some cmake modules (none currently)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
-# use CONFIG mode first, fallback to MODULE
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
 option(ENABLE_UNITY "Enable unity builds" OFF)
 
@@ -36,12 +28,6 @@ if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
 else ()
     set(BUILD_ARCH "x64")
     set(BUILD_IS_32BIT FALSE)
-endif ()
-
-if (NOT VCPKG_TOOLCHAIN)
-    # not using vcpkg, unset this setting
-    unset(VCPKG_OVERLAY_TRIPLETS)
-    unset(VCPKG_OVERLAY_PORTS)
 endif ()
 
 # assume Debug if CMAKE_BUILD_TYPE was not provided
@@ -64,72 +50,18 @@ if (NOT DEBUG_BUILD)
     endif ()
 endif()
 
-
-# ============================================================================
-# Dependencies
-# ============================================================================
-
-# main library for trackerboy (provided via submodule in external/libtrackerboy)
-set(LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY})
-add_subdirectory(external/libtrackerboy)
-
-# Miniaudio library (provided via submodule in external/miniaudio)
-
-# Miniaudio doesn't provide a CMakeLists.txt as it's a single-header library
-# we'll have to DIY it then.
-# The split version is used to speed up compilation, the single c file gets compiled
-# into a library, miniaudio.
-
-add_library(miniaudio STATIC "external/miniaudio/extras/miniaudio_split/miniaudio.c")
-target_include_directories(miniaudio PUBLIC "external/miniaudio/extras/miniaudio_split")
-#
-# add some definitions to cut out stuff we don't need
-#
-target_compile_definitions(miniaudio PUBLIC
-    MA_NO_MP3           # No MP3 decoding
-    MA_NO_FLAC          # No FLAC decoding
-    MA_NO_GENERATION    # No waveform generators
-    MA_NO_CUSTOM        # No custom backend
-)
-if (DEBUG_BUILD)
-    # MA_LOG_LEVEL_INFO for debug builds
-    target_compile_definitions(miniaudio PRIVATE MA_LOG_LEVEL=3)
-endif ()
-# miniaudio dependencies
-# windows: none
-# mac: none
-# linux: pthreads, libm, libdl
-# bsd: pthreads, libm
-if (UNIX AND NOT APPLE)
-   set(THREADS_PREFER_PTHREAD_FLAG ON)
-   find_package(Threads REQUIRED)
-   find_library(LIB_M m)
-   if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-       find_library(LIB_DL dl)
-       target_link_libraries(miniaudio PRIVATE ${LIB_DL})
-   endif ()
-   target_link_libraries(miniaudio PRIVATE Threads::Threads ${LIB_M})
-endif ()
-
-
-include(CTest)
-
-# ============================================================================
-# Sub-projects
-# ============================================================================
-
 #
 # Main program
 #
 add_subdirectory(src)
 
+#
+# Unit tests
+#
 if (BUILD_TESTING)
+    include(CTest)
     add_subdirectory(test)
 endif ()
-
-# ============================================================================
-# Information
-# ============================================================================
 
 message(
     "\n"

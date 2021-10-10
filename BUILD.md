@@ -13,27 +13,28 @@ Requirements:
  * CMake 3.9 or higher
  * [Miniaudio](https://github.com/mackron/miniaudio)
  * [libtrackerboy](https://github.com/stoneface86/libtrackerboy)
- * [RtMidi](https://github.com/thestk/rtmidi)
+ * [RtMidi](https://github.com/thestk/rtmidi) (4.0.0)
+ * (Linux only) ALSA development libraries
  * Qt v5.12.10 or higher
 
-Miniaudio and libtrackerboy are acquired via submodule so there is no need to
-install these libraries on your system. All of the other requirements can be
-acquired from vcpkg, or you can provide your own if that is preferred.
+Miniaudio, libtrackerboy and RtMidi are acquired via FetchContent so there is no
+need to install these libraries on your system (requires CMake 3.11). You will
+however, need to install Qt on your system.
+
+Note: I am using my own fork of miniaudio (located [here](https://github.com/stoneface86/miniaudio-cmake))
+that adds cmake support.
 
 # Recommended build guide
 
+Follow this guide to build Trackerboy.
+
 ## 1. Install Qt / dependencies
 
-You will need to install the Qt5 development libraries. Note that Qt5 is not
-listed as a dependency in the vcpkg manifest as there are better ways of
-acquiring it. Here are a couple ways to get it:
+You will need to install the Qt5 development libraries.
+Here are a couple ways to get it:
  * Install via the official Qt installer (requires Qt account)
  * Install via [aqtinstall](https://github.com/miurahr/aqtinstall)
  * Install via your OS's package manager
- * Install via vcpkg (slow, not recommended)
-
- I do not recommend installing from vcpkg as it builds from source, which can
- take hours depending on your machine. (Also requires several GB of disk space).
 
 I recommend using your system's package manager or aqtinstall if your system
 does not have a package manager.
@@ -43,16 +44,23 @@ your Qt installation when configuring, simply pass
 `-DCMAKE_PREFIX_PATH="path/to/qt"` when running cmake. See these
 [instructions](https://doc.qt.io/qt-5/cmake-get-started.html) for more details.
 
+For Linux builds, you will need to install the ALSA development libraries
+(needed by RtMidi). For apt-based distros:
+```sh
+sudo apt install libasound2-dev
+```
+
 ## 2. Clone the repository
 
 ```sh
-git clone --recursive https://github.com/stoneface86/trackerboy
+git clone https://github.com/stoneface86/trackerboy
 cd trackerboy
 ```
 
 ## 3. Build
 
-Configure using cmake for a release or debug build.
+Configure using cmake for a release or debug build. Debug is assumed if
+you do not specify CMAKE_BUILD_TYPE.
 
 For a release build (users):
 ```sh
@@ -69,18 +77,19 @@ Then build:
 cmake --build build --target all
 ```
 
-For vcpkg users, specify the toolchain file from your vcpkg installation when
-configuring:
-```sh
-... -DCMAKE_TOOLCHAIN_FILE="<VCPKG_ROOT>/scripts/buildsystems/vcpkg.cmake"
-```
-
 ## 4. (Optional) install
 
 Depending on your CMAKE_INSTALL_PREFIX, you may need administrator priviledges
 ```sh
 cmake --build build --target install
 ```
+
+## Building without FetchContent
+
+If you are unable to use FetchContent, you will need to acquire the source,
+build and install for all of the required dependencies (miniaudio, libtrackerboy
+and RtMidi). Then you will set `CMAKE_PREFIX_PATH` to the path of the installed
+dependencies when configuring, along with `FETCH_DEPS=OFF`.
 
 ## Options
 
@@ -91,6 +100,7 @@ Here is a table of options that can be used when building.
 | BUILD_TESTING     | BOOL | ON      | Enables unit testing                                |
 | ENABLE_UNITY      | BOOL | OFF     | Enables unity builds (requires cmake 3.16)          |
 | ENABLE_DEPLOYMENT | BOOL | OFF     | Enables the deploy target                           |
+| FETCH_DEPS        | BOOL | ON      | Acquires dependencies during configuration (requires cmake 3.11) |
 
 Unity builds should only be used if you are just building trackerboy. It is
 not recommended to have this enabled when developing.

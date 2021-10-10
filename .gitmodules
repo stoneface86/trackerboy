@@ -1,6 +1,0 @@
-[submodule "external/miniaudio"]
-	path = external/miniaudio
-	url = https://github.com/mackron/miniaudio
-[submodule "external/libtrackerboy"]
-	path = external/libtrackerboy
-	url = https://github.com/stoneface86/libtrackerboy.git

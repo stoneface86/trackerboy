@@ -1,13 +1,90 @@
 project(src CXX)
 
+#
+# Dependencies
+#
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
-find_package(RtMidi CONFIG)
-if (NOT RtMidi_FOUND)
-    # try again using the find script
-    find_package(RtMidi MODULE REQUIRED)
+
+# interface library containing all of our dependencies
+add_library(deps INTERFACE)
+
+option(FETCH_DEPS "Automatically fetch required dependencies" ON)
+if (FETCH_DEPS AND CMAKE_VERSION VERSION_GREATER 3.10)
+
+    include(FetchContent)
+
+    FetchContent_Declare(
+        miniaudio
+        GIT_REPOSITORY https://github.com/stoneface86/miniaudio-cmake.git
+        GIT_TAG dadfa05c8e189e8336f6441206c3f08d6a52f750 # version 0.10.42
+    )
+
+    FetchContent_Declare(
+        libtrackerboy
+        GIT_REPOSITORY https://github.com/stoneface86/libtrackerboy.git
+        GIT_TAG c65f6e3207f0d5873ff144d4a1a4c1729cebfc6b
+    )
+
+    FetchContent_Declare(
+        rtmidi
+        GIT_REPOSITORY https://github.com/thestk/rtmidi.git
+        GIT_TAG cc887191c3b4cb6697aeba5536d9f4eb423090aa # 4.0.0
+    )
+
+    # FetchContent_MakeAvailable is not used for compatibility reasons
+
+    FetchContent_GetProperties(libtrackerboy)
+    if (NOT libtrackerboy_POPULATED)
+        message(STATUS "Fetching libtrackerboy")
+        FetchContent_Populate(libtrackerboy)
+        set(LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY})
+        add_subdirectory("${libtrackerboy_SOURCE_DIR}" "${libtrackerboy_BINARY_DIR}")
+    endif ()
+
+    FetchContent_GetProperties(miniaudio)
+    if (NOT miniaudio_POPULATED)
+        message(STATUS "Fetching miniaudio")
+        FetchContent_Populate(miniaudio)
+
+        set(MA_NO_MP3 ON)
+        set(MA_NO_FLAC ON)
+        set(MA_NO_GENERATION ON)
+        set(MA_NO_CUSTOM ON)
+        add_subdirectory("${miniaudio_SOURCE_DIR}" "${miniaudio_BINARY_DIR}")
+    endif ()
+
+    FetchContent_GetProperties(rtmidi)
+    if (NOT rtmidi_POPULATED)
+        message(STATUS "Fetching RtMidi")
+        FetchContent_Populate(rtmidi)
+
+        set(RTMIDI_BUILD_STATIC_LIBS ON)
+        set(RTMIDI_BUILD_TESTING OFF)
+        add_subdirectory("${rtmidi_SOURCE_DIR}" "${rtmidi_BINARY_DIR}")
+    endif ()
+
+    target_link_libraries(deps INTERFACE trackerboy miniaudio rtmidi)
+    # hack: RtMidi CMakeList doesn't add an include dir for the rtmidi library
+    target_include_directories(deps INTERFACE "${rtmidi_SOURCE_DIR}")
+else ()
+
+    if (FETCH_DEPS AND CMAKE_VERSION VERSION_LESS 3.11)
+        message(WARNING "cannot fetch dependencies with this version of cmake")
+    endif ()
+
+    # do not fetch dependencies, find them on the system instead
+    # this is typically only used by CI, as CI will build and install the
+    # deps so that they can be cached
+
+    find_package(libtrackerboy CONFIG REQUIRED)
+    find_package(miniaudio CONFIG REQUIRED)
+    find_package(RtMidi CONFIG REQUIRED)
+
+    target_link_libraries(deps INTERFACE trackerboy::trackerboy miniaudio::miniaudio RtMidi::rtmidi)
 endif ()
 
 if (WIN32)
@@ -165,9 +242,7 @@ list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" "version.hpp")
 #
 add_library(ui STATIC ${UI_SRC})
 target_link_libraries(ui PUBLIC 
-    trackerboy
-    miniaudio
-    RtMidi::rtmidi
+    deps
     Qt5::Widgets
 )
 target_compile_features(ui PUBLIC cxx_std_17)
@@ -185,12 +260,6 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -pedantic
         -Wno-missing-field-initializers
     )
-endif ()
-if (VCPKG_TOOLCHAIN)
-    # hack
-    # the toolchain should do this but it does not for some reason ?
-    # might just be a problem with the rtmidi port
-    target_include_directories(ui PUBLIC "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/include")
 endif ()
 
 if (ENABLE_UNITY AND ${CMAKE_VERSION} VERSION_GREATER "3.15")
