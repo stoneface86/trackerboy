@@ -1,140 +1,113 @@
 
+#include "widgets/config/SoundConfigTab.hpp"
 #include "core/audio/AudioProber.hpp"
 #include "core/samplerates.hpp"
-#include "widgets/config/SoundConfigTab.hpp"
+
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QPushButton>
+#include <QSignalBlocker>
 
 #include <array>
 #include <optional>
 #include <cmath>
 
-#include <QSignalBlocker>
 
 
 SoundConfigTab::SoundConfigTab(QWidget *parent) :
-    ConfigTab(Config::CategorySound, parent),
-    mLayout(),
-    mDeviceGroup(tr("Device")),
-    mDeviceLayout(),
-    mApiLabel(tr("API")),
-    mApiCombo(),
-    mDeviceLabel(tr("Device")),
-    mDeviceCombo(),
-    mRescanLayout(),
-    mApiErrorLabel(tr("API unavailable")),
-    mRescanButton(tr("Rescan")),
-    mLatencyLabel(tr("Buffer size")),
-    mLatencySpin(),
-    mPeriodLabel(tr("Period")),
-    mPeriodSpin(),
-    mSamplerateLabel(tr("Sample rate")),
-    mSamplerateCombo(),
-    mQualityGroup(tr("Quality")),
-    mQualityLayout(),
-    mQualityRadioLayout(),
-    mLowQualityRadio(tr("Low")),
-    mMedQualityRadio(tr("Medium")),
-    mHighQualityRadio(tr("High")),
-    mPreviewLayout(),
-    mChannels12Label(tr("CH1 + CH2")),
-    mChannels34Label(tr("CH3 + CH4")),
-    mPreview12(),
-    mPreview34(),
-    mQualityButtons()
+    ConfigTab(Config::CategorySound, parent)
 {
-    // layout
-    mRescanLayout.addStretch();
-    mRescanLayout.addWidget(&mApiErrorLabel);
-    mRescanLayout.addStretch(1);
-    mRescanLayout.addWidget(&mRescanButton);
-    mApiErrorLabel.setVisible(false);
 
-    mDeviceLayout.addWidget(&mApiLabel,         0, 0);
-    mDeviceLayout.addWidget(&mApiCombo,         0, 1);
+    auto layout = new QVBoxLayout;
 
-    mDeviceLayout.addWidget(&mDeviceLabel,      1, 0);
-    mDeviceLayout.addWidget(&mDeviceCombo,      1, 1);
+    auto deviceGroup = new QGroupBox(tr("Device"));
+    auto deviceLayout = new QGridLayout;
 
-    mDeviceLayout.addLayout(&mRescanLayout,     2, 1);
+    // row 0
+    deviceLayout->addWidget(new QLabel(tr("API")), 0, 0);
+    mApiCombo = new QComboBox;
+    deviceLayout->addWidget(mApiCombo, 0, 1);
 
-    mDeviceLayout.addWidget(&mLatencyLabel,     3, 0);
-    mDeviceLayout.addWidget(&mLatencySpin,      3, 1);
-    mDeviceLayout.addWidget(&mPeriodLabel,      4, 0);
-    mDeviceLayout.addWidget(&mPeriodSpin,       4, 1);
-    mDeviceLayout.addWidget(&mSamplerateLabel,  5, 0);
-    mDeviceLayout.addWidget(&mSamplerateCombo,  5, 1);
+    // row 1
+    deviceLayout->addWidget(new QLabel(tr("Device")), 1, 0);
+    mDeviceCombo = new QComboBox;
+    deviceLayout->addWidget(mDeviceCombo, 1, 1);
 
-    mDeviceLayout.setColumnStretch(1, 1);
-    mDeviceGroup.setLayout(&mDeviceLayout);
+    // row 2
+    auto rescanLayout = new QHBoxLayout;
+    mApiErrorLabel = new QLabel(tr("API Unavailable"));
+    rescanLayout->addStretch();
+    rescanLayout->addWidget(mApiErrorLabel);
+    rescanLayout->addStretch(1);
+    auto rescanButton = new QPushButton(tr("Rescan"));
+    rescanLayout->addWidget(rescanButton);
+    deviceLayout->addLayout(rescanLayout, 2, 1);
 
-    mQualityRadioLayout.addWidget(&mLowQualityRadio);
-    mQualityRadioLayout.addWidget(&mMedQualityRadio);
-    mQualityRadioLayout.addWidget(&mHighQualityRadio);
-    
-    mPreviewLayout.addWidget(&mChannels12Label, 0, 0);
-    mPreviewLayout.addWidget(&mChannels34Label, 0, 1);
-    mPreviewLayout.addWidget(&mPreview12, 1, 0);
-    mPreviewLayout.addWidget(&mPreview34, 1, 1);
+    deviceGroup->setLayout(deviceLayout);
 
 
-    mQualityLayout.addLayout(&mQualityRadioLayout);
-    mQualityLayout.addLayout(&mPreviewLayout, 1);
-    mQualityGroup.setLayout(&mQualityLayout);
+    auto audioGroup = new QGroupBox(tr("Audio"));
+    auto audioLayout = new QGridLayout;
 
-    mLayout.addWidget(&mDeviceGroup);
-    mLayout.addWidget(&mQualityGroup);
-    mLayout.addStretch();
-    setLayout(&mLayout);
+    // row 0, buffer size (latency)
+    audioLayout->addWidget(new QLabel(tr("Buffer size")), 0, 0);
+    mLatencySpin = new QSpinBox;
+    audioLayout->addWidget(mLatencySpin, 0, 1);
+
+    // row 1, period
+    audioLayout->addWidget(new QLabel(tr("Period")), 1, 0);
+    mPeriodSpin = new QSpinBox;
+    audioLayout->addWidget(mPeriodSpin, 1, 1);
+
+    // row 2, samplerate
+    audioLayout->addWidget(new QLabel(tr("Sample rate")), 2, 0);
+    mSamplerateCombo = new QComboBox;
+    audioLayout->addWidget(mSamplerateCombo, 2, 1);
+
+    audioGroup->setLayout(audioLayout);
+
+    layout->addWidget(deviceGroup);
+    layout->addWidget(audioGroup);
+    layout->addStretch();
+    setLayout(layout);
+
 
     // settings
-    mDeviceCombo.setMaximumWidth(300); // device names can get pretty long sometimes
+    mDeviceCombo->setMaximumWidth(300); // device names can get pretty long sometimes
 
     auto &prober = AudioProber::instance();
-    mApiCombo.addItems(prober.backendNames());
+    mApiCombo->addItems(prober.backendNames());
     // populate samplerate combo
     for (int i = 0; i != N_SAMPLERATES; ++i) {
-        mSamplerateCombo.addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
+        mSamplerateCombo->addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
     }
 
-    setupTimeSpinbox(mLatencySpin);
-    mLatencySpin.setMinimum(SoundConfig::MIN_LATENCY);
-    mLatencySpin.setMaximum(SoundConfig::MAX_LATENCY);
+    auto setupTimeSpinbox = [](QSpinBox &spin, int min, int max) {
+        spin.setSuffix(tr(" ms"));
+        spin.setMinimum(min);
+        spin.setMaximum(max);
+    };
+    setupTimeSpinbox(*mLatencySpin, SoundConfig::MIN_LATENCY, SoundConfig::MAX_LATENCY);
+    setupTimeSpinbox(*mPeriodSpin, SoundConfig::MIN_PERIOD, SoundConfig::MAX_PERIOD);
 
-    setupTimeSpinbox(mPeriodSpin);
-    mPeriodSpin.setMinimum(SoundConfig::MIN_PERIOD);
-    mPeriodSpin.setMaximum(SoundConfig::MAX_PERIOD);
-
-    mLowQualityRadio.setToolTip(tr("Linear interpolation on all channels"));
-    mMedQualityRadio.setToolTip(tr("Sinc interpolation on channels 1 and 2, linear interpolation on channels 3 and 4."));
-    mHighQualityRadio.setToolTip(tr("Sinc interpolation on all channels"));
-    
-    mQualityButtons.addButton(&mLowQualityRadio, 0);
-    mQualityButtons.addButton(&mMedQualityRadio, 1);
-    mQualityButtons.addButton(&mHighQualityRadio, 2);
+    mApiErrorLabel->setVisible(false);
 
     // any changes made by the user will mark this tab as "dirty"
-    connect(&mSamplerateCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty);
-    connect(&mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::apiChanged);
-    connect(&mDeviceCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::onDeviceComboSelected);
-    connect(&mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::onDeviceComboSelected);
-    connect(&mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
-    connect(&mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
-    connect(&mQualityButtons, qOverload<QAbstractButton*, bool>(&QButtonGroup::buttonToggled), this, &SoundConfigTab::qualityRadioToggled);
-    connect(&mRescanButton, &QPushButton::clicked, this, &SoundConfigTab::rescan);
-}
-
-void SoundConfigTab::setupTimeSpinbox(QSpinBox &spin) {
-    spin.setSuffix(tr(" ms"));
-    spin.setMinimum(1);
+    connect(mSamplerateCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty);
+    connect(mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::apiChanged);
+    connect(mDeviceCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty);
+    connect(mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty);
+    connect(mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
+    connect(mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
 }
 
 void SoundConfigTab::apply(SoundConfig &soundConfig) {
-    soundConfig.setBackendIndex(mApiCombo.currentIndex());
-    soundConfig.setDeviceIndex(mDeviceCombo.currentIndex());
-    soundConfig.setSamplerateIndex(mSamplerateCombo.currentIndex());
+    soundConfig.setBackendIndex(mApiCombo->currentIndex());
+    soundConfig.setDeviceIndex(mDeviceCombo->currentIndex());
+    soundConfig.setSamplerateIndex(mSamplerateCombo->currentIndex());
 
-    soundConfig.setLatency(mLatencySpin.value());
-    soundConfig.setPeriod(mPeriodSpin.value());
-    soundConfig.setQuality(mQualityButtons.checkedId());
+    soundConfig.setLatency(mLatencySpin->value());
+    soundConfig.setPeriod(mPeriodSpin->value());
 
     clean();
 }
@@ -142,67 +115,58 @@ void SoundConfigTab::apply(SoundConfig &soundConfig) {
 void SoundConfigTab::resetControls(SoundConfig const& soundConfig) {
 
     {
-        QSignalBlocker blocker(&mApiCombo);
-        mApiCombo.setCurrentIndex(soundConfig.backendIndex());
+        QSignalBlocker blocker(mApiCombo);
+        mApiCombo->setCurrentIndex(soundConfig.backendIndex());
     }
 
 
     {
-        QSignalBlocker blocker(&mDeviceCombo);
+        QSignalBlocker blocker(mDeviceCombo);
         populateDevices();
-        mDeviceCombo.setCurrentIndex(soundConfig.deviceIndex());
+        mDeviceCombo->setCurrentIndex(soundConfig.deviceIndex());
     }
 
-    mSamplerateCombo.setCurrentIndex(soundConfig.samplerateIndex());
+    mSamplerateCombo->setCurrentIndex(soundConfig.samplerateIndex());
 
-    mLatencySpin.setValue(soundConfig.latency());
-    mPeriodSpin.setValue(soundConfig.period());
-    mQualityButtons.button(soundConfig.quality())->setChecked(true);
+    mLatencySpin->setValue(soundConfig.latency());
+    mPeriodSpin->setValue(soundConfig.period());
 
     clean();
 }
 
-void SoundConfigTab::qualityRadioToggled(QAbstractButton *btn, bool checked) {
-    if (checked) {
-        //auto id = mQualityButtons.id(btn);
-        //mPreview12.setHighQuality(id != (int)gbapu::Apu::Quality::low);
-        //mPreview34.setHighQuality(id == (int)gbapu::Apu::Quality::high);
-        setDirty();
-    }
-}
 
 void SoundConfigTab::apiChanged(int index) {
     Q_UNUSED(index)
     rescan(true); // new api selected, pick the default device
-    mApiErrorLabel.setVisible(!AudioProber::instance().backendInitialized(index));
+    mApiErrorLabel->setVisible(!AudioProber::instance().backendInitialized(index));
     setDirty();
 }
 
 void SoundConfigTab::populateDevices() {
-    mDeviceCombo.clear();
-    mDeviceCombo.addItem(tr("Default device"));
-    mDeviceCombo.addItems(AudioProber::instance().deviceNames(mApiCombo.currentIndex()));
+    mDeviceCombo->clear();
+    mDeviceCombo->addItem(tr("Default device"));
+    mDeviceCombo->addItems(AudioProber::instance().deviceNames(mApiCombo->currentIndex()));
 }
 
 void SoundConfigTab::rescan(bool rescanDueToApiChange) {
     
-    auto const backendIndex = mApiCombo.currentIndex();
+    auto const backendIndex = mApiCombo->currentIndex();
 
     auto &prober = AudioProber::instance();
     
-    mDeviceCombo.blockSignals(true);
+    mDeviceCombo->blockSignals(true);
 
     if (rescanDueToApiChange) {
         prober.probe(backendIndex);
         populateDevices();
-        mDeviceCombo.setCurrentIndex(0); // default
+        mDeviceCombo->setCurrentIndex(0); // default
     } else {
 
         // get a copy of the current id
         // the current index becomes invalid when devices are added/removed
         // so we'll search after probing for the current device using it's id
         std::optional<ma_device_id> idCopy;
-        auto id = prober.deviceId(backendIndex, mDeviceCombo.currentIndex());
+        auto id = prober.deviceId(backendIndex, mDeviceCombo->currentIndex());
         if (id) {
             idCopy = *id;
         }
@@ -217,16 +181,9 @@ void SoundConfigTab::rescan(bool rescanDueToApiChange) {
         } else {
             index = 0;
         }
-        mDeviceCombo.setCurrentIndex(index);
+        mDeviceCombo->setCurrentIndex(index);
 
     }
-    mDeviceCombo.blockSignals(false);
+    mDeviceCombo->blockSignals(false);
 
-}
-
-void SoundConfigTab::onDeviceComboSelected(int index) {
-    Q_UNUSED(index)
-
-    //mDeviceConfig.setDevice(index);
-    setDirty();
 }

@@ -17,8 +17,7 @@ SoundConfig::SoundConfig() :
     mDeviceIndex(0),
     mSamplerateIndex(4),
     mLatency(40),
-    mPeriod(5),
-    mQuality(1)
+    mPeriod(5)
 {
 }
 
@@ -44,10 +43,6 @@ int SoundConfig::latency() const {
 
 int SoundConfig::period() const {
     return mPeriod;
-}
-
-int SoundConfig::quality() const {
-    return mQuality;
 }
 
 void SoundConfig::setBackendIndex(int index) {
@@ -97,14 +92,6 @@ void SoundConfig::setPeriod(int period) {
     mPeriod = period;
 }
 
-void SoundConfig::setQuality(int quality) {
-    if (quality < MIN_QUALITY || quality > MAX_QUALITY) {
-        qWarning() << TU::LOG_PREFIX << "invalid quality";
-        return;
-    }
-    mQuality = quality;
-}
-
 void SoundConfig::readSettings(QSettings &settings) {
     settings.beginGroup(Keys::Sound);
 
@@ -150,7 +137,6 @@ void SoundConfig::readSettings(QSettings &settings) {
     setSamplerate(settings.value(Keys::samplerate, samplerate()).toInt());
     setLatency(settings.value(Keys::latency, mLatency).toInt());
     setPeriod(settings.value(Keys::period, mPeriod).toInt());
-    setQuality(settings.value(Keys::quality, mQuality).toInt());
 
     settings.endGroup();
 }
@@ -176,7 +162,6 @@ void SoundConfig::writeSettings(QSettings &settings) const {
     settings.setValue(Keys::samplerate, samplerate());
     settings.setValue(Keys::latency, mLatency);
     settings.setValue(Keys::period, mPeriod);
-    settings.setValue(Keys::quality, mQuality);
 
     settings.endGroup();
 }

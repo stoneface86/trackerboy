@@ -28,7 +28,6 @@ QString const key { QStringLiteral("key") };
 QString const samplerate { QStringLiteral("samplerate") };
 QString const period { QStringLiteral("period") };
 QString const latency { QStringLiteral("latency") };
-QString const quality { QStringLiteral("quality") };
 QString const deviceId { QStringLiteral("deviceId") };
 
 }

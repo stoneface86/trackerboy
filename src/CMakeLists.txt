@@ -206,7 +206,6 @@ makeSourceList(UI_SRC
     "widgets/config/ConfigTab"
     "widgets/config/MidiConfigTab"
     "widgets/config/SoundConfigTab"
-    "widgets/config/SoundQualityPreview"
     "widgets/docks/TableDock"
     "widgets/grid/PatternGrid"
     "widgets/grid/PatternGridHeader"

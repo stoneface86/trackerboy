@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - Command line argument parsing, you can now open a module on application startup
+### Removed
+ - Synthesizer quality setting in Sound configuration
 
 ## [0.5.0] - 2021-09-10
 ### Added

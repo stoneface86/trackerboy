@@ -39,7 +39,6 @@ extern QString const key;
 extern QString const samplerate;
 extern QString const period;
 extern QString const latency;
-extern QString const quality;
 extern QString const deviceId;
 
 }

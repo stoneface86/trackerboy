@@ -13,10 +13,6 @@ public:
     static constexpr int MIN_LATENCY = 1;
     static constexpr int MAX_LATENCY = 500;
 
-    static constexpr int MIN_QUALITY = 0;
-    static constexpr int MAX_QUALITY = 2;
-
-
     SoundConfig();
     
     int backendIndex() const;
@@ -25,7 +21,6 @@ public:
     int samplerateIndex() const;
     int latency() const;
     int period() const;
-    int quality() const;
 
     void setBackendIndex(int index);
 
@@ -38,8 +33,6 @@ public:
     void setLatency(int latency);
 
     void setPeriod(int period);
-
-    void setQuality(int quality);
     
     void readSettings(QSettings &settings);
 
@@ -52,5 +45,4 @@ private:
     int mSamplerateIndex;        // index of the current samplerate
     int mLatency;                // latency, or internal buffer size, in milliseconds
     int mPeriod;                 // period, in milliseconds
-    int mQuality;                // synthesizer quality setting
 };
