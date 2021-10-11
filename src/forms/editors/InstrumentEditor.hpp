@@ -67,5 +67,6 @@ private:
     std::array<SequenceEditor*, 4> mSequenceEditors;
 
     std::shared_ptr<trackerboy::Instrument> mInstrument;
+    bool mCanEdit;
 
 };

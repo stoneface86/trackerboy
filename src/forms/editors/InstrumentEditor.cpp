@@ -28,7 +28,8 @@ InstrumentEditor::InstrumentEditor(
     mWaveformEditButton(nullptr),
     mSequenceTabs(nullptr),
     mSequenceEditors(),
-    mInstrument(nullptr)
+    mInstrument(nullptr),
+    mCanEdit(true)
 {
     setWindowTitle(tr("Instrument editor"));
     auto channelGroup = new QGroupBox(tr("Channel"));
@@ -156,11 +157,11 @@ InstrumentEditor::InstrumentEditor(
 
 void InstrumentEditor::setChannel(int channel) {
     auto chtype = static_cast<trackerboy::ChType>(channel);
-    if (chtype != mInstrument->channel()) {
+    if (mCanEdit && chtype != mInstrument->channel()) {
         auto ctx = mModule.permanentEdit();
         mInstrument->setChannel(chtype);
+        model().updateChannelIcon(currentItem());
     }
-    model().updateChannelIcon(currentItem());
 
 }
 
@@ -172,18 +173,15 @@ void InstrumentEditor::setCurrentItem(int index) {
     
     if (mInstrument) {
 
+        mCanEdit = false;
         auto channel = mInstrument->channel();
-        {
-            QSignalBlocker blocker(mChannelCombo);
-            mChannelCombo->setCurrentIndex(static_cast<int>(channel));
-        }
-        {
-            QSignalBlocker blocker(mSetEnvelopeCheck);
-            bool const hasEnvelope = mInstrument->hasEnvelope();
-            mSetEnvelopeCheck->setChecked(hasEnvelope);
-            mEnvelopeGroup->setEnabled(hasEnvelope);
-            mWaveformGroup->setEnabled(hasEnvelope);
-        }
+        mChannelCombo->setCurrentIndex(static_cast<int>(channel));
+
+        bool const hasEnvelope = mInstrument->hasEnvelope();
+        mSetEnvelopeCheck->setChecked(hasEnvelope);
+        mEnvelopeGroup->setEnabled(hasEnvelope);
+        mWaveformGroup->setEnabled(hasEnvelope);
+
 
         auto envelope = mInstrument->envelope();
         if (channel == trackerboy::ChType::ch3) {
@@ -193,6 +191,7 @@ void InstrumentEditor::setCurrentItem(int index) {
             QSignalBlocker blocker(mEnvelopeForm);
             mEnvelopeForm->setEnvelope(envelope);
         }
+        mCanEdit = true;
         
     }
 
@@ -207,14 +206,14 @@ void InstrumentEditor::setEnvelopeToWaveform(int index) {
 }
 
 void InstrumentEditor::setEnvelope(uint8_t envelope) {
-    if (mInstrument->envelope() != envelope) {
+    if (mCanEdit && mInstrument->envelope() != envelope) {
         auto ctx = mModule.permanentEdit();
         mInstrument->setEnvelope(envelope);
     }
 }
 
 void InstrumentEditor::setEnvelopeEnable(bool enabled) {
-    if (mInstrument->hasEnvelope() != enabled) {
+    if (mCanEdit && mInstrument->hasEnvelope() != enabled) {
         auto ctx = mModule.permanentEdit();
         mInstrument->setEnvelopeEnable(enabled);
     }
