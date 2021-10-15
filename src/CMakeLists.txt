@@ -16,24 +16,7 @@ option(FETCH_DEPS "Automatically fetch required dependencies" ON)
 if (FETCH_DEPS AND CMAKE_VERSION VERSION_GREATER 3.10)
 
     include(FetchContent)
-
-    FetchContent_Declare(
-        miniaudio
-        GIT_REPOSITORY https://github.com/stoneface86/miniaudio-cmake.git
-        GIT_TAG dadfa05c8e189e8336f6441206c3f08d6a52f750 # version 0.10.42
-    )
-
-    FetchContent_Declare(
-        libtrackerboy
-        GIT_REPOSITORY https://github.com/stoneface86/libtrackerboy.git
-        GIT_TAG c65f6e3207f0d5873ff144d4a1a4c1729cebfc6b
-    )
-
-    FetchContent_Declare(
-        rtmidi
-        GIT_REPOSITORY https://github.com/thestk/rtmidi.git
-        GIT_TAG cc887191c3b4cb6697aeba5536d9f4eb423090aa # 4.0.0
-    )
+    include("${CMAKE_CURRENT_LIST_DIR}/dependencies.cmake")
 
     # FetchContent_MakeAvailable is not used for compatibility reasons
 

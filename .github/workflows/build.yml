@@ -50,7 +50,7 @@ jobs:
           # FetchContent puts all its content in ${CMAKE_BINARY_DIR}/_deps
           # so we can just cache this entire folder
           path: ${{ github.workspace }}/build/_deps
-          key: ${{ matrix.os }}-${{ matrix.arch }}-deps
+          key: ${{ matrix.os }}-${{ matrix.arch }}-${{ hashFiles('src/dependencies.cmake') }}-deps
      
       - name: Cache Qt
         id: cache-qt
