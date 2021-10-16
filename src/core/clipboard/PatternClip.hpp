@@ -21,6 +21,11 @@ class PatternClip {
 public:
 
     //
+    // MIME type for the clip data
+    //
+    static constexpr auto MIME_TYPE = "application/x-trackerboy-clip";
+
+    //
     // Default contructor. Clip initialized with no data.
     //
     PatternClip();
@@ -76,10 +81,12 @@ public:
     //
     bool fromMime(QMimeData const* data);
 
+    friend bool operator==(PatternClip const& lhs, PatternClip const& rhs) noexcept;
+    friend bool operator!=(PatternClip const& lhs, PatternClip const& rhs) noexcept;
+
 private:
 
-    template <bool mix>
-    void pasteImpl(trackerboy::Pattern &dest, std::optional<PatternCursor> pos) const;
+    void pasteImpl(trackerboy::Pattern &dest, std::optional<PatternCursor> pos, bool mixPaste) const;
 
     std::unique_ptr<char[]> mData;
     PatternSelection mLocation;

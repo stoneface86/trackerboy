@@ -47,9 +47,8 @@
 //
 
 
-
-
-constexpr auto MIME_TYPE = "application/trackerboy";
+#define TU PatternClipTU
+namespace TU {
 
 // might want to make this a table instead
 // this function converts a select column to an offset in the trackerboy::TrackRow structure
@@ -95,6 +94,7 @@ size_t getRowLength(PatternSelection::Iterator const& iter) {
     return length - columnToOffset(iter.columnStart());
 }
 
+}
 
 PatternClip::PatternClip() :
     mData(),
@@ -109,16 +109,16 @@ PatternClip::PatternClip(PatternClip const& clip) :
 }
 
 PatternClip::PatternClip(PatternClip &&clip) noexcept :
-    mData(std::exchange(clip.mData, nullptr)),
-    mLocation(clip.mLocation)
+    PatternClip()
 {
+    operator=(std::move(clip));
 }
 
 PatternClip& PatternClip::operator=(PatternClip const& clip) {
     if (clip.mData) {
         auto iter = clip.mLocation.iterator();
-        auto size = getRowLength(iter) * iter.rows();
-        mData.reset(new char[size]);
+        auto size = TU::getRowLength(iter) * iter.rows();
+        mData = std::make_unique<char[]>(size);
         std::copy_n(clip.mData.get(), size, mData.get());
         mLocation = clip.mLocation;
     } else {
@@ -130,8 +130,10 @@ PatternClip& PatternClip::operator=(PatternClip const& clip) {
 }
 
 PatternClip& PatternClip::operator=(PatternClip &&clip) noexcept {
-    std::swap(mData, clip.mData);
+    // move the clips data to ours, resetting the clip's data
+    mData = std::exchange(clip.mData, nullptr);
     mLocation = clip.mLocation;
+    clip.mLocation = {};
     return *this;
 }
 
@@ -148,26 +150,25 @@ PatternSelection const& PatternClip::selection() {
 }
 
 void PatternClip::restore(trackerboy::Pattern &dest) const {
-    pasteImpl<false>(dest, std::nullopt);
+    pasteImpl(dest, std::nullopt, false);
 
 }
 
 void PatternClip::paste(trackerboy::Pattern &dest, PatternCursor pos, bool mix) const {
     if (mix) {
-        pasteImpl<true>(dest, pos);
+        pasteImpl(dest, pos, true);
     } else {
-        pasteImpl<false>(dest, pos);
+        pasteImpl(dest, pos, false);
     }
 
 }
 
-template <bool tMix>
-void PatternClip::pasteImpl(trackerboy::Pattern &dest, std::optional<PatternCursor> pos) const {
+void PatternClip::pasteImpl(trackerboy::Pattern &dest, std::optional<PatternCursor> pos, bool mixPaste) const {
     
 
-    auto bufAtRowStart = mData.get();
+    char const* bufAtRowStart = mData.get();
     auto iter = mLocation.iterator();
-    auto const rowLength = getRowLength(iter);
+    auto const rowLength = TU::getRowLength(iter);
     
     int trackEnd, rowEnd, rowStart;
 
@@ -198,8 +199,8 @@ void PatternClip::pasteImpl(trackerboy::Pattern &dest, std::optional<PatternCurs
 
     for (auto track = iter.trackStart(); track <= trackEnd; ++track) {
         auto const tmeta = iter.getTrackMeta(track);
-        auto const offset = columnToOffset(tmeta.columnStart());
-        auto const length = columnToLength(tmeta.columnEnd()) - offset;
+        auto const offset = TU::columnToOffset(tmeta.columnStart());
+        auto const length = TU::columnToLength(tmeta.columnEnd()) - offset;
         // with this assertion passing, we will never read or write past
         // the bounds of a TrackRow
         Q_ASSERT(offset + length <= sizeof(trackerboy::TrackRow));
@@ -210,7 +211,7 @@ void PatternClip::pasteImpl(trackerboy::Pattern &dest, std::optional<PatternCurs
             auto bufAtTrack = bufAtRowStart;
             for (int row = rowStart; row <= rowEnd; ++row) {
                 auto &rowdata = dest.getTrackRow(static_cast<trackerboy::ChType>(track), (uint16_t)row);
-                if constexpr (tMix) {
+                if (mixPaste) {
                     // construct a TrackRow from the clip data
                     trackerboy::TrackRow src;
                     std::copy_n(bufAtTrack, length, reinterpret_cast<char*>(&src) + offset);
@@ -269,17 +270,17 @@ void PatternClip::save(trackerboy::Pattern const& src, PatternSelection region) 
     auto const iter = mLocation.iterator();
 
     // determine the row length
-    auto const rowLength = getRowLength(iter);
+    auto const rowLength = TU::getRowLength(iter);
 
     auto const bufsize = rowLength * iter.rows();
     Q_ASSERT(bufsize != 0);
-    mData.reset(new char[bufsize]);
+    mData = std::make_unique<char[]>(bufsize);
 
     auto bufAtRowStart = mData.get();
     for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
         auto const tmeta = iter.getTrackMeta(track);
-        auto const offset = columnToOffset(tmeta.columnStart());
-        auto const length = columnToLength(tmeta.columnEnd()) - offset;
+        auto const offset = TU::columnToOffset(tmeta.columnStart());
+        auto const length = TU::columnToLength(tmeta.columnEnd()) - offset;
         // with this assertion passing, we will never read or write past
         // the bounds of a TrackRow
         Q_ASSERT(offset + length <= sizeof(trackerboy::TrackRow));
@@ -301,7 +302,7 @@ void PatternClip::save(trackerboy::Pattern const& src, PatternSelection region) 
 void PatternClip::toMime(QMimeData *mime) const {
 
     auto iter = mLocation.iterator();
-    size_t datasize = getRowLength(iter) * iter.rows();
+    size_t datasize = TU::getRowLength(iter) * iter.rows();
     QByteArray arr((int)(sizeof(mLocation) + datasize), '\0');
 
     auto dataptr = arr.data();
@@ -332,9 +333,9 @@ bool PatternClip::fromMime(QMimeData const* mime) {
     dataptr += sizeof(mLocation);
 
     auto iter = mLocation.iterator();
-    size_t datasize = getRowLength(iter) * iter.rows();
+    size_t datasize = TU::getRowLength(iter) * iter.rows();
     if (datasize == size) {
-        mData.reset(new char[datasize]);
+        mData = std::make_unique<char[]>(datasize);
         std::copy_n(dataptr, datasize, mData.get());
         return true;
     } else {
@@ -344,4 +345,31 @@ bool PatternClip::fromMime(QMimeData const* mime) {
 
 }
 
+bool operator==(PatternClip const& lhs, PatternClip const& rhs) noexcept {
+    if (lhs.mData && rhs.mData) {
+        auto leftIter = lhs.mLocation.iterator();
+        auto rightIter = rhs.mLocation.iterator();
 
+        // check if the selection is the same
+        if (leftIter.start() == rightIter.start() && leftIter.end() == rightIter.end()) {
+            auto leftsize = TU::getRowLength(leftIter) * leftIter.rows();
+            auto rightsize = TU::getRowLength(rightIter) * rightIter.rows();
+            if (leftsize != rightsize) {
+                return false;
+            } else {
+                // determine if the clipped data is the same
+                return std::equal(lhs.mData.get(), lhs.mData.get() + leftsize, rhs.mData.get());
+            }
+        } else {
+            return false;
+        }
+    }
+
+    return lhs.mData == nullptr && rhs.mData == nullptr;
+}
+
+bool operator!=(PatternClip const& lhs, PatternClip const& rhs) noexcept {
+    return !(lhs == rhs);
+}
+
+#undef TU
