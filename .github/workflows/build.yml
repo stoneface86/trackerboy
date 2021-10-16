@@ -73,6 +73,8 @@ jobs:
         run: cmake --build build --target all
       
       - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: |
           cd build
           ctest --output-on-failure
