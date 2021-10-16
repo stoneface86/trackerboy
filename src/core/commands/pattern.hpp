@@ -3,11 +3,103 @@
 
 class PatternModel;
 
+#include "core/clipboard/PatternClip.hpp"
+
 #include "trackerboy/data/TrackRow.hpp"
 
 #include <QUndoCommand>
 
 #include <cstdint>
+
+
+//
+// Base class for commands that operate on a PatternSelection
+//
+class SelectionCmd : public QUndoCommand {
+
+protected:
+    PatternModel &mModel;
+    uint8_t mPattern;
+    PatternClip mClip;
+
+    //
+    // initializes the command by saving a clip of the current selection
+    //
+    explicit SelectionCmd(PatternModel &model);
+
+    //
+    // Restores the saved clip
+    //
+    void restore(bool update);
+
+};
+
+//
+// Command for erasing the contents of a selection
+//
+class EraseCmd : public SelectionCmd {
+
+public:
+
+    EraseCmd(PatternModel &model);
+
+    virtual void redo() override;
+
+    virtual void undo() override;
+
+};
+
+//
+// Command for pasting pattern data
+//
+class PasteCmd : public QUndoCommand {
+
+    PatternModel &mModel;
+    PatternClip mSrc;
+    PatternClip mPast;
+    PatternCursor mPos;
+    uint8_t mPattern;
+    bool mMix;
+
+public:
+    PasteCmd(
+        PatternModel &model,
+        PatternClip const& clip,
+        PatternCursor pos,
+        bool mix
+    );
+
+    virtual void redo() override;
+
+    virtual void undo() override;
+
+};
+
+//
+// Command for reversing the contents of a selection. While reverse applies to
+// a selection, we do not inherit from SelectionCmd, as its
+// redo/undo actions are the same (reversing is an involutory function). So
+// there is no need to save a chunk of the selection for undo'ing
+//
+class ReverseCmd : public QUndoCommand {
+
+    PatternModel &mModel;
+    PatternSelection mSelection;
+    uint8_t mPattern;
+
+public:
+
+    explicit ReverseCmd(PatternModel &model);
+
+    virtual void redo() override;
+
+    virtual void undo() override;
+
+private:
+
+    void reverse();
+
+};
 
 //
 // Base command class for editing a column in a track row
@@ -109,4 +201,19 @@ protected:
 
 };
 
+//
+// Command for transposing all notes in a selection by a given semitone offset.
+//
+class TransposeCmd : public SelectionCmd {
 
+    int8_t mTransposeAmount; // semitones to transpose all notes by
+
+public:
+
+    explicit TransposeCmd(PatternModel &model, int8_t transposeAmount);
+
+    virtual void redo() override;
+
+    virtual void undo() override;
+
+};

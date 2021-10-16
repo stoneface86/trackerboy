@@ -1,6 +1,5 @@
 
 #include "forms/AboutDialog.hpp"
-#include "GitSHA1.hpp"
 #include "version.hpp"
 
 AboutDialog::AboutDialog(QWidget *parent) :

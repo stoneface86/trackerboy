@@ -238,6 +238,7 @@ private slots:
 
             // buffer is too big
             data.resize(data.size() + 10);
+            badMime.setData(PatternClip::MIME_TYPE, data);
 
             PatternClip clip;
             QVERIFY(!clip.fromMime(&badMime));

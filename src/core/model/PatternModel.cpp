@@ -1,15 +1,7 @@
 
 #include "core/model/PatternModel.hpp"
-#include "core/commands/order/OrderEditCmd.hpp"
-#include "core/commands/order/OrderDuplicateCmd.hpp"
-#include "core/commands/order/OrderInsertCmd.hpp"
-#include "core/commands/order/OrderRemoveCmd.hpp"
-#include "core/commands/order/OrderSwapCmd.hpp"
-#include "core/commands/pattern/EraseCmd.hpp"
-#include "core/commands/pattern/PasteCmd.hpp"
-#include "core/commands/pattern/ReverseCmd.hpp"
-#include "core/commands/pattern/TrackEditCmd.hpp"
-#include "core/commands/pattern/TransposeCmd.hpp"
+#include "core/commands/order.hpp"
+#include "core/commands/pattern.hpp"
 #include "core/misc/utils.hpp"
 
 #include "trackerboy/note.hpp"

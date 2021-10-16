@@ -3,12 +3,6 @@ project(src CXX)
 #
 # Dependencies
 #
-
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-
-
 # interface library containing all of our dependencies
 add_library(deps INTERFACE)
 
@@ -70,6 +64,10 @@ else ()
     target_link_libraries(deps INTERFACE trackerboy::trackerboy miniaudio::miniaudio RtMidi::rtmidi)
 endif ()
 
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 if (WIN32)
     set(GUI_TYPE WIN32)
     set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
@@ -118,17 +116,8 @@ makeSourceList(UI_SRC
     "core/audio/VisualizerBuffer"
     "core/clipboard/PatternClip"
     "core/clipboard/PatternClipboard"
-    "core/commands/order/OrderDuplicateCmd"
-    "core/commands/order/OrderEditCmd"
-    "core/commands/order/OrderInsertCmd"
-    "core/commands/order/OrderRemoveCmd"
-    "core/commands/order/OrderSwapCmd"
-    "core/commands/pattern/EraseCmd"
-    "core/commands/pattern/PasteCmd"
-    "core/commands/pattern/ReverseCmd"
-    "core/commands/pattern/SelectionCmd"
-    "core/commands/pattern/TrackEditCmd"
-    "core/commands/pattern/TransposeCmd"
+    "core/commands/order"
+    "core/commands/pattern"
     "core/config/AppearanceConfig"
     "core/config/GeneralConfig"
     #"core/config/KeyboardConfig"
@@ -212,9 +201,6 @@ makeSourceList(UI_SRC
 # https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake/4318642#4318642
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
-
-configure_file("GitSHA1.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" @ONLY)
-list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/GitSHA1.cpp" "GitSHA1.hpp")
 
 configure_file("version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
 list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" "version.hpp")
