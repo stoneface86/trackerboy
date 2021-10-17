@@ -1,7 +1,7 @@
 
 #include "widgets/config/SoundConfigTab.hpp"
 #include "core/audio/AudioProber.hpp"
-#include "core/samplerates.hpp"
+#include "core/StandardRates.hpp"
 
 #include <QGridLayout>
 #include <QGroupBox>
@@ -78,8 +78,8 @@ SoundConfigTab::SoundConfigTab(QWidget *parent) :
     auto &prober = AudioProber::instance();
     mApiCombo->addItems(prober.backendNames());
     // populate samplerate combo
-    for (int i = 0; i != N_SAMPLERATES; ++i) {
-        mSamplerateCombo->addItem(tr("%1 Hz").arg(SAMPLERATE_TABLE[i]));
+    for (int i = 0; i != StandardRates::COUNT; ++i) {
+        mSamplerateCombo->addItem(tr("%1 Hz").arg(StandardRates::get(i)));
     }
 
     auto setupTimeSpinbox = [](QSpinBox &spin, int min, int max) {

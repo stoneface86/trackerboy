@@ -1,6 +1,6 @@
 
 #include "core/audio/Renderer.hpp"
-#include "core/samplerates.hpp"
+#include "core/StandardRates.hpp"
 #include "core/misc/utils.hpp"
 
 #include "trackerboy/engine/ChannelControl.hpp"

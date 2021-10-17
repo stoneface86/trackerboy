@@ -3,7 +3,7 @@
 
 #include "core/audio/AudioProber.hpp"
 #include "core/config/keys.hpp"
-#include "core/samplerates.hpp"
+#include "core/StandardRates.hpp"
 
 #include <QtDebug>
 
@@ -30,7 +30,7 @@ int SoundConfig::deviceIndex() const {
 }
 
 int SoundConfig::samplerate() const {
-    return SAMPLERATE_TABLE[mSamplerateIndex];
+    return StandardRates::get(mSamplerateIndex);
 }
 
 int SoundConfig::samplerateIndex() const {
@@ -58,14 +58,14 @@ void SoundConfig::setDeviceIndex(int index) {
 }
 
 void SoundConfig::setSamplerateIndex(int index) {
-    if (index >= 0 && index < N_SAMPLERATES) {
+    if (index >= 0 && index < (int)StandardRates::COUNT) {
         mSamplerateIndex = index;
     }
 }
 
 void SoundConfig::setSamplerate(int samplerate) {
-    for (int i = 0; i < N_SAMPLERATES; ++i) {
-        if ((int)SAMPLERATE_TABLE[i] == samplerate) {
+    for (int i = 0; i < (int)StandardRates::COUNT; ++i) {
+        if (StandardRates::get(i) == samplerate) {
             mSamplerateIndex = i;
             return;
         }

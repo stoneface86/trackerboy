@@ -154,7 +154,7 @@ makeSourceList(UI_SRC
     FILE "core/PatternCursor.hpp"
     "core/PatternSelection"
     "core/PianoInput"
-    "core/samplerates"
+    "core/StandardRates"
     "core/WavExporter"
 
     "forms/editors/BaseEditor"

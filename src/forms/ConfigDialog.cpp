@@ -1,6 +1,6 @@
 
 #include "ConfigDialog.hpp"
-#include "core/samplerates.hpp"
+#include "core/StandardRates.hpp"
 
 #include <QMessageBox>
 #include <QPushButton>
