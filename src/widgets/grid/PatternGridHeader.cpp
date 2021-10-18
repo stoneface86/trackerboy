@@ -73,7 +73,8 @@ PatternGridHeader::PatternGridHeader(PatternModel &model, QWidget *parent) :
     mColorForeground2(),
     mColorEnabled(),
     mColorDisabled(),
-    mLinePen()
+    mLinePen(),
+    mUpdatingFont(false)
 {
     setFixedHeight(HEIGHT);
     setAutoFillBackground(true);
@@ -130,6 +131,21 @@ void PatternGridHeader::unmuteAll() {
         mTrackFlags = ChannelOutput::AllOn;
         emit outputChanged(mTrackFlags);
         update();
+    }
+}
+
+void PatternGridHeader::changeEvent(QEvent *evt) {
+    if (evt->type() == QEvent::FontChange) {
+        if (!mUpdatingFont) {
+            mUpdatingFont = true;
+
+            // force the set font to have a height of 12 pixels
+            auto font_ = font();
+            font_.setPixelSize(12);
+            setFont(font_);
+
+            mUpdatingFont = false;
+        }
     }
 }
 

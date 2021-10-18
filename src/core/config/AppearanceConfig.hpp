@@ -18,11 +18,17 @@ public:
 
     bool showPreviews() const;
 
-    QFont font() const;
-    QFont& font();
+    QFont patternGridFont() const;
 
-    Palette const& palette() const;
-    Palette& palette();
+    QFont patternGridHeaderFont() const;
+
+    QFont orderGridFont() const;
+
+    void setPatternGridFont(QFont const& font);
+
+    void setPatternGridHeaderFont(QFont const& font);
+
+    void setOrderGridFont(QFont const& font);
 
     void setShowFlats(bool showFlats);
 
@@ -34,8 +40,9 @@ public:
 
 private:
 
-    std::optional<Palette> mPalette; // optional is used for lazy loading
-    QFont mFont;
+    QFont mPatternGridFont;
+    QFont mPatternGridHeaderFont;
+    QFont mOrderGridFont;
     bool mShowFlats;         // if true flats will be shown for accidental notes
     bool mShowPreviews;      // if true, pattern previews will be rendered
 

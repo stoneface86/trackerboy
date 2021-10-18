@@ -263,13 +263,15 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto const& appearance = mConfig.appearance();
         auto const& pal = mConfig.palette();
 
-        auto font = appearance.font();
-        
-        mPatternEditor->setFont(font);
+        mPatternEditor->grid()->setFont(appearance.patternGridFont());
+        mPatternEditor->grid()->setShowFlats(appearance.showFlats());
+        mPatternModel->setPreviewEnable(appearance.showPreviews());
         mPatternEditor->setColors(pal);
 
+        mPatternEditor->gridHeader()->setFont(appearance.patternGridHeaderFont());
+
         auto orderGrid = mSidebar->orderEditor()->grid();
-        orderGrid->setFont(font);
+        orderGrid->setFont(appearance.orderGridFont());
         orderGrid->setColors(pal);
     }
 

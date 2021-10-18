@@ -15,11 +15,13 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     mDirty(Config::CategoryNone),
     mLayout(),
     mTabs(),
+    mTabAppearance(),
     mTabMidi(),
     mTabSound(),
     mButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply, Qt::Horizontal)
 {
     // layout
+    mTabs.addTab(&mTabAppearance, tr("Appearance"));
     mTabs.addTab(&mTabMidi, tr("MIDI"));
     mTabs.addTab(&mTabSound, tr("Sound"));
 
@@ -32,6 +34,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     setWindowTitle(tr("Configuration"));
     setModal(true);
 
+    connect(&mTabAppearance, &AppearanceConfigTab::dirty, this, &ConfigDialog::setDirty);
     connect(&mTabMidi, &MidiConfigTab::dirty, this, &ConfigDialog::setDirty);
     connect(&mTabSound, &SoundConfigTab::dirty, this, &ConfigDialog::setDirty);
 
@@ -63,6 +66,10 @@ void ConfigDialog::reject() {
 void ConfigDialog::apply() {
     // update all changes to the Config object
 
+    if (mDirty.testFlag(Config::CategoryAppearance)) {
+        mTabAppearance.apply(mConfig.appearance(), mConfig.palette());
+    }
+
     if (mDirty.testFlag(Config::CategorySound)) {
         mTabSound.apply(mConfig.sound());        
     }
@@ -83,6 +90,7 @@ void ConfigDialog::showEvent(QShowEvent *evt) {
 
 void ConfigDialog::resetControls() {
 
+    mTabAppearance.resetControls(mConfig.appearance(), mConfig.palette());
     mTabSound.resetControls(mConfig.sound());
     mTabMidi.resetControls(mConfig.midi());
 

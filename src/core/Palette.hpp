@@ -95,9 +95,10 @@ public:
     void readSettings(QSettings &settings);
 
     //
-    // Writes color settings to the given QSettings.
+    // Writes color settings to the given QSettings. Settings are not saved
+    // when the palette is the default one, unless saveOnDefault is true.
     //
-    void writeSettings(QSettings &settings) const;
+    void writeSettings(QSettings &settings, bool saveOnDefault = false) const;
 
 private:
 

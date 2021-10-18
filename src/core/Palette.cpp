@@ -100,17 +100,16 @@ void Palette::readSettings(QSettings &settings) {
     settings.endGroup();
 }
 
-void Palette::writeSettings(QSettings &settings) const {
-    if (mDefault) {
-        return; // no need to save palette when it's the default
-    }
+void Palette::writeSettings(QSettings &settings, bool saveOnDefault) const {
 
     settings.beginGroup(Keys::Palette);
     settings.remove(QString()); // remove everything
 
-    for (int i = 0; i < ColorCount; ++i) {
-        QString color = mData[i].name();
-        settings.setValue(ColorKeys[i], color);
+    if (saveOnDefault || !mDefault) {
+        for (int i = 0; i < ColorCount; ++i) {
+            QString color = mData[i].name();
+            settings.setValue(ColorKeys[i], color);
+        }
     }
 
     settings.endGroup();

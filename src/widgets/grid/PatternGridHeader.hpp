@@ -32,6 +32,8 @@ signals:
 
 protected:
 
+    virtual void changeEvent(QEvent *evt) override;
+
     virtual void contextMenuEvent(QContextMenuEvent *evt) override;
 
     virtual void paintEvent(QPaintEvent *evt) override;
@@ -80,5 +82,7 @@ private:
     QColor mColorDisabled;
 
     QPen mLinePen;
+
+    bool mUpdatingFont;
 
 };

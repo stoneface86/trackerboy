@@ -138,6 +138,7 @@ makeSourceList(UI_SRC
     "core/model/graph/SequenceModel"
     "core/model/graph/WaveModel"
     "core/model/BaseTableModel"
+    "core/model/PaletteModel"
     "core/model/PatternModel"
     "core/model/SongModel"
     "core/model/SongListModel"
@@ -175,6 +176,7 @@ makeSourceList(UI_SRC
     FILE "resources/icons.qrc"
     FILE "resources/images.qrc"
 
+    "widgets/config/AppearanceConfigTab"
     "widgets/config/ConfigTab"
     "widgets/config/MidiConfigTab"
     "widgets/config/SoundConfigTab"
