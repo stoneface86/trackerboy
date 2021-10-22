@@ -9,8 +9,11 @@ enum class Category : uint8_t {
     header
 };
 
+constexpr size_t CATEGORIES = 2;
+
 struct Node {
 
+    // parent node
     constexpr Node(Category category) :
         parent(true),
         category(category),
@@ -18,6 +21,7 @@ struct Node {
     {
     }
 
+    // child node
     constexpr Node(Category category, uint8_t paletteIndex) :
         parent(false),
         category(category),
@@ -56,6 +60,7 @@ static constexpr std::array NODE_TABLE = {
     Node(Category::header, Palette::ColorHeaderDisabled),
 
 };
+static_assert(NODE_TABLE.size() == Palette::ColorCount + CATEGORIES, "NODE_TABLE size mismatch");
 
 static std::array const COLOR_NAMES = {
     QT_TR_NOOP("Background"),
@@ -82,8 +87,8 @@ static std::array const COLOR_NAMES = {
 };
 static_assert(COLOR_NAMES.size() == Palette::ColorCount, "color name table size mismatch");
 
-constexpr int findParent(int order) {
-    for (int i = 0; i < (int)NODE_TABLE.size(); ++i) {
+constexpr quintptr findParent(int order) {
+    for (quintptr i = 0; i < NODE_TABLE.size(); ++i) {
         if (NODE_TABLE[i].parent) {
             if (order) {
                 --order;
@@ -92,14 +97,18 @@ constexpr int findParent(int order) {
             }
         }
     }
-    return (int)NODE_TABLE.size();
+    return (quintptr)NODE_TABLE.size();
 }
 
-constexpr int PARENT_PATTERN_EDITOR = findParent(0);
-constexpr int PARENT_HEADER = findParent(1);
+constexpr auto PARENT_PATTERN_EDITOR = findParent(0);
+constexpr auto PARENT_HEADER = findParent(1);
 
 constexpr int PARENTS = 2;
 
+
+Node getNode(QModelIndex const& index) {
+    return NODE_TABLE[index.internalId()];
+}
 
 
 }
@@ -117,11 +126,10 @@ Palette const& PaletteModel::palette() const {
 }
 
 void PaletteModel::setPalette(const Palette &pal) {
-    beginResetModel();
-
-    mPalette = pal;
-
-    endResetModel();
+    if (mPalette != pal) {
+        mPalette = pal;
+        emit dataChanged(index(0, 0), index(TU::PARENTS - 1, 1), { Qt::DisplayRole, Qt::DecorationRole });
+    }
 }
 
 int PaletteModel::columnCount(const QModelIndex &parent) const {
@@ -132,7 +140,7 @@ int PaletteModel::columnCount(const QModelIndex &parent) const {
 QVariant PaletteModel::data(const QModelIndex &index, int role) const {
     if (index.isValid()) {
 
-        auto const node = TU::NODE_TABLE[index.internalId()];
+        auto const node = TU::getNode(index);
         if (node.parent) {
             if (index.column() == 0 && role == Qt::DisplayRole) {
                 switch (node.category) {
@@ -169,7 +177,7 @@ QVariant PaletteModel::data(const QModelIndex &index, int role) const {
 
 Qt::ItemFlags PaletteModel::flags(QModelIndex const& index) const {
     if (index.isValid()) {
-        auto const node = TU::NODE_TABLE[index.internalId()];
+        auto const node = TU::getNode(index);
         if (node.parent) {
             return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
         } else {
@@ -186,7 +194,7 @@ Qt::ItemFlags PaletteModel::flags(QModelIndex const& index) const {
 
 bool PaletteModel::hasChildren(const QModelIndex &index) const {
     if (index.isValid()) {
-        auto const node = TU::NODE_TABLE[index.internalId()];
+        auto const node = TU::getNode(index);
         return node.parent;
     } else {
         return true;
@@ -233,7 +241,7 @@ QModelIndex PaletteModel::index(int row, int column, const QModelIndex &parent) 
 
 QModelIndex PaletteModel::parent(const QModelIndex &index) const {
     if (index.isValid()) {
-        auto const node = TU::NODE_TABLE[index.internalId()];
+        auto const node = TU::getNode(index);
         if (!node.parent) {
             switch (node.category) {
                 case TU::Category::patternEditor:
@@ -268,7 +276,7 @@ int PaletteModel::rowCount(const QModelIndex &parent) const {
 
 bool PaletteModel::setData(const QModelIndex &index, const QVariant &value, int role) {
     if (index.isValid() && role == Qt::EditRole && index.column() == 1) {
-        auto const node = TU::NODE_TABLE[index.internalId()];
+        auto const node = TU::getNode(index);
 
         if (!node.parent) {
             QColor color;
@@ -291,7 +299,7 @@ bool PaletteModel::setData(const QModelIndex &index, const QVariant &value, int 
 
 std::optional<QColor> PaletteModel::colorAt(const QModelIndex &index) const {
     if (index.isValid()) {
-        auto const node = TU::NODE_TABLE[index.internalId()];
+        auto const node = TU::getNode(index);
         if (!node.parent) {
             return mPalette[(Palette::Color)node.paletteIndex];
         }
@@ -302,7 +310,7 @@ std::optional<QColor> PaletteModel::colorAt(const QModelIndex &index) const {
 
 void PaletteModel::setColor(const QModelIndex &index, const QColor &color) {
     if (index.isValid()) {
-        auto const node = TU::NODE_TABLE[index.internalId()];
+        auto const node = TU::getNode(index);
         if (!node.parent) {
             updateColor(index, (Palette::Color)node.paletteIndex, color);
         }

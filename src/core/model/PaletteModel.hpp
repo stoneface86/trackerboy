@@ -7,6 +7,9 @@
 
 #include <optional>
 
+//
+// Model class for editing a Palette. Used only by the AppearanceConfigTab
+//
 class PaletteModel : public QAbstractItemModel {
 
     Q_OBJECT

@@ -93,7 +93,10 @@ void Palette::readSettings(QSettings &settings) {
     for (int i = 0; i < ColorCount; ++i) {
         if (settings.contains(ColorKeys[i])) {
             QColor color(settings.value(ColorKeys[i]).toString());
-            setColor((Color)i, color);            
+            if (color.isValid()) {
+                color.setAlpha(255); // sanitize
+                setColor((Color)i, color);
+            }
         }
     }
 
@@ -114,4 +117,19 @@ void Palette::writeSettings(QSettings &settings, bool saveOnDefault) const {
 
     settings.endGroup();
 
+}
+
+bool operator==(Palette const& lhs, Palette const& rhs) noexcept {
+    if (lhs.mDefault == rhs.mDefault) {
+        if (lhs.mDefault) {
+            return true;
+        } else {
+            return lhs.mData == rhs.mData;
+        }
+    }
+    return false;
+}
+
+bool operator!=(Palette const& lhs, Palette const& rhs) noexcept {
+    return !(lhs == rhs);
 }

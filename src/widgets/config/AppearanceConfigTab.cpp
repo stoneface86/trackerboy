@@ -23,7 +23,8 @@ static std::array const FONT_NAMES = {
     QT_TR_NOOP("Header")
 };
 
-static const char *INI_FILE_FILTER = QT_TR_NOOP("Color settings (*.ini)");
+// file filter for color settings (just ini files)
+static const char *COLOR_SETTINGS_FILTER = QT_TR_NOOP("Color settings (*.ini)");
 
 // clamp the size of a selected font to this size
 constexpr int MAX_POINT_SIZE = 22;
@@ -96,22 +97,20 @@ AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
     lazyconnect(mShowPreviewsCheck, toggled, this, setDirty);
     lazyconnect(mModel, dataChanged, this, setDirty);
 
-    connect(mDefaultButton, &QPushButton::clicked, this, [this]() {
-        mModel->setPalette(Palette());
-        setDirty();
-        mDefaultButton->setEnabled(false);
-    });
+    connect(mModel, &PaletteModel::dataChanged, this,
+        [this]() {
+            mDefaultButton->setEnabled(!mModel->palette().isDefault());
+            setDirty();
+            updateColorDialog();
+        });
 
-
-    lazyconnect(mModel, dataChanged, this, modelWasChanged);
-    lazyconnect(mModel, modelReset, this, modelWasReset);
 
     connect(loadButton, &QPushButton::clicked, this, [this]() {
         auto filename = QFileDialog::getOpenFileName(
                     this,
                     tr("Open color settings"),
                     mSaveDir.path(),
-                    tr(TU::INI_FILE_FILTER)
+                    tr(TU::COLOR_SETTINGS_FILTER)
                     );
         if (!filename.isEmpty()) {
             QSettings settings(filename, QSettings::IniFormat);
@@ -127,13 +126,19 @@ AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
                     this,
                     tr("Save color settings"),
                     mSaveDir.filePath(tr("colors.ini")),
-                    tr(TU::INI_FILE_FILTER)
+                    tr(TU::COLOR_SETTINGS_FILTER)
                     );
         if (!filename.isEmpty()) {
             QSettings settings(filename, QSettings::IniFormat);
             mModel->palette().writeSettings(settings, true);
             mSaveDir.setPath(filename);
         }
+    });
+
+    connect(mDefaultButton, &QPushButton::clicked, this, [this]() {
+        mModel->setPalette(Palette());
+        setDirty();
+        mDefaultButton->setEnabled(false);
     });
 
     connect(pickerButton, &QPushButton::clicked, this, [this]() {
@@ -143,8 +148,7 @@ AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
             updateColorDialog();
             lazyconnect(mColorDialog, currentColorChanged, this, chooseColor);
         }
-        mColorDialog->setVisible(!mColorDialog->isVisible());
-
+        mColorDialog->show();
     });
 
     auto selectionModel = colorTree->selectionModel();
@@ -189,6 +193,7 @@ void AppearanceConfigTab::resetControls(AppearanceConfig const& appearanceConfig
 }
 
 void AppearanceConfigTab::hideEvent(QHideEvent *evt) {
+    // close the color dialog if the user switches tabs or closes the dialog
     if (mColorDialog) {
         mColorDialog->close();
     }
@@ -225,17 +230,6 @@ void AppearanceConfigTab::chooseFont() {
 
 void AppearanceConfigTab::chooseColor(QColor const& color) {
     mModel->setColor(mSelectedColor, color);
-}
-
-void AppearanceConfigTab::modelWasChanged() {
-    mDefaultButton->setEnabled(!mModel->palette().isDefault());
-    setDirty();
-}
-
-void AppearanceConfigTab::modelWasReset() {
-    modelWasChanged();
-    // selection model does not fire selectionChanged signal on model reset
-    selectColor(QModelIndex());
 }
 
 void AppearanceConfigTab::setFont(size_t index, QFont const& font) {

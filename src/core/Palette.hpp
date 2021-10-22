@@ -100,6 +100,9 @@ public:
     //
     void writeSettings(QSettings &settings, bool saveOnDefault = false) const;
 
+    friend bool operator==(Palette const& lhs, Palette const& rhs) noexcept;
+    friend bool operator!=(Palette const& lhs, Palette const& rhs) noexcept;
+
 private:
 
     std::array<QColor, ColorCount> mData;

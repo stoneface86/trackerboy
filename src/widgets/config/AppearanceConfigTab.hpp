@@ -33,10 +33,6 @@ private slots:
 
     void chooseColor(QColor const& color);
 
-    void modelWasChanged();
-
-    void modelWasReset();
-
 private:
     Q_DISABLE_COPY(AppearanceConfigTab)
 
