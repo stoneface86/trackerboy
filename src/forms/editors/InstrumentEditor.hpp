@@ -3,6 +3,7 @@
 
 #include "core/model/graph/SequenceModel.hpp"
 #include "core/model/TableModel.hpp"
+#include "core/Palette.hpp"
 #include "forms/editors/BaseEditor.hpp"
 #include "widgets/EnvelopeForm.hpp"
 #include "widgets/SequenceEditor.hpp"
@@ -28,6 +29,8 @@ public:
         PianoInput const& input,
         QWidget *parent = nullptr
     );
+
+    void setColors(Palette const& pal);
 
 signals:
     void openWaveEditor(int index);

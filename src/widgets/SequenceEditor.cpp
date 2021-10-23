@@ -74,6 +74,10 @@ void SequenceEditor::setInstrument(trackerboy::Instrument *instrument) {
     }
 }
 
+GraphEdit* SequenceEditor::graphEdit() {
+    return mGraph;
+}
+
 void SequenceEditor::convertEditToSequence() {
     if (!mEditDirty) {
         return;

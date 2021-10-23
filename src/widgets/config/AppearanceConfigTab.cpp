@@ -91,6 +91,7 @@ AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
     colorTree->setModel(mModel);
     colorTree->expandAll();
     colorTree->resizeColumnToContents(0);
+    colorTree->collapseAll();
 
 
     lazyconnect(mShowFlatsCheck, toggled, this, setDirty);

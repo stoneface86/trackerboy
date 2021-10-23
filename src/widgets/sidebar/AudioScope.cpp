@@ -16,7 +16,8 @@ constexpr int LINE_WIDTH = 1;
 
 AudioScope::AudioScope(QWidget *parent) :
     QFrame(parent),
-    mBuffer(nullptr)
+    mBuffer(nullptr),
+    mLineColor(Qt::white)
 {
     setAttribute(Qt::WA_StyledBackground);
     setAutoFillBackground(true);
@@ -27,7 +28,6 @@ AudioScope::AudioScope(QWidget *parent) :
     if (pal.isCopyOf(QGuiApplication::palette())) {
         // only modify the palette if we have the default one
         pal.setColor(QPalette::Window, Qt::black);
-        pal.setColor(QPalette::WindowText, Qt::white);
         setPalette(pal);
     }
 
@@ -43,6 +43,16 @@ void AudioScope::setBuffer(Guarded<VisualizerBuffer> *buffer) {
         mBuffer = buffer;
         update();
     }
+}
+
+void AudioScope::setColors(Palette const& pal) {
+    auto widgetPal = palette();
+    widgetPal.setColor(QPalette::Window, pal[Palette::ColorScopeBackground]);
+    setPalette(widgetPal);
+
+    mLineColor = pal[Palette::ColorScopeLine];
+
+    update();
 }
 
 void AudioScope::paintEvent(QPaintEvent *evt) {
@@ -70,7 +80,7 @@ void AudioScope::paintEvent(QPaintEvent *evt) {
     
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.setPen(palette().color(QPalette::WindowText));
+    painter.setPen(mLineColor);
 
     // pixels per sample
     float ratio = (unsigned)size / (float)w;

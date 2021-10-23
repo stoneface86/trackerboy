@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Command line argument parsing, you can now open a module on application startup
  - Appearance tab in Config dialog for changing fonts, colors and other settings
+ - Colors for the audio scope and graph editors are now customizable
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
 ### Removed

@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "core/Palette.hpp"
 #include "core/model/graph/WaveModel.hpp"
 #include "core/model/TableModel.hpp"
 #include "forms/editors/BaseEditor.hpp"
@@ -24,6 +25,8 @@ public:
         QWidget *parent = nullptr
     );
 
+    void setColors(Palette const& pal);
+
 protected:
 
     virtual void setCurrentItem(int index) override;
@@ -36,6 +39,7 @@ private:
     void setWaveFromPreset(int preset);
     
     WaveModel *mWaveModel;
+    GraphEdit *mWaveEdit;
     QLineEdit *mWaveramEdit;
     bool mWaveEditedFromText;
 

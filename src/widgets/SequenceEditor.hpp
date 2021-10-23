@@ -28,6 +28,8 @@ public:
 
     void setInstrument(trackerboy::Instrument *instrument);
 
+    GraphEdit* graphEdit();
+
 private:
     void convertEditToSequence();
 

@@ -16,46 +16,25 @@ class Palette {
 public:
 
     enum Color {
-        // background color
-        ColorBackground,
 
-        // background color for first highlight (beat row)
-        ColorBackgroundHighlight1,
+        // Pattern editor colors
 
-        // background color for second highlight (measure row)
-        ColorBackgroundHighlight2,
-
-        // general text color
-        ColorForeground,
-
-        // text color for first highlight (beat row)
-        ColorForegroundHighlight1,
-
-        // text color for second highlight (measure row)
-        ColorForegroundHighlight2,
-
-        // background color for the cursor row
-        ColorRow,
-
-        // same as row, but edit mode is enabled
-        ColorRowEdit,
-
-        // cursor row of the renderer (only visible when follow mode is off)
-        ColorRowPlayer,
-
-        // text color for effect column
-        ColorEffectType,
-
-        // text color for instrument column
-        ColorInstrument,
-
-        // selection rectangle color
-        ColorSelection,
-
-        // cursor rectangle color
-        ColorCursor,
-
+        ColorBackground,                // background color
+        ColorBackgroundHighlight1,      // background color for first highlight (beat row)
+        ColorBackgroundHighlight2,      // background color for second highlight (measure row)
+        ColorForeground,                // general text color
+        ColorForegroundHighlight1,      // text color for first highlight (beat row)
+        ColorForegroundHighlight2,      // text color for second highlight (measure row)
+        ColorRow,                       // background color for the cursor row
+        ColorRowEdit,                   // same as row, but edit mode is enabled
+        ColorRowPlayer,                 // cursor row of the renderer (only visible when follow mode is off)
+        ColorEffectType,                // text color for effect column
+        ColorInstrument,                // text color for instrument column
+        ColorSelection,                 // selection rectangle color
+        ColorCursor,                    // cursor rectangle color
         ColorLine,
+
+        // Pattern editor header
 
         ColorHeaderBackground1,
         ColorHeaderBackground2,
@@ -63,6 +42,19 @@ public:
         ColorHeaderForeground2,
         ColorHeaderEnabled,
         ColorHeaderDisabled,
+
+        // Graph editor
+
+        ColorGraphBackground,
+        ColorGraphAlternate,
+        ColorGraphLines,
+        ColorGraphSamples,
+
+        // Audio scope
+
+        ColorScopeBackground,
+        ColorScopeLine,
+
 
         ColorCount
     };

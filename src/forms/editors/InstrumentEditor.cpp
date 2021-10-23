@@ -165,6 +165,12 @@ void InstrumentEditor::setChannel(int channel) {
 
 }
 
+void InstrumentEditor::setColors(const Palette &pal) {
+    for (auto editor : mSequenceEditors) {
+        editor->graphEdit()->setColors(pal);
+    }
+}
+
 void InstrumentEditor::setCurrentItem(int index) {
     mInstrument = model().getShared(index);
     for (auto editor : mSequenceEditors) {

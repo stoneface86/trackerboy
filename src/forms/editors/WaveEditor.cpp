@@ -60,8 +60,8 @@ WaveEditor::WaveEditor(
 
 
     auto layout = new QVBoxLayout;
-    auto graph = new GraphEdit(*mWaveModel);
-    layout->addWidget(graph, 1);
+    mWaveEdit = new GraphEdit(*mWaveModel);
+    layout->addWidget(mWaveEdit, 1);
     layout->addLayout(presetLayout);
     layout->addLayout(waveramLayout);
     layout->setMargin(0);
@@ -73,7 +73,7 @@ WaveEditor::WaveEditor(
     mWaveramEdit->setInputMask(QStringLiteral("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH"));
     mWaveramEdit->setText(QStringLiteral("00000000000000000000000000000000"));
 
-    graph->setViewMode(GraphEdit::WaveformView);
+    mWaveEdit->setViewMode(GraphEdit::WaveformView);
 
     connect(mWaveramEdit, &QLineEdit::textEdited, this,
         [this](QString const& text) {
@@ -105,6 +105,10 @@ WaveEditor::WaveEditor(
         setWaveFromPreset(PRESET_SINE);
     });
 
+}
+
+void WaveEditor::setColors(Palette const& pal) {
+    mWaveEdit->setColors(pal);
 }
 
 void WaveEditor::setCurrentItem(int index) {

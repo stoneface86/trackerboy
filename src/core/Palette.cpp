@@ -28,7 +28,13 @@ Palette::Palette() :
         QColor(240, 240, 240), // ColorHeaderForeground1
         QColor(192, 192, 192), // ColorHeaderForeground2
         QColor(153, 229,  80), // ColorHeaderEnabled
-        QColor(217,  87,  99)  // ColorHeaderDisabled
+        QColor(217,  87,  99), // ColorHeaderDisabled
+        QColor(  0,   0,   0), // ColorGraphBackground
+        QColor( 32,  32,  32), // ColorGraphAlternate
+        QColor( 64,  64,  64), // ColorGraphLines
+        QColor(224, 224, 224), // ColorGraphSamples
+        QColor(  0,   0,   0), // ColorScopeBackground
+        QColor(  0, 255,  68), // ColorScopeLine
     },
     mDefault(true)
 {
@@ -76,7 +82,13 @@ static std::array const ColorKeys = {
     QStringLiteral("headerForeground1"),
     QStringLiteral("headerForeground2"),
     QStringLiteral("headerEnabled"),
-    QStringLiteral("headerDisabled")
+    QStringLiteral("headerDisabled"),
+    QStringLiteral("graphBackground"),
+    QStringLiteral("graphAlternate"),
+    QStringLiteral("graphLines"),
+    QStringLiteral("graphSamples"),
+    QStringLiteral("scopeBackground"),
+    QStringLiteral("scopeLine")
 };
 
 // If this fails you forgot to remove/add a key to the array

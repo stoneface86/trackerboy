@@ -131,10 +131,6 @@ QToolBar QLabel {
     padding-left: 3px;
     padding-right: 3px;
 }
-
-GraphEdit {
-    background-color: black;
-}
     )stylesheet"));
 }
 

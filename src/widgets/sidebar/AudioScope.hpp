@@ -2,8 +2,9 @@
 #pragma once
 
 
-#include "core/Guarded.hpp"
 #include "core/audio/VisualizerBuffer.hpp"
+#include "core/Guarded.hpp"
+#include "core/Palette.hpp"
 
 #include <QFrame>
 #include <QMutex>
@@ -26,6 +27,8 @@ public:
 
     void setBuffer(Guarded<VisualizerBuffer>* buffer);
 
+    void setColors(Palette const& pal);
+
 protected:
 
     void paintEvent(QPaintEvent *evt) override;
@@ -45,6 +48,8 @@ private:
     static constexpr int WAVE_RIGHT_AXIS = (WAVE_HEIGHT / 2) + WAVE_HEIGHT + 1;
 
     Guarded<VisualizerBuffer> *mBuffer;
+
+    QColor mLineColor;
 
 
 };

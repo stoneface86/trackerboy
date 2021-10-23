@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/model/graph/GraphModel.hpp"
+#include "core/Palette.hpp"
 
 #include <QAbstractScrollArea>
 #include <QPoint>
@@ -27,17 +28,7 @@ public:
 
     ViewMode viewMode() const;
 
-    QColor alternateColor() const;
-
-    QColor lineColor() const;
-
-    QColor sampleColor() const;
-
-    void setAlternateColor(QColor color);
-
-    void setLineColor(QColor color);
-
-    void setSampleColor(QColor color);
+    void setColors(Palette const& pal);
 
     void setViewMode(ViewMode mode);
 
@@ -102,6 +93,7 @@ private:
     std::optional<QPoint> mMouseOver;
     QPoint mLastMouseCoords;
 
+    QColor mBackgroundColor;
     QColor mAlternateColor;
     QColor mLineColor;
     QColor mSampleColor;

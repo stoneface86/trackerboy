@@ -273,6 +273,14 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         auto orderGrid = mSidebar->orderEditor()->grid();
         orderGrid->setFont(appearance.orderGridFont());
         orderGrid->setColors(pal);
+
+        mSidebar->scope()->setColors(pal);
+        if (mInstrumentEditor) {
+            mInstrumentEditor->setColors(pal);
+        }
+        if (mWaveEditor) {
+            mWaveEditor->setColors(pal);
+        }
     }
 
     if (categories.testFlag(Config::CategoryKeyboard)) {
@@ -339,6 +347,7 @@ void MainWindow::showInstrumentEditor() {
     if (mInstrumentEditor == nullptr) {
         mInstrumentEditor = new InstrumentEditor(*mModule, *mInstrumentModel, *mWaveModel, mConfig.pianoInput(), this);
         mInstrumentEditor->init();
+        mInstrumentEditor->setColors(mConfig.palette());
         auto piano = mInstrumentEditor->piano();
         connect(piano, &PianoWidget::keyDown, this,
             [this](int note) {
@@ -360,6 +369,7 @@ void MainWindow::showWaveEditor() {
     if (mWaveEditor == nullptr) {
         mWaveEditor = new WaveEditor(*mModule, *mWaveModel, mConfig.pianoInput(), this);
         mWaveEditor->init();
+        mWaveEditor->setColors(mConfig.palette());
         auto piano = mWaveEditor->piano();
         connect(piano, &PianoWidget::keyDown, this,
             [this](int note) {

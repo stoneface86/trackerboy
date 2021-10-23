@@ -11,6 +11,9 @@
 #include <QResizeEvent>
 #include <QScrollBar>
 
+#define TU GraphEditTU
+namespace TU {
+
 constexpr int MIN_CELL_WIDTH = 12;
 constexpr int MAX_CELL_WIDTH = 32;
 
@@ -67,6 +70,8 @@ public:
 
 };
 
+}
+
 
 // TIP: always call viewport()->update() instead of update()!
 
@@ -81,15 +86,12 @@ GraphEdit::GraphEdit(GraphModel &model, QWidget *parent) :
     mCellWidth(0),
     mCellHeight(0),
     mAlternateInterval(0),
-    mMouseOver(),
-    mAlternateColor(0x20, 0x20, 0x20),
-    mLineColor(0x40, 0x40, 0x40),
-    mSampleColor(0xE0, 0xE0, 0xE0)
+    mMouseOver()
 {
     auto _viewport = viewport();
     _viewport->setMouseTracking(true);
     mPlotRect = _viewport->rect();
-    mPlotRect.adjust(PADDING_X, PADDING_Y, -PADDING_X, -PADDING_Y);
+    mPlotRect.adjust(TU::PADDING_X, TU::PADDING_Y, -TU::PADDING_X, -TU::PADDING_Y);
 
     connect(&model, &GraphModel::dataChanged, _viewport, qOverload<>(&QWidget::update));
     connect(&model, &GraphModel::countChanged, this,
@@ -99,22 +101,8 @@ GraphEdit::GraphEdit(GraphModel &model, QWidget *parent) :
             update();
         });
 
-    _viewport->setAttribute(Qt::WA_StyledBackground);
-
     calculateAxis();
     setViewModeImpl(mMode);
-}
-
-QColor GraphEdit::alternateColor() const {
-    return mAlternateColor;
-}
-
-QColor GraphEdit::lineColor() const {
-    return mLineColor;
-}
-
-QColor GraphEdit::sampleColor() const {
-    return mSampleColor;
 }
 
 GraphEdit::ViewMode GraphEdit::viewMode() const {
@@ -127,6 +115,15 @@ int GraphEdit::minimumValue() const {
 
 int GraphEdit::maximumValue() const {
     return mMaxValue;
+}
+
+void GraphEdit::setColors(Palette const& pal) {
+    mBackgroundColor = pal[Palette::ColorGraphBackground];
+    mAlternateColor = pal[Palette::ColorGraphAlternate];
+    mSampleColor = pal[Palette::ColorGraphSamples];
+    mLineColor = pal[Palette::ColorGraphLines];
+
+    viewport()->update();
 }
 
 void GraphEdit::setViewMode(ViewMode mode) {
@@ -183,23 +180,6 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
     update();
 }
 
-void GraphEdit::setAlternateColor(QColor color) {
-    mAlternateColor = color;
-    if (mAlternateInterval) {
-        viewport()->update();
-    }
-}
-
-void GraphEdit::setLineColor(QColor color) {
-    mLineColor = color;
-    viewport()->update();
-}
-
-void GraphEdit::setSampleColor(QColor color) {
-    mSampleColor = color;
-    viewport()->update();
-}
-
 void GraphEdit::leaveEvent(QEvent *evt) {
     Q_UNUSED(evt)
 
@@ -215,6 +195,10 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
     // paint on the viewport widget
     auto _viewport = viewport();
     QPainter painter(_viewport);
+
+    // doing this manually instead of using auto-fill background because changing the
+    // background role color in QPalette has no effect (tried both this widgets and the viewport widgets palette)
+    painter.fillRect(_viewport->rect(), mBackgroundColor);
 
     auto hscroll = horizontalScrollBar();
     auto vscroll = verticalScrollBar();
@@ -234,8 +218,8 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
 
     // viewport minimum/maximum or just minimum/maximum
     painter.setPen(mSampleColor);
-    painter.drawText(PADDING_X, mPlotRect.top(), mYAxisWidth, metrics.height(), Qt::AlignRight | Qt::AlignTop, QString::number(viewportMax));
-    painter.drawText(PADDING_X, _viewport->height() - PADDING_Y - metrics.height(), mYAxisWidth, metrics.height(), Qt::AlignRight | Qt::AlignBottom, QString::number(viewportMin));
+    painter.drawText(TU::PADDING_X, mPlotRect.top(), mYAxisWidth, metrics.height(), Qt::AlignRight | Qt::AlignTop, QString::number(viewportMax));
+    painter.drawText(TU::PADDING_X, _viewport->height() - TU::PADDING_Y - metrics.height(), mYAxisWidth, metrics.height(), Qt::AlignRight | Qt::AlignBottom, QString::number(viewportMin));
 
 
     // Grid lines
@@ -249,7 +233,7 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
     painter.drawLine(axis + 1, plotBottom, viewportWidth, plotBottom);
 
     if (mBarMode) {
-        BarPlotter plotter(mPlotRect, mMinValue, mMaxValue);
+        TU::BarPlotter plotter(mPlotRect, mMinValue, mMaxValue);
         if (mLines) {
             for (int i = mMinValue + 1; i < mMaxValue; ++i) {
                 auto ypos = plotter.plot((GraphModel::DataType)i);
@@ -295,7 +279,7 @@ void GraphEdit::paintEvent(QPaintEvent *evt) {
         }
 
         if (mAlternateInterval) {
-            int ypos = mPlotRect.bottom() - mod(viewportMin, mAlternateInterval) * mCellHeight;
+            int ypos = mPlotRect.bottom() - TU::mod(viewportMin, mAlternateInterval) * mCellHeight;
             int skip = mAlternateInterval * mCellHeight;
             for (int const top = mPlotRect.top(); ypos > top; ypos -= skip) {
                 painter.fillRect(mPlotRect.left(), ypos - mCellHeight + 1, viewportWidth, mCellHeight - 1, mAlternateColor);
@@ -461,8 +445,8 @@ void GraphEdit::calculateAxis() {
     // PADDING + mYAxisWidth + PADDING + mPlotRect.width() + PADDING = viewport()->width()
     auto metrics = fontMetrics();
     mYAxisWidth = metrics.averageCharWidth() * 4;
-    mPlotRect.setLeft(mYAxisWidth + (PADDING_X * 2));
-    mPlotRect.setRight(viewport()->width() - PADDING_X);
+    mPlotRect.setLeft(mYAxisWidth + (TU::PADDING_X * 2));
+    mPlotRect.setRight(viewport()->width() - TU::PADDING_X);
     calculateCellWidth();
 }
 
@@ -471,7 +455,7 @@ int GraphEdit::availableWidth() {
 }
 
 int GraphEdit::availableHeight() {
-    return viewport()->height() - PADDING_Y * 2;
+    return viewport()->height() - TU::PADDING_Y * 2;
 }
 
 void GraphEdit::calculateCellWidth() {
@@ -480,16 +464,16 @@ void GraphEdit::calculateCellWidth() {
     auto count = mModel.count();
     if (count) {
         auto cellWidth = _width / count;
-        if (cellWidth < MIN_CELL_WIDTH) {
+        if (cellWidth < TU::MIN_CELL_WIDTH) {
             // horizontal scrollbar is needed
-            cellWidth = MIN_CELL_WIDTH;
-            auto pagestep = _width / MIN_CELL_WIDTH;
+            cellWidth = TU::MIN_CELL_WIDTH;
+            auto pagestep = _width / TU::MIN_CELL_WIDTH;
             auto scrollbar = horizontalScrollBar();
             scrollbar->setPageStep(pagestep);
             scrollbar->setMaximum(count - pagestep - 1);
-            mPlotRect.setWidth(pagestep * MIN_CELL_WIDTH + 1);
+            mPlotRect.setWidth(pagestep * TU::MIN_CELL_WIDTH + 1);
         } else {
-            cellWidth = std::min(cellWidth, MAX_CELL_WIDTH);
+            cellWidth = std::min(cellWidth, TU::MAX_CELL_WIDTH);
             horizontalScrollBar()->setMaximum(0);
             mPlotRect.setWidth(count * cellWidth + 1);
         }
@@ -508,10 +492,10 @@ void GraphEdit::calculateCellHeight() {
             verticalScrollBar()->setRange(0, 0);
             newHeight = _height;
         } else {
-            if (cellHeight < MIN_CELL_HEIGHT) {
-                cellHeight = MIN_CELL_HEIGHT;
+            if (cellHeight < TU::MIN_CELL_HEIGHT) {
+                cellHeight = TU::MIN_CELL_HEIGHT;
                 // idk why the -1 is needed but it works
-                auto pagestep = (_height / MIN_CELL_HEIGHT) - 1;
+                auto pagestep = (_height / TU::MIN_CELL_HEIGHT) - 1;
                 auto scrollbar = verticalScrollBar();
 
                 // keep the current value proportional to the new range
@@ -520,7 +504,7 @@ void GraphEdit::calculateCellHeight() {
                 scrollbar->setPageStep(pagestep);
                 scrollbar->setRange(mMinValue, mMaxValue - pagestep);
                 scrollbar->setValue(value);
-                newHeight = (pagestep + 1) * MIN_CELL_HEIGHT;
+                newHeight = (pagestep + 1) * TU::MIN_CELL_HEIGHT;
             } else {
                 verticalScrollBar()->setRange(0, 0);
                 newHeight = cellHeight * range;
@@ -536,3 +520,5 @@ void GraphEdit::calculateCellHeight() {
         mCellHeight = cellHeight;
     }
 }
+
+#undef TU
