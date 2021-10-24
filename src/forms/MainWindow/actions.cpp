@@ -11,7 +11,8 @@
 #include <QMenuBar>
 
 
-
+#define TU MainWindowTU
+namespace TU {
 
 //
 // adds a new action to a menu and sets the text, status tip and shortcut
@@ -43,6 +44,8 @@ static QAction* createAction(QWidget *parent, QString const& text, QString const
     return act;
 }
 
+}
+
 void MainWindow::createActions(TableActions const& instrumentActions, TableActions const& waveformActions) {
 
     auto menubar = menuBar();
@@ -51,24 +54,24 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     // > File ================================================================
     auto menuFile = menubar->addMenu(tr("&File"));
 
-    act = setupAction(menuFile, tr("&New"), tr("Create a new module"), Icons::fileNew, QKeySequence::New);
+    act = TU::setupAction(menuFile, tr("&New"), tr("Create a new module"), Icons::fileNew, QKeySequence::New);
     mToolbarFile->addAction(act);
     connectActionToThis(act, onFileNew);
 
-    act = setupAction(menuFile, tr("&Open"), tr("Open an existing module"), Icons::fileOpen, QKeySequence::Open);
+    act = TU::setupAction(menuFile, tr("&Open"), tr("Open an existing module"), Icons::fileOpen, QKeySequence::Open);
     mToolbarFile->addAction(act);
     connectActionToThis(act, onFileOpen);
     
-    act = setupAction(menuFile, tr("&Save"), tr("Save the module"), Icons::fileSave, QKeySequence::Save);
+    act = TU::setupAction(menuFile, tr("&Save"), tr("Save the module"), Icons::fileSave, QKeySequence::Save);
     mToolbarFile->addAction(act);
     connectActionToThis(act, onFileSave);
     
-    act = setupAction(menuFile, tr("Save &As..."), tr("Save the module to a new file"), QKeySequence::SaveAs);
+    act = TU::setupAction(menuFile, tr("Save &As..."), tr("Save the module to a new file"), QKeySequence::SaveAs);
     connectActionToThis(act, onFileSaveAs);
 
     menuFile->addSeparator(); // ---------------------------------------------
     
-    act = setupAction(menuFile, tr("Export to WAV..."), tr("Exports the module to a WAV file"));
+    act = TU::setupAction(menuFile, tr("Export to WAV..."), tr("Exports the module to a WAV file"));
     connectActionToThis(act, showExportWavDialog);
 
     mRecentFilesSeparator = menuFile->addSeparator(); // ---------------------
@@ -86,14 +89,14 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     menuFile->addSeparator(); // ---------------------------------------------
     
-    act = setupAction(menuFile, tr("&Configuration..."), tr("Change application settings"), Icons::fileConfig);
+    act = TU::setupAction(menuFile, tr("&Configuration..."), tr("Change application settings"), Icons::fileConfig);
     mToolbarFile->addSeparator();
     mToolbarFile->addAction(act);
     connectActionToThis(act, showConfigDialog);
 
     menuFile->addSeparator(); // ---------------------------------------------
     
-    act = setupAction(menuFile, tr("&Quit"), tr("Exit the application"), QKeySequence::Quit);
+    act = TU::setupAction(menuFile, tr("&Quit"), tr("Exit the application"), QKeySequence::Quit);
     connectActionToThis(act, close);
 
     // > Edit ================================================================
@@ -115,27 +118,27 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     menuEdit->addSeparator(); // ---------------------------------------------
     mToolbarEdit->addSeparator();
 
-    act = setupAction(menuEdit, tr("C&ut"), tr("Copies and deletes selection to the clipboard"), Icons::editCut, QKeySequence::Cut);
+    act = TU::setupAction(menuEdit, tr("C&ut"), tr("Copies and deletes selection to the clipboard"), Icons::editCut, QKeySequence::Cut);
     mToolbarEdit->addAction(act);
     connectActionTo(act, mPatternEditor, cut);
 
-    act = setupAction(menuEdit, tr("&Copy"), tr("Copies selected rows to the clipboard"), Icons::editCopy, QKeySequence::Copy);
+    act = TU::setupAction(menuEdit, tr("&Copy"), tr("Copies selected rows to the clipboard"), Icons::editCopy, QKeySequence::Copy);
     mToolbarEdit->addAction(act);
     connectActionTo(act, mPatternEditor, copy);
     
-    act = setupAction(menuEdit, tr("&Paste"), tr("Pastes contents at the cursor"), Icons::editPaste, QKeySequence::Paste);
+    act = TU::setupAction(menuEdit, tr("&Paste"), tr("Pastes contents at the cursor"), Icons::editPaste, QKeySequence::Paste);
     mToolbarEdit->addAction(act);
     connectActionTo(act, mPatternEditor, paste);
     
-    act = setupAction(menuEdit, tr("Paste &Mix"), tr("Pastes contents at the cursor, merging with existing rows"), tr("Ctrl+M"));
+    act = TU::setupAction(menuEdit, tr("Paste &Mix"), tr("Pastes contents at the cursor, merging with existing rows"), tr("Ctrl+M"));
     connectActionTo(act, mPatternEditor, pasteMix);
 
-    act = setupAction(menuEdit, tr("&Erase"), tr("Erases selection contents"), QKeySequence::Delete);
+    act = TU::setupAction(menuEdit, tr("&Erase"), tr("Erases selection contents"), QKeySequence::Delete);
     connectActionTo(act, mPatternEditor, erase);
     
     menuEdit->addSeparator(); // ---------------------------------------------
 
-    act = setupAction(menuEdit, tr("&Select All"), tr("Selects entire track/pattern"), QKeySequence::SelectAll);
+    act = TU::setupAction(menuEdit, tr("&Select All"), tr("Selects entire track/pattern"), QKeySequence::SelectAll);
     connectActionTo(act, mPatternEditor, selectAll);
 
     menuEdit->addSeparator(); // ----------------------------------------------
@@ -143,27 +146,27 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     // > Edit > Transpose
     auto menuEditTranspose = menuEdit->addMenu(tr("Transpose"));
     
-    act = setupAction(menuEditTranspose, tr("Decrease note"), tr("Decreases note/notes by 1 step"));
+    act = TU::setupAction(menuEditTranspose, tr("Decrease note"), tr("Decreases note/notes by 1 step"));
     connectActionTo(act, mPatternEditor, decreaseNote);
     
-    act = setupAction(menuEditTranspose, tr("Increase note"), tr("Increases note/notes by 1 step"));
+    act = TU::setupAction(menuEditTranspose, tr("Increase note"), tr("Increases note/notes by 1 step"));
     connectActionTo(act, mPatternEditor, increaseNote);
     
-    act = setupAction(menuEditTranspose, tr("Decrease octave"), tr("Decreases note/notes by 12 steps"));
+    act = TU::setupAction(menuEditTranspose, tr("Decrease octave"), tr("Decreases note/notes by 12 steps"));
     connectActionTo(act, mPatternEditor, decreaseOctave);
     
-    act = setupAction(menuEditTranspose, tr("Increase octave"), tr("Increases note/notes by 12 steps"));
+    act = TU::setupAction(menuEditTranspose, tr("Increase octave"), tr("Increases note/notes by 12 steps"));
     connectActionTo(act, mPatternEditor, increaseOctave);
 
-    act = setupAction(menuEditTranspose, tr("Custom..."), tr("Transpose by a custom amount"), tr("Ctrl+T"));
+    act = TU::setupAction(menuEditTranspose, tr("Custom..."), tr("Transpose by a custom amount"), tr("Ctrl+T"));
     connectActionTo(act, mPatternEditor, transpose);
 
-    setupAction(menuEdit, tr("&Reverse"), tr("Reverses selected rows"), tr("Ctrl+R"));
+    TU::setupAction(menuEdit, tr("&Reverse"), tr("Reverses selected rows"), tr("Ctrl+R"));
     connectActionTo(act, mPatternEditor, reverse);
 
     menuEdit->addSeparator(); // ----------------------------------------------
 
-    act = setupAction(menuEdit, tr("Key repetition"), tr("Toggles key repetition for pattern editor"));
+    act = TU::setupAction(menuEdit, tr("Key repetition"), tr("Toggles key repetition for pattern editor"));
     act->setCheckable(true);
     act->setChecked(true);
     mToolbarInput->addAction(act);
@@ -179,27 +182,27 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     menuModule->addSeparator(); // --------------------------------------------
 
-    act = setupAction(menuModule, tr("Comments..."), tr("Shows comments about the module"));
+    act = TU::setupAction(menuModule, tr("Comments..."), tr("Shows comments about the module"));
     connectActionToThis(act, onModuleComments);
 
-    act = setupAction(menuModule, tr("Module properties..."), tr("Opens the module properties dialog"));
+    act = TU::setupAction(menuModule, tr("Module properties..."), tr("Opens the module properties dialog"));
     connectActionToThis(act, onModuleModuleProperties);
 
     // > Song =================================================================
 
-    mActionOrderInsert = createAction(this, tr("&Insert order row"), tr("Inserts a new order at the current pattern"), Icons::itemAdd);
+    mActionOrderInsert = TU::createAction(this, tr("&Insert order row"), tr("Inserts a new order at the current pattern"), Icons::itemAdd);
     connectActionTo(mActionOrderInsert, mPatternModel, insertOrder);
     
-    mActionOrderRemove = createAction(this, tr("&Remove order row"), tr("Removes the order at the current pattern"), Icons::itemRemove);
+    mActionOrderRemove = TU::createAction(this, tr("&Remove order row"), tr("Removes the order at the current pattern"), Icons::itemRemove);
     connectActionTo(mActionOrderRemove, mPatternModel, removeOrder);
 
-    mActionOrderDuplicate = createAction(this, tr("&Duplicate order row"), tr("Duplicates the order at the current pattern"), Icons::itemDuplicate);
+    mActionOrderDuplicate = TU::createAction(this, tr("&Duplicate order row"), tr("Duplicates the order at the current pattern"), Icons::itemDuplicate);
     connectActionTo(mActionOrderDuplicate, mPatternModel, duplicateOrder);
 
-    mActionOrderMoveUp = createAction(this, tr("Move order &up"), tr("Moves the order up 1"), Icons::moveUp);
+    mActionOrderMoveUp = TU::createAction(this, tr("Move order &up"), tr("Moves the order up 1"), Icons::moveUp);
     connectActionTo(mActionOrderMoveUp, mPatternModel, moveOrderUp);
 
-    mActionOrderMoveDown = createAction(this, tr("Move order dow&n"), tr("Moves the order down 1"), Icons::moveDown);
+    mActionOrderMoveDown = TU::createAction(this, tr("Move order dow&n"), tr("Moves the order down 1"), Icons::moveDown);
     connectActionTo(mActionOrderMoveDown, mPatternModel, moveOrderDown);
 
     auto menuSong = menubar->addMenu(tr("&Song"));
@@ -207,7 +210,7 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     menuSong->addSeparator();
 
-    act = setupAction(menuSong, tr("Tempo calculator..."), tr("Shows the tempo calculator dialog"));
+    act = TU::setupAction(menuSong, tr("Tempo calculator..."), tr("Shows the tempo calculator dialog"));
     connectActionToThis(act, showTempoCalculator);
 
     // > Instrument ===========================================================
@@ -223,34 +226,34 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     // > Tracker ==============================================================
     auto menuTracker = menubar->addMenu(tr("&Tracker"));
 
-    act = setupAction(menuTracker, tr("&Play"), tr("Resume playing or play the song from the current position"), Icons::trackerPlay);
+    act = TU::setupAction(menuTracker, tr("&Play"), tr("Resume playing or play the song from the current position"), Icons::trackerPlay);
     mToolbarTracker->addAction(act);
     connectActionToThis(act, onTrackerPlay);
 
-    act = setupAction(menuTracker, tr("Play from start"), tr("Begin playback of the song from the start"), Icons::trackerRestart, QKeySequence(Qt::Key_F5));
+    act = TU::setupAction(menuTracker, tr("Play from start"), tr("Begin playback of the song from the start"), Icons::trackerRestart, QKeySequence(Qt::Key_F5));
     mToolbarTracker->addAction(act);
     connectActionToThis(act, onTrackerPlayAtStart);
 
-    act = setupAction(menuTracker, tr("Play at cursor"), tr("Begin playback from the cursor"), Icons::trackerPlayRow, QKeySequence(Qt::Key_F6));
+    act = TU::setupAction(menuTracker, tr("Play at cursor"), tr("Begin playback from the cursor"), Icons::trackerPlayRow, QKeySequence(Qt::Key_F6));
     mToolbarTracker->addAction(act);
     connectActionToThis(act, onTrackerPlayFromCursor);
 
-    act = setupAction(menuTracker, tr("Step row"), tr("Play and hold the row at the cursor"), Icons::trackerStepRow, QKeySequence(Qt::Key_F7));
+    act = TU::setupAction(menuTracker, tr("Step row"), tr("Play and hold the row at the cursor"), Icons::trackerStepRow, QKeySequence(Qt::Key_F7));
     mToolbarTracker->addAction(act);
     connectActionToThis(act, onTrackerStep);
 
-    act = setupAction(menuTracker, tr("&Stop"), tr("Stop playing"), Icons::trackerStop, QKeySequence(Qt::Key_F8));
+    act = TU::setupAction(menuTracker, tr("&Stop"), tr("Stop playing"), Icons::trackerStop, QKeySequence(Qt::Key_F8));
     mToolbarTracker->addAction(act);
     connectActionToThis(act, onTrackerStop);
 
     mToolbarTracker->addSeparator();
 
-    act = setupAction(menuTracker, "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat, QKeySequence(Qt::Key_F9));
+    act = TU::setupAction(menuTracker, "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat, QKeySequence(Qt::Key_F9));
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
     lazyconnect(act, toggled, mRenderer, setPatternRepeat);
 
-    act = setupAction(menuTracker, tr("Record"), tr("Toggles record mode"), Icons::trackerRecord, QKeySequence(Qt::Key_Space));
+    act = TU::setupAction(menuTracker, tr("Record"), tr("Toggles record mode"), Icons::trackerRecord, QKeySequence(Qt::Key_Space));
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
     lazyconnect(act, toggled, mPatternModel, setRecord);
@@ -260,18 +263,18 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     menuTracker->addSeparator(); // -------------------------------------------
 
-    act = setupAction(menuTracker, tr("Toggle channel output"), tr("Enables/disables sound output for the current track"), QKeySequence(Qt::Key_F10));
+    act = TU::setupAction(menuTracker, tr("Toggle channel output"), tr("Enables/disables sound output for the current track"), QKeySequence(Qt::Key_F10));
     connectActionToThis(act, onTrackerToggleOutput);
 
-    act = setupAction(menuTracker, tr("Solo"), tr("Solos the current track"), QKeySequence(Qt::Key_F11));
+    act = TU::setupAction(menuTracker, tr("Solo"), tr("Solos the current track"), QKeySequence(Qt::Key_F11));
     connectActionToThis(act, onTrackerSolo);
 
     menuTracker->addSeparator(); // -------------------------------------------
 
-    act = setupAction(menuTracker, tr("&Kill sound"), tr("Immediately stops sound output"), QKeySequence(Qt::Key_F12));
+    act = TU::setupAction(menuTracker, tr("&Kill sound"), tr("Immediately stops sound output"), QKeySequence(Qt::Key_F12));
     connectActionToThis(act, onTrackerKill);
 
-    mActionFollowMode = createAction(this, tr("Follow-mode"), tr("Toggles follow mode"), Qt::Key_ScrollLock);
+    mActionFollowMode = TU::createAction(this, tr("Follow-mode"), tr("Toggles follow mode"), Qt::Key_ScrollLock);
     mActionFollowMode->setCheckable(true);
     mActionFollowMode->setChecked(true);
     mToolbarTracker->addAction(mActionFollowMode);
@@ -280,7 +283,7 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     // > View =================================================================
     auto menuView = menubar->addMenu(tr("&View"));
 
-    mActionViewReset = createAction(this, tr("Reset layout"), tr("Rearranges all docks and toolbars to the default layout"));
+    mActionViewReset = TU::createAction(this, tr("Reset layout"), tr("Rearranges all docks and toolbars to the default layout"));
     connectActionToThis(mActionViewReset, onViewResetLayout);
 
     setupViewMenu(menuView);
@@ -292,34 +295,34 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     // secret debug menu
 
     auto menuHelpDebug = menuHelp->addMenu(tr("Debug"));
-    act = setupAction(menuHelpDebug, tr("Dump QObject tree"), tr("Calls MainWindow::dumpObjectTree()"));
+    act = TU::setupAction(menuHelpDebug, tr("Dump QObject tree"), tr("Calls MainWindow::dumpObjectTree()"));
     connect(act, &QAction::triggered, this, [this]() {
         dumpObjectTree();
     });
 
-    act = setupAction(menuHelpDebug, tr("Clear config"), tr("Deletes the application configuration, window state and geometry"));
+    act = TU::setupAction(menuHelpDebug, tr("Clear config"), tr("Deletes the application configuration, window state and geometry"));
     connect(act, &QAction::triggered, this, [this](){
         mSaveConfig = false;
         QSettings settings;
         settings.clear();
     });
 
-    act = setupAction(menuHelpDebug, tr("Panic"), tr("Forces a fatal error to occur"));
+    act = TU::setupAction(menuHelpDebug, tr("Panic"), tr("Forces a fatal error to occur"));
     connect(act, &QAction::triggered, this, []() {
         qFatal("panic requested");
     });
 
     #endif
 
-    act = setupAction(menuHelp, tr("Audio diagnostics..."), tr("Shows the audio diagnostics dialog"));
+    act = TU::setupAction(menuHelp, tr("Audio diagnostics..."), tr("Shows the audio diagnostics dialog"));
     connectActionToThis(act, showAudioDiag);
     
     menuHelp->addSeparator(); // ----------------------------------------------
     
-    act = setupAction(menuHelp, tr("&About"), tr("About this program"));
+    act = TU::setupAction(menuHelp, tr("&About"), tr("About this program"));
     connectActionToThis(act, showAboutDialog);
     
-    act = setupAction(menuHelp, tr("About &Qt"), tr("Shows information about Qt"));
+    act = TU::setupAction(menuHelp, tr("About &Qt"), tr("Shows information about Qt"));
     QApplication::connect(act, &QAction::triggered, &QApplication::aboutQt);
 
 
@@ -369,3 +372,5 @@ void MainWindow::setupTableMenu(QMenu *menu, TableActions const& actions) {
     menu->addAction(actions.edit);
 
 }
+
+#undef TU

@@ -5,6 +5,9 @@
 
 #include <array>
 
+#define TU AudioProberTU
+
+namespace TU {
 //
 // logging callback for miniaudio, redirects to Qt's message logging utility
 //
@@ -19,6 +22,7 @@ void logCallback(ma_context* pContext, ma_device* pDevice, ma_uint32 logLevel, c
     dbg << "[Miniaudio]" << message;
 }
 
+}
 
 AudioProber::Context::Context(ma_backend backend) :
     mContext(),
@@ -114,7 +118,7 @@ void AudioProber::Context::probe() {
         // context not initialized, attempt to do so and log error on failure
 
         auto config = ma_context_config_init();
-        config.logCallback = logCallback;
+        config.logCallback = TU::logCallback;
         auto result = ma_context_init(&mBackend, 1, &config, mContext.get());
         if (result == MA_SUCCESS) {
             mInitialized = true;
@@ -229,3 +233,5 @@ void AudioProber::probe(int backendIndex) {
 bool AudioProber::indexIsInvalid(int backendIndex) const {
     return backendIndex < 0 || backendIndex > (int)mContexts.size();
 }
+
+#undef TU

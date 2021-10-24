@@ -6,7 +6,12 @@
 #include <QTimerEvent>
 #include <QThread>
 
+#define TU FastTimerTU
+namespace TU {
+
 constexpr auto NO_TIMER = -1;
+
+}
 
 FastTimer::FastTimer(QObject *parent) :
     QObject(parent),
@@ -14,7 +19,7 @@ FastTimer::FastTimer(QObject *parent) :
     mCallbackData(nullptr),
     mInterval(0),
     mTimerType(Qt::CoarseTimer),
-    mTimerId(NO_TIMER)
+    mTimerId(TU::NO_TIMER)
 {
 }
 
@@ -38,7 +43,7 @@ void FastTimer::setInterval(int ms, Qt::TimerType type) {
     auto timerId = mTimerId;
     mMutex.unlock();
 
-    if (changed && timerId != NO_TIMER) {
+    if (changed && timerId != TU::NO_TIMER) {
         // restart the timer with the new interval
         start();
     }
@@ -85,8 +90,10 @@ void FastTimer::_startTimer() {
 }
 
 void FastTimer::_stopTimer() {
-    if (mTimerId != NO_TIMER) {
+    if (mTimerId != TU::NO_TIMER) {
         killTimer(mTimerId);
         mTimerId = -1;
     }
 }
+
+#undef TU

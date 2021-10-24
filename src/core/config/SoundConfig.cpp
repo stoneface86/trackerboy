@@ -7,9 +7,11 @@
 
 #include <QtDebug>
 
-#define TU SoundConfigStatic
+#define TU SoundConfigTU
 namespace TU {
+
     static auto const LOG_PREFIX = "[SoundConfig]";
+
 }
 
 SoundConfig::SoundConfig() :

@@ -7,9 +7,14 @@
 
 #include <algorithm>
 
+#define TU InstrumentEditorTU
+namespace TU {
+
 static auto SET_VOLUME_CHECK_STR = QT_TR_NOOP("Set volume on trigger");
 static auto SET_WAVE_CHECK_STR = QT_TR_NOOP("Set waveform on trigger");
 static auto DUTY_CYCLE_STR = QT_TR_NOOP("Duty cycle");
+
+}
 
 InstrumentEditor::InstrumentEditor(
     Module &mod,
@@ -38,7 +43,7 @@ InstrumentEditor::InstrumentEditor(
     {
         auto layout = new QVBoxLayout;
         mChannelCombo = new QComboBox;
-        mSetEnvelopeCheck = new QCheckBox(tr(SET_VOLUME_CHECK_STR));
+        mSetEnvelopeCheck = new QCheckBox(tr(TU::SET_VOLUME_CHECK_STR));
         layout->addWidget(mChannelCombo);
         layout->addWidget(mSetEnvelopeCheck);
         layout->addStretch();
@@ -102,7 +107,7 @@ InstrumentEditor::InstrumentEditor(
     mSequenceTabs->addTab(mSequenceEditors[0], tr("Arpeggio"));
     mSequenceTabs->addTab(mSequenceEditors[1], tr("Panning"));
     mSequenceTabs->addTab(mSequenceEditors[2], tr("Pitch"));
-    mSequenceTabs->addTab(mSequenceEditors[3], tr(DUTY_CYCLE_STR));
+    mSequenceTabs->addTab(mSequenceEditors[3], tr(TU::DUTY_CYCLE_STR));
     
 
     connect(mSetEnvelopeCheck, &QCheckBox::toggled, this,
@@ -126,7 +131,7 @@ InstrumentEditor::InstrumentEditor(
             switch (index) {
                 case 0:
                 case 1:
-                    mSequenceTabs->setTabText(3, tr(DUTY_CYCLE_STR));
+                    mSequenceTabs->setTabText(3, tr(TU::DUTY_CYCLE_STR));
                     break;
                 case 2:
                     mSequenceTabs->setTabText(3, tr("Volume"));
@@ -138,10 +143,10 @@ InstrumentEditor::InstrumentEditor(
 
             if (isWave) {
                 setEnvelopeToWaveform(mWaveformCombo->currentIndex());
-                mSetEnvelopeCheck->setText(tr(SET_WAVE_CHECK_STR));
+                mSetEnvelopeCheck->setText(tr(TU::SET_WAVE_CHECK_STR));
             } else {
                 setEnvelope(mEnvelopeForm->envelope());
-                mSetEnvelopeCheck->setText(tr(SET_VOLUME_CHECK_STR));
+                mSetEnvelopeCheck->setText(tr(TU::SET_VOLUME_CHECK_STR));
             }
 
         });
@@ -232,3 +237,5 @@ void InstrumentEditor::setEnvelopeEnable(bool enabled) {
 InstrumentListModel& InstrumentEditor::model() const noexcept {
     return static_cast<InstrumentListModel&>(mModel);
 }
+
+#undef TU

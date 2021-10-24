@@ -5,9 +5,6 @@
 #include <QMessageBox>
 #include <QPushButton>
 
-#include <algorithm>
-#include <cmath>
-
 
 ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),

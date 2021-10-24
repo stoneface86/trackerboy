@@ -5,8 +5,12 @@
 
 #include <algorithm>
 
+#define TU MidiProberTU
+namespace TU {
+
 static auto CLIENT_NAME = "Trackerboy input client";
 
+}
 
 MidiProber::MidiProber() :
     mApiVec(),
@@ -53,7 +57,7 @@ void MidiProber::setBackend(int index) {
             noBackend();
         } else {
             try {
-                mBackend = std::make_shared<RtMidiIn>(mApiVec[index], CLIENT_NAME);
+                mBackend = std::make_shared<RtMidiIn>(mApiVec[index], TU::CLIENT_NAME);
             } catch (RtMidiError const &err) {
                 qCritical().noquote() << "[MIDI] Couldn't initialize API:" << QString::fromStdString(err.getMessage());
                 noBackend();
@@ -96,3 +100,5 @@ void MidiProber::noBackend() {
     mBackend = nullptr;
     mPortNames.clear();
 }
+
+#undef TU

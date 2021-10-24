@@ -5,8 +5,12 @@
 #include <QPainter>
 #include <QPen>
 
+#define TU AudioScopeTU
+namespace TU {
+
 constexpr int LINE_WIDTH = 1;
 
+}
 
 AudioScope::AudioScope(QWidget *parent) :
     QFrame(parent),
@@ -27,8 +31,8 @@ AudioScope::AudioScope(QWidget *parent) :
 
     setFrameStyle(QFrame::Box | QFrame::Plain);
     
-    setLineWidth(LINE_WIDTH);
-    setFixedHeight(WAVE_HEIGHT * 2 + LINE_WIDTH * 2);
+    setLineWidth(TU::LINE_WIDTH);
+    setFixedHeight(WAVE_HEIGHT * 2 + TU::LINE_WIDTH * 2);
 
 }
 
@@ -70,7 +74,7 @@ void AudioScope::paintEvent(QPaintEvent *evt) {
         return;
     }
 
-    auto const w = width() - (LINE_WIDTH * 2);
+    auto const w = width() - (TU::LINE_WIDTH * 2);
     
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -84,8 +88,8 @@ void AudioScope::paintEvent(QPaintEvent *evt) {
     float prevRight;
     sample(handle, 0.0f, ratio, prevLeft, prevRight);
 
-    int const end = w + LINE_WIDTH;
-    for (int t = 1 + LINE_WIDTH; t < end; ++t) {
+    int const end = w + TU::LINE_WIDTH;
+    for (int t = 1 + TU::LINE_WIDTH; t < end; ++t) {
         index += ratio;
         
         float leftSample;
@@ -106,9 +110,9 @@ void AudioScope::paintEvent(QPaintEvent *evt) {
 void AudioScope::drawSilence() {
     QPainter painter(this);
     painter.setPen(palette().color(QPalette::WindowText));
-    auto const x2 = width() - LINE_WIDTH;
-    painter.drawLine(LINE_WIDTH, WAVE_LEFT_AXIS, x2, WAVE_LEFT_AXIS);
-    painter.drawLine(LINE_WIDTH, WAVE_RIGHT_AXIS, x2, WAVE_RIGHT_AXIS);
+    auto const x2 = width() - TU::LINE_WIDTH;
+    painter.drawLine(TU::LINE_WIDTH, WAVE_LEFT_AXIS, x2, WAVE_LEFT_AXIS);
+    painter.drawLine(TU::LINE_WIDTH, WAVE_RIGHT_AXIS, x2, WAVE_RIGHT_AXIS);
 
 }
 
@@ -119,3 +123,5 @@ void AudioScope::sample(Locked<VisualizerBuffer> &handle, float index, float rat
     outLeft = WAVE_LEFT_AXIS - (left / (2.0f / WAVE_HEIGHT));
     outRight = WAVE_RIGHT_AXIS - (right / (2.0f / WAVE_HEIGHT));
 }
+
+#undef TU

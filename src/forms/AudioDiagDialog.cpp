@@ -3,7 +3,12 @@
 
 #include <QTimerEvent>
 
+#define TU AudioDiagDialogTU
+namespace TU {
+
 constexpr int DEFAULT_REFRESH_INTERVAL = 100;
+
+}
 
 AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
@@ -47,7 +52,7 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
 
     mIntervalSpin.setSuffix(tr(" ms"));
     mIntervalSpin.setRange(10, 60000);
-    mIntervalSpin.setValue(DEFAULT_REFRESH_INTERVAL);
+    mIntervalSpin.setValue(TU::DEFAULT_REFRESH_INTERVAL);
 
     mAutoRefreshCheck.setCheckState(Qt::Checked);
 
@@ -138,3 +143,5 @@ void AudioDiagDialog::refresh() {
     mPeriodLabel.setText(tr("%1 ms").arg(periodMs, 0, 'f', 3));
     mPeriodWrittenLabel.setText(QString::number(diags.writesSinceLastPeriod));
 }
+
+#undef TU

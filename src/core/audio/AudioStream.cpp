@@ -8,8 +8,12 @@
 #include <algorithm>
 
 
+#define TU AudioStreamTU
+namespace TU {
 
 static const char* LOG_PREFIX = "[AudioStream]";
+
+}
 
 
 AudioStream::AudioStream() :
@@ -171,7 +175,7 @@ void AudioStream::handleStop() {
     //  * explicitly: when the stream is stopped via stop() (mRunning = false)
     
     if (mRunning) {
-        qCritical() << LOG_PREFIX << "stream aborted";
+        qCritical() << TU::LOG_PREFIX << "stream aborted";
         mRunning = false;
         // we didn't trigger this stop via stop(), an error must've occurred
         emit aborted();
@@ -181,8 +185,10 @@ void AudioStream::handleStop() {
 
 void AudioStream::handleError(const char *msg, ma_result err) {
     qCritical().noquote()
-        << LOG_PREFIX
+        << TU::LOG_PREFIX
         << msg
         << ma_result_description(err);
     disable();
 }
+
+#undef TU

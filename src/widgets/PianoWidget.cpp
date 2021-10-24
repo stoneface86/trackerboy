@@ -3,12 +3,17 @@
 
 #include <QKeyEvent>
 #include <QPainter>
+#include <QPixmapCache>
 #include <QScrollBar>
+
+#include <QtDebug>
+
+#define TU PianoWidgetTU
+namespace TU {
 
 constexpr int KEYINDEX_NULL = -1;
 constexpr int N_OCTAVES = 7;
 constexpr int N_WHITEKEYS = 7;
-constexpr int N_BLACKKEYS = 5;
 
 // IMPORTANT! these widths must match the widths of the key images
 
@@ -76,7 +81,15 @@ static const trackerboy::Note BLACKKEY_TO_NOTE[] = {
     trackerboy::NOTE_Bb  // A#
 };
 
-std::optional<PianoWidget::Pixmaps> PianoWidget::mPixmaps;
+static std::array const PIXMAP_PATHS = {
+    ":/images/whitekey_down.png",
+    ":/images/blackkey_down.png",
+    ":/images/piano_whitekeys.png",
+    ":/images/piano_blackkeys.png"
+};
+
+}
+
 
 
 PianoWidget::PianoWidget(PianoInput const& input, QWidget *parent) :
@@ -88,15 +101,8 @@ PianoWidget::PianoWidget(PianoInput const& input, QWidget *parent) :
 {
     setFocusPolicy(Qt::StrongFocus);
     
-    if (!mPixmaps) {
-        auto &pixmaps = mPixmaps.emplace();
-        pixmaps.whiteKeyDown.load(QStringLiteral(":/images/whitekey_down.png"));
-        pixmaps.blackKeyDown.load(QStringLiteral(":/images/blackkey_down.png"));
-        pixmaps.pianoWhitePix.load(QStringLiteral(":/images/piano_whitekeys.png"));
-        pixmaps.pianoBlackPix.load(QStringLiteral(":/images/piano_blackkeys.png"));
-    }
-    setFixedWidth(PIANO_WIDTH);
-    setFixedHeight(PIANO_HEIGHT);
+    setFixedWidth(TU::PIANO_WIDTH);
+    setFixedHeight(TU::PIANO_HEIGHT);
 }
 
 void PianoWidget::play(int note) {
@@ -200,29 +206,27 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
     (void)event;
 
     int octaveOffset = 0;
-    KeyPaintInfo keyInfo{ 0 };
+    TU::KeyPaintInfo keyInfo{ false, 0 };
 
     if (mIsKeyDown) {
         octaveOffset = mNote / 12;
         int keyInOctave = mNote % 12;
-        octaveOffset *= N_WHITEKEYS * WKEY_WIDTH;
+        octaveOffset *= TU::N_WHITEKEYS * TU::WKEY_WIDTH;
 
-        keyInfo = KEY_INFO[keyInOctave];
+        keyInfo = TU::KEY_INFO[keyInOctave];
     }
-
-    auto &pixmaps = mPixmaps.value();
 
     QPainter painter(this);
-    painter.drawPixmap(0, 0, pixmaps.pianoWhitePix);
+    painter.drawPixmap(0, 0, getPixmap(PixWhiteKeys));
     
     if (mIsKeyDown && !keyInfo.isBlack) {
-        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, pixmaps.whiteKeyDown);
+        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, getPixmap(PixWhiteKeyDown));
     }
 
-    painter.drawPixmap(0, 0, pixmaps.pianoBlackPix);
+    painter.drawPixmap(0, 0, getPixmap(PixBlackKeys));
 
     if (mIsKeyDown && keyInfo.isBlack) {
-        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, pixmaps.blackKeyDown);
+        painter.drawPixmap(octaveOffset + keyInfo.xoffset, 0, getPixmap(PixBlackKeyDown));
     }
 
     if (!isEnabled()) {
@@ -236,26 +240,26 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
 
 int PianoWidget::getNoteFromMouse(int x, int y) {
     bool isBlack = false;
-    int wkeyInOctave = x / WKEY_WIDTH;
-    int octave = wkeyInOctave / N_WHITEKEYS;
-    wkeyInOctave %= N_WHITEKEYS;
+    int wkeyInOctave = x / TU::WKEY_WIDTH;
+    int octave = wkeyInOctave / TU::N_WHITEKEYS;
+    wkeyInOctave %= TU::N_WHITEKEYS;
     int bkeyInOctave = 0;
 
-    if (y < BKEY_HEIGHT) {
+    if (y < TU::BKEY_HEIGHT) {
         // check if the mouse is over a black key
-        bkeyInOctave = BLACKKEY_LEFTOF[wkeyInOctave];
-        int wkeyx = x % WKEY_WIDTH;
+        bkeyInOctave = TU::BLACKKEY_LEFTOF[wkeyInOctave];
+        int wkeyx = x % TU::WKEY_WIDTH;
 
-        if (bkeyInOctave != KEYINDEX_NULL && wkeyx <= BKEY_WIDTH_HALF) {
+        if (bkeyInOctave != TU::KEYINDEX_NULL && wkeyx <= TU::BKEY_WIDTH_HALF) {
             // mouse is over the black key to the left of the white key
             isBlack = true;
         } else {
             // now check the right
             
             // get the black key to the left of the next white key
-            bkeyInOctave = BLACKKEY_LEFTOF[wkeyInOctave == N_WHITEKEYS - 1 ? 0 : wkeyInOctave + 1];
+            bkeyInOctave = TU::BLACKKEY_LEFTOF[wkeyInOctave == TU::N_WHITEKEYS - 1 ? 0 : wkeyInOctave + 1];
             
-            if (bkeyInOctave != KEYINDEX_NULL && wkeyx >= WKEY_WIDTH - BKEY_WIDTH_HALF) {
+            if (bkeyInOctave != TU::KEYINDEX_NULL && wkeyx >= TU::WKEY_WIDTH - TU::BKEY_WIDTH_HALF) {
                 isBlack = true;
             }
         }
@@ -263,11 +267,21 @@ int PianoWidget::getNoteFromMouse(int x, int y) {
 
     int note = octave * 12;
     if (isBlack) {
-        note += BLACKKEY_TO_NOTE[bkeyInOctave];
+        note += TU::BLACKKEY_TO_NOTE[bkeyInOctave];
     } else {
-        note += WHITEKEY_TO_NOTE[wkeyInOctave];
+        note += TU::WHITEKEY_TO_NOTE[wkeyInOctave];
     }
 
     return note;
+}
+
+QPixmap PianoWidget::getPixmap(Pixmaps id) {
+    QPixmap pixmap;
+    QString const key = TU::PIXMAP_PATHS[id];
+    if (!QPixmapCache::find(key, &pixmap)) {
+        pixmap.load(key);
+        QPixmapCache::insert(key, pixmap);
+    }
+    return pixmap;
 }
 

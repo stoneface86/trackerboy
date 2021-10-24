@@ -3,7 +3,6 @@
 
 #include <type_traits>
 
-using IconsIntegral = std::underlying_type<Icons>::type;
 
 IconManager::IconManager() {
     mPlaceholder.addFile(QStringLiteral(":/icons/placeholder.png"));
@@ -29,6 +28,7 @@ QIcon const& IconManager::getIcon(Icons icon) {
         return instance.mPlaceholder;
     }
 
+    using IconsIntegral = std::underlying_type<Icons>::type;
     auto &iconRef = instance.mIconTable[static_cast<IconsIntegral>(icon)];
 
     if (iconRef.isNull()) {

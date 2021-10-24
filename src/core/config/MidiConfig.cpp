@@ -6,10 +6,7 @@
 
 #include <QtDebug>
 
-// prevents name clashing when using unity builds
-// TU = Translation unit
-#define TU MidiConfigNamespace
-
+#define TU MidiConfigTU
 namespace TU {
 
 static const auto LOG_PREFIX = "[MidiConfig]";

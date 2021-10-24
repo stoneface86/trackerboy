@@ -6,6 +6,10 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 
+#define TU WaveEditorTU
+namespace TU {
+
+
 constexpr int PRESET_PULSE50 = 0;
 constexpr int PRESET_PULSE25 = 1;
 constexpr int PRESET_TRIANGLE = 2;
@@ -25,6 +29,8 @@ static trackerboy::Waveform::Data const PRESETS[] = {
     {0x89, 0xAC, 0xDE, 0xFF, 0xFF, 0xED, 0xCB, 0xA8, 0x75, 0x43, 0x21, 0x00, 0x00, 0x12, 0x35, 0x67}
     
 };
+
+}
 
 WaveEditor::WaveEditor(
     Module &mod,
@@ -92,19 +98,19 @@ WaveEditor::WaveEditor(
     });
 
     connect(square50btn, &QPushButton::clicked, this, [this](){
-        setWaveFromPreset(PRESET_PULSE50);
+        setWaveFromPreset(TU::PRESET_PULSE50);
     });
     connect(square25btn, &QPushButton::clicked, this, [this](){
-        setWaveFromPreset(PRESET_PULSE25);
+        setWaveFromPreset(TU::PRESET_PULSE25);
     });
     connect(trianglebtn, &QPushButton::clicked, this, [this](){
-        setWaveFromPreset(PRESET_TRIANGLE);
+        setWaveFromPreset(TU::PRESET_TRIANGLE);
     });
     connect(sawbtn, &QPushButton::clicked, this, [this](){
-        setWaveFromPreset(PRESET_SAWTOOTH);
+        setWaveFromPreset(TU::PRESET_SAWTOOTH);
     });
     connect(sinebtn, &QPushButton::clicked, this, [this](){
-        setWaveFromPreset(PRESET_SINE);
+        setWaveFromPreset(TU::PRESET_SINE);
     });
 
 }
@@ -134,5 +140,7 @@ WaveListModel& WaveEditor::model() const noexcept {
 }
 
 void WaveEditor::setWaveFromPreset(int preset) {
-    mWaveModel->setWaveformData(PRESETS[preset]);
+    mWaveModel->setWaveformData(TU::PRESETS[preset]);
 }
+
+#undef TU

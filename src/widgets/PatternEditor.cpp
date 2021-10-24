@@ -12,6 +12,8 @@
 #include <QVBoxLayout>
 #include <QtDebug>
 
+#define TU PatternEditorTU
+namespace TU {
 
 static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
     switch (key) {
@@ -62,6 +64,8 @@ static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
         default:
             return std::nullopt;
     }
+}
+
 }
 
 // PatternEditor is just a composite widget containing the grid, header and
@@ -261,7 +265,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         case PatternCursor::ColumnEffect3Type:
         {
             // check if the key pressed is a valid effect type
-            auto effectType = keyToEffectType(key);
+            auto effectType = TU::keyToEffectType(key);
             if (effectType) {
                 if (recording) {
                     mModel.setEffectType(*effectType);
@@ -507,3 +511,5 @@ void PatternEditor::midiNoteOn(int note) {
 void PatternEditor::midiNoteOff() {
     emit stopNotePreview();
 }
+
+#undef TU

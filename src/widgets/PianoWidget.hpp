@@ -7,6 +7,7 @@
 #include <QWidget>
 #include <QPixmap>
 
+#include <array>
 #include <optional>
 
 //
@@ -45,19 +46,19 @@ protected:
 
 private:
     Q_DISABLE_COPY(PianoWidget)
-    
-    int getNoteFromMouse(int x, int y);
-    
-    struct Pixmaps {
-        QPixmap whiteKeyDown;
-        QPixmap blackKeyDown;
-        QPixmap pianoWhitePix;
-        QPixmap pianoBlackPix;
+
+    enum Pixmaps {
+        PixWhiteKeyDown,
+        PixBlackKeyDown,
+        PixWhiteKeys,
+        PixBlackKeys,
+
+        PixCount
     };
 
-    // pixmaps are stored statically, so that each PianoWidget doesn't have
-    // to load in its own copy.
-    static std::optional<Pixmaps> mPixmaps;
+    QPixmap getPixmap(Pixmaps id);
+    
+    int getNoteFromMouse(int x, int y);
 
     bool mIsKeyDown;
     int mNote;
