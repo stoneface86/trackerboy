@@ -7,7 +7,6 @@
 #include <QPoint>
 
 #include <optional>
-#include <variant>
 
 class GraphEdit : public QAbstractScrollArea {
 

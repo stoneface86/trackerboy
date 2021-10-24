@@ -4,7 +4,6 @@
 #include "miniaudio.h"
 
 #include <cstddef>
-#include <cstdint>
 
 //
 // Wrapper for a miniaudio ringbuffer, ma_rb.

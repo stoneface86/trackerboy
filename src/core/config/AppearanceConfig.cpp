@@ -3,9 +3,6 @@
 
 #include "core/config/keys.hpp"
 
-#include <QMetaEnum>
-#include <QtDebug>
-#include <QFontDatabase>
 
 AppearanceConfig::AppearanceConfig() :
     mPatternGridFont(),

@@ -3,8 +3,6 @@
 
 #include <QGridLayout>
 
-#include <cmath>
-
 SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     QWidget(parent),
     mSongModel(model),

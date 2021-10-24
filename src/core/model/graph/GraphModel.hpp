@@ -5,6 +5,8 @@
 
 #include <QObject>
 
+#include <cstdint>
+
 //
 // Model class for graph data, waveforms and sequences. To be used in a
 // GraphEdit

@@ -5,8 +5,6 @@
 
 #include <QtDebug>
 
-#include <QGuiApplication>
-#include <QFontDatabase>
 #include <QPainter>
 #include <QResizeEvent>
 #include <QScrollBar>
@@ -98,7 +96,7 @@ GraphEdit::GraphEdit(GraphModel &model, QWidget *parent) :
         [this](int count) {
             Q_UNUSED(count)
             calculateCellWidth();
-            update();
+            viewport()->update();
         });
 
     calculateAxis();
@@ -177,7 +175,7 @@ void GraphEdit::setViewModeImpl(ViewMode mode) {
         vscroll->setValue(value);
     }
 
-    update();
+    viewport()->update();
 }
 
 void GraphEdit::leaveEvent(QEvent *evt) {

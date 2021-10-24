@@ -1,12 +1,11 @@
 
 #pragma once
 
+#include "RtMidi.h"
+
 #include <QMutex>
 #include <QObject>
 
-#include "RtMidi.h"
-
-#include <optional>
 #include <memory>
 #include <vector>
 

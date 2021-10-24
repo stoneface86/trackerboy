@@ -7,10 +7,9 @@
 #include "forms/editors/BaseEditor.hpp"
 #include "widgets/GraphEdit.hpp"
 
-#include <QHBoxLayout>
 #include <QLineEdit>
-#include <QPushButton>
-#include <QVBoxLayout>
+
+#include <memory>
 
 
 class WaveEditor : public BaseEditor {

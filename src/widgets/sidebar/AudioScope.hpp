@@ -7,12 +7,6 @@
 #include "core/Palette.hpp"
 
 #include <QFrame>
-#include <QMutex>
-#include <QPixmap>
-
-#include <array>
-#include <cstdint>
-#include <cstddef>
 
 
 class AudioScope : public QFrame {

@@ -1,8 +1,15 @@
 
 #include "widgets/SequenceEditor.hpp"
 
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QSpinBox>
 #include <QtDebug>
+#include <QVBoxLayout>
+
+#ifdef PROFILE_STRING_CONVERSION
 #include <QElapsedTimer>
+#endif
 
 #include <algorithm>
 

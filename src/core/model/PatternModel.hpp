@@ -1,10 +1,9 @@
 
 #pragma once
 
+#include "core/clipboard/PatternClip.hpp"
 #include "core/model/SongModel.hpp"
 #include "core/Module.hpp"
-
-#include "core/clipboard/PatternClip.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 
@@ -16,6 +15,7 @@
 
 #include <array>
 #include <optional>
+
 
 //
 // Model class for accessing/modifying pattern data for a song.

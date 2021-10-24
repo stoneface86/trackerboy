@@ -13,7 +13,6 @@
 #include <QColor>
 #include <QFont>
 #include <QPainter>
-#include <QWidget>
 
 #include <array>
 

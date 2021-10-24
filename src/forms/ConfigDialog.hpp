@@ -7,8 +7,6 @@
 
 #include <QDialog>
 #include <QDialogButtonBox>
-#include <QSettings>
-#include <QShowEvent>
 #include <QTabWidget>
 #include <QVBoxLayout>
 

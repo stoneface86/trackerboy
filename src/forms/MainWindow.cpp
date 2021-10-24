@@ -12,7 +12,6 @@
 #include <QShortcut>
 #include <QScreen>
 #include <QMenu>
-#include <QPlainTextEdit>
 #include <QStatusBar>
 #include <QtDebug>
 #include <QUndoView>

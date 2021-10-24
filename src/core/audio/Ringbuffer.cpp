@@ -3,7 +3,6 @@
 
 #include <QtGlobal>
 
-#include <cstdint>
 #include <cstring>
 
 RingbufferBase::RingbufferBase() :

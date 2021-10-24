@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include "core/config/SoundConfig.hpp"
+class SoundConfig;
+
 #include "core/audio/Ringbuffer.hpp"
 
 #include "miniaudio.h"
@@ -10,7 +11,6 @@
 
 #include <atomic>
 #include <memory>
-#include <cstdint>
 
 //
 // AudioStream class. Manages a miniaudio device and a playback buffer for

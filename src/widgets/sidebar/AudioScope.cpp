@@ -2,14 +2,8 @@
 #include "widgets/sidebar/AudioScope.hpp"
 
 #include <QGuiApplication>
-#include <QMutexLocker>
 #include <QPainter>
 #include <QPen>
-
-#include <QtDebug>
-
-#include <cmath>
-#include <cstdlib>
 
 constexpr int LINE_WIDTH = 1;
 

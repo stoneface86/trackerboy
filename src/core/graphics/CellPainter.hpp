@@ -3,6 +3,7 @@
 
 #include <QFont>
 #include <QPainter>
+#include <QString>
 
 //
 // Utility class for painting single characters in a grid of "cells". The size

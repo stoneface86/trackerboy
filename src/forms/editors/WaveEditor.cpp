@@ -3,6 +3,8 @@
 
 #include <QtDebug>
 #include <QFontDatabase>
+#include <QHBoxLayout>
+#include <QPushButton>
 
 constexpr int PRESET_PULSE50 = 0;
 constexpr int PRESET_PULSE25 = 1;

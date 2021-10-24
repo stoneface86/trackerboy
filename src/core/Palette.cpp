@@ -5,8 +5,6 @@
 
 #include <QtDebug>
 
-#include <array>
-
 Palette::Palette() :
     mData{
         QColor( 24,  24,  24), // ColorBackground

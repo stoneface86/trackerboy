@@ -6,11 +6,9 @@
 
 #include <QApplication>
 #include <QDrag>
-#include <QFontDatabase>
 #include <QMimeData>
 #include <QPainter>
 #include <QtDebug>
-#include <QUndoCommand>
 
 #include <algorithm>
 

@@ -7,6 +7,10 @@
 #include <QAbstractListModel>
 #include <QIcon>
 
+#include <string>
+#include <utility>
+#include <vector>
+
 //
 // Base class for the WaveListModel and InstrumentListModel.
 //

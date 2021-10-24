@@ -7,12 +7,8 @@
 
 #include "trackerboy/data/Instrument.hpp"
 
-#include <QHBoxLayout>
-#include <QLabel>
 #include <QLineEdit>
-#include <QSpinBox>
 #include <QWidget>
-#include <QVBoxLayout>
 
 
 class SequenceEditor : public QWidget {

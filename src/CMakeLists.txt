@@ -207,6 +207,9 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 configure_file("version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
 list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" "version.hpp")
 
+
+
+
 #
 # ui library
 #
@@ -239,7 +242,6 @@ endif ()
 if (NOT ${DEBUG_BUILD})
     target_compile_definitions(ui PUBLIC QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
 endif ()
-
 
 #
 # Target for the main ui, trackerboy_ui. We cannot use trackerboy as that name is used

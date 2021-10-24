@@ -1,6 +1,7 @@
 
 #include "widgets/PianoWidget.hpp"
 
+#include <QKeyEvent>
 #include <QPainter>
 #include <QScrollBar>
 

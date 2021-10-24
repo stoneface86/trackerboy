@@ -7,7 +7,6 @@
 #include "widgets/TempoLabel.hpp"
 
 #include <QDialog>
-#include <QLabel>
 #include <QSpinBox>
 
 

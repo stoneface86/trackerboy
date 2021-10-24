@@ -2,10 +2,9 @@
 #pragma once
 
 #include "core/audio/AudioStream.hpp"
-#include "core/audio/Ringbuffer.hpp"
 #include "core/audio/VisualizerBuffer.hpp"
-#include "core/ChannelOutput.hpp"
 #include "core/config/SoundConfig.hpp"
+#include "core/ChannelOutput.hpp"
 #include "core/FastTimer.hpp"
 #include "core/Guarded.hpp"
 #include "core/Module.hpp"

@@ -11,8 +11,6 @@
 #include "core/Palette.hpp"
 
 #include <QFlags>
-#include <QFont>
-#include <QSettings>
 
 //
 // Class containing application settings. Settings are modified via the ConfigDialog

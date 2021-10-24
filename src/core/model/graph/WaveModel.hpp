@@ -5,6 +5,8 @@
 
 #include "trackerboy/data/Waveform.hpp"
 
+#include <QString>
+
 class WaveModel : public GraphModel {
 
     Q_OBJECT

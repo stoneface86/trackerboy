@@ -2,7 +2,6 @@
 #pragma once
 
 #include <QColor>
-#include <QDataStream>
 #include <QSettings>
 
 #include <array>

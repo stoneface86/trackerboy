@@ -4,7 +4,7 @@
 #include <QtGlobal>
 
 #include <algorithm>
-#include <type_traits>
+#include <cstddef>
 
 //
 // Implementation details

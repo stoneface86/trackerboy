@@ -142,7 +142,7 @@ bool PatternSelection::contains(PatternAnchor cursor) {
            cursorColumn >= start && cursorColumn <= end;
 }
 
-#ifndef QT_NO_DEBUG
+#ifdef QT_DEBUG
 
 QDebug operator<<(QDebug debug, PatternSelection const& selection) {
     QDebugStateSaver saver(debug);

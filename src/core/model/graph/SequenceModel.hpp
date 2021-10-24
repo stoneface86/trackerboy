@@ -5,6 +5,9 @@
 
 #include "trackerboy/data/Sequence.hpp"
 
+#include <cstdint>
+#include <vector>
+
 
 class SequenceModel : public GraphModel {
 

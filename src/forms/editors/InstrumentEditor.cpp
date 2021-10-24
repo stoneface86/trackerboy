@@ -1,7 +1,9 @@
 
 #include "forms/editors/InstrumentEditor.hpp"
 
+#include <QHBoxLayout>
 #include <QSignalBlocker>
+#include <QVBoxLayout>
 
 #include <algorithm>
 
@@ -59,6 +61,8 @@ InstrumentEditor::InstrumentEditor(
         mWaveformCombo = new QComboBox;
         mWaveformCombo->setModel(&mWaveListModel);
         mWaveformEditButton = new QPushButton(tr("Edit"));
+        mWaveformEditButton->setAutoDefault(false);
+        mWaveformEditButton->setDefault(false);
         layout->addWidget(mWaveformCombo, 1);
         layout->addWidget(mWaveformEditButton);
         layout->setAlignment(Qt::AlignTop);

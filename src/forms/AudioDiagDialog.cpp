@@ -1,7 +1,6 @@
 
 #include "forms/AudioDiagDialog.hpp"
 
-#include <QTime>
 #include <QTimerEvent>
 
 constexpr int DEFAULT_REFRESH_INTERVAL = 100;

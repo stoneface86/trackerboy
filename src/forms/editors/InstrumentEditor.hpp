@@ -1,7 +1,6 @@
 
 #pragma once
 
-#include "core/model/graph/SequenceModel.hpp"
 #include "core/model/TableModel.hpp"
 #include "core/Palette.hpp"
 #include "forms/editors/BaseEditor.hpp"
@@ -9,13 +8,8 @@
 #include "widgets/SequenceEditor.hpp"
 
 #include <QComboBox>
-#include <QFrame>
 #include <QGroupBox>
-#include <QHBoxLayout>
 #include <QPushButton>
-#include <QSpinBox>
-#include <QTabBar>
-#include <QVBoxLayout>
 
 class InstrumentEditor : public BaseEditor {
 

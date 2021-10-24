@@ -6,7 +6,6 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QSpinBox>
 
 #include <cmath>
 

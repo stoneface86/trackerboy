@@ -4,12 +4,8 @@
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/PianoInput.hpp"
 
-#include "trackerboy/note.hpp"
-
 #include <QWidget>
 #include <QPixmap>
-#include <QPixmapCache>
-#include <QMouseEvent>
 
 #include <optional>
 

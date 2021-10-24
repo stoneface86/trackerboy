@@ -11,7 +11,6 @@
 #include <QFrame>
 #include <QScrollBar>
 
-#include <array>
 #include <cstdint>
 #include <optional>
 

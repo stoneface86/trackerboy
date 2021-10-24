@@ -5,6 +5,8 @@
 #include "widgets/sidebar/OrderGrid.hpp"
 
 #include <QCheckBox>
+#include <QPoint>
+#include <QScrollBar>
 #include <QTableView>
 
 //

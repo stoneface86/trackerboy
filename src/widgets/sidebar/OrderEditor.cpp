@@ -5,12 +5,9 @@
 
 #include <QAction>
 #include <QHBoxLayout>
-#include <QHeaderView>
-#include <QPushButton>
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QScrollBar>
 #include <QWheelEvent>
 
 OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :

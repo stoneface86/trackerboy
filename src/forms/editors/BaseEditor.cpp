@@ -4,6 +4,7 @@
 #include <QSignalBlocker>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QShowEvent>
 #include <QtDebug>
 
 BaseEditor::BaseEditor(

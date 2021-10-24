@@ -14,11 +14,9 @@
 #include <QWidget>
 #include <QPaintEvent>
 #include <QString>
-#include <QBitmap>
 #include <QRect>
 #include <QSize>
 
-#include <cstdint>
 #include <optional>
 
 

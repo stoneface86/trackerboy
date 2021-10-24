@@ -1,6 +1,7 @@
 
 #include "core/audio/AudioStream.hpp"
 #include "core/audio/AudioProber.hpp"
+#include "core/config/SoundConfig.hpp"
 
 #include <QtDebug>
 

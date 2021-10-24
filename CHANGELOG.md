@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Colors for the audio scope and graph editors are now customizable
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
+ - Hitting enter in the sequence editor line edit opens the Wave editor
 ### Removed
  - Synthesizer quality setting in Sound configuration
 

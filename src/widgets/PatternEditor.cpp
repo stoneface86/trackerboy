@@ -3,10 +3,8 @@
 
 #include "core/misc/utils.hpp"
 
-#include <QClipboard>
 #include <QDialog>
 #include <QDialogButtonBox>
-#include <QGuiApplication>
 #include <QGridLayout>
 #include <QLabel>
 #include <QSignalBlocker>
@@ -14,7 +12,6 @@
 #include <QVBoxLayout>
 #include <QtDebug>
 
-#include <cmath>
 
 static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
     switch (key) {

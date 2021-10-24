@@ -1,6 +1,5 @@
 
 #include "core/graphics/PatternPainter.hpp"
-#include "core/model/PatternModel.hpp"
 
 #include "trackerboy/note.hpp"
 

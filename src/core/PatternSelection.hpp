@@ -5,6 +5,8 @@
 
 #include <QtDebug>
 
+#include <algorithm>
+
 /*
 Developer notes for iterating selections:
 
@@ -220,7 +222,7 @@ private:
     PatternAnchor mStart;
     PatternAnchor mEnd;
 
-#ifndef QT_NO_DEBUG
+#ifdef QT_DEBUG
 friend QDebug operator<<(QDebug debug, const PatternSelection &selection);
 #endif
 
