@@ -10,7 +10,7 @@ optional, and can be enabled/disabled by setting their respective options.
 
 Requirements:
  * C/C++ compiler with the C++17 standard or later
- * CMake 3.9 or higher
+ * CMake 3.12 or higher
  * [Miniaudio](https://github.com/mackron/miniaudio)
  * [libtrackerboy](https://github.com/stoneface86/libtrackerboy)
  * [RtMidi](https://github.com/thestk/rtmidi) (4.0.0)
@@ -18,8 +18,8 @@ Requirements:
  * Qt v5.12.10 or higher
 
 Miniaudio, libtrackerboy and RtMidi are acquired via FetchContent so there is no
-need to install these libraries on your system (requires CMake 3.11). You will
-however, need to install Qt on your system.
+need to install these libraries on your system. You will however, need to
+install Qt on your system.
 
 Note: I am using my own fork of miniaudio (located [here](https://github.com/stoneface86/miniaudio-cmake))
 that adds cmake support.
@@ -100,7 +100,7 @@ Here is a table of options that can be used when building.
 | BUILD_TESTING     | BOOL | ON      | Enables unit testing                                |
 | ENABLE_UNITY      | BOOL | OFF     | Enables unity builds (requires cmake 3.16)          |
 | ENABLE_DEPLOYMENT | BOOL | OFF     | Enables the deploy target                           |
-| FETCH_DEPS        | BOOL | ON      | Acquires dependencies during configuration (requires cmake 3.11) |
+| FETCH_DEPS        | BOOL | ON      | Acquires dependencies during configuration          |
 
 Unity builds should only be used if you are just building trackerboy. It is
 not recommended to have this enabled when developing.

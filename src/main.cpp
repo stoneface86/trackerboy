@@ -114,10 +114,6 @@ int main(int argc, char *argv[]) {
             return EXIT_BAD_ARGUMENTS;
     }
 
-    Q_INIT_RESOURCE(fonts);
-    Q_INIT_RESOURCE(icons);
-    Q_INIT_RESOURCE(images);
-
     // register types for signals
     qRegisterMetaType<ChannelOutput::Flags>("ChannelOutput::Flags");
     qRegisterMetaType<PatternModel::CursorChangeFlags>("CursorChangeFlags");

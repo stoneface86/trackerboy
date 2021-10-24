@@ -7,7 +7,7 @@ project(src CXX)
 add_library(deps INTERFACE)
 
 option(FETCH_DEPS "Automatically fetch required dependencies" ON)
-if (FETCH_DEPS AND CMAKE_VERSION VERSION_GREATER 3.10)
+if (FETCH_DEPS)
 
     include(FetchContent)
     include("${CMAKE_CURRENT_LIST_DIR}/dependencies.cmake")
@@ -27,8 +27,8 @@ if (FETCH_DEPS AND CMAKE_VERSION VERSION_GREATER 3.10)
         message(STATUS "Fetching miniaudio")
         FetchContent_Populate(miniaudio)
 
-        set(MA_NO_MP3 ON)
-        set(MA_NO_FLAC ON)
+        set(MA_NO_DECODING ON)
+        set(MA_NO_ENCODING ON)
         set(MA_NO_GENERATION ON)
         set(MA_NO_CUSTOM ON)
         add_subdirectory("${miniaudio_SOURCE_DIR}" "${miniaudio_BINARY_DIR}")
@@ -48,10 +48,6 @@ if (FETCH_DEPS AND CMAKE_VERSION VERSION_GREATER 3.10)
     # hack: RtMidi CMakeList doesn't add an include dir for the rtmidi library
     target_include_directories(deps INTERFACE "${rtmidi_SOURCE_DIR}")
 else ()
-
-    if (FETCH_DEPS AND CMAKE_VERSION VERSION_LESS 3.11)
-        message(WARNING "cannot fetch dependencies with this version of cmake")
-    endif ()
 
     # do not fetch dependencies, find them on the system instead
     # this is typically only used by CI, as CI will build and install the
@@ -114,6 +110,7 @@ makeSourceList(UI_SRC
     "core/audio/Renderer"
     "core/audio/Ringbuffer"
     "core/audio/VisualizerBuffer"
+    "core/audio/Wav"
     "core/clipboard/PatternClip"
     "core/clipboard/PatternClipboard"
     "core/commands/order"
@@ -208,18 +205,16 @@ configure_file("version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
 list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" "version.hpp")
 
 
-
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 #
 # ui library
 #
-add_library(ui STATIC ${UI_SRC})
-target_link_libraries(ui PUBLIC 
-    deps
-    Qt5::Widgets
-)
+add_library(ui OBJECT ${UI_SRC})
+target_link_libraries(ui PUBLIC deps Qt5::Widgets)
+
+
 target_compile_features(ui PUBLIC cxx_std_17)
-target_include_directories(ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 if (MSVC)
     target_compile_options(ui PUBLIC
         /W4
@@ -233,24 +228,33 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -pedantic
         -Wno-missing-field-initializers
     )
-endif ()
 
-if (ENABLE_UNITY AND ${CMAKE_VERSION} VERSION_GREATER "3.15")
-    set_target_properties(ui PROPERTIES UNITY_BUILD ON)
+    # flags to help minimize the binary size
+#    if (NOT ${DEBUG_BUILD})
+#        target_compile_options(ui PRIVATE
+#            -fno-rtti
+#            -ffunction-sections -fdata-sections -Wl,--gc-sections
+#            )
+#    endif ()
 endif ()
 
 if (NOT ${DEBUG_BUILD})
     target_compile_definitions(ui PUBLIC QT_NO_INFO_OUTPUT QT_NO_DEBUG_OUTPUT)
 endif ()
 
+if (ENABLE_UNITY AND ${CMAKE_VERSION} VERSION_GREATER "3.15")
+    set_target_properties(ui PROPERTIES UNITY_BUILD ON)
+endif ()
+
 #
 # Target for the main ui, trackerboy_ui. We cannot use trackerboy as that name is used
 # for libtrackerboy. However, the resulting executable is named trackerboy, not trackerboy_ui
 #
-add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" ${WINDOWS_APPICON_RC})
+add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${WINDOWS_APPICON_RC}")
 target_link_libraries(trackerboy_ui PRIVATE ui)
 # output executable is "trackerboy" and not "trackerboy_ui"
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
+
 
 #
 # Deployment

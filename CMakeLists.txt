@@ -5,7 +5,7 @@
 # See README.md for details on building
 #
 
-cmake_minimum_required(VERSION 3.9...3.21)
+cmake_minimum_required(VERSION 3.12...3.21)
 
 # removes default /W3 flag for MSVC 
 # https://stackoverflow.com/questions/45995784/how-to-set-compiler-options-with-cmake-in-visual-studio-2017
@@ -17,7 +17,6 @@ project (
     LANGUAGES C CXX
 )
 
-# uncomment if we need some cmake modules (none currently)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 option(ENABLE_UNITY "Enable unity builds" OFF)

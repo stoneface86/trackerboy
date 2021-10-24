@@ -1,0 +1,7 @@
+
+#pragma once
+
+@CONFIG_INCLUDES@
+
+// This is a comma-separated list of Test classes
+#define CONFIG_TESTS @CONFIG_TESTS@

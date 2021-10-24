@@ -1,7 +1,7 @@
 
 #include "core/WavExporter.hpp"
 
-#include "miniaudio.h"
+#include "core/audio/Wav.hpp"
 
 #include <memory>
 
@@ -47,12 +47,8 @@ void WavExporter::run() {
     trackerboy::Player player(mEngine);
     player.start(mDuration);
 
-    ma_encoder_config config = ma_encoder_config_init(ma_resource_format_wav, ma_format_f32, 2, mSamplerate);
-    ma_encoder encoder;
-
-    auto dest = mDestination.toLatin1();
-    auto result = ma_encoder_init_file(dest.data(), &config, &encoder);
-    if (result != MA_SUCCESS) {
+    Wav wav(mDestination.toStdString(), 2, mSamplerate);
+    if (!wav.stream().good()) {
         mFailed = true;
         return;
     }
@@ -88,19 +84,14 @@ void WavExporter::run() {
         mSynth.run();
 
         auto samplesRead = mApu.readSamples(buffer.get(), mSynth.framesize());
-
-        size_t toWrite = samplesRead;
-        auto dataPtr = buffer.get();
-        while (toWrite) {
-            auto written = ma_encoder_write_pcm_frames(&encoder, dataPtr, toWrite);
-            toWrite -= written;
-            dataPtr += written * 2;
+        wav.write(buffer.get(), samplesRead);
+        if (!wav.stream().good()) {
+            mFailed = true;
+            return;
         }
-
 
     }
 
-    ma_encoder_uninit(&encoder);
     mFailed = false;
     
 }
