@@ -226,12 +226,9 @@ void Renderer::beginRender(Handle &handle) {
 
 void Renderer::stopRender(Handle &handle, bool aborted) {
 
-    handle->state = State::stopped;
-    handle.unlock();
 
     // this lambda must only be called from the same thread as the Renderer
-    auto stopRender_ = [this, aborted]() {
-        mTimer->stop();
+    auto stopRender_ = [this](bool aborted) {
 
         auto success = mStream.stop();
 
@@ -256,11 +253,19 @@ void Renderer::stopRender(Handle &handle, bool aborted) {
     //  - the watchdog timer has exceeded 1 second (unknown problem with device)
     // for these cases we need to invoke the lambda in the GUI thread (AudioStream is not thread-safe)
 
+    mTimer->stop();
+
     if (objectInCurrentThread(*this)) {
-        stopRender_();
+        handle->state = State::stopped;
+        handle.unlock();
+        stopRender_(aborted);
     } else {
         // stopRender was called from mTimerThread, invoke the lambda in the renderer's thread
-        QMetaObject::invokeMethod(this, stopRender_);
+        handle.unlock();
+        QMetaObject::invokeMethod(this, [this, &stopRender_, aborted]() {
+            mContext.access()->state = State::stopped;
+            stopRender_(aborted);
+        }, Qt::BlockingQueuedConnection);
     }
 
 
@@ -521,6 +526,7 @@ void Renderer::render() {
         if (timeSinceLastWatchdogReset >= WATCHDOG_INTERVAL) {
             // we have gone 1 second without renderering anything
             // abort the render
+            handle.unlock();
             stopRender(handle, true);
         }
         // no frames to render, exit early
