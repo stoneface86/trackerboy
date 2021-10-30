@@ -26,7 +26,8 @@ extern QString const PianoInput;
 extern QString const Sound;
 
 extern QString const api;
-extern QString const bindings;
+extern QString const bindingsUpper;
+extern QString const bindingsLower;
 extern QString const deviceName;
 extern QString const enabled;
 extern QString const showFlats;
@@ -41,6 +42,7 @@ extern QString const samplerate;
 extern QString const period;
 extern QString const latency;
 extern QString const deviceId;
+extern QString const noteCut;
 
 }
 

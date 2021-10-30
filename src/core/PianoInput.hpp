@@ -1,10 +1,12 @@
 
 #pragma once
 
+#include "core/PianoInputBindings.hpp"
+
 #include "trackerboy/note.hpp"
 
 #include <QHash>
-#include <QSettings>
+class QSettings;
 
 #include <array>
 #include <optional>
@@ -18,46 +20,42 @@ class PianoInput {
 public:
 
     enum KeyboardLayout {
+        // determine layout from System's locale
+        LayoutSystem,
+        // US QWERTY layout
         LayoutQwerty,
         LayoutQwertz,
+        // French AZERTY layout
         LayoutAzerty,
-        LayoutCustom
+        // Custom keybindings
+        LayoutCustom,
+
+        LayoutCount
 
     };
-
-    // 3 octaves of bindings + note cut
-    static constexpr int TOTAL_BINDINGS = 37;
-    static constexpr int NOTE_CUT_BINDING = TOTAL_BINDINGS - 1;
-
-    using Bindings = std::array<int, TOTAL_BINDINGS>;
 
     explicit PianoInput();
 
     //
-    // Copies the bindings of the given input object. This operation only copies bindings,
-    // the base octave is left unchanged.
+    // Get the current keyboard layout in use
     //
-    PianoInput& operator=(PianoInput const& rhs);
-
-    Bindings const& bindings() const;
-
     KeyboardLayout layout() const;
 
     //
-    // Sets the default bindings for the given keyboard layout.
+    // Change the current layout
     //
     void setLayout(KeyboardLayout layout);
 
     //
-    // Modifies a binding for the given semitone offset. The keyboard layout is
-    // set to LayoutCustom after calling this function.
+    // Get the current key bindings
     //
-    void bind(int key, int semitoneOffset);
+    PianoInputBindings const& bindings() const;
 
     //
-    // Removes an existing key binding for the given semitone offset
+    // Sets the key bindings from the given bindings. The layout is
+    // then set to LayoutCustom.
     //
-    void unbind(int semitone);
+    void setBindings(PianoInputBindings const& bindings);
 
     //
     // Converts a Qt keycode to a trackerboy note. If no binding was set for
@@ -65,25 +63,40 @@ public:
     //
     std::optional<trackerboy::Note> keyToNote(int key) const;
 
+    //
+    // The base octave used when converting a Qt::Key to a note
+    //
     int octave() const;
 
+    //
+    // Set the base octave. Octave must be in range of 2-8.
+    //
     void setOctave(int octave);
 
+    //
+    // Sets keybindings and layout from the given QSettings.
+    //
     void readSettings(QSettings &settings);
 
+    //
+    // Writes current layout and keybindings to the given QSettings. Keybindings are
+    // only written if the layout is LayoutCustom.
+    //
     void writeSettings(QSettings &settings) const;
 
 private:
 
-    void clearBindings();
+    void mapBindings();
+
+    // special semitones start at this offset
+    // semitones below this offset are mapped to a note
+    static constexpr int SPECIAL_START = 36;
 
     // base octave
     int mOctave;
 
     KeyboardLayout mLayout;
-
-    // array of key bindings, with the index being the semitone it is bound to
-    Bindings mBindings;
+    PianoInputBindings mBindings;
 
     // map of keys -> semitone offsets
     // example: binding Key_Q to 12 means that Q is note C at mOctave + 1
