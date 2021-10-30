@@ -12,6 +12,7 @@ find_package(Qt5Test REQUIRED)
 # IMPORTANT: your test class must have a constructor taking no arguments and is marked with Q_INVOKABLE
 set(TESTLIST
     "TestPatternClip"
+    "TestPatternSelection"
 )
 
 set(TEST_SRC "")
