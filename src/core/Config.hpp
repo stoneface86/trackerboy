@@ -7,7 +7,7 @@
 #include "core/config/MidiConfig.hpp"
 #include "core/config/SoundConfig.hpp"
 
-#include "core/PianoInput.hpp"
+#include "core/input/PianoInput.hpp"
 #include "core/Palette.hpp"
 
 #include <QFlags>

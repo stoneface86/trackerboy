@@ -12,7 +12,7 @@
 #include "core/Config.hpp"
 #include "core/Module.hpp"
 #include "core/ModuleFile.hpp"
-#include "core/PianoInput.hpp"
+#include "core/input/PianoInput.hpp"
 #include "forms/editors/InstrumentEditor.hpp"
 #include "forms/editors/WaveEditor.hpp"
 #include "forms/AboutDialog.hpp"

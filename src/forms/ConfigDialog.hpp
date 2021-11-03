@@ -2,6 +2,7 @@
 
 #include "core/Config.hpp"
 #include "widgets/config/AppearanceConfigTab.hpp"
+#include "widgets/config/KeyboardConfigTab.hpp"
 #include "widgets/config/MidiConfigTab.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
 
@@ -56,6 +57,7 @@ private:
     QVBoxLayout mLayout;
         QTabWidget mTabs;
             AppearanceConfigTab mTabAppearance;
+            KeyboardConfigTab mTabKeyboard;
             MidiConfigTab mTabMidi;
             SoundConfigTab mTabSound;
         QDialogButtonBox mButtons;

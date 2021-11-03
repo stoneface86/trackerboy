@@ -1,5 +1,5 @@
 
-#include "core/PianoInput.hpp"
+#include "core/input/PianoInput.hpp"
 
 #include "core/config/keys.hpp"
 
@@ -7,35 +7,18 @@
 #include <QSettings>
 
 #include <algorithm>
-#include <functional>   // std::cref
-#include <utility>      // std::pair
 
 #define TU PianoInputTU
 namespace TU {
 
-// reduced version of PianoInputBindings
+// reduced version of PianoInput::Bindings
 struct StandardBinds {
 
     std::array<Qt::Key, 17> lowerBindings;
     std::array<Qt::Key, 20> upperBindings;
-    PianoInputBindings::SpecialBindings specials;
+    std::array<Qt::Key, PianoInput::BindingCount - PianoInput::BindingNoteCut> specials;
 
 };
-
-//
-// Copies a source array to a destination array, with both arrays being different sizes.
-//
-template <class T, size_t ds, size_t ss>
-static void populate(std::array<T, ds> &dest, std::array<T, ss> const& src) {
-    if constexpr (ds == ss) {
-        dest = src;
-    } else if constexpr (ds > ss) {
-        std::copy(src.begin(), src.end(), dest.begin());
-        std::fill_n(dest.begin() + ss, ds - ss, T());
-    } else {
-        std::copy_n(src.begin(), ds, dest.begin());
-    }
-}
 
 // Standard QWERTY layout
 // 1 2 3 4 5 6 7 8 9 0 - +  => CUT C#1 D#1 ... F#1 G#1 A#1 ... C#2 D#2 ... F#2
@@ -215,11 +198,11 @@ PianoInput::PianoInput() :
 }
 
 
-PianoInputBindings const& PianoInput::bindings() const {
+PianoInput::Bindings const& PianoInput::bindings() const {
     return mBindings;
 }
 
-void PianoInput::setBindings(const PianoInputBindings &bindings) {
+void PianoInput::setBindings(Bindings const& bindings) {
     mLayout = LayoutCustom;
     mBindings = bindings;
     mapBindings();
@@ -230,28 +213,24 @@ void PianoInput::mapBindings() {
     mBindingLookup.clear();
 
     auto mapKey = [this](Qt::Key key, int semitone) {
-        if (key != PianoInputBindings::NoKey) {
+        if (key != NoKey) {
             mBindingLookup.insert(key, semitone);
         }
     };
 
-
-    std::array bindpairs = {
-        std::make_pair(std::cref(mBindings.lowerBindings), 0),  // lower row starts at the base octave
-        std::make_pair(std::cref(mBindings.upperBindings), 12)  // upper row starts at the base octave + 1
-    };
-
-    // upper and lower rows
-    for (auto bindpair : bindpairs) {
-        int semitone = bindpair.second;
-        for (auto key : bindpair.first) {
-            mapKey(key, semitone);
-            semitone++;
+    auto iter = mBindings.begin();
+    // lower and upper rows (lower octave starts at 0, upper at 1)
+    for (auto semitone : {0, 12}) {
+        for (int i = 0; i < BindsPerRow; ++i) {
+            mapKey(*iter++, semitone++);
         }
     }
-
     // specials
-    mapKey(mBindings.specials[PianoInputBindings::NoteCut], 36);
+    int special = SPECIAL_START;
+    while (iter != mBindings.end()) {
+        mapKey(*iter++, special++);
+    }
+
 }
 
 PianoInput::KeyboardLayout PianoInput::layout() const {
@@ -264,17 +243,19 @@ void PianoInput::setLayout(KeyboardLayout layout) {
     }
 
     auto setBindings = [this](TU::StandardBinds const& binds) {
-        TU::populate(mBindings.lowerBindings, binds.lowerBindings);
-        TU::populate(mBindings.upperBindings, binds.upperBindings);
-        TU::populate(mBindings.specials, binds.specials);
+
+        auto iter = mBindings.begin();
+        iter = std::copy(binds.lowerBindings.begin(), binds.lowerBindings.end(), iter);
+        iter = std::fill_n(iter, BindsPerRow - binds.lowerBindings.size(), NoKey);
+        iter = std::copy(binds.upperBindings.begin(), binds.upperBindings.end(), iter);
+        iter = std::fill_n(iter, BindsPerRow - binds.upperBindings.size(), NoKey);
+        std::copy(binds.specials.begin(), binds.specials.end(), iter);
+
+
         mapBindings();
     };
 
     switch (layout) {
-        case LayoutSystem:
-            // TODO: determine which layout to use from the system's locale
-            setLayout(LayoutQwerty);
-            break;
         case LayoutQwerty:
             setBindings(TU::QWERTY);
             break;
@@ -327,7 +308,6 @@ void PianoInput::setOctave(int octave) {
 namespace TU {
 
 static std::array const LAYOUT_KEYS = {
-    QStringLiteral("system"),
     QStringLiteral("qwerty"),
     QStringLiteral("qwertz"),
     QStringLiteral("azerty"),
@@ -339,7 +319,7 @@ static_assert(LAYOUT_KEYS.size() == PianoInput::LayoutCount, "missing key for a 
 static Qt::Key readBinding(QSettings &settings, QString const& keyname) {
     QKeySequence seq(settings.value(keyname).toString(), QKeySequence::PortableText);
     if (seq.isEmpty()) {
-        return PianoInputBindings::NoKey;
+        return PianoInput::NoKey;
     } else {
         return (Qt::Key)seq[0];
     }
@@ -349,28 +329,45 @@ static void writeBinding(QSettings &settings, QString const& keyname, Qt::Key ke
     settings.setValue(keyname, QKeySequence(key).toString(QKeySequence::PortableText));
 }
 
-static void readRowBindings(QSettings &settings, PianoInputBindings::RowBindings &row, QString const& key) {
+template <class Iter>
+static Iter readRowBindings(QSettings &settings, Iter dest, QString const& key) {
     auto count = settings.beginReadArray(key);
-    if (count == (int)row.size()) {
+    if (count == PianoInput::BindsPerRow) {
         for (int i = 0; i < count; ++i) {
             settings.setArrayIndex(i);
-            row[i] = TU::readBinding(settings, Keys::key);
+            *dest++ = TU::readBinding(settings, Keys::key);
 
         }
     }
     settings.endArray();
+    return dest;
 }
 
-static void writeRowBindings(QSettings &settings, PianoInputBindings::RowBindings const& row, QString const& key) {
-    settings.beginWriteArray(key, row.size());
-    for (int i = 0; i < (int)row.size(); ++i) {
+template <class Iter>
+static Iter writeRowBindings(QSettings &settings, Iter src, QString const& key) {
+    settings.beginWriteArray(key, PianoInput::BindsPerRow);
+    for (int i = 0; i < PianoInput::BindsPerRow; ++i) {
         settings.setArrayIndex(i);
-        writeBinding(settings, Keys::key, row[i]);
+        writeBinding(settings, Keys::key, *src++);
     }
     settings.endArray();
+    return src;
 }
 
 
+}
+
+QString PianoInput::layoutName(KeyboardLayout layout) {
+    switch (layout) {
+        case LayoutQwerty:
+        case LayoutQwertz:
+        case LayoutAzerty:
+            return TU::LAYOUT_KEYS[layout].toUpper();
+        case LayoutCustom:
+            return tr("Custom");
+        default:
+            return {};
+    }
 }
 
 
@@ -379,26 +376,33 @@ void PianoInput::readSettings(QSettings &settings) {
     settings.beginGroup(Keys::PianoInput);
 
     auto const layoutStr = settings.value(Keys::keyboardLayout).toString();
-    int layoutEnum = LayoutQwerty;
-    if (!layoutStr.isEmpty()) {
-        for (auto const &key : TU::LAYOUT_KEYS) {
-            if (layoutStr == key) {
-                break;
+    auto layoutEnum = [](QString const& str) {
+        if (!str.isEmpty()) {
+            int result = 0;
+            for (auto const &key : TU::LAYOUT_KEYS) {
+                if (str == key) {
+                    return (KeyboardLayout)result;
+                }
+                result++;
             }
-            layoutEnum++;
         }
-    }
-    setLayout((KeyboardLayout)layoutEnum);
+
+        // default to QWERTY
+        return LayoutQwerty;
+    }(layoutStr);
 
     if (layoutEnum == LayoutCustom) {
 
-        TU::readRowBindings(settings, mBindings.lowerBindings, Keys::bindingsLower);
-        TU::readRowBindings(settings, mBindings.upperBindings, Keys::bindingsUpper);
+        auto iter = mBindings.begin();
+        iter = TU::readRowBindings(settings, iter, Keys::bindingsLower);
+        TU::readRowBindings(settings, iter, Keys::bindingsUpper);
 
         // specials
-        mBindings.specials[PianoInputBindings::NoteCut] = TU::readBinding(settings, Keys::noteCut);
+        mBindings[BindingNoteCut] = TU::readBinding(settings, Keys::noteCut);
 
         mapBindings();
+    } else {
+        setLayout(layoutEnum);
     }
 
     settings.endGroup();
@@ -412,11 +416,12 @@ void PianoInput::writeSettings(QSettings &settings) const {
 
     if (mLayout == LayoutCustom) {
 
-        TU::writeRowBindings(settings, mBindings.lowerBindings, Keys::bindingsLower);
-        TU::writeRowBindings(settings, mBindings.upperBindings, Keys::bindingsUpper);
+        auto iter = mBindings.begin();
+        iter = TU::writeRowBindings(settings, iter, Keys::bindingsLower);
+        TU::writeRowBindings(settings, iter, Keys::bindingsUpper);
 
         // specials
-        TU::writeBinding(settings, Keys::noteCut, mBindings.specials[PianoInputBindings::NoteCut]);
+        TU::writeBinding(settings, Keys::noteCut, mBindings[BindingNoteCut]);
     }
 
 

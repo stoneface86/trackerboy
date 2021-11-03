@@ -4,7 +4,7 @@
 #include "core/clipboard/PatternClipboard.hpp"
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/Palette.hpp"
-#include "core/PianoInput.hpp"
+#include "core/input/PianoInput.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 

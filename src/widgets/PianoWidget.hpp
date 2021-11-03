@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/midi/IMidiReceiver.hpp"
-#include "core/PianoInput.hpp"
+#include "core/input/PianoInput.hpp"
 
 #include <QWidget>
 #include <QPixmap>

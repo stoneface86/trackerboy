@@ -19,6 +19,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
 {
     // layout
     mTabs.addTab(&mTabAppearance, tr("Appearance"));
+    mTabs.addTab(&mTabKeyboard, tr("Keyboard"));
     mTabs.addTab(&mTabMidi, tr("MIDI"));
     mTabs.addTab(&mTabSound, tr("Sound"));
 
@@ -32,6 +33,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     setModal(true);
 
     connect(&mTabAppearance, &AppearanceConfigTab::dirty, this, &ConfigDialog::setDirty);
+    connect(&mTabKeyboard, &AppearanceConfigTab::dirty, this, &ConfigDialog::setDirty);
     connect(&mTabMidi, &MidiConfigTab::dirty, this, &ConfigDialog::setDirty);
     connect(&mTabSound, &SoundConfigTab::dirty, this, &ConfigDialog::setDirty);
 
@@ -67,6 +69,10 @@ void ConfigDialog::apply() {
         mTabAppearance.apply(mConfig.appearance(), mConfig.palette());
     }
 
+    if (mDirty.testFlag(Config::CategoryKeyboard)) {
+        mTabKeyboard.apply(mConfig.pianoInput());
+    }
+
     if (mDirty.testFlag(Config::CategorySound)) {
         mTabSound.apply(mConfig.sound());        
     }
@@ -88,6 +94,7 @@ void ConfigDialog::showEvent(QShowEvent *evt) {
 void ConfigDialog::resetControls() {
 
     mTabAppearance.resetControls(mConfig.appearance(), mConfig.palette());
+    mTabKeyboard.resetControls(mConfig.pianoInput());
     mTabSound.resetControls(mConfig.sound());
     mTabMidi.resetControls(mConfig.midi());
 
