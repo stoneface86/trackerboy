@@ -62,6 +62,7 @@ jobs:
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
+          py7zrversion: ==0.16.2  # workaround for windows-x86
           version: ${{ env.QT_VERSION }}
           arch: ${{ matrix.qt-arch }}
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
