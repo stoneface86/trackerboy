@@ -3,9 +3,9 @@
 
 #include "widgets/config/ConfigTab.hpp"
 
-#include <QComboBox>
-#include <QSpinBox>
-#include <QLabel>
+class QComboBox;
+class QSpinBox;
+class QLabel;
 
 //
 // Tab widget for the "Sound" tab in ConfigDialog
@@ -15,11 +15,9 @@ class SoundConfigTab : public ConfigTab {
     Q_OBJECT
 
 public:
-    explicit SoundConfigTab(QWidget *parent = nullptr);
+    explicit SoundConfigTab(SoundConfig const& soundConfig, QWidget *parent = nullptr);
 
     void apply(SoundConfig &soundConfig);
-
-    void resetControls(SoundConfig const& soundConfig);
 
 private slots:
 

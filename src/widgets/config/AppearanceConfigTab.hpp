@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "core/model/PaletteModel.hpp"
 #include "widgets/config/ConfigTab.hpp"
+class PaletteModel;
 
-#include <QCheckBox>
-#include <QColorDialog>
 #include <QDir>
+class QCheckBox;
+class QColorDialog;
 #include <QModelIndex>
-#include <QPushButton>
+class QPushButton;
 
 #include <array>
 
@@ -17,15 +17,13 @@ class AppearanceConfigTab : public ConfigTab {
     Q_OBJECT
 
 public:
-    explicit AppearanceConfigTab(QWidget *parent = nullptr);
+    explicit AppearanceConfigTab(
+        AppearanceConfig const& appearance,
+        Palette const& pal,
+        QWidget *parent = nullptr
+    );
 
     void apply(AppearanceConfig &appearanceConfig, Palette &pal);
-
-    void resetControls(AppearanceConfig const& appearanceConfig, Palette const& pal);
-
-protected:
-
-    virtual void hideEvent(QHideEvent *evt) override;
 
 private slots:
 

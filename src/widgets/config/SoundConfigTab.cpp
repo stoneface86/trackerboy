@@ -3,10 +3,13 @@
 #include "core/audio/AudioProber.hpp"
 #include "core/StandardRates.hpp"
 
+#include <QComboBox>
 #include <QGridLayout>
 #include <QGroupBox>
+#include <QLabel>
 #include <QPushButton>
 #include <QSignalBlocker>
+#include <QSpinBox>
 
 #include <array>
 #include <optional>
@@ -14,8 +17,8 @@
 
 
 
-SoundConfigTab::SoundConfigTab(QWidget *parent) :
-    ConfigTab(Config::CategorySound, parent)
+SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, QWidget *parent) :
+    ConfigTab(parent)
 {
 
     auto layout = new QVBoxLayout;
@@ -82,6 +85,13 @@ SoundConfigTab::SoundConfigTab(QWidget *parent) :
         mSamplerateCombo->addItem(tr("%1 Hz").arg(StandardRates::get(i)));
     }
 
+    mApiCombo->setCurrentIndex(soundConfig.backendIndex());
+    populateDevices();
+    mDeviceCombo->setCurrentIndex(soundConfig.deviceIndex());
+    mSamplerateCombo->setCurrentIndex(soundConfig.samplerateIndex());
+    mLatencySpin->setValue(soundConfig.latency());
+    mPeriodSpin->setValue(soundConfig.period());
+
     auto setupTimeSpinbox = [](QSpinBox &spin, int min, int max) {
         spin.setSuffix(tr(" ms"));
         spin.setMinimum(min);
@@ -93,12 +103,12 @@ SoundConfigTab::SoundConfigTab(QWidget *parent) :
     mApiErrorLabel->setVisible(false);
 
     // any changes made by the user will mark this tab as "dirty"
-    connect(mSamplerateCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty);
+    connect(mSamplerateCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty<Config::CategorySound>);
     connect(mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::apiChanged);
-    connect(mDeviceCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty);
-    connect(mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty);
-    connect(mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
-    connect(mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty);
+    connect(mDeviceCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty<Config::CategorySound>);
+    connect(mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
+    connect(mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
+    connect(mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
 }
 
 void SoundConfigTab::apply(SoundConfig &soundConfig) {
@@ -112,34 +122,10 @@ void SoundConfigTab::apply(SoundConfig &soundConfig) {
     clean();
 }
 
-void SoundConfigTab::resetControls(SoundConfig const& soundConfig) {
-
-    {
-        QSignalBlocker blocker(mApiCombo);
-        mApiCombo->setCurrentIndex(soundConfig.backendIndex());
-    }
-
-
-    {
-        QSignalBlocker blocker(mDeviceCombo);
-        populateDevices();
-        mDeviceCombo->setCurrentIndex(soundConfig.deviceIndex());
-    }
-
-    mSamplerateCombo->setCurrentIndex(soundConfig.samplerateIndex());
-
-    mLatencySpin->setValue(soundConfig.latency());
-    mPeriodSpin->setValue(soundConfig.period());
-
-    clean();
-}
-
-
 void SoundConfigTab::apiChanged(int index) {
-    Q_UNUSED(index)
     rescan(true); // new api selected, pick the default device
     mApiErrorLabel->setVisible(!AudioProber::instance().backendInitialized(index));
-    setDirty();
+    setDirty<Config::CategorySound>();
 }
 
 void SoundConfigTab::populateDevices() {

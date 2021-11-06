@@ -15,12 +15,9 @@ class KeyboardConfigTab : public ConfigTab {
     Q_OBJECT
 
 public:
-    explicit KeyboardConfigTab(QWidget *parent = nullptr);
-
+    explicit KeyboardConfigTab(PianoInput const& input, QWidget *parent = nullptr);
 
     void apply(PianoInput &input);
-
-    void resetControls(PianoInput const& input);
 
 private:
 

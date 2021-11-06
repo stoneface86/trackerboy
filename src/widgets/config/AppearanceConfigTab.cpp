@@ -1,7 +1,10 @@
 
 #include "widgets/config/AppearanceConfigTab.hpp"
 #include "core/misc/connectutils.hpp"
+#include "core/model/PaletteModel.hpp"
 
+#include <QCheckBox>
+#include <QColorDialog>
 #include <QFontDialog>
 #include <QFileDialog>
 #include <QGridLayout>
@@ -9,6 +12,7 @@
 #include <QHeaderView>
 #include <QHideEvent>
 #include <QLabel>
+#include <QPushButton>
 #include <QTreeView>
 #include <QVBoxLayout>
 
@@ -31,8 +35,12 @@ constexpr int MAX_POINT_SIZE = 22;
 
 }
 
-AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
-    ConfigTab(Config::CategoryAppearance, parent),
+AppearanceConfigTab::AppearanceConfigTab(
+        AppearanceConfig const& appearance,
+        Palette const& pal,
+        QWidget *parent
+    ) :
+    ConfigTab(parent),
     mColorDialog(nullptr),
     mSaveDir(QDir::home())
 {
@@ -93,15 +101,24 @@ AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
     colorTree->resizeColumnToContents(0);
     colorTree->collapseAll();
 
+    setFont(0, appearance.patternGridFont());
+    setFont(1, appearance.orderGridFont());
+    setFont(2, appearance.patternGridHeaderFont());
 
-    lazyconnect(mShowFlatsCheck, toggled, this, setDirty);
-    lazyconnect(mShowPreviewsCheck, toggled, this, setDirty);
-    lazyconnect(mModel, dataChanged, this, setDirty);
+    mShowFlatsCheck->setChecked(appearance.showFlats());
+    mShowPreviewsCheck->setChecked(appearance.showPreviews());
+
+    mModel->setPalette(pal);
+    mDefaultButton->setEnabled(!pal.isDefault());
+
+
+    lazyconnect(mShowFlatsCheck, toggled, this, setDirty<Config::CategoryAppearance>);
+    lazyconnect(mShowPreviewsCheck, toggled, this, setDirty<Config::CategoryAppearance>);
 
     connect(mModel, &PaletteModel::dataChanged, this,
         [this]() {
             mDefaultButton->setEnabled(!mModel->palette().isDefault());
-            setDirty();
+            setDirty<Config::CategoryAppearance>();
             updateColorDialog();
         });
 
@@ -138,7 +155,7 @@ AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
 
     connect(mDefaultButton, &QPushButton::clicked, this, [this]() {
         mModel->setPalette(Palette());
-        setDirty();
+        setDirty<Config::CategoryAppearance>();
         mDefaultButton->setEnabled(false);
     });
 
@@ -162,6 +179,9 @@ AppearanceConfigTab::AppearanceConfigTab(QWidget *parent) :
             }
         });
 
+
+
+
 }
 
 void AppearanceConfigTab::apply(AppearanceConfig &appearanceConfig, Palette &pal) {
@@ -176,29 +196,6 @@ void AppearanceConfigTab::apply(AppearanceConfig &appearanceConfig, Palette &pal
     pal = mModel->palette();
 
     clean();
-}
-
-void AppearanceConfigTab::resetControls(AppearanceConfig const& appearanceConfig, Palette const& pal) {
-
-    setFont(0, appearanceConfig.patternGridFont());
-    setFont(1, appearanceConfig.orderGridFont());
-    setFont(2, appearanceConfig.patternGridHeaderFont());
-
-    mShowFlatsCheck->setChecked(appearanceConfig.showFlats());
-    mShowPreviewsCheck->setChecked(appearanceConfig.showPreviews());
-
-    mModel->setPalette(pal);
-    mDefaultButton->setEnabled(!pal.isDefault());
-
-    clean();
-}
-
-void AppearanceConfigTab::hideEvent(QHideEvent *evt) {
-    // close the color dialog if the user switches tabs or closes the dialog
-    if (mColorDialog) {
-        mColorDialog->close();
-    }
-    evt->accept();
 }
 
 void AppearanceConfigTab::chooseFont() {
@@ -222,7 +219,7 @@ void AppearanceConfigTab::chooseFont() {
                     font.setPointSize(TU::MAX_POINT_SIZE);
                 }
                 setFont(index, font);
-                setDirty();
+                setDirty<Config::CategoryAppearance>();
             }
 
         }

@@ -1,16 +1,15 @@
 #pragma once
 
 #include "core/Config.hpp"
-#include "widgets/config/AppearanceConfigTab.hpp"
-#include "widgets/config/KeyboardConfigTab.hpp"
-#include "widgets/config/MidiConfigTab.hpp"
-#include "widgets/config/SoundConfigTab.hpp"
 
 #include <QDialog>
-#include <QDialogButtonBox>
-#include <QTabWidget>
-#include <QVBoxLayout>
 
+class AppearanceConfigTab;
+class KeyboardConfigTab;
+class MidiConfigTab;
+class SoundConfigTab;
+
+class QDialogButtonBox;
 
 //
 // Configuration dialog. Allows the user to change application settings
@@ -22,21 +21,12 @@ class ConfigDialog : public QDialog {
 public:
 
     ConfigDialog(Config &config, QWidget *parent = nullptr);
-    ~ConfigDialog();
 
-    void accept() override;
-
-    void reject() override;
-
-    void resetControls();
+    virtual void accept() override;
 
 signals:
     // emitted when changes in the Config must be applied
     void applied(Config::Categories categories);
-
-protected:
-
-    void showEvent(QShowEvent *evt) override;
 
 private slots:
     void apply();
@@ -54,13 +44,13 @@ private:
     // user clicks the OK or Apply button.
     Config::Categories mDirty;
 
-    QVBoxLayout mLayout;
-        QTabWidget mTabs;
-            AppearanceConfigTab mTabAppearance;
-            KeyboardConfigTab mTabKeyboard;
-            MidiConfigTab mTabMidi;
-            SoundConfigTab mTabSound;
-        QDialogButtonBox mButtons;
+    AppearanceConfigTab *mAppearance;
+    KeyboardConfigTab *mKeyboard;
+    MidiConfigTab *mMidi;
+    SoundConfigTab *mSound;
+
+    QDialogButtonBox *mButtons;
+
 
 
 

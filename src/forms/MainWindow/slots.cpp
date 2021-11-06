@@ -238,6 +238,11 @@ void MainWindow::onViewResetLayout() {
 }
 
 void MainWindow::onConfigApplied(Config::Categories categories) {
+    applyConfig(categories);
+    mConfig.writeSettings();
+}
+
+void MainWindow::applyConfig(Config::Categories categories) {
     if (categories.testFlag(Config::CategorySound)) {
         auto const& sound = mConfig.sound();
         mStatusSamplerate->setText(tr("%1 Hz").arg(sound.samplerate()));
@@ -300,7 +305,6 @@ void MainWindow::onConfigApplied(Config::Categories categories) {
         }
     }
 
-    mConfig.writeSettings();
 }
 
 void MainWindow::showAboutDialog() {
@@ -319,14 +323,16 @@ void MainWindow::showAudioDiag() {
 }
 
 void MainWindow::showConfigDialog() {
-    if (mConfigDialog == nullptr) {
-        mConfigDialog = new ConfigDialog(mConfig, this);
-        mConfigDialog->resetControls();
-
-        connect(mConfigDialog, &ConfigDialog::applied, this, &MainWindow::onConfigApplied);
-    }
-
-    mConfigDialog->show();
+#ifdef QT_DEBUG
+    QElapsedTimer timer;
+    timer.start();
+#endif
+    ConfigDialog diag(mConfig, this);
+    lazyconnect(&diag, applied, this, onConfigApplied);
+#ifdef QT_DEBUG
+    qDebug() << "ConfigDialog creation took" << timer.elapsed() << "ms";
+#endif
+    diag.exec();
 }
 
 void MainWindow::showExportWavDialog() {

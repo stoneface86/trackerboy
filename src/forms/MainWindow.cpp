@@ -45,7 +45,6 @@ MainWindow::MainWindow() :
     mErrorSinceLastConfig(false),
     mAboutDialog(nullptr),
     mAudioDiag(nullptr),
-    mConfigDialog(nullptr),
     mTempoCalc(nullptr),
     mCommentsDialog(nullptr),
     mInstrumentEditor(nullptr),
@@ -123,7 +122,7 @@ MainWindow::MainWindow() :
     updateWindowTitle();
 
     // apply the read in configuration
-    onConfigApplied(Config::CategoryAll);
+    applyConfig(Config::CategoryAll);
 
     setStyleSheet(QStringLiteral(R"stylesheet(
 QToolBar QLabel {
@@ -524,9 +523,6 @@ void MainWindow::setPlayingStatus(PlayingStatusText type) {
 
 void MainWindow::disableMidi(bool causedByError) {
     mConfig.disableMidi();
-    if (mConfigDialog) {
-        mConfigDialog->resetControls();
-    }
 
     if (!causedByError) {
         qCritical().noquote() << "[MIDI] Failed to initialize MIDI device:" << mMidi.lastErrorString();

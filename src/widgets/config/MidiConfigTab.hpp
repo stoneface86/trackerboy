@@ -3,42 +3,28 @@
 
 #include "widgets/config/ConfigTab.hpp"
 
-#include <QComboBox>
-#include <QGridLayout>
-#include <QGroupBox>
-#include <QHBoxLayout>
-#include <QLabel>
-#include <QPushButton>
-#include <QVBoxLayout>
+class QGroupBox;
+class QComboBox;
+
 
 class MidiConfigTab : public ConfigTab {
 
     Q_OBJECT
 
 public:
-    explicit MidiConfigTab(QWidget *parent = nullptr);
+    explicit MidiConfigTab(MidiConfig const& midiConfig, QWidget *parent = nullptr);
 
     void apply(MidiConfig &midiConfig);
-
-    void resetControls(MidiConfig const& midiConfig);
 
 private:
 
     void rescan();
 
-    void portChosen();
+    void setApi(int index);
 
-    bool mRescanning;
-
-    QVBoxLayout mLayout;
-        QGroupBox mMidiGroup;
-            QGridLayout mMidiLayout;
-                QLabel mApiLabel;
-                QComboBox mApiCombo;
-                QLabel mPortLabel;
-                QComboBox mPortCombo;
-                QHBoxLayout mRescanLayout;
-                    QPushButton mRescanButton;
+    QGroupBox *mMidiGroup;
+    QComboBox *mApiCombo;
+    QComboBox *mPortCombo;
 
 
 };

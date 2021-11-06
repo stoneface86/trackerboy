@@ -85,6 +85,7 @@ private slots:
 
     // config changes
     void onConfigApplied(Config::Categories categories);
+    void applyConfig(Config::Categories categories);
 
     // dialog show slots (lazy loading)
     void showAboutDialog();
@@ -272,7 +273,6 @@ private:
     // dialogs
     AboutDialog *mAboutDialog;
     AudioDiagDialog *mAudioDiag;
-    ConfigDialog *mConfigDialog;
     TempoCalculator *mTempoCalc;
     CommentsDialog *mCommentsDialog;
     InstrumentEditor *mInstrumentEditor;

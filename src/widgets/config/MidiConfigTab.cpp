@@ -3,103 +3,98 @@
 
 #include "core/midi/MidiProber.hpp"
 
-MidiConfigTab::MidiConfigTab(QWidget *parent) :
-    ConfigTab(Config::CategoryMidi, parent),
-    mRescanning(false),
-    mLayout(),
-    mMidiGroup(tr("MIDI input")),
-    mMidiLayout(),
-    mApiLabel(tr("API")),
-    mApiCombo(),
-    mPortLabel(tr("Device")),
-    mPortCombo(),
-    mRescanLayout(),
-    mRescanButton(tr("Rescan"))
+#include <QComboBox>
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QSignalBlocker>
+
+MidiConfigTab::MidiConfigTab(MidiConfig const& midiConfig, QWidget *parent) :
+    ConfigTab(parent)
 {
 
-    mRescanLayout.addStretch();
-    mRescanLayout.addWidget(&mRescanButton);
+    auto layout = new QVBoxLayout;
 
-    mMidiLayout.addWidget(&mApiLabel, 0, 0);
-    mMidiLayout.addWidget(&mApiCombo, 0, 1);
-    mMidiLayout.addWidget(&mPortLabel, 1, 0);
-    mMidiLayout.addWidget(&mPortCombo, 1, 1);
-    mMidiLayout.addLayout(&mRescanLayout, 2, 0, 1, 2);
-    mMidiLayout.setColumnStretch(1, 1);
-    mMidiGroup.setLayout(&mMidiLayout);
-    mMidiGroup.setCheckable(true);
+    mMidiGroup = new QGroupBox(tr("MIDI input"));
+    auto midiLayout = new QGridLayout;
+    midiLayout->addWidget(new QLabel(tr("API")), 0, 0);
+    mApiCombo = new QComboBox;
+    midiLayout->addWidget(mApiCombo, 0, 1);
+    midiLayout->addWidget(new QLabel(tr("Device")), 1, 0);
+    mPortCombo = new QComboBox;
+    midiLayout->addWidget(mPortCombo, 1, 1);
 
-    mLayout.addWidget(&mMidiGroup);
-    mLayout.addStretch();
-    setLayout(&mLayout);
+    auto rescanLayout = new QHBoxLayout;
+    rescanLayout->addStretch();
+    auto rescanButton = new QPushButton(tr("Rescan"));
+    rescanLayout->addWidget(rescanButton);
 
+    midiLayout->addLayout(rescanLayout, 2, 0, 1, 2);
+    midiLayout->setColumnStretch(1, 1);
+    mMidiGroup->setLayout(midiLayout);
+
+
+    layout->addWidget(mMidiGroup);
+    layout->addStretch(1);
+    setLayout(layout);
+
+    mMidiGroup->setCheckable(true);
+    mMidiGroup->setChecked(midiConfig.isEnabled());
 
     auto &prober = MidiProber::instance();
-    mApiCombo.addItems(prober.backendNames());
-    mApiCombo.setCurrentIndex(-1);
+    mApiCombo->addItems(prober.backendNames());
+    mApiCombo->setCurrentIndex(midiConfig.backendIndex());
+    setApi(midiConfig.backendIndex());
+    clean();
 
-    connect(&mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this,
-        [this](int index) {
-            auto &prober = MidiProber::instance();
-            prober.setBackend(index);
-            mPortCombo.clear();
-            mPortCombo.addItems(prober.portNames());
-            mPortCombo.setEnabled(mPortCombo.count() > 0);
 
-            setDirty();
-        });
-
-    connect(&mApiCombo, qOverload<int>(&QComboBox::activated), this, &MidiConfigTab::setDirty);
-    connect(&mPortCombo, qOverload<int>(&QComboBox::activated), this, &MidiConfigTab::setDirty);
-    connect(&mMidiGroup, &QGroupBox::toggled, this, &MidiConfigTab::setDirty);
-    connect(&mRescanButton, &QPushButton::clicked, this, &MidiConfigTab::rescan);
+    connect(mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &MidiConfigTab::setApi);
+    connect(mPortCombo, qOverload<int>(&QComboBox::activated), this, &MidiConfigTab::setDirty<Config::CategoryMidi>);
+    connect(mMidiGroup, &QGroupBox::toggled, this, &MidiConfigTab::setDirty<Config::CategoryMidi>);
+    connect(rescanButton, &QPushButton::clicked, this, &MidiConfigTab::rescan);
 
 }
 
 void MidiConfigTab::apply(MidiConfig &midiConfig) {
-    auto const enabled = mMidiGroup.isChecked();
+    auto const enabled = mMidiGroup->isChecked();
     midiConfig.setEnabled(enabled);
     if (enabled) {
-        midiConfig.setBackendIndex(mApiCombo.currentIndex());
-        midiConfig.setPortIndex(mPortCombo.currentIndex());
+        midiConfig.setBackendIndex(mApiCombo->currentIndex());
+        midiConfig.setPortIndex(mPortCombo->currentIndex());
     }
-
-    clean();
-}
-
-void MidiConfigTab::resetControls(MidiConfig const& midiConfig) {
-
-
-    auto &prober = MidiProber::instance();
-
-    if (mApiCombo.currentIndex() != midiConfig.backendIndex()) {
-        prober.setBackend(midiConfig.backendIndex());
-        mApiCombo.setCurrentIndex(midiConfig.backendIndex());
-    }
-
-    mPortCombo.setCurrentIndex(midiConfig.portIndex());
-    mMidiGroup.setChecked(midiConfig.isEnabled());
 
     clean();
 }
 
 void MidiConfigTab::rescan() {
-    mRescanning = true;
+    QSignalBlocker blocker(mPortCombo);
 
     auto &prober = MidiProber::instance();
-    auto const current = mPortCombo.currentText();
+    auto const current = mPortCombo->currentText();
     prober.probe();
-    mPortCombo.clear();
+    mPortCombo->clear();
     auto const portNames = prober.portNames();
-    mPortCombo.addItems(portNames);
-    mPortCombo.setCurrentIndex(portNames.indexOf(current));
-    mPortCombo.setEnabled(mPortCombo.count() > 0);
-
-    mRescanning = false;
-}
-
-void MidiConfigTab::portChosen() {
-    if (!mRescanning) {
-        setDirty();
+    mPortCombo->addItems(portNames);
+    auto index = portNames.indexOf(current);
+    if (index == -1) {
+        // the previous port was not found, so the config is now dirty
+        setDirty<Config::CategoryMidi>();
     }
+    mPortCombo->setCurrentIndex(index);
+    mPortCombo->setEnabled(mPortCombo->count() > 0);
 }
+
+
+void MidiConfigTab::setApi(int index) {
+    auto &prober = MidiProber::instance();
+    prober.setBackend(index);
+    mPortCombo->clear();
+    mPortCombo->addItems(prober.portNames());
+    mPortCombo->setEnabled(mPortCombo->count() > 0);
+
+    setDirty<Config::CategoryMidi>();
+}
+

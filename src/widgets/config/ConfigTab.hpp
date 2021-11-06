@@ -15,21 +15,24 @@ class ConfigTab : public QWidget {
     Q_OBJECT
 
 public:
-    ConfigTab(Config::Category flag, QWidget *parent = nullptr);
+    ConfigTab(QWidget *parent = nullptr);
 
     void clean();
 
 signals:
     void dirty(Config::Category flag);
 
-protected slots:
+protected:
+
+    template <Config::Category flag>
     void setDirty();
+
+    void setDirty(Config::Category flag);
 
 
 private:
     Q_DISABLE_COPY(ConfigTab)
 
-    Config::Category const mDirtyFlag;
     bool mDirty;
 
 };

@@ -294,8 +294,8 @@ private:
 };
 
 
-KeyboardConfigTab::KeyboardConfigTab(QWidget *parent) :
-    ConfigTab(Config::CategoryKeyboard, parent)
+KeyboardConfigTab::KeyboardConfigTab(PianoInput const& input, QWidget *parent) :
+    ConfigTab(parent)
 {
 
     auto layout = new QVBoxLayout;
@@ -327,19 +327,27 @@ KeyboardConfigTab::KeyboardConfigTab(QWidget *parent) :
         mLayoutCombo->addItem(PianoInput::layoutName((PianoInput::KeyboardLayout)kblayout));
     }
 
-
-
     mCustomGroup->setCheckable(true);
-    mCustomGroup->setChecked(false);
+
+    switch (auto layout = input.layout(); layout) {
+        case PianoInput::LayoutQwerty:
+        case PianoInput::LayoutQwertz:
+        case PianoInput::LayoutAzerty:
+            mLayoutCombo->setCurrentIndex(layout);
+            break;
+        default:
+            break;
+
+    }
+
+    mCustomGroup->setChecked(input.layout() == PianoInput::LayoutCustom);
+    mBindingEdit->setBindings(input.bindings());
 
     lazyconnect(mCustomGroup, toggled, mLayoutCombo, setDisabled);
-    lazyconnect(mCustomGroup, toggled, this, setDirty);
-    lazyconnect(mBindingEdit, bindingsChanged, this, setDirty);
+    lazyconnect(mCustomGroup, toggled, this, setDirty<Config::CategoryKeyboard>);
+    lazyconnect(mBindingEdit, bindingsChanged, this, setDirty<Config::CategoryKeyboard>);
 
-    connect(mLayoutCombo, qOverload<int>(&QComboBox::activated), this, &KeyboardConfigTab::setDirty);
-
-
-
+    connect(mLayoutCombo, qOverload<int>(&QComboBox::activated), this, &KeyboardConfigTab::setDirty<Config::CategoryKeyboard>);    
 
 }
 
@@ -363,21 +371,6 @@ void KeyboardConfigTab::apply(PianoInput &input) {
     clean();
 }
 
-void KeyboardConfigTab::resetControls(const PianoInput &input) {
-    switch (auto layout = input.layout(); layout) {
-        case PianoInput::LayoutQwerty:
-        case PianoInput::LayoutQwertz:
-        case PianoInput::LayoutAzerty:
-            mLayoutCombo->setCurrentIndex(layout);
-            break;
-        default:
-            break;
-
-    }
-
-    mCustomGroup->setChecked(input.layout() == PianoInput::LayoutCustom);
-    mBindingEdit->setBindings(input.bindings());
-    clean();
-}
-
 #include "KeyboardConfigTab.moc"
+
+#undef TU
