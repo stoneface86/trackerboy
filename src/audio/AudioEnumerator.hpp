@@ -7,6 +7,7 @@
 #include "miniaudio.h"
 
 #include <memory>
+#include <vector>
 
 //
 // Audio device enumeration. Devices for each available API on the

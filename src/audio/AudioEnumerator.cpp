@@ -4,6 +4,9 @@
 #include <QCoreApplication>
 #include <QtDebug>
 
+#include <array>
+#include <cstring>
+
 #define TU AudioEnumeratorTU
 
 namespace TU {

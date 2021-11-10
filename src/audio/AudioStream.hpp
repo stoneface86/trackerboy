@@ -3,9 +3,12 @@
 #include "audio/AudioEnumerator.hpp"
 #include "audio/Ringbuffer.hpp"
 
+#include "miniaudio.h"
+
 #include <QObject>
 
 #include <atomic>
+#include <cstddef>
 
 //
 // AudioStream class. Manages a miniaudio device and a playback buffer for
