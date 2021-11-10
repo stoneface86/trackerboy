@@ -4,6 +4,7 @@
 
 #include <QDialog>
 
+class AudioEnumerator;
 class AppearanceConfigTab;
 class KeyboardConfigTab;
 class MidiConfigTab;
@@ -20,7 +21,7 @@ class ConfigDialog : public QDialog {
 
 public:
 
-    ConfigDialog(Config &config, QWidget *parent = nullptr);
+    ConfigDialog(Config &config, AudioEnumerator &audio, QWidget *parent = nullptr);
 
     virtual void accept() override;
 

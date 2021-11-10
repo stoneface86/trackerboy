@@ -16,7 +16,7 @@
 
 
 
-ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
+ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mConfig(config),
     mDirty(Config::CategoryNone)
@@ -34,7 +34,7 @@ ConfigDialog::ConfigDialog(Config &config, QWidget *parent) :
     mMidi = new MidiConfigTab(config.midi());
     tabs->addTab(mMidi, tr("MIDI"));
 
-    mSound = new SoundConfigTab(config.sound());
+    mSound = new SoundConfigTab(config.sound(), audio);
     tabs->addTab(mSound, tr("Sound"));
 
     mButtons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply, Qt::Horizontal);

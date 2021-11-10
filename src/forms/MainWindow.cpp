@@ -35,6 +35,7 @@ static constexpr int WINDOW_STATE_VERSION = 1;
 
 MainWindow::MainWindow() :
     QMainWindow(),
+    mAudioEnumerator(),
     mUntitledString(tr("Untitled")),
     mConfig(),
     mMidi(),
@@ -64,7 +65,7 @@ MainWindow::MainWindow() :
     setupUi();
 
     // read in application configuration
-    mConfig.readSettings();
+    mConfig.readSettings(mAudioEnumerator);
     
     setWindowIcon(IconManager::getAppIcon());
 

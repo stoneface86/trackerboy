@@ -2,12 +2,10 @@
 #include "config.hpp"
 
 #include <iostream>
-#include <unordered_map>
 #include <memory>
+#include <cstring>
 
 #include <QtTest/QtTest>
-
-using TestMap = std::unordered_map<std::string, const QMetaObject *>;
 
 enum ExitCodes {
     ExitArguments = 1,
@@ -15,14 +13,19 @@ enum ExitCodes {
     ExitNoInstantiation = 3
 };
 
+
 template <class Test, class... Tests>
-void registerTests(TestMap &map) {
-    map.emplace(Test::staticMetaObject.className(), &Test::staticMetaObject);
+QMetaObject const* searchTest(const char *name) {
+    if (strcmp(name, Test::staticMetaObject.className()) == 0) {
+        return &Test::staticMetaObject;
+    }
+
     if constexpr (sizeof...(Tests) != 0) {
-        registerTests<Tests...>(map);
+        return searchTest<Tests...>(name);
+    } else {
+        return nullptr;
     }
 }
-
 
 
 int main(int argc, char* argv[]) {
@@ -32,20 +35,13 @@ int main(int argc, char* argv[]) {
         return ExitArguments;
     }
 
-    TestMap map;
-    registerTests<
-        CONFIG_TESTS
-    >(map);
-
-    // find the test by name
-    auto iter = map.find(argv[1]);
-    if (iter == map.end()) {
+    auto meta = searchTest<CONFIG_TESTS>(argv[1]);
+    if (meta == nullptr) {
         std::cerr << "unknown test case\n";
         return ExitNoTest;
     }
 
-    // instantiate the test
-    std::unique_ptr<QObject> test(iter->second->newInstance());
+    std::unique_ptr<QObject> test(meta->newInstance());
     if (test == nullptr) {
         std::cerr << "could not instantiate test class\n";
         return ExitNoInstantiation;

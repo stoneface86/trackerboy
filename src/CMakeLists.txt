@@ -105,12 +105,12 @@ endfunction()
 # use FILE <filename>
 
 makeSourceList(UI_SRC
-    "core/audio/AudioProber"
-    "core/audio/AudioStream"
-    "core/audio/Renderer"
-    "core/audio/Ringbuffer"
-    "core/audio/VisualizerBuffer"
-    "core/audio/Wav"
+    "audio/AudioEnumerator"
+    "audio/AudioStream"
+    "audio/Renderer"
+    "audio/Ringbuffer"
+    "audio/VisualizerBuffer"
+    "audio/Wav"
     "core/clipboard/PatternClip"
     "core/clipboard/PatternClipboard"
     "core/commands/order"

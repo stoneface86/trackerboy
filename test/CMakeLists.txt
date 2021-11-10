@@ -11,6 +11,7 @@ find_package(Qt5Test REQUIRED)
 # each test in this list must have a cpp and hpp file in the units/ directory
 # IMPORTANT: your test class must have a constructor taking no arguments and is marked with Q_INVOKABLE
 set(TESTLIST
+    "TestAudioEnumerator"
     "TestPatternClip"
     "TestPatternSelection"
 )

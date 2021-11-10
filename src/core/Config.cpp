@@ -35,25 +35,25 @@ Palette const& Config::palette() const              { return mPalette; }
 PianoInput& Config::pianoInput()                    { return mPianoInput; }
 PianoInput const& Config::pianoInput() const        { return mPianoInput; }
 
-void Config::readSettings() {
+void Config::readSettings(AudioEnumerator &audio) {
     QSettings settings;
 
     mAppearance.readSettings(settings);
     mGeneral.readSettings(settings);
     mMidi.readSettings(settings);
-    mSound.readSettings(settings);
+    mSound.readSettings(settings, audio);
     mPalette.readSettings(settings);
     mPianoInput.readSettings(settings);
 }
 
 
-void Config::writeSettings() {
+void Config::writeSettings(AudioEnumerator const& audio) {
     QSettings settings;
 
     mAppearance.writeSettings(settings);
     mGeneral.writeSettings(settings);
     mMidi.writeSettings(settings);
-    mSound.writeSettings(settings);
+    mSound.writeSettings(settings, audio);
     mPalette.writeSettings(settings);
     mPianoInput.writeSettings(settings);
 }

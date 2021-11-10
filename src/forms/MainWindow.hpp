@@ -1,7 +1,8 @@
 
 #pragma once
 
-#include "core/audio/Renderer.hpp"
+#include "audio/AudioEnumerator.hpp"
+#include "audio/Renderer.hpp"
 #include "core/midi/IMidiReceiver.hpp"
 #include "core/midi/Midi.hpp"
 #include "core/misc/TableActions.hpp"
@@ -243,6 +244,7 @@ private:
     //
     void updateRecentFiles(QStringList const& list);
 
+    AudioEnumerator mAudioEnumerator;
     QString const mUntitledString;
 
     #ifdef QT_DEBUG

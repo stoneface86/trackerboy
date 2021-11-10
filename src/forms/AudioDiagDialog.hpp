@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/audio/Renderer.hpp"
+#include "audio/Renderer.hpp"
 #include "core/Config.hpp"
 
 #include <QCheckBox>

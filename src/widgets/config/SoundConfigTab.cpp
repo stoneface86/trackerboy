@@ -1,7 +1,8 @@
-
+﻿
 #include "widgets/config/SoundConfigTab.hpp"
-#include "core/audio/AudioProber.hpp"
+#include "audio/AudioEnumerator.hpp"
 #include "core/StandardRates.hpp"
+#include "core/misc/connectutils.hpp"
 
 #include <QComboBox>
 #include <QGridLayout>
@@ -17,8 +18,9 @@
 
 
 
-SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, QWidget *parent) :
-    ConfigTab(parent)
+SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, AudioEnumerator &enumerator, QWidget *parent) :
+    ConfigTab(parent),
+    mEnumerator(enumerator)
 {
 
     auto layout = new QVBoxLayout;
@@ -78,8 +80,7 @@ SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, QWidget *parent) 
     // settings
     mDeviceCombo->setMaximumWidth(300); // device names can get pretty long sometimes
 
-    auto &prober = AudioProber::instance();
-    mApiCombo->addItems(prober.backendNames());
+    mApiCombo->addItems(mEnumerator.backendNames());
     // populate samplerate combo
     for (int i = 0; i != StandardRates::COUNT; ++i) {
         mSamplerateCombo->addItem(tr("%1 Hz").arg(StandardRates::get(i)));
@@ -109,6 +110,7 @@ SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, QWidget *parent) 
     connect(mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
     connect(mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
     connect(mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
+    lazyconnect(rescanButton, clicked, this, rescan);
 }
 
 void SoundConfigTab::apply(SoundConfig &soundConfig) {
@@ -124,52 +126,39 @@ void SoundConfigTab::apply(SoundConfig &soundConfig) {
 
 void SoundConfigTab::apiChanged(int index) {
     rescan(true); // new api selected, pick the default device
-    mApiErrorLabel->setVisible(!AudioProber::instance().backendInitialized(index));
+    mApiErrorLabel->setVisible(!mEnumerator.backendIsAvailable(index));
     setDirty<Config::CategorySound>();
 }
 
 void SoundConfigTab::populateDevices() {
     mDeviceCombo->clear();
-    mDeviceCombo->addItem(tr("Default device"));
-    mDeviceCombo->addItems(AudioProber::instance().deviceNames(mApiCombo->currentIndex()));
+    mDeviceCombo->addItems(mEnumerator.deviceNames(mApiCombo->currentIndex()));
 }
 
 void SoundConfigTab::rescan(bool rescanDueToApiChange) {
     
     auto const backendIndex = mApiCombo->currentIndex();
 
-    auto &prober = AudioProber::instance();
-    
-    mDeviceCombo->blockSignals(true);
+    QSignalBlocker blocker(mDeviceCombo);
 
     if (rescanDueToApiChange) {
-        prober.probe(backendIndex);
+        mEnumerator.populate(backendIndex);
         populateDevices();
         mDeviceCombo->setCurrentIndex(0); // default
     } else {
 
-        // get a copy of the current id
-        // the current index becomes invalid when devices are added/removed
-        // so we'll search after probing for the current device using it's id
-        std::optional<ma_device_id> idCopy;
-        auto id = prober.deviceId(backendIndex, mDeviceCombo->currentIndex());
-        if (id) {
-            idCopy = *id;
-        }
-
+        // serialize the current device
+        auto serialized = mEnumerator.serializeDevice(backendIndex, mDeviceCombo->currentIndex());
+        
         // rescan
-        prober.probe(backendIndex);
+        mEnumerator.populate(backendIndex);
         populateDevices();
 
-        int index;
-        if (idCopy) {
-            index = prober.indexOfDevice(backendIndex, *idCopy);
-        } else {
-            index = 0;
-        }
+        // now attempt to find the saved device in the list
+        // (its position may have changed or the device is no longer available)
+        auto index = mEnumerator.deserializeDevice(backendIndex, serialized);
         mDeviceCombo->setCurrentIndex(index);
 
     }
-    mDeviceCombo->blockSignals(false);
 
 }

@@ -239,7 +239,7 @@ void MainWindow::onViewResetLayout() {
 
 void MainWindow::onConfigApplied(Config::Categories categories) {
     applyConfig(categories);
-    mConfig.writeSettings();
+    mConfig.writeSettings(mAudioEnumerator);
 }
 
 void MainWindow::applyConfig(Config::Categories categories) {
@@ -247,7 +247,7 @@ void MainWindow::applyConfig(Config::Categories categories) {
         auto const& sound = mConfig.sound();
         mStatusSamplerate->setText(tr("%1 Hz").arg(sound.samplerate()));
 
-        mErrorSinceLastConfig = !mRenderer->setConfig(sound);
+        mErrorSinceLastConfig = !mRenderer->setConfig(sound, mAudioEnumerator);
         if (mErrorSinceLastConfig) {
             setPlayingStatus(PlayingStatusText::error);
             if (isVisible()) {
@@ -327,7 +327,7 @@ void MainWindow::showConfigDialog() {
     QElapsedTimer timer;
     timer.start();
 #endif
-    ConfigDialog diag(mConfig, this);
+    ConfigDialog diag(mConfig, mAudioEnumerator, this);
     lazyconnect(&diag, applied, this, onConfigApplied);
 #ifdef QT_DEBUG
     qDebug() << "ConfigDialog creation took" << timer.elapsed() << "ms";

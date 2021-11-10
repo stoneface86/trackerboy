@@ -6,6 +6,7 @@
 #include "core/config/KeyboardConfig.hpp"
 #include "core/config/MidiConfig.hpp"
 #include "core/config/SoundConfig.hpp"
+class AudioEnumerator;
 
 #include "core/input/PianoInput.hpp"
 #include "core/Palette.hpp"
@@ -44,13 +45,13 @@ public:
     // Read the configuration settings from the given QSettings. Should be
     // called once on application start up
     //
-    void readSettings();
+    void readSettings(AudioEnumerator &audio);
 
     //
     // Write the current configuration settings to the given QSettings. Called
     // when MainWindow closes.
     //
-    void writeSettings();
+    void writeSettings(AudioEnumerator const& audio);
 
     AppearanceConfig& appearance();
     AppearanceConfig const& appearance() const;

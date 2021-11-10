@@ -2,6 +2,8 @@
 #pragma once
 
 #include "widgets/config/ConfigTab.hpp"
+class AudioEnumerator;
+
 
 class QComboBox;
 class QSpinBox;
@@ -15,7 +17,7 @@ class SoundConfigTab : public ConfigTab {
     Q_OBJECT
 
 public:
-    explicit SoundConfigTab(SoundConfig const& soundConfig, QWidget *parent = nullptr);
+    explicit SoundConfigTab(SoundConfig const& soundConfig, AudioEnumerator &audio, QWidget *parent = nullptr);
 
     void apply(SoundConfig &soundConfig);
 
@@ -30,6 +32,8 @@ private:
     void populateDevices();
 
     void apiChanged(int index);
+
+    AudioEnumerator &mEnumerator;
 
     QComboBox *mApiCombo;
     QComboBox *mDeviceCombo;

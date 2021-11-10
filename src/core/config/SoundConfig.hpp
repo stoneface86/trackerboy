@@ -1,7 +1,9 @@
 
 #pragma once
 
-#include <QSettings>
+class AudioEnumerator;
+
+class QSettings;
 
 
 class SoundConfig {
@@ -34,9 +36,9 @@ public:
 
     void setPeriod(int period);
     
-    void readSettings(QSettings &settings);
+    void readSettings(QSettings &settings, AudioEnumerator &enumerator);
 
-    void writeSettings(QSettings &settings) const;
+    void writeSettings(QSettings &settings, AudioEnumerator const& enumerator) const;
 
 private:
 

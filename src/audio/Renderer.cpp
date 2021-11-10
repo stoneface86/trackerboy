@@ -1,5 +1,6 @@
 
-#include "core/audio/Renderer.hpp"
+#include "audio/Renderer.hpp"
+#include "audio/AudioEnumerator.hpp"
 #include "core/StandardRates.hpp"
 #include "core/misc/utils.hpp"
 
@@ -113,7 +114,7 @@ Renderer::Diagnostics Renderer::diagnostics() {
         size,
         handle->writesSinceLastPeriod,
         handle->periodTime,
-        mStream.elapsed()
+        0.0
     };
 }
 
@@ -138,7 +139,7 @@ trackerboy::Frame Renderer::currentFrame() {
     return handle->currentEngineFrame;
 }
 
-bool Renderer::setConfig(SoundConfig const &soundConfig) {
+bool Renderer::setConfig(SoundConfig const &soundConfig, AudioEnumerator const& enumerator) {
 
     // if there is rendering going at on when this function is called it will
     // resume with a slight gap in playback if the config applied without error,
@@ -150,7 +151,11 @@ bool Renderer::setConfig(SoundConfig const &soundConfig) {
         mTimer->stop();
     }
 
-    mStream.setConfig(soundConfig);
+    mStream.open(
+        enumerator.device(soundConfig.backendIndex(), soundConfig.deviceIndex()),
+        soundConfig.samplerate(),
+        soundConfig.latency()
+    );
 
     if (mStream.isEnabled()) {
 
@@ -567,6 +572,7 @@ void Renderer::render() {
                 if (handle->stopCounter) {
                     if (--handle->stopCounter == 0) {
                         handle->state = State::stopping;
+                        mStream.setDraining(true);
                     }
                 } else {
                     newFrame = true;

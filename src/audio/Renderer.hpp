@@ -1,13 +1,15 @@
 
 #pragma once
 
-#include "core/audio/AudioStream.hpp"
-#include "core/audio/VisualizerBuffer.hpp"
+#include "audio/AudioStream.hpp"
+#include "audio/VisualizerBuffer.hpp"
 #include "core/config/SoundConfig.hpp"
 #include "core/ChannelOutput.hpp"
 #include "core/FastTimer.hpp"
 #include "core/Guarded.hpp"
 #include "core/Module.hpp"
+
+class AudioEnumerator;
 
 #include "trackerboy/apu/DefaultApu.hpp"
 #include "trackerboy/data/Song.hpp"
@@ -37,7 +39,7 @@ class Renderer : public QObject {
 public:
 
     struct Diagnostics {
-        int underruns;
+        unsigned underruns;
         size_t bufferUse;
         size_t bufferSize;
         size_t writesSinceLastPeriod;
@@ -88,7 +90,7 @@ public:
     // cannot be configured, the renderer is disabled. This function must
     // be called from the GUI thread.
     //
-    bool setConfig(SoundConfig const& config);
+    bool setConfig(SoundConfig const& config, AudioEnumerator const& enumerator);
 
     //
     // Changes the note being previewed for an instrument/waveform preview.

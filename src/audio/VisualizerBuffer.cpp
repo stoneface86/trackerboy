@@ -1,5 +1,5 @@
 
-#include "core/audio/VisualizerBuffer.hpp"
+#include "audio/VisualizerBuffer.hpp"
 
 #include <algorithm>
 

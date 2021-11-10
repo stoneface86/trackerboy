@@ -1,7 +1,5 @@
 
-#include "core/audio/AudioStream.hpp"
-#include "core/audio/AudioProber.hpp"
-#include "core/config/SoundConfig.hpp"
+#include "audio/AudioStream.hpp"
 
 #include <QtDebug>
 
@@ -16,32 +14,55 @@ static const char* LOG_PREFIX = "[AudioStream]";
 }
 
 
-AudioStream::AudioStream() :
-    QObject(),
-    mEnabled(false),
-    mDevice(new ma_device),
-    mBuffer(),
-    mSamplerate(0),
-    mRunning(false),
-    mPlaybackDelay(0),
-    mUnderruns(0)
+AudioStream::MaDeviceWrapper::MaDeviceWrapper() :
+    mInitialized(false),
+    mDevice()
 {
 }
 
-AudioStream::~AudioStream() {
-    disable();
+AudioStream::MaDeviceWrapper::~MaDeviceWrapper() {
+    if (mInitialized) {
+        uninit();
+    }
+}
+
+ma_result AudioStream::MaDeviceWrapper::init(ma_context *ctx, ma_device_config const* config) {
+    auto result = ma_device_init(ctx, config, &mDevice);
+    mInitialized = result == MA_SUCCESS;
+    return result;
+}
+
+void AudioStream::MaDeviceWrapper::uninit() {
+    ma_device_uninit(&mDevice);
+}
+
+ma_device* AudioStream::MaDeviceWrapper::get() {
+    return &mDevice;
 }
 
 
-bool AudioStream::isEnabled() {
+AudioStream::AudioStream(QObject *parent) :
+    QObject(parent),
+    mEnabled(false),
+    mRunning(false),
+    mBuffer(),
+    mDevice(),
+    mPlaybackDelay(0),
+    mUnderruns(0),
+    mDraining(false)
+{
+
+}
+
+bool AudioStream::isEnabled() const {
     return mEnabled;
 }
 
-bool AudioStream::isRunning() {
+bool AudioStream::isRunning() const {
     return isEnabled() && mRunning.load();
 }
 
-int AudioStream::underruns() const {
+unsigned AudioStream::underruns() const {
     return mUnderruns.load();
 }
 
@@ -49,24 +70,30 @@ void AudioStream::resetUnderruns() {
     mUnderruns = 0;
 }
 
-size_t AudioStream::bufferSize() {
+size_t AudioStream::bufferSize() const {
     return mBuffer.size();
 }
 
-double AudioStream::elapsed() {
-    return 0.0;
+void AudioStream::setDraining(bool draining) {
+    mDraining = draining;
 }
 
 AudioRingbuffer::Writer AudioStream::writer() {
     return mBuffer.writer();
 }
 
-void AudioStream::setConfig(SoundConfig const& config) {
+void AudioStream::open(AudioEnumerator::Device const& device, int samplerate, int latency) {
 
-    auto const samplerate = config.samplerate();
-    
-    auto &prober = AudioProber::instance();
-    
+    // get the current running state
+    // if we are running then we will have to start the newly opened stream
+    bool running = isRunning();
+
+    // must be disabled when changing settings
+    disable();
+
+    // update buffer size
+    mBuffer.init((size_t)(latency * samplerate / 1000));
+
     auto deviceConfig = ma_device_config_init(ma_device_type_playback);
     // always 32-bit float stereo format
     deviceConfig.playback.format = ma_format_f32;
@@ -75,38 +102,25 @@ void AudioStream::setConfig(SoundConfig const& config) {
     deviceConfig.stopCallback = deviceStopCallback;
     deviceConfig.pUserData = this;
     deviceConfig.sampleRate = samplerate;
-    deviceConfig.playback.pDeviceID = prober.deviceId(config.backendIndex(), config.deviceIndex());
+    deviceConfig.playback.pDeviceID = device.id;
 
-    // get the current running state
-    // if we are running then we will have to start the newly opened stream
-    bool running = isRunning();
-
-    // must be disabled when applying config
-    disable();
-
-    // update buffer size
-    mBuffer.init((size_t)(config.latency() * samplerate / 1000));
-
-    // attempt to initialize device
-    auto result = ma_device_init(prober.context(config.backendIndex()), &deviceConfig, mDevice.get());
+    auto result = mDevice.init(device.context, &deviceConfig);
     if (result != MA_SUCCESS) {
         handleError("could not initialize device:", result);
         return;
     }
 
     mEnabled = true;
-
     if (running) {
         start();
     }
-
 }
 
 bool AudioStream::start() {
     if (isEnabled() && !isRunning()) {
         mBuffer.reset();
         mPlaybackDelay = mBuffer.size();
-        
+        mDraining = false;
         auto result = ma_device_start(mDevice.get());
         if (result != MA_SUCCESS) {
             handleError("failed to start device:", result);
@@ -121,6 +135,7 @@ bool AudioStream::start() {
 bool AudioStream::stop() {
     if (isRunning()) {
         mRunning = false;
+
         auto result = ma_device_stop(mDevice.get());
         if (result != MA_SUCCESS) {
             handleError("failed to stop device:", result);
@@ -131,16 +146,15 @@ bool AudioStream::stop() {
     return true;
 }
 
-
 void AudioStream::disable() {
     mRunning = false;
-
     if (mEnabled) {
         mEnabled = false;
-        ma_device_uninit(mDevice.get());
+        mDevice.uninit();
     }
-
 }
+
+
 
 void AudioStream::deviceDataCallback(ma_device *device, void *out, const void *in, ma_uint32 frames) {
     Q_UNUSED(in)
@@ -152,20 +166,28 @@ void AudioStream::deviceDataCallback(ma_device *device, void *out, const void *i
 }
 
 void AudioStream::handleData(float *out, size_t frames) {
+
+    // an entire buffer's worth of silence is played when the stream is started
+    // this gives the us ample time to fill the buffer before playing from it.
+    // Without this the output might be choppy at the start.
+
     if (mPlaybackDelay) {
         auto samples = std::min(mPlaybackDelay, frames);
         frames -= samples;
-        std::fill_n(out, samples * 2, (int16_t)0);
+        // miniaudio clears the output buffer before calling the callback
+        // so just seek the output pointer
         out += samples * 2;
         mPlaybackDelay -= samples;
     }
 
-    auto reader = mBuffer.reader();
-    reader.fullRead(out, frames);
-    
+    auto nread = mBuffer.reader().fullRead(out, frames);
+    if (nread < frames && !mDraining) {
+        ++mUnderruns;
+    }
 }
 
 void AudioStream::deviceStopCallback(ma_device *device) {
+    // on explicit stops, abort does nothing, since isRunning() = false
     static_cast<AudioStream*>(device->pUserData)->handleStop();
 }
 
@@ -173,15 +195,13 @@ void AudioStream::handleStop() {
     // this handler is called:
     //  * implicitly: due to device error or disconnect (mRunning = true)
     //  * explicitly: when the stream is stopped via stop() (mRunning = false)
-    
+
     if (mRunning) {
         qCritical() << TU::LOG_PREFIX << "stream aborted";
         mRunning = false;
-        // we didn't trigger this stop via stop(), an error must've occurred
         emit aborted();
     }
 }
-
 
 void AudioStream::handleError(const char *msg, ma_result err) {
     qCritical().noquote()

@@ -1,9 +1,12 @@
 
-#include "core/audio/Ringbuffer.hpp"
+#include "audio/Ringbuffer.hpp"
+
+#include "miniaudio.h"
 
 #include <QtGlobal>
 
 #include <cstring>
+
 
 RingbufferBase::RingbufferBase() :
     mInitialized(false),

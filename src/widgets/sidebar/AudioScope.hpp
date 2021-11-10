@@ -2,7 +2,7 @@
 #pragma once
 
 
-#include "core/audio/VisualizerBuffer.hpp"
+#include "audio/VisualizerBuffer.hpp"
 #include "core/Guarded.hpp"
 #include "core/Palette.hpp"
 

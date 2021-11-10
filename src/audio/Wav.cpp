@@ -1,5 +1,5 @@
 
-#include "core/audio/Wav.hpp"
+#include "audio/Wav.hpp"
 
 #include <cassert>
 #include <cstdint>
