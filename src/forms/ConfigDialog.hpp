@@ -8,7 +8,6 @@ class AudioEnumerator;
 class MidiEnumerator;
 class AppearanceConfigTab;
 class KeyboardConfigTab;
-class MidiConfigTab;
 class SoundConfigTab;
 
 class QDialogButtonBox;
@@ -48,7 +47,6 @@ private:
 
     AppearanceConfigTab *mAppearance;
     KeyboardConfigTab *mKeyboard;
-    MidiConfigTab *mMidi;
     SoundConfigTab *mSound;
 
     QDialogButtonBox *mButtons;

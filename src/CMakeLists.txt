@@ -180,7 +180,6 @@ makeSourceList(UI_SRC
     "widgets/config/AppearanceConfigTab"
     "widgets/config/ConfigTab"
     "widgets/config/KeyboardConfigTab"
-    "widgets/config/MidiConfigTab"
     "widgets/config/SoundConfigTab"
     "widgets/docks/TableDock"
     "widgets/grid/PatternGrid"

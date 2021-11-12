@@ -5,7 +5,6 @@
 
 #include "widgets/config/AppearanceConfigTab.hpp"
 #include "widgets/config/KeyboardConfigTab.hpp"
-#include "widgets/config/MidiConfigTab.hpp"
 #include "widgets/config/SoundConfigTab.hpp"
 
 #include <QDialogButtonBox>
@@ -31,11 +30,8 @@ ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, MidiEnumerato
     mKeyboard = new KeyboardConfigTab(config.pianoInput());
     tabs->addTab(mKeyboard, tr("Keyboard"));
 
-    mMidi = new MidiConfigTab(config.midi(), midi);
-    tabs->addTab(mMidi, tr("MIDI"));
-
-    mSound = new SoundConfigTab(config.sound(), audio);
-    tabs->addTab(mSound, tr("Sound"));
+    mSound = new SoundConfigTab(config.midi(), config.sound(), audio, midi);
+    tabs->addTab(mSound, tr("Sound / MIDI"));
 
     mButtons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply, Qt::Horizontal);
 
@@ -53,7 +49,6 @@ ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, MidiEnumerato
 
     lazyconnect(mAppearance, dirty, this, setDirty);
     lazyconnect(mKeyboard, dirty, this, setDirty);
-    lazyconnect(mMidi, dirty, this, setDirty);
     lazyconnect(mSound, dirty, this, setDirty);
 
     lazyconnect(applyButton, clicked, this, apply);
@@ -85,7 +80,7 @@ void ConfigDialog::apply() {
         }
 
         if (mDirty.testFlag(Config::CategoryMidi)) {
-            mMidi->apply(mConfig.midi());
+            mSound->apply(mConfig.midi());
         }
 
         emit applied(mDirty);

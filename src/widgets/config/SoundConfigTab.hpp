@@ -3,11 +3,14 @@
 
 #include "widgets/config/ConfigTab.hpp"
 class AudioEnumerator;
-
+class MidiEnumerator;
 
 class QComboBox;
+class QGroupBox;
 class QSpinBox;
 class QLabel;
+
+class DeviceGroup;
 
 //
 // Tab widget for the "Sound" tab in ConfigDialog
@@ -17,27 +20,42 @@ class SoundConfigTab : public ConfigTab {
     Q_OBJECT
 
 public:
-    explicit SoundConfigTab(SoundConfig const& soundConfig, AudioEnumerator &audio, QWidget *parent = nullptr);
+    explicit SoundConfigTab(
+        MidiConfig const& midiConfig,
+        SoundConfig const& soundConfig,
+        AudioEnumerator &audio,
+        MidiEnumerator &midi,
+        QWidget *parent = nullptr
+    );
 
     void apply(SoundConfig &soundConfig);
 
-private slots:
-
-    void rescan(bool rescanDueToApiChange = false);
+    void apply(MidiConfig &midiConfig);
 
 private:
+
     Q_DISABLE_COPY(SoundConfigTab)
 
+    void audioRescan();
+    void midiRescan();
 
-    void populateDevices();
+    void audioApiChanged(int index);
+    void midiApiChanged(int index);
 
-    void apiChanged(int index);
+    template <class Enumerator>
+    void apiChanged(Enumerator &enumerator, DeviceGroup *group, int index);
 
-    AudioEnumerator &mEnumerator;
+    template <class Enumerator>
+    void rescan(Enumerator &enumerator, DeviceGroup *group);
 
-    QComboBox *mApiCombo;
-    QComboBox *mDeviceCombo;
-    QLabel *mApiErrorLabel;
+    template <class Enumerator>
+    void setDirtyFromEnumerator();
+
+    AudioEnumerator &mAudioEnumerator;
+    MidiEnumerator &mMidiEnumerator;
+
+    DeviceGroup *mAudioGroup;
+    DeviceGroup *mMidiGroup;
 
     QSpinBox *mLatencySpin;
     QSpinBox *mPeriodSpin;

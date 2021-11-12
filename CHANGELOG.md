@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Command line argument parsing, you can now open a module on application startup
  - Appearance tab in Config dialog for changing fonts, colors and other settings
  - Colors for the audio scope and graph editors are now customizable
+### Changed
+ - Combined the Sound and Midi tabs in the Configuration dialog (Sound + MIDI)
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor

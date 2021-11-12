@@ -3,6 +3,7 @@
 #include "audio/AudioEnumerator.hpp"
 #include "core/StandardRates.hpp"
 #include "core/misc/connectutils.hpp"
+#include "midi/MidiEnumerator.hpp"
 
 #include <QComboBox>
 #include <QGridLayout>
@@ -12,46 +13,94 @@
 #include <QSignalBlocker>
 #include <QSpinBox>
 
-#include <array>
-#include <optional>
-#include <cmath>
+//
+// QGroupBox subclass containing a combobox for an API and Device
+// Used for selecting a MIDI input device and Audio output device
+//
+class DeviceGroup : public QGroupBox {
+
+    Q_OBJECT
+
+public:
+
+    explicit DeviceGroup(QString const& title) :
+        QGroupBox(title)
+    {
+        auto layout = new QGridLayout;
+
+        // row 0
+        layout->addWidget(new QLabel(tr("API")), 0, 0);
+        mApiCombo = new QComboBox;
+        layout->addWidget(mApiCombo, 0, 1);
+
+        // row 1
+        layout->addWidget(new QLabel(tr("Device")), 1, 0);
+        mDeviceCombo = new QComboBox;
+        layout->addWidget(mDeviceCombo, 1, 1);
+
+        // row 2
+        auto rescanLayout = new QHBoxLayout;
+        mErrorLabel = new QLabel(tr("API Unavailable"));
+        rescanLayout->addStretch();
+        rescanLayout->addWidget(mErrorLabel);
+        rescanLayout->addStretch(1);
+        mRescanButton = new QPushButton(tr("Rescan"));
+        rescanLayout->addWidget(mRescanButton);
+        layout->addLayout(rescanLayout, 2, 1);
+
+        setLayout(layout);
+
+        mDeviceCombo->setMaximumWidth(300); // device names can get pretty long sometimes
+
+    }
+
+    void setAvailable(bool available) {
+        mErrorLabel->setVisible(!available);
+    }
+
+    template <class Enumerator>
+    void init(Enumerator const& enumerator, int backend, int device) {
+        mApiCombo->addItems(enumerator.backendNames());
+        mApiCombo->setCurrentIndex(backend);
+        populateDevices(enumerator);
+        mDeviceCombo->setCurrentIndex(device);
+        mErrorLabel->setVisible(!enumerator.backendIsAvailable(backend));
+    }
+
+    template <class Enumerator>
+    void populateDevices(Enumerator const& enumerator) {
+        mDeviceCombo->clear();
+        mDeviceCombo->addItems(enumerator.deviceNames(mApiCombo->currentIndex()));
+        mDeviceCombo->setEnabled(mDeviceCombo->count() > 0);
+    }
 
 
+private:
+    friend class SoundConfigTab;
 
-SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, AudioEnumerator &enumerator, QWidget *parent) :
+    QComboBox *mApiCombo;
+    QComboBox *mDeviceCombo;
+    QLabel *mErrorLabel;
+    QPushButton *mRescanButton;
+
+};
+
+
+SoundConfigTab::SoundConfigTab(
+    MidiConfig const& midiConfig,
+    SoundConfig const& soundConfig,
+    AudioEnumerator &audio,
+    MidiEnumerator &midi,
+    QWidget *parent
+) :
     ConfigTab(parent),
-    mEnumerator(enumerator)
+    mAudioEnumerator(audio),
+    mMidiEnumerator(midi)
 {
 
-    auto layout = new QVBoxLayout;
+    mAudioGroup = new DeviceGroup(tr("Output device"));
 
-    auto deviceGroup = new QGroupBox(tr("Device"));
-    auto deviceLayout = new QGridLayout;
-
-    // row 0
-    deviceLayout->addWidget(new QLabel(tr("API")), 0, 0);
-    mApiCombo = new QComboBox;
-    deviceLayout->addWidget(mApiCombo, 0, 1);
-
-    // row 1
-    deviceLayout->addWidget(new QLabel(tr("Device")), 1, 0);
-    mDeviceCombo = new QComboBox;
-    deviceLayout->addWidget(mDeviceCombo, 1, 1);
-
-    // row 2
-    auto rescanLayout = new QHBoxLayout;
-    mApiErrorLabel = new QLabel(tr("API Unavailable"));
-    rescanLayout->addStretch();
-    rescanLayout->addWidget(mApiErrorLabel);
-    rescanLayout->addStretch(1);
-    auto rescanButton = new QPushButton(tr("Rescan"));
-    rescanLayout->addWidget(rescanButton);
-    deviceLayout->addLayout(rescanLayout, 2, 1);
-
-    deviceGroup->setLayout(deviceLayout);
-
-
-    auto audioGroup = new QGroupBox(tr("Audio"));
+    auto audioGroup = new QGroupBox(tr("Output settings"));
     auto audioLayout = new QGridLayout;
 
     // row 0, buffer size (latency)
@@ -71,24 +120,26 @@ SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, AudioEnumerator &
 
     audioGroup->setLayout(audioLayout);
 
-    layout->addWidget(deviceGroup);
+    mMidiGroup = new DeviceGroup(tr("MIDI Input"));
+    mMidiGroup->setCheckable(true);
+    mMidiGroup->setChecked(midiConfig.isEnabled());
+
+    auto layout = new QVBoxLayout;
+    layout->addWidget(mAudioGroup);
     layout->addWidget(audioGroup);
+    layout->addWidget(mMidiGroup);
     layout->addStretch();
     setLayout(layout);
 
 
     // settings
-    mDeviceCombo->setMaximumWidth(300); // device names can get pretty long sometimes
+    mAudioGroup->init(mAudioEnumerator, soundConfig.backendIndex(), soundConfig.deviceIndex());
 
-    mApiCombo->addItems(mEnumerator.backendNames());
     // populate samplerate combo
     for (int i = 0; i != StandardRates::COUNT; ++i) {
         mSamplerateCombo->addItem(tr("%1 Hz").arg(StandardRates::get(i)));
     }
 
-    mApiCombo->setCurrentIndex(soundConfig.backendIndex());
-    populateDevices();
-    mDeviceCombo->setCurrentIndex(soundConfig.deviceIndex());
     mSamplerateCombo->setCurrentIndex(soundConfig.samplerateIndex());
     mLatencySpin->setValue(soundConfig.latency());
     mPeriodSpin->setValue(soundConfig.period());
@@ -101,21 +152,26 @@ SoundConfigTab::SoundConfigTab(SoundConfig const& soundConfig, AudioEnumerator &
     setupTimeSpinbox(*mLatencySpin, SoundConfig::MIN_LATENCY, SoundConfig::MAX_LATENCY);
     setupTimeSpinbox(*mPeriodSpin, SoundConfig::MIN_PERIOD, SoundConfig::MAX_PERIOD);
 
-    mApiErrorLabel->setVisible(false);
+    mMidiGroup->init(mMidiEnumerator, midiConfig.backendIndex(), midiConfig.portIndex());
 
     // any changes made by the user will mark this tab as "dirty"
-    connect(mSamplerateCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty<Config::CategorySound>);
-    connect(mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::apiChanged);
-    connect(mDeviceCombo, qOverload<int>(&QComboBox::activated), this, &SoundConfigTab::setDirty<Config::CategorySound>);
-    connect(mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
+    connect(mSamplerateCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
     connect(mLatencySpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
     connect(mPeriodSpin, qOverload<int>(&QSpinBox::valueChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
-    lazyconnect(rescanButton, clicked, this, rescan);
+
+    connect(mAudioGroup->mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::audioApiChanged);
+    connect(mAudioGroup->mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty<Config::CategorySound>);
+    lazyconnect(mAudioGroup->mRescanButton, clicked, this, audioRescan);
+
+    lazyconnect(mMidiGroup, toggled, this, setDirty<Config::CategoryMidi>);
+    connect(mMidiGroup->mApiCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::midiApiChanged);
+    connect(mMidiGroup->mDeviceCombo, qOverload<int>(&QComboBox::currentIndexChanged), this, &SoundConfigTab::setDirty<Config::CategoryMidi>);
+    lazyconnect(mMidiGroup->mRescanButton, clicked, this, midiRescan);
 }
 
 void SoundConfigTab::apply(SoundConfig &soundConfig) {
-    soundConfig.setBackendIndex(mApiCombo->currentIndex());
-    soundConfig.setDeviceIndex(mDeviceCombo->currentIndex());
+    soundConfig.setBackendIndex(mAudioGroup->mApiCombo->currentIndex());
+    soundConfig.setDeviceIndex(mAudioGroup->mDeviceCombo->currentIndex());
     soundConfig.setSamplerateIndex(mSamplerateCombo->currentIndex());
 
     soundConfig.setLatency(mLatencySpin->value());
@@ -124,41 +180,75 @@ void SoundConfigTab::apply(SoundConfig &soundConfig) {
     clean();
 }
 
-void SoundConfigTab::apiChanged(int index) {
-    rescan(true); // new api selected, pick the default device
-    mApiErrorLabel->setVisible(!mEnumerator.backendIsAvailable(index));
+void SoundConfigTab::apply(MidiConfig &midiConfig) {
+    auto const enabled = mMidiGroup->isChecked();
+    midiConfig.setEnabled(enabled);
+    if (enabled) {
+        midiConfig.setBackendIndex(mMidiGroup->mApiCombo->currentIndex());
+        midiConfig.setPortIndex(mMidiGroup->mDeviceCombo->currentIndex());
+    }
+
+    clean();
+}
+
+template <>
+void SoundConfigTab::setDirtyFromEnumerator<AudioEnumerator>() {
     setDirty<Config::CategorySound>();
 }
 
-void SoundConfigTab::populateDevices() {
-    mDeviceCombo->clear();
-    mDeviceCombo->addItems(mEnumerator.deviceNames(mApiCombo->currentIndex()));
+template <>
+void SoundConfigTab::setDirtyFromEnumerator<MidiEnumerator>() {
+    setDirty<Config::CategoryMidi>();
 }
 
-void SoundConfigTab::rescan(bool rescanDueToApiChange) {
-    
-    auto const backendIndex = mApiCombo->currentIndex();
+template <class Enumerator>
+void SoundConfigTab::apiChanged(Enumerator &enumerator, DeviceGroup *group, int index) {
+    QSignalBlocker blocker(group->mDeviceCombo);
+    enumerator.populate(index);
+    group->populateDevices(enumerator);
+    group->mDeviceCombo->setCurrentIndex(0); // default
 
-    QSignalBlocker blocker(mDeviceCombo);
+    group->mErrorLabel->setVisible(!enumerator.backendIsAvailable(index));
 
-    if (rescanDueToApiChange) {
-        mEnumerator.populate(backendIndex);
-        populateDevices();
-        mDeviceCombo->setCurrentIndex(0); // default
-    } else {
+    setDirtyFromEnumerator<Enumerator>();
 
-        // serialize the current device
-        auto serialized = mEnumerator.serializeDevice(backendIndex, mDeviceCombo->currentIndex());
-        
-        // rescan
-        mEnumerator.populate(backendIndex);
-        populateDevices();
+}
 
-        // now attempt to find the saved device in the list
-        // (its position may have changed or the device is no longer available)
-        auto index = mEnumerator.deserializeDevice(backendIndex, serialized);
-        mDeviceCombo->setCurrentIndex(index);
+void SoundConfigTab::audioApiChanged(int index) {
+    apiChanged(mAudioEnumerator, mAudioGroup, index);
+}
 
+void SoundConfigTab::midiApiChanged(int index) {
+    apiChanged(mMidiEnumerator, mMidiGroup, index);
+}
+
+template <class Enumerator>
+void SoundConfigTab::rescan(Enumerator &enumerator, DeviceGroup *group) {
+    QSignalBlocker blocker(group->mDeviceCombo);
+
+    // save the current selection
+    auto const current = group->mDeviceCombo->currentText();
+
+    // rescan the device list and update the combo
+    enumerator.populate(group->mApiCombo->currentIndex());
+    group->populateDevices(enumerator);
+
+    // search for the current in the new list, defaulting to 0 if not found
+    auto index = group->mDeviceCombo->findText(current);
+    if (index == -1) {
+        // not found, select the first
+        index = 0;
+        setDirtyFromEnumerator<Enumerator>();
     }
-
+    group->mDeviceCombo->setCurrentIndex(index);
 }
+
+void SoundConfigTab::audioRescan() {
+    rescan(mAudioEnumerator, mAudioGroup);
+}
+
+void SoundConfigTab::midiRescan() {
+    rescan(mMidiEnumerator, mMidiGroup);
+}
+
+#include "SoundConfigTab.moc"
