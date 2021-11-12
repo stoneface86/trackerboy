@@ -2,9 +2,10 @@
 #include "core/config/MidiConfig.hpp"
 
 #include "core/config/keys.hpp"
-#include "core/midi/MidiProber.hpp"
+#include "midi/MidiEnumerator.hpp"
 
 #include <QtDebug>
+#include <QSettings>
 
 #define TU MidiConfigTU
 namespace TU {
@@ -51,40 +52,25 @@ void MidiConfig::setPortIndex(int index) {
     }
 }
 
-void MidiConfig::readSettings(QSettings &settings) {
+void MidiConfig::readSettings(QSettings &settings, MidiEnumerator &enumerator) {
     settings.beginGroup(Keys::Midi);
-    mEnabled = settings.value(Keys::enabled, mEnabled).toBool();
+    mEnabled = settings.value(Keys::enabled, false).toBool();
 
 
-    QString apiName = settings.value(Keys::api).toString();
-    auto api = RtMidi::getCompiledApiByName(apiName.toStdString());
-    
-    bool checkDevice = true;
-
-    auto &prober = MidiProber::instance();
-    if (api == RtMidi::UNSPECIFIED) {
-        mBackendIndex = 0; // default to first available
-        checkDevice = false;
+    auto apiName = settings.value(Keys::api).toString();
+    if (apiName.isEmpty()) {
+        mBackendIndex = 0;
+        mPortIndex = -1;
     } else {
-        mBackendIndex = prober.indexOfApi(api);
+        mBackendIndex = enumerator.backendNames().indexOf(apiName);
         if (mBackendIndex == -1) {
-            // this should rarely happen
             qWarning() << TU::LOG_PREFIX << "MIDI API is not available, falling back to the first available";
-            mBackendIndex = 0; // default to the first one
-            checkDevice = false;
-        }
-    }
-    prober.setBackend(mBackendIndex);
-
-    if (checkDevice) {
-        QString deviceName = settings.value(Keys::deviceName).toString();
-        if (deviceName.isEmpty()) {
+            mBackendIndex = 0;
             mPortIndex = -1;
         } else {
-            // we don't really have a way to uniquely identify the device so just use the
-            // port name.
-            mPortIndex = prober.portNames().indexOf(deviceName);
-            // if portIndex is -1, then we couldn't find the port, log a warning
+            auto device = settings.value(Keys::deviceName);
+            enumerator.populate(mBackendIndex);
+            mPortIndex = enumerator.deserializeDevice(mBackendIndex, device);
             if (mPortIndex == -1) {
                 qWarning() << TU::LOG_PREFIX << "Could not find MIDI port, please select a new device";
             }
@@ -93,29 +79,16 @@ void MidiConfig::readSettings(QSettings &settings) {
 
     settings.endGroup();
 
-
 }
 
-void MidiConfig::writeSettings(QSettings &settings) const {
+void MidiConfig::writeSettings(QSettings &settings, MidiEnumerator const& enumerator) const {
     settings.beginGroup(Keys::Midi);
     settings.remove(QString());
 
     settings.setValue(Keys::enabled, mEnabled);
 
-    auto &prober = MidiProber::instance();
-
-    auto const names = prober.backendNames();
-    QString api;
-    if (mBackendIndex >= 0 && mBackendIndex < names.size()) {
-        api = names[mBackendIndex];
-    }
-    settings.setValue(Keys::api, api);
-
-    QString device;
-    if (mPortIndex != -1) {
-        device = prober.portNames().at(mPortIndex);
-    }
-    settings.setValue(Keys::deviceName, device);
+    settings.setValue(Keys::api, enumerator.backendNames().at(mBackendIndex));
+    settings.setValue(Keys::deviceName, enumerator.serializeDevice(mBackendIndex, mPortIndex));
     
     settings.endGroup();
 }

@@ -1,7 +1,6 @@
 
 #include "forms/MainWindow.hpp"
 
-#include "core/midi/MidiProber.hpp"
 #include "core/misc/connectutils.hpp"
 #include "forms/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
@@ -239,7 +238,7 @@ void MainWindow::onViewResetLayout() {
 
 void MainWindow::onConfigApplied(Config::Categories categories) {
     applyConfig(categories);
-    mConfig.writeSettings(mAudioEnumerator);
+    mConfig.writeSettings(mAudioEnumerator, mMidiEnumerator);
 }
 
 void MainWindow::applyConfig(Config::Categories categories) {
@@ -294,11 +293,12 @@ void MainWindow::applyConfig(Config::Categories categories) {
 
     if (categories.testFlag(Config::CategoryMidi)) {
         auto const& midiConfig = mConfig.midi();
-        auto &prober = MidiProber::instance();
+
         if (!midiConfig.isEnabled() || midiConfig.portIndex() == -1) {
             mMidi.close();
         } else {
-            auto success = mMidi.setDevice(prober.backend(), midiConfig.portIndex());
+            auto device = mMidiEnumerator.device(midiConfig.backendIndex(), midiConfig.portIndex());
+            auto success = mMidi.open(device);
             if (!success) {
                 disableMidi(false);
             }
@@ -327,7 +327,7 @@ void MainWindow::showConfigDialog() {
     QElapsedTimer timer;
     timer.start();
 #endif
-    ConfigDialog diag(mConfig, mAudioEnumerator, this);
+    ConfigDialog diag(mConfig, mAudioEnumerator, mMidiEnumerator, this);
     lazyconnect(&diag, applied, this, onConfigApplied);
 #ifdef QT_DEBUG
     qDebug() << "ConfigDialog creation took" << timer.elapsed() << "ms";

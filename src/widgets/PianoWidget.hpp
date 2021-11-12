@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/midi/IMidiReceiver.hpp"
+#include "midi/IMidiReceiver.hpp"
 #include "core/input/PianoInput.hpp"
 
 #include <QWidget>

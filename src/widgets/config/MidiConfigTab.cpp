@@ -1,7 +1,7 @@
 
 #include "widgets/config/MidiConfigTab.hpp"
 
-#include "core/midi/MidiProber.hpp"
+#include "midi/MidiEnumerator.hpp"
 
 #include <QComboBox>
 #include <QGridLayout>
@@ -12,8 +12,9 @@
 #include <QVBoxLayout>
 #include <QSignalBlocker>
 
-MidiConfigTab::MidiConfigTab(MidiConfig const& midiConfig, QWidget *parent) :
-    ConfigTab(parent)
+MidiConfigTab::MidiConfigTab(MidiConfig const& midiConfig, MidiEnumerator &enumerator, QWidget *parent) :
+    ConfigTab(parent),
+    mEnumerator(enumerator)
 {
 
     auto layout = new QVBoxLayout;
@@ -28,6 +29,8 @@ MidiConfigTab::MidiConfigTab(MidiConfig const& midiConfig, QWidget *parent) :
     midiLayout->addWidget(mPortCombo, 1, 1);
 
     auto rescanLayout = new QHBoxLayout;
+    mApiErrorLabel = new QLabel(tr("API Unavailable"));
+    rescanLayout->addWidget(mApiErrorLabel);
     rescanLayout->addStretch();
     auto rescanButton = new QPushButton(tr("Rescan"));
     rescanLayout->addWidget(rescanButton);
@@ -44,8 +47,7 @@ MidiConfigTab::MidiConfigTab(MidiConfig const& midiConfig, QWidget *parent) :
     mMidiGroup->setCheckable(true);
     mMidiGroup->setChecked(midiConfig.isEnabled());
 
-    auto &prober = MidiProber::instance();
-    mApiCombo->addItems(prober.backendNames());
+    mApiCombo->addItems(enumerator.backendNames());
     mApiCombo->setCurrentIndex(midiConfig.backendIndex());
     setApi(midiConfig.backendIndex());
     clean();
@@ -72,11 +74,11 @@ void MidiConfigTab::apply(MidiConfig &midiConfig) {
 void MidiConfigTab::rescan() {
     QSignalBlocker blocker(mPortCombo);
 
-    auto &prober = MidiProber::instance();
     auto const current = mPortCombo->currentText();
-    prober.probe();
+    auto const backend = mApiCombo->currentIndex();
+    mEnumerator.populate(backend);
     mPortCombo->clear();
-    auto const portNames = prober.portNames();
+    auto const portNames = mEnumerator.deviceNames(backend);
     mPortCombo->addItems(portNames);
     auto index = portNames.indexOf(current);
     if (index == -1) {
@@ -85,15 +87,17 @@ void MidiConfigTab::rescan() {
     }
     mPortCombo->setCurrentIndex(index);
     mPortCombo->setEnabled(mPortCombo->count() > 0);
+    mApiErrorLabel->setVisible(!mEnumerator.backendIsAvailable(index));
 }
 
 
 void MidiConfigTab::setApi(int index) {
-    auto &prober = MidiProber::instance();
-    prober.setBackend(index);
+    mEnumerator.populate(index);
     mPortCombo->clear();
-    mPortCombo->addItems(prober.portNames());
+    mPortCombo->addItems(mEnumerator.deviceNames(index));
     mPortCombo->setEnabled(mPortCombo->count() > 0);
+
+    mApiErrorLabel->setVisible(!mEnumerator.backendIsAvailable(index));
 
     setDirty<Config::CategoryMidi>();
 }

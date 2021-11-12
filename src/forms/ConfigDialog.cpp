@@ -16,7 +16,7 @@
 
 
 
-ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, QWidget *parent) :
+ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, MidiEnumerator &midi, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mConfig(config),
     mDirty(Config::CategoryNone)
@@ -31,7 +31,7 @@ ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, QWidget *pare
     mKeyboard = new KeyboardConfigTab(config.pianoInput());
     tabs->addTab(mKeyboard, tr("Keyboard"));
 
-    mMidi = new MidiConfigTab(config.midi());
+    mMidi = new MidiConfigTab(config.midi(), midi);
     tabs->addTab(mMidi, tr("MIDI"));
 
     mSound = new SoundConfigTab(config.sound(), audio);
@@ -70,24 +70,27 @@ void ConfigDialog::accept() {
 void ConfigDialog::apply() {
     // update all changes to the Config object
 
-    if (mDirty.testFlag(Config::CategoryAppearance)) {
-        mAppearance->apply(mConfig.appearance(), mConfig.palette());
-    }
+    if (mDirty) {
 
-    if (mDirty.testFlag(Config::CategoryKeyboard)) {
-        mKeyboard->apply(mConfig.pianoInput());
-    }
+        if (mDirty.testFlag(Config::CategoryAppearance)) {
+            mAppearance->apply(mConfig.appearance(), mConfig.palette());
+        }
 
-    if (mDirty.testFlag(Config::CategorySound)) {
-        mSound->apply(mConfig.sound());
-    }
+        if (mDirty.testFlag(Config::CategoryKeyboard)) {
+            mKeyboard->apply(mConfig.pianoInput());
+        }
 
-    if (mDirty.testFlag(Config::CategoryMidi)) {
-        mMidi->apply(mConfig.midi());
-    }
+        if (mDirty.testFlag(Config::CategorySound)) {
+            mSound->apply(mConfig.sound());
+        }
 
-    emit applied(mDirty);
-    clean();
+        if (mDirty.testFlag(Config::CategoryMidi)) {
+            mMidi->apply(mConfig.midi());
+        }
+
+        emit applied(mDirty);
+        clean();
+    }
 }
 
 void ConfigDialog::setDirty(Config::Category category) {

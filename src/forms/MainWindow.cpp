@@ -5,6 +5,8 @@
 #include "core/IconManager.hpp"
 #include "widgets/docks/TableDock.hpp"
 #include "version.hpp"
+#include "midi/MidiEvent.hpp"
+#include "CustomEvents.hpp"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -62,10 +64,12 @@ MainWindow::MainWindow() :
 
     mRenderer = new Renderer(*mModule, this);
 
+    mMidi.setReceiver(this);
+
     setupUi();
 
     // read in application configuration
-    mConfig.readSettings(mAudioEnumerator);
+    mConfig.readSettings(mAudioEnumerator, mMidiEnumerator);
     
     setWindowIcon(IconManager::getAppIcon());
 
@@ -188,6 +192,25 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
         evt->ignore();
     }
     
+}
+
+void MainWindow::customEvent(QEvent *evt) {
+    if (evt->type() == CustomEvents::MidiEvent) {
+        auto midiEvt = static_cast<MidiEvent*>(evt);
+        switch (midiEvt->message()) {
+            case MidiEvent::NoteOff:
+                mMidiReceiver->midiNoteOff();
+                mMidiNoteDown = false;
+                break;
+            case MidiEvent::NoteOn:
+                mMidiReceiver->midiNoteOn(midiEvt->note());
+                mMidiNoteDown = true;
+                break;
+            default:
+                break;
+        }
+
+    }
 }
 
 void MainWindow::showEvent(QShowEvent *evt) {
@@ -419,17 +442,7 @@ void MainWindow::setupUi() {
             disableMidi(true);
         });
 
-    connect(&mMidi, &Midi::noteOn, this,
-        [this](int note) {
-            mMidiReceiver->midiNoteOn(note);
-            mMidiNoteDown = true;
-        });
 
-    connect(&mMidi, &Midi::noteOff, this,
-        [this]() {
-            mMidiReceiver->midiNoteOff();
-            mMidiNoteDown = false;
-        });
 
     connect(mModule, &Module::modifiedChanged, this, &MainWindow::setWindowModified);
 
@@ -526,7 +539,7 @@ void MainWindow::disableMidi(bool causedByError) {
     mConfig.disableMidi();
 
     if (!causedByError) {
-        qCritical().noquote() << "[MIDI] Failed to initialize MIDI device:" << mMidi.lastErrorString();
+        qCritical().noquote() << "[MIDI] Failed to initialize MIDI device:" << mMidi.lastError();
     }
 
     if (isVisible()) {
@@ -537,7 +550,7 @@ void MainWindow::disableMidi(bool causedByError) {
         } else {
             msgbox.setText(tr("Could not initialize MIDI device"));
         }
-        msgbox.setInformativeText(mMidi.lastErrorString());
+        msgbox.setInformativeText(mMidi.lastError());
         settingsMessageBox(msgbox);
     }
 }
@@ -558,7 +571,7 @@ void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
     // that check for FocusIn and FocusOut events, which we could emit a
     // signal for these and the MainWindow would handle them appropriately.
 
-    if (mMidi.isEnabled()) {
+    if (mMidi.isOpen()) {
         if (QApplication::activeModalWidget()) {
             return; // ignore if a dialog is open
         }

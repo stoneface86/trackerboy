@@ -3,8 +3,8 @@
 
 #include "audio/AudioEnumerator.hpp"
 #include "audio/Renderer.hpp"
-#include "core/midi/IMidiReceiver.hpp"
-#include "core/midi/Midi.hpp"
+#include "midi/IMidiReceiver.hpp"
+#include "midi/Midi.hpp"
 #include "core/misc/TableActions.hpp"
 #include "core/model/PatternModel.hpp"
 #include "core/model/SongModel.hpp"
@@ -56,6 +56,8 @@ public:
 protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;
+
+    virtual void customEvent(QEvent *evt) override;
 
     virtual void showEvent(QShowEvent *evt) override;
 
@@ -245,6 +247,7 @@ private:
     void updateRecentFiles(QStringList const& list);
 
     AudioEnumerator mAudioEnumerator;
+    MidiEnumerator mMidiEnumerator;
     QString const mUntitledString;
 
     #ifdef QT_DEBUG

@@ -3,8 +3,11 @@
 
 #include "widgets/config/ConfigTab.hpp"
 
-class QGroupBox;
+class MidiEnumerator;
+
 class QComboBox;
+class QGroupBox;
+class QLabel;
 
 
 class MidiConfigTab : public ConfigTab {
@@ -12,7 +15,7 @@ class MidiConfigTab : public ConfigTab {
     Q_OBJECT
 
 public:
-    explicit MidiConfigTab(MidiConfig const& midiConfig, QWidget *parent = nullptr);
+    explicit MidiConfigTab(MidiConfig const& midiConfig, MidiEnumerator &enumerator, QWidget *parent = nullptr);
 
     void apply(MidiConfig &midiConfig);
 
@@ -22,9 +25,12 @@ private:
 
     void setApi(int index);
 
+    MidiEnumerator &mEnumerator;
+
     QGroupBox *mMidiGroup;
     QComboBox *mApiCombo;
     QComboBox *mPortCombo;
+    QLabel *mApiErrorLabel;
 
 
 };

@@ -111,6 +111,7 @@ makeSourceList(UI_SRC
     "audio/Ringbuffer"
     "audio/VisualizerBuffer"
     "audio/Wav"
+
     "core/clipboard/PatternClip"
     "core/clipboard/PatternClipboard"
     "core/commands/order"
@@ -126,9 +127,6 @@ makeSourceList(UI_SRC
     "core/graphics/PatternLayout"
     "core/graphics/PatternPainter"
     "core/input/PianoInput"
-    FILE "core/midi/IMidiReceiver.hpp"
-    "core/midi/Midi"
-    "core/midi/MidiProber"
     FILE "core/misc/connectutils.hpp"
     "core/misc/NoteStrings"
     FILE "core/misc/TableActions.hpp"
@@ -170,6 +168,11 @@ makeSourceList(UI_SRC
     "forms/ModulePropertiesDialog"
     "forms/TempoCalculator"
 
+    FILE "midi/IMidiReceiver.hpp"
+    "midi/Midi"
+    "midi/MidiEnumerator"
+    "midi/MidiEvent"
+
     FILE "resources/fonts.qrc"
     FILE "resources/icons.qrc"
     FILE "resources/images.qrc"
@@ -197,6 +200,8 @@ makeSourceList(UI_SRC
     "widgets/Sidebar"
     "widgets/SpeedLabel"
     "widgets/TempoLabel"
+
+    FILE "CustomEvents.hpp"
 )
 
 # https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake/4318642#4318642

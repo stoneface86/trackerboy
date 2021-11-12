@@ -1,7 +1,9 @@
 
 #pragma once
 
-#include <QSettings>
+class MidiEnumerator;
+
+class QSettings;
 
 class MidiConfig {
 
@@ -21,9 +23,9 @@ public:
 
     void setPortIndex(int index);
 
-    void readSettings(QSettings &settings);
+    void readSettings(QSettings &settings, MidiEnumerator &enumerator);
 
-    void writeSettings(QSettings &settings) const;
+    void writeSettings(QSettings &settings, MidiEnumerator const& enumerator) const;
 
 private:
 
