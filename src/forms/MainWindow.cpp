@@ -158,17 +158,16 @@ void MainWindow::panic(QString const& msg) {
         if (path.isEmpty()) {
             moduleSaveResult = tr("Unable to save a copy of the module");
         } else {
-            moduleSaveResult = tr("A copy of the module has been saved to:\n%1").arg(path);
+            moduleSaveResult = tr("A copy of the module has been saved to: %1").arg(path);
         }
     }
 
     QMessageBox msgbox(this);
     msgbox.setIcon(QMessageBox::Critical);
-    msgbox.setText(tr("An unexpected error has occurred:"));
-    if (moduleSaveResult.isEmpty()) {
-        msgbox.setInformativeText(msg);
-    } else {
-        msgbox.setInformativeText(tr("%1\n\n%2").arg(msg, moduleSaveResult));
+    msgbox.setText(tr("An unexpected error has occurred."));
+    msgbox.setDetailedText(msg);
+    if (!moduleSaveResult.isEmpty()) {
+        msgbox.setInformativeText(moduleSaveResult);
     }
     msgbox.exec();
 }

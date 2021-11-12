@@ -23,6 +23,32 @@
 #include "version.hpp"
 
 
+#ifdef __GNUG__
+#include <cstdlib>
+#include <memory>
+#include <cxxabi.h>
+
+static std::string demangle(const char* name) {
+    int status = -1;
+
+    std::unique_ptr<char, void(*)(void*)> demangled {
+        abi::__cxa_demangle(name, NULL, NULL, &status),
+        std::free
+    };
+
+    return (status == 0) ? demangled.get() : name;
+}
+
+#else
+
+static std::string demangle(const char* name) {
+    return name;
+}
+
+#endif
+
+
+
 
 constexpr int EXIT_BAD_ARGUMENTS = -1;
 constexpr int EXIT_BAD_ALLOC = 1;
@@ -71,6 +97,36 @@ private:
 
 };
 
+//
+// custom QApplication subclass that catches any uncaught exceptions
+//
+class Application final : public QApplication {
+
+    Q_OBJECT
+
+public:
+    using QApplication::QApplication;
+
+    virtual bool notify(QObject *receiver, QEvent *evt) override {
+        try {
+            return QApplication::notify(receiver, evt);
+        } catch (std::bad_alloc &) {
+            // out of memory, propagate it to main()
+            throw;
+        } catch (std::exception const& except) {
+            // catch any uncaught exception here, so that we can attempt
+            // to save the user's current module before aborting, as well
+            // as logging the problem to the user.
+            auto which = demangle(typeid(except).name());
+            qFatal("[Uncaught exception]\nType: %s\nWhat: %s", which.c_str(), except.what());
+            return true;
+        }
+    }
+
+};
+
+
+
 int main(int argc, char *argv[]) {
 
     int code;
@@ -80,7 +136,7 @@ int main(int argc, char *argv[]) {
     timer.start();
     #endif
 
-    QApplication app(argc, argv);
+    Application app(argc, argv);
     QCoreApplication::setOrganizationName("Trackerboy");
     QCoreApplication::setApplicationName("Trackerboy");
     QCoreApplication::setApplicationVersion(VERSION_STR);
@@ -161,3 +217,5 @@ int main(int argc, char *argv[]) {
 
     return code;
 }
+
+#include "main.moc"
