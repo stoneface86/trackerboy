@@ -1,7 +1,7 @@
 
 #include "widgets/sidebar/OrderEditor.hpp"
 #include "core/misc/connectutils.hpp"
-#include "core/IconManager.hpp"
+#include "utils/IconLocator.hpp"
 
 #include <QAction>
 #include <QHBoxLayout>
@@ -37,15 +37,15 @@ OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
     
     auto incrementAction = new QAction(tr("Increment selection"), this);
     incrementAction->setStatusTip(tr("Increments all selected cells by 1"));
-    incrementAction->setIcon(IconManager::getIcon(Icons::increment));
+    incrementAction->setIcon(IconLocator::get(Icons::increment));
     connectActionTo(incrementAction, mGrid, increment);
     auto decrementAction = new QAction(tr("Decrement selection"), this);
     decrementAction->setStatusTip(tr("Decrements all selected cells by 1"));
-    decrementAction->setIcon(IconManager::getIcon(Icons::decrement));
+    decrementAction->setIcon(IconLocator::get(Icons::decrement));
     connectActionTo(decrementAction, mGrid, decrement);
     toolbar->addAction(incrementAction);
     toolbar->addAction(decrementAction);
-    toolbar->setIconSize(IconManager::size());
+    toolbar->setIconSize(IconLocator::size());
 
     mScrollbar->setRange(0, model.patterns() - 1);
     mScrollbar->setPageStep(1);

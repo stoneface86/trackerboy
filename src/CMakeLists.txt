@@ -144,7 +144,6 @@ makeSourceList(UI_SRC
     "core/Config"
     "core/FastTimer"
     FILE "core/Guarded.hpp"
-    "core/IconManager"
     FILE "core/Locked.hpp"
     "core/Module"
     "core/ModuleFile"
@@ -176,6 +175,8 @@ makeSourceList(UI_SRC
     FILE "resources/fonts.qrc"
     FILE "resources/icons.qrc"
     FILE "resources/images.qrc"
+
+    "utils/IconLocator"
 
     "widgets/config/AppearanceConfigTab"
     "widgets/config/ConfigTab"

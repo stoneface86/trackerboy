@@ -2,7 +2,7 @@
 #include "MainWindow.hpp"
 
 #include "core/misc/connectutils.hpp"
-#include "core/IconManager.hpp"
+#include "utils/IconLocator.hpp"
 #include "widgets/docks/TableDock.hpp"
 #include "version.hpp"
 #include "midi/MidiEvent.hpp"
@@ -71,7 +71,7 @@ MainWindow::MainWindow() :
     // read in application configuration
     mConfig.readSettings(mAudioEnumerator, mMidiEnumerator);
     
-    setWindowIcon(IconManager::getAppIcon());
+    setWindowIcon(IconLocator::getAppIcon());
 
     QSettings settings;
     settings.beginGroup(TU::KEY_MAIN_WINDOW);
@@ -257,7 +257,7 @@ QDockWidget* MainWindow::makeDock(QString const& title, QString const& objname) 
 QToolBar* MainWindow::makeToolbar(QString const& title, QString const& objname) {
     auto toolbar = new QToolBar(title, this);
     toolbar->setObjectName(objname);
-    toolbar->setIconSize(IconManager::size());
+    toolbar->setIconSize(IconLocator::size());
     return toolbar;
 }
 

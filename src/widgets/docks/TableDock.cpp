@@ -2,7 +2,7 @@
 #include "widgets/docks/TableDock.hpp"
 
 #include "core/misc/connectutils.hpp"
-#include "core/IconManager.hpp"
+#include "utils/IconLocator.hpp"
 
 #include <QBoxLayout>
 #include <QToolBar>
@@ -32,42 +32,42 @@ TableDock::TableDock(
     mView->setModel(&model);
     mView->setWrapping(true);
 
-    toolbar->setIconSize(IconManager::size());
+    toolbar->setIconSize(IconLocator::size());
 
     QAction *act;
 
     act = toolbar->addAction(tr("Add"));
-    act->setIcon(IconManager::getIcon(Icons::itemAdd));
+    act->setIcon(IconLocator::get(Icons::itemAdd));
     act->setStatusTip(tr("Adds a new %1").arg(typeName));
     connectActionToThis(act, add);
     mActions.add = act;
     
     act = toolbar->addAction(tr("Remove"));
-    act->setIcon(IconManager::getIcon(Icons::itemRemove));
+    act->setIcon(IconLocator::get(Icons::itemRemove));
     act->setStatusTip(tr("Removes the current %1").arg(typeName));
     connectActionToThis(act, remove);
     mActions.remove = act;
 
     act = toolbar->addAction(tr("Duplicate"));
-    act->setIcon(IconManager::getIcon(Icons::itemDuplicate));
+    act->setIcon(IconLocator::get(Icons::itemDuplicate));
     act->setStatusTip(tr("Adds a copy of the current %1").arg(typeName));
     connectActionToThis(act, duplicate);
     mActions.duplicate = act;
     
     act = toolbar->addAction(tr("Import"));
-    act->setIcon(IconManager::getIcon(Icons::itemImport));
+    act->setIcon(IconLocator::get(Icons::itemImport));
     act->setStatusTip(tr("Import %1 from a file").arg(typeName));
     act->setEnabled(false); // disable for now
     mActions.importFile = act;
     
     act = toolbar->addAction(tr("Export"));
-    act->setIcon(IconManager::getIcon(Icons::itemExport));
+    act->setIcon(IconLocator::get(Icons::itemExport));
     act->setStatusTip(tr("Export %1 to a file").arg(typeName));
     act->setEnabled(false);
     mActions.exportFile = act;
 
     act = toolbar->addAction(tr("Edit"));
-    act->setIcon(IconManager::getIcon(Icons::itemEdit));
+    act->setIcon(IconLocator::get(Icons::itemEdit));
     act->setStatusTip(tr("Edit the current %1").arg(typeName));
     act->setShortcut(editorShortcut);
     connect(act, &QAction::triggered, this,

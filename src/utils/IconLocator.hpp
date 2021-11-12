@@ -4,9 +4,10 @@
 #include <QIcon>
 #include <QSize>
 
-#include <array>
 
-
+//
+// enum of icons used throughout the application
+//
 enum class Icons : int {
     fileNew,
     fileOpen,
@@ -46,29 +47,27 @@ enum class Icons : int {
     itemExport = fileSave
 };
 
-// singleton class for loading and retreiving QIcons
-class IconManager {
+//
+// Contains functions for locating icons
+//
+namespace IconLocator {
 
-public:
-    IconManager(IconManager const&) = delete;
-    void operator=(IconManager const&) = delete;
+//
+// Gets an icon from the given Icons enum
+//
+QIcon get(Icons icon);
 
-    static QIcon getAppIcon();
+//
+// Gets the application icon
+//
+QIcon getAppIcon();
 
-    static QIcon const& getIcon(Icons icon);
+//
+// Gets the size of all icons retrieved from this utility
+//
+constexpr QSize size() {
+    return { 16, 16 };
+}
 
-    static constexpr QSize size() {
-        return { 16, 16 };
-    }
+}
 
-private:
-
-    IconManager();
-
-    static IconManager& getInstance() noexcept;
-
-    std::array<QIcon, static_cast<size_t>(Icons::noIcon)> mIconTable;
-    QIcon mPlaceholder;
-
-
-};

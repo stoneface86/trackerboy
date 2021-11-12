@@ -2,7 +2,7 @@
 #include "forms/MainWindow.hpp"
 
 #include "core/misc/connectutils.hpp"
-#include "core/IconManager.hpp"
+#include "utils/IconLocator.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -27,7 +27,7 @@ static QAction* setupAction(QMenu *menu, QString const& text, QString const& sta
 // same as above, but also sets the icon
 static QAction* setupAction(QMenu *menu, QString const& text, QString const& statusTip, Icons icon, QKeySequence const &seq = QKeySequence()) {
     auto act = setupAction(menu, text, statusTip, seq);
-    act->setIcon(IconManager::getIcon(icon));
+    act->setIcon(IconLocator::get(icon));
     return act;
 }
 
@@ -40,7 +40,7 @@ static QAction* createAction(QWidget *parent, QString const& text, QString const
 
 static QAction* createAction(QWidget *parent, QString const& text, QString const& statusTip, Icons icon, QKeySequence const &seq = QKeySequence()) {
     auto act = createAction(parent, text, statusTip, seq);
-    act->setIcon(IconManager::getIcon(icon));
+    act->setIcon(IconLocator::get(icon));
     return act;
 }
 
@@ -104,13 +104,13 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     auto undoGroup = mModule->undoGroup();
     act = undoGroup->createUndoAction(this);
-    act->setIcon(IconManager::getIcon(Icons::editUndo));
+    act->setIcon(IconLocator::get(Icons::editUndo));
     act->setShortcut(QKeySequence::Undo);
     mToolbarEdit->addAction(act);
     menuEdit->addAction(act);
 
     act = undoGroup->createRedoAction(this);
-    act->setIcon(IconManager::getIcon(Icons::editRedo));
+    act->setIcon(IconLocator::get(Icons::editRedo));
     act->setShortcut(QKeySequence::Redo);
     mToolbarEdit->addAction(act);
     menuEdit->addAction(act);

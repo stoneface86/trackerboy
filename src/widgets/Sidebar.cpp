@@ -1,7 +1,7 @@
 
 #include "widgets/Sidebar.hpp"
 #include "core/misc/connectutils.hpp"
-#include "core/IconManager.hpp"
+#include "utils/IconLocator.hpp"
 
 #include <QGroupBox>
 #include <QVBoxLayout>
@@ -49,12 +49,12 @@ Sidebar::Sidebar(
 
     mNextAction = new QAction(tr("Next song"), this);
     mNextAction->setStatusTip(tr("Selects the next song in the list"));
-    mNextAction->setIcon(IconManager::getIcon(Icons::next));
+    mNextAction->setIcon(IconLocator::get(Icons::next));
     connectActionToThis(mNextAction, nextSong);
 
     mPrevAction = new QAction(tr("Previous song"), this);
     mPrevAction->setStatusTip(tr("Selects the previous song in the list"));
-    mPrevAction->setIcon(IconManager::getIcon(Icons::prev));
+    mPrevAction->setIcon(IconLocator::get(Icons::prev));
     connectActionToThis(mPrevAction, previousSong);
 
     lazyconnect(&mod, reloaded, this, reload);

@@ -1,6 +1,6 @@
 
 #include "core/model/TableModel.hpp"
-#include "core/IconManager.hpp"
+#include "utils/IconLocator.hpp"
 
 #include <type_traits>
 
@@ -48,7 +48,7 @@ QIcon TableModel<T>::iconData(int id) const {
 
         }
 
-        return IconManager::getIcon(icons);
+        return IconLocator::get(icons);
     } else {
         // no icons for waveforms (yet, potential TODO)
         Q_UNUSED(id);
