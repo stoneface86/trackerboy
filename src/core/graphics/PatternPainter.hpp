@@ -7,6 +7,7 @@
 #include "core/Palette.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
+#include "core/misc/NoteStrings.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
 
@@ -90,17 +91,12 @@ public:
 
 private:
 
-    using NoteTable = std::array<char, 24>;
-
-    static NoteTable const NOTE_TABLE_FLATS;
-    static NoteTable const NOTE_TABLE_SHARPS;
-
     int highlightIndex(int rowno) const;
     
     int mHighlightInterval1;
     int mHighlightInterval2;
 
-    NoteTable const *mNoteTable;
+    NoteStrings::NoteTable const *mNoteTable;
 
     std::array<QColor, 3> mForegroundColors;
     std::array<QColor, 3> mBackgroundColors;

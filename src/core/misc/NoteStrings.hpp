@@ -3,8 +3,6 @@
 
 #include <array>
 
-// TODO: PatternPainter has its own version of this, refactor it to this one instead
-
 //
 // Namespace contains lookup tables for converting a note index (0-11)
 // to a string (ie 0 is "C-", 3 is "D#" or "Eb")

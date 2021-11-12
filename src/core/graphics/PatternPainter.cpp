@@ -59,36 +59,6 @@ static char effectTypeToChar(trackerboy::EffectType et) {
 
 } // namespace TU
 
-PatternPainter::NoteTable const PatternPainter::NOTE_TABLE_FLATS = {
-    'C', '-',   // note  0: C-
-    'D', 'b',   // note  1: Db
-    'D', '-',   // note  2: D-
-    'E', 'b',   // note  3: Eb
-    'E', '-',   // note  4: E-
-    'F', '-',   // note  5: F-
-    'G', 'b',   // note  6: Gb
-    'G', '-',   // note  7: G-
-    'A', 'b',   // note  8: Ab
-    'A', '-',   // note  9: A-
-    'B', 'b',   // note 10: Bb
-    'B', '-'    // note 11: B-
-};
-
-PatternPainter::NoteTable const PatternPainter::NOTE_TABLE_SHARPS = {
-    'C', '-',   // note  0: C-
-    'C', '#',   // note  1: C#
-    'D', '-',   // note  2: D-
-    'D', '#',   // note  3: D#
-    'E', '-',   // note  4: E-
-    'F', '-',   // note  5: F-
-    'F', '#',   // note  6: F#
-    'G', '-',   // note  7: G-
-    'G', '#',   // note  8: G#
-    'A', '-',   // note  9: A-
-    'A', '#',   // note 10: A#
-    'B', '-'    // note 11: B-
-};
-
 // NOTE
 // Do not create temporary QPens! The member variable, mPen, should be used
 // instead when needing to modify QPainter's pen. Doing so will prevent
@@ -99,7 +69,7 @@ PatternPainter::PatternPainter(QFont const& font) :
     CellPainter(),
     mHighlightInterval1(0),
     mHighlightInterval2(0),
-    mNoteTable(&NOTE_TABLE_SHARPS),
+    mNoteTable(&NoteStrings::Sharps),
     mForegroundColors(),
     mBackgroundColors(),
     mColorInstrument(),
@@ -114,7 +84,7 @@ PatternPainter::PatternPainter(QFont const& font) :
 }
 
 bool PatternPainter::flats() const {
-    return mNoteTable == &NOTE_TABLE_FLATS;
+    return mNoteTable == &NoteStrings::Flats;
 }
 
 void PatternPainter::setFirstHighlight(int interval) {
@@ -128,7 +98,7 @@ void PatternPainter::setSecondHighlight(int interval) {
 }
 
 void PatternPainter::setFlats(bool flats) {
-    mNoteTable = (flats) ? &NOTE_TABLE_FLATS : &NOTE_TABLE_SHARPS;
+    mNoteTable = (flats) ? &NoteStrings::Flats : &NoteStrings::Sharps;
 }
 
 void PatternPainter::setColors(Palette const& colors) {
@@ -296,7 +266,7 @@ int PatternPainter::drawNote(QPainter &painter, uint8_t note, int xpos, int ypos
         int key = note % 12;
         octave += 2;
 
-        auto notestr = mNoteTable->data() + (key * 2);
+        auto notestr = (*mNoteTable)[key];
         xpos = drawCell(painter, *notestr++, xpos, ypos);
         xpos = drawCell(painter, *notestr, xpos, ypos);
         return drawCell(painter, octave + '0', xpos, ypos);
