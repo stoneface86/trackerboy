@@ -36,6 +36,9 @@ code looks out of place compared to everything else I will ask you to revise it.
 
 The rest of this document defines how you should write your code.
 
+See [ORGANIZATION.md](ORGANIZATION.md) for details on where to put source files,
+as well as editing the build system.
+
 ### Style guidelines
 
 All code in this repo should be consistent in style and naming scheme. Please
@@ -45,18 +48,58 @@ follow these rules when contributing:
  * curly braces on same line, except for constructors
  * class/struct/typedef names should use PascalCase
  * function names and variables should use camelCase
- * one class/type per header, one implementation per source file (except for
-   inner classes and other tightly coupled types).
+ * forward-declare in headers when possible
  * member variables must be prefixed with m (ie mFooBar) (except for structs)
  * try to avoid macros in headers, use constexpr functions when possible and
    use enums or constexpr instead of `#define`. Rely on the compiler, not the preprocessor
  * avoid `if(cond) statement;` always use braces.
- * summarize in comments what your code does (don't comment every line)
+ * summarize in comments what your code does (but don't comment every line)
  * C-style casts should not be used except for integer conversions
    (ie int -> uint8_t)
 
-See [ORGANIZATION.md](ORGANIZATION.md) for details on where to put source files,
-as well as editing the build system.
+### Miniaudio
+
+Miniaudio is a C header-only library that Trackerboy uses for audio playback.
+
+Do not call any miniaudio functions or use miniaudio types/constants except
+in these classes:
+ * AudioEnumerator
+ * AudioStream
+ * RingbufferBase
+
+This is to make a potential refactor painless if we ever need to switch audio
+libs.
+
+### RtMidi
+
+RtMidi is a C/C++ library that Trackerboy uses for MIDI input.
+
+Similiarly as with miniaudio, do not interface with RtMidi except for the
+following classes:
+ * Midi
+ * MidiEnumerator
+
+### TU namespacing
+
+In order to prevent name-clashes and ODR violations when unity building, use
+the TU namespace in your source files for any static constants/functions etc.
+Do not use anonymous namespaces! (Note: TU is short for "this unit").
+
+Example:
+```cpp
+// TU is a shortcut macro
+// the namespace will be named using the source unit's name suffixed with TU
+#define TU MyClassTU
+namespace TU {
+
+    // constants, functions, etc
+    
+}
+
+// undefine TU at the end of the source file
+#undef TU
+
+```
 
 ### Notes on integers
 
@@ -82,4 +125,7 @@ as it is slowly being refactored. All new code however, should follow this rule.
 
 ### Documentation
 
-TBD
+Functions, methods, classes and typedefs should have a comment block before the
+declaration stating its purpose. A simple sentence or two explaining what it is
+and/or what it's for will suffice. Doxygen is not used for this project, but you
+may use doxygen style formatting if you prefer.
