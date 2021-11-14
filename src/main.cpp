@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
 
 
     #ifndef QT_NO_INFO_OUTPUT
-    qInfo() << "Launch time: " << timer.elapsed() << " ms";
+    qInfo() << "Launch time:" << timer.elapsed() << "ms";
     #endif
 
     try {

@@ -91,7 +91,7 @@ int AudioEnumerator::Context::findDevice(ma_device_id const& id) const {
         ++i;
     }
 
-    return 0;
+    return -1;
 }
 
 QStringList AudioEnumerator::Context::deviceNames() const {
@@ -237,6 +237,7 @@ QVariant AudioEnumerator::serializeDevice(int backend, int device) const {
 
     auto id = mContexts[backend].id(device);
     if (id == nullptr) {
+        // default device
         return QByteArray();
     }
 
@@ -245,6 +246,10 @@ QVariant AudioEnumerator::serializeDevice(int backend, int device) const {
 
 int AudioEnumerator::deserializeDevice(int backend, const QVariant &data) const {
     if (indexIsInvalid(backend)) {
+        return -1;
+    }
+
+    if (data.type() != QVariant::ByteArray) {
         return -1;
     }
 

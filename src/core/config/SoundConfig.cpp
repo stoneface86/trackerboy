@@ -121,12 +121,8 @@ void SoundConfig::readSettings(QSettings &settings, AudioEnumerator &enumerator)
 
     auto deviceId = settings.value(Keys::deviceId);
     int device = enumerator.deserializeDevice(backend, deviceId);
-    if (device == 0) {
-        if (!deviceId.isNull()) {
-            qWarning() << TU::LOG_PREFIX << "last configured device not available, using default";
-        }
-    } else if (device == -1) {
-        qWarning() << TU::LOG_PREFIX << "invalid device id, using default";
+    if (device == -1) {
+        qWarning() << TU::LOG_PREFIX << "last configured device not available, using default";
         device = 0;
     }
     setDeviceIndex(device);
