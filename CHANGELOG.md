@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Combined the Sound and Midi tabs in the Configuration dialog (Sound + MIDI)
  - AZERTY keyboard layout uses French AZERTY
  - QWERTZ keyboard layout uses German T3
+ - CascadiaMono is no longer the default font
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor

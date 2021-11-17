@@ -172,7 +172,6 @@ makeSourceList(UI_SRC
     "midi/MidiEnumerator"
     "midi/MidiEvent"
 
-    FILE "resources/fonts.qrc"
     FILE "resources/icons.qrc"
     FILE "resources/images.qrc"
 

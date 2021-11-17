@@ -3,6 +3,7 @@
 
 #include "core/config/keys.hpp"
 
+#include <QFontDatabase>
 
 AppearanceConfig::AppearanceConfig() :
     mPatternGridFont(),
@@ -60,8 +61,8 @@ void AppearanceConfig::readSettings(QSettings &settings) {
 
     auto setFont = [](QFont &font, QString const& fontstr) {
         if (fontstr.isEmpty() || !font.fromString(fontstr)) {
-            // use built-in as a default
-            font.setFamily("Cascadia Mono");
+            // use the system default fixed-width font
+            font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
             font.setPointSize(12);
         }
     };

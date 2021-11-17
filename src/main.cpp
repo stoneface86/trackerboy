@@ -176,9 +176,6 @@ int main(int argc, char *argv[]) {
 
     // instantiate the custom message handler for logging to file
     MessageHandler::instance();
-
-    // add the default font for the pattern editor
-    QFontDatabase::addApplicationFont(":/CascadiaMono.ttf");
    
     auto win = std::make_unique<MainWindow>();
     MessageHandler::instance().setWindow(win.get());
