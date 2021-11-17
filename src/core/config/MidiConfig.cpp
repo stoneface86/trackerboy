@@ -71,7 +71,7 @@ void MidiConfig::readSettings(QSettings &settings, MidiEnumerator &enumerator) {
             auto device = settings.value(Keys::deviceName);
             enumerator.populate(mBackendIndex);
             mPortIndex = enumerator.deserializeDevice(mBackendIndex, device);
-            if (mPortIndex == -1) {
+            if (mPortIndex == -1 && !device.toString().isEmpty()) {
                 qWarning() << TU::LOG_PREFIX << "Could not find MIDI port, please select a new device";
             }
         }
@@ -87,7 +87,11 @@ void MidiConfig::writeSettings(QSettings &settings, MidiEnumerator const& enumer
 
     settings.setValue(Keys::enabled, mEnabled);
 
-    settings.setValue(Keys::api, enumerator.backendNames().at(mBackendIndex));
+    if (mBackendIndex == -1) {
+        settings.setValue(Keys::api, QString());
+    } else {
+        settings.setValue(Keys::api, enumerator.backendNames().at(mBackendIndex));
+    }
     settings.setValue(Keys::deviceName, enumerator.serializeDevice(mBackendIndex, mPortIndex));
     
     settings.endGroup();

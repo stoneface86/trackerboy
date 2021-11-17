@@ -34,7 +34,7 @@ private slots:
 private:
     Q_DISABLE_COPY(AppearanceConfigTab)
 
-    void setFont(size_t index, QFont const& font);
+    void setFont(size_t index, QFont const& font, bool showSize = true);
 
     void selectColor(QModelIndex const& index);
 

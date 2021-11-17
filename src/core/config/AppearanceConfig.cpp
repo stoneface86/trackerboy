@@ -61,7 +61,7 @@ void AppearanceConfig::readSettings(QSettings &settings) {
     auto setFont = [](QFont &font, QString const& fontstr) {
         if (fontstr.isEmpty() || !font.fromString(fontstr)) {
             // use built-in as a default
-            font.setFamily("CascadiaMono");
+            font.setFamily("Cascadia Mono");
             font.setPointSize(12);
         }
     };

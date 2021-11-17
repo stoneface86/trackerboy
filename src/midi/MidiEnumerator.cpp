@@ -86,9 +86,13 @@ MidiEnumerator::Device MidiEnumerator::device(int backend, int device) const {
 
 QVariant MidiEnumerator::serializeDevice(int backend, int device) const {
     if (indexIsInvalid(backend)) {
-        return {};
+        return QString();
     }
-    return mContexts[backend].deviceNames[device];
+    auto &ctx = mContexts[backend];
+    if (device < 0 || device >= ctx.deviceNames.count()) {
+        return QString();
+    }
+    return ctx.deviceNames[device];
 }
 
 int MidiEnumerator::deserializeDevice(int backend, const QVariant &data) const {

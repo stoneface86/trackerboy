@@ -103,7 +103,7 @@ AppearanceConfigTab::AppearanceConfigTab(
 
     setFont(0, appearance.patternGridFont());
     setFont(1, appearance.orderGridFont());
-    setFont(2, appearance.patternGridHeaderFont());
+    setFont(2, appearance.patternGridHeaderFont(), false);
 
     mShowFlatsCheck->setChecked(appearance.showFlats());
     mShowPreviewsCheck->setChecked(appearance.showPreviews());
@@ -218,7 +218,7 @@ void AppearanceConfigTab::chooseFont() {
                 if (font.pointSize() > TU::MAX_POINT_SIZE) {
                     font.setPointSize(TU::MAX_POINT_SIZE);
                 }
-                setFont(index, font);
+                setFont(index, font, index < 2);
                 setDirty<Config::CategoryAppearance>();
             }
 
@@ -230,12 +230,17 @@ void AppearanceConfigTab::chooseColor(QColor const& color) {
     mModel->setColor(mSelectedColor, color);
 }
 
-void AppearanceConfigTab::setFont(size_t index, QFont const& font) {
+void AppearanceConfigTab::setFont(size_t index, QFont const& font, bool showSize) {
     mFonts[index] = font;
     auto button = mFontChooseButtons[index];
-    button->setText(tr("%1, %2 pt").arg(
-                         font.family(),
-                         QString::number(font.pointSize())));
+
+    if (showSize) {
+        button->setText(tr("%1, %2 pt").arg(
+                            font.family(),
+                            QString::number(font.pointSize())));
+    } else {
+        button->setText(font.family());
+    }
     auto buttonFont = font;
     // use the same font size as the button
     buttonFont.setPointSize(button->font().pointSize());

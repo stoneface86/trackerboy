@@ -10,6 +10,15 @@
 #include <QMenu>
 #include <QMenuBar>
 
+#ifdef QT_DEBUG
+
+#include <QDesktopServices>
+#include <QUrl>
+
+#include <stdexcept>
+
+#endif
+
 
 #define TU MainWindowTU
 namespace TU {
@@ -310,6 +319,19 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     act = TU::setupAction(menuHelpDebug, tr("Panic"), tr("Forces a fatal error to occur"));
     connect(act, &QAction::triggered, this, []() {
         qFatal("panic requested");
+    });
+
+    act = TU::setupAction(menuHelpDebug, tr("Panic (exception)"), tr("Force a fatal error to occur via exception"));
+    connect(act, &QAction::triggered, this, []() {
+        throw std::invalid_argument("panic requested");
+    });
+
+    act = TU::setupAction(menuHelpDebug, tr("Open configuration..."), tr("Opens the appliciation configuration file"));
+    connect(act, &QAction::triggered, this, []() {
+        QSettings settings;
+        auto path = settings.fileName();
+        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+
     });
 
     #endif
