@@ -1,5 +1,5 @@
 
-#include "widgets/config/AppearanceConfigTab.hpp"
+#include "config/tabs/AppearanceConfigTab.hpp"
 #include "core/model/PaletteModel.hpp"
 #include "utils/connectutils.hpp"
 

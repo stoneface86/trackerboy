@@ -2,7 +2,7 @@
 #pragma once
 
 #include "audio/Renderer.hpp"
-#include "core/Config.hpp"
+#include "config/Config.hpp"
 
 #include <QCheckBox>
 #include <QDialog>

@@ -1,7 +1,7 @@
 
 #include "core/input/PianoInput.hpp"
 
-#include "core/config/keys.hpp"
+#include "config/data/keys.hpp"
 
 #include <QKeySequence>
 

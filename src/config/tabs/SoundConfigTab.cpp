@@ -1,5 +1,5 @@
 ﻿
-#include "widgets/config/SoundConfigTab.hpp"
+#include "config/tabs/SoundConfigTab.hpp"
 #include "audio/AudioEnumerator.hpp"
 #include "core/StandardRates.hpp"
 #include "midi/MidiEnumerator.hpp"

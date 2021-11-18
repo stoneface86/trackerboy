@@ -1,6 +1,6 @@
 
-#include "core/config/MidiConfig.hpp"
-#include "core/config/keys.hpp"
+#include "config/data/MidiConfig.hpp"
+#include "config/data/keys.hpp"
 
 #include <QtDebug>
 

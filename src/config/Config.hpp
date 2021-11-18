@@ -2,10 +2,10 @@
 #pragma once
 
 #include "audio/AudioEnumerator.hpp"
-#include "core/config/AppearanceConfig.hpp"
-#include "core/config/GeneralConfig.hpp"
-#include "core/config/MidiConfig.hpp"
-#include "core/config/SoundConfig.hpp"
+#include "config/data/AppearanceConfig.hpp"
+#include "config/data/GeneralConfig.hpp"
+#include "config/data/MidiConfig.hpp"
+#include "config/data/SoundConfig.hpp"
 #include "midi/MidiEnumerator.hpp"
 
 #include "core/input/PianoInput.hpp"

@@ -1,13 +1,12 @@
 
-#include "ConfigDialog.hpp"
+#include "config/ConfigDialog.hpp"
 #include "core/StandardRates.hpp"
 #include "utils/connectutils.hpp"
 
-#include "widgets/config/AppearanceConfigTab.hpp"
-#include "widgets/config/KeyboardConfigTab.hpp"
-#include "widgets/config/SoundConfigTab.hpp"
+#include "config/tabs/AppearanceConfigTab.hpp"
+#include "config/tabs/KeyboardConfigTab.hpp"
+#include "config/tabs/SoundConfigTab.hpp"
 
-#include <QDialogButtonBox>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QVBoxLayout>

@@ -1,5 +1,5 @@
 
-#include "widgets/config/KeyboardConfigTab.hpp"
+#include "config/tabs/KeyboardConfigTab.hpp"
 
 #include "core/input/PianoInput.hpp"
 #include "core/misc/NoteStrings.hpp"

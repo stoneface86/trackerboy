@@ -1,6 +1,6 @@
 #pragma once
 
-#include "widgets/config/ConfigTab.hpp"
+#include "config/tabs/ConfigTab.hpp"
 
 class PianoInput;
 

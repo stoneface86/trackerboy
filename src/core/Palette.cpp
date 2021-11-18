@@ -1,7 +1,7 @@
 
 #include "core/Palette.hpp"
 
-#include "core/config/keys.hpp"
+#include "config/data/keys.hpp"
 
 #include <QtDebug>
 

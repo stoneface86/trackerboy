@@ -1,16 +1,15 @@
 #pragma once
 
-#include "core/Config.hpp"
+#include "audio/AudioEnumerator.hpp"
+#include "config/Config.hpp"
+#include "midi/MidiEnumerator.hpp"
 
-#include <QDialog>
-
-class AudioEnumerator;
-class MidiEnumerator;
 class AppearanceConfigTab;
 class KeyboardConfigTab;
 class SoundConfigTab;
 
-class QDialogButtonBox;
+#include <QDialog>
+#include <QDialogButtonBox>
 
 //
 // Configuration dialog. Allows the user to change application settings

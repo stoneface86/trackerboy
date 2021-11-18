@@ -1,7 +1,7 @@
 
-#include "core/config/GeneralConfig.hpp"
+#include "config/data/GeneralConfig.hpp"
 
-#include "core/config/keys.hpp"
+#include "config/data/keys.hpp"
 
 GeneralConfig::GeneralConfig() :
     mHistoryLimit(64)

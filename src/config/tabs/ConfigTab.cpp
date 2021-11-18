@@ -1,5 +1,5 @@
 
-#include "ConfigTab.hpp"
+#include "config/tabs/ConfigTab.hpp"
 
 ConfigTab::ConfigTab(QWidget *parent) :
     QWidget(parent),

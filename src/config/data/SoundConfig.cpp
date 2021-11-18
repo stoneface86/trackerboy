@@ -1,6 +1,6 @@
 
-#include "core/config/SoundConfig.hpp"
-#include "core/config/keys.hpp"
+#include "config/data/SoundConfig.hpp"
+#include "config/data/keys.hpp"
 #include "core/StandardRates.hpp"
 
 #include <QtDebug>

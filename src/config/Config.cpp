@@ -1,5 +1,5 @@
 
-#include "core/Config.hpp"
+#include "config/Config.hpp"
 
 #include <QSettings>
 

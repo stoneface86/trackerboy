@@ -4,7 +4,7 @@
 #include "audio/AudioStream.hpp"
 #include "audio/AudioEnumerator.hpp"
 #include "audio/VisualizerBuffer.hpp"
-#include "core/config/SoundConfig.hpp"
+#include "config/data/SoundConfig.hpp"
 #include "core/ChannelOutput.hpp"
 #include "core/FastTimer.hpp"
 #include "core/Module.hpp"
