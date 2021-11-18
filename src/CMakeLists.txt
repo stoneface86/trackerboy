@@ -234,13 +234,12 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         -Wno-missing-field-initializers
     )
 
-    # flags to help minimize the binary size
-#    if (NOT ${DEBUG_BUILD})
-#        target_compile_options(ui PRIVATE
-#            -fno-rtti
-#            -ffunction-sections -fdata-sections -Wl,--gc-sections
-#            )
-#    endif ()
+    # remove any unused code/data when building
+    if (NOT ${DEBUG_BUILD})
+        add_compile_options(
+            -ffunction-sections -fdata-sections -Wl,--gc-sections
+            )
+    endif ()
 endif ()
 
 if (NOT ${DEBUG_BUILD})
