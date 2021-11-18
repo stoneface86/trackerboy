@@ -1,9 +1,9 @@
 
 #pragma once
 
-class AudioEnumerator;
+#include "audio/AudioEnumerator.hpp"
 
-class QSettings;
+#include <QSettings>
 
 
 class SoundConfig {

@@ -1,5 +1,5 @@
 
-#include "core/misc/utils.hpp"
+#include "utils/utils.hpp"
 
 #include <Qt>
 #include <QThread>

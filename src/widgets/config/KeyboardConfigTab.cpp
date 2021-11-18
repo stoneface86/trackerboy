@@ -2,8 +2,8 @@
 #include "widgets/config/KeyboardConfigTab.hpp"
 
 #include "core/input/PianoInput.hpp"
-#include "core/misc/connectutils.hpp"
 #include "core/misc/NoteStrings.hpp"
+#include "utils/connectutils.hpp"
 
 #include <QComboBox>
 #include <QFrame>

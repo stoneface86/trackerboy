@@ -4,7 +4,6 @@
 #include "core/config/keys.hpp"
 
 #include <QKeySequence>
-#include <QSettings>
 
 #include <algorithm>
 

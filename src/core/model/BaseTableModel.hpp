@@ -2,8 +2,6 @@
 
 #include "core/Module.hpp"
 
-#include "trackerboy/data/Table.hpp"
-
 #include <QAbstractListModel>
 #include <QIcon>
 

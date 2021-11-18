@@ -1,7 +1,7 @@
 
 #include "ConfigDialog.hpp"
 #include "core/StandardRates.hpp"
-#include "core/misc/connectutils.hpp"
+#include "utils/connectutils.hpp"
 
 #include "widgets/config/AppearanceConfigTab.hpp"
 #include "widgets/config/KeyboardConfigTab.hpp"

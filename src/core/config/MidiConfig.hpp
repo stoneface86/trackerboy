@@ -1,9 +1,9 @@
 
 #pragma once
 
-class MidiEnumerator;
+#include "midi/MidiEnumerator.hpp"
 
-class QSettings;
+#include <QSettings>
 
 class MidiConfig {
 

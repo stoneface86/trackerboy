@@ -12,8 +12,6 @@
 #include "trackerboy/data/Pattern.hpp"
 
 #include <QColor>
-#include <QFont>
-#include <QPainter>
 
 #include <array>
 

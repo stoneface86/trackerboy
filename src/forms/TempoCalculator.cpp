@@ -1,7 +1,7 @@
 
 #include "forms/TempoCalculator.hpp"
 
-#include "core/misc/connectutils.hpp"
+#include "utils/connectutils.hpp"
 
 #include <QGridLayout>
 #include <QLabel>

@@ -2,8 +2,8 @@
 #include "widgets/config/SoundConfigTab.hpp"
 #include "audio/AudioEnumerator.hpp"
 #include "core/StandardRates.hpp"
-#include "core/misc/connectutils.hpp"
 #include "midi/MidiEnumerator.hpp"
+#include "utils/connectutils.hpp"
 
 #include <QComboBox>
 #include <QGridLayout>

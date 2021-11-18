@@ -7,6 +7,8 @@
 
 #include <optional>
 
+// TODO: move this entire thing into AppearanceConfigTab.cpp
+
 //
 // Model class for editing a Palette. Used only by the AppearanceConfigTab
 //

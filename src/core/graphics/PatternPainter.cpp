@@ -3,6 +3,8 @@
 
 #include "trackerboy/note.hpp"
 
+#include <QPainter>
+
 #define TU PatternPainterTU
 namespace TU {
 

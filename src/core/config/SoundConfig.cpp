@@ -1,11 +1,8 @@
 
 #include "core/config/SoundConfig.hpp"
-
-#include "audio/AudioEnumerator.hpp"
 #include "core/config/keys.hpp"
 #include "core/StandardRates.hpp"
 
-#include <QSettings>
 #include <QtDebug>
 
 #define TU SoundConfigTU

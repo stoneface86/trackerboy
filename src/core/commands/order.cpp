@@ -1,6 +1,9 @@
 
 #include "core/commands/order.hpp"
 #include "core/model/PatternModel.hpp"
+#include "core/Module.hpp"
+
+#include "trackerboy/data/Order.hpp"
 
 
 OrderDuplicateCmd::OrderDuplicateCmd(PatternModel &model, int row) :

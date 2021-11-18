@@ -3,6 +3,7 @@
 #include "core/model/BaseTableModel.hpp"
 
 #include "trackerboy/data/Instrument.hpp"
+#include "trackerboy/data/Table.hpp"
 #include "trackerboy/data/Waveform.hpp"
 
 template <class T>

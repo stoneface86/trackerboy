@@ -1,7 +1,7 @@
 
 #include "widgets/config/AppearanceConfigTab.hpp"
-#include "core/misc/connectutils.hpp"
 #include "core/model/PaletteModel.hpp"
+#include "utils/connectutils.hpp"
 
 #include <QCheckBox>
 #include <QColorDialog>

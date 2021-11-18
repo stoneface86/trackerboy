@@ -48,7 +48,6 @@ follow these rules when contributing:
  * curly braces on same line, except for constructors
  * class/struct/typedef names should use PascalCase
  * function names and variables should use camelCase
- * forward-declare in headers when possible
  * member variables must be prefixed with m (ie mFooBar) (except for structs)
  * try to avoid macros in headers, use constexpr functions when possible and
    use enums or constexpr instead of `#define`. Rely on the compiler, not the preprocessor

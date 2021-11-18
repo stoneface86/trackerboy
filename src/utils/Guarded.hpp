@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/Locked.hpp"
+#include "utils/Locked.hpp"
 
 #include <utility>
 

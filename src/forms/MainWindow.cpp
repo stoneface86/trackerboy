@@ -1,7 +1,7 @@
 
 #include "MainWindow.hpp"
 
-#include "core/misc/connectutils.hpp"
+#include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
 #include "widgets/docks/TableDock.hpp"
 #include "version.hpp"

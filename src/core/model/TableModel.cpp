@@ -1,5 +1,6 @@
 
 #include "core/model/TableModel.hpp"
+#include "core/Module.hpp"
 #include "utils/IconLocator.hpp"
 
 #include <type_traits>

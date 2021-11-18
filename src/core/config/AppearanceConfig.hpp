@@ -1,12 +1,9 @@
 
 #pragma once
 
-#include "core/Palette.hpp"
-
 #include <QFont>
 #include <QSettings>
 
-#include <optional>
 
 class AppearanceConfig {
 

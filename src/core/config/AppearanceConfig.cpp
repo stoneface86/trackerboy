@@ -1,6 +1,5 @@
 
 #include "core/config/AppearanceConfig.hpp"
-
 #include "core/config/keys.hpp"
 
 #include <QFontDatabase>

@@ -1,11 +1,8 @@
 
 #include "core/config/MidiConfig.hpp"
-
 #include "core/config/keys.hpp"
-#include "midi/MidiEnumerator.hpp"
 
 #include <QtDebug>
-#include <QSettings>
 
 #define TU MidiConfigTU
 namespace TU {

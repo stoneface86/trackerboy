@@ -1,6 +1,5 @@
 
 #include "core/model/BaseTableModel.hpp"
-#include "utils/IconLocator.hpp"
 
 #include <QStringBuilder>
 

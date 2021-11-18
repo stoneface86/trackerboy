@@ -1,6 +1,6 @@
 
 #include "widgets/sidebar/OrderEditor.hpp"
-#include "core/misc/connectutils.hpp"
+#include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
 
 #include <QAction>

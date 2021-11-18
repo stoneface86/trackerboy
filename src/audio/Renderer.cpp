@@ -1,8 +1,7 @@
 
 #include "audio/Renderer.hpp"
-#include "audio/AudioEnumerator.hpp"
 #include "core/StandardRates.hpp"
-#include "core/misc/utils.hpp"
+#include "utils/utils.hpp"
 
 #include "trackerboy/engine/ChannelControl.hpp"
 

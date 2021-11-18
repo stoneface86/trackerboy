@@ -2,14 +2,13 @@
 #pragma once
 
 #include "audio/AudioStream.hpp"
+#include "audio/AudioEnumerator.hpp"
 #include "audio/VisualizerBuffer.hpp"
 #include "core/config/SoundConfig.hpp"
 #include "core/ChannelOutput.hpp"
 #include "core/FastTimer.hpp"
-#include "core/Guarded.hpp"
 #include "core/Module.hpp"
-
-class AudioEnumerator;
+#include "utils/Guarded.hpp"
 
 #include "trackerboy/apu/DefaultApu.hpp"
 #include "trackerboy/data/Song.hpp"
@@ -24,7 +23,6 @@ class AudioEnumerator;
 #include <QThread>
 
 #include <chrono>
-#include <optional>
 
 //
 // Class handles all sound renderering. Sound is sent to the

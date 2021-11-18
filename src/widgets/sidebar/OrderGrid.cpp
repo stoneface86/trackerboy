@@ -1,6 +1,6 @@
 
 #include "widgets/sidebar/OrderGrid.hpp"
-#include "core/misc/utils.hpp"
+#include "utils/utils.hpp"
 
 #include <QApplication>
 #include <QEvent>

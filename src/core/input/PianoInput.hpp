@@ -4,7 +4,7 @@
 #include "trackerboy/note.hpp"
 
 #include <QHash>
-class QSettings;
+#include <QSettings>
 
 #include <array>
 #include <optional>

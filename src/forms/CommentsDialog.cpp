@@ -1,6 +1,6 @@
 
 #include "forms/CommentsDialog.hpp"
-#include "core/misc/connectutils.hpp"
+#include "utils/connectutils.hpp"
 
 #include <QVBoxLayout>
 #include <QPushButton>

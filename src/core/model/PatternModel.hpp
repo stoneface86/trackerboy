@@ -7,8 +7,8 @@
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 
-#include "trackerboy/data/PatternRow.hpp"
 #include "trackerboy/data/Pattern.hpp"
+#include "trackerboy/data/Order.hpp"
 
 #include <QObject>
 #include <QRect>

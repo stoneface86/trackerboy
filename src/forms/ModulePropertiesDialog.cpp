@@ -1,6 +1,6 @@
 
 #include "forms/ModulePropertiesDialog.hpp"
-#include "core/misc/connectutils.hpp"
+#include "utils/connectutils.hpp"
 
 #include <QGroupBox>
 #include <QCheckBox>

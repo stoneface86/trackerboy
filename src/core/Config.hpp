@@ -1,13 +1,12 @@
 
 #pragma once
 
+#include "audio/AudioEnumerator.hpp"
 #include "core/config/AppearanceConfig.hpp"
 #include "core/config/GeneralConfig.hpp"
-#include "core/config/KeyboardConfig.hpp"
 #include "core/config/MidiConfig.hpp"
 #include "core/config/SoundConfig.hpp"
-class AudioEnumerator;
-class MidiEnumerator;
+#include "midi/MidiEnumerator.hpp"
 
 #include "core/input/PianoInput.hpp"
 #include "core/Palette.hpp"
@@ -59,9 +58,6 @@ public:
 
     GeneralConfig& general();
     GeneralConfig const& general() const;
-
-    // KeyboardConfig& keyboard();
-    // KeyboardConfig const& keyboard() const;
 
     MidiConfig& midi();
     MidiConfig const& midi() const;

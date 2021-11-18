@@ -3,8 +3,8 @@
 
 
 #include "audio/VisualizerBuffer.hpp"
-#include "core/Guarded.hpp"
 #include "core/Palette.hpp"
+#include "utils/Guarded.hpp"
 
 #include <QFrame>
 
