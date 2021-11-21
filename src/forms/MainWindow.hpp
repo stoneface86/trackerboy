@@ -42,9 +42,8 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow();
-    virtual ~MainWindow();
 
-    QMenu* createPopupMenu() override;
+    virtual QMenu* createPopupMenu() override;
 
     //
     // A crash has occurred, attempt to save a copy of the current module
@@ -86,9 +85,13 @@ private slots:
     
     void onViewResetLayout();
 
-    // config changes
-    void onConfigApplied(Config::Categories categories);
-    void applyConfig(Config::Categories categories);
+    void onMidiError();
+
+    //
+    // Applies the current configuration for the given categories. An optional list of problems
+    // can be given and will be populated with an error string for each error.
+    //
+    Config::Categories applyConfig(Config::Categories categories, QString *problems = nullptr);
 
     // dialog show slots (lazy loading)
     void showAboutDialog();
@@ -222,13 +225,6 @@ private:
     // recieved focus.
     //
     void handleFocusChange(QWidget *oldWidget, QWidget *newWidget);
-
-    //
-    // Shows a message and disables the configured midi device.
-    // If causedByError is true, then the messagebox states it was caused by
-    // an error, otherwise it states that it failed to initialize the device.
-    //
-    void disableMidi(bool causedByError);
 
     //
     // Pushes the given filename to the recent files list. Each file that is

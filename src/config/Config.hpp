@@ -71,12 +71,6 @@ public:
     PianoInput& pianoInput();
     PianoInput const& pianoInput() const;
 
-    //
-    // Disables MIDI configuration. This is to be called when a MIDI error occurs with
-    // the configured device.
-    //
-    void disableMidi();
-
 
 private:
 

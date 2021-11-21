@@ -236,25 +236,31 @@ void MainWindow::onViewResetLayout() {
     initState();
 }
 
-void MainWindow::onConfigApplied(Config::Categories categories) {
-    applyConfig(categories);
-    mConfig.writeSettings(mAudioEnumerator, mMidiEnumerator);
+void MainWindow::onMidiError() {
+    mConfig.midi().setEnabled(false);
+    if (isVisible()) {
+        QMessageBox msgbox(this);
+        msgbox.setIcon(QMessageBox::Critical);
+        msgbox.setText(tr("MIDI device error"));
+        msgbox.setDetailedText(mMidi.lastError());
+        settingsMessageBox(msgbox);
+    }
 }
 
-void MainWindow::applyConfig(Config::Categories categories) {
+Config::Categories MainWindow::applyConfig(Config::Categories categories, QString *problems) {
+
+    Config::Categories flags = Config::CategoryNone;
+
     if (categories.testFlag(Config::CategorySound)) {
         auto const& sound = mConfig.sound();
         mStatusSamplerate->setText(tr("%1 Hz").arg(sound.samplerate()));
 
         mErrorSinceLastConfig = !mRenderer->setConfig(sound, mAudioEnumerator);
         if (mErrorSinceLastConfig) {
+            flags |= Config::CategorySound;
             setPlayingStatus(PlayingStatusText::error);
-            if (isVisible()) {
-                QMessageBox msgbox(this);
-                msgbox.setIcon(QMessageBox::Critical);
-                msgbox.setText(tr("Could not initialize device"));
-                msgbox.setInformativeText(tr("The configured device could not be initialized. Playback is disabled."));
-                settingsMessageBox(msgbox);
+            if (problems) {
+                problems->append(tr("[Sound] The configured device could not be initialized. Playback is disabled.\n"));
             }
         } else {
             if (!mRenderer->isRunning()) {
@@ -287,9 +293,8 @@ void MainWindow::applyConfig(Config::Categories categories) {
         }
     }
 
-    if (categories.testFlag(Config::CategoryKeyboard)) {
-        //mPianoInput = mConfig.keyboard().pianoInput;
-    }
+//    if (categories.testFlag(Config::CategoryKeyboard)) {
+//    }
 
     if (categories.testFlag(Config::CategoryMidi)) {
         auto const& midiConfig = mConfig.midi();
@@ -300,10 +305,17 @@ void MainWindow::applyConfig(Config::Categories categories) {
             auto device = mMidiEnumerator.device(midiConfig.backendIndex(), midiConfig.portIndex());
             auto success = mMidi.open(device);
             if (!success) {
-                disableMidi(false);
+                flags |= Config::CategoryMidi;
+                if (problems) {
+                    problems->append(tr("[Midi] unable to open the device. Midi is disabled.\n"));
+                }
+                qCritical().noquote() << "[MIDI] Failed to initialize MIDI device:" << mMidi.lastError();
+                mConfig.midi().setEnabled(false);
             }
         }
     }
+
+    return flags;
 
 }
 
@@ -323,23 +335,44 @@ void MainWindow::showAudioDiag() {
 }
 
 void MainWindow::showConfigDialog() {
+
 #ifdef QT_DEBUG
     QElapsedTimer timer;
     timer.start();
 #endif
     ConfigDialog diag(mConfig, mAudioEnumerator, mMidiEnumerator, this);
-    lazyconnect(&diag, applied, this, onConfigApplied);
+    connect(&diag, &ConfigDialog::applied, this,
+        [this](Config::Categories categories) {
+
+            mConfig.writeSettings(mAudioEnumerator, mMidiEnumerator);
+
+            QString problems;
+            auto flags = applyConfig(categories, &problems);
+            if (flags) {
+                auto sender_ = qobject_cast<ConfigDialog*>(sender());
+                if (sender_) {
+                    // problems with the config, keep the config dirty
+                    sender_->unclean(flags);
+
+                    // show the issue(s) to the user
+                    QMessageBox msgbox(sender_);
+                    msgbox.setIcon(QMessageBox::Critical);
+                    msgbox.setText(tr("Problem(s) occurred when applying the config"));
+                    msgbox.setDetailedText(problems);
+                    msgbox.exec();
+                }
+            }
+        });
 #ifdef QT_DEBUG
     qDebug() << "ConfigDialog creation took" << timer.elapsed() << "ms";
 #endif
     diag.exec();
+
 }
 
 void MainWindow::showExportWavDialog() {
-    auto dialog = new ExportWavDialog(*mModule, mModuleFile, mConfig.sound().samplerate(), this);
-    dialog->show();
-    dialog->exec();
-    delete dialog;
+    ExportWavDialog dialog(*mModule, mModuleFile, mConfig.sound().samplerate(), this);
+    dialog.exec();
 }
 
 void MainWindow::showTempoCalculator() {

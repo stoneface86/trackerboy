@@ -57,7 +57,3 @@ void Config::writeSettings(AudioEnumerator const& audio, MidiEnumerator const& m
     mPalette.writeSettings(settings);
     mPianoInput.writeSettings(settings);
 }
-
-void Config::disableMidi() {
-    mMidi.setEnabled(false);
-}

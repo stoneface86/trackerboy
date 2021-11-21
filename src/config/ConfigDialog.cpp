@@ -14,7 +14,12 @@
 
 
 
-ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, MidiEnumerator &midi, QWidget *parent) :
+ConfigDialog::ConfigDialog(
+    Config &config,
+    AudioEnumerator &audio,
+    MidiEnumerator &midi,
+    QWidget *parent
+) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mConfig(config),
     mDirty(Config::CategoryNone)
@@ -57,11 +62,16 @@ ConfigDialog::ConfigDialog(Config &config, AudioEnumerator &audio, MidiEnumerato
 }
 
 void ConfigDialog::accept() {
-    apply();
-    QDialog::accept();
+    if (apply()) {
+        QDialog::accept();
+    }
 }
 
-void ConfigDialog::apply() {
+void ConfigDialog::unclean(Config::Categories categories) {
+    mDirty = categories;
+}
+
+bool ConfigDialog::apply() {
     // update all changes to the Config object
 
     if (mDirty) {
@@ -82,9 +92,20 @@ void ConfigDialog::apply() {
             mSound->apply(mConfig.midi());
         }
 
-        emit applied(mDirty);
-        clean();
+        auto dirty = mDirty;
+        mDirty = Config::CategoryNone;
+        emit applied(dirty);
+        if (mDirty) {
+            // the receiver had issues with the config, do not accept the dialog
+            return false;
+        } else {
+            mButtons->button(QDialogButtonBox::Apply)->setEnabled(false);
+        }
+
     }
+
+    // ok to accept
+    return true;
 }
 
 void ConfigDialog::setDirty(Config::Category category) {

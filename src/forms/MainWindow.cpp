@@ -137,10 +137,6 @@ QToolBar QLabel {
     )stylesheet"));
 }
 
-MainWindow::~MainWindow() {
-
-}
-
 QMenu* MainWindow::createPopupMenu() {
     auto menu = new QMenu(this);
     setupViewMenu(menu);
@@ -436,11 +432,7 @@ void MainWindow::setupUi() {
     lazyconnect(mPatternEditor, previewNote, mRenderer, instrumentPreview);
     lazyconnect(mPatternEditor, stopNotePreview, mRenderer, stopPreview);
 
-    connect(&mMidi, &Midi::error, this,
-        [this]() {
-            disableMidi(true);
-        });
-
+    lazyconnect(&mMidi, error, this, onMidiError);
 
 
     connect(mModule, &Module::modifiedChanged, this, &MainWindow::setWindowModified);
@@ -532,26 +524,6 @@ void MainWindow::setPlayingStatus(PlayingStatusText type) {
     };
 
     mStatusRenderer->setText(tr(PLAYING_STATUSES[(int)type]));
-}
-
-void MainWindow::disableMidi(bool causedByError) {
-    mConfig.disableMidi();
-
-    if (!causedByError) {
-        qCritical().noquote() << "[MIDI] Failed to initialize MIDI device:" << mMidi.lastError();
-    }
-
-    if (isVisible()) {
-        QMessageBox msgbox(this);
-        msgbox.setIcon(QMessageBox::Critical);
-        if (causedByError) {
-            msgbox.setText(tr("MIDI device error"));
-        } else {
-            msgbox.setText(tr("Could not initialize MIDI device"));
-        }
-        msgbox.setInformativeText(mMidi.lastError());
-        settingsMessageBox(msgbox);
-    }
 }
 
 void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
