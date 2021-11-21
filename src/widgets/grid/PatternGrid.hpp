@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "core/graphics/PatternLayout.hpp"
-#include "core/graphics/PatternPainter.hpp"
+#include "graphics/PatternLayout.hpp"
+#include "graphics/PatternPainter.hpp"
 #include "model/PatternModel.hpp"
 #include "core/Palette.hpp"
 #include "core/input/PianoInput.hpp"

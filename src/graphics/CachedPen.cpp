@@ -1,5 +1,5 @@
 
-#include "core/graphics/CachedPen.hpp"
+#include "graphics/CachedPen.hpp"
 
 
 CachedPen& CachedPen::operator=(QPen const& pen) {

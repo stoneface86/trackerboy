@@ -1,8 +1,8 @@
 
 #pragma once
 
-#include "core/graphics/CachedPen.hpp"
-#include "core/graphics/CellPainter.hpp"
+#include "graphics/CachedPen.hpp"
+#include "graphics/CellPainter.hpp"
 #include "model/PatternModel.hpp"
 #include "core/Palette.hpp"
 

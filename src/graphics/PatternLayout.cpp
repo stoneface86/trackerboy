@@ -1,5 +1,5 @@
 
-#include "core/graphics/PatternLayout.hpp"
+#include "graphics/PatternLayout.hpp"
 
 #include <algorithm>
 

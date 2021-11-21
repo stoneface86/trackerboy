@@ -1,5 +1,5 @@
 
-#include "core/graphics/PatternPainter.hpp"
+#include "graphics/PatternPainter.hpp"
 
 #include "trackerboy/note.hpp"
 

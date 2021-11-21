@@ -2,7 +2,7 @@
 #pragma once
 
 #include "model/PatternModel.hpp"
-#include "core/graphics/PatternLayout.hpp"
+#include "graphics/PatternLayout.hpp"
 #include "core/ChannelOutput.hpp"
 #include "core/Palette.hpp"
 

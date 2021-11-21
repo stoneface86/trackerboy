@@ -1,13 +1,13 @@
 
 #pragma once
 
-#include "core/graphics/CachedPen.hpp"
-#include "core/graphics/CellPainter.hpp"
-#include "core/graphics/PatternLayout.hpp"
 #include "core/Palette.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 #include "core/misc/NoteStrings.hpp"
+#include "graphics/CachedPen.hpp"
+#include "graphics/CellPainter.hpp"
+#include "graphics/PatternLayout.hpp"
 
 #include "trackerboy/data/Pattern.hpp"
 

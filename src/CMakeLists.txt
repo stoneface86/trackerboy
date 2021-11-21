@@ -127,10 +127,6 @@ makeSourceList(UI_SRC
     "config/Config"
     "config/ConfigDialog"
 
-    "core/graphics/CachedPen"
-    "core/graphics/CellPainter"
-    "core/graphics/PatternLayout"
-    "core/graphics/PatternPainter"
     "core/input/PianoInput"
     "core/misc/NoteStrings"
     FILE "core/misc/TableActions.hpp"
@@ -157,6 +153,11 @@ makeSourceList(UI_SRC
     "forms/MainWindow"
     "forms/ModulePropertiesDialog"
     "forms/TempoCalculator"
+
+    "graphics/CachedPen"
+    "graphics/CellPainter"
+    "graphics/PatternLayout"
+    "graphics/PatternPainter"
 
     FILE "midi/IMidiReceiver.hpp"
     "midi/Midi"

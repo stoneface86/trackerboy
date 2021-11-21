@@ -1,5 +1,5 @@
 
-#include "core/graphics/CellPainter.hpp"
+#include "graphics/CellPainter.hpp"
 
 #include <QFontMetrics>
 
