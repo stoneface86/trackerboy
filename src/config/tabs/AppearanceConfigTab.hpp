@@ -2,7 +2,7 @@
 #pragma once
 
 #include "config/tabs/ConfigTab.hpp"
-class PaletteModel;
+class PaletteModel; // implemented in AppearanceConfigTab.cpp
 
 #include <QDir>
 class QCheckBox;

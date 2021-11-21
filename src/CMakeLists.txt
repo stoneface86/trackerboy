@@ -140,7 +140,6 @@ makeSourceList(UI_SRC
     "core/model/graph/SequenceModel"
     "core/model/graph/WaveModel"
     "core/model/BaseTableModel"
-    "core/model/PaletteModel"
     "core/model/PatternModel"
     "core/model/SongModel"
     "core/model/SongListModel"
