@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/TableModel.hpp"
+#include "model/TableModel.hpp"
 #include "core/Palette.hpp"
 #include "forms/editors/BaseEditor.hpp"
 #include "widgets/EnvelopeForm.hpp"

@@ -1,5 +1,5 @@
 
-#include "core/model/SongModel.hpp"
+#include "model/SongModel.hpp"
 
 
 SongModel::SongModel(Module &mod, QObject *parent) :

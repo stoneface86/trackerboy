@@ -1,5 +1,5 @@
 
-#include "core/model/SongListModel.hpp"
+#include "model/SongListModel.hpp"
 
 SongListModel::SongMeta::SongMeta(QString const& name) :
     name(name),

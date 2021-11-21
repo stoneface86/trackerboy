@@ -1,5 +1,5 @@
 
-#include "core/model/graph/WaveModel.hpp"
+#include "model/graph/WaveModel.hpp"
 
 WaveModel::WaveModel(Module &mod, QObject *parent) :
     GraphModel(mod, parent),

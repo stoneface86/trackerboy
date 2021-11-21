@@ -1,5 +1,5 @@
 
-#include "core/model/graph/SequenceModel.hpp"
+#include "model/graph/SequenceModel.hpp"
 
 SequenceModel::SequenceModel(Module &mod, QObject *parent) :
     GraphModel(mod, parent),

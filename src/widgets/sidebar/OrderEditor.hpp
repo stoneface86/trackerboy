@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/PatternModel.hpp"
+#include "model/PatternModel.hpp"
 #include "widgets/sidebar/OrderGrid.hpp"
 
 #include <QCheckBox>

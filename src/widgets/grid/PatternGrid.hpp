@@ -3,7 +3,7 @@
 
 #include "core/graphics/PatternLayout.hpp"
 #include "core/graphics/PatternPainter.hpp"
-#include "core/model/PatternModel.hpp"
+#include "model/PatternModel.hpp"
 #include "core/Palette.hpp"
 #include "core/input/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"

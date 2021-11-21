@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "core/model/PatternModel.hpp"
-#include "core/model/SongModel.hpp"
-#include "core/model/SongListModel.hpp"
+#include "model/PatternModel.hpp"
+#include "model/SongModel.hpp"
+#include "model/SongListModel.hpp"
 #include "widgets/sidebar/AudioScope.hpp"
 #include "widgets/sidebar/OrderEditor.hpp"
 #include "widgets/sidebar/SongEditor.hpp"

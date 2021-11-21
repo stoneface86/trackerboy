@@ -2,8 +2,8 @@
 #pragma once
 
 #include "core/Palette.hpp"
-#include "core/model/graph/WaveModel.hpp"
-#include "core/model/TableModel.hpp"
+#include "model/graph/WaveModel.hpp"
+#include "model/TableModel.hpp"
 #include "forms/editors/BaseEditor.hpp"
 #include "widgets/GraphEdit.hpp"
 

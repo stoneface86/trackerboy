@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/Module.hpp"
-#include "core/model/graph/SequenceModel.hpp"
+#include "model/graph/SequenceModel.hpp"
 #include "widgets/GraphEdit.hpp"
 
 #include "trackerboy/data/Instrument.hpp"

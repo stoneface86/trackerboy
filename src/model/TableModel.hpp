@@ -1,6 +1,6 @@
 
 #pragma once
-#include "core/model/BaseTableModel.hpp"
+#include "model/BaseTableModel.hpp"
 
 #include "trackerboy/data/Instrument.hpp"
 #include "trackerboy/data/Table.hpp"

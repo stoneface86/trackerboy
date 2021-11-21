@@ -127,9 +127,6 @@ makeSourceList(UI_SRC
     "config/Config"
     "config/ConfigDialog"
 
-    "core/commands/order"
-    "core/commands/pattern"
-
     "core/graphics/CachedPen"
     "core/graphics/CellPainter"
     "core/graphics/PatternLayout"
@@ -137,14 +134,7 @@ makeSourceList(UI_SRC
     "core/input/PianoInput"
     "core/misc/NoteStrings"
     FILE "core/misc/TableActions.hpp"
-    "core/model/graph/GraphModel"
-    "core/model/graph/SequenceModel"
-    "core/model/graph/WaveModel"
-    "core/model/BaseTableModel"
-    "core/model/PatternModel"
-    "core/model/SongModel"
-    "core/model/SongListModel"
-    "core/model/TableModel"
+
     FILE "core/ChannelOutput.hpp"
     "core/FastTimer"
     "core/Module"
@@ -172,6 +162,17 @@ makeSourceList(UI_SRC
     "midi/Midi"
     "midi/MidiEnumerator"
     "midi/MidiEvent"
+
+    "model/commands/order"
+    "model/commands/pattern"
+    "model/graph/GraphModel"
+    "model/graph/SequenceModel"
+    "model/graph/WaveModel"
+    "model/BaseTableModel"
+    "model/PatternModel"
+    "model/SongModel"
+    "model/SongListModel"
+    "model/TableModel"
 
     FILE "resources/icons.qrc"
     FILE "resources/images.qrc"

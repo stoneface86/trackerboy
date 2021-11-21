@@ -1,7 +1,7 @@
 
-#include "core/model/PatternModel.hpp"
-#include "core/commands/order.hpp"
-#include "core/commands/pattern.hpp"
+#include "model/PatternModel.hpp"
+#include "model/commands/order.hpp"
+#include "model/commands/pattern.hpp"
 #include "utils/utils.hpp"
 
 #include "trackerboy/note.hpp"

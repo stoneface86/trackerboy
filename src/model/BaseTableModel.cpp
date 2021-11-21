@@ -1,5 +1,5 @@
 
-#include "core/model/BaseTableModel.hpp"
+#include "model/BaseTableModel.hpp"
 
 #include <QStringBuilder>
 

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/BaseTableModel.hpp"
+#include "model/BaseTableModel.hpp"
 #include "core/Module.hpp"
 #include "widgets/PianoWidget.hpp"
 

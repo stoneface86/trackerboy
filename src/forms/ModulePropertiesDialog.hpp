@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/Module.hpp"
-#include "core/model/SongListModel.hpp"
+#include "model/SongListModel.hpp"
 
 #include <QButtonGroup>
 #include <QDialog>

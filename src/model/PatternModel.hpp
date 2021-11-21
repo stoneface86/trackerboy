@@ -2,7 +2,7 @@
 #pragma once
 
 #include "clipboard/PatternClip.hpp"
-#include "core/model/SongModel.hpp"
+#include "model/SongModel.hpp"
 #include "core/Module.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"

@@ -1,6 +1,6 @@
 
-#include "core/commands/pattern.hpp"
-#include "core/model/PatternModel.hpp"
+#include "model/commands/pattern.hpp"
+#include "model/PatternModel.hpp"
 
 SelectionCmd::SelectionCmd(PatternModel &model) :
     mModel(model),

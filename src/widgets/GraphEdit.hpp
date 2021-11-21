@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/model/graph/GraphModel.hpp"
+#include "model/graph/GraphModel.hpp"
 #include "core/Palette.hpp"
 
 #include <QAbstractScrollArea>

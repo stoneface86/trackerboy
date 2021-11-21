@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/SongModel.hpp"
+#include "model/SongModel.hpp"
 #include "widgets/CustomSpinBox.hpp"
 #include "widgets/SpeedLabel.hpp"
 #include "widgets/TempoLabel.hpp"

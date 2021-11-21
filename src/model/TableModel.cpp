@@ -1,5 +1,5 @@
 
-#include "core/model/TableModel.hpp"
+#include "model/TableModel.hpp"
 #include "core/Module.hpp"
 #include "utils/IconLocator.hpp"
 

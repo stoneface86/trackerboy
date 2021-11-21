@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/model/graph/GraphModel.hpp"
+#include "model/graph/GraphModel.hpp"
 
 #include "trackerboy/data/Sequence.hpp"
 
