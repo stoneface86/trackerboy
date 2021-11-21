@@ -1,7 +1,7 @@
 #pragma once
 
 #include "model/graph/GraphModel.hpp"
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 
 #include <QAbstractScrollArea>
 #include <QPoint>

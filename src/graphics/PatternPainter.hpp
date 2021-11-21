@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
 #include "core/misc/NoteStrings.hpp"

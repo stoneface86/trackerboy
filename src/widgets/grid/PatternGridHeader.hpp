@@ -4,7 +4,7 @@
 #include "model/PatternModel.hpp"
 #include "graphics/PatternLayout.hpp"
 #include "core/ChannelOutput.hpp"
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 
 #include <QPen>
 #include <QWidget>

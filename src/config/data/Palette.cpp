@@ -1,5 +1,5 @@
 
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 
 #include "config/data/keys.hpp"
 

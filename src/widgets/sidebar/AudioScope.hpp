@@ -3,7 +3,7 @@
 
 
 #include "audio/VisualizerBuffer.hpp"
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 #include "utils/Guarded.hpp"
 
 #include <QFrame>

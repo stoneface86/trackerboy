@@ -4,7 +4,7 @@
 #include "graphics/PatternLayout.hpp"
 #include "graphics/PatternPainter.hpp"
 #include "model/PatternModel.hpp"
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 #include "config/data/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 

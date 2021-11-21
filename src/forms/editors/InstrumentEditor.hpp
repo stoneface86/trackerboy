@@ -2,7 +2,7 @@
 #pragma once
 
 #include "model/TableModel.hpp"
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 #include "forms/editors/BaseEditor.hpp"
 #include "widgets/EnvelopeForm.hpp"
 #include "widgets/SequenceEditor.hpp"

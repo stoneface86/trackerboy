@@ -4,7 +4,7 @@
 #include "graphics/CachedPen.hpp"
 #include "graphics/CellPainter.hpp"
 #include "model/PatternModel.hpp"
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 
 #include <QColor>
 #include <QPoint>

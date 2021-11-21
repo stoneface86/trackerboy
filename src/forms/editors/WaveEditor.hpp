@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/Palette.hpp"
+#include "config/data/Palette.hpp"
 #include "model/graph/WaveModel.hpp"
 #include "model/TableModel.hpp"
 #include "forms/editors/BaseEditor.hpp"
