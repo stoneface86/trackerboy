@@ -8,7 +8,7 @@
 #include "config/data/SoundConfig.hpp"
 #include "midi/MidiEnumerator.hpp"
 
-#include "core/input/PianoInput.hpp"
+#include "config/data/PianoInput.hpp"
 #include "core/Palette.hpp"
 
 #include <QFlags>

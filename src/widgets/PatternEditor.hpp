@@ -3,7 +3,7 @@
 
 #include "clipboard/PatternClipboard.hpp"
 #include "core/Palette.hpp"
-#include "core/input/PianoInput.hpp"
+#include "config/data/PianoInput.hpp"
 #include "midi/IMidiReceiver.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"

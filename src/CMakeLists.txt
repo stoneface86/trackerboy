@@ -119,6 +119,7 @@ makeSourceList(UI_SRC
     "config/data/GeneralConfig"
     "config/data/keys"
     "config/data/MidiConfig"
+    "config/data/PianoInput"
     "config/data/SoundConfig"
     "config/tabs/AppearanceConfigTab"
     "config/tabs/ConfigTab"
@@ -127,7 +128,6 @@ makeSourceList(UI_SRC
     "config/Config"
     "config/ConfigDialog"
 
-    "core/input/PianoInput"
     "core/misc/NoteStrings"
     FILE "core/misc/TableActions.hpp"
 

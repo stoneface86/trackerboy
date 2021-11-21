@@ -1,7 +1,7 @@
 
 #include "config/tabs/KeyboardConfigTab.hpp"
 
-#include "core/input/PianoInput.hpp"
+#include "config/data/PianoInput.hpp"
 #include "core/misc/NoteStrings.hpp"
 #include "utils/connectutils.hpp"
 

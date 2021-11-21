@@ -5,7 +5,7 @@
 #include "graphics/PatternPainter.hpp"
 #include "model/PatternModel.hpp"
 #include "core/Palette.hpp"
-#include "core/input/PianoInput.hpp"
+#include "config/data/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 
 #include "trackerboy/data/Pattern.hpp"

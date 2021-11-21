@@ -1,5 +1,5 @@
 
-#include "core/input/PianoInput.hpp"
+#include "config/data/PianoInput.hpp"
 
 #include "config/data/keys.hpp"
 

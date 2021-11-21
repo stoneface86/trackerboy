@@ -12,7 +12,7 @@
 #include "model/TableModel.hpp"
 #include "core/Module.hpp"
 #include "core/ModuleFile.hpp"
-#include "core/input/PianoInput.hpp"
+#include "config/data/PianoInput.hpp"
 #include "forms/editors/InstrumentEditor.hpp"
 #include "forms/editors/WaveEditor.hpp"
 #include "forms/AboutDialog.hpp"
