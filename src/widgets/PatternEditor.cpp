@@ -1,6 +1,5 @@
 
 #include "widgets/PatternEditor.hpp"
-
 #include "utils/utils.hpp"
 
 #include <QDialog>

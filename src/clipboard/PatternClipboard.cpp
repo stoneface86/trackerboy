@@ -1,5 +1,5 @@
 
-#include "core/clipboard/PatternClipboard.hpp"
+#include "clipboard/PatternClipboard.hpp"
 
 #include <QClipboard>
 #include <QGuiApplication>

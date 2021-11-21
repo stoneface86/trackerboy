@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "core/clipboard/PatternClip.hpp"
+#include "clipboard/PatternClip.hpp"
 #include "core/model/SongModel.hpp"
 #include "core/Module.hpp"
 #include "core/PatternCursor.hpp"

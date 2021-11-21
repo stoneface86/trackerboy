@@ -112,6 +112,9 @@ makeSourceList(UI_SRC
     "audio/VisualizerBuffer"
     "audio/Wav"
 
+    "clipboard/PatternClip"
+    "clipboard/PatternClipboard"
+
     "config/data/AppearanceConfig"
     "config/data/GeneralConfig"
     "config/data/keys"
@@ -124,8 +127,6 @@ makeSourceList(UI_SRC
     "config/Config"
     "config/ConfigDialog"
 
-    "core/clipboard/PatternClip"
-    "core/clipboard/PatternClipboard"
     "core/commands/order"
     "core/commands/pattern"
 

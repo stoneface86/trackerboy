@@ -3,7 +3,7 @@
 
 class PatternModel;
 
-#include "core/clipboard/PatternClip.hpp"
+#include "clipboard/PatternClip.hpp"
 
 #include "trackerboy/data/TrackRow.hpp"
 

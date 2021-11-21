@@ -1,10 +1,10 @@
 
 #pragma once
 
-#include "core/clipboard/PatternClipboard.hpp"
-#include "midi/IMidiReceiver.hpp"
+#include "clipboard/PatternClipboard.hpp"
 #include "core/Palette.hpp"
 #include "core/input/PianoInput.hpp"
+#include "midi/IMidiReceiver.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
 

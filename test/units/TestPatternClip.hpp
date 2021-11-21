@@ -1,6 +1,6 @@
 
 #include <QtTest/QtTest>
-#include "core/clipboard/PatternClip.hpp"
+#include "clipboard/PatternClip.hpp"
 
 #include "trackerboy/data/PatternMap.hpp"
 #include "trackerboy/note.hpp"

@@ -1,5 +1,5 @@
 
-#include "core/clipboard/PatternClip.hpp"
+#include "clipboard/PatternClip.hpp"
 
 #include <QtGlobal>
 

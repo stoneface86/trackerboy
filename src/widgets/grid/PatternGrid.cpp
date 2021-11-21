@@ -1,5 +1,4 @@
 
-#include "core/clipboard/PatternClip.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 
 #include "trackerboy/note.hpp"
