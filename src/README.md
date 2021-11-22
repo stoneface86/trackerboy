@@ -7,17 +7,16 @@ This folder contains all the source code for the trackerboy application.
 
 * `src/`
     * `audio/` - audio-related code: rendering, data buffers, device management, etc
+    * `clipboard/` - clipboard management and clipboard data classes
     * `config/` - configuration releated code: ConfigDialog and Config classes
         * `data/` - internal data classes for the Config class
         * `tabs/` - QWidget subclasses for each tab in the ConfigDialog
-    * `core/` - Application core internals, non-ui classes
-        * `clipboard/` - clipboard management and clipboard data classes
-        * `commands/` - QUndoCommand subclasses used by model classes
-        * `graphics/` - Utility code for use in paint events / QPainter
-        * `misc/` - miscellaneous/utility code
-        * `model/` - data model classes using Qt Model/View framework
+    * `core/` - core classes used throughout the source
     * `forms/` - Form/dialog classes
+    * `graphics/` - Utility code for use in paint events / QPainter
     * `midi/` - MIDI handling and device management
+    * `model/` - data model classes using Qt Model/View framework
+        * `commands/` - QUndoCommand subclasses used by model classes
     * `resources/` - images, Qt resource files (.qrc), etc
         * `icons/` - image files for QIcons (see core/misc/IconManager.hpp)
         * `images/` - misc image files for QWidget subclasses

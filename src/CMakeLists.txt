@@ -129,17 +129,16 @@ makeSourceList(UI_SRC
     "config/Config"
     "config/ConfigDialog"
 
-    "core/misc/NoteStrings"
-    FILE "core/misc/TableActions.hpp"
-
     FILE "core/ChannelOutput.hpp"
-    "core/FastTimer"
     "core/Module"
     "core/ModuleFile"
+    "core/NoteStrings"
     FILE "core/PatternCursor.hpp"
     "core/PatternSelection"
     "core/StandardRates"
-    "core/WavExporter"
+
+    "export/ExportWavDialog"
+    "export/WavExporter"
 
     "forms/editors/BaseEditor"
     "forms/editors/InstrumentEditor"
@@ -149,7 +148,6 @@ makeSourceList(UI_SRC
     "forms/AboutDialog"
     "forms/AudioDiagDialog"
     "forms/CommentsDialog"
-    "forms/ExportWavDialog"
     "forms/MainWindow"
     "forms/ModulePropertiesDialog"
     "forms/TempoCalculator"
@@ -178,10 +176,12 @@ makeSourceList(UI_SRC
     FILE "resources/icons.qrc"
     FILE "resources/images.qrc"
 
-    FILE "utils/connectutils.hpp"
+    "utils/FastTimer"
     FILE "utils/Guarded.hpp"
     "utils/IconLocator"
     FILE "utils/Locked.hpp"
+    FILE "utils/TableActions.hpp"
+    FILE "utils/connectutils.hpp"
     "utils/utils"
 
     "widgets/docks/TableDock"

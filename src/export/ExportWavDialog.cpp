@@ -1,5 +1,5 @@
 
-#include "forms/ExportWavDialog.hpp"
+#include "export/ExportWavDialog.hpp"
 
 #include <QFileDialog>
 #include <QFileInfo>

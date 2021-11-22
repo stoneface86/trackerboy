@@ -2,7 +2,7 @@
 #include "forms/MainWindow.hpp"
 
 #include "utils/connectutils.hpp"
-#include "forms/ExportWavDialog.hpp"
+#include "export/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
 #include "widgets/docks/TableDock.hpp"
 

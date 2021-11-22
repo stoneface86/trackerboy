@@ -1,5 +1,5 @@
 
-#include "core/WavExporter.hpp"
+#include "export/WavExporter.hpp"
 
 #include "audio/Wav.hpp"
 

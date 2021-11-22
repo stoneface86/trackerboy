@@ -2,7 +2,7 @@
 #pragma once
 
 #include "model/BaseTableModel.hpp"
-#include "core/misc/TableActions.hpp"
+#include "utils/TableActions.hpp"
 
 #include <QKeySequence>
 #include <QListView>

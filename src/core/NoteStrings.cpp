@@ -1,5 +1,5 @@
 
-#include "core/misc/NoteStrings.hpp"
+#include "core/NoteStrings.hpp"
 
 
 namespace NoteStrings {

@@ -2,7 +2,7 @@
 #include "config/tabs/KeyboardConfigTab.hpp"
 
 #include "config/data/PianoInput.hpp"
-#include "core/misc/NoteStrings.hpp"
+#include "core/NoteStrings.hpp"
 #include "utils/connectutils.hpp"
 
 #include <QComboBox>

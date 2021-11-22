@@ -1,5 +1,5 @@
 
-#include "core/FastTimer.hpp"
+#include "utils/FastTimer.hpp"
 #include "utils/utils.hpp"
 
 #include <QMutexLocker>

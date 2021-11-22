@@ -3,7 +3,7 @@
 
 #include "core/Module.hpp"
 #include "core/ModuleFile.hpp"
-#include "core/WavExporter.hpp"
+#include "export/WavExporter.hpp"
 
 #include <QCheckBox>
 #include <QDialog>

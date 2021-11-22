@@ -4,7 +4,7 @@
 #include "config/data/Palette.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
-#include "core/misc/NoteStrings.hpp"
+#include "core/NoteStrings.hpp"
 #include "graphics/CachedPen.hpp"
 #include "graphics/CellPainter.hpp"
 #include "graphics/PatternLayout.hpp"

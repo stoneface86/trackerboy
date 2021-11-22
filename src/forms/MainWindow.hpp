@@ -5,7 +5,7 @@
 #include "audio/Renderer.hpp"
 #include "config/Config.hpp"
 #include "config/ConfigDialog.hpp"
-#include "core/misc/TableActions.hpp"
+#include "utils/TableActions.hpp"
 #include "model/PatternModel.hpp"
 #include "model/SongModel.hpp"
 #include "model/SongListModel.hpp"

@@ -6,7 +6,7 @@
 #include "audio/VisualizerBuffer.hpp"
 #include "config/data/SoundConfig.hpp"
 #include "core/ChannelOutput.hpp"
-#include "core/FastTimer.hpp"
+#include "utils/FastTimer.hpp"
 #include "core/Module.hpp"
 #include "utils/Guarded.hpp"
 
