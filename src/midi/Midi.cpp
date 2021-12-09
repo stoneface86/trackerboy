@@ -1,14 +1,14 @@
 
 #include "midi/Midi.hpp"
-#include "midi/MidiEvent.hpp"
 
 #include "trackerboy/note.hpp"
 
 #include <QCoreApplication>
 #include <QMutexLocker>
 #include <QtDebug>
+#include <QEvent>
 
-#include <utility>
+#include <algorithm>
 
 #define TU MidiTU
 namespace TU {
@@ -24,14 +24,62 @@ static void logError(const char* str, RtMidiError const& err) {
     qCritical() << LOG_PREFIX << str << err.getMessage().c_str();
 }
 
+//
+// Custom event for a MIDI input message
+//
+class MidiEvent : public QEvent {
+
+public:
+
+    enum Message {
+        NoteOn,
+        NoteOff
+    };
+
+    explicit MidiEvent(Message msg, int note = -1) :
+        QEvent(getType()),
+        mMessage(msg),
+        mNote(note)
+    {
+
+    }
+
+    //
+    // Get the type of the message that was received
+    //
+    Message message() const {
+        return mMessage;
+    }
+
+    //
+    // Get the note pressed if the message type was NoteOn
+    //
+    int note() const {
+        return mNote;
+    }
+
+    static constexpr Type getType() {
+        // since this event is only used internally by the Midi class, just
+        // use the first User event id. 
+        return QEvent::User;
+    }
+
+private:
+    Message const mMessage;
+    int const mNote;
+
+
+};
+
 }
 
 
 Midi::Midi(QObject *parent) :
     QObject(parent),
+    mReceiver(nullptr),
+    mNoteDown(false),
     mMidiIn(),
     mMutex(),
-    mReceiver(),
     mLastNotePitch(-1)
 {
 }
@@ -111,9 +159,42 @@ bool Midi::open(MidiEnumerator::Device const& device) {
 
 }
 
-void Midi::setReceiver(QObject *obj) {
-    if (!isOpen()) {
-        mReceiver = obj;
+void Midi::setReceiver(IMidiReceiver *receiver) {
+
+    if (mReceiver != receiver) {
+        // change the receiver
+        if (mNoteDown && mReceiver) {
+            // force the note off
+            // if we don't do this, the previous receiver won't get the next noteOff message
+            // and the note will be held indefinitely
+            mReceiver->midiNoteOff();
+            mNoteDown = false;
+        }
+        mReceiver = receiver;
+
+    }
+}
+
+void Midi::customEvent(QEvent *evt) {
+    if (evt->type() == TU::MidiEvent::getType()) {
+        auto midiEvt = static_cast<TU::MidiEvent*>(evt);
+        switch (midiEvt->message()) {
+            case TU::MidiEvent::NoteOff:
+                if (mReceiver) {
+                    mReceiver->midiNoteOff();
+                    mNoteDown = false;
+                }
+                break;
+            case TU::MidiEvent::NoteOn:
+                if (mReceiver) {
+                    mReceiver->midiNoteOn(midiEvt->note());
+                    mNoteDown = true;
+                }
+                break;
+            default:
+                break;
+        }
+
     }
 }
 
@@ -167,9 +248,7 @@ void Midi::handleMidiIn(double deltatime, std::vector<unsigned char> &message) {
             if (msgSize == 3) {
                 if (mLastNotePitch == (int)message[1]) {
                     mLastNotePitch = -1;
-                    if (mReceiver) {
-                        QCoreApplication::postEvent(mReceiver, new MidiEvent(MidiEvent::NoteOff), Qt::HighEventPriority);
-                    }
+                    QCoreApplication::postEvent(this, new TU::MidiEvent(TU::MidiEvent::NoteOff), Qt::HighEventPriority);
                 }
             }
             break;
@@ -180,9 +259,7 @@ void Midi::handleMidiIn(double deltatime, std::vector<unsigned char> &message) {
                 // 69 is A-4
                 // 36 is C-2
                 int trackerboyNote = std::clamp((int)message[1] - 36, 0, (int)trackerboy::NOTE_LAST);
-                if (mReceiver) {
-                    QCoreApplication::postEvent(mReceiver, new MidiEvent(MidiEvent::NoteOn, trackerboyNote), Qt::HighEventPriority);
-                }
+                QCoreApplication::postEvent(this, new TU::MidiEvent(TU::MidiEvent::NoteOn, trackerboyNote), Qt::HighEventPriority);
             }
             break;
         default:
@@ -201,9 +278,10 @@ void Midi::handleMidiError(RtMidiError::Type type, const std::string &errorText)
     mLastErrorString = QString::fromStdString(errorText);
     mMutex.unlock();
 
-    if (type != RtMidiError::WARNING || type != RtMidiError::WARNING) {
+    if (type != RtMidiError::WARNING) {
         emit error();
     }
 
 }
 
+#undef TU

@@ -19,7 +19,6 @@
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/TempoCalculator.hpp"
 #include "forms/CommentsDialog.hpp"
-#include "midi/IMidiReceiver.hpp"
 #include "midi/Midi.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
@@ -55,8 +54,6 @@ public:
 protected:
 
     virtual void closeEvent(QCloseEvent *evt) override;
-
-    virtual void customEvent(QEvent *evt) override;
 
     virtual void showEvent(QShowEvent *evt) override;
 
@@ -253,8 +250,6 @@ private:
     Config mConfig;
 
     Midi mMidi;
-    IMidiReceiver *mMidiReceiver;
-    bool mMidiNoteDown;
 
     Module *mModule;
     ModuleFile mModuleFile;

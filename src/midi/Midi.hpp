@@ -2,19 +2,20 @@
 #pragma once
 
 #include "midi/MidiEnumerator.hpp"
+#include "midi/IMidiReceiver.hpp"
 
 #include "RtMidi.h"
 
 #include <QMutex>
 #include <QObject>
-#include <QPointer>
 
 #include <optional>
 #include <vector>
 
 
 //
-// Midi class. Sends a MidiEvent whenever a MIDI message is received.
+// Midi class. Notifies an IMidiReceiver whenever a MIDI note message
+// is received.
 //
 class Midi : public QObject {
 
@@ -24,8 +25,14 @@ public:
 
     explicit Midi(QObject *parent = nullptr);
 
+    //
+    // Determine if the port is open.
+    //
     bool isOpen();
 
+    //
+    // RtMidi error string of the last error, empty for no error.
+    //
     QString lastError();
 
     //
@@ -34,24 +41,32 @@ public:
     void close();
 
     //
-    // Sets the port to receive MIDI messages from. true is returned
+    // Opens the port to receive MIDI messages from. true is returned
     // on success.
     //
     bool open(MidiEnumerator::Device const& device);
 
     //
-    // Sets the object that will receive MIDI message events. The receiver can only
-    // be set when there is no device open.
+    // Set the receiver that will respond to midi note on/off messages
     //
-    void setReceiver(QObject *obj);
+    void setReceiver(IMidiReceiver *receiver);
 
     
 signals:
+    //
+    // emitted if an error occurs during input
+    //
     void error();
+
+protected:
+
+    virtual void customEvent(QEvent *evt) override;
 
 private:
     Q_DISABLE_COPY(Midi)
 
+    IMidiReceiver *mReceiver;
+    bool mNoteDown;
 
     // callback functions
     // note that these functions are called from a separate thread
@@ -68,7 +83,6 @@ private:
     // start of mutex requirement
     // mutex is required since these variables are modified from
     // the callback functions, which are called from an RtMidi managed thread
-    QPointer<QObject> mReceiver;
     QString mLastErrorString;
 
     // MIDI pitch of the last note on message, we only send the noteOff signal

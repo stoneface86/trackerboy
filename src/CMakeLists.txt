@@ -160,7 +160,6 @@ makeSourceList(UI_SRC
     FILE "midi/IMidiReceiver.hpp"
     "midi/Midi"
     "midi/MidiEnumerator"
-    "midi/MidiEvent"
 
     "model/commands/order"
     "model/commands/pattern"
@@ -202,8 +201,6 @@ makeSourceList(UI_SRC
     "widgets/Sidebar"
     "widgets/SpeedLabel"
     "widgets/TempoLabel"
-
-    FILE "CustomEvents.hpp"
 )
 
 # https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake/4318642#4318642

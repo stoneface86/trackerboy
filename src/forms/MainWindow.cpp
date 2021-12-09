@@ -5,8 +5,6 @@
 #include "utils/IconLocator.hpp"
 #include "widgets/docks/TableDock.hpp"
 #include "version.hpp"
-#include "midi/MidiEvent.hpp"
-#include "CustomEvents.hpp"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -41,8 +39,6 @@ MainWindow::MainWindow() :
     mUntitledString(tr("Untitled")),
     mConfig(),
     mMidi(),
-    mMidiReceiver(nullptr),
-    mMidiNoteDown(false),
     mModule(),
     mModuleFile(),
     mErrorSinceLastConfig(false),
@@ -63,8 +59,6 @@ MainWindow::MainWindow() :
     mWaveModel = new WaveListModel(*mModule, this);
 
     mRenderer = new Renderer(*mModule, this);
-
-    mMidi.setReceiver(this);
 
     setupUi();
 
@@ -189,25 +183,6 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
     
 }
 
-void MainWindow::customEvent(QEvent *evt) {
-    if (evt->type() == CustomEvents::MidiEvent) {
-        auto midiEvt = static_cast<MidiEvent*>(evt);
-        switch (midiEvt->message()) {
-            case MidiEvent::NoteOff:
-                mMidiReceiver->midiNoteOff();
-                mMidiNoteDown = false;
-                break;
-            case MidiEvent::NoteOn:
-                mMidiReceiver->midiNoteOn(midiEvt->note());
-                mMidiNoteDown = true;
-                break;
-            default:
-                break;
-        }
-
-    }
-}
-
 void MainWindow::showEvent(QShowEvent *evt) {
     Q_UNUSED(evt)
     mPatternEditor->setFocus();
@@ -269,6 +244,7 @@ void MainWindow::setupUi() {
     centralWidget->setLayout(layout);
 
     setCentralWidget(centralWidget);
+    mMidi.setReceiver(mPatternEditor);
 
     {
         auto grid = mPatternEditor->grid();
@@ -563,19 +539,7 @@ void MainWindow::handleFocusChange(QWidget *oldWidget, QWidget *newWidget) {
             }
             widget = widget->parentWidget();
         }
-
-        if (mMidiReceiver != receiver) {
-            // change the receiver
-            if (mMidiNoteDown) {
-                // force the note off
-                // if we don't do this, the previous receiver won't get the next noteOff message
-                // and the note will be held indefinitely
-                mMidiReceiver->midiNoteOff();
-                mMidiNoteDown = false;
-            }
-            mMidiReceiver = receiver;
-
-        }
+        mMidi.setReceiver(receiver);
     }
 
 }
