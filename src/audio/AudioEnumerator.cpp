@@ -58,7 +58,7 @@ ma_backend AudioEnumerator::Context::backend() const {
 ma_context* AudioEnumerator::Context::get() {
     if (mContext == nullptr) {
         // lazy loading
-        mContext.reset(new ma_context);
+        mContext = std::make_shared<ma_context>();
         probe();
     }
 
@@ -68,6 +68,10 @@ ma_context* AudioEnumerator::Context::get() {
 
 ma_context* AudioEnumerator::Context::get() const {
     return mContext.get();
+}
+
+std::shared_ptr<ma_context> AudioEnumerator::Context::getShared() const {
+    return mContext;
 }
 
 ma_device_id const* AudioEnumerator::Context::id(int deviceIndex) const {
@@ -216,7 +220,7 @@ AudioEnumerator::Device AudioEnumerator::device(int backend, int device) const {
         return { nullptr, nullptr };
     } else {
         return {
-            mContexts[backend].get(),
+            mContexts[backend].getShared(),
             mContexts[backend].id(device)
         };
     }

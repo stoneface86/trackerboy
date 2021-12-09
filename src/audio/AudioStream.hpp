@@ -113,6 +113,7 @@ private:
     std::atomic_bool mRunning;
     AudioRingbuffer mBuffer;
 
+    std::shared_ptr<ma_context> mContext;
     MaDeviceWrapper mDevice;
     size_t mPlaybackDelay;
 

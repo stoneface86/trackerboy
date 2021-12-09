@@ -22,7 +22,7 @@ class AudioEnumerator {
 public:
 
     struct Device {
-        ma_context *context;
+        std::shared_ptr<ma_context> context;
         ma_device_id const* id;
     };
 
@@ -99,6 +99,8 @@ private:
 
         ma_context* get() const;
 
+        std::shared_ptr<ma_context> getShared() const;
+
         ma_device_id const* id(int deviceIndex) const;
 
         bool initialized() const;
@@ -123,7 +125,7 @@ private:
         // this way we only initialize the backends when they are used
 
 
-        std::unique_ptr<ma_context> mContext;
+        std::shared_ptr<ma_context> mContext;
         bool mInitialized;
         ma_backend const mBackend;
 

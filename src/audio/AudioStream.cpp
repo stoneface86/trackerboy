@@ -46,6 +46,7 @@ AudioStream::AudioStream(QObject *parent) :
     mEnabled(false),
     mRunning(false),
     mBuffer(),
+    mContext(),
     mDevice(),
     mPlaybackDelay(0),
     mUnderruns(0),
@@ -104,7 +105,8 @@ void AudioStream::open(AudioEnumerator::Device const& device, int samplerate, in
     deviceConfig.sampleRate = samplerate;
     deviceConfig.playback.pDeviceID = device.id;
 
-    auto result = mDevice.init(device.context, &deviceConfig);
+    mContext = device.context;
+    auto result = mDevice.init(mContext.get(), &deviceConfig);
     if (result != MA_SUCCESS) {
         handleError("could not initialize device:", result);
         return;
