@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QFileDialog>
 #include <QStringBuilder>
+#include <QUndoView>
 
 #define TU MainWindowTU
 namespace TU {
@@ -234,6 +235,7 @@ void MainWindow::onViewResetLayout() {
     removeToolBar(mToolbarInput);
 
     initState();
+    initSplitters();
 }
 
 void MainWindow::onMidiError() {
@@ -423,6 +425,19 @@ void MainWindow::showWaveEditor() {
     mWaveEditor->show();
 }
 
+void MainWindow::showHistory() {
+    if (mHistoryDialog == nullptr) {
+        mHistoryDialog = new PersistantDialog(this, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint);
+        auto layout = new QVBoxLayout;
+        auto undoView = new QUndoView(mModule->undoGroup());
+        layout->addWidget(undoView);
+        mHistoryDialog->setLayout(layout);
+        mHistoryDialog->setWindowTitle(tr("History"));
+    } 
+    mHistoryDialog->show();
+    
+}
+
 void MainWindow::onAudioStart() {
     if (!mRenderer->isRunning()) {
         return;
@@ -516,23 +531,12 @@ void MainWindow::onFrameSync() {
     mLastEngineFrame = frame;
 }
 
-namespace TU {
-
-void incrementSelectedItemInTableDock(QDockWidget *dock, int amount) {
-    auto table = qobject_cast<TableDock*>(dock->widget());
-    if (table) {
-        table->setSelectedItem(table->selectedItem() + amount);
-    }
-}
-
-}
-
 void MainWindow::previousInstrument() {
-    TU::incrementSelectedItemInTableDock(mDockInstruments, -1);
+    mInstruments->setSelectedItem(mInstruments->selectedItem() - 1);
 }
 
 void MainWindow::nextInstrument() {
-    TU::incrementSelectedItemInTableDock(mDockInstruments, 1);
+    mInstruments->setSelectedItem(mInstruments->selectedItem() + 1);
 }
 
 void MainWindow::previousPattern() {

@@ -150,6 +150,7 @@ makeSourceList(UI_SRC
     "forms/CommentsDialog"
     "forms/MainWindow"
     "forms/ModulePropertiesDialog"
+    "forms/PersistantDialog"
     "forms/TempoCalculator"
 
     "graphics/CachedPen"
@@ -175,6 +176,7 @@ makeSourceList(UI_SRC
     FILE "resources/icons.qrc"
     FILE "resources/images.qrc"
 
+    "utils/actions"
     "utils/FastTimer"
     FILE "utils/Guarded.hpp"
     "utils/IconLocator"

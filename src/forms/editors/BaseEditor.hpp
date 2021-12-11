@@ -3,14 +3,14 @@
 
 #include "model/BaseTableModel.hpp"
 #include "core/Module.hpp"
+#include "forms/PersistantDialog.hpp"
 #include "widgets/PianoWidget.hpp"
 
 #include <QComboBox>
 #include <QLineEdit>
-#include <QDialog>
 
 
-class BaseEditor : public QDialog {
+class BaseEditor : public PersistantDialog {
 
     Q_OBJECT
 
@@ -22,12 +22,6 @@ public:
 
     // needed because we can't call virtual functions in BaseEditor's constructor
     void init();
-
-protected:
-
-    virtual void showEvent(QShowEvent *evt) override;
-
-public slots:
 
     //
     // Opens the item at the given index for editing
@@ -60,7 +54,5 @@ private:
     QLineEdit *mNameEdit;
     QWidget *mEditorWidget;
     PianoWidget *mPiano;
-
-    bool mShown;
 
 };

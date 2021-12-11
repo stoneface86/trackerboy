@@ -2,11 +2,11 @@
 #pragma once
 
 #include "core/Module.hpp"
+#include "forms/PersistantDialog.hpp"
 
-#include <QDialog>
 #include <QPlainTextEdit>
 
-class CommentsDialog : public QDialog {
+class CommentsDialog : public PersistantDialog {
 
     Q_OBJECT
 

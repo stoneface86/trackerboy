@@ -2,6 +2,7 @@
 #pragma once
 
 #include <QObject>
+class QSplitter;
 
 #include <optional>
 #include <cstdint>
@@ -26,3 +27,11 @@ uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble);
 // safe to modify the object without synchronization primitives.
 //
 bool objectInCurrentThread(QObject const& object);
+
+//
+// Resize a splitter so that the first widget gets the specified amount of
+// available space. ie if ratio = 0.75f, the first widget will be resized
+// so it takes up 75% of the splitter's size.
+// ONLY WORKS FOR SPLITTERS WITH 2 WIDGETS!
+//
+void rationSplitter(QSplitter &splitter, float ratio);

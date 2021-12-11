@@ -1,5 +1,6 @@
 
 #include "widgets/Sidebar.hpp"
+#include "utils/actions.hpp"
 #include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
 
@@ -46,15 +47,10 @@ Sidebar::Sidebar(
 
     setLayout(layout);
 
-
-    mNextAction = new QAction(tr("Next song"), this);
-    mNextAction->setStatusTip(tr("Selects the next song in the list"));
-    mNextAction->setIcon(IconLocator::get(Icons::next));
+    mNextAction = createAction(this, tr("Next song"), tr("Selects the next song in the list"), Icons::next);
     connectActionToThis(mNextAction, nextSong);
 
-    mPrevAction = new QAction(tr("Previous song"), this);
-    mPrevAction->setStatusTip(tr("Selects the previous song in the list"));
-    mPrevAction->setIcon(IconLocator::get(Icons::prev));
+    mPrevAction = createAction(this, tr("Previous song"), tr("Selects the previous song in the list"), Icons::prev);
     connectActionToThis(mPrevAction, previousSong);
 
     lazyconnect(&mod, reloaded, this, reload);

@@ -3,6 +3,7 @@
 
 #include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
+#include "utils/utils.hpp"
 #include "widgets/docks/TableDock.hpp"
 #include "version.hpp"
 
@@ -15,6 +16,7 @@
 #include <QStatusBar>
 #include <QtDebug>
 #include <QUndoView>
+#include <QSplitter>
 
 #define TU MainWindowTU
 
@@ -23,13 +25,21 @@ namespace TU {
 static auto const KEY_MAIN_WINDOW = QStringLiteral("MainWindow");
 static auto const KEY_WINDOW_STATE = QStringLiteral("windowState");
 static auto const KEY_GEOMETRY = QStringLiteral("geometry");
+static auto const KEY_HSPLITTER = QStringLiteral("hsplitter");
+static auto const KEY_VSPLITTER = QStringLiteral("vsplitter");
+
 
 static auto const KEY_RECENT_FILES = QStringLiteral("recentFiles");
 
+static auto const DEFAULT_HSPLITTER_RATIO = 0.625f;
+static auto const DEFAULT_VSPLITTER_RATIO = 0.625f;
+
 //
 // increment this constant when adding new docks or toolbars
+// v2 - removed all dock widgets (no longer using QDockWidget)
+// v1 - initial version
 //
-static constexpr int WINDOW_STATE_VERSION = 1;
+static constexpr int WINDOW_STATE_VERSION = 2;
 
 }
 
@@ -47,7 +57,8 @@ MainWindow::MainWindow() :
     mTempoCalc(nullptr),
     mCommentsDialog(nullptr),
     mInstrumentEditor(nullptr),
-    mWaveEditor(nullptr)
+    mWaveEditor(nullptr),
+    mHistoryDialog(nullptr)
 {
 
     // create models
@@ -71,9 +82,7 @@ MainWindow::MainWindow() :
     settings.beginGroup(TU::KEY_MAIN_WINDOW);
 
     // restore geomtry from the last session
-    auto const geometry = settings.value(TU::KEY_GEOMETRY, QByteArray()).toByteArray();
-
-    if (geometry.isEmpty()) {
+    if (!restoreGeometry(settings.value(TU::KEY_GEOMETRY, QByteArray()).toByteArray())) {
         // no saved geometry, initialize it
         // we will take 3/4 of the primary screen's width and height, but we
         // will take no more than 1280x720
@@ -94,8 +103,6 @@ MainWindow::MainWindow() :
 
         newGeometry.moveTo(availableGeometry.center() - newGeometry.center());
         setGeometry(newGeometry);
-    } else {
-        restoreGeometry(geometry);
     }
 
     // restore window state if it exists
@@ -109,13 +116,19 @@ MainWindow::MainWindow() :
         addToolBar(mToolbarSong);
         addToolBar(mToolbarTracker);
         addToolBar(mToolbarInput);
-        addDockWidget(Qt::LeftDockWidgetArea, mDockHistory);
-        addDockWidget(Qt::LeftDockWidgetArea, mDockInstruments);
-        addDockWidget(Qt::LeftDockWidgetArea, mDockWaveforms);
         if (!restoreState(windowState, TU::WINDOW_STATE_VERSION)) {
             initState();
         }
     }
+
+    // restore splitter sizes
+    auto restoreSplitter = [](QSplitter &splitter, QByteArray const& state, float defaultRatio) {
+        if (!splitter.restoreState(state)) {
+            rationSplitter(splitter, defaultRatio);
+        }
+    };
+    restoreSplitter(*mVSplitter, settings.value(TU::KEY_VSPLITTER).toByteArray(), TU::DEFAULT_VSPLITTER_RATIO);
+    restoreSplitter(*mHSplitter, settings.value(TU::KEY_HSPLITTER).toByteArray(), TU::DEFAULT_HSPLITTER_RATIO);
 
     mModuleFile.setName(mUntitledString);
     updateWindowTitle();
@@ -172,6 +185,9 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
             settings.beginGroup(TU::KEY_MAIN_WINDOW);
             settings.setValue(TU::KEY_GEOMETRY, saveGeometry());
             settings.setValue(TU::KEY_WINDOW_STATE, saveState(TU::WINDOW_STATE_VERSION));
+            // splitters
+            settings.setValue(TU::KEY_HSPLITTER, mHSplitter->saveState());
+            settings.setValue(TU::KEY_VSPLITTER, mVSplitter->saveState());
         #ifdef QT_DEBUG
         }
         #endif
@@ -218,12 +234,6 @@ bool MainWindow::maybeSave() {
     return true;
 }
 
-QDockWidget* MainWindow::makeDock(QString const& title, QString const& objname) {
-    auto dock = new QDockWidget(title, this);
-    dock->setObjectName(objname);
-    return dock;
-}
-
 QToolBar* MainWindow::makeToolbar(QString const& title, QString const& objname) {
     auto toolbar = new QToolBar(title, this);
     toolbar->setObjectName(objname);
@@ -240,8 +250,40 @@ void MainWindow::setupUi() {
     mSidebar = new Sidebar(*mModule, *mPatternModel, *mSongListModel, *mSongModel);
     mPatternEditor = new PatternEditor(mConfig.pianoInput(), *mPatternModel);
     layout->addWidget(mSidebar);
-    layout->addWidget(mPatternEditor, 1);
     centralWidget->setLayout(layout);
+
+    mHSplitter = new QSplitter(Qt::Horizontal);
+    
+    mVSplitter = new QSplitter(Qt::Vertical);
+    auto setupTableEdit = [](QString const& table, TableDock *&dock, BaseTableModel &model, QKeySequence const& seq, QString const& str) {
+        auto group = new QGroupBox(table);
+        auto layout = new QVBoxLayout;
+        dock = new TableDock(model, seq, str);
+        layout->addWidget(dock);
+        layout->setMargin(0);
+        group->setLayout(layout);
+        return group;
+    };
+    mVSplitter->addWidget(
+        setupTableEdit(
+            tr("Instruments"),
+            mInstruments,
+            *mInstrumentModel,
+            tr("Ctrl+I"),
+            tr("instrument")
+        ));
+    mVSplitter->addWidget(
+        setupTableEdit(
+            tr("Waveforms"),
+            mWaveforms,
+            *mWaveModel,
+            tr("Ctrl+W"),
+            tr("waveform")
+        ));
+
+    mHSplitter->addWidget(mPatternEditor);
+    mHSplitter->addWidget(mVSplitter);
+    layout->addWidget(mHSplitter, 1);
 
     setCentralWidget(centralWidget);
     mMidi.setReceiver(mPatternEditor);
@@ -253,16 +295,7 @@ void MainWindow::setupUi() {
         lazyconnect(mSongModel, rowsPerBeatChanged, grid, setFirstHighlight);
         lazyconnect(mSongModel, rowsPerMeasureChanged, grid, setSecondHighlight);
     }
-
-    // DOCKS =================================================================
-
-    mDockHistory = makeDock(tr("History"), QStringLiteral("DockHistory"));
-    auto undoView = new QUndoView(mModule->undoGroup(), mDockHistory);
-    mDockHistory->setWidget(undoView);
-
-    mDockInstruments = makeDock(tr("Instruments"), QStringLiteral("DockInstruments"));
-    auto instruments = new TableDock(*mInstrumentModel, tr("Ctrl+I"), tr("instrument"), mDockInstruments);
-    connect(instruments, &TableDock::selectedItemChanged, this,
+    connect(mInstruments, &TableDock::selectedItemChanged, this,
         [this](int index) {
             int id = -1;
             if (index != -1) {
@@ -270,11 +303,6 @@ void MainWindow::setupUi() {
             }
             mPatternEditor->setInstrument(id);
         });
-    mDockInstruments->setWidget(instruments);
-
-    mDockWaveforms = makeDock(tr("Waveforms"), QStringLiteral("DockWaveforms"));
-    auto waveforms = new TableDock(*mWaveModel, tr("Ctrl+W"), tr("waveform"), mDockWaveforms);
-    mDockWaveforms->setWidget(waveforms);
 
     // TOOLBARS ==============================================================
 
@@ -303,7 +331,7 @@ void MainWindow::setupUi() {
 
     // ACTIONS ===============================================================
 
-    createActions(instruments->tableActions(), waveforms->tableActions());
+    createActions(mInstruments->tableActions(), mWaveforms->tableActions());
 
     mToolbarSong->addAction(mActionOrderInsert);
     mToolbarSong->addAction(mActionOrderRemove);
@@ -424,8 +452,8 @@ void MainWindow::setupUi() {
 
     lazyconnect(mRenderer, isPlayingChanged, mPatternModel, setPlaying);
 
-    lazyconnect(instruments, edit, this, editInstrument);
-    lazyconnect(waveforms, edit, this, editWaveform);
+    lazyconnect(mInstruments, edit, this, editInstrument);
+    lazyconnect(mWaveforms, edit, this, editWaveform);
 
     connect(mPatternEditor->gridHeader(), &PatternGridHeader::outputChanged, mRenderer, &Renderer::setChannelOutput);
 
@@ -441,14 +469,6 @@ void MainWindow::setupUi() {
 
 void MainWindow::initState() {
     // setup default layout
-
-    // setup corners, left and right get both corners
-    setCorner(Qt::Corner::TopLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
-    setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
-    setCorner(Qt::Corner::BottomLeftCorner, Qt::DockWidgetArea::LeftDockWidgetArea);
-    setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
-
-
     addToolBar(Qt::TopToolBarArea, mToolbarFile);
     mToolbarFile->show();
 
@@ -463,18 +483,11 @@ void MainWindow::initState() {
 
     addToolBar(Qt::TopToolBarArea, mToolbarInput);
     mToolbarInput->show();
+}
 
-    addDockWidget(Qt::RightDockWidgetArea, mDockHistory);
-    mDockHistory->setFloating(true);
-    mDockHistory->hide();
-
-    addDockWidget(Qt::RightDockWidgetArea, mDockInstruments);
-    mDockInstruments->setFloating(true);
-    mDockInstruments->hide();
-
-    addDockWidget(Qt::RightDockWidgetArea, mDockWaveforms);
-    mDockWaveforms->setFloating(true);
-    mDockWaveforms->hide();
+void MainWindow::initSplitters() {
+    rationSplitter(*mHSplitter, TU::DEFAULT_HSPLITTER_RATIO);
+    rationSplitter(*mVSplitter, TU::DEFAULT_VSPLITTER_RATIO);
 }
 
 void MainWindow::settingsMessageBox(QMessageBox &msgbox) {

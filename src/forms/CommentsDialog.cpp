@@ -6,7 +6,7 @@
 #include <QPushButton>
 
 CommentsDialog::CommentsDialog(Module &mod, QWidget *parent) :
-    QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
+    PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mModule(mod)
 {
     setWindowTitle(tr("Comments"));

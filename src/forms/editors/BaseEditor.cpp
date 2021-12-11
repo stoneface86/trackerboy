@@ -12,9 +12,8 @@ BaseEditor::BaseEditor(
     PianoInput const& input, 
     QWidget *parent
 ) :
-    QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
-    mModel(model),
-    mShown(false)
+    PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
+    mModel(model)
 {
 
     mCombo = new QComboBox;
@@ -69,20 +68,6 @@ int BaseEditor::currentItem() const {
 
 void BaseEditor::init() {
     onIndexChanged(mCombo->currentIndex());
-}
-
-void BaseEditor::showEvent(QShowEvent *evt) {
-    if (mShown) {
-        // accepting the event prevents the dialog from being centered within the
-        // parent widget (MainWindow).
-
-        // this way the dialog "remembers" its geometry
-        evt->accept();
-    } else {
-        // dialog hasn't been shown yet, center it within the parent widget
-        mShown = true;
-        QDialog::showEvent(evt);
-    }
 }
 
 void BaseEditor::onIndexChanged(int index) {

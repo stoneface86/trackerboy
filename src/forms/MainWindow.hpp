@@ -20,6 +20,7 @@
 #include "forms/TempoCalculator.hpp"
 #include "forms/CommentsDialog.hpp"
 #include "midi/Midi.hpp"
+#include "widgets/docks/TableDock.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 
@@ -31,6 +32,7 @@
 #include <QMessageBox>
 #include <QToolBar>
 #include <QSpinBox>
+#include <QSplitter>
 
 //
 // Main form for the application
@@ -98,6 +100,7 @@ private slots:
     void showTempoCalculator();
     void showInstrumentEditor();
     void showWaveEditor();
+    void showHistory();
 
     void onAudioStart();
     void onAudioError();
@@ -132,12 +135,6 @@ private:
         playing,
         error
     };
-
-    //
-    // Creates a new dock widget with the given title and object name. This
-    // class takes ownership of the returned dock widget.
-    //
-    QDockWidget* makeDock(QString const& title, QString const& objname);
 
     //
     // Creates a new toolbar with the given title and object name. This class
@@ -197,6 +194,11 @@ private:
     // Resets all toolbars and docks to the initial state.
     //
     void initState();
+
+    //
+    // initialize the size of each splitter to default
+    //
+    void initSplitters();
 
     //
     // Shows and adds a "Change settings" button that opens the configuration
@@ -273,6 +275,7 @@ private:
     CommentsDialog *mCommentsDialog;
     InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
+    PersistantDialog *mHistoryDialog;
 
     // toolbars
     QToolBar *mToolbarFile;
@@ -289,6 +292,7 @@ private:
     QAction *mActionOrderMoveUp;
     QAction *mActionOrderMoveDown;
 
+    QAction *mActionViewHistory;
     QAction *mActionViewReset;
 
     QAction *mActionFollowMode;
@@ -299,15 +303,13 @@ private:
     std::array<QAction*, 9> mRecentFilesActions;
     QAction* mRecentFilesSeparator;
 
-    // dock widgets
-
-    QDockWidget *mDockInstruments;
-    QDockWidget *mDockWaveforms;
-    QDockWidget *mDockHistory;
-
     // widgets
     Sidebar *mSidebar;
     PatternEditor *mPatternEditor;
+    TableDock *mInstruments;
+    TableDock *mWaveforms;
+    QSplitter *mHSplitter;
+    QSplitter *mVSplitter;
 
     // statusbar widgets
     QLabel *mStatusRenderer;

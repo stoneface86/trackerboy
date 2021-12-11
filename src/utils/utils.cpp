@@ -3,6 +3,7 @@
 
 #include <Qt>
 #include <QThread>
+#include <QSplitter>
 
 std::optional<uint8_t> keyToHex(int const key) {
     if (key >= Qt::Key_0 && key <= Qt::Key_9) {
@@ -24,4 +25,11 @@ uint8_t replaceNibble(uint8_t value, uint8_t nibble, bool highNibble) {
 
 bool objectInCurrentThread(QObject const& obj) {
     return obj.thread() == QThread::currentThread();
+}
+
+void rationSplitter(QSplitter &splitter, float ratio) {
+    auto total = splitter.orientation() == Qt::Horizontal ? splitter.width() : splitter.height();
+    auto first = (int)(total * ratio);
+    auto second = total - first;
+    splitter.setSizes({ first, second });
 }
