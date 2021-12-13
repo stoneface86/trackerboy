@@ -8,6 +8,7 @@
 #include "widgets/TempoLabel.hpp"
 
 #include <QLabel>
+#include <QPushButton>
 #include <QSpinBox>
 #include <QWidget>
 
@@ -31,6 +32,5 @@ private:
     CustomSpinBox *mSpeedSpin;
     SpeedLabel *mSpeedLabel;
     TempoLabel *mTempoLabel;
-    QSpinBox *mPatternSizeSpin;
-
+    QPushButton *mPatternSizeButton;
 };

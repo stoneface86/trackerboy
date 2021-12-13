@@ -1,7 +1,13 @@
 
 #include "widgets/sidebar/SongEditor.hpp"
+#include "utils/connectutils.hpp"
 
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QGridLayout>
+#include <QLabel>
+#include <QSpinBox>
+#include <QVBoxLayout>
 
 SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     QWidget(parent),
@@ -11,7 +17,7 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     mSpeedSpin(new CustomSpinBox),
     mSpeedLabel(new SpeedLabel),
     mTempoLabel(new TempoLabel),
-    mPatternSizeSpin(new QSpinBox)
+    mPatternSizeButton(new QPushButton)
 {
 
     auto layout = new QGridLayout;
@@ -26,9 +32,9 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     layout->addWidget(mRowsPerMeasureSpin, 1, 1);
     //
     label = new QLabel(tr("Rows"));
-    label->setBuddy(mPatternSizeSpin);
+    label->setBuddy(mPatternSizeButton);
     layout->addWidget(label, 2, 0);
-    layout->addWidget(mPatternSizeSpin, 2, 1);
+    layout->addWidget(mPatternSizeButton, 2, 1);
     //
     label = new QLabel(tr("Speed"));
     label->setBuddy(mSpeedSpin);
@@ -45,7 +51,6 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     mSpeedSpin->setRange(trackerboy::SPEED_MIN, trackerboy::SPEED_MAX);
     mSpeedSpin->setDisplayIntegerBase(16);
     mSpeedSpin->setPrefix("0x");
-    mPatternSizeSpin->setRange(1, 256);
 
     mSpeedLabel->setAlignment(Qt::AlignCenter);
     mTempoLabel->setAlignment(Qt::AlignCenter);
@@ -78,8 +83,7 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
 
     connect(&model, &SongModel::patternSizeChanged, this,
         [this](int rows) {
-            QSignalBlocker blocker(mPatternSizeSpin);
-            mPatternSizeSpin->setValue(rows);
+            mPatternSizeButton->setText(QString::number(rows));
         });
 
     model.reload();
@@ -87,7 +91,40 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setRowsPerBeat);
     connect(mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setRowsPerMeasure);
     connect(mSpeedSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setSpeed);
-    connect(mPatternSizeSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setPatternSize);
 
+    //
+    // a dialog is used for changing the pattern size instead of just a spin box. This is
+    // because changing the pattern size is a destructive operation with no undo (Decreasing
+    // the size results in existing data being truncated).
+    //
+
+    connect(mPatternSizeButton, &QPushButton::clicked, this,
+        [this]() {
+            QDialog diag(this, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint);
+            diag.setWindowTitle(tr("Change pattern size"));
+
+            QVBoxLayout layout;
+                QLabel label(tr("Pattern size:"));
+                QSpinBox sizeSpin;
+                QLabel warning(tr("Warning: this action cannot be undone."));
+                QDialogButtonBox buttons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    
+            layout.addWidget(&label);
+            layout.addWidget(&sizeSpin);
+            layout.addWidget(&warning);
+            layout.addWidget(&buttons);
+            layout.setSizeConstraint(QLayout::SetFixedSize);
+            diag.setLayout(&layout);
+
+            auto const originalSize = mSongModel.patternSize();
+            sizeSpin.setValue(originalSize);
+            sizeSpin.setRange(1, 256);
+            lazyconnect(&buttons, accepted, &diag, accept);
+            lazyconnect(&buttons, rejected, &diag, reject);
+
+            if (diag.exec() == QDialog::Accepted) {
+                mSongModel.setPatternSize(sizeSpin.value());
+            }
+        });
 
 }

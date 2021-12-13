@@ -7,6 +7,7 @@
 #include "widgets/docks/TableDock.hpp"
 
 #include <QApplication>
+#include <QElapsedTimer>
 #include <QFileDialog>
 #include <QStringBuilder>
 #include <QUndoView>
