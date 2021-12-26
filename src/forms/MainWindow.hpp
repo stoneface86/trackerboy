@@ -26,6 +26,7 @@
 
 #include "trackerboy/engine/Frame.hpp"
 
+#include <QBasicTimer>
 #include <QDockWidget>
 #include <QLabel>
 #include <QMainWindow>
@@ -58,6 +59,8 @@ protected:
     virtual void closeEvent(QCloseEvent *evt) override;
 
     virtual void showEvent(QShowEvent *evt) override;
+
+    virtual void timerEvent(QTimerEvent *evt) override;
 
 private slots:
 
@@ -267,6 +270,8 @@ private:
     bool mErrorSinceLastConfig;
     trackerboy::Frame mLastEngineFrame;
     int mFrameSkip;
+
+    QBasicTimer mAutosaveTimer;
 
     // dialogs
     AboutDialog *mAboutDialog;

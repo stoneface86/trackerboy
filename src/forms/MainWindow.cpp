@@ -17,6 +17,7 @@
 #include <QtDebug>
 #include <QUndoView>
 #include <QSplitter>
+#include <QTimerEvent>
 
 #define TU MainWindowTU
 
@@ -202,6 +203,16 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
 void MainWindow::showEvent(QShowEvent *evt) {
     Q_UNUSED(evt)
     mPatternEditor->setFocus();
+}
+
+void MainWindow::timerEvent(QTimerEvent *evt) {
+    if (evt->timerId() == mAutosaveTimer.timerId()) {
+        qDebug() << "[MainWindow] Auto-saving...";
+        onFileSave();
+        mAutosaveTimer.stop();
+    } else {
+        QMainWindow::timerEvent(evt);
+    }
 }
 
 // PRIVATE METHODS -----------------------------------------------------------
@@ -438,8 +449,18 @@ void MainWindow::setupUi() {
 
     lazyconnect(&mMidi, error, this, onMidiError);
 
-
-    connect(mModule, &Module::modifiedChanged, this, &MainWindow::setWindowModified);
+    connect(mModule, &Module::modifiedChanged, this,
+        [this](bool modified) {
+            if (modified) {
+                if (mModuleFile.hasFile() && mConfig.general().hasAutosave()) {
+                    qDebug() << "[MainWindow] Auto-save scheduled";
+                    mAutosaveTimer.start(mConfig.general().autosaveInterval() * 1000, this);
+                }
+            } else {
+                mAutosaveTimer.stop();
+            }
+            setWindowModified(modified);
+        });
 
     connect(mRenderer, &Renderer::audioStarted, this, &MainWindow::onAudioStart);
     connect(mRenderer, &Renderer::audioStopped, this, &MainWindow::onAudioStop);

@@ -254,6 +254,14 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
 
     Config::Categories flags = Config::CategoryNone;
 
+    //if (categories.testFlag(Config::CategoryGeneral))
+    {
+        auto const& general = mConfig.general();
+
+
+    }
+
+
     if (categories.testFlag(Config::CategorySound)) {
         auto const& sound = mConfig.sound();
         mStatusSamplerate->setText(tr("%1 Hz").arg(sound.samplerate()));

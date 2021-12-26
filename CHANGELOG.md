@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Appearance tab in Config dialog for changing fonts, colors and other settings
  - Keyboard tab in Config dialog for changing keyboard layout and editing keybinds.
  - Colors for the audio scope and graph editors are now customizable
+ - Autosave. Disabled by default, enable in the General tab in Config.
 ### Changed
  - Combined the Sound and Midi tabs in the Configuration dialog (Sound + MIDI)
  - AZERTY keyboard layout uses French AZERTY
