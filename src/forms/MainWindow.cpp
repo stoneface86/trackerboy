@@ -53,7 +53,6 @@ MainWindow::MainWindow() :
     mModule(),
     mModuleFile(),
     mErrorSinceLastConfig(false),
-    mAboutDialog(nullptr),
     mAudioDiag(nullptr),
     mTempoCalc(nullptr),
     mCommentsDialog(nullptr),

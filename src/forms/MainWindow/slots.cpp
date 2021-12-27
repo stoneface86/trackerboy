@@ -5,6 +5,7 @@
 #include "export/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
 #include "widgets/docks/TableDock.hpp"
+#include "version.hpp"
 
 #include <QApplication>
 #include <QElapsedTimer>
@@ -329,10 +330,31 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
 }
 
 void MainWindow::showAboutDialog() {
-    if (mAboutDialog == nullptr) {
-        mAboutDialog = new AboutDialog(this);
-    }
-    mAboutDialog->show();
+
+    QMessageBox::about(this, tr("About"),
+        QStringLiteral(
+R"bodystr(
+<html><head/>
+<body>
+<h1>Trackerboy v%1</h1>
+<h3>Gameboy/Gameboy Color music tracker</h3>
+<h3>Copyright (C) 2019-2021 stoneface86</h3>
+<br/>
+<span>Repo - <a href="https://github.com/stoneface86/trackerboy">https://github.com/stoneface86/trackerboy</a></span>
+<br/>
+<span>Commit: %2</span>
+<br/>
+<p>This software is licensed under the MIT License.</p>
+<hr/>
+<h3>Libraries</h3>
+<ul>
+<li>miniaudio 0.10.42 (C) David Reid</li>
+<li>RtMidi 4.0.0 (C) Gary P. Scavone</li>
+</ul>
+</body>
+</html>
+)bodystr").arg(QString::fromLatin1(VERSION_STR), QString::fromUtf8(GIT_SHA1)));
+
 }
 
 void MainWindow::showAudioDiag() {

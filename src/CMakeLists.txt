@@ -146,7 +146,6 @@ makeSourceList(UI_SRC
     "forms/editors/WaveEditor"
     FILE "forms/MainWindow/actions.cpp"
     FILE "forms/MainWindow/slots.cpp"
-    "forms/AboutDialog"
     "forms/AudioDiagDialog"
     "forms/CommentsDialog"
     "forms/MainWindow"

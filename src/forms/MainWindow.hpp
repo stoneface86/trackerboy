@@ -15,7 +15,6 @@
 #include "config/data/PianoInput.hpp"
 #include "forms/editors/InstrumentEditor.hpp"
 #include "forms/editors/WaveEditor.hpp"
-#include "forms/AboutDialog.hpp"
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/TempoCalculator.hpp"
 #include "forms/CommentsDialog.hpp"
@@ -274,7 +273,6 @@ private:
     QBasicTimer mAutosaveTimer;
 
     // dialogs
-    AboutDialog *mAboutDialog;
     AudioDiagDialog *mAudioDiag;
     TempoCalculator *mTempoCalc;
     CommentsDialog *mCommentsDialog;
