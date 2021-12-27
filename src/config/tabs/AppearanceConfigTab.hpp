@@ -5,7 +5,6 @@
 class PaletteModel; // implemented in AppearanceConfigTab.cpp
 
 #include <QDir>
-class QCheckBox;
 class QColorDialog;
 #include <QModelIndex>
 class QPushButton;
@@ -43,9 +42,6 @@ private:
     static constexpr size_t FONT_COUNT = 3;
     std::array<QPushButton*, FONT_COUNT> mFontChooseButtons;
     std::array<QFont, FONT_COUNT> mFonts;
-
-    QCheckBox *mShowFlatsCheck;
-    QCheckBox *mShowPreviewsCheck;
 
     QPushButton *mDefaultButton;
 

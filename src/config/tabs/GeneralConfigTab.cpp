@@ -23,7 +23,9 @@ static std::array<const char*, GeneralConfig::OptionCount> const OPTION_TEXT = {
     QT_TR_NOOP("Backup module on save"),
     QT_TR_NOOP("Wrap cursor"),
     QT_TR_NOOP("Wrap cursor across patterns"),
-    QT_TR_NOOP("Show row numbers in hexadecimal")
+    QT_TR_NOOP("Show row numbers in hexadecimal"),
+    QT_TR_NOOP("Show flat accidentals instead of sharps"),
+    QT_TR_NOOP("Show pattern previews")
 };
 
 }
@@ -99,6 +101,8 @@ void GeneralConfigTab::apply(GeneralConfig &config) {
         auto item = mOptionList->item(i);
         config.setOption((GeneralConfig::Options)i, item->checkState() == Qt::Checked);
     }
+
+    clean();
 }
 
 #undef TU

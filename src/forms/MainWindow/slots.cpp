@@ -256,7 +256,8 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
 
     if (categories.testFlag(Config::CategoryGeneral)) {
         auto const& general = mConfig.general();
-        
+        mPatternEditor->grid()->setShowFlats(general.hasOption(GeneralConfig::OptionShowFlats));
+        mPatternModel->setPreviewEnable(general.hasOption(GeneralConfig::OptionShowPreviews));
     }
 
 
@@ -283,8 +284,7 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
         auto const& pal = mConfig.palette();
 
         mPatternEditor->grid()->setFont(appearance.patternGridFont());
-        mPatternEditor->grid()->setShowFlats(appearance.showFlats());
-        mPatternModel->setPreviewEnable(appearance.showPreviews());
+        
         mPatternEditor->setColors(pal);
 
         mPatternEditor->gridHeader()->setFont(appearance.patternGridHeaderFont());

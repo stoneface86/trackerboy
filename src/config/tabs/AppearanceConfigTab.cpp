@@ -2,7 +2,6 @@
 #include "config/tabs/AppearanceConfigTab.hpp"
 #include "utils/connectutils.hpp"
 
-#include <QCheckBox>
 #include <QColorDialog>
 #include <QFontDialog>
 #include <QFileDialog>
@@ -408,14 +407,6 @@ AppearanceConfigTab::AppearanceConfigTab(
     fontLayout->setColumnStretch(1, 1);
     fontGroup->setLayout(fontLayout);
 
-    auto generalGroup = new QGroupBox(tr("General"));
-    auto generalLayout = new QVBoxLayout;
-    mShowFlatsCheck = new QCheckBox(tr("Show flats instead of sharps"));
-    generalLayout->addWidget(mShowFlatsCheck);
-    mShowPreviewsCheck = new QCheckBox(tr("Show pattern previews"));
-    generalLayout->addWidget(mShowPreviewsCheck);
-    generalGroup->setLayout(generalLayout);
-
     auto colorGroup = new QGroupBox(tr("Colors"));
     auto colorLayout = new QVBoxLayout;
     auto colorTree = new QTreeView;
@@ -435,7 +426,6 @@ AppearanceConfigTab::AppearanceConfigTab(
     colorGroup->setLayout(colorLayout);
 
     layout->addWidget(fontGroup);
-    layout->addWidget(generalGroup);
     layout->addWidget(colorGroup);
     layout->addStretch();
     setLayout(layout);
@@ -450,15 +440,8 @@ AppearanceConfigTab::AppearanceConfigTab(
     setFont(1, appearance.orderGridFont());
     setFont(2, appearance.patternGridHeaderFont(), false);
 
-    mShowFlatsCheck->setChecked(appearance.showFlats());
-    mShowPreviewsCheck->setChecked(appearance.showPreviews());
-
     mModel->setPalette(pal);
     mDefaultButton->setEnabled(!pal.isDefault());
-
-
-    lazyconnect(mShowFlatsCheck, toggled, this, setDirty<Config::CategoryAppearance>);
-    lazyconnect(mShowPreviewsCheck, toggled, this, setDirty<Config::CategoryAppearance>);
 
     connect(mModel, &PaletteModel::dataChanged, this,
         [this]() {
@@ -534,9 +517,6 @@ void AppearanceConfigTab::apply(AppearanceConfig &appearanceConfig, Palette &pal
     appearanceConfig.setPatternGridFont(mFonts[0]);
     appearanceConfig.setOrderGridFont(mFonts[1]);
     appearanceConfig.setPatternGridHeaderFont(mFonts[2]);
-
-    appearanceConfig.setShowFlats(mShowFlatsCheck->isChecked());
-    appearanceConfig.setShowPreviews(mShowPreviewsCheck->isChecked());
 
     pal = mModel->palette();
 

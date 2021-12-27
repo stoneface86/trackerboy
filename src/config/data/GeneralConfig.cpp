@@ -4,6 +4,7 @@
 #include "config/data/keys.hpp"
 
 GeneralConfig::GeneralConfig() :
+    mPageStep(1),
     mAutosave(false),
     mAutosaveInterval(1),
     mOptions()
@@ -52,6 +53,8 @@ void GeneralConfig::readSettings(QSettings &settings) {
     readOption(OptionCursorWrap, Keys::cursorWrap, true);
     readOption(OptionCursorWrapPattern, Keys::cursorWrapPattern, true);
     readOption(OptionRownoHex, Keys::rownoHex, true);
+    readOption(OptionShowFlats, Keys::showFlats, false);
+    readOption(OptionShowPreviews, Keys::showPreviews, true);
 
     // autosave is off by default
     mAutosave = settings.value(Keys::autosave, false).toBool();
@@ -76,6 +79,8 @@ void GeneralConfig::writeSettings(QSettings &settings) const {
     writeOption(OptionCursorWrap, Keys::cursorWrap);
     writeOption(OptionCursorWrapPattern, Keys::cursorWrapPattern);
     writeOption(OptionRownoHex, Keys::rownoHex);
+    writeOption(OptionShowFlats, Keys::showFlats);
+    writeOption(OptionShowPreviews, Keys::showPreviews);
 
     settings.endGroup();
 }

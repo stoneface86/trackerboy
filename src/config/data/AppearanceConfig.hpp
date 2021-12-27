@@ -11,10 +11,6 @@ public:
 
     AppearanceConfig();
 
-    bool showFlats() const;
-
-    bool showPreviews() const;
-
     QFont patternGridFont() const;
 
     QFont patternGridHeaderFont() const;
@@ -27,10 +23,6 @@ public:
 
     void setOrderGridFont(QFont const& font);
 
-    void setShowFlats(bool showFlats);
-
-    void setShowPreviews(bool showPreviews);
-
     void readSettings(QSettings &settings);
 
     void writeSettings(QSettings &settings) const;
@@ -40,7 +32,5 @@ private:
     QFont mPatternGridFont;
     QFont mPatternGridHeaderFont;
     QFont mOrderGridFont;
-    bool mShowFlats;         // if true flats will be shown for accidental notes
-    bool mShowPreviews;      // if true, pattern previews will be rendered
 
 };

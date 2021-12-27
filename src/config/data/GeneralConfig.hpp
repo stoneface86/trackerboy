@@ -12,8 +12,10 @@ public:
     enum Options {
         OptionBackupCopy,
         OptionCursorWrap,
-        OptionCursorWrapPattern,
-        OptionRownoHex,
+        OptionCursorWrapPattern,    // wrap the cursor to start/end of order
+        OptionRownoHex,             // use hex for row numbers
+        OptionShowFlats,            // if enabled flats will be shown for accidental notes
+        OptionShowPreviews,         // if enabled previous/next pattern in order will be drawn
 
         OptionCount
     };
