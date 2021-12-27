@@ -50,7 +50,7 @@ public:
 
         setLayout(layout);
 
-        mDeviceCombo->setMaximumWidth(300); // device names can get pretty long sometimes
+        //mDeviceCombo->setMaximumWidth(300); // device names can get pretty long sometimes
 
     }
 

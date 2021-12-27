@@ -124,6 +124,7 @@ makeSourceList(UI_SRC
     "config/data/SoundConfig"
     "config/tabs/AppearanceConfigTab"
     "config/tabs/ConfigTab"
+    "config/tabs/GeneralConfigTab"
     "config/tabs/KeyboardConfigTab"
     "config/tabs/SoundConfigTab"
     "config/Config"

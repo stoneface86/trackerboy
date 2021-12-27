@@ -4,21 +4,18 @@
 #include "config/data/keys.hpp"
 
 GeneralConfig::GeneralConfig() :
-    mHistoryLimit(64),
     mAutosave(false),
     mAutosaveInterval(1),
     mOptions()
 {
 }
 
-int GeneralConfig::historyLimit() const {
-    return mHistoryLimit;
+int GeneralConfig::pageStep() const {
+    return mPageStep;
 }
 
-void GeneralConfig::setHistoryLimit(int limit) {
-    if (limit >= 0) {
-        mHistoryLimit = limit;
-    }
+void GeneralConfig::setPageStep(int step) {
+    mPageStep = step;
 }
 
 bool GeneralConfig::hasAutosave() const {
@@ -47,8 +44,6 @@ void GeneralConfig::setOption(Options option, bool enabled) {
 
 void GeneralConfig::readSettings(QSettings &settings) {
     settings.beginGroup(Keys::General);
-
-    mHistoryLimit = settings.value(Keys::historyLimit, mHistoryLimit).toInt();
     
     auto readOption = [this, &settings](Options option, QString const& key, bool defaultValue) {
         mOptions.set(option, settings.value(key, defaultValue).toBool());
@@ -62,6 +57,7 @@ void GeneralConfig::readSettings(QSettings &settings) {
     mAutosave = settings.value(Keys::autosave, false).toBool();
     // default autosave interval is 30 seconds
     mAutosaveInterval = settings.value(Keys::autosaveInterval, 30).toInt();
+    mPageStep = settings.value(Keys::pageStep, 4).toInt();
 
     settings.endGroup();
 }
@@ -70,9 +66,9 @@ void GeneralConfig::writeSettings(QSettings &settings) const {
     settings.beginGroup(Keys::General);
     settings.remove(QString());
 
-    settings.setValue(Keys::historyLimit, mHistoryLimit);
     settings.setValue(Keys::autosave, mAutosave);
     settings.setValue(Keys::autosaveInterval, mAutosaveInterval);
+    settings.setValue(Keys::pageStep, mPageStep);
     auto writeOption = [this, &settings](Options option, QString const& key) {
         settings.setValue(key, mOptions.test(option));
     };

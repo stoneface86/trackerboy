@@ -30,11 +30,13 @@ public:
         CategoryAppearance = 2,
         CategoryKeyboard = 4,
         CategoryMidi = 8,
+        CategoryGeneral = 16,
 
         CategoryAll = CategorySound |
                       CategoryAppearance |
                       CategoryKeyboard |
-                      CategoryMidi
+                      CategoryMidi |
+                      CategoryGeneral
     };
     Q_DECLARE_FLAGS(Categories, Category)
     
@@ -73,11 +75,9 @@ public:
 
 
 private:
-
     
     AppearanceConfig mAppearance;
     GeneralConfig mGeneral;
-    // KeyboardConfig mKeyboard;
     MidiConfig mMidi;
     SoundConfig mSound;
 

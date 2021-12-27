@@ -4,6 +4,7 @@
 #include "config/Config.hpp"
 #include "midi/MidiEnumerator.hpp"
 
+class GeneralConfigTab;
 class AppearanceConfigTab;
 class KeyboardConfigTab;
 class SoundConfigTab;
@@ -29,8 +30,6 @@ public:
 
     virtual void accept() override;
 
-    void setProblems(Config::Categories categories, QString const& problems);
-
     void unclean(Config::Categories categories);
 
 signals:
@@ -54,6 +53,7 @@ private:
     // user clicks the OK or Apply button.
     Config::Categories mDirty;
 
+    GeneralConfigTab *mGeneral;
     AppearanceConfigTab *mAppearance;
     KeyboardConfigTab *mKeyboard;
     SoundConfigTab *mSound;

@@ -254,11 +254,9 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
 
     Config::Categories flags = Config::CategoryNone;
 
-    //if (categories.testFlag(Config::CategoryGeneral))
-    {
+    if (categories.testFlag(Config::CategoryGeneral)) {
         auto const& general = mConfig.general();
-
-
+        
     }
 
 

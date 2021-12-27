@@ -20,8 +20,8 @@ public:
 
     GeneralConfig();
 
-    int historyLimit() const;
-    void setHistoryLimit(int limit);
+    int pageStep() const;
+    void setPageStep(int step);
 
     bool hasAutosave() const;
     void setAutosave(bool autosave);
@@ -38,7 +38,7 @@ public:
 
 private:
 
-    int mHistoryLimit;
+    int mPageStep;
 
     bool mAutosave;
     int mAutosaveInterval;

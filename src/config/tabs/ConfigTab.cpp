@@ -25,6 +25,7 @@ void ConfigTab::setDirty(Config::Category flag) {
 }
 
 template void ConfigTab::setDirty<Config::CategoryAppearance>();
+template void ConfigTab::setDirty<Config::CategoryGeneral>();
 template void ConfigTab::setDirty<Config::CategoryKeyboard>();
 template void ConfigTab::setDirty<Config::CategoryMidi>();
 template void ConfigTab::setDirty<Config::CategorySound>();

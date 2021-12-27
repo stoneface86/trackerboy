@@ -4,6 +4,7 @@
 #include "utils/connectutils.hpp"
 
 #include "config/tabs/AppearanceConfigTab.hpp"
+#include "config/tabs/GeneralConfigTab.hpp"
 #include "config/tabs/KeyboardConfigTab.hpp"
 #include "config/tabs/SoundConfigTab.hpp"
 
@@ -28,6 +29,9 @@ ConfigDialog::ConfigDialog(
 
     auto tabs = new QTabWidget;
 
+    mGeneral = new GeneralConfigTab(config.general());
+    tabs->addTab(mGeneral, tr("General"));
+
     mAppearance = new AppearanceConfigTab(config.appearance(), config.palette());
     tabs->addTab(mAppearance, tr("Appearance"));
 
@@ -51,6 +55,7 @@ ConfigDialog::ConfigDialog(
     auto applyButton = mButtons->button(QDialogButtonBox::Apply);
     applyButton->setEnabled(false);
 
+    lazyconnect(mGeneral, dirty, this, setDirty);
     lazyconnect(mAppearance, dirty, this, setDirty);
     lazyconnect(mKeyboard, dirty, this, setDirty);
     lazyconnect(mSound, dirty, this, setDirty);
@@ -75,6 +80,10 @@ bool ConfigDialog::apply() {
     // update all changes to the Config object
 
     if (mDirty) {
+
+        if (mDirty.testFlag(Config::CategoryGeneral)) {
+            mGeneral->apply(mConfig.general());
+        }
 
         if (mDirty.testFlag(Config::CategoryAppearance)) {
             mAppearance->apply(mConfig.appearance(), mConfig.palette());
