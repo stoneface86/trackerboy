@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - No longer using dock widgets, Instruments + Waveforms are now located to
    the right of the pattern editor.
  - Pattern editor row numbers can be displayed in decimal (default is hexadecimal)
+ - Cursor wrap can now be disabled in General settings
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor

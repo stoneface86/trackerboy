@@ -260,6 +260,8 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
         mPatternEditor->grid()->setShowFlats(general.hasOption(GeneralConfig::OptionShowFlats));
         mPatternModel->setPreviewEnable(general.hasOption(GeneralConfig::OptionShowPreviews));
         mPatternEditor->setRownoHex(general.hasOption(GeneralConfig::OptionRownoHex));
+        mPatternModel->setCursorWrap(general.hasOption(GeneralConfig::OptionCursorWrap));
+        mPatternModel->setCursorWrapPattern(general.hasOption(GeneralConfig::OptionCursorWrapPattern));
     }
 
 

@@ -27,6 +27,8 @@ PatternModel::PatternModel(Module &mod, SongModel &songModel, QObject *parent) :
     mFollowing(true),
     mPlaying(false),
     mShowPreviews(true),
+    mWrapCursor(true),
+    mWrapPattern(true),
     mTrackerRow(0),
     mTrackerPattern(0),
     mPatternPrev(),
@@ -283,24 +285,31 @@ void PatternModel::setCursorRowImpl(int row, CursorChangeFlags &flags) {
     int newRow;
     if (row < 0) {
         // go to the previous pattern or wrap around to the last one
-        int prevPattern;
-        if (mCursorPattern == 0) {
-            prevPattern = patterns() - 1;
+        if (mWrapPattern) {
+            int prevPattern;
+            if (mCursorPattern == 0) {
+                prevPattern = patterns() - 1;
+            } else {
+                prevPattern = mCursorPattern - 1;
+            }
+            setCursorPatternImpl(prevPattern, flags);
+            newRow = std::max(0, (int)mPatternCurr.totalRows() + row);
         } else {
-            prevPattern = mCursorPattern - 1;
+            newRow = 0;
         }
-        setCursorPatternImpl(prevPattern, flags);
-        newRow = std::max(0, (int)mPatternCurr.totalRows() + row);
-
     } else if (row >= (int)mPatternCurr.totalRows()) {
-        // go to the next pattern or wrap around to the first one
-        row -= mPatternCurr.totalRows();
-        auto nextPattern = mCursorPattern + 1;
-        if (nextPattern == patterns()) {
-            nextPattern = 0;
+        if (mWrapPattern) {
+            // go to the next pattern or wrap around to the first one
+            row -= mPatternCurr.totalRows();
+            auto nextPattern = mCursorPattern + 1;
+            if (nextPattern == patterns()) {
+                nextPattern = 0;
+            }
+            setCursorPatternImpl(nextPattern, flags);
+            newRow = std::min((int)mPatternCurr.totalRows() - 1, row);
+        } else {
+            newRow = mPatternCurr.totalRows() - 1;
         }
-        setCursorPatternImpl(nextPattern, flags);
-        newRow = std::min((int)mPatternCurr.totalRows() - 1, row);
     } else {
         newRow = row;
     }
@@ -339,14 +348,19 @@ void PatternModel::setCursorColumnImpl(int column, CursorChangeFlags &flags) {
 
     if (column < 0) {
         auto track = mCursor.track - 1;
-        if (track < 0) {
-            track = PatternCursor::MAX_TRACKS - 1;
-        }
-        column = mMaxColumns[track] - 1;
         setCursorTrackImpl(track, flags);
+        if (flags & CursorTrackChanged) {
+            column = mMaxColumns[mCursor.track] - 1;
+        } else {
+            column = 0;
+        }
     } else if (column >= mMaxColumns[mCursor.track]) {
-        column = 0;
         setCursorTrackImpl(mCursor.track + 1, flags);
+        if (flags & CursorTrackChanged) {
+            column = 0;
+        } else {
+            column = mMaxColumns[mCursor.track] - 1;
+        }
     }
 
     if (mCursor.column != column) {
@@ -367,10 +381,14 @@ void PatternModel::setCursorTrackImpl(int track, CursorChangeFlags &flags) {
         return;
     }
 
-    if (track < 0) {
-        track = PatternCursor::MAX_TRACKS - (-track % PatternCursor::MAX_TRACKS);
-    } else if (track > 3) {
-        track %= PatternCursor::MAX_TRACKS;
+    if (mWrapCursor) {
+        if (track < 0) {
+            track = PatternCursor::MAX_TRACKS - (-track % PatternCursor::MAX_TRACKS);
+        } else if (track > 3) {
+            track %= PatternCursor::MAX_TRACKS;
+        }
+    } else {
+        track = std::clamp(track, 0, PatternCursor::MAX_TRACKS - 1);
     }
 
     if (track != mCursor.track) {
@@ -462,6 +480,14 @@ void PatternModel::setPreviewEnable(bool enable) {
         }
         emit invalidated();
     }
+}
+
+void PatternModel::setCursorWrap(bool wrap) {
+    mWrapCursor = wrap;
+}
+
+void PatternModel::setCursorWrapPattern(bool wrap) {
+    mWrapPattern = wrap;
 }
 
 trackerboy::Song* PatternModel::source() const {

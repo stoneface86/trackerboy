@@ -89,6 +89,10 @@ public:
     void setTrackerCursor(int row, int pattern);
     void setPlaying(bool playing);
 
+    void setCursorWrap(bool wrap);
+
+    void setCursorWrapPattern(bool wrap);
+
     int patterns() const;
 
     int totalColumns() const;
@@ -204,11 +208,6 @@ public:
     void moveOrderDown();
 
     //
-    // Resize the order to the given count. Count must be >= 1 and <= 256
-    //
-    void setOrderCount(int count);
-
-    //
     // Makes an effect column visible for the track
     //
     void showEffect(int track);
@@ -321,6 +320,8 @@ private:
     bool mFollowing;
     bool mPlaying;
     bool mShowPreviews;
+    bool mWrapCursor;
+    bool mWrapPattern;
 
     int mTrackerRow;
     int mTrackerPattern;
