@@ -161,6 +161,11 @@ void PatternEditor::setColors(Palette const& colors) {
     mGrid->setColors(colors);
 }
 
+void PatternEditor::setRownoHex(bool hex) {
+    mGrid->setRownoHex(hex);
+    mGridHeader->update();
+}
+
 bool PatternEditor::event(QEvent *evt)  {
     if (evt->type() == QEvent::KeyPress) {
         auto keyEvt = static_cast<QKeyEvent*>(evt);

@@ -64,8 +64,12 @@ int locateSelect(int selectColumn, int cellWidth) {
 PatternLayout::PatternLayout() :
     mCellWidth(0),
     mCellHeight(0),
+    mTrackWidths(),
+    mTrackStarts(),
     mPatternWidth(0),
-    mEffectCounts(trackerboy::DEFAULT_EFFECT_COUNTS)
+    mRownoCells(2),
+    mEffectCounts(trackerboy::DEFAULT_EFFECT_COUNTS),
+    mColumnDivs()
 {
 }
 
@@ -93,7 +97,7 @@ void PatternLayout::setCellSize(int width, int height) {
         }
 
         {
-            int x = (SPACING * 2) + (width * 2) + LINE_WIDTH;
+            int x = (SPACING * 2) + (width * mRownoCells) + LINE_WIDTH;
             mTrackStarts[0] = x;
             for (size_t i = 1; i < mTrackStarts.size(); ++i) {
                 x += mTrackWidths[i - 1] + LINE_WIDTH;
@@ -124,6 +128,15 @@ void PatternLayout::setCellSize(int width, int height) {
     mCellHeight = height;
 }
 
+bool PatternLayout::rownoHex() const {
+    return mRownoCells == 2;
+}
+
+void PatternLayout::setRownoHex(bool hex) {
+    setRownoCells(hex ? 2 : 3);
+
+}
+
 int PatternLayout::effectsVisible(int track) const {
     return mEffectCounts[track];
 }
@@ -148,6 +161,16 @@ void PatternLayout::setEffectsVisible(int track, int count) {
             *iter += diff;
         }
         mPatternWidth += diff;
+    }
+}
+
+void PatternLayout::setRownoCells(int cells) {
+    auto diff = (cells - mRownoCells) * mCellWidth;
+    if (diff) {
+        mRownoCells = cells;
+        for (auto &start : mTrackStarts) {
+            start += diff;
+        }
     }
 }
 

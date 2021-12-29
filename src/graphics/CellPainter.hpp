@@ -28,6 +28,8 @@ public:
 
     int drawHex(QPainter &painter, int hex, int xpos, int ypos) const;
 
+    int drawDec(QPainter &painter, int dec, int xpos, int ypos) const;
+
     //
     // Determines the number of rows that can fit in the given height. The
     // result is rounded up, so this function will always return a number >= 1.

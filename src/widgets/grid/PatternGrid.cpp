@@ -117,6 +117,13 @@ void PatternGrid::setShowShadow(bool shadow) {
     }
 }
 
+void PatternGrid::setRownoHex(bool hex) {
+    if (hex != mLayout.rownoHex()) {
+        mLayout.setRownoHex(hex);
+        update();
+    }
+}
+
 void PatternGrid::setEditorFocus(bool focus) {
     if (mEditorFocus != focus) {
         mEditorFocus = focus;

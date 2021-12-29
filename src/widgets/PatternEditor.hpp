@@ -34,6 +34,8 @@ public:
 
     void setColors(Palette const& colors);
 
+    void setRownoHex(bool hex);
+
     virtual void midiNoteOn(int note) override;
 
     virtual void midiNoteOff() override;

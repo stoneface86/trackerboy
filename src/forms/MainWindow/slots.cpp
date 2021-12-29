@@ -259,6 +259,7 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
         auto const& general = mConfig.general();
         mPatternEditor->grid()->setShowFlats(general.hasOption(GeneralConfig::OptionShowFlats));
         mPatternModel->setPreviewEnable(general.hasOption(GeneralConfig::OptionShowPreviews));
+        mPatternEditor->setRownoHex(general.hasOption(GeneralConfig::OptionRownoHex));
     }
 
 

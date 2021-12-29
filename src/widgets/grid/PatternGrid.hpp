@@ -48,6 +48,11 @@ public:
     //
     void setShowShadow(bool shadow);
 
+    //
+    // If this setting is true, row numbers will be drawn in hexadecimal.
+    //
+    void setRownoHex(bool hex);
+
     void setEditorFocus(bool focus);
 
 public slots:

@@ -41,6 +41,18 @@ public:
     void setCellSize(int width, int height);
 
     //
+    // Returns true if the row numbers are in hexadecimal format, false
+    // for decimal.
+    //
+    bool rownoHex() const;
+
+    //
+    // Sets whether row number are to be display in hexadecimal or decimal.
+    // true for hex, false for decimal.
+    //
+    void setRownoHex(bool hex);
+
+    //
     // Gets the number of effects visible for the given track
     //
     int effectsVisible(int track) const;
@@ -50,6 +62,8 @@ public:
     // from 0-3 and count must be from 1-3.
     //
     void setEffectsVisible(int track, int count);
+
+    
 
     //
     // X-position of where to start painting pattern data.
@@ -98,6 +112,12 @@ public:
 private:
     int maxColumnInTrack(int track) const;
 
+    //
+    // Sets the number of cells reserved for row numbers. The default is 2 for
+    // hexadecimal notation. Set this to 3 for decimal.
+    //
+    void setRownoCells(int cells);
+
     int mCellWidth;     // width of a cell/char
     int mCellHeight;    // height of a cell/char
 
@@ -107,6 +127,7 @@ private:
     std::array<int, 5> mTrackStarts;
 
     int mPatternWidth;
+    int mRownoCells;
 
     trackerboy::EffectCounts mEffectCounts;
 

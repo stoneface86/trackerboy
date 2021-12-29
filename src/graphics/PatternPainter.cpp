@@ -198,10 +198,12 @@ int PatternPainter::drawPattern(
     // text centering
     ypos++;
 
+    auto rownoDraw = l.rownoHex() ? &PatternPainter::drawHex : &PatternPainter::drawDec;
+
     for (int rowno = rowStart; rowno <= rowEnd; ++rowno) {
         auto const& fgcolor = mForegroundColors[highlightIndex(rowno)];
         p.setPen(mPen.get(fgcolor));
-        drawHex(p, rowno, PatternLayout::SPACING, ypos);
+        (*this.*rownoDraw)(p, rowno, PatternLayout::SPACING, ypos);
         int xpos = start + PatternLayout::SPACING;
         for (int track = 0; track <= 3; ++track) {
             auto &trackdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), rowno);

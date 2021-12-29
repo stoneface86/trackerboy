@@ -73,6 +73,14 @@ int CellPainter::drawHex(QPainter &painter, int hex, int xpos, int ypos) const {
     return drawCell(painter, TU::HEX_TABLE[hex & 0xF], xpos, ypos);
 }
 
+int CellPainter::drawDec(QPainter &painter, int dec, int xpos, int ypos) const {
+    xpos = drawCell(painter, '0' + (dec / 100), xpos, ypos);
+    dec %= 100;
+    xpos = drawCell(painter, '0' + (dec / 10), xpos, ypos);
+    dec %= 10;
+    return drawCell(painter, '0' + dec, xpos, ypos);
+}
+
 int CellPainter::calculateRowsAvailable(int height) const {
     return (height - 1) / mCellHeight + 1;
 }
