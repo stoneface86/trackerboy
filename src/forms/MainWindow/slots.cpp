@@ -262,6 +262,7 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
         mPatternEditor->setRownoHex(general.hasOption(GeneralConfig::OptionRownoHex));
         mPatternModel->setCursorWrap(general.hasOption(GeneralConfig::OptionCursorWrap));
         mPatternModel->setCursorWrapPattern(general.hasOption(GeneralConfig::OptionCursorWrapPattern));
+        mModuleFile.setAutoBackup(general.hasOption(GeneralConfig::OptionBackupCopy));
     }
 
 

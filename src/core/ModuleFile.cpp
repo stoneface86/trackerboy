@@ -4,13 +4,16 @@
 #include <QDateTime>
 #include <QDir>
 #include <QFileInfo>
+#include <QtDebug>
 
 #include <fstream>
 
 ModuleFile::ModuleFile() :
     mFilename(),
     mFilepath(),
-    mLastError(trackerboy::FormatError::none)
+    mIoError(false),
+    mLastError(trackerboy::FormatError::none),
+    mAutoBackup(false)
 {
 }
 
@@ -120,7 +123,47 @@ bool ModuleFile::hasFile() const noexcept {
     return !mFilepath.isEmpty();
 }
 
+void ModuleFile::setAutoBackup(bool backup) {
+    mAutoBackup = backup;
+}
+
 bool ModuleFile::doSave(QString const& filename, Module &mod) {
+    if (mAutoBackup) {
+        static constexpr auto errorPrefix = "failed to backup module:";
+
+        // backup the current file if it exists
+        QFileInfo info(filename);
+        if (info.exists() && info.isFile()) {
+            do { // do-once and break on error
+
+                // Qt doesn't have an overwrite file copy function so
+                // we'll have to remove first and then copy
+
+                QFileInfo backupInfo(filename + ".bak");
+                QString backupPath = backupInfo.filePath();
+                if (backupInfo.exists()) {
+                    if (!backupInfo.isFile()) {
+                        // ERROR! the backup dest is not a file!
+                        qWarning() << errorPrefix << "backup destination in use";
+                        break;
+                    }
+                    // remove old backup
+                    if (!QFile::remove(backupPath)) {
+                        // ERROR! failed to remove existing backup
+                        qWarning() << errorPrefix << "cannot remove existing backup";
+                        break;
+                    }
+                }
+                if (!QFile::copy(filename, backupPath)) {
+                    // ERROR! failed to backup module
+                    qWarning() << errorPrefix << "cannot copy existing module";
+                    break;
+                }
+                qInfo() << "module backup saved to" << backupPath;
+            } while (false);
+        }
+    }
+
     bool success = false;
     std::ofstream out(filename.toStdString(), std::ios::binary | std::ios::out);
     if (out.good()) {

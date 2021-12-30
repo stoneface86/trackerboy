@@ -69,6 +69,13 @@ public:
     //
     bool hasFile() const noexcept;
 
+    //
+    // Set auto-backup enable. If enabled, existing files will be copied to a .bak file
+    // before saving. ie if the user saves "foo.tbm" the current file will be copied to
+    // "foo.tbm.bak" in the same directory as foo.tbm. Existing bak files will be overwritten
+    //
+    void setAutoBackup(bool backup);
+
 private:
 
     bool doSave(QString const& filename, Module &mod);
@@ -81,4 +88,5 @@ private:
     bool mIoError;
     trackerboy::FormatError mLastError;
 
+    bool mAutoBackup;
 };
