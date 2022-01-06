@@ -58,6 +58,11 @@ public:
     Diagnostics diagnostics();
 
     //
+    // Get the current samplerate
+    //
+    int samplerate();
+
+    //
     // Accessor for the visualizer buffer. The updateVisualizers() signal is
     // emitted when this buffer is modified.
     //

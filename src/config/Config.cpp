@@ -6,11 +6,11 @@
 Config::Config() :
     mAppearance(),
     mGeneral(),
-    //mKeyboard(),
     mMidi(),
     mSound(),
     mPalette(),
-    mPianoInput()
+    mPianoInput(),
+    mShortcuts()
 {
 }
 
@@ -20,8 +20,8 @@ AppearanceConfig const& Config::appearance() const  { return mAppearance; }
 GeneralConfig& Config::general()                    { return mGeneral; }
 GeneralConfig const& Config::general() const        { return mGeneral; }
 
-// KeyboardConfig& Config::keyboard()                  { return mKeyboard; }
-// KeyboardConfig const& Config::keyboard() const      { return mKeyboard; }
+ShortcutTable& Config::shortcuts()                  { return mShortcuts; }
+ShortcutTable const& Config::shortcuts() const      { return mShortcuts; }
 
 MidiConfig& Config::midi()                          { return mMidi; }
 MidiConfig const& Config::midi() const              { return mMidi; }
@@ -44,6 +44,7 @@ void Config::readSettings(AudioEnumerator &audio, MidiEnumerator &midi) {
     mSound.readSettings(settings, audio);
     mPalette.readSettings(settings);
     mPianoInput.readSettings(settings);
+    mShortcuts.readSettings(settings);
 }
 
 
@@ -56,4 +57,5 @@ void Config::writeSettings(AudioEnumerator const& audio, MidiEnumerator const& m
     mSound.writeSettings(settings, audio);
     mPalette.writeSettings(settings);
     mPianoInput.writeSettings(settings);
+    mShortcuts.writeSettings(settings);
 }

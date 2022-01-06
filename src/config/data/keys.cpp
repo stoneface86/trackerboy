@@ -12,6 +12,7 @@ QString const General { QStringLiteral("General") };
 QString const Midi { QStringLiteral("Midi") };
 QString const Palette { QStringLiteral("Palette") };
 QString const PianoInput { QStringLiteral("PianoInput") };
+QString const Shortcuts { QStringLiteral("Shortcuts") };
 QString const Sound { QStringLiteral("Sound") };
 
 QString const api { QStringLiteral("api") };

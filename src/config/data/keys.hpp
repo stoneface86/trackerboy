@@ -23,6 +23,7 @@ extern QString const General;
 extern QString const Midi;
 extern QString const Palette;
 extern QString const PianoInput;
+extern QString const Shortcuts;
 extern QString const Sound;
 
 extern QString const api;

@@ -426,8 +426,7 @@ AppearanceConfigTab::AppearanceConfigTab(
     colorGroup->setLayout(colorLayout);
 
     layout->addWidget(fontGroup);
-    layout->addWidget(colorGroup);
-    layout->addStretch();
+    layout->addWidget(colorGroup, 1);
     setLayout(layout);
 
     mModel = new PaletteModel(this);

@@ -196,6 +196,14 @@ PianoInput::PianoInput() :
 {
 }
 
+PianoInput& PianoInput::operator=(PianoInput const& rhs) {
+    mLayout = rhs.mLayout;
+    mBindings = rhs.mBindings;
+    mBindingLookup = rhs.mBindingLookup;
+    
+    return *this;
+}
+
 
 PianoInput::Bindings const& PianoInput::bindings() const {
     return mBindings;

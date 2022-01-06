@@ -241,7 +241,6 @@ void MainWindow::onViewResetLayout() {
 }
 
 void MainWindow::onMidiError() {
-    mConfig.midi().setEnabled(false);
     if (isVisible()) {
         QMessageBox msgbox(this);
         msgbox.setIcon(QMessageBox::Critical);
@@ -251,23 +250,31 @@ void MainWindow::onMidiError() {
     }
 }
 
-Config::Categories MainWindow::applyConfig(Config::Categories categories, QString *problems) {
+Config::Categories MainWindow::applyConfig(Config const& config, Config::Categories categories, QString *problems) {
 
     Config::Categories flags = Config::CategoryNone;
 
     if (categories.testFlag(Config::CategoryGeneral)) {
-        auto const& general = mConfig.general();
+        auto const& general = config.general();
+        // options
         mPatternEditor->grid()->setShowFlats(general.hasOption(GeneralConfig::OptionShowFlats));
         mPatternModel->setPreviewEnable(general.hasOption(GeneralConfig::OptionShowPreviews));
         mPatternEditor->setRownoHex(general.hasOption(GeneralConfig::OptionRownoHex));
         mPatternModel->setCursorWrap(general.hasOption(GeneralConfig::OptionCursorWrap));
         mPatternModel->setCursorWrapPattern(general.hasOption(GeneralConfig::OptionCursorWrapPattern));
         mModuleFile.setAutoBackup(general.hasOption(GeneralConfig::OptionBackupCopy));
+
+        // autosave
+        mAutosave = general.hasAutosave();
+        mAutosaveIntervalMs = general.autosaveInterval() * 1000;
+
+        // page step
+        //mPatternEditor->setPageStep(general.pageStep());
     }
 
 
     if (categories.testFlag(Config::CategorySound)) {
-        auto const& sound = mConfig.sound();
+        auto const& sound = config.sound();
         mStatusSamplerate->setText(tr("%1 Hz").arg(sound.samplerate()));
 
         mErrorSinceLastConfig = !mRenderer->setConfig(sound, mAudioEnumerator);
@@ -285,33 +292,34 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
-        auto const& appearance = mConfig.appearance();
-        auto const& pal = mConfig.palette();
+        auto const& appearance = config.appearance();
+        mPalette = config.palette();
 
         mPatternEditor->grid()->setFont(appearance.patternGridFont());
         
-        mPatternEditor->setColors(pal);
+        mPatternEditor->setColors(mPalette);
 
         mPatternEditor->gridHeader()->setFont(appearance.patternGridHeaderFont());
 
         auto orderGrid = mSidebar->orderEditor()->grid();
         orderGrid->setFont(appearance.orderGridFont());
-        orderGrid->setColors(pal);
+        orderGrid->setColors(mPalette);
 
-        mSidebar->scope()->setColors(pal);
+        mSidebar->scope()->setColors(mPalette);
         if (mInstrumentEditor) {
-            mInstrumentEditor->setColors(pal);
+            mInstrumentEditor->setColors(mPalette);
         }
         if (mWaveEditor) {
-            mWaveEditor->setColors(pal);
+            mWaveEditor->setColors(mPalette);
         }
     }
 
-//    if (categories.testFlag(Config::CategoryKeyboard)) {
-//    }
+    if (categories.testFlag(Config::CategoryKeyboard)) {
+        mPianoInput = config.pianoInput();
+    }
 
     if (categories.testFlag(Config::CategoryMidi)) {
-        auto const& midiConfig = mConfig.midi();
+        auto const& midiConfig = config.midi();
 
         if (!midiConfig.isEnabled() || midiConfig.portIndex() == -1) {
             mMidi.close();
@@ -324,7 +332,6 @@ Config::Categories MainWindow::applyConfig(Config::Categories categories, QStrin
                     problems->append(tr("[Midi] unable to open the device. Midi is disabled.\n"));
                 }
                 qCritical().noquote() << "[MIDI] Failed to initialize MIDI device:" << mMidi.lastError();
-                mConfig.midi().setEnabled(false);
             }
         }
     }
@@ -371,18 +378,21 @@ void MainWindow::showAudioDiag() {
 
 void MainWindow::showConfigDialog() {
 
+    Config config;
+    config.readSettings(mAudioEnumerator, mMidiEnumerator);
+
 #ifdef QT_DEBUG
     QElapsedTimer timer;
     timer.start();
 #endif
-    ConfigDialog diag(mConfig, mAudioEnumerator, mMidiEnumerator, this);
+    ConfigDialog diag(config, mAudioEnumerator, mMidiEnumerator, this);
     connect(&diag, &ConfigDialog::applied, this,
-        [this](Config::Categories categories) {
+        [this, &config](Config::Categories categories) {
 
-            mConfig.writeSettings(mAudioEnumerator, mMidiEnumerator);
+            config.writeSettings(mAudioEnumerator, mMidiEnumerator);
 
             QString problems;
-            auto flags = applyConfig(categories, &problems);
+            auto flags = applyConfig(config, categories, &problems);
             if (flags) {
                 auto sender_ = qobject_cast<ConfigDialog*>(sender());
                 if (sender_) {
@@ -406,7 +416,7 @@ void MainWindow::showConfigDialog() {
 }
 
 void MainWindow::showExportWavDialog() {
-    ExportWavDialog dialog(*mModule, mModuleFile, mConfig.sound().samplerate(), this);
+    ExportWavDialog dialog(*mModule, mModuleFile, mRenderer->samplerate(), this);
     dialog.exec();
 }
 
@@ -419,9 +429,9 @@ void MainWindow::showTempoCalculator() {
 
 void MainWindow::showInstrumentEditor() {
     if (mInstrumentEditor == nullptr) {
-        mInstrumentEditor = new InstrumentEditor(*mModule, *mInstrumentModel, *mWaveModel, mConfig.pianoInput(), this);
+        mInstrumentEditor = new InstrumentEditor(*mModule, *mInstrumentModel, *mWaveModel, mPianoInput, this);
         mInstrumentEditor->init();
-        mInstrumentEditor->setColors(mConfig.palette());
+        mInstrumentEditor->setColors(mPalette);
         auto piano = mInstrumentEditor->piano();
         connect(piano, &PianoWidget::keyDown, this,
             [this](int note) {
@@ -441,9 +451,9 @@ void MainWindow::showInstrumentEditor() {
 
 void MainWindow::showWaveEditor() {
     if (mWaveEditor == nullptr) {
-        mWaveEditor = new WaveEditor(*mModule, *mWaveModel, mConfig.pianoInput(), this);
+        mWaveEditor = new WaveEditor(*mModule, *mWaveModel, mPianoInput, this);
         mWaveEditor->init();
-        mWaveEditor->setColors(mConfig.palette());
+        mWaveEditor->setColors(mPalette);
         auto piano = mWaveEditor->piano();
         connect(piano, &PianoWidget::keyDown, this,
             [this](int note) {

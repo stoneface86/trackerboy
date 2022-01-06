@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Command line argument parsing, you can now open a module on application startup
  - General tab in Config dialog for changing basic settings.
  - Appearance tab in Config dialog for changing fonts, colors and other settings
- - Keyboard tab in Config dialog for changing keyboard layout and editing keybinds.
+ - Keyboard tab in Config dialog for changing keyboard layout and editing keybinds,
+   as well as shortcut key sequences.
  - Colors for the audio scope and graph editors are now customizable
  - Autosave. Disabled by default, enable in the General tab in Config.
 ### Changed

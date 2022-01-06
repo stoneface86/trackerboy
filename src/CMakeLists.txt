@@ -121,6 +121,7 @@ makeSourceList(UI_SRC
     "config/data/MidiConfig"
     "config/data/Palette"
     "config/data/PianoInput"
+    "config/data/ShortcutTable"
     "config/data/SoundConfig"
     "config/tabs/AppearanceConfigTab"
     "config/tabs/ConfigTab"

@@ -35,7 +35,7 @@ ConfigDialog::ConfigDialog(
     mAppearance = new AppearanceConfigTab(config.appearance(), config.palette());
     tabs->addTab(mAppearance, tr("Appearance"));
 
-    mKeyboard = new KeyboardConfigTab(config.pianoInput());
+    mKeyboard = new KeyboardConfigTab(config.pianoInput(), config.shortcuts());
     tabs->addTab(mKeyboard, tr("Keyboard"));
 
     mSound = new SoundConfigTab(config.midi(), config.sound(), audio, midi);

@@ -48,11 +48,15 @@ MainWindow::MainWindow() :
     QMainWindow(),
     mAudioEnumerator(),
     mUntitledString(tr("Untitled")),
-    mConfig(),
+    mPianoInput(),
     mMidi(),
     mModule(),
     mModuleFile(),
     mErrorSinceLastConfig(false),
+    mLastEngineFrame(),
+    mFrameSkip(0),
+    mAutosave(false),
+    mAutosaveIntervalMs(30000),
     mAudioDiag(nullptr),
     mTempoCalc(nullptr),
     mCommentsDialog(nullptr),
@@ -74,7 +78,7 @@ MainWindow::MainWindow() :
     setupUi();
 
     // read in application configuration
-    mConfig.readSettings(mAudioEnumerator, mMidiEnumerator);
+    //mConfig.readSettings(mAudioEnumerator, mMidiEnumerator);
     
     setWindowIcon(IconLocator::getAppIcon());
 
@@ -134,7 +138,9 @@ MainWindow::MainWindow() :
     updateWindowTitle();
 
     // apply the read in configuration
-    applyConfig(Config::CategoryAll);
+    Config config;
+    config.readSettings(mAudioEnumerator, mMidiEnumerator);
+    applyConfig(config, Config::CategoryAll);
 
     setStyleSheet(QStringLiteral(R"stylesheet(
 QToolBar QLabel {
@@ -258,7 +264,7 @@ void MainWindow::setupUi() {
     auto centralWidget = new QWidget(this);
     auto layout = new QHBoxLayout;
     mSidebar = new Sidebar(*mModule, *mPatternModel, *mSongListModel, *mSongModel);
-    mPatternEditor = new PatternEditor(mConfig.pianoInput(), *mPatternModel);
+    mPatternEditor = new PatternEditor(mPianoInput, *mPatternModel);
     layout->addWidget(mSidebar);
     centralWidget->setLayout(layout);
 
@@ -324,10 +330,10 @@ void MainWindow::setupUi() {
 
     mOctaveSpin = new QSpinBox(mToolbarInput);
     mOctaveSpin->setRange(2, 8);
-    mOctaveSpin->setValue(mConfig.pianoInput().octave());
+    mOctaveSpin->setValue(mPianoInput.octave());
     connect(mOctaveSpin, qOverload<int>(&QSpinBox::valueChanged), this,
         [this](int octave) {
-            mConfig.pianoInput().setOctave(octave);
+            mPianoInput.setOctave(octave);
         });
     auto editStepSpin = new QSpinBox(mToolbarInput);
     editStepSpin->setRange(0, 255);
@@ -451,9 +457,9 @@ void MainWindow::setupUi() {
     connect(mModule, &Module::modifiedChanged, this,
         [this](bool modified) {
             if (modified) {
-                if (mModuleFile.hasFile() && mConfig.general().hasAutosave()) {
+                if (mAutosave && mModuleFile.hasFile()) {
                     qDebug() << "[MainWindow] Auto-save scheduled";
-                    mAutosaveTimer.start(mConfig.general().autosaveInterval() * 1000, this);
+                    mAutosaveTimer.start(mAutosaveIntervalMs, this);
                 }
             } else {
                 mAutosaveTimer.stop();

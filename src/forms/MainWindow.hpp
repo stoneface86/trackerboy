@@ -92,7 +92,7 @@ private slots:
     // Applies the current configuration for the given categories. An optional list of problems
     // can be given and will be populated with an error string for each error.
     //
-    Config::Categories applyConfig(Config::Categories categories, QString *problems = nullptr);
+    Config::Categories applyConfig(Config const& config, Config::Categories categories, QString *problems = nullptr);
 
     // dialog show slots (lazy loading)
     void showAboutDialog();
@@ -251,7 +251,9 @@ private:
     bool mSaveConfig = true;
     #endif
 
-    Config mConfig;
+    //Config mConfig;
+    PianoInput mPianoInput;
+    Palette mPalette;
 
     Midi mMidi;
 
@@ -270,6 +272,8 @@ private:
     trackerboy::Frame mLastEngineFrame;
     int mFrameSkip;
 
+    bool mAutosave;
+    int mAutosaveIntervalMs;
     QBasicTimer mAutosaveTimer;
 
     // dialogs

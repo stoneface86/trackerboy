@@ -117,6 +117,10 @@ Renderer::Diagnostics Renderer::diagnostics() {
     };
 }
 
+int Renderer::samplerate() {
+    return mContext.access()->synth.samplerate();
+}
+
 Guarded<VisualizerBuffer>& Renderer::visualizerBuffer() {
     return mVisBuffer;
 }

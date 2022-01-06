@@ -2,18 +2,23 @@
 #include "config/tabs/KeyboardConfigTab.hpp"
 
 #include "config/data/PianoInput.hpp"
+#include "config/data/ShortcutTable.hpp"
 #include "core/NoteStrings.hpp"
 #include "utils/connectutils.hpp"
 
+#include <QAbstractItemModel>
 #include <QComboBox>
 #include <QFrame>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QKeySequenceEdit>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QPainter>
 #include <QPushButton>
 #include <QResizeEvent>
+#include <QSignalBlocker>
+#include <QTreeView>
 #include <QVBoxLayout>
 
 #include <QtDebug>
@@ -24,9 +29,22 @@
 #define TU KeyboardConfigTabTU
 namespace TU {
 
+// human readable names for each shortcut in ShortcutTable
+static std::array<const char*, ShortcutTable::Count> const SHORTCUT_NAMES = {
+    QT_TR_NOOP("Previous instrument"),
+    QT_TR_NOOP("Next instrument"),
+    QT_TR_NOOP("Previous pattern"),
+    QT_TR_NOOP("Next pattern"),
+    QT_TR_NOOP("Increment octave"),
+    QT_TR_NOOP("Decrement octave"),
+    QT_TR_NOOP("Play / Stop")
+};
 
 }
 
+//
+// QWidget subclass for editing PianoInput::Bindings
+//
 class BindingEdit : public QFrame {
 
     Q_OBJECT
@@ -293,9 +311,115 @@ private:
 
 };
 
+//
+// QAbstractItemModel subclass for ShortcutTable
+//
+class ShortcutTableModel : public QAbstractItemModel {
 
-KeyboardConfigTab::KeyboardConfigTab(PianoInput const& input, QWidget *parent) :
-    ConfigTab(parent)
+    Q_OBJECT
+
+public:
+    explicit ShortcutTableModel(ShortcutTable &src, QObject *parent = nullptr) :
+        QAbstractItemModel(parent),
+        mSrc(src)
+    {
+    }
+
+    virtual QModelIndex index(int row, int column, QModelIndex const& index = QModelIndex()) const override {
+        if (!index.isValid()) {
+            return createIndex(row, column, nullptr);
+        } else {
+            return {};
+        }
+    }
+
+    virtual Qt::ItemFlags flags(QModelIndex const& index) const override {
+        if (index.isValid()) {
+            return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemNeverHasChildren;
+        }
+
+        return Qt::NoItemFlags;
+    }
+
+    virtual QModelIndex parent(QModelIndex const& index) const override {
+        Q_UNUSED(index)
+        return {};
+    }
+
+    virtual int rowCount(QModelIndex const& parent = QModelIndex()) const override {
+        if (parent.isValid()) {
+            return 0;
+        } else {
+            return ShortcutTable::Count;
+        }
+    }
+
+    virtual int columnCount(QModelIndex const& parent = QModelIndex()) const override {
+        if (parent.isValid()) {
+            return 0;
+        } else {
+            return 2;
+        }
+    }
+
+    virtual QVariant data(QModelIndex const& index, int role = Qt::DisplayRole) const override {
+        if (index.isValid() && role == Qt::DisplayRole) {
+            auto const row = index.row();
+            if (row >= 0 && row < ShortcutTable::Count) {
+                switch (index.column()) {
+                    case 0:
+                        return tr(TU::SHORTCUT_NAMES[row]);
+                    case 1:
+                        return mSrc.get((ShortcutTable::Shortcut)row).toString(QKeySequence::NativeText);
+                    default:
+                        break;
+                }
+            
+            }
+        }
+
+        return {};
+    }
+
+    virtual QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+        if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
+            switch (section) {
+                case 0:
+                    return tr("Action");
+                case 1:
+                    return tr("Key sequence");
+                default:
+                    break;
+            }
+        }
+
+        return {};
+    }
+
+    void setShortcut(int row, QKeySequence const& seq) {
+        mSrc.set((ShortcutTable::Shortcut)row, seq);
+        emit dataChanged(
+            createIndex(row, 1, nullptr),
+            createIndex(row, 1, nullptr),
+            { Qt::DisplayRole }
+        );
+    }
+
+private:
+    Q_DISABLE_COPY(ShortcutTableModel)
+
+    ShortcutTable &mSrc;
+
+};
+
+
+
+
+KeyboardConfigTab::KeyboardConfigTab(PianoInput &input, ShortcutTable &shortcuts, QWidget *parent) :
+    ConfigTab(parent),
+    mInput(input),
+    mShortcuts(shortcuts),
+    mSelectedShortcut(-1)
 {
 
     auto layout = new QVBoxLayout;
@@ -306,7 +430,6 @@ KeyboardConfigTab::KeyboardConfigTab(PianoInput const& input, QWidget *parent) :
     mLayoutCombo = new QComboBox;
     keyboardLayoutLayout->addWidget(mLayoutCombo, 1);
 
-
     mCustomGroup = new QGroupBox(tr("Custom layout"));
     auto customLayout = new QVBoxLayout;
     customLayout->addWidget(new QLabel(tr("Assign keys to each note. Press Shift+Del to unbind.")));
@@ -314,61 +437,107 @@ KeyboardConfigTab::KeyboardConfigTab(PianoInput const& input, QWidget *parent) :
     customLayout->addWidget(mBindingEdit);
     mCustomGroup->setLayout(customLayout);
 
+    auto shortcutGroup = new QGroupBox(tr("Shortcuts"));
+    auto shortcutLayout = new QVBoxLayout;
+    auto shortcutView = new QTreeView;
+    mModel = new ShortcutTableModel(shortcuts, this);
+    shortcutView->setModel(mModel);
+
+    auto shortcutEditLayout = new QHBoxLayout;
+    mKeyEdit = new QKeySequenceEdit;
+    mClearButton = new QPushButton(tr("Clear"));
+    mDefaultButton = new QPushButton(tr("Default"));
+    shortcutEditLayout->addWidget(new QLabel(tr("Keys:")));
+    shortcutEditLayout->addWidget(mKeyEdit, 1);
+    shortcutEditLayout->addWidget(mClearButton);
+    shortcutEditLayout->addWidget(mDefaultButton);
+
+    shortcutLayout->addWidget(shortcutView, 1);
+    shortcutLayout->addLayout(shortcutEditLayout);
+    shortcutGroup->setLayout(shortcutLayout);
 
     layout->addLayout(keyboardLayoutLayout);
     layout->addWidget(mCustomGroup);
+    layout->addWidget(shortcutGroup);
     layout->addStretch(1);
     setLayout(layout);
 
+    // I'd like to have both columns 50/50 and user resizeable but
+    // couldn't get it working so just do this for now
+    shortcutView->resizeColumnToContents(0);
 
-
-    // ignore LayoutSystem for now
-    for (int kblayout = PianoInput::LayoutQwerty; kblayout < PianoInput::LayoutCustom; ++kblayout) {
+    for (int kblayout = PianoInput::LayoutQwerty; kblayout < PianoInput::LayoutCount; ++kblayout) {
         mLayoutCombo->addItem(PianoInput::layoutName((PianoInput::KeyboardLayout)kblayout));
     }
+    mLayoutCombo->setCurrentIndex(input.layout());
 
-    mCustomGroup->setCheckable(true);
-
-    switch (auto layout = input.layout(); layout) {
-        case PianoInput::LayoutQwerty:
-        case PianoInput::LayoutQwertz:
-        case PianoInput::LayoutAzerty:
-            mLayoutCombo->setCurrentIndex(layout);
-            break;
-        default:
-            break;
-
-    }
-
-    mCustomGroup->setChecked(input.layout() == PianoInput::LayoutCustom);
+    mCustomGroup->setEnabled(input.layout() == PianoInput::LayoutCustom);
     mBindingEdit->setBindings(input.bindings());
 
-    lazyconnect(mCustomGroup, toggled, mLayoutCombo, setDisabled);
-    lazyconnect(mCustomGroup, toggled, this, setDirty<Config::CategoryKeyboard>);
     lazyconnect(mBindingEdit, bindingsChanged, this, setDirty<Config::CategoryKeyboard>);
 
-    connect(mLayoutCombo, qOverload<int>(&QComboBox::activated), this, &KeyboardConfigTab::setDirty<Config::CategoryKeyboard>);    
+    lazyconnect(mClearButton, clicked, mKeyEdit, clear);
+    connect(mDefaultButton, &QPushButton::clicked, this,
+        [this]() {
+            // sets the default shortcut for the current selection
+            mKeyEdit->setKeySequence(ShortcutTable::getDefault((ShortcutTable::Shortcut)mSelectedShortcut));
+        });
 
+    connect(shortcutView->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+        [this](QItemSelection const& selected) {
+            QSignalBlocker blocker(mKeyEdit); // ignore changed signals for the key edit
+
+            bool hasSelection = !selected.isEmpty();
+            setKeyEditEnable(hasSelection);
+            if (hasSelection) {
+                // get the row of the selection
+                mSelectedShortcut = selected.indexes().first().row();
+                // update the key edit with this row's key sequence
+                mKeyEdit->setKeySequence(mShortcuts.get((ShortcutTable::Shortcut)mSelectedShortcut));
+            } else {
+                // no selection, clear the edit
+                mSelectedShortcut = -1;
+                mKeyEdit->clear();
+            }
+        });
+
+    connect(mKeyEdit, &QKeySequenceEdit::keySequenceChanged, this,
+        [this](QKeySequence const& seq) {
+            // update the shortcut's sequence in the model
+            mModel->setShortcut(mSelectedShortcut, seq);
+        });
+
+    // any change made to the model dirties the config
+    lazyconnect(mModel, dataChanged, this, setDirty<Config::CategoryKeyboard>);
+
+    connect(mLayoutCombo, qOverload<int>(&QComboBox::currentIndexChanged), this,
+        [this](int index) {
+            if (index != -1) {
+                setDirty<Config::CategoryKeyboard>();
+                auto const layout = (PianoInput::KeyboardLayout)index;
+                mInput.setLayout(layout);
+                mBindingEdit->setBindings(mInput.bindings());
+                mCustomGroup->setEnabled(layout == PianoInput::LayoutCustom);
+            }
+        });
+
+    setKeyEditEnable(false);
 }
 
 void KeyboardConfigTab::apply(PianoInput &input) {
-    if (mCustomGroup->isChecked()) {
+
+    // we only need to copy the bindings if the user set a custom layout
+    if (mLayoutCombo->currentIndex() == PianoInput::LayoutCustom) {
         input.setBindings(mBindingEdit->bindings());
-    } else {
-        switch (mLayoutCombo->currentIndex()) {
-            case 0:
-                input.setLayout(PianoInput::LayoutQwerty);
-                break;
-            case 1:
-                input.setLayout(PianoInput::LayoutQwertz);
-                break;
-            case 2:
-                input.setLayout(PianoInput::LayoutAzerty);
-                break;
-        }
     }
 
     clean();
+}
+
+void KeyboardConfigTab::setKeyEditEnable(bool enable) {
+    mKeyEdit->setEnabled(enable);
+    mClearButton->setEnabled(enable);
+    mDefaultButton->setEnabled(enable);
 }
 
 #include "KeyboardConfigTab.moc"

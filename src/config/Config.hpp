@@ -6,6 +6,7 @@
 #include "config/data/GeneralConfig.hpp"
 #include "config/data/MidiConfig.hpp"
 #include "config/data/SoundConfig.hpp"
+#include "config/data/ShortcutTable.hpp"
 #include "midi/MidiEnumerator.hpp"
 
 #include "config/data/PianoInput.hpp"
@@ -73,6 +74,8 @@ public:
     PianoInput& pianoInput();
     PianoInput const& pianoInput() const;
 
+    ShortcutTable& shortcuts();
+    ShortcutTable const& shortcuts() const;
 
 private:
     
@@ -83,6 +86,7 @@ private:
 
     Palette mPalette;
     PianoInput mPianoInput;
+    ShortcutTable mShortcuts;
 
 };
 

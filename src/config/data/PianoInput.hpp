@@ -73,6 +73,11 @@ public:
     explicit PianoInput();
 
     //
+    // Copies only the bindings of the given PianoInput
+    //
+    PianoInput& operator=(PianoInput const& rhs);
+
+    //
     // Get the current keyboard layout in use
     //
     KeyboardLayout layout() const;
