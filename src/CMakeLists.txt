@@ -115,7 +115,7 @@ makeSourceList(UI_SRC
     "clipboard/PatternClip"
     "clipboard/PatternClipboard"
 
-    "config/data/AppearanceConfig"
+    "config/data/FontTable"
     "config/data/GeneralConfig"
     "config/data/keys"
     "config/data/MidiConfig"

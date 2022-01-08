@@ -292,17 +292,17 @@ Config::Categories MainWindow::applyConfig(Config const& config, Config::Categor
     }
 
     if (categories.testFlag(Config::CategoryAppearance)) {
-        auto const& appearance = config.appearance();
+        auto const& fonts = config.fonts();
         mPalette = config.palette();
 
-        mPatternEditor->grid()->setFont(appearance.patternGridFont());
+        mPatternEditor->grid()->setFont(fonts[FontTable::PatternGrid]);
         
         mPatternEditor->setColors(mPalette);
 
-        mPatternEditor->gridHeader()->setFont(appearance.patternGridHeaderFont());
+        mPatternEditor->gridHeader()->setFont(fonts[FontTable::PatternGridHeader]);
 
         auto orderGrid = mSidebar->orderEditor()->grid();
-        orderGrid->setFont(appearance.orderGridFont());
+        orderGrid->setFont(fonts[FontTable::OrderGrid]);
         orderGrid->setColors(mPalette);
 
         mSidebar->scope()->setColors(mPalette);

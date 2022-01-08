@@ -2,7 +2,7 @@
 #pragma once
 
 #include "audio/AudioEnumerator.hpp"
-#include "config/data/AppearanceConfig.hpp"
+#include "config/data/FontTable.hpp"
 #include "config/data/GeneralConfig.hpp"
 #include "config/data/MidiConfig.hpp"
 #include "config/data/SoundConfig.hpp"
@@ -56,8 +56,8 @@ public:
     //
     void writeSettings(AudioEnumerator const& audio, MidiEnumerator const& midi);
 
-    AppearanceConfig& appearance();
-    AppearanceConfig const& appearance() const;
+    FontTable& fonts();
+    FontTable const& fonts() const;
 
     GeneralConfig& general();
     GeneralConfig const& general() const;
@@ -79,7 +79,7 @@ public:
 
 private:
     
-    AppearanceConfig mAppearance;
+    FontTable mFonts;
     GeneralConfig mGeneral;
     MidiConfig mMidi;
     SoundConfig mSound;

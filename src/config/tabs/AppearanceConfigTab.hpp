@@ -17,12 +17,10 @@ class AppearanceConfigTab : public ConfigTab {
 
 public:
     explicit AppearanceConfigTab(
-        AppearanceConfig const& appearance,
+        FontTable &fonts,
         Palette &pal,
         QWidget *parent = nullptr
     );
-
-    void apply(AppearanceConfig &appearanceConfig);
 
 private:
 
@@ -32,15 +30,14 @@ private:
 
     void chooseColor(QColor const& color);
 
-    void setFont(size_t index, QFont const& font, bool showSize = true);
+    void updateFontButton(int index);
 
     void selectColor(QModelIndex const& index);
 
     void updateColorDialog();
 
-    static constexpr size_t FONT_COUNT = 3;
-    std::array<QPushButton*, FONT_COUNT> mFontChooseButtons;
-    std::array<QFont, FONT_COUNT> mFonts;
+    FontTable &mFonts;
+    std::array<QPushButton*, FontTable::Count> mFontChooseButtons;
 
     QPushButton *mDefaultButton;
 

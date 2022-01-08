@@ -32,7 +32,7 @@ ConfigDialog::ConfigDialog(
     mGeneral = new GeneralConfigTab(config.general());
     tabs->addTab(mGeneral, tr("General"));
 
-    mAppearance = new AppearanceConfigTab(config.appearance(), config.palette());
+    mAppearance = new AppearanceConfigTab(config.fonts(), config.palette());
     tabs->addTab(mAppearance, tr("Appearance"));
 
     mKeyboard = new KeyboardConfigTab(config.pianoInput(), config.shortcuts());
@@ -86,7 +86,7 @@ bool ConfigDialog::apply() {
         }
 
         if (mDirty.testFlag(Config::CategoryAppearance)) {
-            mAppearance->apply(mConfig.appearance());
+            mAppearance->clean();
         }
 
         if (mDirty.testFlag(Config::CategoryKeyboard)) {

@@ -19,11 +19,20 @@
 #define TU AppearanceConfigTabTU
 namespace TU {
 
-static std::array const FONT_NAMES = {
-    QT_TR_NOOP("Pattern editor"),
-    QT_TR_NOOP("Order editor"),
-    QT_TR_NOOP("Header")
+struct FontButtonMeta {
+    // string for the QLabel that describes the font button
+    const char *label;
+    // index in the FontTable for this button's font
+    FontTable::Fonts index;
+    // determines if the point size of the font should be shown
+    bool showSize;
 };
+
+static std::array<FontButtonMeta, FontTable::Count> const FontButtonMetas{ {
+    { QT_TR_NOOP("Pattern editor"), FontTable::PatternGrid,         true },
+    { QT_TR_NOOP("Order editor"),   FontTable::OrderGrid,           true },
+    { QT_TR_NOOP("Header"),         FontTable::PatternGridHeader,   false }
+} };
 
 // file filter for color settings (just ini files)
 static const char *COLOR_SETTINGS_FILTER = QT_TR_NOOP("Color settings (*.ini)");
@@ -373,16 +382,13 @@ private:
 };
 
 
-
-
-
-
 AppearanceConfigTab::AppearanceConfigTab(
-        AppearanceConfig const& appearance,
+        FontTable &fonts,
         Palette &pal,
         QWidget *parent
     ) :
     ConfigTab(parent),
+    mFonts(fonts),
     mColorDialog(nullptr),
     mSaveDir(QDir::home())
 {
@@ -392,13 +398,15 @@ AppearanceConfigTab::AppearanceConfigTab(
     auto fontGroup = new QGroupBox(tr("Fonts"));
     auto fontLayout = new QGridLayout;
 
-    for (int i = 0; i < FONT_COUNT; ++i) {
+    for (int i = 0; i < mFontChooseButtons.size(); ++i) {
         auto &chooseBtn = mFontChooseButtons[i];
+        auto &meta = TU::FontButtonMetas[i];
 
-        fontLayout->addWidget(new QLabel(tr(TU::FONT_NAMES[i])), i, 0);
+        fontLayout->addWidget(new QLabel(tr(meta.label)), i, 0);
         chooseBtn = new QPushButton;
         fontLayout->addWidget(chooseBtn, i, 1);
 
+        updateFontButton(i);
         connect(chooseBtn, &QPushButton::clicked, this, &AppearanceConfigTab::chooseFont);
     }
 
@@ -432,10 +440,6 @@ AppearanceConfigTab::AppearanceConfigTab(
     colorTree->expandAll();
     colorTree->resizeColumnToContents(0);
     colorTree->collapseAll();
-
-    setFont(0, appearance.patternGridFont());
-    setFont(1, appearance.orderGridFont());
-    setFont(2, appearance.patternGridHeaderFont(), false);
 
     connect(mModel, &PaletteModel::dataChanged, this,
         [this]() {
@@ -503,26 +507,18 @@ AppearanceConfigTab::AppearanceConfigTab(
 
 }
 
-void AppearanceConfigTab::apply(AppearanceConfig &appearanceConfig) {
-
-    appearanceConfig.setPatternGridFont(mFonts[0]);
-    appearanceConfig.setOrderGridFont(mFonts[1]);
-    appearanceConfig.setPatternGridHeaderFont(mFonts[2]);
-
-    clean();
-}
-
 void AppearanceConfigTab::chooseFont() {
     auto button = qobject_cast<QPushButton*>(sender());
     if (button) {
         auto iter = std::find(mFontChooseButtons.begin(), mFontChooseButtons.end(), button);
         if (iter != mFontChooseButtons.end()) {
-            auto index = iter - mFontChooseButtons.begin();
+            int index = iter - mFontChooseButtons.begin();
+            auto const& meta = TU::FontButtonMetas[index];
 
             bool ok;
             auto font = QFontDialog::getFont(
                 &ok,
-                mFonts[index],
+                mFonts[meta.index],
                 this,
                 tr("Select a font"),
                 QFontDialog::DontUseNativeDialog | QFontDialog::MonospacedFonts
@@ -532,7 +528,9 @@ void AppearanceConfigTab::chooseFont() {
                 if (font.pointSize() > TU::MAX_POINT_SIZE) {
                     font.setPointSize(TU::MAX_POINT_SIZE);
                 }
-                setFont(index, font, index < 2);
+
+                mFonts.set(meta.index, font);
+                updateFontButton(index);
                 setDirty<Config::CategoryAppearance>();
             }
 
@@ -544,11 +542,12 @@ void AppearanceConfigTab::chooseColor(QColor const& color) {
     mModel->setColor(mSelectedColor, color);
 }
 
-void AppearanceConfigTab::setFont(size_t index, QFont const& font, bool showSize) {
-    mFonts[index] = font;
+void AppearanceConfigTab::updateFontButton(int index) {
+    auto const& meta = TU::FontButtonMetas[index];
+    auto const& font = mFonts[meta.index];
     auto button = mFontChooseButtons[index];
 
-    if (showSize) {
+    if (meta.showSize) {
         button->setText(tr("%1, %2 pt").arg(
                             font.family(),
                             QString::number(font.pointSize())));

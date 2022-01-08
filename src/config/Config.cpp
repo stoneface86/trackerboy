@@ -4,7 +4,7 @@
 #include <QSettings>
 
 Config::Config() :
-    mAppearance(),
+    mFonts(),
     mGeneral(),
     mMidi(),
     mSound(),
@@ -14,8 +14,8 @@ Config::Config() :
 {
 }
 
-AppearanceConfig& Config::appearance()              { return mAppearance; }
-AppearanceConfig const& Config::appearance() const  { return mAppearance; }
+FontTable& Config::fonts()                          { return mFonts; }
+FontTable const& Config::fonts() const              { return mFonts; }
 
 GeneralConfig& Config::general()                    { return mGeneral; }
 GeneralConfig const& Config::general() const        { return mGeneral; }
@@ -38,7 +38,7 @@ PianoInput const& Config::pianoInput() const        { return mPianoInput; }
 void Config::readSettings(AudioEnumerator &audio, MidiEnumerator &midi) {
     QSettings settings;
 
-    mAppearance.readSettings(settings);
+    mFonts.readSettings(settings);
     mGeneral.readSettings(settings);
     mMidi.readSettings(settings, midi);
     mSound.readSettings(settings, audio);
@@ -51,7 +51,7 @@ void Config::readSettings(AudioEnumerator &audio, MidiEnumerator &midi) {
 void Config::writeSettings(AudioEnumerator const& audio, MidiEnumerator const& midi) {
     QSettings settings;
 
-    mAppearance.writeSettings(settings);
+    mFonts.writeSettings(settings);
     mGeneral.writeSettings(settings);
     mMidi.writeSettings(settings, midi);
     mSound.writeSettings(settings, audio);

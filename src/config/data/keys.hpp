@@ -18,7 +18,7 @@
 namespace Keys {
 
 // groups
-extern QString const Appearance;
+extern QString const Fonts;
 extern QString const General;
 extern QString const Midi;
 extern QString const Palette;
@@ -39,9 +39,6 @@ extern QString const enabled;
 extern QString const showFlats;
 extern QString const showPreviews;
 extern QString const pageStep;
-extern QString const patternGridFont;
-extern QString const patternGridHeaderFont;
-extern QString const orderGridFont;
 extern QString const keyboardLayout;
 extern QString const key;
 extern QString const rownoHex;
