@@ -5,52 +5,59 @@
 
 #include <QtDebug>
 
-Palette::Palette() :
-    mData{
-        QColor( 24,  24,  24), // ColorBackground
-        QColor( 32,  32,  32), // ColorBackgroundHighlight1
-        QColor( 48,  48,  48), // ColorBackgroundHighlight2
-        QColor(192, 192, 192), // ColorForeground
-        QColor(240, 240, 240), // ColorForegroundHighlight1
-        QColor(255, 255, 255), // ColorForegroundHighlight2
-        QColor( 32,  48, 128), // ColorRow
-        QColor(128,  48,  48), // ColorRowEdit
-        QColor(128,  32, 128), // ColorRowPlayer
-        QColor(128, 128, 255), // ColorEffectType
-        QColor(128, 255, 128), // ColorInstrument
-        QColor( 69,  69,  80), // ColorSelection
-        QColor(192, 192, 192), // ColorCursor
-        QColor( 64,  64,  64), // ColorLine
-        QColor( 48,  48,  48), // ColorHeaderBackground1
-        QColor( 40,  40,  40), // ColorHeaderBackground2
-        QColor(240, 240, 240), // ColorHeaderForeground1
-        QColor(192, 192, 192), // ColorHeaderForeground2
-        QColor(153, 229,  80), // ColorHeaderEnabled
-        QColor(217,  87,  99), // ColorHeaderDisabled
-        QColor(  0,   0,   0), // ColorGraphBackground
-        QColor( 32,  32,  32), // ColorGraphAlternate
-        QColor( 64,  64,  64), // ColorGraphLines
-        QColor(224, 224, 224), // ColorGraphSamples
-        QColor(  0,   0,   0), // ColorScopeBackground
-        QColor(  0, 255,  68), // ColorScopeLine
-    },
-    mDefault(true)
-{
+#define TU PaletteTU
 
+Palette::Palette() :
+    mData()
+{
 }
 
 QColor const& Palette::operator[](Color color) const {
     return mData[color];
 }
 
-bool Palette::isDefault() const {
-    return mDefault;
+namespace TU {
+
+static std::array<QColor, Palette::ColorCount> const ColorDefaults = {
+    QColor( 24,  24,  24), // ColorBackground
+    QColor( 32,  32,  32), // ColorBackgroundHighlight1
+    QColor( 48,  48,  48), // ColorBackgroundHighlight2
+    QColor(192, 192, 192), // ColorForeground
+    QColor(240, 240, 240), // ColorForegroundHighlight1
+    QColor(255, 255, 255), // ColorForegroundHighlight2
+    QColor( 32,  48, 128), // ColorRow
+    QColor(128,  48,  48), // ColorRowEdit
+    QColor(128,  32, 128), // ColorRowPlayer
+    QColor(128, 128, 255), // ColorEffectType
+    QColor(128, 255, 128), // ColorInstrument
+    QColor( 69,  69,  80), // ColorSelection
+    QColor(192, 192, 192), // ColorCursor
+    QColor( 64,  64,  64), // ColorLine
+    QColor( 48,  48,  48), // ColorHeaderBackground1
+    QColor( 40,  40,  40), // ColorHeaderBackground2
+    QColor(240, 240, 240), // ColorHeaderForeground1
+    QColor(192, 192, 192), // ColorHeaderForeground2
+    QColor(153, 229,  80), // ColorHeaderEnabled
+    QColor(217,  87,  99), // ColorHeaderDisabled
+    QColor(  0,   0,   0), // ColorGraphBackground
+    QColor( 32,  32,  32), // ColorGraphAlternate
+    QColor( 64,  64,  64), // ColorGraphLines
+    QColor(224, 224, 224), // ColorGraphSamples
+    QColor(  0,   0,   0), // ColorScopeBackground
+    QColor(  0, 255,  68)  // ColorScopeLine
+};
+
+}
+
+QColor Palette::getDefault(Color color) {
+    return TU::ColorDefaults[color];
 }
 
 void Palette::setColor(Color color, QColor value) {
     mData[color] = value;
-    mDefault = false;
 }
+
+namespace TU {
 
 //
 // QString interning for QSettings, QMetaEnum was not used because:
@@ -60,7 +67,7 @@ void Palette::setColor(Color color, QColor value) {
 //
 // downside to this is that we need a matching key string for each Color enum
 //
-static std::array const ColorKeys = {
+static std::array<QString, Palette::ColorCount> const ColorKeys = {
     QStringLiteral("background"),
     QStringLiteral("backgroundHighlight1"),
     QStringLiteral("backgroundHighlight2"),
@@ -89,40 +96,39 @@ static std::array const ColorKeys = {
     QStringLiteral("scopeLine")
 };
 
-// If this fails you forgot to remove/add a key to the array
-static_assert(ColorKeys.size() == Palette::ColorCount, "ColorKeys.size() does not match enum count!");
-
+}
 
 void Palette::readSettings(QSettings &settings) {
-
-    // QSettings has no way of checking if a group exists, so we have to read
-    // all color keys even if the user is using the default :(
 
     settings.beginGroup(Keys::Palette);
 
     for (int i = 0; i < ColorCount; ++i) {
-        if (settings.contains(ColorKeys[i])) {
-            QColor color(settings.value(ColorKeys[i]).toString());
+
+        auto colorstr = settings.value(TU::ColorKeys[i]).toString();
+        if (!colorstr.isEmpty()) {
+            QColor color(colorstr);
             if (color.isValid()) {
                 color.setAlpha(255); // sanitize
-                setColor((Color)i, color);
+                mData[i] = color;
+                continue; // success, do not load default
             }
         }
+        // setting not found or was invalid
+        // load the default
+        mData[i] = getDefault((Color)i);
     }
 
     settings.endGroup();
 }
 
-void Palette::writeSettings(QSettings &settings, bool saveOnDefault) const {
+void Palette::writeSettings(QSettings &settings) const {
 
     settings.beginGroup(Keys::Palette);
     settings.remove(QString()); // remove everything
 
-    if (saveOnDefault || !mDefault) {
-        for (int i = 0; i < ColorCount; ++i) {
-            QString color = mData[i].name();
-            settings.setValue(ColorKeys[i], color);
-        }
+    for (int i = 0; i < ColorCount; ++i) {
+        QString color = mData[i].name();
+        settings.setValue(TU::ColorKeys[i], color);
     }
 
     settings.endGroup();
@@ -130,16 +136,11 @@ void Palette::writeSettings(QSettings &settings, bool saveOnDefault) const {
 }
 
 bool operator==(Palette const& lhs, Palette const& rhs) noexcept {
-    if (lhs.mDefault == rhs.mDefault) {
-        if (lhs.mDefault) {
-            return true;
-        } else {
-            return lhs.mData == rhs.mData;
-        }
-    }
-    return false;
+    return lhs.mData == rhs.mData;
 }
 
 bool operator!=(Palette const& lhs, Palette const& rhs) noexcept {
     return !(lhs == rhs);
 }
+
+#undef TU

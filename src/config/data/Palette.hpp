@@ -59,7 +59,7 @@ public:
     };
 
     //
-    // Initializes the palette with the default colors
+    // Initializes the palette.
     //
     Palette();
 
@@ -69,14 +69,12 @@ public:
     QColor const& operator[](Color color) const;
 
     //
-    // Returns true if this palette is the default, or has not had any of its
-    // colors modified.
+    // Gets the default color setting
     //
-    bool isDefault() const;
+    static QColor getDefault(Color color);
 
     //
-    // Sets the color for the given color setting. Calling this method
-    // clears the default property.
+    // Sets the color for the given color setting.
     //
     void setColor(Color color, QColor value);
 
@@ -89,7 +87,7 @@ public:
     // Writes color settings to the given QSettings. Settings are not saved
     // when the palette is the default one, unless saveOnDefault is true.
     //
-    void writeSettings(QSettings &settings, bool saveOnDefault = false) const;
+    void writeSettings(QSettings &settings) const;
 
     friend bool operator==(Palette const& lhs, Palette const& rhs) noexcept;
     friend bool operator!=(Palette const& lhs, Palette const& rhs) noexcept;
@@ -97,6 +95,5 @@ public:
 private:
 
     std::array<QColor, ColorCount> mData;
-    bool mDefault;
 
 };

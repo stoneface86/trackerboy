@@ -18,20 +18,19 @@ class AppearanceConfigTab : public ConfigTab {
 public:
     explicit AppearanceConfigTab(
         AppearanceConfig const& appearance,
-        Palette const& pal,
+        Palette &pal,
         QWidget *parent = nullptr
     );
 
-    void apply(AppearanceConfig &appearanceConfig, Palette &pal);
+    void apply(AppearanceConfig &appearanceConfig);
 
-private slots:
+private:
+
+    Q_DISABLE_COPY(AppearanceConfigTab)
 
     void chooseFont();
 
     void chooseColor(QColor const& color);
-
-private:
-    Q_DISABLE_COPY(AppearanceConfigTab)
 
     void setFont(size_t index, QFont const& font, bool showSize = true);
 

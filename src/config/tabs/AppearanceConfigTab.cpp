@@ -117,24 +117,14 @@ constexpr int colorsInCategory(Category category) {
 
 struct ModelId {
 
-    static_assert(Palette::ColorCount <= 256, "too many colors defined");
-    static_assert(CategoryCount <= 256, "too many categories defined");
-    static_assert(sizeof(quintptr) >= 3, "cannot pack ModelId into quintptr");
-
     Category category;
     std::optional<Palette::Color> color;
 
     quintptr toInternalId() {
-        // pack this struct into a quintptr, so that it can be placed in a QModelIndex's internalId
-        // bits 0-7:  Palette::Color index
-        // bits 8-15: Category
-        // bit  16:   color enable
 
-        quintptr id = category << 8;
-        if (color) {
-            id |= 0x10000 | *color;
-        }
-        return id;
+        // for parent nodes, the internalId is CategoryCount
+        // for child nodes, the internalId is the Category of the parent
+        return color ? (quintptr)category : (quintptr)CategoryCount;
     }
 };
 
@@ -143,17 +133,21 @@ struct ModelId {
 // to a ModelId.
 //
 ModelId getModelId(QModelIndex const& index) {
-    auto id = index.internalId();
-    ModelId result {
-        (Category)((id >> 8) & 0xFF),
-        (id & 0x10000) ? std::make_optional((Palette::Color)(id & 0xFF)) : std::nullopt
-    };
+    auto id = (Category)index.internalId();
+    if (id == CategoryCount) {
+        return {
+            (Category)index.row(),
+            std::nullopt
+        };
+    } else {
+        auto const color = index.row() + COLOR_GROUPS[id];
+        Q_ASSERT(color >= 0 && color < Palette::ColorCount);
+        return {
+            id,
+            (Palette::Color)color
+        };
+    }
 
-    // check that this ModelId is valid
-    Q_ASSERT(result.category < CategoryCount);
-    Q_ASSERT(!result.color || *result.color < Palette::ColorCount);
-
-    return result;
 }
 
 }
@@ -166,9 +160,9 @@ class PaletteModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
-    explicit PaletteModel(QObject *parent = nullptr) :
+    explicit PaletteModel(Palette &src, QObject *parent = nullptr) :
         QAbstractItemModel(parent),
-        mPalette()
+        mPalette(src)
     {
     }
 
@@ -346,11 +340,15 @@ public:
         return std::nullopt;
     }
 
-    void setColor(QModelIndex const& index, QColor const& color) {
+    void setColor(QModelIndex const& index, std::optional<QColor> color = std::nullopt) {
         if (index.isValid()) {
             auto const id = TU::getModelId(index);
             if (id.color) {
-                updateColor(index, *id.color, color);
+                if (color) {
+                    updateColor(index, *id.color, *color);
+                } else {
+                    updateColor(index, *id.color, Palette::getDefault(*id.color));
+                }
             }
 
         }
@@ -370,7 +368,7 @@ private:
     }
 
 
-    Palette mPalette;
+    Palette &mPalette;
 
 };
 
@@ -381,7 +379,7 @@ private:
 
 AppearanceConfigTab::AppearanceConfigTab(
         AppearanceConfig const& appearance,
-        Palette const& pal,
+        Palette &pal,
         QWidget *parent
     ) :
     ConfigTab(parent),
@@ -394,7 +392,7 @@ AppearanceConfigTab::AppearanceConfigTab(
     auto fontGroup = new QGroupBox(tr("Fonts"));
     auto fontLayout = new QGridLayout;
 
-    for (size_t i = 0; i < FONT_COUNT; ++i) {
+    for (int i = 0; i < FONT_COUNT; ++i) {
         auto &chooseBtn = mFontChooseButtons[i];
 
         fontLayout->addWidget(new QLabel(tr(TU::FONT_NAMES[i])), i, 0);
@@ -416,9 +414,9 @@ AppearanceConfigTab::AppearanceConfigTab(
     colorButtonLayout->addWidget(loadButton);
     auto saveButton = new QPushButton(tr("Save"));
     colorButtonLayout->addWidget(saveButton);
+    colorButtonLayout->addStretch();
     mDefaultButton = new QPushButton(tr("Default"));
     colorButtonLayout->addWidget(mDefaultButton);
-    colorButtonLayout->addStretch();
     auto pickerButton = new QPushButton(tr("Color picker..."));
     colorButtonLayout->addWidget(pickerButton);
 
@@ -429,7 +427,7 @@ AppearanceConfigTab::AppearanceConfigTab(
     layout->addWidget(colorGroup, 1);
     setLayout(layout);
 
-    mModel = new PaletteModel(this);
+    mModel = new PaletteModel(pal, this);
     colorTree->setModel(mModel);
     colorTree->expandAll();
     colorTree->resizeColumnToContents(0);
@@ -439,12 +437,8 @@ AppearanceConfigTab::AppearanceConfigTab(
     setFont(1, appearance.orderGridFont());
     setFont(2, appearance.patternGridHeaderFont(), false);
 
-    mModel->setPalette(pal);
-    mDefaultButton->setEnabled(!pal.isDefault());
-
     connect(mModel, &PaletteModel::dataChanged, this,
         [this]() {
-            mDefaultButton->setEnabled(!mModel->palette().isDefault());
             setDirty<Config::CategoryAppearance>();
             updateColorDialog();
         });
@@ -475,15 +469,13 @@ AppearanceConfigTab::AppearanceConfigTab(
                     );
         if (!filename.isEmpty()) {
             QSettings settings(filename, QSettings::IniFormat);
-            mModel->palette().writeSettings(settings, true);
+            mModel->palette().writeSettings(settings);
             mSaveDir.setPath(filename);
         }
     });
 
     connect(mDefaultButton, &QPushButton::clicked, this, [this]() {
-        mModel->setPalette(Palette());
-        setDirty<Config::CategoryAppearance>();
-        mDefaultButton->setEnabled(false);
+        mModel->setColor(mSelectedColor);
     });
 
     connect(pickerButton, &QPushButton::clicked, this, [this]() {
@@ -511,13 +503,11 @@ AppearanceConfigTab::AppearanceConfigTab(
 
 }
 
-void AppearanceConfigTab::apply(AppearanceConfig &appearanceConfig, Palette &pal) {
+void AppearanceConfigTab::apply(AppearanceConfig &appearanceConfig) {
 
     appearanceConfig.setPatternGridFont(mFonts[0]);
     appearanceConfig.setOrderGridFont(mFonts[1]);
     appearanceConfig.setPatternGridHeaderFont(mFonts[2]);
-
-    pal = mModel->palette();
 
     clean();
 }

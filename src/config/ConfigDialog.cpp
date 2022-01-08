@@ -86,7 +86,7 @@ bool ConfigDialog::apply() {
         }
 
         if (mDirty.testFlag(Config::CategoryAppearance)) {
-            mAppearance->apply(mConfig.appearance(), mConfig.palette());
+            mAppearance->apply(mConfig.appearance());
         }
 
         if (mDirty.testFlag(Config::CategoryKeyboard)) {
