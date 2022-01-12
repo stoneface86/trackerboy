@@ -14,15 +14,12 @@ public:
 
     explicit CommentsDialog(Module &mod, QWidget *parent = nullptr);
 
-private slots:
+private:
+    Q_DISABLE_COPY(CommentsDialog)
 
     void reload();
 
     void commit();
-
-private:
-
-    Q_DISABLE_COPY(CommentsDialog)
 
     Module &mModule;
 

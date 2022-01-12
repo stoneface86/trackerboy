@@ -34,11 +34,10 @@ protected:
 
     void timerEvent(QTimerEvent *evt) override;
 
-private slots:
-    void refresh();
-
 private:
     Q_DISABLE_COPY(AudioDiagDialog)
+
+    void refresh();
 
     Renderer &mRenderer;
     int mTimerId;

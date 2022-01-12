@@ -21,7 +21,6 @@ public:
         PitchView,
         WaveformView
     };
-    Q_ENUM(ViewMode)
 
     explicit GraphEdit(GraphModel &model, QWidget *parent = nullptr);
 

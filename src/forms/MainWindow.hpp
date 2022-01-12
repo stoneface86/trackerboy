@@ -61,7 +61,7 @@ protected:
 
     virtual void timerEvent(QTimerEvent *evt) override;
 
-private slots:
+private:
 
     // implementation in MainWindow/slots.cpp - BEGIN -------------------------
 

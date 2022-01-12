@@ -32,7 +32,9 @@ signals:
 protected:
     virtual void setCurrentItem(int index) override;
 
-private slots:
+private:
+    Q_DISABLE_COPY(InstrumentEditor)
+
     void setChannel(int channel);
 
     void setEnvelopeToWaveform(int index);
@@ -40,9 +42,6 @@ private slots:
     void setEnvelope(uint8_t envelope);
 
     void setEnvelopeEnable(bool enabled);
-
-private:
-    Q_DISABLE_COPY(InstrumentEditor)
 
     InstrumentListModel& model() const noexcept;
 

@@ -27,13 +27,12 @@ public:
 signals:
     void envelopeChanged(uint8_t value);
 
-private slots:
-    void updateEnvelope();
-
 private:
-    void setPeriodLabel(int value);
-
     Q_DISABLE_COPY(EnvelopeForm)
+
+    void setPeriodLabel(int value);
+    
+    void updateEnvelope();
 
     bool mIgnoreChanges;
     uint8_t mEnvelope;

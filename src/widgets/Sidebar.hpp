@@ -40,8 +40,6 @@ public:
 
     QAction* previousSongAction();
 
-public slots:
-
     //
     // Selects the next song in the list
     //
@@ -52,11 +50,9 @@ public slots:
     //
     void previousSong();
 
-private slots:
+private:
 
     void reload();
-
-private:
 
     Q_DISABLE_COPY(Sidebar)
 

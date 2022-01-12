@@ -31,8 +31,6 @@ public:
 
     QString waveformToString();
 
-public slots:
-
     void setDataFromString(QString const &str);
 
     void clear();

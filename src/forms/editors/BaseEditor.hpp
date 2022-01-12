@@ -42,13 +42,11 @@ protected:
     
     BaseTableModel &mModel;
 
-private slots:
+private:
 
     void onIndexChanged(int index);
 
     void onNameEdited(QString const& name);
-
-private:
 
     QComboBox *mCombo;
     QLineEdit *mNameEdit;

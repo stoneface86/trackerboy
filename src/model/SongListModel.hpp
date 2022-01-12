@@ -41,10 +41,10 @@ public:
 
     void moveDown(int index);
 
-private slots:
-    void reload();
-
 private:
+    Q_DISABLE_COPY(SongListModel)
+
+    void reload();
 
     //
     // Meta-info struct for a single song. Contains a QString version of the name with modified flag

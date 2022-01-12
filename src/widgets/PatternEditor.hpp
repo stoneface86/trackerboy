@@ -44,13 +44,6 @@ public:
 
     virtual bool event(QEvent *evt) override;
 
-signals:
-    void previewNote(int note, int track, int instrument);
-
-    void stopNotePreview();
-
-public slots:
-
     void setEditStep(int step);
 
     void setInstrument(int id);
@@ -81,6 +74,11 @@ public slots:
 
     void reverse();
 
+signals:
+    void previewNote(int note, int track, int instrument);
+
+    void stopNotePreview();
+
 protected:
 
     virtual void focusInEvent(QFocusEvent *evt) override;
@@ -93,7 +91,8 @@ protected:
 
     virtual void wheelEvent(QWheelEvent *evt) override;
 
-private slots:
+private:
+    Q_DISABLE_COPY(PatternEditor)
 
     void hscrollAction(int action);
     void vscrollAction(int action);
@@ -101,16 +100,12 @@ private slots:
     void updateScrollbars(PatternModel::CursorChangeFlags flags);
     void setCursorFromHScroll(int value);
 
-private:
-
     void pasteImpl(bool mix);
 
     void setTempoLabel(float tempo);
     float calcActualTempo(float speed);
 
     void stepDown();
-
-    Q_DISABLE_COPY(PatternEditor)
 
     PianoInput const& mPianoIn;
     PatternModel &mModel;

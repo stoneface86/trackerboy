@@ -27,6 +27,12 @@ public:
 
     trackerboy::Speed estimateSpeed(int tempo);
 
+    void setRowsPerBeat(int rpb);
+    void setRowsPerMeasure(int rpm);
+    void setSpeed(int speed);
+    void setSpeedFromTempo(int tempo);
+    void setPatternSize(int rows);
+
 signals:
 
     void patternSizeChanged(int rows);
@@ -35,15 +41,8 @@ signals:
     void rowsPerMeasureChanged(int rpm);
     void tempoChanged(float tempo);
 
-public slots:
-
-    void setRowsPerBeat(int rpb);
-    void setRowsPerMeasure(int rpm);
-    void setSpeed(int speed);
-    void setSpeedFromTempo(int tempo);
-    void setPatternSize(int rows);
-
 private:
+    Q_DISABLE_COPY(SongModel)
 
     void calcTempo(bool notify = false);
 

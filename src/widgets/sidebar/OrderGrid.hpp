@@ -23,7 +23,6 @@ public:
 
     void setColors(Palette const& colors);
 
-public slots:
     void setChangeAll(bool changeAll);
 
     void decrement();

@@ -217,6 +217,24 @@ public:
     //
     void hideEffect(int track);
 
+    void moveCursorRow(int amount, PatternModel::SelectMode mode = SelectionKeep);
+    void moveCursorColumn(int amount, PatternModel::SelectMode mode = SelectionKeep);
+    void moveCursorTrack(int amount);
+
+    void setCursorRow(int row);
+    void setCursorColumn(int column);
+    void setCursorAbsoluteColumn(int column);
+    void setCursorTrack(int track);
+    void setCursorPattern(int pattern);
+
+    void setCursor(PatternCursor const cursor);
+
+    void setRecord(bool recording);
+
+    void setFollowing(bool following);
+
+    void setPreviewEnable(bool previews);
+
 signals:
     void cursorChanged(PatternModel::CursorChangeFlags flags);
     void cursorPatternChanged(int pattern);
@@ -239,26 +257,6 @@ signals:
     void effectsVisibleChanged();
 
     void totalColumnsChanged(int columns);
-
-public slots:
-
-    void moveCursorRow(int amount, PatternModel::SelectMode mode = SelectionKeep);
-    void moveCursorColumn(int amount, PatternModel::SelectMode mode = SelectionKeep);
-    void moveCursorTrack(int amount);
-
-    void setCursorRow(int row);
-    void setCursorColumn(int column);
-    void setCursorAbsoluteColumn(int column);
-    void setCursorTrack(int track);
-    void setCursorPattern(int pattern);
-
-    void setCursor(PatternCursor const cursor);
-
-    void setRecord(bool recording);
-
-    void setFollowing(bool following);
-
-    void setPreviewEnable(bool previews);
 
 private:
 

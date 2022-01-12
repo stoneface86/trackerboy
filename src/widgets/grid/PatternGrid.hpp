@@ -55,7 +55,6 @@ public:
 
     void setEditorFocus(bool focus);
 
-public slots:
     void setFirstHighlight(int highlight);
 
     void setSecondHighlight(int highlight);
@@ -84,17 +83,14 @@ protected:
 
     void resizeEvent(QResizeEvent *evt) override;
 
-private slots:
+private:
+    Q_DISABLE_COPY(PatternGrid)
+    
     void updateCursorRow();
     void updateAll();
     void setPlaying(bool playing);
 
     void updateCursor(PatternModel::CursorChangeFlags flags);
-
-    
-
-private:
-    Q_DISABLE_COPY(PatternGrid)
 
     //
     // Called when appearance settings have changed, recalculates metrics and redraws

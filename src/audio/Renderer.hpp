@@ -120,40 +120,6 @@ public:
     //
     void updateFramerate();
 
-signals:
-
-    //
-    // Signal emitted when the audio callback thread was started
-    //
-    void audioStarted();
-
-    //
-    // Signal emitted when the audio callback thread was stopped.
-    //
-    void audioStopped();
-
-    //
-    // Emitted when music has started/stopped playing
-    //
-    void isPlayingChanged(bool playing);
-
-    //
-    // An error occurred during audio playback.
-    //
-    void audioError();
-
-    //
-    // emitted when a new frame is renderered
-    //
-    void frameSync();
-
-    //
-    // Emitted when the visualizer buffer has been modified
-    //
-    void updateVisualizers();
-
-public slots:
-
     //
     // Clears counters in the diagnostic data
     //
@@ -206,7 +172,39 @@ public slots:
 
     void setChannelOutput(ChannelOutput::Flags output);
 
-private slots:
+signals:
+
+    //
+    // Signal emitted when the audio callback thread was started
+    //
+    void audioStarted();
+
+    //
+    // Signal emitted when the audio callback thread was stopped.
+    //
+    void audioStopped();
+
+    //
+    // Emitted when music has started/stopped playing
+    //
+    void isPlayingChanged(bool playing);
+
+    //
+    // An error occurred during audio playback.
+    //
+    void audioError();
+
+    //
+    // emitted when a new frame is renderered
+    //
+    void frameSync();
+
+    //
+    // Emitted when the visualizer buffer has been modified
+    //
+    void updateVisualizers();
+
+private:
 
     //
     // invoked when the current song being edited has changed. If music is
@@ -214,7 +212,6 @@ private slots:
     //
     void setSong();
 
-private:
     Q_DISABLE_COPY(Renderer)
 
     enum class PreviewState {
