@@ -30,16 +30,35 @@
 namespace TU {
 
 // human readable names for each shortcut in ShortcutTable
-static std::array<const char*, ShortcutTable::Count> const SHORTCUT_NAMES = {
+static std::array const SHORTCUT_NAMES = {
     QT_TR_NOOP("Previous instrument"),
     QT_TR_NOOP("Next instrument"),
     QT_TR_NOOP("Previous pattern"),
     QT_TR_NOOP("Next pattern"),
     QT_TR_NOOP("Increment octave"),
     QT_TR_NOOP("Decrement octave"),
-    QT_TR_NOOP("Play / Stop")
+    QT_TR_NOOP("Play / Stop"),
+    QT_TR_NOOP("Mix paste"),
+    QT_TR_NOOP("Transpose, decrease note"),
+    QT_TR_NOOP("Transpose, increase note"),
+    QT_TR_NOOP("Transpose, decrease octave"),
+    QT_TR_NOOP("Transpose, increase octave"),
+    QT_TR_NOOP("Transpose..."),
+    QT_TR_NOOP("Reverse"),
+    QT_TR_NOOP("Play"),
+    QT_TR_NOOP("Play from start"),
+    QT_TR_NOOP("Play from cursor"),
+    QT_TR_NOOP("Step from cursor"),
+    QT_TR_NOOP("Stop"),
+    QT_TR_NOOP("Pattern repeat"),
+    QT_TR_NOOP("Record"),
+    QT_TR_NOOP("Toggle channel output"),
+    QT_TR_NOOP("Solo channel"),
+    QT_TR_NOOP("Kill sound"),
+    QT_TR_NOOP("Edit instrument"),
+    QT_TR_NOOP("Edit waveform")
 };
-
+static_assert(SHORTCUT_NAMES.size() == ShortcutTable::Count, "table size mismatch");
 }
 
 //

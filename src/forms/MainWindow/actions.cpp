@@ -28,6 +28,9 @@ namespace TU {
 
 void MainWindow::createActions(TableActions const& instrumentActions, TableActions const& waveformActions) {
 
+    // NOTE: For user-configurable shortcuts, set the action's data to the
+    // ShortcutTable::Shortcut enum
+
     auto menubar = menuBar();
     QAction *act;
 
@@ -110,7 +113,8 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     mToolbarEdit->addAction(act);
     connectActionTo(act, mPatternEditor, paste);
     
-    act = setupAction(menuEdit, tr("Paste &Mix"), tr("Pastes contents at the cursor, merging with existing rows"), tr("Ctrl+M"));
+    act = setupAction(menuEdit, tr("Paste &Mix"), tr("Pastes contents at the cursor, merging with existing rows"));
+    act->setData(ShortcutTable::PasteMix);
     connectActionTo(act, mPatternEditor, pasteMix);
 
     act = setupAction(menuEdit, tr("&Erase"), tr("Erases selection contents"), QKeySequence::Delete);
@@ -127,21 +131,27 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     auto menuEditTranspose = menuEdit->addMenu(tr("Transpose"));
     
     act = setupAction(menuEditTranspose, tr("Decrease note"), tr("Decreases note/notes by 1 step"));
+    act->setData(ShortcutTable::TransposeDecNote);
     connectActionTo(act, mPatternEditor, decreaseNote);
     
     act = setupAction(menuEditTranspose, tr("Increase note"), tr("Increases note/notes by 1 step"));
+    act->setData(ShortcutTable::TransposeIncNote);
     connectActionTo(act, mPatternEditor, increaseNote);
     
     act = setupAction(menuEditTranspose, tr("Decrease octave"), tr("Decreases note/notes by 12 steps"));
+    act->setData(ShortcutTable::TransposeDecOctave);
     connectActionTo(act, mPatternEditor, decreaseOctave);
     
     act = setupAction(menuEditTranspose, tr("Increase octave"), tr("Increases note/notes by 12 steps"));
+    act->setData(ShortcutTable::TransposeIncOctave);
     connectActionTo(act, mPatternEditor, increaseOctave);
 
-    act = setupAction(menuEditTranspose, tr("Custom..."), tr("Transpose by a custom amount"), tr("Ctrl+T"));
+    act = setupAction(menuEditTranspose, tr("Custom..."), tr("Transpose by a custom amount"));
+    act->setData(ShortcutTable::Transpose);
     connectActionTo(act, mPatternEditor, transpose);
 
-    setupAction(menuEdit, tr("&Reverse"), tr("Reverses selected rows"), tr("Ctrl+R"));
+    setupAction(menuEdit, tr("&Reverse"), tr("Reverses selected rows"));
+    act->setData(ShortcutTable::Reverse);
     connectActionTo(act, mPatternEditor, reverse);
 
     menuEdit->addSeparator(); // ----------------------------------------------
@@ -208,34 +218,41 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     act = setupAction(menuTracker, tr("&Play"), tr("Resume playing or play the song from the current position"), Icons::trackerPlay);
     mToolbarTracker->addAction(act);
+    act->setData(ShortcutTable::Play);
     connectActionToThis(act, onTrackerPlay);
 
-    act = setupAction(menuTracker, tr("Play from start"), tr("Begin playback of the song from the start"), Icons::trackerRestart, QKeySequence(Qt::Key_F5));
+    act = setupAction(menuTracker, tr("Play from start"), tr("Begin playback of the song from the start"), Icons::trackerRestart);
     mToolbarTracker->addAction(act);
+    act->setData(ShortcutTable::PlayFromStart);
     connectActionToThis(act, onTrackerPlayAtStart);
 
-    act = setupAction(menuTracker, tr("Play at cursor"), tr("Begin playback from the cursor"), Icons::trackerPlayRow, QKeySequence(Qt::Key_F6));
+    act = setupAction(menuTracker, tr("Play at cursor"), tr("Begin playback from the cursor"), Icons::trackerPlayRow);
     mToolbarTracker->addAction(act);
+    act->setData(ShortcutTable::PlayFromCursor);
     connectActionToThis(act, onTrackerPlayFromCursor);
 
-    act = setupAction(menuTracker, tr("Step row"), tr("Play and hold the row at the cursor"), Icons::trackerStepRow, QKeySequence(Qt::Key_F7));
+    act = setupAction(menuTracker, tr("Step row"), tr("Play and hold the row at the cursor"), Icons::trackerStepRow);
     mToolbarTracker->addAction(act);
+    act->setData(ShortcutTable::Step);
     connectActionToThis(act, onTrackerStep);
 
-    act = setupAction(menuTracker, tr("&Stop"), tr("Stop playing"), Icons::trackerStop, QKeySequence(Qt::Key_F8));
+    act = setupAction(menuTracker, tr("&Stop"), tr("Stop playing"), Icons::trackerStop);
     mToolbarTracker->addAction(act);
+    act->setData(ShortcutTable::Stop);
     connectActionToThis(act, onTrackerStop);
 
     mToolbarTracker->addSeparator();
 
-    act = setupAction(menuTracker, "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat, QKeySequence(Qt::Key_F9));
+    act = setupAction(menuTracker, "Pattern repeat", "Toggles pattern repeat mode", Icons::trackerRepeat);
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
+    act->setData(ShortcutTable::PatternRepeat);
     lazyconnect(act, toggled, mRenderer, setPatternRepeat);
 
-    act = setupAction(menuTracker, tr("Record"), tr("Toggles record mode"), Icons::trackerRecord, QKeySequence(Qt::Key_Space));
+    act = setupAction(menuTracker, tr("Record"), tr("Toggles record mode"), Icons::trackerRecord);
     act->setCheckable(true);
     mToolbarTracker->addAction(act);
+    act->setData(ShortcutTable::Record);
     lazyconnect(act, toggled, mPatternModel, setRecord);
 
     mToolbarTracker->addAction(mSidebar->previousSongAction());
@@ -243,15 +260,18 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     menuTracker->addSeparator(); // -------------------------------------------
 
-    act = setupAction(menuTracker, tr("Toggle channel output"), tr("Enables/disables sound output for the current track"), QKeySequence(Qt::Key_F10));
+    act = setupAction(menuTracker, tr("Toggle channel output"), tr("Enables/disables sound output for the current track"));
+    act->setData(ShortcutTable::ToggleOutput);
     connectActionToThis(act, onTrackerToggleOutput);
 
-    act = setupAction(menuTracker, tr("Solo"), tr("Solos the current track"), QKeySequence(Qt::Key_F11));
+    act = setupAction(menuTracker, tr("Solo"), tr("Solos the current track"));
+    act->setData(ShortcutTable::Solo);
     connectActionToThis(act, onTrackerSolo);
 
     menuTracker->addSeparator(); // -------------------------------------------
 
-    act = setupAction(menuTracker, tr("&Kill sound"), tr("Immediately stops sound output"), QKeySequence(Qt::Key_F12));
+    act = setupAction(menuTracker, tr("&Kill sound"), tr("Immediately stops sound output"));
+    act->setData(ShortcutTable::Kill);
     connectActionToThis(act, onTrackerKill);
 
     mActionFollowMode = createAction(this, tr("Follow-mode"), tr("Toggles follow mode"), Qt::Key_ScrollLock);

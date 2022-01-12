@@ -10,7 +10,6 @@
 
 TableDock::TableDock(
     BaseTableModel &model,
-    QKeySequence editorShortcut,
     QString const& typeName,
     QWidget *parent
 ) :
@@ -69,7 +68,6 @@ TableDock::TableDock(
     act = toolbar->addAction(tr("Edit"));
     act->setIcon(IconLocator::get(Icons::itemEdit));
     act->setStatusTip(tr("Edit the current %1").arg(typeName));
-    act->setShortcut(editorShortcut);
     connect(act, &QAction::triggered, this,
         [this]() {
             emit edit(mSelectedItem);
@@ -157,6 +155,10 @@ int TableDock::selectedItem() const {
 
 void TableDock::setSelectedItem(int item) {
     mView->selectionModel()->select(mModel.index(item), QItemSelectionModel::ClearAndSelect);
+}
+
+void TableDock::setShortcut(QKeySequence const& seq) {
+    mActions.edit->setShortcut(seq);
 }
 
 void TableDock::setSelected(int index) {

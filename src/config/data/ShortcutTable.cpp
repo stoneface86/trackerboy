@@ -3,22 +3,11 @@
 #include "config/data/keys.hpp"
 
 #include <QKeySequence>
+#include <QMetaEnum>
 #include <QSettings>
 
 #define TU ShortcutTableTU
 namespace TU {
-
-static std::array const SHORTCUT_KEYS = {
-    QStringLiteral("PrevInstrument"),
-    QStringLiteral("NextInstrument"),
-    QStringLiteral("PrevPattern"),
-    QStringLiteral("NextPattern"),
-    QStringLiteral("IncOctave"),
-    QStringLiteral("DecOctave"),
-    QStringLiteral("Play")
-};
-
-static_assert(SHORTCUT_KEYS.size() == ShortcutTable::Count, "table size mismatch");
 
 }
 
@@ -27,59 +16,114 @@ ShortcutTable::ShortcutTable() noexcept :
 {
 }
 
-std::array<ShortcutTable::KeyPack, ShortcutTable::Count> const ShortcutTable::DEFAULTS{ {
-    { Qt::CTRL | Qt::Key_Left, 0, 0, 0 },
-    { Qt::CTRL | Qt::Key_Right, 0, 0, 0 },
-    { Qt::CTRL | Qt::Key_Up, 0, 0, 0 },
-    { Qt::CTRL | Qt::Key_Down, 0, 0, 0 },
-    { Qt::CTRL | Qt::Key_BracketRight, 0, 0, 0 },
-    { Qt::CTRL | Qt::Key_BracketLeft, 0, 0, 0 },
-    { Qt::Key_Return, 0, 0, 0 }
-} };
-
 void ShortcutTable::set(Shortcut shortcut, QKeySequence const& seq) noexcept {
-    mTable[shortcut] = toPack(seq);
+    auto &ref = mTable[shortcut];
+    if (ref) {
+        *ref = seq;
+    } else {
+        ref = seq;
+    }
 }
 
 QKeySequence ShortcutTable::get(Shortcut shortcut) const noexcept {
-    return toSequence(mTable[shortcut]);
+    auto &ref = mTable[shortcut];
+    if (ref) {
+        return *ref;
+    } else {
+        return {};
+    }
 }
 
 QKeySequence ShortcutTable::getDefault(Shortcut shortcut) noexcept {
-    return toSequence(DEFAULTS[shortcut]);
+    switch (shortcut) {
+        case PrevInstrument:
+            return tr("Ctrl+Left");
+        case NextInstrument:
+            return tr("Ctrl+Right");
+        case PrevPattern:
+            return tr("Ctrl+Up");
+        case NextPattern:
+            return tr("Ctrl+Down");
+        case DecOctave:
+            return tr("Ctrl+[");
+        case IncOctave:
+            return tr("Ctrl+]");
+        case PlayStop:
+            return tr("Return");
+        case PasteMix:
+            return tr("Ctrl+M");
+        case TransposeDecNote:
+            return tr("Ctrl+F1");
+        case TransposeIncNote:
+            return tr("Ctrl+F2");
+        case TransposeDecOctave:
+            return tr("Ctrl+F3");
+        case TransposeIncOctave:
+            return tr("Ctrl+F4");
+        case Transpose:
+            return tr("Ctrl+T");
+        case Reverse:
+            return tr("Ctrl+R");
+        case Play:
+            return {};
+        case PlayFromStart:
+            return tr("F5");
+        case PlayFromCursor:
+            return tr("F6");
+        case Step:
+            return tr("F7");
+        case Stop:
+            return tr("F8");
+        case PatternRepeat:
+            return tr("F9");
+        case Record:
+            return tr("Space");
+        case ToggleOutput:
+            return tr("F10");
+        case Solo:
+            return tr("F11");
+        case Kill:
+            return tr("F12");
+        case EditInstrument:
+            return tr("Ctrl+I");
+        case EditWaveform:
+            return tr("Ctrl+W");
+        default:
+            return {};
+    }
 }
 
 void ShortcutTable::readSettings(QSettings &settings) noexcept {
+    
     settings.beginGroup(Keys::Shortcuts);
 
+    auto meta = QMetaEnum::fromType<Shortcut>();
     for (int i = 0; i < Count; ++i) {
-        auto seqstr = settings.value(TU::SHORTCUT_KEYS[i]).toString();
-        if (seqstr.isEmpty()) {
-            mTable[i] = DEFAULTS[i];
-        } else {
-            mTable[i] = toPack(QKeySequence(seqstr, QKeySequence::PortableText));
-        }
+        auto keyname = meta.key(i);
+        Q_ASSERT(keyname != nullptr);
+        auto seqstr = settings.value(keyname).toString();
+        set((Shortcut)i,
+            seqstr.isEmpty()
+            ? getDefault((Shortcut)i)
+            : QKeySequence(seqstr, QKeySequence::PortableText));
     }
 
     settings.endGroup();
+
 }
 
 void ShortcutTable::writeSettings(QSettings &settings) noexcept {
     settings.beginGroup(Keys::Shortcuts);
 
+    auto meta = QMetaEnum::fromType<Shortcut>();
     for (int i = 0; i < Count; ++i) {
-        settings.setValue(TU::SHORTCUT_KEYS[i], toSequence(mTable[i]).toString(QKeySequence::PortableText));
+        auto keyname = meta.key(i);
+        Q_ASSERT(keyname != nullptr);
+        settings.setValue(keyname, get((Shortcut)i).toString(QKeySequence::PortableText));
     }
 
     settings.endGroup();
 }
 
-QKeySequence ShortcutTable::toSequence(KeyPack const& pack) noexcept {
-    return { pack[0], pack[1], pack[2], pack[3] };
-}
-
-ShortcutTable::KeyPack ShortcutTable::toPack(QKeySequence const& seq) noexcept {
-    return { seq[0], seq[1], seq[2], seq[3] };
-}
 
 #undef TU

@@ -243,6 +243,14 @@ private:
     //
     void updateRecentFiles(QStringList const& list);
 
+    //
+    // Configures key sequences for all actions in the given widget. A shortcut is
+    // assigned to the action if the action's data property contains a ShortcutTable::Shortcut
+    // value. This function applies shortcuts to all of the widget's actions and all actions
+    // in each submenu.
+    //
+    void configureActions(QWidget &widget, ShortcutTable const& shortcuts);
+
     AudioEnumerator mAudioEnumerator;
     MidiEnumerator mMidiEnumerator;
     QString const mUntitledString;
@@ -325,6 +333,15 @@ private:
     QLabel *mStatusElapsed;
     QLabel *mStatusPos;
     QLabel *mStatusSamplerate;
+
+    // shortcuts
+    QShortcut *mShortcutPrevInst;
+    QShortcut *mShortcutNextInst;
+    QShortcut *mShortcutPrevPatt;
+    QShortcut *mShortcutNextPatt;
+    QShortcut *mShortcutIncOct;
+    QShortcut *mShortcutDecOct;
+    QShortcut *mShortcutPlayStop;
 
 
 };

@@ -16,7 +16,6 @@ class TableDock : public QWidget {
 public:
     TableDock(
         BaseTableModel &model,
-        QKeySequence editorShortcut,
         QString const& typeName,
         QWidget *parent = nullptr
     );
@@ -33,6 +32,7 @@ public:
 
     void setSelectedItem(int item);
 
+    void setShortcut(QKeySequence const& seq);
 
 signals:
     void selectedItemChanged(int index);

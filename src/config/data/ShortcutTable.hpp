@@ -7,25 +7,52 @@
 class QSettings;
 
 #include <array>
+#include <optional>
 
 //
 // Configuration data for user configured shortcuts.
 //
 class ShortcutTable {
 
+    Q_GADGET
+    Q_DECLARE_TR_FUNCTIONS(ShortcutTable)
+
 public:
 
     enum Shortcut {
+        // QShortcut
         PrevInstrument,
         NextInstrument,
         PrevPattern,
         NextPattern,
-        IncOctave,
         DecOctave,
+        IncOctave,
+        PlayStop,
+        // QAction
+        PasteMix,
+        TransposeDecNote,
+        TransposeIncNote,
+        TransposeDecOctave,
+        TransposeIncOctave,
+        Transpose,
+        Reverse,
         Play,
+        PlayFromStart,
+        PlayFromCursor,
+        Step,
+        Stop,
+        PatternRepeat,
+        Record,
+        ToggleOutput,
+        Solo,
+        Kill,
+        // Misc
+        EditInstrument,
+        EditWaveform,
 
         Count
     };
+    Q_ENUM(Shortcut)
 
     explicit ShortcutTable() noexcept;
 
@@ -42,16 +69,10 @@ public:
 
 private:
 
-    // use this instead of QKeySequence to avoid heap allocation
-    using KeyPack = std::array<int, 4>;
-
-    static inline QKeySequence toSequence(KeyPack const& pack) noexcept;
-    static inline KeyPack toPack(QKeySequence const& seq) noexcept;
-
-    static std::array<KeyPack, Count> const DEFAULTS;
-
-
-    std::array<KeyPack, Count> mTable;
+    // optional is used for deferred construction
+    // QKeySequence uses PIMPL so this prevents a bunch of
+    // heap allocs when mTable is initialized.
+    std::array<std::optional<QKeySequence>, Count> mTable;
 
 
 };

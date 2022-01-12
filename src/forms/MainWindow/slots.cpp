@@ -12,6 +12,8 @@
 #include <QFileDialog>
 #include <QStringBuilder>
 #include <QUndoView>
+#include <QShortcut>
+#include <QMenuBar>
 
 #define TU MainWindowTU
 namespace TU {
@@ -316,6 +318,23 @@ Config::Categories MainWindow::applyConfig(Config const& config, Config::Categor
 
     if (categories.testFlag(Config::CategoryKeyboard)) {
         mPianoInput = config.pianoInput();
+
+        auto &shortcuts = config.shortcuts();
+        #define setShortcut(shortcut, key) shortcut->setKey(shortcuts.get(ShortcutTable::key))
+        setShortcut(mShortcutPrevInst, PrevInstrument);
+        setShortcut(mShortcutNextInst, NextInstrument);
+        setShortcut(mShortcutPrevPatt, PrevPattern);
+        setShortcut(mShortcutNextPatt, NextPattern);
+        setShortcut(mShortcutDecOct, DecOctave);
+        setShortcut(mShortcutIncOct, IncOctave);
+        setShortcut(mShortcutPlayStop, PlayStop);
+        #undef setShortcut
+
+        mInstruments->setShortcut(shortcuts.get(ShortcutTable::EditInstrument));
+        mWaveforms->setShortcut(shortcuts.get(ShortcutTable::EditWaveform));
+
+        configureActions(*menuBar(), shortcuts);
+
     }
 
     if (categories.testFlag(Config::CategoryMidi)) {
@@ -408,6 +427,7 @@ void MainWindow::showConfigDialog() {
                 }
             }
         });
+    // optimize if showing the dialog takes longer than 250 ms
 #ifdef QT_DEBUG
     qDebug() << "ConfigDialog creation took" << timer.elapsed() << "ms";
 #endif

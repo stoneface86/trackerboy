@@ -271,10 +271,10 @@ void MainWindow::setupUi() {
     mHSplitter = new QSplitter(Qt::Horizontal);
     
     mVSplitter = new QSplitter(Qt::Vertical);
-    auto setupTableEdit = [](QString const& table, TableDock *&dock, BaseTableModel &model, QKeySequence const& seq, QString const& str) {
+    auto setupTableEdit = [](QString const& table, TableDock *&dock, BaseTableModel &model, QString const& str) {
         auto group = new QGroupBox(table);
         auto layout = new QVBoxLayout;
-        dock = new TableDock(model, seq, str);
+        dock = new TableDock(model, str);
         layout->addWidget(dock);
         layout->setMargin(0);
         group->setLayout(layout);
@@ -285,7 +285,6 @@ void MainWindow::setupUi() {
             tr("Instruments"),
             mInstruments,
             *mInstrumentModel,
-            tr("Ctrl+I"),
             tr("instrument")
         ));
     mVSplitter->addWidget(
@@ -293,7 +292,6 @@ void MainWindow::setupUi() {
             tr("Waveforms"),
             mWaveforms,
             *mWaveModel,
-            tr("Ctrl+W"),
             tr("waveform")
         ));
 
@@ -357,29 +355,27 @@ void MainWindow::setupUi() {
 
     // SHORTCUTS =============================================================
 
-    QShortcut *shortcut;
+    mShortcutPrevInst = new QShortcut(this);
+    lazyconnect(mShortcutPrevInst, activated, this, previousInstrument);
 
-    shortcut = new QShortcut(tr("Ctrl+Left"), this);
-    lazyconnect(shortcut, activated, this, previousInstrument);
+    mShortcutNextInst = new QShortcut(this);
+    lazyconnect(mShortcutNextInst, activated, this, nextInstrument);
 
-    shortcut = new QShortcut(tr("Ctrl+Right"), this);
-    lazyconnect(shortcut, activated, this, nextInstrument);
-
-    shortcut = new QShortcut(tr("Ctrl+Up"), this);
-    lazyconnect(shortcut, activated, this, previousPattern);
+    mShortcutPrevPatt = new QShortcut(this);
+    lazyconnect(mShortcutPrevPatt, activated, this, previousPattern);
     
-    shortcut = new QShortcut(tr("Ctrl+Down"), this);
-    lazyconnect(shortcut, activated, this, nextPattern);
+    mShortcutNextPatt = new QShortcut(this);
+    lazyconnect(mShortcutNextPatt, activated, this, nextPattern);
 
-    shortcut = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_BracketRight), this);
-    lazyconnect(shortcut, activated, this, increaseOctave);
+    mShortcutIncOct = new QShortcut(this);
+    lazyconnect(mShortcutIncOct, activated, this, increaseOctave);
     
-    shortcut = new QShortcut(QKeySequence(Qt::ControlModifier | Qt::Key_BracketLeft), this);
-    lazyconnect(shortcut, activated, this, decreaseOctave);
+    mShortcutDecOct = new QShortcut(this);
+    lazyconnect(mShortcutDecOct, activated, this, decreaseOctave);
 
-    shortcut = new QShortcut(QKeySequence(Qt::Key_Return), mPatternEditor);
-    shortcut->setContext(Qt::WidgetWithChildrenShortcut);
-    lazyconnect(shortcut, activated, this, playOrStop);
+    mShortcutPlayStop = new QShortcut(mPatternEditor);
+    mShortcutPlayStop->setContext(Qt::WidgetWithChildrenShortcut);
+    lazyconnect(mShortcutPlayStop, activated, this, playOrStop);
 
     // STATUSBAR ==============================================================
 
@@ -639,6 +635,24 @@ void MainWindow::updateRecentFiles(const QStringList &list) {
 
     for (auto iter = mRecentFilesActions.begin() + size; iter != mRecentFilesActions.end(); ++iter) {
         (*iter)->setVisible(false);
+    }
+}
+
+void MainWindow::configureActions(QWidget &widget, ShortcutTable const& shortcuts) {
+    for (auto act : widget.actions()) {
+        if (act->isSeparator()) {
+            continue;
+        } else if (auto menu = act->menu(); menu) {
+            // recurse into this menu
+            configureActions(*menu, shortcuts);
+        } else {
+            // check if this action has a shortcut
+            auto const data = act->data();
+            if (data.canConvert<ShortcutTable::Shortcut>()) {
+                // yes, set the action's shortcut from the configuration
+                act->setShortcut(shortcuts.get(data.value<ShortcutTable::Shortcut>()));
+            }
+        }
     }
 }
 
