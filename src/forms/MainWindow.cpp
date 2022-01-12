@@ -382,8 +382,8 @@ void MainWindow::setupUi() {
     auto statusbar = statusBar();
 
     mStatusRenderer = new QLabel(statusbar);
-    mStatusSpeed = new SpeedLabel(statusbar);
-    mStatusTempo = new TempoLabel(statusbar);
+    mStatusSpeed = new QLabel(statusbar);
+    mStatusTempo = new QLabel(statusbar);
     mStatusElapsed = new QLabel(statusbar);
     mStatusPos = new QLabel(statusbar);
     mStatusSamplerate = new QLabel(statusbar);
@@ -413,6 +413,8 @@ void MainWindow::setupUi() {
     setPlayingStatus(PlayingStatusText::ready);
     mStatusElapsed->setText(QStringLiteral("00:00"));
     mStatusPos->setText(QStringLiteral("00 / 00"));
+    mStatusSpeed->setText(tr("-- FPR"));
+    mStatusTempo->setText(tr("-- BPM"));
     // no need to set samplerate, it is done so in onConfigApplied
 
     // CONNECTIONS ============================================================

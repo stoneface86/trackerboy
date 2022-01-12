@@ -328,8 +328,8 @@ private:
 
     // statusbar widgets
     QLabel *mStatusRenderer;
-    SpeedLabel *mStatusSpeed;
-    TempoLabel *mStatusTempo;
+    QLabel *mStatusSpeed;
+    QLabel *mStatusTempo;
     QLabel *mStatusElapsed;
     QLabel *mStatusPos;
     QLabel *mStatusSamplerate;

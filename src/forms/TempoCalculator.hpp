@@ -3,11 +3,12 @@
 
 #include "model/SongModel.hpp"
 #include "widgets/CustomSpinBox.hpp"
-#include "widgets/SpeedLabel.hpp"
-#include "widgets/TempoLabel.hpp"
 
 #include <QDialog>
 #include <QSpinBox>
+
+class QLabel;
+class SpinBox;
 
 
 //
@@ -27,9 +28,9 @@ private:
 
     SongModel &mModel;
 
-    TempoLabel *mTempoLabel;
+    QLabel *mTempoLabel;
     QSpinBox *mTempoSpin;
-    SpeedLabel *mSpeedLabel;
+    QLabel *mSpeedLabel;
     CustomSpinBox *mSpeedSpin;
 
 };

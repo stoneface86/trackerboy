@@ -2,6 +2,7 @@
 #include "forms/TempoCalculator.hpp"
 
 #include "utils/connectutils.hpp"
+#include "utils/string.hpp"
 
 #include <QGridLayout>
 #include <QLabel>
@@ -24,7 +25,7 @@ TempoCalculator::TempoCalculator(SongModel &model, QWidget *parent) :
     QLabel *label;
     label = new QLabel(tr("Tempo"));
     mTempoSpin = new QSpinBox;
-    mTempoLabel = new TempoLabel;
+    mTempoLabel = new QLabel;
     label->setBuddy(mTempoSpin);
     layout->addWidget(label, 0, 0);
     layout->addWidget(mTempoSpin, 0, 1);
@@ -32,7 +33,7 @@ TempoCalculator::TempoCalculator(SongModel &model, QWidget *parent) :
 
     label = new QLabel(tr("Speed"));
     mSpeedSpin = new CustomSpinBox;
-    mSpeedLabel = new SpeedLabel;
+    mSpeedLabel = new QLabel;
     label->setBuddy(mSpeedSpin);
     layout->addWidget(label, 1, 0);
     layout->addWidget(mSpeedSpin, 1, 1);
@@ -86,7 +87,7 @@ TempoCalculator::TempoCalculator(SongModel &model, QWidget *parent) :
 float TempoCalculator::calculate(trackerboy::Speed speed) {
     auto speedFloat = trackerboy::speedToFloat(speed);
     auto tempo = trackerboy::speedToTempo(speedFloat, mModel.rowsPerBeat());
-    mSpeedLabel->setSpeed(speedFloat);
-    mTempoLabel->setTempo(tempo);
+    mSpeedLabel->setText(speedToString(speedFloat));
+    mTempoLabel->setText(tempoToString(tempo));
     return tempo;
 }

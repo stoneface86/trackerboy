@@ -2,6 +2,7 @@
 #include "forms/MainWindow.hpp"
 
 #include "utils/connectutils.hpp"
+#include "utils/string.hpp"
 #include "export/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
 #include "widgets/TableView.hpp"
@@ -562,9 +563,9 @@ void MainWindow::onFrameSync() {
     if (mLastEngineFrame.speed != frame.speed) {
         auto speedF = trackerboy::speedToFloat(frame.speed);
         // update speed status
-        mStatusSpeed->setSpeed(speedF);
+        mStatusSpeed->setText(speedToString(speedF));
         auto tempo = trackerboy::speedToTempo(speedF,  mSongModel->rowsPerBeat());
-        mStatusTempo->setTempo(tempo);
+        mStatusTempo->setText(tempoToString(tempo));
     }
 
     constexpr auto FRAME_SKIP = 30;

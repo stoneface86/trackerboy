@@ -182,6 +182,7 @@ makeSourceList(UI_SRC
     FILE "utils/Guarded.hpp"
     "utils/IconLocator"
     FILE "utils/Locked.hpp"
+    "utils/string"
     FILE "utils/TableActions.hpp"
     FILE "utils/connectutils.hpp"
     "utils/utils"
@@ -201,9 +202,7 @@ makeSourceList(UI_SRC
     "widgets/PianoWidget"
     "widgets/SequenceEditor"
     "widgets/Sidebar"
-    "widgets/SpeedLabel"
     "widgets/TableView"
-    "widgets/TempoLabel"
 )
 
 # https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake/4318642#4318642

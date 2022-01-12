@@ -1,6 +1,7 @@
 
 #include "widgets/sidebar/SongEditor.hpp"
 #include "utils/connectutils.hpp"
+#include "utils/string.hpp"
 
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -15,8 +16,8 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     mRowsPerBeatSpin(new QSpinBox),
     mRowsPerMeasureSpin(new QSpinBox),
     mSpeedSpin(new CustomSpinBox),
-    mSpeedLabel(new SpeedLabel),
-    mTempoLabel(new TempoLabel),
+    mSpeedLabel(new QLabel),
+    mTempoLabel(new QLabel),
     mPatternSizeButton(new QPushButton)
 {
 
@@ -76,10 +77,13 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
             mSpeedSpin->setValue(speed);
 
             auto speedFloat = trackerboy::speedToFloat((trackerboy::Speed)speed);
-            mSpeedLabel->setSpeed(speedFloat);
+            mSpeedLabel->setText(speedToString(speedFloat));
         });
 
-    connect(&model, &SongModel::tempoChanged, mTempoLabel, &TempoLabel::setTempo);
+    connect(&model, &SongModel::tempoChanged, this,
+        [this](float tempo) {
+            mTempoLabel->setText(tempoToString(tempo));
+        });
 
     connect(&model, &SongModel::patternSizeChanged, this,
         [this](int rows) {
