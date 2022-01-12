@@ -19,9 +19,9 @@
 #include "forms/TempoCalculator.hpp"
 #include "forms/CommentsDialog.hpp"
 #include "midi/Midi.hpp"
-#include "widgets/docks/TableDock.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
+#include "widgets/TableView.hpp"
 
 #include "trackerboy/engine/Frame.hpp"
 
@@ -321,8 +321,8 @@ private:
     // widgets
     Sidebar *mSidebar;
     PatternEditor *mPatternEditor;
-    TableDock *mInstruments;
-    TableDock *mWaveforms;
+    TableView *mInstruments;
+    TableView *mWaveforms;
     QSplitter *mHSplitter;
     QSplitter *mVSplitter;
 

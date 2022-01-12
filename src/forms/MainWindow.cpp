@@ -4,7 +4,7 @@
 #include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
 #include "utils/utils.hpp"
-#include "widgets/docks/TableDock.hpp"
+#include "widgets/TableView.hpp"
 #include "version.hpp"
 
 #include <QApplication>
@@ -271,10 +271,10 @@ void MainWindow::setupUi() {
     mHSplitter = new QSplitter(Qt::Horizontal);
     
     mVSplitter = new QSplitter(Qt::Vertical);
-    auto setupTableEdit = [](QString const& table, TableDock *&dock, BaseTableModel &model, QString const& str) {
+    auto setupTableEdit = [](QString const& table, TableView *&dock, BaseTableModel &model, QString const& str) {
         auto group = new QGroupBox(table);
         auto layout = new QVBoxLayout;
-        dock = new TableDock(model, str);
+        dock = new TableView(model, str);
         layout->addWidget(dock);
         layout->setMargin(0);
         group->setLayout(layout);
@@ -309,7 +309,7 @@ void MainWindow::setupUi() {
         lazyconnect(mSongModel, rowsPerBeatChanged, grid, setFirstHighlight);
         lazyconnect(mSongModel, rowsPerMeasureChanged, grid, setSecondHighlight);
     }
-    connect(mInstruments, &TableDock::selectedItemChanged, this,
+    connect(mInstruments, &TableView::selectedItemChanged, this,
         [this](int index) {
             int id = -1;
             if (index != -1) {

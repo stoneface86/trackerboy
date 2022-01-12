@@ -186,7 +186,6 @@ makeSourceList(UI_SRC
     FILE "utils/connectutils.hpp"
     "utils/utils"
 
-    "widgets/docks/TableDock"
     "widgets/grid/PatternGrid"
     "widgets/grid/PatternGridHeader"
     "widgets/sidebar/AudioScope"
@@ -203,6 +202,7 @@ makeSourceList(UI_SRC
     "widgets/SequenceEditor"
     "widgets/Sidebar"
     "widgets/SpeedLabel"
+    "widgets/TableView"
     "widgets/TempoLabel"
 )
 

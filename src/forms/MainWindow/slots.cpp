@@ -4,7 +4,7 @@
 #include "utils/connectutils.hpp"
 #include "export/ExportWavDialog.hpp"
 #include "forms/ModulePropertiesDialog.hpp"
-#include "widgets/docks/TableDock.hpp"
+#include "widgets/TableView.hpp"
 #include "version.hpp"
 
 #include <QApplication>

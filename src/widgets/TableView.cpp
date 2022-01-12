@@ -1,5 +1,5 @@
 
-#include "widgets/docks/TableDock.hpp"
+#include "widgets/TableView.hpp"
 
 #include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
@@ -8,7 +8,7 @@
 #include <QToolBar>
 #include <QtDebug>
 
-TableDock::TableDock(
+TableView::TableView(
     BaseTableModel &model,
     QString const& typeName,
     QWidget *parent
@@ -122,11 +122,11 @@ TableDock::TableDock(
 
 }
 
-TableActions const& TableDock::tableActions() const {
+TableActions const& TableView::tableActions() const {
     return mActions;
 }
 
-void TableDock::add() {
+void TableView::add() {
     mModel.add();
     if (!mModel.canAdd()) {
         mActions.add->setEnabled(false);
@@ -135,7 +135,7 @@ void TableDock::add() {
     updateActions();
 }
 
-void TableDock::remove() {
+void TableView::remove() {
     mModel.remove(mSelectedItem);
     if (mSelectedItem == mModel.rowCount()) {
         --mSelectedItem;
@@ -144,24 +144,24 @@ void TableDock::remove() {
     updateActions();
 }
 
-void TableDock::duplicate() {
+void TableView::duplicate() {
     mModel.duplicate(mSelectedItem);
     updateActions();
 }
 
-int TableDock::selectedItem() const {
+int TableView::selectedItem() const {
     return mSelectedItem;
 }
 
-void TableDock::setSelectedItem(int item) {
+void TableView::setSelectedItem(int item) {
     mView->selectionModel()->select(mModel.index(item), QItemSelectionModel::ClearAndSelect);
 }
 
-void TableDock::setShortcut(QKeySequence const& seq) {
+void TableView::setShortcut(QKeySequence const& seq) {
     mActions.edit->setShortcut(seq);
 }
 
-void TableDock::setSelected(int index) {
+void TableView::setSelected(int index) {
     if (mSelectedItem != index) {
         bool hadItem = mSelectedItem != -1;
         mSelectedItem = index;
@@ -172,7 +172,7 @@ void TableDock::setSelected(int index) {
     }
 }
 
-void TableDock::updateActions() {
+void TableView::updateActions() {
     auto const canAdd = mModel.canAdd();
     auto const hasSelection = mSelectedItem != -1;
     mActions.add->setEnabled(canAdd);

@@ -9,12 +9,16 @@
 #include <QString>
 #include <QWidget>
 
-class TableDock : public QWidget {
+//
+// Composite widget for viewing/editing a trackerboy::Table. Not
+// to be confused with QTableView.
+//
+class TableView : public QWidget {
 
     Q_OBJECT
 
 public:
-    TableDock(
+    TableView(
         BaseTableModel &model,
         QString const& typeName,
         QWidget *parent = nullptr
@@ -40,6 +44,7 @@ signals:
     void edit(int index);
 
 private:
+    Q_DISABLE_COPY(TableView)
 
     void updateActions();
     
