@@ -271,7 +271,7 @@ Config::Categories MainWindow::applyConfig(Config const& config, Config::Categor
         mAutosaveIntervalMs = general.autosaveInterval() * 1000;
 
         // page step
-        //mPatternEditor->setPageStep(general.pageStep());
+        mPatternEditor->setPageStep(general.pageStep());
     }
 
 

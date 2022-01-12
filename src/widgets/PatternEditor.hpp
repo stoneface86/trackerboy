@@ -36,6 +36,8 @@ public:
 
     void setRownoHex(bool hex);
 
+    void setPageStep(int pageStep);
+
     virtual void midiNoteOn(int note) override;
 
     virtual void midiNoteOff() override;

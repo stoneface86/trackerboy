@@ -161,6 +161,10 @@ void PatternEditor::setColors(Palette const& colors) {
     mGrid->setColors(colors);
 }
 
+void PatternEditor::setPageStep(int pageStep) {
+    mPageStep = pageStep;
+}
+
 void PatternEditor::setRownoHex(bool hex) {
     mGrid->setRownoHex(hex);
     mGridHeader->update();
