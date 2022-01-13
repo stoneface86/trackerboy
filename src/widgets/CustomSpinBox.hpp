@@ -10,8 +10,8 @@
 //
 class CustomSpinBox : public QSpinBox {
 
-    Q_OBJECT
-
+    // not needed, no signals, slots or properties defined
+    //Q_OBJECT
 
 public:
     CustomSpinBox(QWidget *parent = nullptr);

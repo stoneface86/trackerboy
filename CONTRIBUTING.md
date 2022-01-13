@@ -122,6 +122,31 @@ the limits of `int`, so there should be rarely any need to use `size_t`.
 Note: there is still a lot of code in this repo that doesn't follow this rule,
 as it is slowly being refactored. All new code however, should follow this rule.
 
+### Notes on Qt
+
+Here are some notes on how Qt is used in this project.
+
+ * All UI code in this repo is hand-written, .ui files are not permitted.
+   This is mainly a personal choice, as I dislike integrating ui files with
+   the codebase as well as the code the UIC generates.
+ * Avoid the `slots` keyword. Marking your functions as slots is unnecessary
+   for Qt 5's signal-slot connection mechanism. Doing so adds extra code bloat
+   to the resulting executable. The exception to this rule is if you need to
+   call a slot by name (ie via invokeMethod), however, I prefer that you do
+   not do this as well ;)
+ * Avoid subclassing QObject. Generally speaking, you should only subclass QObject
+   if your class has signals. Don't abuse signals, if you can easily write code
+   without signals, do so. Overuse of the signal-slot mechanism can lead to spaghetti
+   code.
+ * The Q_OBJECT macro can be omitted if you do not use any MOC features. Be careful
+   with this, as doing so effects the use of qobject_cast and inheritsFrom
+   (and other RTTI related methods).
+ * Avoid the use of Qt's property system. (Opinion) This feature is unnecessary and adds
+   bloat when used.
+ * Prefer to use lambdas when connecting signals. Use a member function if
+   your slot is used elsewhere.
+ * Use `QStringLiteral` when able.
+
 ### Documentation
 
 Functions, methods, classes and typedefs should have a comment block before the
