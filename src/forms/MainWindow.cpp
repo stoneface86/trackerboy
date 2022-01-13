@@ -649,10 +649,10 @@ void MainWindow::configureActions(QWidget &widget, ShortcutTable const& shortcut
             configureActions(*menu, shortcuts);
         } else {
             // check if this action has a shortcut
-            auto const data = act->data();
-            if (data.canConvert<ShortcutTable::Shortcut>()) {
+            auto const _data = act->data();
+            if (_data.canConvert<ShortcutTable::Shortcut>()) {
                 // yes, set the action's shortcut from the configuration
-                act->setShortcut(shortcuts.get(data.value<ShortcutTable::Shortcut>()));
+                act->setShortcut(shortcuts.get(_data.value<ShortcutTable::Shortcut>()));
             }
         }
     }

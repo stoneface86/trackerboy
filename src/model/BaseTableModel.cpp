@@ -33,7 +33,7 @@ void BaseTableModel::reload() {
     beginResetModel();
 
     mItems.clear();
-    for (size_t id = 0; id != trackerboy::InstrumentTable::MAX_SIZE; ++id) {
+    for (int id = 0; id < (int)trackerboy::InstrumentTable::MAX_SIZE; ++id) {
         auto str = sourceName(id);
         if (str) {
             mItems.emplace_back(id, QString::fromStdString(*str));

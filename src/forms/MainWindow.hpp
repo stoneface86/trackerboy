@@ -33,6 +33,7 @@
 #include <QToolBar>
 #include <QSpinBox>
 #include <QSplitter>
+#include <QShortcut>
 
 //
 // Main form for the application

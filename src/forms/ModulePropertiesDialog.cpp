@@ -270,7 +270,7 @@ ModulePropertiesDialog::ModulePropertiesDialog(Module &mod, SongListModel &model
     auto const& moddata = mModule.data();
     auto setInfoEdit = [](QLineEdit *edit, trackerboy::InfoStr const& str) {
         edit->setMaxLength((int)str.size());
-        edit->setText(QString::fromUtf8(str.data(), str.length()));
+        edit->setText(QString::fromUtf8(str.data(), (int)str.length()));
     };
     setInfoEdit(mTitleEdit, moddata.title());
     setInfoEdit(mArtistEdit, moddata.artist());

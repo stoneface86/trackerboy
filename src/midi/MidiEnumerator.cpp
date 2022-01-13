@@ -125,7 +125,7 @@ void MidiEnumerator::populate(int backend) {
         }
 
         ctx.available = true;
-    }  catch (RtMidiError const& err) {
+    }  catch (RtMidiError const&) {
         ctx.available = false;
     }
 }
