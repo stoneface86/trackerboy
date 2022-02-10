@@ -35,6 +35,7 @@ void MainWindow::onFileNew() {
     mModule->clear();
 
     mModuleFile.setName(mUntitledString);
+    mModuleFile.clearFilepath();
     updateWindowTitle();
 
 }

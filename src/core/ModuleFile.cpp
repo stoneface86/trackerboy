@@ -115,6 +115,10 @@ void ModuleFile::setName(QString const& name) noexcept {
     }
 }
 
+void ModuleFile::clearFilepath() noexcept {
+    mFilepath.clear();
+}
+
 QString ModuleFile::filepath() const noexcept {
     return mFilepath;
 }

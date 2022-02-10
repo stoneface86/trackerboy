@@ -59,6 +59,11 @@ public:
     void setName(QString const& name) noexcept;
 
     //
+    // Removes the associated filepath
+    //
+    void clearFilepath() noexcept;
+
+    //
     // Filepath of the module if present. This path is used by save()
     //
     QString filepath() const noexcept;

@@ -212,9 +212,11 @@ void MainWindow::showEvent(QShowEvent *evt) {
 
 void MainWindow::timerEvent(QTimerEvent *evt) {
     if (evt->timerId() == mAutosaveTimer.timerId()) {
-        qDebug() << "[MainWindow] Auto-saving...";
-        onFileSave();
-        mAutosaveTimer.stop();
+        if (mModuleFile.hasFile()) {
+            qDebug() << "[MainWindow] Auto-saving...";
+            onFileSave();
+            mAutosaveTimer.stop();
+        }
     } else {
         QMainWindow::timerEvent(evt);
     }

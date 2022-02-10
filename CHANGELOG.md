@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor
+ - Bug when saving a new module overwrites the last opened one instead of prompting
+   the user for a new location.
 ### Removed
  - Synthesizer quality setting in Sound configuration
 
