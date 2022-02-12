@@ -42,9 +42,17 @@ void FontTable::readSettings(QSettings &settings) {
         auto &font = mFonts[i];
         if (fontstr.isEmpty() || !font.fromString(fontstr)) {
             if (!defaultFont) {
-                // use the system default fixed-width font
-                defaultFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-                defaultFont->setPointSize(12);
+                #ifdef Q_OS_WIN
+                    defaultFont.emplace(QStringLiteral("Consolas"), 12);
+                    if (!defaultFont->exactMatch()) {
+                        // fallback to Courier New
+                        defaultFont->setFamily(QStringLiteral("Courier New"));
+                    }
+                #else
+                    // use the system default fixed-width font
+                    defaultFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+                    defaultFont->setPointSize(12);
+                #endif
             }
             font = *defaultFont;
         }

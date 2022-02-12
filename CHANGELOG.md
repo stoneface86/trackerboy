@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - AZERTY keyboard layout uses French AZERTY
  - QWERTZ keyboard layout uses German T3
  - CascadiaMono is no longer the default font
+ - (Windows) Consolas is now the default font, falling back to Courier New if not available
  - No longer using dock widgets, Instruments + Waveforms are now located to
    the right of the pattern editor.
  - Pattern editor row numbers can be displayed in decimal (default is hexadecimal)
