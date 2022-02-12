@@ -170,6 +170,11 @@ public:
     //
     void forceStop();
 
+    //
+    // Resets the APU volume setting (NR50).
+    //
+    void resetGlobalVolume();
+
     void setChannelOutput(ChannelOutput::Flags output);
 
 signals:

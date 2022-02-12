@@ -270,6 +270,9 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     menuTracker->addSeparator(); // -------------------------------------------
 
+    act = setupAction(menuTracker, tr("Reset volume"), tr("Resets the APU global volume setting"));
+    connectActionTo(act, mRenderer, resetGlobalVolume);
+
     act = setupAction(menuTracker, tr("&Kill sound"), tr("Immediately stops sound output"));
     act->setData(ShortcutTable::Kill);
     connectActionToThis(act, onTrackerKill);

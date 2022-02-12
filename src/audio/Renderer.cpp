@@ -473,6 +473,11 @@ void Renderer::resetPreview(Handle &handle) {
     handle->previewState = PreviewState::none;
 }
 
+void Renderer::resetGlobalVolume() {
+    auto ctx = mContext.access();
+    ctx->apu.writeRegister(trackerboy::IApuIo::REG_NR50, 0x77);
+}
+
  void Renderer::setChannelOutput(ChannelOutput::Flags flags) {
      mOutputFlags = flags;
      auto ctx = mContext.access();

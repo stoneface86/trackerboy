@@ -32,6 +32,8 @@ static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
             return trackerboy::EffectType::setTimbre;
         case Qt::Key_I:
             return trackerboy::EffectType::setPanning;
+        case Qt::Key_J:
+            return trackerboy::EffectType::setGlobalVolume;
         case Qt::Key_H:
             return trackerboy::EffectType::setSweep;
         case Qt::Key_S:

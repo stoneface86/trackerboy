@@ -10,7 +10,7 @@ FetchContent_Declare(
 FetchContent_Declare(
     libtrackerboy
     GIT_REPOSITORY https://github.com/stoneface86/libtrackerboy.git
-    GIT_TAG 8bc14ef244bca50c1fb7732de30dfce16aeb04a4
+    GIT_TAG e942550c9985c93741e7580a697b65c9639109d3
 )
 
 FetchContent_Declare(

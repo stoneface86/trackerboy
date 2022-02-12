@@ -54,6 +54,8 @@ static char effectTypeToChar(trackerboy::EffectType et) {
             return 'Q';
         case trackerboy::EffectType::noteSlideDown:
             return 'R';
+        case trackerboy::EffectType::setGlobalVolume:
+            return 'J';
         default:
             return '?';
     }
