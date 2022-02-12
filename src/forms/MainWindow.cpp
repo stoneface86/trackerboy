@@ -141,6 +141,7 @@ MainWindow::MainWindow() :
     Config config;
     config.readSettings(mAudioEnumerator, mMidiEnumerator);
     applyConfig(config, Config::CategoryAll);
+    config.writeSettings(mAudioEnumerator, mMidiEnumerator);
 
     setStyleSheet(QStringLiteral(R"stylesheet(
 QToolBar QLabel {
