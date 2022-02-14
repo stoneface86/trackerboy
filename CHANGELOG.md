@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Pattern editor row numbers can be displayed in decimal (default is hexadecimal)
  - Cursor wrap can now be disabled in General settings
  - Hxx effect (set sweep register) now works.
+ - Crash save filename no longer using colons in the timestamp (this resulted
+   in using an illegal filename on windows).
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor

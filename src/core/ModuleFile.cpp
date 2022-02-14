@@ -71,7 +71,7 @@ QString ModuleFile::crashSave(Module &mod) {
         copyPath = mFilename;
     }
     copyPath.append(QStringLiteral(".crash-%1.tbm").arg(
-        QDateTime::currentDateTime().toString(Qt::ISODate)
+        QDateTime::currentDateTime().toString(QStringLiteral("yyyy.mm.ddThh.mm.ss"))
     ));
 
     // This approach uses the same directory as the module file, which will
