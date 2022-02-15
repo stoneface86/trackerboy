@@ -14,6 +14,8 @@
 #include <cstdint>
 #include <optional>
 
+class QMenu;
+
 
 class PatternEditor : public QFrame, public IMidiReceiver {
 
@@ -34,6 +36,8 @@ public:
 
     void setColors(Palette const& colors);
 
+    void setEditMenu(QMenu *menu);
+
     void setRownoHex(bool hex);
 
     void setPageStep(int pageStep);
@@ -41,8 +45,6 @@ public:
     virtual void midiNoteOn(int note) override;
 
     virtual void midiNoteOff() override;
-
-    virtual bool event(QEvent *evt) override;
 
     void setEditStep(int step);
 
@@ -80,6 +82,10 @@ signals:
     void stopNotePreview();
 
 protected:
+
+    virtual void contextMenuEvent(QContextMenuEvent *evt) override;
+
+    virtual bool event(QEvent *evt) override;
 
     virtual void focusInEvent(QFocusEvent *evt) override;
 
@@ -128,6 +134,8 @@ private:
     PatternClipboard mClipboard;
 
     std::optional<uint8_t> mInstrument;
+
+    QMenu *mEditMenu;
 
 
 };

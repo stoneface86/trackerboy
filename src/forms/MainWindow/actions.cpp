@@ -84,6 +84,7 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     // > Edit ================================================================
     auto menuEdit = menubar->addMenu(tr("&Edit"));
+    mPatternEditor->setEditMenu(menuEdit);
 
     auto undoGroup = mModule->undoGroup();
     act = undoGroup->createUndoAction(this);
@@ -150,7 +151,7 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     act->setData(ShortcutTable::Transpose);
     connectActionTo(act, mPatternEditor, transpose);
 
-    setupAction(menuEdit, tr("&Reverse"), tr("Reverses selected rows"));
+    act = setupAction(menuEdit, tr("&Reverse"), tr("Reverses selected rows"));
     act->setData(ShortcutTable::Reverse);
     connectActionTo(act, mPatternEditor, reverse);
 

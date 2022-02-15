@@ -6,6 +6,7 @@
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include <QLabel>
+#include <QMenu>
 #include <QSignalBlocker>
 #include <QSpinBox>
 #include <QVBoxLayout>
@@ -104,7 +105,8 @@ PatternEditor::PatternEditor(
     mIgnoreCursorChanges(false),
     mKeyRepeat(true),
     mClipboard(),
-    mInstrument()
+    mInstrument(),
+    mEditMenu(nullptr)
 {
     setFrameStyle(QFrame::StyledPanel);
     setFocusPolicy(Qt::StrongFocus);
@@ -163,6 +165,10 @@ void PatternEditor::setColors(Palette const& colors) {
     mGrid->setColors(colors);
 }
 
+void PatternEditor::setEditMenu(QMenu *menu) {
+    mEditMenu = menu;
+}
+
 void PatternEditor::setPageStep(int pageStep) {
     mPageStep = pageStep;
 }
@@ -170,6 +176,38 @@ void PatternEditor::setPageStep(int pageStep) {
 void PatternEditor::setRownoHex(bool hex) {
     mGrid->setRownoHex(hex);
     mGridHeader->update();
+}
+
+void PatternEditor::contextMenuEvent(QContextMenuEvent *evt) {
+    // only show the menu if the user right-clicked on the grid
+    if (childAt(evt->pos()) == mGrid) {
+        auto menu = new QMenu(this);
+        menu->setAttribute(Qt::WA_DeleteOnClose);
+        // add the actions of the Edit menu to this menu
+        if (mEditMenu) {
+            menu->addActions(mEditMenu->actions());
+        }
+        
+        // check if the mouse is under a track
+        auto track = mGrid->trackFromMouse(evt->pos());
+        if (track >= 0 && track <= 3) {
+            // yes, so add toggle/solo track actions (same as PatternGridHeader)
+            menu->addSeparator();
+            QAction *act;
+            act = menu->addAction(PatternGridHeader::toggleChannelString(track + 1));
+            connect(act, &QAction::triggered, this,
+                [this, track]() {
+                    mGridHeader->toggleTrack(track);
+                });
+            act = menu->addAction(PatternGridHeader::soloChannelString(track + 1));
+            connect(act, &QAction::triggered, this,
+                [this, track]() {
+                    mGridHeader->soloTrack(track);
+                });
+        }
+
+        menu->popup(evt->globalPos());
+    }
 }
 
 bool PatternEditor::event(QEvent *evt)  {

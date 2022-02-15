@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Autosave. Disabled by default, enable in the General tab in Config.
  - Jxy effect for setting the global volume scale.
  - Menu action in Tracker for reseting the global volume (Tracker|Reset global volume)
+ - Context menu for pattern editor
 ### Changed
  - Combined the Sound and Midi tabs in the Configuration dialog (Sound + MIDI)
  - AZERTY keyboard layout uses French AZERTY

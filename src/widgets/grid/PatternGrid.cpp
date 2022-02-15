@@ -131,6 +131,9 @@ void PatternGrid::setEditorFocus(bool focus) {
     }
 }
 
+int PatternGrid::trackFromMouse(QPoint const& pos) const {
+    return mLayout.mouseToTrack(pos.x());
+}
 
 
 // ================================================================ EVENTS ===

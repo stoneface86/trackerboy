@@ -134,6 +134,14 @@ void PatternGridHeader::unmuteAll() {
     }
 }
 
+QString PatternGridHeader::toggleChannelString(int track) {
+    return tr("Toggle channel %1").arg(track);
+}
+
+QString PatternGridHeader::soloChannelString(int track) {
+    return tr("Solo channel %1").arg(track);
+}
+
 void PatternGridHeader::changeEvent(QEvent *evt) {
     if (evt->type() == QEvent::FontChange) {
         if (!mUpdatingFont) {
@@ -159,12 +167,12 @@ void PatternGridHeader::contextMenuEvent(QContextMenuEvent *evt) {
         // add actions for the current track
         auto channelNum = mTrackHover + 1;
         auto trackHover = mTrackHover;
-        act = menu->addAction(tr("Toggle channel %1").arg(channelNum));
+        act = menu->addAction(toggleChannelString(channelNum));
         connect(act, &QAction::triggered, this,
             [this, trackHover]() {
                 toggleTrack(trackHover);
             });
-        act = menu->addAction(tr("Solo channel %1").arg(channelNum));
+        act = menu->addAction(soloChannelString(channelNum));
         connect(act, &QAction::triggered, this,
             [this, trackHover]() {
                 soloTrack(trackHover);

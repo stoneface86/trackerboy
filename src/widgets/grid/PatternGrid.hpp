@@ -59,6 +59,8 @@ public:
 
     void setSecondHighlight(int highlight);
 
+    int trackFromMouse(QPoint const& pos) const;
+
 protected:
 
     void changeEvent(QEvent *evt) override;

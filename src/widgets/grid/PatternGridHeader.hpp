@@ -27,6 +27,10 @@ public:
 
     void unmuteAll();
 
+    static QString toggleChannelString(int track);
+
+    static QString soloChannelString(int track);
+
 signals:
     void outputChanged(ChannelOutput::Flags flags);
 
