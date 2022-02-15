@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Jxy effect for setting the global volume scale.
  - Menu action in Tracker for reseting the global volume (Tracker|Reset global volume)
  - Context menu for pattern editor
+ - Action for replacing all selected instrument columns with the current instrument
+   (Edit|Replace instrument)
 ### Changed
  - Combined the Sound and Midi tabs in the Configuration dialog (Sound + MIDI)
  - AZERTY keyboard layout uses French AZERTY

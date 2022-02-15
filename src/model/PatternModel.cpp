@@ -840,6 +840,28 @@ void PatternModel::reverse() {
     }
 }
 
+void PatternModel::replaceInstrument(int instrument) {
+    Q_ASSERT(instrument >= 0 && instrument < 64);
+    if (mHasSelection) {
+        auto cmd = new ReplaceInstrumentCmd(*this, instrument);
+        cmd->setText(tr("replace instrument in selection"));
+        mModule.undoStack()->push(cmd);
+    } else {
+        auto &rowdata = cursorTrackRow();
+        auto newinstrument = trackerboy::TrackRow::convertColumn((uint8_t)instrument);
+        if (rowdata.queryInstrument().has_value() && newinstrument != rowdata.instrumentId) {
+            auto cmd = new InstrumentEditCmd(
+                *this,
+                newinstrument,
+                rowdata.instrumentId
+                );
+            cmd->setText(tr("replace instrument"));
+            mModule.undoStack()->push(cmd);
+        }
+    }
+
+}
+
 void PatternModel::moveSelection(PatternCursor pos) {
     if (mHasSelection) {
         auto undoStack = mModule.undoStack();

@@ -76,6 +76,8 @@ public:
 
     void reverse();
 
+    void replaceInstrument();
+
 signals:
     void previewNote(int note, int track, int instrument);
 

@@ -170,6 +170,9 @@ public:
     // reverses rows in a selection
     void reverse();
 
+    // replaces all instrument colums in the selection with the given instrument
+    void replaceInstrument(int instrument);
+
     // moves the selected data to a new position
     void moveSelection(PatternCursor pos);
 
@@ -268,6 +271,7 @@ private:
     friend class PasteCmd;
     friend class TransposeCmd;
     friend class ReverseCmd;
+    friend class ReplaceInstrumentCmd;
     friend class OrderEditCmd;
     friend class OrderInsertCmd;
     friend class OrderRemoveCmd;

@@ -102,6 +102,25 @@ private:
 };
 
 //
+// Command for replacing all selected instrument columns with the given instrument
+// Empty instrument columns are ignored.
+//
+class ReplaceInstrumentCmd : public SelectionCmd {
+
+    int const mInstrument;
+
+public:
+
+    explicit ReplaceInstrumentCmd(PatternModel &model, int instrument);
+
+    virtual void redo() override;
+    
+    virtual void undo() override;
+    
+
+};
+
+//
 // Base command class for editing a column in a track row
 //
 class TrackEditCmd : public QUndoCommand {

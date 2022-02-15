@@ -515,6 +515,12 @@ void PatternEditor::reverse() {
     mModel.reverse();
 }
 
+void PatternEditor::replaceInstrument() {
+    if (mInstrument.has_value()) {
+        mModel.replaceInstrument(*mInstrument);
+    }
+}
+
 void PatternEditor::stepDown() {
     mModel.moveCursorRow(mEditStep);
 }

@@ -36,6 +36,7 @@ public:
         TransposeIncOctave,
         Transpose,
         Reverse,
+        ReplaceInstrument,
         Play,
         PlayFromStart,
         PlayFromCursor,

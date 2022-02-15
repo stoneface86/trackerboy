@@ -167,6 +167,40 @@ void ReverseCmd::reverse() {
     mModel.invalidate(mPattern, true);
 }
 
+ReplaceInstrumentCmd::ReplaceInstrumentCmd(PatternModel &model, int instrument) :
+    SelectionCmd(model),
+    mInstrument(instrument)
+{
+
+}
+
+void ReplaceInstrumentCmd::redo() {
+    {
+        auto ctx = mModel.mModule.edit();
+        auto iter = mClip.selection().iterator();
+        auto pattern = mModel.source()->getPattern(mPattern);
+
+        for (auto track = iter.trackStart(); track <= iter.trackEnd(); ++track) {
+            auto tmeta = iter.getTrackMeta(track);
+            if (tmeta.hasColumn<PatternAnchor::SelectInstrument>()) {
+                for (auto row = iter.rowStart(); row <= iter.rowEnd(); ++row) {
+                    auto &rowdata = pattern.getTrackRow(static_cast<trackerboy::ChType>(track), row);
+                    if (rowdata.queryInstrument().has_value()) {
+                        rowdata.setInstrument((uint8_t)mInstrument);
+                    }
+                }
+            }
+        }
+    }
+
+    mModel.invalidate(mPattern, false);
+}
+
+void ReplaceInstrumentCmd::undo() {
+    restore(false);
+}
+
+
 TrackEditCmd::TrackEditCmd(
     PatternModel &model,
     uint8_t dataNew,

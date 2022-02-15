@@ -155,6 +155,10 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     act->setData(ShortcutTable::Reverse);
     connectActionTo(act, mPatternEditor, reverse);
 
+    act = setupAction(menuEdit, tr("Replace instrument"), tr("Replaces all instruments with the current one"));
+    act->setData(ShortcutTable::ReplaceInstrument);
+    connectActionTo(act, mPatternEditor, replaceInstrument);
+
     menuEdit->addSeparator(); // ----------------------------------------------
 
     act = setupAction(menuEdit, tr("Key repetition"), tr("Toggles key repetition for pattern editor"));

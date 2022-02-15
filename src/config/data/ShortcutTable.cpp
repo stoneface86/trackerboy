@@ -64,6 +64,8 @@ QKeySequence ShortcutTable::getDefault(Shortcut shortcut) noexcept {
             return tr("Ctrl+T");
         case Reverse:
             return tr("Ctrl+R");
+        case ReplaceInstrument:
+            return {};
         case Play:
             return {};
         case PlayFromStart:
