@@ -212,6 +212,8 @@ get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 configure_file("version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
 list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" "version.hpp")
 
+configure_file("forms/MainWindow/aboutstr.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/aboutstr.cpp" @ONLY)
+list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/aboutstr.cpp" "forms/MainWindow/aboutstr.hpp")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
