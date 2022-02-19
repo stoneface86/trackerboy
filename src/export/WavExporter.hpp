@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/Module.hpp"
+#include "core/ChannelOutput.hpp"
 
 #include "trackerboy/apu/DefaultApu.hpp"
 #include "trackerboy/export/Player.hpp"
@@ -27,6 +28,12 @@ public:
 
     void setDestination(QString const& dest);
 
+    void setChannels(ChannelOutput::Flags channels);
+
+    void setSeparate(bool separate);
+
+    void setSeparatePrefix(QString const& prefix);
+
     bool failed() const;
 
     void cancel();
@@ -48,7 +55,11 @@ private:
 
     trackerboy::Player::Duration mDuration;
 
+    ChannelOutput::Flags mChannels;
+    bool mSeparate;
+
     QString mDestination;
+    QString mSeparatePrefix;
 
     bool mFailed;
     bool mAbort;

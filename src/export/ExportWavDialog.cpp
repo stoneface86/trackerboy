@@ -1,8 +1,22 @@
 
 #include "export/ExportWavDialog.hpp"
 
+#include "core/Module.hpp"
+#include "core/ModuleFile.hpp"
+#include "export/WavExporter.hpp"
+
+#include <QCheckBox>
+#include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QGroupBox>
+#include <QLabel>
+#include <QLineEdit>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSpinBox>
+#include <QStackedLayout>
 
 ExportWavDialog::ExportWavDialog(
     Module const& mod,
@@ -13,60 +27,47 @@ ExportWavDialog::ExportWavDialog(
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mModule(mod),
     mSamplerate(samplerate),
-    mLayout(),
-    mDurationGroup(tr("Duration")),
-    mDurationLayout(),
-    mLoopRadio(tr("Play the song")),
-    mLoopSpin(),
-    mLoopLabel(tr("time(s)")),
-    mTimeRadio(tr("Play for")),
-    mTimeEdit(QStringLiteral("01:00")),
-    mTimeLabel(tr("mm:ss")),
-    mChannelGroup(tr("Channels")),
-    mChannelLayout(),
-    mChannelSelectLayout(),
-    mChannelChecks(),
-    mSeparateChannelsCheck(tr("Export each channel separately")),
-    mDestinationGroup(tr("Destination")),
-    mDestinationLayout(),
-    mFilenameEdit(),
-    mBrowseButton(tr("Browse")),
-    mProgress(),
-    mStatusLabel(),
-    mButtons(),
-    mExportButton(nullptr),
     mExporter(nullptr),
     mTimeEditDuration(60)
 {
     setModal(true);
     setWindowTitle(tr("Export to WAV"));
 
-    mDurationLayout.addWidget(&mLoopRadio, 0, 0);
-    mDurationLayout.addWidget(&mLoopSpin, 0, 1);
-    mDurationLayout.addWidget(&mLoopLabel, 0, 2);
-    mDurationLayout.addWidget(&mTimeRadio, 1, 0);
-    mDurationLayout.addWidget(&mTimeEdit, 1, 1);
-    mDurationLayout.addWidget(&mTimeLabel, 1, 2);
-    mDurationGroup.setLayout(&mDurationLayout);
+    auto layout = new QVBoxLayout;
+    mDurationGroup = new QGroupBox(tr("Duration"));
+    auto durationLayout = new QGridLayout;
+    mLoopRadio = new QRadioButton(tr("Play  the song"));
+    mLoopSpin = new QSpinBox;
+    mTimeRadio = new QRadioButton(tr("Play for"));
+    mTimeEdit = new QLineEdit(QStringLiteral("01:00"));
+    durationLayout->addWidget(mLoopRadio, 0, 0);
+    durationLayout->addWidget(mLoopSpin, 0, 1);
+    durationLayout->addWidget(new QLabel(tr("time(s)")), 0, 2);
+    durationLayout->addWidget(mTimeRadio, 1, 0);
+    durationLayout->addWidget(mTimeEdit, 1, 1);
+    durationLayout->addWidget(new QLabel(tr("mm:ss")), 1, 2);
+    mDurationGroup->setLayout(durationLayout);
 
+    mChannelsGroup = new QGroupBox(tr("Channels"));
+    auto channelLayout = new QHBoxLayout;
     int ch = 1;
     for (auto &check : mChannelChecks) {
-        check.setText(QString::number(ch));
-        check.setChecked(true);
-        mChannelSelectLayout.addWidget(&check);
-        connect(&check, &QCheckBox::toggled, this,
+        check = new QCheckBox(QString::number(ch));
+        check->setChecked(true);
+        channelLayout->addWidget(check);
+        connect(check, &QCheckBox::toggled, this,
             [this](bool toggled) {
                 if (toggled) {
                     for (auto &box : mChannelChecks) {
-                        box.setEnabled(true);
+                        box->setEnabled(true);
                     }
                 } else {
                     int checkCount = 0;
                     QCheckBox *lastChecked = nullptr;
                     for (auto &box : mChannelChecks) {
-                        if (box.isChecked()) {
+                        if (box->isChecked()) {
                             ++checkCount;
-                            lastChecked = &box;
+                            lastChecked = box;
                         }
                     }
                     if (checkCount == 1) {
@@ -78,48 +79,79 @@ ExportWavDialog::ExportWavDialog(
         );
         ++ch;
     }
-    mChannelSelectLayout.addStretch();
-    mChannelLayout.addLayout(&mChannelSelectLayout);
-    mChannelLayout.addWidget(&mSeparateChannelsCheck);
-    mChannelGroup.setLayout(&mChannelLayout);
+    channelLayout->addStretch();
+    mChannelsGroup->setLayout(channelLayout);
 
-    mDestinationLayout.addWidget(&mFilenameEdit, 1);
-    mDestinationLayout.addWidget(&mBrowseButton);
-    mDestinationGroup.setLayout(&mDestinationLayout);
+    mDestinationGroup = new QGroupBox(tr("Destination"));
+    auto destinationLayout = new QVBoxLayout;
+    mSeparateChannelsCheck = new QCheckBox(tr("Export each channel separately"));
+    mDestinationStack = new QStackedLayout;
+    destinationLayout->addWidget(mSeparateChannelsCheck);
+    destinationLayout->addLayout(mDestinationStack, 1);
+    auto singleContainer = new QWidget;
+    auto singleLayout = new QHBoxLayout;
+    mSingleDestination = new QLineEdit;
+    auto browseSingleButton = new QPushButton(tr("Browse"));
+    singleLayout->addWidget(mSingleDestination, 1);
+    singleLayout->addWidget(browseSingleButton);
+    singleLayout->setMargin(0);
+    singleLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
+    singleContainer->setLayout(singleLayout);
 
-    mLayout.addWidget(&mDurationGroup);
-    mLayout.addWidget(&mChannelGroup);
-    mLayout.addWidget(&mDestinationGroup);
-    mLayout.addWidget(&mProgress);
-    mLayout.addWidget(&mStatusLabel);
-    mLayout.addWidget(&mButtons);
-    mLayout.setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
-    setLayout(&mLayout);
+    auto separateContainer = new QWidget;
+    auto separateLayout = new QGridLayout;
+    separateLayout->addWidget(new QLabel(tr("Directory")), 0, 0);
+    mSeparateDestination = new QLineEdit;
+    separateLayout->addWidget(mSeparateDestination, 0, 1);
+    auto browseSeparateButton = new QPushButton(tr("Browse"));
+    separateLayout->addWidget(browseSeparateButton, 0, 2);
+    separateLayout->addWidget(new QLabel(tr("Prefix")), 1, 0);
+    mSeparatePrefix = new QLineEdit;
+    separateLayout->addWidget(mSeparatePrefix, 1, 1);
+    separateLayout->setMargin(0);
+    separateLayout->setColumnStretch(1, 1);
+    separateContainer->setLayout(separateLayout);
 
-    mLoopRadio.setChecked(true);
-    mLoopSpin.setRange(1, 100);
-    mTimeEdit.setInputMask(QStringLiteral("99:99"));
-    mTimeEdit.setMaxLength(5);
-    mProgress.setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
-    
-    // disable this group since individual channel selection is not implemented at this time
-    mChannelGroup.setEnabled(false);
+    mDestinationStack->addWidget(singleContainer);
+    mDestinationStack->addWidget(separateContainer);
+    mDestinationGroup->setLayout(destinationLayout);
 
-    mExportButton = mButtons.addButton(tr("Export"), QDialogButtonBox::AcceptRole);
+    mProgress = new QProgressBar;
+    mStatusLabel = new QLabel;
+
+    auto buttons = new QDialogButtonBox;
+    mExportButton = buttons->addButton(tr("Export"), QDialogButtonBox::AcceptRole);
     mExportButton->setEnabled(false);
-    mButtons.addButton(QDialogButtonBox::Cancel);
+    buttons->addButton(QDialogButtonBox::Cancel);
 
-    connect(&mButtons, &QDialogButtonBox::accepted, this, &ExportWavDialog::accept);
-    connect(&mButtons, &QDialogButtonBox::rejected, this, &ExportWavDialog::reject);
+    layout->addWidget(mDurationGroup);
+    layout->addWidget(mChannelsGroup);
+    layout->addWidget(mDestinationGroup);
+    layout->addWidget(mProgress);
+    layout->addWidget(mStatusLabel);
+    layout->addWidget(buttons);
+    layout->setSizeConstraint(QLayout::SizeConstraint::SetFixedSize);
+    setLayout(layout);
 
-    connect(&mLoopSpin, qOverload<int>(&QSpinBox::valueChanged), this,
+    
+
+    mLoopRadio->setChecked(true);
+    mLoopSpin->setRange(1, 100);
+    mTimeEdit->setInputMask(QStringLiteral("99:99"));
+    mTimeEdit->setMaxLength(5);
+    mProgress->setAlignment(Qt::AlignVCenter | Qt::AlignHCenter);
+    
+    connect(buttons, &QDialogButtonBox::accepted, this, &ExportWavDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, this, &ExportWavDialog::reject);
+
+    connect(mLoopSpin, qOverload<int>(&QSpinBox::valueChanged), this,
         [this]() {
-            mLoopRadio.setChecked(true);
+            mLoopRadio->setChecked(true);
         });
     
-    connect(&mTimeEdit, &QLineEdit::textEdited, this,
+    connect(mTimeEdit, &QLineEdit::textEdited, this,
         [this](QString const& text) {
-            mTimeRadio.setChecked(true);
+            mTimeRadio->setChecked(false);
 
             if (text.length() == 5) {
                 QStringRef minRef(&text, 0, 2);
@@ -143,22 +175,22 @@ ExportWavDialog::ExportWavDialog(
             // whatever the user entered is invalid, restore previous setting
             auto secs = mTimeEditDuration % 60;
             auto mins = mTimeEditDuration / 60;
-            mTimeEdit.setText(QStringLiteral("%1:%2")
-                        .arg(mins, 2, 10, QChar('0'))
-                        .arg(secs, 2, 10, QChar('0')));
+            mTimeEdit->setText(QStringLiteral("%1:%2")
+                            .arg(mins, 2, 10, QChar('0'))
+                            .arg(secs, 2, 10, QChar('0')));
         });
 
-    connect(&mFilenameEdit, &QLineEdit::textChanged, this,
+    connect(mSingleDestination, &QLineEdit::textChanged, this,
         [this](QString const& str) {
             mExportButton->setEnabled(!str.isEmpty());
         });
 
-    connect(&mBrowseButton, &QPushButton::clicked, this,
+    connect(browseSingleButton, &QPushButton::clicked, this,
         [this]() {
             auto filename = QFileDialog::getSaveFileName(
                 this,
                 tr("Select destination"),
-                mFilenameEdit.text(),
+                mSingleDestination->text(),
                 tr("WAV files (*.wav)")
             );
 
@@ -166,18 +198,39 @@ ExportWavDialog::ExportWavDialog(
                 return;
             }
 
-            mFilenameEdit.setText(filename);
+            mSingleDestination->setText(filename);
         });
+    connect(browseSeparateButton, &QPushButton::clicked, this,
+        [this]() {
+            auto path = QFileDialog::getExistingDirectory(
+                this,
+                tr("Select destination"),
+                mSeparateDestination->text()
+            );
+            if (path.isEmpty()) {
+                return;
+            }
+            mSeparateDestination->setText(path);
+        });
+
+    connect(mSeparateChannelsCheck, &QCheckBox::toggled, this,
+        [this](bool checked) {
+            mDestinationStack->setCurrentIndex(checked ? 1 : 0);
+        });
+
+    auto dir = [](ModuleFile const& file) -> QDir {
+        if (file.hasFile()) {
+            QFileInfo info(file.filepath());
+            return info.dir();
+        } else {
+            return QDir::home();
+        }
+    }(modFile);
+    QString basename = QFileInfo(dir.filePath(modFile.name())).baseName();
     
-    QString destinationName;
-    if (modFile.hasFile()) {
-        // initialize the destination file with the module filename
-        QFileInfo info(modFile.filepath());
-        destinationName = info.dir().filePath(info.completeBaseName());
-    } else {
-        destinationName = QDir::home().filePath(modFile.name());
-    }
-    mFilenameEdit.setText(QStringLiteral("%1.wav").arg(destinationName));
+    mSingleDestination->setText(dir.filePath(basename + ".wav"));
+    mSeparateDestination->setText(dir.path());
+    mSeparatePrefix->setText(basename);
     
 }
 
@@ -191,31 +244,55 @@ void ExportWavDialog::accept() {
     if (!isExporting) {
         if (mExporter == nullptr) {
             mExporter = new WavExporter(mModule, mSamplerate, this);
-            connect(mExporter, &WavExporter::progressMax, &mProgress, &QProgressBar::setMaximum);
-            connect(mExporter, &WavExporter::progress, &mProgress, &QProgressBar::setValue);
+            connect(mExporter, &WavExporter::progressMax, mProgress, &QProgressBar::setMaximum);
+            connect(mExporter, &WavExporter::progress, mProgress, &QProgressBar::setValue);
             connect(mExporter, &WavExporter::finished, this,
                 [this]() {
                     if (mExporter->failed()) {
-                        mStatusLabel.setText(tr("Export failed"));
+                        mStatusLabel->setText(tr("Export failed"));
                     } else {
-                        mProgress.setValue(mProgress.maximum());
-                        mStatusLabel.setText(tr("Export complete"));
+                        mProgress->setValue(mProgress->maximum());
+                        mStatusLabel->setText(tr("Export complete"));
                     }
                     mExportButton->setEnabled(true);
                     setGroupsEnabled(true);
                 });
         }
 
-        if (mLoopRadio.isChecked()) {
-            mExporter->setDuration(mLoopSpin.value());
+        if (mLoopRadio->isChecked()) {
+            mExporter->setDuration(mLoopSpin->value());
         } else {
             mExporter->setDuration(std::chrono::seconds(mTimeEditDuration));
         }
 
-        mExporter->setDestination(mFilenameEdit.text());
+        {
+            ChannelOutput::Flags channels = ChannelOutput::AllOff;
+            if (mChannelChecks[0]->isChecked()) {
+                channels |= ChannelOutput::CH1;
+            }
+            if (mChannelChecks[1]->isChecked()) {
+                channels |= ChannelOutput::CH2;
+            }
+            if (mChannelChecks[2]->isChecked()) {
+                channels |= ChannelOutput::CH3;
+            }
+            if (mChannelChecks[3]->isChecked()) {
+                channels |= ChannelOutput::CH4;
+            }
+            mExporter->setChannels(channels);
+        }
 
-        mStatusLabel.setText(tr("Exporting..."));
-        mProgress.setValue(0);
+        if (mSeparateChannelsCheck->isChecked()) {
+            mExporter->setSeparate(true);
+            mExporter->setDestination(mSeparateDestination->text());
+            mExporter->setSeparatePrefix(mSeparatePrefix->text());
+        } else {
+            mExporter->setSeparate(false);
+            mExporter->setDestination(mSingleDestination->text());
+        }
+
+        mStatusLabel->setText(tr("Exporting..."));
+        mProgress->setValue(0);
         setGroupsEnabled(false);
         mExporter->start();
         mExportButton->setEnabled(false);
@@ -236,6 +313,7 @@ void ExportWavDialog::reject() {
 }
 
 void ExportWavDialog::setGroupsEnabled(bool enabled) {
-    mDurationGroup.setEnabled(enabled);
-    mDestinationGroup.setEnabled(enabled);
+    mDurationGroup->setEnabled(enabled);
+    mChannelsGroup->setEnabled(enabled);
+    mDestinationGroup->setEnabled(enabled);
 }

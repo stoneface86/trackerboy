@@ -1,21 +1,21 @@
 
 #pragma once
 
-#include "core/Module.hpp"
-#include "core/ModuleFile.hpp"
-#include "export/WavExporter.hpp"
+class Module;
+class ModuleFile;
+class WavExporter;
 
-#include <QCheckBox>
+class QCheckBox;
 #include <QDialog>
-#include <QDialogButtonBox>
-#include <QGroupBox>
-#include <QLabel>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QProgressBar>
-#include <QRadioButton>
-#include <QSpinBox>
-#include <QVBoxLayout>
+class QDialogButtonBox;
+class QGroupBox;
+class QLabel;
+class QLineEdit;
+class QProgressBar;
+class QPushButton;
+class QRadioButton;
+class QSpinBox;
+class QStackedLayout;
 
 #include <array>
 
@@ -41,33 +41,29 @@ private:
 
     Module const& mModule;
     int mSamplerate;
-
-    QVBoxLayout mLayout;
-        QGroupBox mDurationGroup;
-            QGridLayout mDurationLayout;
-                QRadioButton mLoopRadio;
-                QSpinBox mLoopSpin;
-                QLabel mLoopLabel;
-                QRadioButton mTimeRadio;
-                QLineEdit mTimeEdit;
-                QLabel mTimeLabel;
-        QGroupBox mChannelGroup;
-            QVBoxLayout mChannelLayout;
-                QHBoxLayout mChannelSelectLayout;
-                    std::array<QCheckBox, 4> mChannelChecks;
-                QCheckBox mSeparateChannelsCheck;
-        QGroupBox mDestinationGroup;
-            QHBoxLayout mDestinationLayout;
-                QLineEdit mFilenameEdit;
-                QPushButton mBrowseButton;
-        QProgressBar mProgress;
-        QLabel mStatusLabel;
-        QDialogButtonBox mButtons;
-
-        QPushButton *mExportButton;
-
     WavExporter *mExporter;
-
     unsigned mTimeEditDuration;
+
+    QGroupBox *mDurationGroup;
+    QGroupBox *mChannelsGroup;
+    QGroupBox *mDestinationGroup;
+
+    QRadioButton *mLoopRadio;
+    QRadioButton *mTimeRadio;
+    QSpinBox *mLoopSpin;
+    QLineEdit *mTimeEdit;
+    std::array<QCheckBox*, 4> mChannelChecks;
+
+    QCheckBox *mSeparateChannelsCheck;
+    QStackedLayout *mDestinationStack;
+    QLineEdit *mSingleDestination;
+    QLineEdit *mSeparateDestination;
+    QLineEdit *mSeparatePrefix;
+
+    QProgressBar *mProgress;
+    QLabel *mStatusLabel;
+    QPushButton *mExportButton;
+
+    
 
 };
