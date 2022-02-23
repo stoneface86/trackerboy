@@ -166,3 +166,5 @@ void WavExporter::run() {
 
     }
 }
+
+#undef TU

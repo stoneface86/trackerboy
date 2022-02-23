@@ -398,7 +398,7 @@ AppearanceConfigTab::AppearanceConfigTab(
     auto fontGroup = new QGroupBox(tr("Fonts"));
     auto fontLayout = new QGridLayout;
 
-    for (int i = 0; i < mFontChooseButtons.size(); ++i) {
+    for (int i = 0; i < (int)mFontChooseButtons.size(); ++i) {
         auto &chooseBtn = mFontChooseButtons[i];
         auto &meta = TU::FontButtonMetas[i];
 
