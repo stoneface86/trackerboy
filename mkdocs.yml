@@ -1,0 +1,58 @@
+
+site_name: Trackerboy
+site_description: Gameboy / Gameboy Color music tracker
+site_url: https://stoneface86.github.com/trackerboy
+repo_url: https://github.com/stoneface86/trackerboy
+
+
+nav:
+  - 'Home': 'index.md'
+  - 'FAQ': 'faq.md'
+  - 'Interface':
+    - 'Overview': 'interface/index.md'
+    - 'Configuration':
+      - 'General': 'interface/configuration/general.md'
+      - 'Appearance': 'interface/configuration/appearance.md'
+      - 'Keyboard': 'interface/configuration/keyboard.md'
+      - 'Sound / Midi': 'interface/configuration/sound.md'
+    - 'Menus':
+      - 'File': 'interface/menus/file.md'
+      - 'Edit': 'interface/menus/edit.md'
+      - 'Module': 'interface/menus/module.md'
+      - 'Song': 'interface/menus/song.md'
+      - 'Instruments': 'interface/menus/instruments.md'
+      - 'Waveforms': 'interface/menus/waveforms.md'
+      - 'Tracker': 'interface/menus/tracker.md'
+      - 'View': 'interface/menus/view.md'
+      - 'Help': 'interface/menus/help.md'
+    - 'Toolbars': 'interface/toolbars.md'
+    - 'Sidebar': 'interface/sidebar.md'
+    - 'Pattern editor': 'interface/pattern-editor.md'
+    - 'Instruments/Waveforms panel': 'interface/instruments-waveforms.md'
+    - 'Instrument editor': 'interface/instrument-editor.md'
+    - 'Waveform editor': 'interface/waveform-editor.md'
+    - 'Module properties': 'interface/module-properties.md'
+    - 'Comments': 'interface/comments.md'
+    - 'History': 'interface/history.md'
+    - 'Shortcuts': 'interface/shortcuts.md'
+    - 'Status bar': 'interface/statusbar.md'
+    - 'Audio diagnostics': 'interface/audio-diagnostics.md'
+  - 'Tracker':
+    - 'Overview': 'tracker/index.md'
+    - 'Glossary': 'tracker/glossary.md'
+    - 'Octave range and notes': 'tracker/octave-range.md'
+    - 'Channel locking': 'tracker/channel-lock.md'
+    - 'Speed/Tempo': 'tracker/speed.md'
+    - 'Instruments': 'tracker/instruments.md'
+    - 'Effect list': 'tracker/effect-list.md'
+  - 'Hardware Primer':
+    - 'Overview': 'hardware/index.md'
+    - 'Pulse channel': 'hardware/pulse-channel.md'
+    - 'Wave channel': 'hardware/wave-channel.md'
+    - 'Noise channel': 'hardware/noise-channel.md'
+    - 'Frequency sweep': 'hardware/sweep.md'
+    - 'Volume control and panning': 'hardware/volume-control.md'
+  - 'About':
+    - 'Roadmap': 'about/roadmap.md'
+    - 'Change log': 'about/changelog.md'
+    - 'License': 'about/license.md'
