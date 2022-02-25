@@ -41,13 +41,13 @@ Automatically slides to new notes with speed xx. Use `300` to disable the effect
 
 ## 4xy - Square vibrato
 
- * `x` - extent, in tune units
- * `y` - speed, number of frames per oscillation in pitch
+ * `x` - speed, number of frames per oscillation in pitch
+ * `y` - extent, in tune units
 
 Modulates the channel's frequency using a square vibrato. The channel's
-frequency alternates between +/- the extent (x). The speed, y, is the number of
-frames needed for a single oscillation (1: fastest, F: slowest). To disable,
-use an extent of 0.
+frequency alternates between +/- the extent (`y`). The speed, `x`, is the
+number of frames needed for a single oscillation (1: fastest, F: slowest).
+To disable, use an extent of 0 (`4x0`).
 
 ## 5xx - Set vibrato delay
 

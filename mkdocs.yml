@@ -1,9 +1,14 @@
 
 site_name: Trackerboy
 site_description: Gameboy / Gameboy Color music tracker
-site_url: https://stoneface86.github.com/trackerboy
+site_url: https://www.trackerboy.org/manual
 repo_url: https://github.com/stoneface86/trackerboy
 
+extra_javascript: 
+    - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+
+markdown_extensions:
+    - mdx_math
 
 nav:
   - 'Home': 'index.md'
@@ -34,6 +39,7 @@ nav:
     - 'Module properties': 'interface/module-properties.md'
     - 'Comments': 'interface/comments.md'
     - 'History': 'interface/history.md'
+    - 'Tempo Calculator': 'interface/tempo-calculator.md'
     - 'Shortcuts': 'interface/shortcuts.md'
     - 'Status bar': 'interface/statusbar.md'
     - 'Audio diagnostics': 'interface/audio-diagnostics.md'
@@ -45,6 +51,7 @@ nav:
     - 'Speed/Tempo': 'tracker/speed.md'
     - 'Instruments': 'tracker/instruments.md'
     - 'Effect list': 'tracker/effect-list.md'
+    - 'Sound effects (TBD)': 'tracker/sfx.md'
   - 'Hardware Primer':
     - 'Overview': 'hardware/index.md'
     - 'Pulse channel': 'hardware/pulse-channel.md'

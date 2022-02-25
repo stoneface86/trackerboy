@@ -24,6 +24,11 @@ your question in the `#help` channel.
 You can also contact me via email or twitter.
 
  * **Discord**: [https://discord.gg/m6wcAK3](https://discord.gg/m6wcAK3)
- * **Website**: [https://stoneface86.github.com/trackerboy](https://stoneface86.github.com/trackerboy)
+ * **Website**: [https://www.trackerboy.org](https://www.trackerboy.org)
+ * **Source code**: [https://github.com/stoneface86/trackerboy](https://github.com/stoneface86/trackerboy)
  * **Email**: stoneface8086 @ gmail.com (Please include "trackerboy" in the subject line)
  * **Twitter**: [@stoneface86](https://twitter.com/stoneface86)
+
+## Download this manual
+
+Click [here](offline.zip) to download an offline copy of this manual.
