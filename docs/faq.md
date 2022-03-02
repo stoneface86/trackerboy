@@ -9,8 +9,8 @@ The following are some answers to some common questions about Trackerboy.
 
 You could create some instruments, make a couple for each channel to explore
 the hardware's capabilities. Or you can dive right in and start entering notes
-on the pattern. Unlike some other trackers, instruments are 100% optional (but
-recommended!) to make music.
+on the pattern editor. Unlike some other trackers, instruments are 100%
+optional (but recommended!) to make music.
 
  * *Is there a macOS release?*
 
@@ -47,7 +47,7 @@ not provided.
 
 CH3's frequency range is one octave lower than the pulse channels if you have a
 single period waveform. Notes in trackerboy are based on the octave range of
-the pulse channels. See Hardware Primer/Wave channel for more details.
+the pulse channels. See [Wave channel](hardware/wave-channel.md) for more details.
 
 ## Troubleshooting
 

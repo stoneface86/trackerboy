@@ -279,6 +279,14 @@ if (ENABLE_DEPLOYMENT)
     get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
     get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
 
+    find_program(MKDOCS mkdocs)
+    if (MKDOCS)
+        add_custom_target(
+            docs ${MKDOCS} build --no-directory-urls -d "${CMAKE_CURRENT_BINARY_DIR}/manual"
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        )
+    endif ()
+
     if (WIN32)
         find_program(WINDEPLOYQT windeployqt HINTS "${_qt_bin_dir}")
         if (WINDEPLOYQT)

@@ -11,13 +11,14 @@ playback with the [Fxx](effect-list.md#fxx-set-speed) effect. This
 setting determines the number of frames each row gets when playing. Fixed point
 is the format of this setting with 4 bits for the integral and 4 bits for the
 fraction (Q4.4). For more details on fixed point see [Q-format](https://en.wikipedia.org/wiki/Q_(number_format)).
-In other words, the speed setting is composed of the two hex nibbles. The first
+In other words, the speed setting is composed of two hex nibbles. The first
 nibble being the integral, or the whole number of frames each row gets. The
-second nibble is the fraction, which determines how often some frames get an
-extra row.
+second nibble is the fraction, which determines how often some rows get an
+extra frame.
 
-Valid speeds range from 1.0 to 15.0 (0x10 to 0xF0), inclusive. Speed 1.0, unit speed, is the
-fastest and 15.0 is the slowest. The default speed for new songs is 6.0 (0x60).
+Valid speeds range from 1.0 to 15.0 (0x10 to 0xF0), inclusive. Speed 1.0,
+unit speed, is the fastest and 15.0 is the slowest. The default speed for new
+songs is 6.0 (0x60).
 
 ### Whole-number speed
 

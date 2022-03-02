@@ -259,9 +259,15 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     mToolbarTracker->addAction(act);
     act->setData(ShortcutTable::Record);
     lazyconnect(act, toggled, mPatternModel, setRecord);
+    
+    mActionFollowMode = setupAction(menuTracker, tr("Follow-mode"), tr("Toggles follow mode"), Qt::Key_ScrollLock);
+    mActionFollowMode->setCheckable(true);
+    mActionFollowMode->setChecked(true);
+    lazyconnect(mActionFollowMode, toggled, mPatternModel, setFollowing);
 
     mToolbarTracker->addAction(mSidebar->previousSongAction());
     mToolbarTracker->addAction(mSidebar->nextSongAction());
+    mToolbarTracker->addAction(mActionFollowMode);
 
     menuTracker->addSeparator(); // -------------------------------------------
 
@@ -282,11 +288,7 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     act->setData(ShortcutTable::Kill);
     connectActionToThis(act, onTrackerKill);
 
-    mActionFollowMode = createAction(this, tr("Follow-mode"), tr("Toggles follow mode"), Qt::Key_ScrollLock);
-    mActionFollowMode->setCheckable(true);
-    mActionFollowMode->setChecked(true);
-    mToolbarTracker->addAction(mActionFollowMode);
-    lazyconnect(mActionFollowMode, toggled, mPatternModel, setFollowing);
+    
 
     // > View =================================================================
     auto menuView = menubar->addMenu(tr("&View"));

@@ -46,10 +46,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            arch: x64
-            platform: osx
-            qt-arch: ''
+          # - os: macos-latest
+          #   arch: x64
+          #   platform: osx
+          #   qt-arch: ''
           
           - os: ubuntu-18.04
             arch: x64
@@ -95,28 +95,25 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
-      
+
       - name: Cache Qt
         id: cache-qt
         uses: actions/cache@v1
         with:
           path: ../Qt
-          key: ${{ runner.os }}-${{ matrix.arch }}-${{ env.QT_VERSION }}-QtCache
-
+          key: ${{ matrix.os }}-${{ matrix.arch }}-${{ env.QT_VERSION }}-QtCache
+      
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
+          py7zrversion: ==0.16.2  # workaround for windows-x86
+          version: ${{ env.QT_VERSION }}
           arch: ${{ matrix.qt-arch }}
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
-          version: ${{ env.QT_VERSION }}
       
       - name: Build
         run: |
-          cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake"
-          cmake --build build
-          cd build
-          ctest
-          cd ..
+          cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=MinSizeRel -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON
           cmake --build build --target deploy
     
       # windows and macos get a zip of the deploy folder
@@ -154,3 +151,36 @@ jobs:
         with:
           draft: true
           files: ${{ github.workspace }}/build/ui/${{ steps.archive.outputs.filename }}
+      
+      - name: Build documentation
+        if: ${{ matrix.docs }}
+        run: |
+          cmake --build build --target docs
+
+  # Builds an offline version of the manual to include in the release, as a
+  # separate download
+  docs:
+    name: Build documentation
+    needs: draft-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+          with:
+            submodules: true
+      - name: Get mkdocs
+        run: |
+          python -m pip install --upgrade pip
+          pip install mkdocs
+          mkdocs --version
+      - name: Build manual
+        run: |
+          mkdocs build --no-directory-urls -d build/manual
+      - name: Package
+        run: |
+          cd build
+          zip -r manual.zip manual
+      - name: Upload to release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: ${{ github.workspace }}/build/manual.zip
