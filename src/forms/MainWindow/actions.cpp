@@ -181,6 +181,7 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
     connectActionToThis(act, onModuleComments);
 
     act = setupAction(menuModule, tr("Module properties..."), tr("Opens the module properties dialog"));
+    act->setData(ShortcutTable::ModuleProperties);
     connectActionToThis(act, onModuleModuleProperties);
 
     // > Song =================================================================

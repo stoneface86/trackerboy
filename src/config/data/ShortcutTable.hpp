@@ -50,6 +50,7 @@ public:
         // Misc
         EditInstrument,
         EditWaveform,
+        ModuleProperties,
 
         Count
     };

@@ -57,7 +57,8 @@ static std::array const SHORTCUT_NAMES = {
     QT_TR_NOOP("Solo channel"),
     QT_TR_NOOP("Kill sound"),
     QT_TR_NOOP("Edit instrument"),
-    QT_TR_NOOP("Edit waveform")
+    QT_TR_NOOP("Edit waveform"),
+    QT_TR_NOOP("Module properties...")
 };
 static_assert(SHORTCUT_NAMES.size() == ShortcutTable::Count, "table size mismatch");
 }

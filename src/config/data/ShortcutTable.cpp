@@ -90,6 +90,8 @@ QKeySequence ShortcutTable::getDefault(Shortcut shortcut) noexcept {
             return tr("Ctrl+I");
         case EditWaveform:
             return tr("Ctrl+W");
+        case ModuleProperties:
+            return tr("Ctrl+P");
         default:
             return {};
     }
