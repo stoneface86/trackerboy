@@ -7,7 +7,7 @@ SongModel::SongModel(Module &mod, QObject *parent) :
     mModule(mod),
     mTempo(0.0f)
 {
-    connect(&mod, &Module::reloaded, this, &SongModel::reload);
+    connect(&mod, &Module::songChanged, this, &SongModel::reload);
 }
 
 void SongModel::reload() {
