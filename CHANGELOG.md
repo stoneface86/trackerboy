@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2022-03-03
 ### Added
  - Command line argument parsing, you can now open a module on application startup
  - General tab in Config dialog for changing basic settings.
@@ -33,13 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    in using an illegal filename on windows).
  - Follow-mode is now accessible from the Tracker menu
  - Selecting an instrument/waveform will switch to that item in its editor if it is open.
- - Song editor not updating on song change.
  - Module properties dialog can now be opened via Ctrl+P
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor
  - Bug when saving a new module overwrites the last opened one instead of prompting
    the user for a new location.
+ - Song editor not updating on song change.
 ### Removed
  - Synthesizer quality setting in Sound configuration
 

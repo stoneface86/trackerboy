@@ -80,18 +80,6 @@ jobs:
   
       - uses: lukka/get-cmake@latest
 
-      - name: Restore vcpkg
-        uses: actions/cache@v2
-        with:
-          path: |
-            build/vcpkg_installed/
-            vcpkg
-            !vcpkg/buildtrees
-            !vcpkg/packages
-            !vcpkg/downloads
-          key: |
-            ${{ hashFiles( 'vcpkg.json' ) }}-${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}-${{ env.TRIPLET }}-invalidate
-
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
@@ -155,7 +143,7 @@ jobs:
   # Builds an offline version of the manual to include in the release, as a
   # separate download
   docs:
-    name: Build documentation
+    name: Documentation
     needs: draft-release
     runs-on: ubuntu-latest
     steps:
