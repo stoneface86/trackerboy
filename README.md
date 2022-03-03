@@ -15,15 +15,15 @@ My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
 
 ## Getting Started
 
- * __Build:__ To compile Trackerboy from source, see the [build instructions](BUILD.md)
- * __Contribute:__ For contributing to this repo, see the [contributing guidelines](CONTRIBUTING.md) and [source code organization](ORGANIZATION.md)
- * __Use:__ For details on how to use the tracker, see TBD
+ * __Build:__ To compile Trackerboy from source, see the [build instructions](BUILD.md).
+ * __Contribute:__ For contributing to this repo, see the [contributing guidelines](CONTRIBUTING.md) and [source code organization](ORGANIZATION.md).
+ * __Use:__ For details on how to use the tracker, see the [manual](https://www.trackerboy.org/manual).
 
 ## Status
 
-[v0.5.0](https://github.com/stoneface86/trackerboy/releases/tag/v0.5.0) is now available.
+[v0.6.0](https://github.com/stoneface86/trackerboy/releases/tag/v0.6.0) is now available.
 
-![Demo](/.github/screenshot-v0.5.0.png)
+![Demo](/.github/screenshot.png "Trackerboy application v0.6.0")
 
  Post-release features:
  * Sound effects
