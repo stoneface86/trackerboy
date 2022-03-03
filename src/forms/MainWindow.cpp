@@ -317,8 +317,18 @@ void MainWindow::setupUi() {
             int id = -1;
             if (index != -1) {
                 id = mInstrumentModel->id(index);
+                if (mInstrumentEditor && mInstrumentEditor->isVisible()) {
+                    mInstrumentEditor->openItem(index);
+                }
             }
             mPatternEditor->setInstrument(id);
+        });
+
+    connect(mWaveforms, &TableView::selectedItemChanged, this,
+        [this](int index) {
+            if (index != -1 && mWaveEditor && mWaveEditor->isVisible()) {
+                mWaveEditor->openItem(index);
+            }
         });
 
     // TOOLBARS ==============================================================

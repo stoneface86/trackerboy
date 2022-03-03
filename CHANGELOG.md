@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Crash save filename no longer using colons in the timestamp (this resulted
    in using an illegal filename on windows).
  - Follow-mode is now accessible from the Tracker menu
+ - Selecting an instrument/waveform will switch to that item in its editor if it is open.
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor

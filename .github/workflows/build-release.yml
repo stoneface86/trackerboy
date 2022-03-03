@@ -150,12 +150,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           draft: true
-          files: ${{ github.workspace }}/build/ui/${{ steps.archive.outputs.filename }}
-      
-      - name: Build documentation
-        if: ${{ matrix.docs }}
-        run: |
-          cmake --build build --target docs
+          files: ${{ github.workspace }}/build/src/${{ steps.archive.outputs.filename }}
 
   # Builds an offline version of the manual to include in the release, as a
   # separate download
