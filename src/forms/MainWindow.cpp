@@ -311,6 +311,11 @@ void MainWindow::setupUi() {
         grid->setSecondHighlight(mSongModel->rowsPerMeasure());
         lazyconnect(mSongModel, rowsPerBeatChanged, grid, setFirstHighlight);
         lazyconnect(mSongModel, rowsPerMeasureChanged, grid, setSecondHighlight);
+        connect(mSongModel, &SongModel::reloaded, this,
+            [this]() {
+                mPatternEditor->grid()->setFirstHighlight(mSongModel->rowsPerBeat());
+                mPatternEditor->grid()->setSecondHighlight(mSongModel->rowsPerMeasure());
+            });
     }
     connect(mInstruments, &TableView::selectedItemChanged, this,
         [this](int index) {

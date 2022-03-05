@@ -75,22 +75,21 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
         [this](int speed) {
             QSignalBlocker blocker(mSpeedSpin);
             mSpeedSpin->setValue(speed);
-
-            auto speedFloat = trackerboy::speedToFloat((trackerboy::Speed)speed);
-            mSpeedLabel->setText(speedToString(speedFloat));
+            updateSpeedLabel(speed);
         });
 
     connect(&model, &SongModel::tempoChanged, this,
         [this](float tempo) {
-            mTempoLabel->setText(tempoToString(tempo));
+            updateTempoLabel(tempo);
         });
 
     connect(&model, &SongModel::patternSizeChanged, this,
         [this](int rows) {
-            mPatternSizeButton->setText(QString::number(rows));
+            updatePatternSizeButton(rows);
         });
 
-    model.reload();
+    connect(&model, &SongModel::reloaded, this, &SongEditor::refresh);
+    refresh();
     
     connect(mRowsPerBeatSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setRowsPerBeat);
     connect(mRowsPerMeasureSpin, qOverload<int>(&QSpinBox::valueChanged), &model, &SongModel::setRowsPerMeasure);
@@ -131,4 +130,26 @@ SongEditor::SongEditor(SongModel &model, QWidget *parent) :
             }
         });
 
+}
+
+void SongEditor::updatePatternSizeButton(int rows) {
+    mPatternSizeButton->setText(QString::number(rows));
+}
+
+void SongEditor::updateSpeedLabel(int speed) {
+    auto speedFloat = trackerboy::speedToFloat((trackerboy::Speed)speed);
+    mSpeedLabel->setText(speedToString(speedFloat));
+}
+
+void SongEditor::updateTempoLabel(float tempo) {
+    mTempoLabel->setText(tempoToString(tempo));
+}
+
+void SongEditor::refresh() {
+    mRowsPerBeatSpin->setValue(mSongModel.rowsPerBeat());
+    mRowsPerMeasureSpin->setValue(mSongModel.rowsPerMeasure());
+    mSpeedSpin->setValue(mSongModel.speed());
+    updatePatternSizeButton(mSongModel.patternSize());
+    updateSpeedLabel(mSongModel.speed());
+    updateTempoLabel(mSongModel.tempo());
 }

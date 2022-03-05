@@ -23,6 +23,13 @@ public:
 
 private:
 
+    void updatePatternSizeButton(int rows);
+
+    void updateSpeedLabel(int speed);
+    void updateTempoLabel(float tempo);
+
+    void refresh();
+
     SongModel &mSongModel;
 
     QSpinBox *mRowsPerBeatSpin;

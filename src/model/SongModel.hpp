@@ -8,7 +8,7 @@
 
 //
 // Model class for a trackerboy Song. Provides methods for safely modifying
-// the song's properties for a ModuleDocument.
+// the current song's settings in a Module.
 //
 class SongModel : public QObject {
 
@@ -16,8 +16,6 @@ class SongModel : public QObject {
 
 public:
     explicit SongModel(Module &mod, QObject *parent = nullptr);
-
-    void reload();
 
     int rowsPerBeat();
     int rowsPerMeasure();
@@ -41,10 +39,12 @@ signals:
     void rowsPerMeasureChanged(int rpm);
     void tempoChanged(float tempo);
 
+    void reloaded();
+
 private:
     Q_DISABLE_COPY(SongModel)
 
-    void calcTempo(bool notify = false);
+    void calcTempo(bool notify = true);
 
     Module &mModule;
     float mTempo;

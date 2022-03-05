@@ -7,16 +7,12 @@ SongModel::SongModel(Module &mod, QObject *parent) :
     mModule(mod),
     mTempo(0.0f)
 {
-    connect(&mod, &Module::songChanged, this, &SongModel::reload);
-}
-
-void SongModel::reload() {
-    auto song = mModule.song();
-    emit rowsPerBeatChanged(song->rowsPerBeat());
-    emit rowsPerMeasureChanged(song->rowsPerMeasure());
-    emit speedChanged((int)song->speed());
-    emit patternSizeChanged(song->patterns().length());
-    calcTempo(true);
+    calcTempo(false);
+    connect(&mod, &Module::songChanged, this,
+        [this]() {
+            calcTempo(false);
+            emit reloaded();
+        });
 }
 
 int SongModel::rowsPerBeat() {
@@ -29,6 +25,10 @@ int SongModel::rowsPerMeasure() {
 
 int SongModel::speed() {
     return mModule.song()->speed();
+}
+
+float SongModel::tempo() {
+    return mTempo;
 }
 
 int SongModel::patternSize() {
@@ -96,8 +96,10 @@ void SongModel::setPatternSize(int rows) {
 
 void SongModel::calcTempo(bool notify) {
     auto tempo = mModule.song()->tempo(mModule.data().framerate());
-    if (notify || !qFuzzyCompare(tempo, mTempo)) {
+    if (!qFuzzyCompare(tempo, mTempo)) {
         mTempo = tempo;
-        emit tempoChanged(tempo);
+        if (notify) {
+            emit tempoChanged(tempo);
+        }
     }
 }
