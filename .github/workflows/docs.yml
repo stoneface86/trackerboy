@@ -19,6 +19,7 @@ jobs:
       - name: checkout site
         uses: actions/checkout@v2
         with:
+          repository: TrackerboyOrg/TrackerboyOrg.github.io
           token: ${{ secrets.TRACKERBOY_SITE_PAT }}
           path: ./site
       
