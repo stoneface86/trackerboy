@@ -151,11 +151,7 @@ jobs:
         with:
           submodules: true
       - name: Get mkdocs
-        run: |
-          python -m pip install --upgrade pip
-          pip install mkdocs
-          pip install python-markdown-math
-          mkdocs --version
+        run: ${{ github.workspace }}/.github/scripts/getmkdocs.sh
       - name: Build manual
         run: |
           mkdocs build --no-directory-urls -d build/manual

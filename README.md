@@ -25,14 +25,6 @@ My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
 
 ![Demo](/.github/screenshot.png "Trackerboy application v0.6.0")
 
- Post-release features:
- * Sound effects
- * Export to .asm (pattern compilation)
-   * Compile to [tbengine](https://github.com/stoneface86/tbengine) format
-   * Compile to pokemon engine (experimental)
- * Export to .gbs
- * Import from famitracker (tool to convert .ftm -> .tbm)
-
 ## Versioning
 
 This project uses Semantic Versioning v2.0.0

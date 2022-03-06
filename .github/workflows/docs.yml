@@ -1,0 +1,41 @@
+
+name: update site documentation
+on:
+  push:
+    paths:
+      'docs/**'
+      'mkdocs.yml'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    name: Update site manual
+    steps:
+      - name: checkout trackerboy
+        uses: actions/checkout@v2
+        with:
+          path: ./trackerboy
+
+      - name: checkout site
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.TRACKERBOY_SITE_PAT }}
+          path: ./site
+      
+      - name: Get mkdocs
+        run: ./trackerboy/.github/scripts/getmkdocs.sh
+      
+      - name: Build docs
+        run: |
+          mkdocs build -f ./trackerboy/mkdocs.yml -d ../site/manual/
+          mkdocs build -f ./trackerboy/mkdocs.yml --no-directory-urls -d ../offline
+          zip -r site/manual/offline.zip ./offline/
+      
+      - name: Push docs
+        run: |
+          cd ./site
+          git add .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -am "Update manual from CI"
+          git push

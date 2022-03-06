@@ -10,6 +10,7 @@ extra_javascript:
 
 markdown_extensions:
     - mdx_math
+    - pymdownx.tasklist
 
 nav:
   - 'Home': 'index.md'
