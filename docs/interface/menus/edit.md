@@ -1,8 +1,6 @@
 
 # Edit
 
----
-
 ## Undo
 
 Undos the last change to the current song.

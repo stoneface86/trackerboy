@@ -1,8 +1,6 @@
 
 # Module
 
----
-
 ## Previous song
 
 Changes the current song to the previous one in the list.

@@ -1,8 +1,6 @@
 
 # File
 
----
-
 ## New
 
 Creates a new module. If the current module has any unsaved changes you will be
