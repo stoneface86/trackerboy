@@ -3,8 +3,8 @@ name: update site documentation
 on:
   push:
     paths:
-      'docs/**'
-      'mkdocs.yml'
+      - 'docs/**'
+      - 'mkdocs.yml'
 
 jobs:
   docs:
