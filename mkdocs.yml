@@ -10,7 +10,6 @@ extra_javascript:
 
 markdown_extensions:
     - mdx_math
-    - pymdownx.tasklist
 
 nav:
   - 'Home': 'index.md'
@@ -64,6 +63,5 @@ nav:
     - 'Frequency sweep': 'hardware/sweep.md'
     - 'Volume control and panning': 'hardware/volume-control.md'
   - 'About':
-    - 'Roadmap': 'about/roadmap.md'
     - 'Change log': 'about/changelog.md'
     - 'License': 'about/license.md'
