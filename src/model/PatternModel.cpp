@@ -790,9 +790,49 @@ void PatternModel::deleteSelection() {
         }
     } else {
         switch (mCursor.column) {
-            case PatternCursor::ColumnNote:
-                setNote({}, {});
+            case PatternCursor::ColumnNote: {
+                // four possibilities
+                // 1. just the note is set          -> erase the note
+                // 2. just the instrument is set    -> erase the instrument
+                // 3. both are set (use a macro)    -> erase both (macro)
+                // 4. neither are set               -> do nothing
+
+                auto &rowdata = cursorTrackRow();
+                auto oldNote = rowdata.queryNote();
+                auto oldInstrument = rowdata.queryInstrument();
+
+                QUndoCommand *noteClear = nullptr;
+                QUndoCommand *instClear = nullptr;
+
+                if (oldNote.has_value()) {
+                    noteClear = new NoteEditCmd(*this, trackerboy::TrackRow::convertColumn({}), trackerboy::TrackRow::convertColumn(oldNote));
+                }
+
+                if (oldInstrument.has_value()) {
+                    instClear = new InstrumentEditCmd(*this, trackerboy::TrackRow::convertColumn({}), trackerboy::TrackRow::convertColumn(oldInstrument));
+                }
+
+                auto getCommandText = []() { return tr("Clear note"); };
+
+                auto undoStack = mModule.undoStack();
+                if (noteClear && instClear) {
+                    // 3
+                    undoStack->beginMacro(getCommandText());
+                    undoStack->push(noteClear);
+                    undoStack->push(instClear);
+                    undoStack->endMacro();
+                } else if (noteClear) {
+                    // 1
+                    noteClear->setText(getCommandText());
+                    undoStack->push(noteClear);
+                } else if (instClear) {
+                    // 2
+                    instClear->setText(getCommandText());
+                    undoStack->push(instClear);
+                } // 4
+
                 break;
+            }
             case PatternCursor::ColumnInstrumentHigh:
             case PatternCursor::ColumnInstrumentLow:
                 setInstrument({});

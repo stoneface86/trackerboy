@@ -20,6 +20,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - os: macos-latest
+            arch: x64
+            platform: osx
+            qt-arch: ''
           - os: ubuntu-18.04
             arch: x64
             platform: linux

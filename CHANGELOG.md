@@ -1,10 +1,9 @@
 # Changelog
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+ - Erasing a note will also erase the instrument column
+
 ### Fixed
  - Issue #5 - Pattern Crash When Switching Songs
 
@@ -22,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Context menu for pattern editor
  - Action for replacing all selected instrument columns with the current instrument
    (Edit|Replace instrument)
+
 ### Changed
  - Combined the Sound and Midi tabs in the Configuration dialog (Sound + MIDI)
  - AZERTY keyboard layout uses French AZERTY
@@ -38,12 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Follow-mode is now accessible from the Tracker menu
  - Selecting an instrument/waveform will switch to that item in its editor if it is open.
  - Module properties dialog can now be opened via Ctrl+P
+
 ### Fixed
  - Issue with Instrument Editor not properly updating when changing instruments
  - Hitting enter in the sequence editor line edit opens the Wave editor
  - Bug when saving a new module overwrites the last opened one instead of prompting
    the user for a new location.
  - Song editor not updating on song change.
+
 ### Removed
  - Synthesizer quality setting in Sound configuration
 
@@ -61,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Song selector in Sidebar for selecting the current song
  - Comments dialog for editing module comments
  - File menu now shows a list of recently opened/saved modules
+
 ### Changed
  - Back to using miniaudio instead of RtAudio for audio playback
  - Trackerboy is now SDI instead of MDI (only one module can be open at a time).
@@ -72,10 +75,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Rewrote OrderEditor using a custom widget instead of QTableView + OrderModel
  - Instrument and Waveform editors are now dialogs instead of docks.
  - Octave decrease/increase shortcut changed from numpad / * to Ctrl+[ and Ctrl+]
+
 ### Fixed
  - issue #2 - Exx not taking immediate effect (also fixes V0x and I0x not
               taking immediate effect as well)
  - issue #3 - PulseAudio hang
+
 ### Removed
  - Module tree view (replaced by instrument and waveform docks)
  - Instrument select toolbar (functionality replaced by selecting an instrument
@@ -89,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Order editor has increment/decrement and set operations again
  - Oscilloscope visualizer
  - Icons for cut/copy/paste
+
 ### Changed
  - 32-bit builds are now supported
  - Using RtAudio instead of miniaudio for audio playback
@@ -98,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    current song being played.
  - Cursor row is locked when playing in follow-mode
  - Selecting an order while playing in follow-mode jumps to it
+
 ### Fixed
  - Crash when creating new module on linux
  - Copy/Paste bugs when copying effect columns
@@ -106,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.1] - 2021-06-23
 ### Changed
  - Play and stop shortcut only triggers when pattern editor has focus
+
 ### Fixed
  - Note previews not working right on CH4
  - Current track not updating in order editor
@@ -123,6 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Icon for configuration
  - Keybinds for tracker actions (play, stop, etc)
  - Add "play and stop" shortcut (pressing enter plays, pressing it again stops)
+
 ### Changed
  - No longer need to have record mode on when deleting, transposing, etc
    (record mode now only applies to setting notes, instruments and effects)
@@ -134,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Fix pattern previews not showing up on module load
  - Fix order move up/down actions not disabling/enabling when user changes patterns
  - Setting a note cut does not set the instrument column
+
 ### Removed
  - PatternEditor toolbar (now is part of the main application toolbar)
  - Order increment/decrement and set controls
@@ -166,11 +176,13 @@ Here's a quick list of features:
  - Instrument editor dialog
  - DeviceManager and DeviceTable classes in the audio library
  - demo_device_manager demo lists all available host api and output devices
+
 ### Changed
  - PlaybackQueue can use any portaudio device instead of the default one
  - Reorganized library header folders
  - MusicRuntime only updates "locked" channels
  - Rewrote Engine class to use MusicRuntime class
+
 ### Removed
  - File class
  - Old ui code (instedit)
@@ -187,12 +199,14 @@ Here's a quick list of features:
  - PatternCursor, utility class for random access/iteration of a Pattern
  - RuntimeContext struct, utility struct containing Synth and Table references
  - Timer class, used for tempo/speed
+
 ### Changed
  - Fixed warnings for ubuntu build
  - Mixer no longer uses sigma approximation when calculating the STEP_TABLE, this was done as
    an experiment and also worked as a low pass filter. Filtering will be done elsewhere in the future.
  - added utility method Synth::setFrequency
  - added several new effects. Effects are now categorized by pattern, track and frequency.
+
 ### Removed
  - InstrumentRuntime, TrackRuntime, PatternRuntime and SongRuntime classes. These are being replaced
    with the newly added classes in the engine folder.
@@ -202,6 +216,7 @@ Here's a quick list of features:
 ### Added
  - PatternMaster class, container for all tracks in a Song
  - Synth::reset() and for all APU components also
+
 ### Changed
  - Instruments are now a sequence of commands, 1 command per frame
  - All runtime classes have been rewritten to use the new pattern format
@@ -220,6 +235,7 @@ Here's a quick list of features:
    incorrect for multichannel data.
  - The Mixer and Synth sampling rates can now be changed
  - SongRuntime is now single-use, or, you can no longer set a new song
+
 ### Removed
  - Instruction struct, no longer needed
  - PatternRuntime::reset()
@@ -232,6 +248,7 @@ Here's a quick list of features:
  - WaveGen class, similar to the previously removed WaveChannel
  - Mixer class, adds bandlimited steps to left/right channels
  - Sequencer class, similar to the previously removed one
+
 ### Changed
  - Minimum required C++ standard is now C++17
  - PlaybackQueue uses float samples instead of int16_t
@@ -243,6 +260,7 @@ Here's a quick list of features:
  - Sweep has its own shadow register and now longer uses the channel's on trigger
    (this behavior now matches the hardware)
  - Sweep and Envelope register contents get applied on restart
+
 ### Removed
  - include/trackerboy/synth/utils.hpp, no longer being used
  - libtrackerboy/synth/test_Osc.cpp, was unused
@@ -258,6 +276,7 @@ Here's a quick list of features:
  - Envelope, moved code from EnvChannel here (will replace EnvChannel)
  - Sweep class, replaces SweepPulseChannel
  - HardwareFile struct (replaces ChannelFile)
+
 ### Changed
  - Fix exception being thrown when attempting to insert into table of size one less than maximum
  - Rewrote Osc class. Subclasses must edit the delta buffer manually instead of
@@ -270,6 +289,7 @@ Here's a quick list of features:
  - Mixer works with sample buffers as opposed to individual samples from each channel
  - Length counters are no longer emulated by the Synth
  - Mixer and Sequencer were moved into Synth, as only the synth used these internally.
+
 ### Removed
   - `Osc::deltaSet` as only WaveOsc needed this method
   - `Osc::setMute` and `Osc::muted`, replaced by `Osc::disable` and `Osc::disabled`
@@ -285,6 +305,7 @@ Here's a quick list of features:
  - `Table<T>::insert` methods
  - `Table<T>::clear`
  - Version struct + operator overloads
+
 ### Changed
  - Rewrote implementation for `Table<T>`, no longer uses `std::unordered_map`
    Uses a vector for the item data, and a 256 uint8_t array that maps an id
@@ -294,6 +315,7 @@ Here's a quick list of features:
  - table size is now a 2 byte field when saving/loading
  - add setSpeed() overload to calculate speed from tempo/rpb settings. Song
    no longer calculates speed when tempo or rpb is set.
+
 ### Removed
  - `Table<T>::add`, `Table<T>::set`, as these methods are no longer needed as the
    insert methods should be used instead.
@@ -302,6 +324,7 @@ Here's a quick list of features:
 ### Added
  - This CHANGELOG.md file to serve as a changelog for any new features, removals
    deprecations and so on for the project as a whole.
+
 ### Changed
  - README.md, added a roadmap section to list planned features and the order
    in which they are worked on.
