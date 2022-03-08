@@ -69,6 +69,7 @@ if (WIN32)
     set(WINDOWS_APPICON_RC "resources/icons/app/appicon.rc")
 elseif (APPLE)
     set(GUI_TYPE MACOSX_BUNDLE)
+    set(MACOSX_APPICON_ICNS "resources/icons/app/appicon.icns")
 else ()
     set(GUI_TYPE "")
 endif ()
@@ -259,7 +260,12 @@ endif ()
 # Target for the main ui, trackerboy_ui. We cannot use trackerboy as that name is used
 # for libtrackerboy. However, the resulting executable is named trackerboy, not trackerboy_ui
 #
-add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${WINDOWS_APPICON_RC}")
+if (APPLE)
+    set_source_files_properties(${MACOSX_APPICON_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+    add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${MACOSX_APPICON_ICNS}")
+else ()
+    add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${WINDOWS_APPICON_RC}")
+endif ()
 target_link_libraries(trackerboy_ui PRIVATE ui)
 # output executable is "trackerboy" and not "trackerboy_ui"
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
