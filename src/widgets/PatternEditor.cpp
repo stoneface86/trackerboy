@@ -289,6 +289,13 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
     auto const recording = mModel.isRecording();
     bool validKey = false;
 
+    if (key == Qt::Key_Backspace) {
+        if (recording) {
+            mModel.backspace();
+        }
+        return;
+    }
+
     switch (mModel.cursorColumn()) {
         case PatternCursor::ColumnNote: {
             auto note = mPianoIn.keyToNote(key);
@@ -352,6 +359,7 @@ void PatternEditor::keyPressEvent(QKeyEvent *evt) {
         }
         break;
     }
+
 
     if (validKey) {
         if (recording) {

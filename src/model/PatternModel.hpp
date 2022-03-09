@@ -178,6 +178,8 @@ public:
 
     void paste(PatternClip const& clip, bool mix);
 
+    void backspace();
+
     // order
 
     //
@@ -272,6 +274,7 @@ private:
     friend class TransposeCmd;
     friend class ReverseCmd;
     friend class ReplaceInstrumentCmd;
+    friend class BackspaceCmd;
     friend class OrderEditCmd;
     friend class OrderInsertCmd;
     friend class OrderRemoveCmd;

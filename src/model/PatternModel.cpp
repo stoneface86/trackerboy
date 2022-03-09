@@ -924,6 +924,16 @@ void PatternModel::paste(PatternClip const& clip, bool mix) {
     mModule.undoStack()->push(cmd);
 }
 
+void PatternModel::backspace() {
+    if (mCursor.row > 0) {
+        auto nextRow = mCursor.row - 1;
+        auto cmd = new BackspaceCmd(*this);
+        cmd->setText(tr("backspace"));
+        mModule.undoStack()->push(cmd);
+        setCursorRow(nextRow);
+    }
+}
+
 void PatternModel::setOrderRow(trackerboy::OrderRow row) {
     if (order()[mCursorPattern] != row) {
         auto cmd = new OrderEditCmd(*this, row, mCursorPattern);

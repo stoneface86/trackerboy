@@ -324,3 +324,60 @@ void TransposeCmd::redo()  {
 void TransposeCmd::undo() {
     restore(false);
 }
+
+BackspaceCmd::BackspaceCmd(PatternModel &model, QUndoCommand *parent) :
+    QUndoCommand(parent),
+    mModel(model),
+    mPattern(model.mCursorPattern),
+    mRow(model.mCursor.row),
+    mTrack(model.mCursor.track),
+    mDeleted(model.currentPattern()[mRow - 1][mTrack])
+{
+}
+
+// 0 a
+// 1 b <- backspace here
+// 2 c
+// 3 d
+
+// redo
+// 0 b
+// 1 c
+// 2 d
+// 3 . <- empty row
+
+// undo
+// 0 a <- restored from mDeleted
+// 1 b
+// 2 c
+// 3 d
+
+
+void BackspaceCmd::redo() {
+    {
+        auto editor = mModel.mModule.edit();
+        auto &dest = mModel.source()->patterns().getTrack(static_cast<trackerboy::ChType>(mTrack), mPattern);
+        auto const rows = (int)dest.size() - 1;
+        for (int i = mRow - 1; i < rows; ++i) {
+            dest[i] = dest[i + 1];
+        }
+        dest[rows] = {};
+
+    }
+    mModel.invalidate(mPattern, true);
+}
+
+void BackspaceCmd::undo() {
+
+    {
+        auto editor = mModel.mModule.edit();
+        auto &dest = mModel.source()->patterns().getTrack(static_cast<trackerboy::ChType>(mTrack), mPattern);
+        auto const restoredRow = mRow - 1;
+        for (int i = dest.size() - 1; i > restoredRow; --i) {
+            dest[i] = dest[i - 1];
+        }
+        dest[restoredRow] = mDeleted;
+    }
+    mModel.invalidate(mPattern, true);
+}
+

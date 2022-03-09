@@ -1,11 +1,15 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+ - Backspace operation for pattern editor.
+ - [#7] - Add icon for MacOS app (thanks [@jtakakura])
+
 ### Changed
  - Erasing a note will also erase the instrument column
 
 ### Fixed
- - Issue #5 - Pattern Crash When Switching Songs
+ - [#5] - Pattern Crash When Switching Songs
 
 ## [0.6.0] - 2022-03-03
 ### Added

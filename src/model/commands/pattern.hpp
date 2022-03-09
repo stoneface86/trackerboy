@@ -236,3 +236,25 @@ public:
     virtual void undo() override;
 
 };
+
+//
+// Backspace command. Deletes the previous row in the track and shifts all rows
+// below it up 1.
+//
+class BackspaceCmd : public QUndoCommand {
+
+    PatternModel &mModel;
+    int const mPattern;
+    int const mTrack;
+    int const mRow;
+    trackerboy::TrackRow const mDeleted;
+
+public:
+
+    explicit BackspaceCmd(PatternModel &model, QUndoCommand *parent = nullptr);
+
+    virtual void redo() override;
+
+    virtual void undo() override;
+
+};
