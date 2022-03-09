@@ -262,10 +262,8 @@ endif ()
 #
 if (APPLE)
     set_source_files_properties(${MACOSX_APPICON_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-    add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${MACOSX_APPICON_ICNS}")
-else ()
-    add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${WINDOWS_APPICON_RC}")
 endif ()
+add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${WINDOWS_APPICON_RC}" "${MACOSX_APPICON_ICNS}")
 target_link_libraries(trackerboy_ui PRIVATE ui)
 # output executable is "trackerboy" and not "trackerboy_ui"
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
