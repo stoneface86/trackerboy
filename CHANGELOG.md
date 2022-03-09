@@ -11,6 +11,10 @@
 ### Fixed
  - [#5] - Pattern Crash When Switching Songs
 
+[#5]: https://github.com/stoneface86/trackerboy/issues/5
+[#7]: https://github.com/stoneface86/trackerboy/issues/7
+[@jtakakura]: https://github.com/jtakakura
+
 ## [0.6.0] - 2022-03-03
 ### Added
  - Command line argument parsing, you can now open a module on application startup
