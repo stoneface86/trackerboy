@@ -45,6 +45,7 @@ Sidebar::Sidebar(
     groupbox->setLayout(groupLayout);
     layout->addWidget(groupbox, 1);
 
+    layout->setMargin(0);
     setLayout(layout);
 
     mNextAction = createAction(this, tr("Next song"), tr("Selects the next song in the list"), Icons::next);
