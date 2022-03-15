@@ -365,6 +365,14 @@ void MainWindow::setupUi() {
 
     createActions(mInstruments->tableActions(), mWaveforms->tableActions());
 
+    mSidebar->orderEditor()->addActionsToToolbar({
+        mActionOrderInsert,
+        mActionOrderRemove,
+        mActionOrderDuplicate,
+        mActionOrderMoveUp,
+        mActionOrderMoveDown
+        });
+
     mToolbarSong->addAction(mActionOrderInsert);
     mToolbarSong->addAction(mActionOrderRemove);
     mToolbarSong->addAction(mActionOrderDuplicate);
@@ -437,33 +445,7 @@ void MainWindow::setupUi() {
 
     // CONNECTIONS ============================================================
 
-    auto orderEditor = mSidebar->orderEditor();
-    connect(orderEditor, &OrderEditor::popupMenuAt, this,
-        [this](QPoint const& pos) {
-            if (mSongOrderContextMenu == nullptr) {
-                mSongOrderContextMenu = new QMenu(this);
-                setupSongMenu(mSongOrderContextMenu);
-            }
-            mSongOrderContextMenu->popup(pos);
-        });
-    auto orderGrid = orderEditor->grid();
-    lazyconnect(orderGrid, patternJump, mRenderer, jumpToPattern);
-    orderGrid->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(orderGrid, &OrderGrid::customContextMenuRequested, this,
-        [this](QPoint const& pos) {
-            auto _sender = qobject_cast<QWidget*>(sender());
-            if (_sender) {
-                QMenu *menu = new QMenu(this);
-                menu->setAttribute(Qt::WA_DeleteOnClose);
-                menu->addAction(mActionOrderInsert);
-                menu->addAction(mActionOrderRemove);
-                menu->addAction(mActionOrderDuplicate);
-                menu->addSeparator();
-                menu->addAction(mActionOrderMoveUp);
-                menu->addAction(mActionOrderMoveDown);
-                menu->popup(_sender->mapToGlobal(pos));
-            }
-        });
+    lazyconnect(mSidebar->orderEditor()->grid(), patternJump, mRenderer, jumpToPattern);
 
     lazyconnect(mPatternEditor, previewNote, mRenderer, instrumentPreview);
     lazyconnect(mPatternEditor, stopNotePreview, mRenderer, stopPreview);

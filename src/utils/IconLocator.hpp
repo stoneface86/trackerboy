@@ -36,6 +36,7 @@ enum class Icons : int {
     ch4,
     increment,
     decrement,
+    changeAll,
     moveUp,
     moveDown,
     next,

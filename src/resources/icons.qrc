@@ -54,6 +54,7 @@
         <file>icons/moveDown-disabled.png</file>
         <file>icons/increment.png</file>
         <file>icons/decrement.png</file>
+        <file>icons/orderChangeAll.png</file>
         <file>icons/placeholder.png</file>
         <file>icons/placeholder-disabled.png</file>
         <file>icons/next.png</file>

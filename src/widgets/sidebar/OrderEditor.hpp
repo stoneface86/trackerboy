@@ -4,10 +4,9 @@
 #include "model/PatternModel.hpp"
 #include "widgets/sidebar/OrderGrid.hpp"
 
-#include <QCheckBox>
-#include <QPoint>
-#include <QScrollBar>
-#include <QTableView>
+class QToolBar;
+class QScrollBar;
+#include <QWidget>
 
 //
 // Composite widget for the song order editor, located in the Sidebar
@@ -18,17 +17,19 @@ class OrderEditor : public QWidget {
 
 public:
 
+    struct Actions {
+        QAction *add, *remove, *duplicate, *moveUp, *moveDown;
+    };
+
     explicit OrderEditor(PatternModel &model, QWidget *parent = nullptr);
 
     OrderGrid* grid();
 
-signals:
-    //
-    // re-emits QTableView's contextMenuRequested signal
-    //
-    void popupMenuAt(QPoint const& pos);
+    void addActionsToToolbar(Actions const& actions);
 
 protected:
+
+    virtual void contextMenuEvent(QContextMenuEvent *evt) override;
 
     virtual void wheelEvent(QWheelEvent *evt) override;
 
@@ -36,7 +37,7 @@ private:
 
     Q_DISABLE_COPY(OrderEditor)
 
-    QCheckBox *mChangeAll;
+    QToolBar *mToolbar;
     OrderGrid *mGrid;
 
     QScrollBar *mScrollbar;

@@ -5,22 +5,15 @@
 
 #include <QAction>
 #include <QHBoxLayout>
+#include <QMenu>
+#include <QScrollBar>
 #include <QToolBar>
-#include <QVBoxLayout>
-#include <QWidget>
 #include <QWheelEvent>
 
 OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
-    QWidget(parent),
-    mChangeAll(nullptr),
-    mGrid(nullptr),
-    mScrollbar(nullptr)
+    QWidget(parent)
 {
-    auto toolbarLayout = new QHBoxLayout;
-    auto toolbar = new QToolBar;
-    mChangeAll = new QCheckBox(tr("Change all"));
-    toolbarLayout->addWidget(toolbar, 1);
-    toolbarLayout->addWidget(mChangeAll);
+    mToolbar = new QToolBar;
     
     mGrid = new OrderGrid(model);
     auto gridLayout = new QHBoxLayout;
@@ -29,11 +22,10 @@ OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
     gridLayout->addWidget(mScrollbar);
     gridLayout->setSpacing(0);
 
-    auto layout = new QVBoxLayout;
-    layout->addLayout(toolbarLayout);
+    auto layout = new QHBoxLayout;
+    layout->addWidget(mToolbar);
     layout->addLayout(gridLayout, 1);
     setLayout(layout);
-    
     
     auto incrementAction = new QAction(tr("Increment selection"), this);
     incrementAction->setStatusTip(tr("Increments all selected cells by 1"));
@@ -43,9 +35,17 @@ OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
     decrementAction->setStatusTip(tr("Decrements all selected cells by 1"));
     decrementAction->setIcon(IconLocator::get(Icons::decrement));
     connectActionTo(decrementAction, mGrid, decrement);
-    toolbar->addAction(incrementAction);
-    toolbar->addAction(decrementAction);
-    toolbar->setIconSize(IconLocator::size());
+    auto changeAllAction = new QAction(tr("Change all"), this);
+    changeAllAction->setStatusTip(tr("Toggles change all tracks mode"));
+    changeAllAction->setIcon(IconLocator::get(Icons::changeAll));
+    changeAllAction->setCheckable(true);
+    
+    mToolbar->addAction(incrementAction);
+    mToolbar->addAction(decrementAction);
+    mToolbar->addAction(changeAllAction);
+    mToolbar->setIconSize(IconLocator::size());
+    mToolbar->setOrientation(Qt::Vertical);
+
 
     mScrollbar->setRange(0, model.patterns() - 1);
     mScrollbar->setPageStep(1);
@@ -56,26 +56,33 @@ OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
             mScrollbar->setMaximum(count - 1);
         });
     
-    connect(mChangeAll, &QCheckBox::toggled, mGrid, &OrderGrid::setChangeAll);
-    // connect(incrementAction, &QAction::triggered, this,
-    //     [this]() {
-            
-    //     });
-
-    // connect(decrementAction, &QAction::triggered, this,
-    //     [this]() {
-            
-    //     });
-
-    // connect(setButton, &QPushButton::clicked, this,
-    //     [this]() {
-    //     });
+    connect(changeAllAction, &QAction::toggled, mGrid, &OrderGrid::setChangeAll);
 
 
 }
 
 OrderGrid* OrderEditor::grid() {
     return mGrid;
+}
+
+void OrderEditor::addActionsToToolbar(Actions const& actions) {
+    auto head = mToolbar->actions()[0];
+    mToolbar->insertAction(head, actions.add);
+    mToolbar->insertAction(head, actions.remove);
+    mToolbar->insertAction(head, actions.duplicate);
+    mToolbar->insertSeparator(head);
+    mToolbar->insertAction(head, actions.moveUp);
+    mToolbar->insertAction(head, actions.moveDown);
+    mToolbar->insertSeparator(head);
+}
+
+void OrderEditor::contextMenuEvent(QContextMenuEvent *evt) {
+    if (childAt(evt->pos()) == mGrid) {
+        auto menu = new QMenu(this);
+        menu->setAttribute(Qt::WA_DeleteOnClose);
+        menu->addActions(mToolbar->actions());
+        menu->popup(evt->globalPos());
+    }
 }
 
 void OrderEditor::wheelEvent(QWheelEvent *evt) {

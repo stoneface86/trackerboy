@@ -7,6 +7,8 @@
 
 ### Changed
  - Erasing a note will also erase the instrument column
+ - Moved Song order editor toolbar to the left of the order grid,
+   also added Song menu actions to the toolbar.
 
 ### Fixed
  - [#5] - Pattern Crash When Switching Songs

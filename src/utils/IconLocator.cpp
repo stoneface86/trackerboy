@@ -107,6 +107,9 @@ QIcon get(Icons type) {
         case Icons::decrement:
             icon.addFile(QStringLiteral(":/icons/decrement.png"));
             break;
+        case Icons::changeAll:
+            icon.addFile(QStringLiteral(":/icons/orderChangeAll.png"));
+            break;
         case Icons::moveUp:
             icon.addFile(QStringLiteral(":/icons/moveUp.png"));
             icon.addFile(QStringLiteral(":/icons/moveUp-disabled.png"), QSize(), QIcon::Disabled);
