@@ -43,7 +43,9 @@ want sound to play out.
  - *Samplerate* - the sample rate, in Hz, of the generated output. Output will
    be resampled using a linear resampler if the configured device does not
    support the sample rate. See [here](https://miniaud.io/docs/manual/index.html#LinearResampling)
-   for more details on the resampler.
+   for more details on the resampler. Since Trackerboy uses bandlimited synthesis,
+   higher samplerates do not improve audio quality. So it is recommended you
+   select the same samplerate the device uses.
 
 ### Notes on latency
 

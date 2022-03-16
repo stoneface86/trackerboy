@@ -38,14 +38,33 @@ This section has controls for changing the song's settings.
 ## Order editor
 
 The order editor is where you edit the song's order. The song order is a list
-of orders, which is a set of track ids (one for each channel). You can reuse
+of orders, which is a set of track IDs (one for each channel). You can reuse
 existing tracks across orders. Each song can have a maximum of 256 orders, and
 must have at least 1 order.
 
 To edit the order, move the cursor via the mouse or keyboard and edit the track
-id via the keyboard.
+ID via the keyboard.
 
-### Change all
+Track IDs are in hexadecimal notation and can range from 0x00 to 0xFF.
 
-If this is checked, all track ids in the order will be edited via the keyboard
-or increment/decrement actions.
+### Toolbar
+
+The order editor has a vertical toolbar to the left of the order grid. It
+contains actions for editing the song's order. Some of these actions are the
+same as the [Song](menus/song.md) menu's, also provided here for convenience.
+The editor adds a few more actions not present in that menu.
+
+#### Increment selected
+
+Increments the track ID at the cursor position by 1. If Change all mode is
+enabled, then all track IDs for the current row will be incremented by 1.
+
+#### Decrement selected
+
+Decrements the track ID at the cursor position by 1. If Change all mode is
+enabled, then all track IDs for the current row will be decremented by 1.
+
+#### Change all
+
+Toggles Change all mode. If this mode is enabled, then all track IDs in the
+order will be edited via the keyboard or increment/decrement actions.
