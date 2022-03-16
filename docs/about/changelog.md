@@ -1,6 +1,23 @@
 
 # Change log
 
+## [0.6.1] - 2022-03-15
+### Added
+ - Backspace operation for pattern editor.
+ - [#7] - Add icon for MacOS app (thanks [@jtakakura])
+
+### Changed
+ - Erasing a note will also erase the instrument column
+ - Moved Song order editor toolbar to the left of the order grid,
+   also added Song menu actions to the toolbar.
+
+### Fixed
+ - [#5] - Pattern Crash When Switching Songs
+
+[#5]: https://github.com/stoneface86/trackerboy/issues/5
+[#7]: https://github.com/stoneface86/trackerboy/issues/7
+[@jtakakura]: https://github.com/jtakakura
+
 ## [0.6.0] - 2022-03-03
 ### Added
  - Command line argument parsing, you can now open a module on application startup

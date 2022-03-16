@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.6.1] - 2022-03-15
 ### Added
  - Backspace operation for pattern editor.
  - [#7] - Add icon for MacOS app (thanks [@jtakakura])
