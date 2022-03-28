@@ -14,7 +14,7 @@ on the gameboy sound hardware.
  * [Effect list](tracker/effect-list.md)
  * [Shortcuts](interface/shortcuts.md)
  * [Frequently asked questions (FAQ)](faq.md)
- * [Change log](about/changelog.md)
+ * [Change log](changelog.md)
 
 ## Contact / Support
 

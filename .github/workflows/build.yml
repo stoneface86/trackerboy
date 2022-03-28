@@ -5,8 +5,12 @@ on:
     branches:
       - master
       - develop
-      - ci
     tags-ignore: '**'
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
 
 env:
   QT_VERSION: 5.12.10
@@ -84,10 +88,10 @@ jobs:
           cd build
           ctest --output-on-failure
 
-      - name: deploy
+      - name: Deploy
         run: cmake --build build --target deploy
 
-      - name: upload
+      - name: Upload
         uses: actions/upload-artifact@v2
         with:
           name: trackerboy-nightly-${{ matrix.platform }}-${{ matrix.arch }}

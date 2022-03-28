@@ -23,7 +23,7 @@ exceeds the highest, the highest will be used. Use `000` to turn off the effect.
  * `xx` - speed, in pitch units / frame
 
 Modulates the channel's frequency upward using the given speed every frame.
-Note that the perceived change in frequency is not linear. Use 100 to turn off
+Note that the perceived change in frequency is not linear. Use `100` to turn off
 the effect. The effect will not increase the frequency past the channel's
 maximum.
 
@@ -96,16 +96,18 @@ channel the effect is used.
 
 ### For CH3:
 
-Changes the current waveform in use.
+Changes the current waveform in use. The parameter is the id of the wavefrom to
+use.
 
 ### For CH1, CH2 and CH4:
 
-Changes the channel's volume envelope. The volume envelope parameter is
-composed of two nibbles - initial volume and mode. The initial volume is the
-starting volume of the envelope and ranges from 0-F. The mode determines the
-direction and speed of the envelope. A mode of 1-7 attenuates with 1 being the
-fastest. A mode of 9-F amplifies with 9 being the fastest. A mode of 0 or 8
-is constant volume.
+Changes the channel's volume envelope. The volume envelope has the format - `xy`:
+
+ - `x` - Volume level, 0-F
+ - `y` - Fade speed, 0/8 no fade, 1-7 fade out, 9-F fade in
+
+See [Channel envelope](../hardware/envelope.md) for more details about the
+hardware.
 
 ## Gxx - Note delay
  

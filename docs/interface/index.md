@@ -3,7 +3,7 @@
 
 The section describes every part of the Trackerboy interface.
 
-![overview](img/overview.png "The Trackerboy interface")
+![overview](../img/interface/overview.png "The Trackerboy interface")
 
 Main window
 

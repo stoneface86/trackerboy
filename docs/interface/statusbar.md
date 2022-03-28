@@ -1,7 +1,7 @@
 
 # Status bar
 
-![statusbar](img/statusbar.png "The status bar")
+![statusbar](../img/interface/statusbar.png "The status bar")
 
  1. Status message / tip.
  1. Output status.

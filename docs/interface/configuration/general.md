@@ -3,7 +3,7 @@
 
 General application settings
 
-![general-config](../img/config-general.png "The General tab")
+![general-config](../../img/interface/config-general.png "The General tab")
 
 ## Options
 

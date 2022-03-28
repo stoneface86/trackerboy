@@ -4,7 +4,7 @@
 The sidebar is located to the left of the [Pattern editor](pattern-editor.md)
 and contains controls for the current song.
 
-![sidebar](img/sidebar.png "The sidebar")
+![sidebar](../img/interface/sidebar.png "The sidebar")
 
 ## Visualizer
 

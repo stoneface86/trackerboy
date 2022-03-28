@@ -4,7 +4,7 @@
 The pattern editor is where you write your song, and is the heart of the
 application.
 
-![pattern-editor](img/pattern-editor.png "The pattern editor")
+![pattern-editor](../img/interface/pattern-editor.png "The pattern editor")
 
 The editor shows the current pattern, which can be selected from the
 [order editor](sidebar.md#order-editor). The first column on the left are row
@@ -17,7 +17,7 @@ the cursor line will be red instead of blue.
 
 ## Track layout
 
-![pattern-editor-layout](img/pattern-editor-layout.png "Pattern editor layout")
+![pattern-editor-layout](../img/interface/pattern-editor-layout.png "Pattern editor layout")
 
 For any unset column, dashes are displayed. All numberical data in the editor
 uses hexadecimal notation.
@@ -75,7 +75,7 @@ See [shortcuts](shortcuts.md) for more available shortcuts.
 The header allows you to hide/show effect columns for each channel and 
 mute/unmute channels.
 
-![pattern-editor-header](img/pattern-editor-header.png "The header")
+![pattern-editor-header](../img/interface/pattern-editor-header.png "The header")
 
 ### Adding/hiding effects
 

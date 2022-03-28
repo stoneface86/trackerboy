@@ -1,8 +1,8 @@
 
 # Tempo Calculator
 
-![tempo-calculator](img/tempo-calculator.png "Tempo calculator dialog")
-![tempo-calculator-where](img/tempo-calculator-where-to-find.png "Where to find the tempo calculator")
+![tempo-calculator](../img/interface/tempo-calculator.png "Tempo calculator dialog")
+![tempo-calculator-where](../img/interface/tempo-calculator-where-to-find.png "Where to find the tempo calculator")
 
 The tempo calculator is a utility dialog for calculating speed values from a
 given tempo. You can access it from the *Tempo Calculator...* action in the

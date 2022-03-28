@@ -3,7 +3,7 @@
 
 This page explains all toolbars used in the application.
 
-![toolbars](img/toolbar.png "The toolbar")
+![toolbars](../img/interface/toolbar.png "The toolbar")
 
 Each toolbar can be docked on either side of the main window, or can be left
 floating anywhere on screen. By default all toolbars are position at the top
@@ -17,7 +17,7 @@ You can also reset the layout of all toolbars by clicking the
 
 ## File toolbar
 
-![toolbar-file](img/toolbar-file.png "The File toolbar")
+![toolbar-file](../img/interface/toolbar-file.png "The File toolbar")
 
 Contains actions from the [File](menus/file.md) menu.
 
@@ -28,7 +28,7 @@ Contains actions from the [File](menus/file.md) menu.
 
 ## Edit toolbar
 
-![toolbar-edit](img/toolbar-edit.png "The Edit toolbar")
+![toolbar-edit](../img/interface/toolbar-edit.png "The Edit toolbar")
 
 Contains actions from the [Edit](menus/edit.md) menu.
 
@@ -40,7 +40,7 @@ Contains actions from the [Edit](menus/edit.md) menu.
 
 ## Song toolbar
 
-![toolbar-song](img/toolbar-song.png "The Song toolbar")
+![toolbar-song](../img/interface/toolbar-song.png "The Song toolbar")
 
 Contains actions from the [Song](menus/song.md) menu.
 
@@ -52,7 +52,7 @@ Contains actions from the [Song](menus/song.md) menu.
 
 ## Tracker toolbar
 
-![toolbar-tracker](img/toolbar-tracker.png "The Tracker toolbar")
+![toolbar-tracker](../img/interface/toolbar-tracker.png "The Tracker toolbar")
 
 Contains actions from the [Tracker](menus/tracker.md) and
 [Module](menus/module.md) menus.
@@ -71,7 +71,7 @@ Contains actions from the [Tracker](menus/tracker.md) and
 
 ## Input toolbar
 
-![toolbar-input](img/toolbar-input.png "The Input toolbar")
+![toolbar-input](../img/interface/toolbar-input.png "The Input toolbar")
 
  - *Octave* - Base octave used when entering notes. Default is **5**.
  - *Edit step* - Amount of rows the editor steps down to when entering data.

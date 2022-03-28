@@ -40,6 +40,10 @@ also determine a speed setting for any given tempo.
 
 ### Speed to tempo calculation
 
+**NOTE:** These examples are provided for clarification, when calculating a speed
+in Trackerboy, you can use the [Tempo calculator](../interface/tempo-calculator.md) utility
+(Song > Tempo calculator...) instead.
+
 We can convert a speed to a tempo using the following formula:
 
 $$tempo = {{60 * framerate} \over {speed * rpb}}$$
@@ -75,10 +79,3 @@ $$ speed = { {60 * 59.7} \over {8 * 170}} = { 3582 \over 1360 } = 2.634 \approx 
 Note that we cannot represent 2.634 using Q4.4 so the closest value is 2.625 or
 0x2A. If we calculate the tempo using this speed value we get 170.571 bpm. Some
 tempos, like this example, cannot be accurately represented by our speed setting.
-
-## Tempo calculator
-
-These calculations are provided as an example. When using Trackerboy you do not
-need to do these calculations yourself, simply use the
-[Tempo calculator](../interface/tempo-calculator.md) utility
-(Song > Tempo calculator...) instead.

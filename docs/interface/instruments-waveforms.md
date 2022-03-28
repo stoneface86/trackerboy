@@ -1,7 +1,7 @@
 
 # The instruments/waveforms panel
 
-![panel](img/instruments-waveforms.png "Instruments/Waveforms panel")
+![panel](../img/interface/instruments-waveforms.png "Instruments/Waveforms panel")
 
 This panel shows all of your instruments and waveforms contained in the current
 module. It is located to the right of the [pattern editor](pattern-editor.md).

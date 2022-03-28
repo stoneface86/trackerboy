@@ -3,7 +3,7 @@
 
 Here you can configure your output device and (optionally) MIDI input device.
 
-![sound-config](../img/config-sound.png "Sound configuration tab")
+![sound-config](../../img/interface/config-sound.png "Sound configuration tab")
 
 ## Output device
 
@@ -50,10 +50,10 @@ want sound to play out.
 ### Notes on latency
 
 Latency depends mainly on two things: the buffer size and the latency provided
-by the backend. Trackerboy will try to use the lowest latency possible for the
+by the audio API. Trackerboy will try to use the lowest latency possible for the
 configured device, which on WASAPI is usually 10 ms. You may need to configure
-your audio provider if a lower latency is desired, but for most cases the
-default is acceptable.
+your audio API if a lower latency is desired, but for most cases the default is
+acceptable.
 
 ## MIDI input
 

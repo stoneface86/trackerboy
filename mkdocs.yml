@@ -3,13 +3,40 @@ site_name: Trackerboy
 site_description: Gameboy / Gameboy Color music tracker
 site_url: https://www.trackerboy.org/manual
 repo_url: https://github.com/stoneface86/trackerboy
+repo_name: stoneface86/trackerboy
 edit_uri: edit/develop/docs/
 
 extra_javascript: 
-    - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+  - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+
+extra_css:
+  - css/extra.css
 
 markdown_extensions:
     - mdx_math
+    - meta
+
+theme:
+  name: material
+#  custom_dir: docs-theme/
+  favicon: img/favicon.ico
+  logo: img/appicon-48.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline 
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tracking
+    - navigation.top
+    - toc.integrate
 
 nav:
   - 'Home': 'index.md'
@@ -60,8 +87,8 @@ nav:
     - 'Pulse channel': 'hardware/pulse-channel.md'
     - 'Wave channel': 'hardware/wave-channel.md'
     - 'Noise channel': 'hardware/noise-channel.md'
+    - 'Channel envelope': 'hardware/envelope.md'
     - 'Frequency sweep': 'hardware/sweep.md'
     - 'Volume control and panning': 'hardware/volume-control.md'
-  - 'About':
-    - 'Change log': 'about/changelog.md'
-    - 'License': 'about/license.md'
+  - 'Change log': 'changelog.md'
+  - 'License': 'license.md'

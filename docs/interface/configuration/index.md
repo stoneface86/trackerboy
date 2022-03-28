@@ -4,7 +4,7 @@
 Application settings can be changed using the configuration dialog, which
 can be opened from the [File](../menus/file.md) menu.
 
-![config-dialog](../img/config-general.png "The configuration dialog")
+![config-dialog](../../img/interface/config-general.png "The configuration dialog")
 
 ## Categories
 

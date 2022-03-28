@@ -1,7 +1,7 @@
 
 # Audio diagnostics
 
-![audio-diagnostics](img/audio-diagnostics.png "Audio diagnostics dialog")
+![audio-diagnostics](../img/interface/audio-diagnostics.png "Audio diagnostics dialog")
 <!-- ![audio-diagnostics-where](img/audio-diagnostics-where-to-find.png "Where to find the audio diagnostics") -->
 
 The audio diagnostics dialog is a utility for displaying statistics about the

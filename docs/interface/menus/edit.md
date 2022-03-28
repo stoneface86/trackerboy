@@ -32,10 +32,10 @@ cursor. When mixing data, only empty columns get overwritten.
 
 ### Example
 
-![paste-mix-ex1](../img/paste-mix-ex1.png "Copy example")
+![paste-mix-ex1](../../img/interface/paste-mix-ex1.png "Copy example")
 
-![paste-mix-ex2](../img/paste-mix-ex2.png "Paste Mix example")
-![paste-mix-ex3](../img/paste-mix-ex3.png "Paste example")
+![paste-mix-ex2](../../img/interface/paste-mix-ex2.png "Paste Mix example")
+![paste-mix-ex3](../../img/interface/paste-mix-ex3.png "Paste example")
 
 Only rows 00 and 02 were copied since they were empty in the destination region.
 
@@ -80,8 +80,8 @@ Transposes the note by a specified number of semitones.
 
 Reverses by row the selected region. Does nothing if there is no selection.
 
-![reverse-before](../img/reverse-ex-before.png "Reverse example before")
-![reverse-after](../img/reverse-ex-after.png "Reverse example after")
+![reverse-before](../../img/interface/reverse-ex-before.png "Reverse example before")
+![reverse-after](../../img/interface/reverse-ex-after.png "Reverse example after")
 
 ## Replace instrument
 
