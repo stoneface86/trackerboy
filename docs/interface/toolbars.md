@@ -6,7 +6,7 @@ This page explains all toolbars used in the application.
 ![toolbars](../img/interface/toolbar.png "The toolbar")
 
 Each toolbar can be docked on either side of the main window, or can be left
-floating anywhere on screen. By default all toolbars are position at the top
+floating anywhere on screen. By default all toolbars are positioned at the top
 of the window.
 
 Visibility of each toolbar can be toggled by clicking its corresponding menu

@@ -22,8 +22,8 @@ added from the [Module properties](module-properties.md) dialog.
 This section has controls for changing the song's settings.
 
  - *Rows/beat* - This setting determines the number of rows that make up a beat.
-   It used for tempo calculation and for highlighting rows in the pattern editor.
-   The default value for new songs is **4**.
+   It is used for tempo calculation and for highlighting rows in the pattern
+   editor. The default value for new songs is **4**.
  - *Rows/measure* - This setting determines how many rows make up a measure.
    This setting should be a multiple of the *Rows/beat* setting but this is not
    required. This setting is only used for highlighting rows in the pattern

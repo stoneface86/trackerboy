@@ -19,7 +19,7 @@ the cursor line will be red instead of blue.
 
 ![pattern-editor-layout](../img/interface/pattern-editor-layout.png "Pattern editor layout")
 
-For any unset column, dashes are displayed. All numberical data in the editor
+For any unset column, dashes are displayed. All numerical data in the editor
 uses hexadecimal notation.
 
  - **Note** - Displays the note if one was set. The format of the note shown has
