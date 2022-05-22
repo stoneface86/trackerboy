@@ -21,7 +21,7 @@
 #include <cstdio>
 
 #include "version.hpp"
-
+#include "bridge/bridge.h"
 
 #ifdef __GNUG__
 #include <cstdlib>
@@ -136,12 +136,17 @@ int main(int argc, char *argv[]) {
     timer.start();
     #endif
 
+    NimMain();
+
     Application app(argc, argv);
     QCoreApplication::setOrganizationName("Trackerboy");
     QCoreApplication::setApplicationName("Trackerboy");
     QCoreApplication::setApplicationVersion(VERSION_STR);
     // use INI on all systems, much easier to edit by hand
     QSettings::setDefaultFormat(QSettings::IniFormat);
+
+    auto version = tb_getAppVersion();
+    qInfo() << version.major  << version.minor << version.patch;
 
 #define main_tr(str) QCoreApplication::translate("main", str)
 

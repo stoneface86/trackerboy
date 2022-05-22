@@ -1,5 +1,7 @@
 project(src CXX)
 
+add_subdirectory(bridge)
+
 #
 # Dependencies
 #
@@ -44,7 +46,7 @@ if (FETCH_DEPS)
         add_subdirectory("${rtmidi_SOURCE_DIR}" "${rtmidi_BINARY_DIR}")
     endif ()
 
-    target_link_libraries(deps INTERFACE trackerboy miniaudio rtmidi)
+    target_link_libraries(deps INTERFACE trackerboy miniaudio rtmidi bridge)
     # hack: RtMidi CMakeList doesn't add an include dir for the rtmidi library
     target_include_directories(deps INTERFACE "${rtmidi_SOURCE_DIR}")
 else ()
@@ -57,7 +59,7 @@ else ()
     find_package(miniaudio CONFIG REQUIRED)
     find_package(RtMidi CONFIG REQUIRED)
 
-    target_link_libraries(deps INTERFACE trackerboy::trackerboy miniaudio::miniaudio RtMidi::rtmidi)
+    target_link_libraries(deps INTERFACE trackerboy::trackerboy miniaudio::miniaudio RtMidi::rtmidi bridge)
 endif ()
 
 set(CMAKE_AUTOMOC ON)
