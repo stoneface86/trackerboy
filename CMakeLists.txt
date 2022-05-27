@@ -36,8 +36,28 @@ else ()
     set(DEBUG_BUILD FALSE)
 endif ()
 
-# enable LTO for non-debug builds
+if (MSVC)
+    if (DEBUG_BUILD)
+        set(MSVC_RUNTIME /MDd)
+    else ()
+        set(MSVC_RUNTIME /MT)
+    endif ()
+    if (CMAKE_VERSION VERSION_LESS 3.15.0)
+        # hopefully the runtime flag was removed by CompilerOverrides, if not,
+        # you will get warning D9025 when compiling. 
+        add_compile_options(${MSVC_RUNTIME})
+    else ()
+        cmake_policy(SET CMP0091 NEW)
+        if (DEBUG_BUILD)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreadedDebugDLL)
+        else ()
+            set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded)
+        endif ()
+    endif ()
+endif()
+
 if (NOT DEBUG_BUILD)
+    # enable LTO for non-debug builds
     message(CHECK_START "checking if LTO is supported")
     include(CheckIPOSupported)
     check_ipo_supported(RESULT ipoSupported OUTPUT output)

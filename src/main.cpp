@@ -21,8 +21,7 @@
 #include <cstdio>
 
 #include "version.hpp"
-#include "bridge/bridge.h"
-
+#include "bridge/bridge.hpp"
 #ifdef __GNUG__
 #include <cstdlib>
 #include <memory>
@@ -46,7 +45,6 @@ static std::string demangle(const char* name) {
 }
 
 #endif
-
 
 
 
@@ -97,6 +95,10 @@ private:
 
 };
 
+static void fatalException(const char* type, const char* what) {
+    qFatal("[Uncaught exception]\nType: %s\nWhat: %s", type, what);
+}
+
 //
 // custom QApplication subclass that catches any uncaught exceptions
 //
@@ -118,13 +120,17 @@ public:
             // to save the user's current module before aborting, as well
             // as logging the problem to the user.
             auto which = demangle(typeid(except).name());
-            qFatal("[Uncaught exception]\nType: %s\nWhat: %s", which.c_str(), except.what());
+            fatalException(which.c_str(), except.what());
+            return true;
+        } catch (bridge::Exception *except) {
+            // nim exception
+            bridge::printStackTrace(except);
+            fatalException(bridge::getExceptionName(except), bridge::getExceptionMsg(except));
             return true;
         }
     }
 
 };
-
 
 
 int main(int argc, char *argv[]) {
@@ -136,7 +142,7 @@ int main(int argc, char *argv[]) {
     timer.start();
     #endif
 
-    NimMain();
+    bridge::NimMain();
 
     Application app(argc, argv);
     QCoreApplication::setOrganizationName("Trackerboy");
@@ -145,7 +151,7 @@ int main(int argc, char *argv[]) {
     // use INI on all systems, much easier to edit by hand
     QSettings::setDefaultFormat(QSettings::IniFormat);
 
-    auto version = tb_getAppVersion();
+    auto version = bridge::getAppVersion();
     qInfo() << version.major  << version.minor << version.patch;
 
 #define main_tr(str) QCoreApplication::translate("main", str)

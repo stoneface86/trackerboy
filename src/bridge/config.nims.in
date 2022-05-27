@@ -1,0 +1,37 @@
+@CONFIG_WARNING@
+
+import std/strutils
+
+switch "app",       "staticlib"
+switch "nomain"
+switch "cc",        "@BRIDGE_CC@"
+switch "out",       "@BRIDGE_LIB_PATH@"
+switch "outdir",    "@CMAKE_CURRENT_BINARY_DIR@"
+switch "nimcache",  "@BRIDGE_NIMCACHE@"
+switch "mm",        "arc"
+switch "cppCompileToNamespace", "bridge"
+@BRIDGE_LTO@
+
+# set switches based on CMAKE_BUILD_TYPE
+case "@CMAKE_BUILD_TYPE@".toLowerAscii():
+of "release":
+    switch "define",    "release"
+of "minsizerel":
+    switch "define",    "release"
+    switch "opt",       "size"
+of "relwithdebinfo":
+    switch "define",    "release"
+    switch "debuginfo", "on"
+else:
+    discard
+
+proc applyAllToSwitch(sw, list: string) =
+    for item in list.split(';'):
+        if item.len > 0:
+            switch(sw, item)
+
+# switch foreach item in cmake list
+applyAllToSwitch "define",      "@BRIDGE_DEFINES@"
+applyAllToSwitch "cincludes",   "@BRIDGE_INCLUDES@"
+applyAllToSwitch "passC",       "@BRIDGE_PASSC@"
+applyAllToSwitch "passL",       "@BRIDGE_PASSL@"

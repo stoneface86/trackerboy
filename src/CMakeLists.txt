@@ -1,7 +1,5 @@
 project(src CXX)
 
-add_subdirectory(bridge)
-
 #
 # Dependencies
 #
@@ -59,8 +57,10 @@ else ()
     find_package(miniaudio CONFIG REQUIRED)
     find_package(RtMidi CONFIG REQUIRED)
 
-    target_link_libraries(deps INTERFACE trackerboy::trackerboy miniaudio::miniaudio RtMidi::rtmidi bridge)
+    target_link_libraries(deps INTERFACE trackerboy::trackerboy miniaudio::miniaudio RtMidi::rtmidi)
 endif ()
+
+
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -226,6 +226,8 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_library(ui OBJECT ${UI_SRC})
 target_link_libraries(ui PUBLIC deps Qt5::Widgets)
 
+add_subdirectory(bridge)
+target_link_libraries(ui PUBLIC bridge)
 
 target_compile_features(ui PUBLIC cxx_std_17)
 if (MSVC)
