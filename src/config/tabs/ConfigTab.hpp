@@ -2,6 +2,7 @@
 #pragma once
 
 #include "config/Config.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QWidget>
 
@@ -12,15 +13,15 @@
 //
 class ConfigTab : public QWidget {
     
-    Q_OBJECT
+    W_OBJECT(ConfigTab)
 
 public:
     ConfigTab(QWidget *parent = nullptr);
 
     void clean();
 
-signals:
-    void dirty(Config::Category flag);
+//signals:
+    void dirty(Config::Category flag) W_SIGNAL(dirty, flag)
 
 protected:
 

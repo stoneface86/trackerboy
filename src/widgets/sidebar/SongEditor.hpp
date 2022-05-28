@@ -4,6 +4,7 @@
 #include "model/SongModel.hpp"
 
 #include "widgets/CustomSpinBox.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QLabel>
 #include <QPushButton>
@@ -15,7 +16,7 @@
 //
 class SongEditor : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(SongEditor)
 
 public:
 

@@ -3,6 +3,7 @@
 
 #include "midi/IMidiReceiver.hpp"
 #include "config/data/PianoInput.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QWidget>
 #include <QPixmap>
@@ -16,7 +17,7 @@
 //
 class PianoWidget : public QWidget, public IMidiReceiver {
 
-    Q_OBJECT
+    W_OBJECT(PianoWidget)
 
 public:
     PianoWidget(PianoInput const& input, QWidget *parent = nullptr);
@@ -29,10 +30,10 @@ public:
 
     virtual void midiNoteOff() override;
 
-signals:
-    void keyDown(int note);
-    void keyChange(int note);
-    void keyUp();
+//signals:
+    void keyDown(int note) W_SIGNAL(keyDown, note)
+    void keyChange(int note) W_SIGNAL(keyChange, note)
+    void keyUp() W_SIGNAL(keyUp)
 
 
 protected:

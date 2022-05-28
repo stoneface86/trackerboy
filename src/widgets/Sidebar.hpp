@@ -7,6 +7,7 @@
 #include "widgets/sidebar/AudioScope.hpp"
 #include "widgets/sidebar/OrderEditor.hpp"
 #include "widgets/sidebar/SongEditor.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QAction>
 #include <QComboBox>
@@ -18,7 +19,7 @@
 //
 class Sidebar : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(Sidebar)
 
 public:
 

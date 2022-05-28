@@ -1,10 +1,12 @@
 
 #include "clipboard/PatternClipboard.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QClipboard>
 #include <QGuiApplication>
 #include <QMimeData>
 
+W_OBJECT_IMPL(PatternClipboard)
 
 PatternClipboard::PatternClipboard(QObject *parent) :
     QObject(parent),

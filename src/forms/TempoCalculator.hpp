@@ -3,6 +3,7 @@
 
 #include "model/SongModel.hpp"
 #include "widgets/CustomSpinBox.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QDialog>
 #include <QSpinBox>
@@ -16,7 +17,7 @@ class SpinBox;
 //
 class TempoCalculator : public QDialog {
 
-    Q_OBJECT
+    W_OBJECT(TempoCalculator)
 
 public:
 

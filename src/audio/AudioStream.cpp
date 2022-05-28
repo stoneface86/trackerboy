@@ -1,5 +1,6 @@
 
 #include "audio/AudioStream.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QtDebug>
 
@@ -12,6 +13,8 @@ namespace TU {
 static const char* LOG_PREFIX = "[AudioStream]";
 
 }
+
+W_OBJECT_IMPL(AudioStream)
 
 
 AudioStream::MaDeviceWrapper::MaDeviceWrapper() :

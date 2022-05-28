@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "verdigris/wobjectdefs.h"
+
 #include <QDialog>
 
 //
@@ -8,7 +10,7 @@
 //
 class PersistantDialog : public QDialog {
 
-    Q_OBJECT
+    W_OBJECT(PersistantDialog)
 
 public:
     explicit PersistantDialog(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());

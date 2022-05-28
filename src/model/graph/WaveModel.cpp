@@ -1,5 +1,8 @@
 
 #include "model/graph/WaveModel.hpp"
+#include "verdigris/wobjectimpl.h"
+
+W_OBJECT_IMPL(WaveModel)
 
 WaveModel::WaveModel(Module &mod, QObject *parent) :
     GraphModel(mod, parent),

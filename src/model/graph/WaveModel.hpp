@@ -2,6 +2,7 @@
 #pragma once
 
 #include "model/graph/GraphModel.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include "trackerboy/data/Waveform.hpp"
 
@@ -9,7 +10,7 @@
 
 class WaveModel : public GraphModel {
 
-    Q_OBJECT
+    W_OBJECT(WaveModel)
 
 public:
     explicit WaveModel(Module &mod, QObject *parent = nullptr);

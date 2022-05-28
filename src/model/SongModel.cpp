@@ -1,6 +1,8 @@
 
 #include "model/SongModel.hpp"
+#include "verdigris/wobjectimpl.h"
 
+W_OBJECT_IMPL(SongModel)
 
 SongModel::SongModel(Module &mod, QObject *parent) :
     QObject(parent),

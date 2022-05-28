@@ -2,6 +2,7 @@
 #pragma once
 
 #include "clipboard/PatternClip.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QObject>
 
@@ -12,7 +13,7 @@
 //
 class PatternClipboard : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(PatternClipboard)
 
 public:
 

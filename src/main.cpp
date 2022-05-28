@@ -22,6 +22,8 @@
 
 #include "version.hpp"
 #include "bridge/bridge.hpp"
+#include "verdigris/wobjectdefs.h"
+#include "verdigris/wobjectimpl.h"
 #ifdef __GNUG__
 #include <cstdlib>
 #include <memory>
@@ -104,7 +106,7 @@ static void fatalException(const char* type, const char* what) {
 //
 class Application final : public QApplication {
 
-    Q_OBJECT
+    W_OBJECT(Application)
 
 public:
     using QApplication::QApplication;
@@ -131,6 +133,8 @@ public:
     }
 
 };
+
+W_OBJECT_IMPL(Application)
 
 
 int main(int argc, char *argv[]) {
@@ -225,5 +229,3 @@ int main(int argc, char *argv[]) {
 
     return code;
 }
-
-#include "main.moc"

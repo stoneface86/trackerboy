@@ -2,6 +2,7 @@
 #include "audio/Renderer.hpp"
 #include "core/StandardRates.hpp"
 #include "utils/utils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include "trackerboy/engine/ChannelControl.hpp"
 
@@ -44,6 +45,7 @@ Renderer::RenderContext::RenderContext(Module &mod) :
 {
 }
 
+W_OBJECT_IMPL(Renderer)
 
 
 Renderer::Renderer(Module &mod, QObject *parent) :

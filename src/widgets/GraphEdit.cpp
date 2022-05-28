@@ -1,5 +1,6 @@
 
 #include "widgets/GraphEdit.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include "trackerboy/note.hpp"
 
@@ -70,6 +71,7 @@ public:
 
 }
 
+W_OBJECT_IMPL(GraphEdit)
 
 // TIP: always call viewport()->update() instead of update()!
 

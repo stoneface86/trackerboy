@@ -2,6 +2,7 @@
 #include "widgets/sidebar/SongEditor.hpp"
 #include "utils/connectutils.hpp"
 #include "utils/string.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -9,6 +10,8 @@
 #include <QLabel>
 #include <QSpinBox>
 #include <QVBoxLayout>
+
+W_OBJECT_IMPL(SongEditor)
 
 SongEditor::SongEditor(SongModel &model, QWidget *parent) :
     QWidget(parent),

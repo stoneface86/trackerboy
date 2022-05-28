@@ -14,7 +14,6 @@ class QSettings;
 //
 class ShortcutTable {
 
-    Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(ShortcutTable)
 
 public:
@@ -54,7 +53,6 @@ public:
 
         Count
     };
-    Q_ENUM(Shortcut)
 
     explicit ShortcutTable() noexcept;
 
@@ -78,3 +76,5 @@ private:
 
 
 };
+
+Q_DECLARE_METATYPE(ShortcutTable::Shortcut)

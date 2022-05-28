@@ -1,6 +1,8 @@
 
 #include "forms/editors/WaveEditor.hpp"
 
+#include "verdigris/wobjectimpl.h"
+
 #include <QtDebug>
 #include <QFontDatabase>
 #include <QHBoxLayout>
@@ -31,6 +33,8 @@ static trackerboy::Waveform::Data const PRESETS[] = {
 };
 
 }
+
+W_OBJECT_IMPL(WaveEditor)
 
 WaveEditor::WaveEditor(
     Module &mod,

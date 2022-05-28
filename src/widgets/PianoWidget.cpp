@@ -1,5 +1,6 @@
 
 #include "widgets/PianoWidget.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QKeyEvent>
 #include <QPainter>
@@ -90,7 +91,7 @@ static std::array const PIXMAP_PATHS = {
 
 }
 
-
+W_OBJECT_IMPL(PianoWidget)
 
 PianoWidget::PianoWidget(PianoInput const& input, QWidget *parent) :
     QWidget(parent),

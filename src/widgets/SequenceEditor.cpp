@@ -1,5 +1,6 @@
 
 #include "widgets/SequenceEditor.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -14,6 +15,8 @@
 #include <algorithm>
 
 //#define PROFILE_STRING_CONVERSION
+
+W_OBJECT_IMPL(SequenceEditor)
 
 SequenceEditor::SequenceEditor(
     Module &mod,

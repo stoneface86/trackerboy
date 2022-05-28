@@ -2,6 +2,7 @@
 #include "widgets/grid/PatternGrid.hpp"
 
 #include "trackerboy/note.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QApplication>
 #include <QDrag>
@@ -31,6 +32,8 @@
 // the user clicks on it.
 //
 // The first 4 cells of the grid are reserved for the row numbers, and are not selectable
+
+W_OBJECT_IMPL(PatternGrid)
 
 PatternGrid::PatternGrid(
     PatternGridHeader &header,

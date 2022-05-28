@@ -1,9 +1,12 @@
 
 #include "forms/CommentsDialog.hpp"
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QVBoxLayout>
 #include <QPushButton>
+
+W_OBJECT_IMPL(CommentsDialog)
 
 CommentsDialog::CommentsDialog(Module &mod, QWidget *parent) :
     PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),

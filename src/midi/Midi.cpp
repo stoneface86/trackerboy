@@ -1,6 +1,8 @@
 
 #include "midi/Midi.hpp"
 
+#include "verdigris/wobjectimpl.h"
+
 #include "trackerboy/note.hpp"
 
 #include <QCoreApplication>
@@ -73,6 +75,7 @@ private:
 
 }
 
+W_OBJECT_IMPL(Midi)
 
 Midi::Midi(QObject *parent) :
     QObject(parent),

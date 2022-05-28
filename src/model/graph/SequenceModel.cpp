@@ -1,5 +1,8 @@
 
 #include "model/graph/SequenceModel.hpp"
+#include "verdigris/wobjectimpl.h"
+
+W_OBJECT_IMPL(SequenceModel)
 
 SequenceModel::SequenceModel(Module &mod, QObject *parent) :
     GraphModel(mod, parent),

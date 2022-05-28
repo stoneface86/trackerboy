@@ -3,6 +3,7 @@
 #include "audio/AudioEnumerator.hpp"
 #include "config/Config.hpp"
 #include "midi/MidiEnumerator.hpp"
+#include "verdigris/wobjectdefs.h"
 
 class GeneralConfigTab;
 class AppearanceConfigTab;
@@ -17,7 +18,7 @@ class SoundConfigTab;
 //
 class ConfigDialog : public QDialog {
 
-    Q_OBJECT
+    W_OBJECT(ConfigDialog)
 
 public:
 
@@ -32,9 +33,9 @@ public:
 
     void unclean(Config::Categories categories);
 
-signals:
+//signals:
     // emitted when changes in the Config must be applied
-    void applied(Config::Categories categories);
+    void applied(Config::Categories categories) W_SIGNAL(applied, categories)
 
 private:
     Q_DISABLE_COPY(ConfigDialog)

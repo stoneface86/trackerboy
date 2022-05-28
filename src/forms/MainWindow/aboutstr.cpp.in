@@ -20,6 +20,7 @@ R"html(
 <ul>
 <li>miniaudio 0.10.42 (C) David Reid</li>
 <li>RtMidi 4.0.0 (C) Gary P. Scavone</li>
+<li>Verdigris 1.2 (C) Woboq</li>
 </ul>
 </body>
 </html>

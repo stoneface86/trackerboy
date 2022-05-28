@@ -1,6 +1,8 @@
 
 #include "core/Module.hpp"
+#include "verdigris/wobjectimpl.h"
 
+W_OBJECT_IMPL(Module)
 
 Module::Editor::Editor(Module &mod) :
     QMutexLocker(&mod.mMutex)

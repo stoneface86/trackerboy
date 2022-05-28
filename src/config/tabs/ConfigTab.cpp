@@ -1,5 +1,8 @@
 
 #include "config/tabs/ConfigTab.hpp"
+#include "verdigris/wobjectimpl.h"
+
+W_OBJECT_IMPL(ConfigTab)
 
 ConfigTab::ConfigTab(QWidget *parent) :
     QWidget(parent),

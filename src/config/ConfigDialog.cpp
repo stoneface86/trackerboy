@@ -2,6 +2,7 @@
 #include "config/ConfigDialog.hpp"
 #include "core/StandardRates.hpp"
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include "config/tabs/AppearanceConfigTab.hpp"
 #include "config/tabs/GeneralConfigTab.hpp"
@@ -13,7 +14,7 @@
 #include <QVBoxLayout>
 #include <QTabWidget>
 
-
+W_OBJECT_IMPL(ConfigDialog)
 
 ConfigDialog::ConfigDialog(
     Config &config,

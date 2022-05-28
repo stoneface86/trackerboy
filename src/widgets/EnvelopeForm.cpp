@@ -1,5 +1,8 @@
 
 #include "EnvelopeForm.hpp"
+#include "verdigris/wobjectimpl.h"
+
+W_OBJECT_IMPL(EnvelopeForm)
 
 EnvelopeForm::EnvelopeForm(QWidget *parent) :
     QWidget(parent),

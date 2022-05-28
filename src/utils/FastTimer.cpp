@@ -1,6 +1,7 @@
 
 #include "utils/FastTimer.hpp"
 #include "utils/utils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QMutexLocker>
 #include <QTimerEvent>
@@ -12,6 +13,8 @@ namespace TU {
 constexpr auto NO_TIMER = -1;
 
 }
+
+W_OBJECT_IMPL(FastTimer)
 
 FastTimer::FastTimer(QObject *parent) :
     QObject(parent),

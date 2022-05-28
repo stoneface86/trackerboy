@@ -4,6 +4,7 @@
 class Module;
 class ModuleFile;
 class WavExporter;
+#include "verdigris/wobjectdefs.h"
 
 class QCheckBox;
 #include <QDialog>
@@ -21,7 +22,7 @@ class QStackedLayout;
 
 class ExportWavDialog : public QDialog {
 
-    Q_OBJECT
+    W_OBJECT(ExportWavDialog)
 
 public:
 

@@ -4,6 +4,7 @@
 #include "core/Module.hpp"
 #include "model/graph/SequenceModel.hpp"
 #include "widgets/GraphEdit.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "trackerboy/data/Instrument.hpp"
 
@@ -13,7 +14,7 @@
 
 class SequenceEditor : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(SequenceEditor)
 
 public:
     SequenceEditor(

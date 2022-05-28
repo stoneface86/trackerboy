@@ -6,6 +6,7 @@
 #include "core/Module.hpp"
 #include "core/PatternCursor.hpp"
 #include "core/PatternSelection.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "trackerboy/data/Pattern.hpp"
 #include "trackerboy/data/Order.hpp"
@@ -22,7 +23,7 @@
 //
 class PatternModel : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(PatternModel)
 
 public:
 
@@ -32,7 +33,7 @@ public:
         CursorTrackChanged = 0x4,
         CursorUnchanged = 0x0
     };
-    Q_DECLARE_FLAGS(CursorChangeFlags, CursorChangeFlag)
+    W_DECLARE_FLAGS(CursorChangeFlags, CursorChangeFlag)
 
     enum SelectMode {
         SelectionKeep,      // the current selection will be kept
@@ -240,28 +241,28 @@ public:
 
     void setPreviewEnable(bool previews);
 
-signals:
-    void cursorChanged(PatternModel::CursorChangeFlags flags);
-    void cursorPatternChanged(int pattern);
+//signals:
+    void cursorChanged(PatternModel::CursorChangeFlags flags) W_SIGNAL(cursorChanged, flags)
+    void cursorPatternChanged(int pattern) W_SIGNAL(cursorPatternChanged, pattern)
 
-    void patternSizeChanged(int rows);
-    void patternCountChanged(int patterns);
-    void trackerCursorChanged(int row, int pattern);
-    void trackerCursorPatternChanged(int pattern);
-    void playingChanged(bool playing);
-    void recordingChanged(bool recording);
+    void patternSizeChanged(int rows) W_SIGNAL(patternSizeChanged, rows)
+    void patternCountChanged(int patterns) W_SIGNAL(patternCountChanged, patterns)
+    void trackerCursorChanged(int row, int pattern) W_SIGNAL(trackerCursorChanged, row, pattern)
+    void trackerCursorPatternChanged(int pattern) W_SIGNAL(trackerCursorPatternChanged, pattern)
+    void playingChanged(bool playing) W_SIGNAL(playingChanged, playing)
+    void recordingChanged(bool recording) W_SIGNAL(recordingChanged, recording)
 
-    void selectionChanged();
+    void selectionChanged() W_SIGNAL(selectionChanged)
 
     //
     // emitted when a change has been made to the current pattern and should
     // be redrawn.
     //
-    void invalidated();
+    void invalidated() W_SIGNAL(invalidated)
 
-    void effectsVisibleChanged();
+    void effectsVisibleChanged() W_SIGNAL(effectsVisibleChanged)
 
-    void totalColumnsChanged(int columns);
+    void totalColumnsChanged(int columns) W_SIGNAL(totalColumnsChanged, columns)
 
 private:
 
@@ -343,3 +344,4 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(PatternModel::CursorChangeFlags)
+W_REGISTER_ARGTYPE(PatternModel::CursorChangeFlags)

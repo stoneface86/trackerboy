@@ -3,6 +3,7 @@
 
 #include "midi/MidiEnumerator.hpp"
 #include "midi/IMidiReceiver.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "RtMidi.h"
 
@@ -19,7 +20,7 @@
 //
 class Midi : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(Midi)
 
 public:
 
@@ -52,11 +53,11 @@ public:
     void setReceiver(IMidiReceiver *receiver);
 
     
-signals:
+//signals:
     //
     // emitted if an error occurs during input
     //
-    void error();
+    void error() W_SIGNAL(error)
 
 protected:
 

@@ -4,6 +4,7 @@
 #include "config/tabs/ConfigTab.hpp"
 class AudioEnumerator;
 class MidiEnumerator;
+#include "verdigris/wobjectdefs.h"
 
 class QComboBox;
 class QGroupBox;
@@ -17,7 +18,7 @@ class DeviceGroup;
 //
 class SoundConfigTab : public ConfigTab {
 
-    Q_OBJECT
+    W_OBJECT(SoundConfigTab)
 
 public:
     explicit SoundConfigTab(

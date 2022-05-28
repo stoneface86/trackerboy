@@ -5,6 +5,7 @@
 #include "graphics/CellPainter.hpp"
 #include "model/PatternModel.hpp"
 #include "config/data/Palette.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QColor>
 #include <QPoint>
@@ -15,7 +16,7 @@
 
 class OrderGrid : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(OrderGrid)
 
 public:
 
@@ -29,8 +30,8 @@ public:
 
     void increment();
 
-signals:
-    void patternJump(int pattern);
+//signals:
+    void patternJump(int pattern) W_SIGNAL(patternJump, pattern)
 
 protected:
 

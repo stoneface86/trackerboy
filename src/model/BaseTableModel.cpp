@@ -1,7 +1,10 @@
 
 #include "model/BaseTableModel.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QStringBuilder>
+
+W_OBJECT_IMPL(BaseTableModel)
 
 BaseTableModel::BaseTableModel(Module &mod, QString defaultName, QObject *parent) :
     QAbstractListModel(parent),

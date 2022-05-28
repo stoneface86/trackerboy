@@ -1,6 +1,7 @@
 
 #include "widgets/PatternEditor.hpp"
 #include "utils/utils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -69,6 +70,8 @@ static std::optional<trackerboy::EffectType> keyToEffectType(int const key) {
 }
 
 }
+
+W_OBJECT_IMPL(PatternEditor)
 
 // PatternEditor is just a composite widget containing the grid, header and
 // two scrollbars. (PatternGrid does most of the work)

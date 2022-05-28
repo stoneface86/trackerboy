@@ -13,13 +13,15 @@
 #include <unordered_map>
 #include <memory>
 
+#include "verdigris/wobjectdefs.h"
+
 //
 // Container class for a trackerboy::Module. Also contains a QMutex and
 // QUndoStacks for editing. Model classes edit the contained module.
 //
 class Module : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(Module)
 
 public:
 
@@ -140,11 +142,11 @@ public:
     //
     QString defaultSongName() const;
 
-signals:
     //
     // emitted when the clean state or modified state of the module changes.
     //
-    void modifiedChanged(bool modified);
+    void modifiedChanged(bool modified)
+    W_SIGNAL(modifiedChanged, modified)
 
     //
     // Emitted when the module has been reset. This occurs when:
@@ -153,19 +155,22 @@ signals:
     //
     // Connect this signal to models so that they can update to the new module data.
     //
-    void reloaded();
+    void reloaded()
+    W_SIGNAL(reloaded)
 
     //
     // Emitted when the current song has changed. Also emitted when the module
     // has been reset. Models should respond to either reloaded or songChanged, not both.
     //
-    void songChanged();
+    void songChanged()
+    W_SIGNAL(songChanged)
 
     //
     // Emitted before saving the module to a file, models should respond to the signal
     // if they have any uncommitted changes to make.
     //
-    void aboutToSave();
+    void aboutToSave()
+    W_SIGNAL(aboutToSave)
 
 private:
 

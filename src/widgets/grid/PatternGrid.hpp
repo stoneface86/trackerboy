@@ -7,6 +7,7 @@
 #include "config/data/Palette.hpp"
 #include "config/data/PianoInput.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "trackerboy/data/Pattern.hpp"
 #include "trackerboy/note.hpp"
@@ -22,7 +23,7 @@
 
 class PatternGrid : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(PatternGrid)
 
 public:
 

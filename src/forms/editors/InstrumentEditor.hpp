@@ -6,6 +6,7 @@
 #include "forms/editors/BaseEditor.hpp"
 #include "widgets/EnvelopeForm.hpp"
 #include "widgets/SequenceEditor.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QComboBox>
 #include <QGroupBox>
@@ -13,7 +14,7 @@
 
 class InstrumentEditor : public BaseEditor {
 
-    Q_OBJECT
+    W_OBJECT(InstrumentEditor)
 
 public:
     InstrumentEditor(
@@ -26,8 +27,8 @@ public:
 
     void setColors(Palette const& pal);
 
-signals:
-    void openWaveEditor(int index);
+//signals:
+    void openWaveEditor(int index) W_SIGNAL(openWaveEditor, index)
 
 protected:
     virtual void setCurrentItem(int index) override;

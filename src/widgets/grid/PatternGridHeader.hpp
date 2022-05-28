@@ -5,13 +5,14 @@
 #include "graphics/PatternLayout.hpp"
 #include "core/ChannelOutput.hpp"
 #include "config/data/Palette.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QPen>
 #include <QWidget>
 
 class PatternGridHeader : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(PatternGridHeader)
 
 public:
 
@@ -31,8 +32,8 @@ public:
 
     static QString soloChannelString(int track);
 
-signals:
-    void outputChanged(ChannelOutput::Flags flags);
+//signals:
+    void outputChanged(ChannelOutput::Flags flags) W_SIGNAL(outputChanged, flags)
 
 protected:
 

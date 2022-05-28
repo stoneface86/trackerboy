@@ -3,9 +3,12 @@
 #include "utils/actions.hpp"
 #include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QGroupBox>
 #include <QVBoxLayout>
+
+W_OBJECT_IMPL(Sidebar)
 
 Sidebar::Sidebar(
     Module &mod,

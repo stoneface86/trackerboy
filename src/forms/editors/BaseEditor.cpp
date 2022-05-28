@@ -1,11 +1,14 @@
 
 #include "forms/editors/BaseEditor.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QSignalBlocker>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QShowEvent>
 #include <QtDebug>
+
+W_OBJECT_IMPL(BaseEditor)
 
 BaseEditor::BaseEditor(
     BaseTableModel &model,

@@ -3,6 +3,7 @@
 
 #include "audio/Renderer.hpp"
 #include "config/Config.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QCheckBox>
 #include <QDialog>
@@ -19,7 +20,7 @@
 //
 class AudioDiagDialog : public QDialog {
 
-    Q_OBJECT
+    W_OBJECT(AudioDiagDialog)
 
 public:
 

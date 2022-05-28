@@ -1,5 +1,6 @@
 
 #include "model/SongListModel.hpp"
+#include "verdigris/wobjectimpl.h"
 
 SongListModel::SongMeta::SongMeta(QString const& name) :
     name(name),
@@ -13,7 +14,7 @@ SongListModel::SongMeta::SongMeta(std::string const& name) :
 {
 }
 
-
+W_OBJECT_IMPL(SongListModel)
 
 SongListModel::SongListModel(Module &mod, QObject *parent) :
     QAbstractListModel(parent),

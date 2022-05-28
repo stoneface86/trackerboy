@@ -9,6 +9,7 @@
 #include "utils/FastTimer.hpp"
 #include "core/Module.hpp"
 #include "utils/Guarded.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "trackerboy/apu/DefaultApu.hpp"
 #include "trackerboy/data/Song.hpp"
@@ -30,7 +31,7 @@
 //
 class Renderer : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(Renderer)
 
     using Clock = std::chrono::steady_clock;
 
@@ -177,37 +178,37 @@ public:
 
     void setChannelOutput(ChannelOutput::Flags output);
 
-signals:
+//signals:
 
     //
     // Signal emitted when the audio callback thread was started
     //
-    void audioStarted();
+    void audioStarted() W_SIGNAL(audioStarted)
 
     //
     // Signal emitted when the audio callback thread was stopped.
     //
-    void audioStopped();
+    void audioStopped() W_SIGNAL(audioStopped)
 
     //
     // Emitted when music has started/stopped playing
     //
-    void isPlayingChanged(bool playing);
+    void isPlayingChanged(bool playing) W_SIGNAL(isPlayingChanged, playing)
 
     //
     // An error occurred during audio playback.
     //
-    void audioError();
+    void audioError() W_SIGNAL(audioError)
 
     //
     // emitted when a new frame is renderered
     //
-    void frameSync();
+    void frameSync() W_SIGNAL(frameSync)
 
     //
     // Emitted when the visualizer buffer has been modified
     //
-    void updateVisualizers();
+    void updateVisualizers() W_SIGNAL(updateVisualizers)
 
 private:
 

@@ -6,6 +6,7 @@
 #include "model/TableModel.hpp"
 #include "forms/editors/BaseEditor.hpp"
 #include "widgets/GraphEdit.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QLineEdit>
 
@@ -14,7 +15,7 @@
 
 class WaveEditor : public BaseEditor {
 
-    Q_OBJECT
+    W_OBJECT(WaveEditor)
 
 public:
     explicit WaveEditor(

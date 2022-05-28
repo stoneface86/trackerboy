@@ -9,6 +9,37 @@
 #define TU ShortcutTableTU
 namespace TU {
 
+static std::array<QString, ShortcutTable::Count> ShortcutNames = {
+    QStringLiteral("PrevInstrument"),
+    QStringLiteral("NextInstrument"),
+    QStringLiteral("PrevPattern"),
+    QStringLiteral("NextPattern"),
+    QStringLiteral("DecOctave"),
+    QStringLiteral("IncOctave"),
+    QStringLiteral("PlayStop"),
+    QStringLiteral("PasteMix"),
+    QStringLiteral("TransposeDecNote"),
+    QStringLiteral("TransposeIncNote"),
+    QStringLiteral("TransposeDecOctave"),
+    QStringLiteral("TransposeIncOctave"),
+    QStringLiteral("Transpose"),
+    QStringLiteral("Reverse"),
+    QStringLiteral("ReplaceInstrument"),
+    QStringLiteral("Play"),
+    QStringLiteral("PlayFromStart"),
+    QStringLiteral("PlayFromCursor"),
+    QStringLiteral("Step"),
+    QStringLiteral("Stop"),
+    QStringLiteral("PatternRepeat"),
+    QStringLiteral("Record"),
+    QStringLiteral("ToggleOutput"),
+    QStringLiteral("Solo"),
+    QStringLiteral("Kill"),
+    QStringLiteral("EditInstrument"),
+    QStringLiteral("EditWaveform"),
+    QStringLiteral("ModuleProperties")
+};
+
 }
 
 ShortcutTable::ShortcutTable() noexcept :
@@ -101,11 +132,8 @@ void ShortcutTable::readSettings(QSettings &settings) noexcept {
     
     settings.beginGroup(Keys::Shortcuts);
 
-    auto meta = QMetaEnum::fromType<Shortcut>();
     for (int i = 0; i < Count; ++i) {
-        auto keyname = meta.key(i);
-        Q_ASSERT(keyname != nullptr);
-        auto seqstr = settings.value(keyname).toString();
+        auto seqstr = settings.value(TU::ShortcutNames[i]).toString();
         set((Shortcut)i,
             seqstr.isEmpty()
             ? getDefault((Shortcut)i)
@@ -119,11 +147,11 @@ void ShortcutTable::readSettings(QSettings &settings) noexcept {
 void ShortcutTable::writeSettings(QSettings &settings) noexcept {
     settings.beginGroup(Keys::Shortcuts);
 
-    auto meta = QMetaEnum::fromType<Shortcut>();
     for (int i = 0; i < Count; ++i) {
-        auto keyname = meta.key(i);
-        Q_ASSERT(keyname != nullptr);
-        settings.setValue(keyname, get((Shortcut)i).toString(QKeySequence::PortableText));
+        settings.setValue(
+            TU::ShortcutNames[i],
+            get((Shortcut)i).toString(QKeySequence::PortableText)
+        );
     }
 
     settings.endGroup();

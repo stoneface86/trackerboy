@@ -3,6 +3,7 @@
 #include "model/commands/order.hpp"
 #include "model/commands/pattern.hpp"
 #include "utils/utils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include "trackerboy/note.hpp"
 
@@ -17,6 +18,7 @@ namespace TU {
 
 }
 
+W_OBJECT_IMPL(PatternModel)
 
 PatternModel::PatternModel(Module &mod, SongModel &songModel, QObject *parent) :
     QObject(parent),

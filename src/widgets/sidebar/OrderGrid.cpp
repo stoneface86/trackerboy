@@ -1,6 +1,7 @@
 
 #include "widgets/sidebar/OrderGrid.hpp"
 #include "utils/utils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QApplication>
 #include <QEvent>
@@ -18,6 +19,8 @@
 // |: line
 // 11,22,33,44: track 1,2,3,4 id, 2 cells each
 // 0: empty cell used as spacer
+
+W_OBJECT_IMPL(OrderGrid)
 
 
 OrderGrid::OrderGrid(PatternModel &model, QWidget *parent) :

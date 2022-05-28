@@ -2,6 +2,7 @@
 #include "widgets/sidebar/OrderEditor.hpp"
 #include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QAction>
 #include <QHBoxLayout>
@@ -9,6 +10,8 @@
 #include <QScrollBar>
 #include <QToolBar>
 #include <QWheelEvent>
+
+W_OBJECT_IMPL(OrderEditor)
 
 OrderEditor::OrderEditor(PatternModel &model, QWidget *parent) :
     QWidget(parent)

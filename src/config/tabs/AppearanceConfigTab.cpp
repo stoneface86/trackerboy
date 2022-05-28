@@ -1,6 +1,7 @@
 
 #include "config/tabs/AppearanceConfigTab.hpp"
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QColorDialog>
 #include <QFontDialog>
@@ -166,7 +167,7 @@ ModelId getModelId(QModelIndex const& index) {
 //
 class PaletteModel : public QAbstractItemModel {
 
-    Q_OBJECT
+    W_OBJECT(PaletteModel)
 
 public:
     explicit PaletteModel(Palette &src, QObject *parent = nullptr) :
@@ -381,6 +382,9 @@ private:
 
 };
 
+W_OBJECT_IMPL(AppearanceConfigTab)
+W_OBJECT_IMPL(PaletteModel)
+
 
 AppearanceConfigTab::AppearanceConfigTab(
         FontTable &fonts,
@@ -575,8 +579,6 @@ void AppearanceConfigTab::updateColorDialog() {
         mColorDialog->setEnabled(color.has_value());
     }
 }
-
-#include "AppearanceConfigTab.moc"
 
 #undef TU
 

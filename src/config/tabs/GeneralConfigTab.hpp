@@ -2,6 +2,7 @@
 #pragma once
 
 #include "config/tabs/ConfigTab.hpp"
+#include "verdigris/wobjectdefs.h"
 
 class GeneralConfig;
 
@@ -12,7 +13,7 @@ class QSpinBox;
 
 class GeneralConfigTab : public ConfigTab {
 
-    Q_OBJECT
+    W_OBJECT(GeneralConfigTab)
 
 public:
     explicit GeneralConfigTab(GeneralConfig const& config, QWidget *parent = nullptr);

@@ -4,6 +4,7 @@
 #include "core/StandardRates.hpp"
 #include "midi/MidiEnumerator.hpp"
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QComboBox>
 #include <QGridLayout>
@@ -19,7 +20,7 @@
 //
 class DeviceGroup : public QGroupBox {
 
-    Q_OBJECT
+    W_OBJECT(DeviceGroup)
 
 public:
 
@@ -84,6 +85,9 @@ private:
     QPushButton *mRescanButton;
 
 };
+
+W_OBJECT_IMPL(DeviceGroup)
+W_OBJECT_IMPL(SoundConfigTab)
 
 
 SoundConfigTab::SoundConfigTab(
@@ -250,5 +254,3 @@ void SoundConfigTab::audioRescan() {
 void SoundConfigTab::midiRescan() {
     rescan(mMidiEnumerator, mMidiGroup);
 }
-
-#include "SoundConfigTab.moc"

@@ -1,5 +1,6 @@
 
 #include "widgets/sidebar/AudioScope.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QGuiApplication>
 #include <QPainter>
@@ -11,6 +12,8 @@ namespace TU {
 constexpr int LINE_WIDTH = 1;
 
 }
+
+W_OBJECT_IMPL(AudioScope)
 
 AudioScope::AudioScope(QWidget *parent) :
     QFrame(parent),

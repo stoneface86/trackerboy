@@ -5,6 +5,7 @@
 #include "core/Module.hpp"
 #include "forms/PersistantDialog.hpp"
 #include "widgets/PianoWidget.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QComboBox>
 #include <QLineEdit>
@@ -12,7 +13,7 @@
 
 class BaseEditor : public PersistantDialog {
 
-    Q_OBJECT
+    W_OBJECT(BaseEditor)
 
 public:
 

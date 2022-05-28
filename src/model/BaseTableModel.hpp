@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Module.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QAbstractListModel>
 #include <QIcon>
@@ -14,7 +15,7 @@
 //
 class BaseTableModel : public QAbstractListModel {
 
-    Q_OBJECT
+    W_OBJECT(BaseTableModel)
 
 public:
 

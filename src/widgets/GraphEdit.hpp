@@ -2,6 +2,7 @@
 
 #include "model/graph/GraphModel.hpp"
 #include "config/data/Palette.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QAbstractScrollArea>
 #include <QPoint>
@@ -10,7 +11,7 @@
 
 class GraphEdit : public QAbstractScrollArea {
 
-    Q_OBJECT
+    W_OBJECT(GraphEdit)
 
 public:
 

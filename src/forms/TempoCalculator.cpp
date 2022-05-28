@@ -3,12 +3,15 @@
 
 #include "utils/connectutils.hpp"
 #include "utils/string.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QGridLayout>
 #include <QLabel>
 #include <QPushButton>
 
 #include <cmath>
+
+W_OBJECT_IMPL(TempoCalculator)
 
 TempoCalculator::TempoCalculator(SongModel &model, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),

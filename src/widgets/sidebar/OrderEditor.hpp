@@ -3,6 +3,7 @@
 
 #include "model/PatternModel.hpp"
 #include "widgets/sidebar/OrderGrid.hpp"
+#include "verdigris/wobjectdefs.h"
 
 class QToolBar;
 class QScrollBar;
@@ -13,7 +14,7 @@ class QScrollBar;
 //
 class OrderEditor : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(OrderEditor)
 
 public:
 

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/Module.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QObject>
 
@@ -13,7 +14,7 @@
 //
 class GraphModel : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(GraphModel)
 
 public:
 
@@ -26,9 +27,9 @@ public:
 
     virtual void setData(int i, DataType data) = 0;
 
-signals:
-    void countChanged(int count);
-    void dataChanged();
+//signals:
+    void countChanged(int count) W_SIGNAL(countChanged, count)
+    void dataChanged() W_SIGNAL(dataChanged)
 
 protected:
     explicit GraphModel(Module &mod, QObject *parent = nullptr);

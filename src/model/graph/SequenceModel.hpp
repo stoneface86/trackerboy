@@ -11,7 +11,7 @@
 
 class SequenceModel : public GraphModel {
 
-    Q_OBJECT
+    W_OBJECT(SequenceModel)
 
 public:
     explicit SequenceModel(Module &mod, QObject *parent = nullptr);

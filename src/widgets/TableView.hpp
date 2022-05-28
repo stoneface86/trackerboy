@@ -3,6 +3,7 @@
 
 #include "model/BaseTableModel.hpp"
 #include "utils/TableActions.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QKeySequence>
 #include <QListView>
@@ -15,7 +16,7 @@
 //
 class TableView : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(TableView)
 
 public:
     TableView(
@@ -38,10 +39,10 @@ public:
 
     void setShortcut(QKeySequence const& seq);
 
-signals:
-    void selectedItemChanged(int index);
+//signals:
+    void selectedItemChanged(int index) W_SIGNAL(selectedItemChanged, index)
 
-    void edit(int index);
+    void edit(int index) W_SIGNAL(edit, index)
 
 private:
     Q_DISABLE_COPY(TableView)

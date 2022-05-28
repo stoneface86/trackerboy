@@ -3,6 +3,7 @@
 
 #include "config/data/GeneralConfig.hpp"
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -29,6 +30,8 @@ static std::array<const char*, GeneralConfig::OptionCount> const OPTION_TEXT = {
 };
 
 }
+
+W_OBJECT_IMPL(GeneralConfigTab)
 
 
 GeneralConfigTab::GeneralConfigTab(GeneralConfig const& config, QWidget *parent) :

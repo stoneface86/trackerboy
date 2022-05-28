@@ -2,6 +2,7 @@
 
 #include "audio/AudioEnumerator.hpp"
 #include "audio/Ringbuffer.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "miniaudio.h"
 
@@ -16,7 +17,7 @@
 //
 class AudioStream : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(AudioStream)
 
 public:
     explicit AudioStream(QObject *parent = nullptr);
@@ -74,9 +75,10 @@ public:
 
     void disable();
 
-signals:
+//signals:
 
-    void aborted();
+    void aborted()
+    W_SIGNAL(aborted)
 
 private:
 

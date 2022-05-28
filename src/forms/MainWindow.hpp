@@ -22,6 +22,7 @@
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
 #include "widgets/TableView.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "trackerboy/engine/Frame.hpp"
 
@@ -40,7 +41,7 @@
 //
 class MainWindow : public QMainWindow {
 
-    Q_OBJECT
+    W_OBJECT(MainWindow)
 
 public:
     explicit MainWindow();

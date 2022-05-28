@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/Module.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QAbstractListModel>
 
@@ -14,7 +15,7 @@
 //
 class SongListModel : public QAbstractListModel {
 
-    Q_OBJECT
+    W_OBJECT(SongListModel)
 
 public:
     explicit SongListModel(Module &mod, QObject *parent = nullptr);

@@ -3,12 +3,13 @@
 
 #include "core/Module.hpp"
 #include "forms/PersistantDialog.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QPlainTextEdit>
 
 class CommentsDialog : public PersistantDialog {
 
-    Q_OBJECT
+    W_OBJECT(CommentsDialog)
 
 public:
 

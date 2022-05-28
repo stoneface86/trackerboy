@@ -5,13 +5,14 @@
 #include "audio/VisualizerBuffer.hpp"
 #include "config/data/Palette.hpp"
 #include "utils/Guarded.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QFrame>
 
 
 class AudioScope : public QFrame {
 
-    Q_OBJECT
+    W_OBJECT(AudioScope)
 
 
 public:

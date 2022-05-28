@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "verdigris/wobjectdefs.h"
+
 #include <QFlags>
 
 namespace ChannelOutput {
@@ -18,8 +20,10 @@ namespace ChannelOutput {
         CH4 = 0x8,
         AllOn = CH1 | CH2 | CH3 | CH4
     };
-    Q_DECLARE_FLAGS(Flags, Flag)
+    W_DECLARE_FLAGS(Flags, Flag)
 
 }
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(ChannelOutput::Flags)
+W_REGISTER_ARGTYPE(ChannelOutput::Flags)
+W_REGISTER_ARGTYPE(ChannelOutput::Flag)

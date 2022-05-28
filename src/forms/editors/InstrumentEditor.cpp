@@ -1,6 +1,8 @@
 
 #include "forms/editors/InstrumentEditor.hpp"
 
+#include "verdigris/wobjectimpl.h"
+
 #include <QHBoxLayout>
 #include <QSignalBlocker>
 #include <QVBoxLayout>
@@ -15,6 +17,8 @@ static auto SET_WAVE_CHECK_STR = QT_TR_NOOP("Set waveform on trigger");
 static auto DUTY_CYCLE_STR = QT_TR_NOOP("Duty cycle");
 
 }
+
+W_OBJECT_IMPL(InstrumentEditor)
 
 InstrumentEditor::InstrumentEditor(
     Module &mod,

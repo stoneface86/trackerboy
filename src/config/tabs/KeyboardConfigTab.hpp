@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config/tabs/ConfigTab.hpp"
+#include "verdigris/wobjectdefs.h"
 
 class PianoInput;
 class ShortcutTable;
@@ -16,7 +17,7 @@ class ShortcutTableModel;
 
 class KeyboardConfigTab : public ConfigTab {
 
-    Q_OBJECT
+    W_OBJECT(KeyboardConfigTab)
 
 public:
     explicit KeyboardConfigTab(PianoInput &input, ShortcutTable &shortcuts, QWidget *parent = nullptr);

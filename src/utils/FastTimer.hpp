@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "verdigris/wobjectdefs.h"
+
 #include <QObject>
 #include <QMutex>
 
@@ -18,7 +20,7 @@
 //
 class FastTimer : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(FastTimer)
 
 public:
 

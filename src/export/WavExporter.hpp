@@ -3,6 +3,7 @@
 
 #include "core/Module.hpp"
 #include "core/ChannelOutput.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include "trackerboy/apu/DefaultApu.hpp"
 #include "trackerboy/export/Player.hpp"
@@ -15,7 +16,8 @@
 // Worker thread for exporting a module to a wav file
 //
 class WavExporter : public QThread {
-    Q_OBJECT
+    
+    W_OBJECT(WavExporter)
 
 public:
     WavExporter(
@@ -38,9 +40,9 @@ public:
 
     void cancel();
 
-signals:
-    void progressMax(int max);
-    void progress(int amount);
+//signals:
+    void progressMax(int max) W_SIGNAL(progressMax, max)
+    void progress(int amount) W_SIGNAL(progress, amount)
 
 protected:
     virtual void run() override;

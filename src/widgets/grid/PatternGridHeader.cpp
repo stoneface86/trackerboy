@@ -1,5 +1,6 @@
 
 #include "widgets/grid/PatternGridHeader.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QContextMenuEvent>
 #include <QFontDatabase>
@@ -59,6 +60,8 @@ void drawMinus(QPainter &painter, int xpos, QColor const& color) {
 }
 
 }
+
+W_OBJECT_IMPL(PatternGridHeader)
 
 
 PatternGridHeader::PatternGridHeader(PatternModel &model, QWidget *parent) :

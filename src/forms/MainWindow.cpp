@@ -6,6 +6,7 @@
 #include "utils/utils.hpp"
 #include "widgets/TableView.hpp"
 #include "version.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QApplication>
 #include <QFileInfo>
@@ -43,6 +44,8 @@ static auto const DEFAULT_VSPLITTER_RATIO = 0.625f;
 static constexpr int WINDOW_STATE_VERSION = 2;
 
 }
+
+W_OBJECT_IMPL(MainWindow)
 
 MainWindow::MainWindow() :
     QMainWindow(),

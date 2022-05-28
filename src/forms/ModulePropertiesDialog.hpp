@@ -3,6 +3,7 @@
 
 #include "core/Module.hpp"
 #include "model/SongListModel.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QButtonGroup>
 #include <QDialog>
@@ -15,7 +16,7 @@
 
 class ModulePropertiesDialog : public QDialog {
 
-    Q_OBJECT
+    W_OBJECT(ModulePropertiesDialog)
 
 public:
 

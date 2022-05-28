@@ -5,6 +5,7 @@
 #include "config/data/ShortcutTable.hpp"
 #include "core/NoteStrings.hpp"
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QAbstractItemModel>
 #include <QComboBox>
@@ -68,7 +69,7 @@ static_assert(SHORTCUT_NAMES.size() == ShortcutTable::Count, "table size mismatc
 //
 class BindingEdit : public QFrame {
 
-    Q_OBJECT
+    W_OBJECT(BindingEdit)
 
     static constexpr int GRID_COLUMNS = 13;
     static constexpr int GRID_ROWS = 6;
@@ -112,8 +113,8 @@ public:
         update();
     }
 
-signals:
-    void bindingsChanged();
+//signals:
+    void bindingsChanged() W_SIGNAL(bindingsChanged)
 
 protected:
 
@@ -337,7 +338,7 @@ private:
 //
 class ShortcutTableModel : public QAbstractItemModel {
 
-    Q_OBJECT
+    W_OBJECT(ShortcutTableModel)
 
 public:
     explicit ShortcutTableModel(ShortcutTable &src, QObject *parent = nullptr) :
@@ -433,7 +434,9 @@ private:
 
 };
 
-
+W_OBJECT_IMPL(ShortcutTableModel)
+W_OBJECT_IMPL(BindingEdit)
+W_OBJECT_IMPL(KeyboardConfigTab)
 
 
 KeyboardConfigTab::KeyboardConfigTab(PianoInput &input, ShortcutTable &shortcuts, QWidget *parent) :
@@ -560,7 +563,5 @@ void KeyboardConfigTab::setKeyEditEnable(bool enable) {
     mClearButton->setEnabled(enable);
     mDefaultButton->setEnabled(enable);
 }
-
-#include "KeyboardConfigTab.moc"
 
 #undef TU

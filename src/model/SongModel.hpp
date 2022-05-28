@@ -2,6 +2,7 @@
 #pragma once
 
 #include "core/Module.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QObject>
 
@@ -12,7 +13,7 @@
 //
 class SongModel : public QObject {
 
-    Q_OBJECT
+    W_OBJECT(SongModel)
 
 public:
     explicit SongModel(Module &mod, QObject *parent = nullptr);
@@ -31,15 +32,15 @@ public:
     void setSpeedFromTempo(int tempo);
     void setPatternSize(int rows);
 
-signals:
+//signals:
 
-    void patternSizeChanged(int rows);
-    void speedChanged(int speed);
-    void rowsPerBeatChanged(int rpb);
-    void rowsPerMeasureChanged(int rpm);
-    void tempoChanged(float tempo);
+    void patternSizeChanged(int rows) W_SIGNAL(patternSizeChanged, rows)
+    void speedChanged(int speed) W_SIGNAL(speedChanged, speed)
+    void rowsPerBeatChanged(int rpb) W_SIGNAL(rowsPerBeatChanged, rpb)
+    void rowsPerMeasureChanged(int rpm) W_SIGNAL(rowsPerMeasureChanged, rpm)
+    void tempoChanged(float tempo) W_SIGNAL(tempoChanged, tempo)
 
-    void reloaded();
+    void reloaded() W_SIGNAL(reloaded)
 
 private:
     Q_DISABLE_COPY(SongModel)

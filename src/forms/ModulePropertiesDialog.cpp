@@ -1,6 +1,7 @@
 
 #include "forms/ModulePropertiesDialog.hpp"
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QGroupBox>
 #include <QCheckBox>
@@ -166,6 +167,8 @@
 //    // remove B, duplicate C, add new song D: { 0, 2, 0x102, -1 }
 //    QVector<int> mModifications;
 //};
+
+W_OBJECT_IMPL(ModulePropertiesDialog)
 
 
 ModulePropertiesDialog::ModulePropertiesDialog(Module &mod, SongListModel &model, QWidget *parent) :

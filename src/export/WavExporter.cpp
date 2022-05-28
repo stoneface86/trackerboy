@@ -2,12 +2,14 @@
 #include "export/WavExporter.hpp"
 
 #include "audio/Wav.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QDir>
 #include <QFileInfo>
 
 #include <memory>
 
+W_OBJECT_IMPL(WavExporter)
 
 
 WavExporter::WavExporter(

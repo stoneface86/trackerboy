@@ -3,10 +3,13 @@
 
 #include "utils/connectutils.hpp"
 #include "utils/IconLocator.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QBoxLayout>
 #include <QToolBar>
 #include <QtDebug>
+
+W_OBJECT_IMPL(TableView)
 
 TableView::TableView(
     BaseTableModel &model,

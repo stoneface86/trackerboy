@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include "verdigris/wobjectdefs.h"
+
 #include <QCheckBox>
 #include <QGridLayout>
 #include <QLabel>
@@ -14,7 +16,7 @@
 //
 class EnvelopeForm : public QWidget {
 
-    Q_OBJECT
+    W_OBJECT(EnvelopeForm)
 
 public:
     EnvelopeForm(QWidget *parent = nullptr);
@@ -24,8 +26,8 @@ public:
 
     void setEnvelope(uint8_t value);
 
-signals:
-    void envelopeChanged(uint8_t value);
+//signals:
+    void envelopeChanged(uint8_t value) W_SIGNAL(envelopeChanged, value)
 
 private:
     Q_DISABLE_COPY(EnvelopeForm)

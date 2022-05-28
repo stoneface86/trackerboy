@@ -7,6 +7,7 @@
 #include "midi/IMidiReceiver.hpp"
 #include "widgets/grid/PatternGrid.hpp"
 #include "widgets/grid/PatternGridHeader.hpp"
+#include "verdigris/wobjectdefs.h"
 
 #include <QFrame>
 #include <QScrollBar>
@@ -19,7 +20,7 @@ class QMenu;
 
 class PatternEditor : public QFrame, public IMidiReceiver {
 
-    Q_OBJECT
+    W_OBJECT(PatternEditor)
 
 public:
 
@@ -78,10 +79,10 @@ public:
 
     void replaceInstrument();
 
-signals:
-    void previewNote(int note, int track, int instrument);
+//signals:
+    void previewNote(int note, int track, int instrument) W_SIGNAL(previewNote, note, track, instrument)
 
-    void stopNotePreview();
+    void stopNotePreview() W_SIGNAL(stopNotePreview)
 
 protected:
 

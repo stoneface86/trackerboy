@@ -2,8 +2,11 @@
 #include "forms/PersistantDialog.hpp"
 
 #include "utils/connectutils.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QShowEvent>
+
+W_OBJECT_IMPL(PersistantDialog)
 
 PersistantDialog::PersistantDialog(QWidget *parent, Qt::WindowFlags flags) :
     QDialog(parent, flags),

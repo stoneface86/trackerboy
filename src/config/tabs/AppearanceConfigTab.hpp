@@ -3,6 +3,7 @@
 
 #include "config/tabs/ConfigTab.hpp"
 class PaletteModel; // implemented in AppearanceConfigTab.cpp
+#include "verdigris/wobjectdefs.h"
 
 #include <QDir>
 class QColorDialog;
@@ -13,7 +14,7 @@ class QPushButton;
 
 class AppearanceConfigTab : public ConfigTab {
 
-    Q_OBJECT
+    W_OBJECT(AppearanceConfigTab)
 
 public:
     explicit AppearanceConfigTab(

@@ -12,7 +12,7 @@
 #include "config/data/PianoInput.hpp"
 #include "config/data/Palette.hpp"
 
-#include <QFlags>
+#include "verdigris/wobjectdefs.h"
 
 //
 // Class containing application settings. Settings are modified via the ConfigDialog
@@ -39,7 +39,7 @@ public:
                       CategoryMidi |
                       CategoryGeneral
     };
-    Q_DECLARE_FLAGS(Categories, Category)
+    W_DECLARE_FLAGS(Categories, Category)
     
     Config();
     ~Config() = default;
@@ -91,3 +91,5 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(Config::Categories)
+W_REGISTER_ARGTYPE(Config::Categories)
+W_REGISTER_ARGTYPE(Config::Category)

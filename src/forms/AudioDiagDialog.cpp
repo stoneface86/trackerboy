@@ -1,5 +1,6 @@
 
 #include "forms/AudioDiagDialog.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QTimerEvent>
 
@@ -9,6 +10,8 @@ namespace TU {
 constexpr int DEFAULT_REFRESH_INTERVAL = 100;
 
 }
+
+W_OBJECT_IMPL(AudioDiagDialog)
 
 AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),

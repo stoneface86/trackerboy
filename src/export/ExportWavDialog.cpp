@@ -4,6 +4,7 @@
 #include "core/Module.hpp"
 #include "core/ModuleFile.hpp"
 #include "export/WavExporter.hpp"
+#include "verdigris/wobjectimpl.h"
 
 #include <QCheckBox>
 #include <QDialogButtonBox>
@@ -17,6 +18,8 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QStackedLayout>
+
+W_OBJECT_IMPL(ExportWavDialog)
 
 ExportWavDialog::ExportWavDialog(
     Module const& mod,
