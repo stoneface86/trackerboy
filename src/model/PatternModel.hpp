@@ -250,6 +250,7 @@ signals:
     void trackerCursorPatternChanged(int pattern);
     void playingChanged(bool playing);
     void recordingChanged(bool recording);
+    void aboutToRemoveLastPattern();
 
     void selectionChanged();
 

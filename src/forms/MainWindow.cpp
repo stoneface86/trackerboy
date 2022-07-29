@@ -483,6 +483,10 @@ void MainWindow::setupUi() {
 
     lazyconnect(mPatternModel, patternCountChanged, this, onPatternCountChanged);
     lazyconnect(mPatternModel, cursorPatternChanged, this, onPatternCursorChanged);
+    connect(mPatternModel, &PatternModel::aboutToRemoveLastPattern, this,
+        [this]() {
+            mRenderer->jumpToPattern(0);
+        });
 
     auto app = static_cast<QApplication*>(QApplication::instance());
     connect(app, &QApplication::focusChanged, this, &MainWindow::handleFocusChange);

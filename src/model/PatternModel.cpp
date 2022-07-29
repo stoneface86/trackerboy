@@ -1037,6 +1037,9 @@ void PatternModel::removeOrderImpl(int at) {
     auto &_order = order();
     {
         auto editor = mModule.edit();
+        if (at == _order.size() - 1) {
+            emit aboutToRemoveLastPattern();
+        }
         _order.remove(at);
     }
 
