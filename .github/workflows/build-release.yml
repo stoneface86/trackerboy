@@ -34,6 +34,12 @@ jobs:
             If a build failed for a platform or there's an issue with any of the
             packages, delete this draft and the tag and try again after making
             any necessary fixes.
+            
+            DELETE ABOVE THIS LINE
+            =======================================================
+            Disclaimer: The MacOS builds are untested and are not guaranteed to
+            work. They **should** work exactly like the Linux and Windows builds.
+            Use at your own risk and please report any problems to issues.
           draft: true
           name: Trackerboy ${{ steps.get-version.outputs.version }}
           prerelease: ${{ startsWith( 'v0.', steps.get-version.outputs.version ) }}
@@ -46,10 +52,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - os: macos-latest
-          #   arch: x64
-          #   platform: osx
-          #   qt-arch: ''
+          - os: macos-latest
+            arch: x64
+            platform: osx
+            qt-arch: ''
           
           - os: ubuntu-18.04
             arch: x64
