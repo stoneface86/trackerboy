@@ -360,11 +360,20 @@ if (ENABLE_DEPLOYMENT)
     endif ()
 
     if (HAS_DEPLOYMENT)
-        # documentation, example modules, etc can be copied over here as well
-        # for now just include the CHANGELOG and LICENSE
-        configure_file("${CMAKE_SOURCE_DIR}/LICENSE" "${DEPLOY_DIR}/LICENSE" COPYONLY)
-        configure_file("${CMAKE_SOURCE_DIR}/CHANGELOG.md" "${DEPLOY_DIR}/CHANGELOG.md" COPYONLY)
-        add_custom_target(deploy DEPENDS ${DEPLOY_TARGET})
+        # common files to be included for each deployment platform
+        # The following from the repo gets included:
+        # - LICENSE
+        # - CHANGELOG.md
+        # - examples/ (example modules)
+        add_custom_target(
+            deployCommon
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/LICENSE" "${DEPLOY_DIR}/LICENSE"
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/CHANGELOG.md" "${DEPLOY_DIR}/CHANGELOG.md"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DEPLOY_DIR}/examples"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/examples" "${DEPLOY_DIR}/examples"
+        )
+        add_custom_target(deploy DEPENDS deployCommon ${DEPLOY_TARGET})
     else ()
         # cannot deploy to this system
         # provide a deploy target that returns an error code
