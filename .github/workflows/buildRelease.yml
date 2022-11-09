@@ -5,23 +5,33 @@
 # builds release binaries and drafts a release
 #
 
-name: build-release
+name: Create a release for a pushed version tag
 on:
   push:
     tags:
-      - testtag
       - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag name to run this workflow for
+        required: true
+        type: string
 
 jobs:
 
-  draft-release:
+  draftRelease:
     name: Draft github release
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get-version.outputs.version }}
     steps:
-      - name: Get version
+      - name: Get version (from dispatch)
         id: get-version
+        if: inputs.tag != ''
+        run: echo "::set-output name=version::${{ inputs.tag }}"
+      
+      - name: Get version (from pushed tag)
+        if: steps.get-version.conclusion == 'skipped'
         run: echo "::set-output name=version::${GITHUB_REF/refs\/tags\//}"
       
       - name: Draft release
@@ -48,6 +58,9 @@ jobs:
     name: Release ${{ matrix.arch }}-${{ matrix.platform }}
     needs: draft-release
     runs-on: ${{ matrix.os }}
+    outputs:
+      asset-location: ${{ steps.archive.outputs.filename }}
+      asset-name: ${{ matrix.platform }}-${{ matrix.arch }}
     strategy:
       fail-fast: false
       matrix:
@@ -170,3 +183,23 @@ jobs:
         with:
           draft: true
           files: ${{ github.workspace }}/build/manual.zip
+  
+  publish:
+    name: Publish release to www.trackerboy.org
+    needs: [docs, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout trackerboy.org repo
+        uses: actions/checkout@v3
+        with:
+          repository: TrackerboyOrg/TrackerboyOrg.github.io
+          token: ${{ secrets.TRACKERBOY_SITE_PAT }}
+          path: ./site
+      
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
+
+      - name: add release
+        working-directory: ./site
+        run: ./ci.py release 

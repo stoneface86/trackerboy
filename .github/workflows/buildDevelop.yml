@@ -1,0 +1,44 @@
+
+name: Build and deploy on push to the develop branch
+on:
+  push:
+    branches:
+      - develop
+    tags-ignore: '**'
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - 'cmake/**'
+      - 'CMakeLists.txt'
+
+jobs:
+  build:
+    name: '${{ matrix.os }}, ${{ matrix.arch }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            arch: x64
+            platform: osx
+            qtArch: ''
+          - os: ubuntu-18.04
+            arch: x64
+            platform: linux
+          - os: windows-latest
+            arch: x64
+            platform: windows
+            qtArch: win64_msvc2017_64
+          - os: windows-latest
+            arch: x86
+            platform: windows
+            qtArch: win32_msvc2017
+    uses: .github/workflows/buildAndDeploy.yml
+    with:
+      buildType: Debug
+      os: ${{ matrix.os }}
+      arch: ${{ matrix.arch }}
+      platform: ${{ matrix.platform }}
+      qtArch: ${{ matrix.qtArch }}
+      qtVersion: 5.12.10
+  

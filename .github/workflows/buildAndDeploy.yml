@@ -1,0 +1,102 @@
+
+name: Build and deploy
+
+on:
+  workflow_call:
+    inputs:
+      buildType:
+        required: true
+        type: string
+      os:
+        required: true
+        type: string
+      arch:
+        required: true
+        type: string
+      platform:
+        required: true
+        type: string
+      qtArch:
+        type: string
+      qtVersion:
+        requried: true
+        type: string
+    outputs:
+      artifactName:
+        description: "Name of the upload artifact"
+        value: ${{ jobs.buildAndDeploy.outputs.artifactName }}
+
+jobs:
+  buildAndDeploy:
+    name: Build-${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.buildType }}
+    runs-on: ${{ inputs.os }}
+    outputs:
+      artifactName: ${{ steps.getArtifactName.outputs.name }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: lukka/get-cmake@latest
+      
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ inputs.arch }}
+      
+      - name: Install dependencies (linux)
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install libasound2-dev
+          mkdir tools
+          cd tools
+          wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
+          chmod a+x linuxdeployqt
+
+      - name: Cache deps
+        uses: actions/cache@v2
+        with:
+          # FetchContent puts all its content in ${CMAKE_BINARY_DIR}/_deps
+          # so we can just cache this entire folder
+          path: ${{ github.workspace }}/build/_deps
+          key: ${{ inputs.os }}-${{ inputs.arch }}-${{ hashFiles('src/dependencies.cmake') }}-deps
+     
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v1
+        with:
+          path: ../Qt
+          key: ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.qtVersion }}-QtCache
+      
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          py7zrversion: ==0.16.2  # workaround for windows-x86
+          version: ${{ inputs.qtVersion }}
+          arch: ${{ inputs.qtArch }}
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+      
+      - name: Configure
+      
+      - name: Build
+        run: |
+          cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=${{ inputs.buildType }} -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON
+          cmake --build build --target all
+      
+      - name: Test
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          cd build
+          ctest --output-on-failure
+
+      - name: Deploy
+        run: cmake --build build --target deploy
+
+      - name: Get artifact name
+        id: getArtifactName
+        run: echo "::set-output artifactName=trackerboy-build-${{ matrix.platform }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
+      
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ steps.getArtifactName.outputs.name }}
+          path: build/src/deploy/

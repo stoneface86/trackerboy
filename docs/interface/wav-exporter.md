@@ -1,3 +1,0 @@
-
-# WAV Exporter
-
