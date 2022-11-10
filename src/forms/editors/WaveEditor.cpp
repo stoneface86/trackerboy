@@ -53,19 +53,17 @@ WaveEditor::WaveEditor(
     auto trianglebtn = new QPushButton(tr("Triangle"));
     auto sawbtn = new QPushButton(tr("Sawtooth"));
     auto sinebtn = new QPushButton(tr("Sine"));
-    presetLayout->addWidget(square50btn);
-    presetLayout->addWidget(square25btn);
-    presetLayout->addWidget(trianglebtn);
-    presetLayout->addWidget(sawbtn);
-    presetLayout->addWidget(sinebtn);
+    for (auto btn : {square50btn, square25btn, trianglebtn, sawbtn, sinebtn}) {
+        btn->setAutoDefault(false);
+        presetLayout->addWidget(btn);
+    }
 
     auto waveramLayout = new QHBoxLayout;
     mWaveramEdit = new QLineEdit;
     auto clearbtn = new QPushButton(tr("Clear"));
+    clearbtn->setAutoDefault(false);
     waveramLayout->addWidget(mWaveramEdit, 1);
     waveramLayout->addWidget(clearbtn);
-
-
 
     auto layout = new QVBoxLayout;
     mWaveEdit = new GraphEdit(*mWaveModel);

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+ - Bug when hitting enter in the Wave Editor sets the waveform to 50% duty.
+
 ## [0.6.2] - 2022-08-22
 
 ### Fixed
