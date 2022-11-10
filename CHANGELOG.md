@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+ - Example modules to be included with each release. Thank you to forple,
+   gazanmei and sttng for their submissions!
+
 ### Fixed
  - Bug when hitting enter in the Wave Editor sets the waveform to 50% duty.
 
