@@ -329,8 +329,8 @@ BackspaceCmd::BackspaceCmd(PatternModel &model, QUndoCommand *parent) :
     QUndoCommand(parent),
     mModel(model),
     mPattern(model.mCursorPattern),
-    mRow(model.mCursor.row),
     mTrack(model.mCursor.track),
+    mRow(model.mCursor.row),
     mDeleted(model.currentPattern()[mRow - 1][mTrack])
 {
 }
