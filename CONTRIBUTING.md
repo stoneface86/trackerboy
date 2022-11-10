@@ -44,7 +44,6 @@ as well as editing the build system.
 All code in this repo should be consistent in style and naming scheme. Please
 follow these rules when contributing:
  * 4-space indentation, use spaces
- * Unix style newlines (LF) for all files
  * curly braces on same line, except for constructors
  * class/struct/typedef names should use PascalCase
  * function names and variables should use camelCase

@@ -1,1 +1,20 @@
-* text=auto eol=lf
+*               text=auto
+*.bmp           binary
+*.cmake         text
+*.cpp           text
+*.desktop       text eof=lf
+*.editorconfig  text
+*.gitattributes text
+*.gitignore     text
+*.gitmodules    text
+*.hpp           text
+*.icns          binary
+*.ico           binary
+*.in            text
+*.md            text
+*.png           binary
+*.qrc           text
+*.rc            text
+*.tbm           binary
+*.txt           text
+*.yml           text
