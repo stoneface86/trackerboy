@@ -362,7 +362,7 @@ Config::Categories MainWindow::applyConfig(Config const& config, Config::Categor
 }
 
 void MainWindow::showAboutDialog() {
-    QMessageBox::about(this, tr("About"), ABOUT_STR);
+    QMessageBox::about(this, tr("About"), getAboutString());
 }
 
 void MainWindow::showAudioDiag() {

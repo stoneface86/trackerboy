@@ -1,8 +1,9 @@
+
 project(src CXX)
 
-#
 # Dependencies
-#
+# =============================================================================
+
 # interface library containing all of our dependencies
 add_library(deps INTERFACE)
 
@@ -22,19 +23,7 @@ if (FETCH_DEPS)
         add_subdirectory("${libtrackerboy_SOURCE_DIR}" "${libtrackerboy_BINARY_DIR}")
     endif ()
 
-    FetchContent_GetProperties(rtmidi)
-    if (NOT rtmidi_POPULATED)
-        message(STATUS "Fetching RtMidi")
-        FetchContent_Populate(rtmidi)
-
-        set(RTMIDI_BUILD_STATIC_LIBS ON)
-        set(RTMIDI_BUILD_TESTING OFF)
-        add_subdirectory("${rtmidi_SOURCE_DIR}" "${rtmidi_BINARY_DIR}")
-    endif ()
-
-    target_link_libraries(deps INTERFACE trackerboy rtmidi)
-    # hack: RtMidi CMakeList doesn't add an include dir for the rtmidi library
-    target_include_directories(deps INTERFACE "${rtmidi_SOURCE_DIR}")
+    target_link_libraries(deps INTERFACE trackerboy)
 else ()
 
     # do not fetch dependencies, find them on the system instead
@@ -42,11 +31,11 @@ else ()
     # deps so that they can be cached
 
     find_package(libtrackerboy CONFIG REQUIRED)
-    find_package(RtMidi CONFIG REQUIRED)
 
-    target_link_libraries(deps INTERFACE trackerboy::trackerboy RtMidi::rtmidi)
+    target_link_libraries(deps INTERFACE trackerboy::trackerboy)
 endif ()
 
+# Miniaudio
 set(MA_NO_DECODING ON)
 set(MA_NO_ENCODING ON)
 set(MA_NO_GENERATION ON)
@@ -54,6 +43,11 @@ set(MA_NO_CUSTOM ON)
 add_subdirectory(miniaudio)
 target_link_libraries(deps INTERFACE miniaudio)
 
+# RtMidi
+find_package(RtMidi REQUIRED)
+target_link_libraries(deps INTERFACE RtMidi::rtmidi)
+
+# Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
@@ -67,6 +61,9 @@ elseif (APPLE)
 else ()
     set(GUI_TYPE "")
 endif ()
+
+# Build targets
+# =============================================================================
 
 #
 # Creates a source list containing the header and source files for each argument
@@ -263,9 +260,8 @@ target_link_libraries(trackerboy_ui PRIVATE ui)
 set_target_properties(trackerboy_ui PROPERTIES OUTPUT_NAME "trackerboy")
 
 
-#
 # Deployment
-#
+# =============================================================================
 
 option(ENABLE_DEPLOYMENT "enables deployment of the trackerboy application" OFF)
 

@@ -1,13 +1,17 @@
 
 #include "forms/MainWindow/aboutstr.hpp"
 
+#include <QString>
 
-const char* ABOUT_STR =
-R"html(
-<html><head/>
-<body>
+#include "miniaudio.h"
+#include "RtMidi.h"
+
+
+static QString const ABOUT_STR_BEGIN =
+QStringLiteral(R"html(
+<html><head/><body>
 <h1>Trackerboy v@CMAKE_PROJECT_VERSION@</h1>
-<h3>Gameboy/Gameboy Color music tracker</h3>
+<h3>Game Boy / Game Boy Color music tracker</h3>
 <h3>Copyright (C) 2019-2022 stoneface86</h3>
 <br />
 <span>Repo - <a href="https://github.com/stoneface86/trackerboy">https://github.com/stoneface86/trackerboy</a></span>
@@ -17,10 +21,26 @@ R"html(
 <p>This software is licensed under the MIT License.</p>
 <hr />
 <h3>Libraries</h3>
-<ul>
-<li>miniaudio 0.10.42 (C) David Reid</li>
-<li>RtMidi 4.0.0 (C) Gary P. Scavone</li>
-</ul>
-</body>
-</html>
-)html";
+)html");
+
+static QString const ABOUT_STR_END = QStringLiteral("</ul></body></html>");
+
+static void addLibraryItem(QString &str, QString const& item) {
+    str.append(QStringLiteral("<li>"));
+    str.append(item);
+    str.append(QStringLiteral("</li>"));
+}
+
+QString getAboutString() {
+    QString result(ABOUT_STR_BEGIN);
+    addLibraryItem(result,
+        QStringLiteral("miniaudio %1 (C) David Reid").arg(ma_version_string())
+    );
+    addLibraryItem(result,
+        QStringLiteral("RtMidi %1 (C) Gary P. Scavone").arg(
+            QString::fromStdString(RtMidi::getVersion())
+        )
+    );
+    result.append(ABOUT_STR_END);
+    return result;
+}
