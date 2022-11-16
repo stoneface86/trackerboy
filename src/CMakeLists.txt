@@ -4,48 +4,38 @@ project(src CXX)
 # Dependencies
 # =============================================================================
 
+
 # interface library containing all of our dependencies
 add_library(deps INTERFACE)
 
-option(FETCH_DEPS "Automatically fetch required dependencies" ON)
-if (FETCH_DEPS)
+include(CPM)
 
-    include(FetchContent)
-    include("${CMAKE_CURRENT_LIST_DIR}/dependencies.cmake")
-
-    # FetchContent_MakeAvailable is not used for compatibility reasons
-
-    FetchContent_GetProperties(libtrackerboy)
-    if (NOT libtrackerboy_POPULATED)
-        message(STATUS "Fetching libtrackerboy")
-        FetchContent_Populate(libtrackerboy)
-        set(LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY})
-        add_subdirectory("${libtrackerboy_SOURCE_DIR}" "${libtrackerboy_BINARY_DIR}")
-    endif ()
-
-    target_link_libraries(deps INTERFACE trackerboy)
-else ()
-
-    # do not fetch dependencies, find them on the system instead
-    # this is typically only used by CI, as CI will build and install the
-    # deps so that they can be cached
-
-    find_package(libtrackerboy CONFIG REQUIRED)
-
-    target_link_libraries(deps INTERFACE trackerboy::trackerboy)
-endif ()
-
-# Miniaudio
-set(MA_NO_DECODING ON)
-set(MA_NO_ENCODING ON)
-set(MA_NO_GENERATION ON)
-set(MA_NO_CUSTOM ON)
-add_subdirectory(miniaudio)
-target_link_libraries(deps INTERFACE miniaudio)
+# libtrackerboy
+CPMAddPackage(
+    NAME libtrackerboy
+    GITHUB_REPOSITORY "stoneface86/libtrackerboy"
+    GIT_TAG "cpp-last"
+    OPTIONS
+        "LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY}"
+)
+target_link_libraries(deps INTERFACE trackerboy)
 
 # RtMidi
-find_package(RtMidi REQUIRED)
-target_link_libraries(deps INTERFACE RtMidi::rtmidi)
+CPMAddPackage(
+    NAME RtMidi
+    GITHUB_REPOSITORY "thestk/rtmidi"
+    VERSION "5.0.0"
+    GIT_TAG "5.0.0"
+    OPTIONS
+        "BUILD_SHARED_LIBS OFF"
+        "RTMIDI_API_JACK OFF"
+        "RTMIDI_BUILD_TESTING OFF"
+)
+target_link_libraries(deps INTERFACE rtmidi)
+
+# Miniaudio
+add_subdirectory(miniaudio)
+target_link_libraries(deps INTERFACE miniaudio)
 
 # Qt
 set(CMAKE_AUTOMOC ON)

@@ -3,8 +3,16 @@
 ## Unreleased
 
 ### Added
- - Example modules to be included with each release. Thank you to forple,
-   gazanmei and sttng for their submissions!
+ - Example modules to be included with each release. 
+   
+   Thank you to the following authors who provided these modules:
+    - forple
+    - gazanmei
+    - sttng
+    - omega_bagel
+
+### Changed
+ - RtMidi library updated, 4.0.0 -> 5.0.0
 
 ### Fixed
  - Bug when hitting enter in the Wave Editor sets the waveform to 50% duty.

@@ -1,66 +1,59 @@
 # Building
 
-UPDATE: Only windows and linux builds are supported at this point in time.
-I simply do not have the resources to build and test for all platforms.
-If you have any issues building on macOS, feel free to submit an issue or
-pull request. Contributions are always welcome.
-
-Use the main CMakeLists.txt to build the library. The ui and demo programs are
-optional, and can be enabled/disabled by setting their respective options.
+Use the main CMakeLists.txt to build the application. See below for available
+build options.
 
 Requirements:
  * C/C++ compiler with the C++17 standard or later
  * CMake 3.12 or higher
- * [Miniaudio](https://github.com/mackron/miniaudio)
- * [libtrackerboy](https://github.com/stoneface86/libtrackerboy)
- * [RtMidi](https://github.com/thestk/rtmidi) (4.0.0)
  * (Linux only) ALSA development libraries
  * Qt v5.12.10 or higher
 
-Miniaudio, libtrackerboy and RtMidi are acquired via FetchContent so there is no
-need to install these libraries on your system. You will however, need to
-install Qt on your system.
+Dependencies satisfied by CMake:
+ * [Miniaudio](https://github.com/mackron/miniaudio)
+ * [libtrackerboy](https://github.com/stoneface86/libtrackerboy/tree/cpp-last)
+ * [RtMidi](https://github.com/thestk/rtmidi)
 
-Note: I am using my own fork of miniaudio (located [here](https://github.com/stoneface86/miniaudio-cmake))
-that adds cmake support.
+Miniaudio source is included in this repo, also libtrackerboy and RtMidi 
+are acquired via CPM.cmake, so there is no need to install these libraries.
 
-# Recommended build guide
+For detailed instructions for your OS, follow one of these build guides:
+ * [Linux](#linux-build-guide)
+ * [MacOS](#macos-build-guide)
+ * [Windows](#windows-build-guide)
 
-Follow this guide to build Trackerboy.
+It is assumed you already have the essentials installed (C++ compiler, git), so
+the installation of these will not be covered by these guides.
 
-## 1. Install Qt / dependencies
+# Linux build guide
 
-You will need to install the Qt5 development libraries.
-Here are a couple ways to get it:
- * Install via the official Qt installer (requires Qt account)
- * Install via [aqtinstall](https://github.com/miurahr/aqtinstall)
- * Install via your OS's package manager
+## 1. Install Dependencies
 
-I recommend using your system's package manager or aqtinstall if your system
-does not have a package manager.
+You can also install Qt via [aqtinstall](https://github.com/miurahr/aqtinstall)
 
-Depending on how you installed qt, you may have to set CMAKE_PREFIX_PATH to
-your Qt installation when configuring, simply pass
-`-DCMAKE_PREFIX_PATH="path/to/qt"` when running cmake. See these
-[instructions](https://doc.qt.io/qt-5/cmake-get-started.html) for more details.
-
-For Linux builds, you will need to install the ALSA development libraries
-(needed by RtMidi). For apt-based distros:
+Arch:
 ```sh
-sudo apt install libasound2-dev
+sudo pacman -Sy --needed alsa-lib cmake qt5-base
 ```
 
-## 2. Clone the repository
+Ubuntu:
+```sh
+sudo apt update
+sudo apt install libasound2-dev cmake qtbase5-dev
+```
+
+For other distros the package manager and package names may differ, but the
+process is the same. Install ALSA development libraries, CMake and Qt5 base
+(Trackerboy only uses QtWidgets, QtGui and QtCore).
+
+## 2. Get trackerboy
 
 ```sh
 git clone https://github.com/stoneface86/trackerboy
 cd trackerboy
 ```
 
-## 3. Build
-
-Configure using cmake for a release or debug build. Debug is assumed if
-you do not specify CMAKE_BUILD_TYPE.
+## 3. Configure
 
 For a release build (users):
 ```sh
@@ -72,26 +65,119 @@ For a debug build (developers):
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 ```
 
-Then build:
+## 4. Build
+
 ```sh
 cmake --build build --target all
 ```
 
-## 4. (Optional) install
+If successful you can run Trackerboy via:
+```sh
+./build/src/trackerboy
+```
 
-Depending on your CMAKE_INSTALL_PREFIX, you may need administrator priviledges
+# MacOS build guide
+
+This guide assumes you have [brew](https://brew.sh) installed.
+
+## 1. Install dependencies
+
+```sh
+brew install cmake qt5
+```
+
+Note: qt5 is keg-only, so cmake will not find it unless we set Qt5_DIR
+accordingly.
+
+## 2. Get trackerboy
+
+Same as the [linux instructions](#2-get-trackerboy)
+
+## 3. Configure
+
+For a release build (users):
+```sh
+cmake -S . -B build -DQt5_DIR=/usr/local/opt/qt@5/lib/cmake/Qt5 -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON
+```
+
+For a debug build (developers):
+```sh
+cmake -S . -B build -DQt5_DIR=/usr/local/opt/qt@5/lib/cmake/Qt5 -DCMAKE_BUILD_TYPE=Debug
+```
+
+## 4. Build
+
+Same as the [linux instructions](#4-build)
+
+# Windows build guide
+
+## 1. Install Qt
+
+Use [aqtinstall](https://github.com/miurahr/aqtinstall), the official installer
+asks for a user account. You will need pip installed.
+
+```sh
+pip install -U pip
+pip install aqtinstall
+```
+
+Now get your desired version of Qt using `aqt`, install this to a directory of
+your choice which I will refer to as `OUT`. `VERSION` is the Qt version to
+install, and `ARCH` is the target architecture (32-bit or 64-bit + msvc or
+mingw). If you are unsure which one to pick, then run
+`aqt list-qt windows desktop --arch VERSION` for a list of available choices.
+
+Example: for Qt 5.15.2, 64-bit MSVC:
+```sh
+aqt install-qt windows desktop 5.15.2 win64_msvc2019_64 --outputdir OUT
+```
+
+Example: for Qt 5.15.2, 32-bit MSVC:
+```sh
+aqt install-qt windows desktop 5.15.2 win32_msvc2019_64 --outputdir OUT
+```
+
+When configuring CMake, you will need to pass this path to variable Qt5_DIR,
+substituting OUT, VERSION and ARCH with your selections:
+```
+OUT/VERSION/ARCH/lib/cmake/Qt5
+```
+
+Make note of this path, the guide will refer to this path as QTDIR
+
+## 2. Get trackerboy
+
+Same as the [linux instructions](#2-get-trackerboy)
+
+## 3. Configure
+
+When configuring you will need to pass your QTDIR location to
+cmake as variable Qt5_DIR.
+
+For a release build (users):
+```sh
+cmake -S . -B build -DQt5_DIR=QTDIR -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON
+```
+
+For a debug build (developers):
+```sh
+cmake -S . -B build -DQt5_DIR=QTDIR -DCMAKE_BUILD_TYPE=Debug
+```
+
+## 4. Build
+
+Same as the [linux instructions](#4-build)
+
+
+# (Optional) Install
+
+You can install the built binary if desired. Depending on your
+CMAKE_INSTALL_PREFIX, you may need administrator priviledges.
 ```sh
 cmake --build build --target install
 ```
 
-## Building without FetchContent
-
-If you are unable to use FetchContent, you will need to acquire the source,
-build and install for all of the required dependencies (miniaudio, libtrackerboy
-and RtMidi). Then you will set `CMAKE_PREFIX_PATH` to the path of the installed
-dependencies when configuring, along with `FETCH_DEPS=OFF`.
-
-## Options
+# Options
 
 Here is a table of options that can be used when building.
 
@@ -100,7 +186,6 @@ Here is a table of options that can be used when building.
 | BUILD_TESTING     | BOOL | ON      | Enables unit testing                                |
 | ENABLE_UNITY      | BOOL | OFF     | Enables unity builds (requires cmake 3.16)          |
 | ENABLE_DEPLOYMENT | BOOL | OFF     | Enables the deploy target                           |
-| FETCH_DEPS        | BOOL | ON      | Acquires dependencies during configuration          |
 
 Unity builds should only be used if you are just building trackerboy. It is
 not recommended to have this enabled when developing.
