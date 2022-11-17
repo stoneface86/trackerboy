@@ -51,34 +51,37 @@ jobs:
           wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
           chmod a+x linuxdeployqt
 
-      - name: Cache deps
-        uses: actions/cache@v2
+      - name: CPM Cache
+        id: cache-cpm
+        uses: actions/cache@v3
         with:
-          # FetchContent puts all its content in ${CMAKE_BINARY_DIR}/_deps
-          # so we can just cache this entire folder
-          path: ${{ github.workspace }}/build/_deps
-          key: ${{ inputs.os }}-${{ inputs.arch }}-${{ hashFiles('src/dependencies.cmake') }}-deps
+          path: ~/cpm-cache
+          key: ${{ inputs.os }}-${{ inputs.arch }}-cpm-${{ hashFiles('**/') }}
+          restore-keys: |
+            ${{ inputs.os }}-${{ inputs.arch }}-cpm-
      
       - name: Cache Qt
         id: cache-qt
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
-          path: ../Qt
-          key: ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.qtVersion }}-QtCache
+          path: ~/qt
+          key: ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.qtVersion }}-qt
       
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
         with:
           py7zrversion: ==0.16.2  # workaround for windows-x86
+          dir: ~/qt
           version: ${{ inputs.qtVersion }}
           arch: ${{ inputs.qtArch }}
           cached: ${{ steps.cache-qt.outputs.cache-hit }}
       
       - name: Configure
+        run: |
+          cmake -S . -B build -GNinja -DCPM_SOURCE_CACHE=~/cpm-cache -DCMAKE_BUILD_TYPE=${{ inputs.buildType }} -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON
       
       - name: Build
         run: |
-          cmake -S . -B build -GNinja -DCMAKE_BUILD_TYPE=${{ inputs.buildType }} -DENABLE_UNITY=ON -DENABLE_DEPLOYMENT=ON
           cmake --build build --target all
       
       - name: Test
@@ -93,7 +96,7 @@ jobs:
 
       - name: Get artifact name
         id: getArtifactName
-        run: echo "::set-output artifactName=trackerboy-build-${{ matrix.platform }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
+        run: echo "name=trackerboy-build-${{ matrix.platform }}-${{ matrix.arch }}" >> $GITHUB_OUTPUT
       
       - name: Upload
         uses: actions/upload-artifact@v3
