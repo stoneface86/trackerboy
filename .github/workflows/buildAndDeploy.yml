@@ -19,7 +19,7 @@ on:
       qtArch:
         type: string
       qtVersion:
-        requried: true
+        required: true
         type: string
     outputs:
       artifactName:
