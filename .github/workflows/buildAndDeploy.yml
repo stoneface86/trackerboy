@@ -59,22 +59,14 @@ jobs:
           key: ${{ inputs.os }}-${{ inputs.arch }}-cpm-${{ hashFiles('**/') }}
           restore-keys: |
             ${{ inputs.os }}-${{ inputs.arch }}-cpm-
-     
-      - name: Cache Qt
-        id: cache-qt
-        uses: actions/cache@v3
-        with:
-          path: ~/qt
-          key: ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.qtVersion }}-qt
       
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          py7zrversion: ==0.16.2  # workaround for windows-x86
-          dir: ~/qt
           version: ${{ inputs.qtVersion }}
           arch: ${{ inputs.qtArch }}
-          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+          cache: true
+          cache-key-prefix: ${{ inputs.os }}-${{ inputs.arch }}-${{ inputs.qtVersion }}-qt
       
       - name: Configure
         run: |

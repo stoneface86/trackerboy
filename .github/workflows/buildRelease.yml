@@ -5,7 +5,7 @@
 # builds release binaries and drafts a release
 #
 
-name: Create a release for a pushed version tag
+name: '[tag] publish release'
 on:
   push:
     tags:
