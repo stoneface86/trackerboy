@@ -34,7 +34,7 @@ jobs:
             arch: x86
             platform: windows
             qtArch: win32_msvc2017
-    uses: .github/workflows/buildAndDeploy.yml
+    uses: ./.github/workflows/buildAndDeploy.yml
     with:
       buildType: Debug
       os: ${{ matrix.os }}
