@@ -20,6 +20,7 @@ project (
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 option(ENABLE_UNITY "Enable unity builds" OFF)
+option(BUILD_TESTING "Build unit tests" OFF)
 
 if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
     set(BUILD_ARCH "x86")

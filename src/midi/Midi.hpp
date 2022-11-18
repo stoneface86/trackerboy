@@ -9,7 +9,17 @@
 #include <QMutex>
 #include <QObject>
 
+#ifdef __APPLE__
+// std::optional<RtMidiIn> does not compile on Apple Clang
+// use this nonstd implementation instead
+#define optional_CONFIG_SELECT_OPTIONAL optional_OPTIONAL_NONSTD
+#include "nonstd/optional.hpp"
+#define OPTIONAL(T) nonstd::optional<T>
+#else
 #include <optional>
+#define OPTIONAL(T) std::optional<T>
+#endif
+
 #include <vector>
 
 
@@ -77,7 +87,7 @@ private:
     static void midiErrorCallback(RtMidiError::Type type, const std::string &errorText, void *userData);
     void handleMidiError(RtMidiError::Type type, const std::string &errorText);
 
-    std::optional<RtMidiIn> mMidiIn;
+    OPTIONAL(RtMidiIn) mMidiIn;
 
     QMutex mMutex;
     // start of mutex requirement
@@ -93,3 +103,5 @@ private:
 
 
 };
+
+#undef OPTIONAL
