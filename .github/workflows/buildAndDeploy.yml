@@ -87,6 +87,7 @@ jobs:
         run: cmake --build build --target deploy
 
       - name: Get artifact name
+        shell: bash
         run: |
           NAME="trackerboy-build-${{ inputs.platform }}-${{ inputs.arch }}"
           echo "name=$NAME" >> $GITHUB_OUTPUT
