@@ -87,11 +87,13 @@ jobs:
         run: cmake --build build --target deploy
 
       - name: Get artifact name
-        id: getArtifactName
-        run: echo "name=trackerboy-build-${{ inputs.platform }}-${{ inputs.arch }}" >> $GITHUB_OUTPUT
+        run: |
+          NAME="trackerboy-build-${{ inputs.platform }}-${{ inputs.arch }}"
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "artifactName=$NAME" >> $GITHUB_ENV
       
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.getArtifactName.outputs.name }}
+          name: ${{ env.artifactName }}
           path: build/src/deploy/
