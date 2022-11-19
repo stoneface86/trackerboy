@@ -183,7 +183,7 @@ Here is a table of options that can be used when building.
 
 | Option            | Type | Default | Description                                         |
 |-------------------|------|---------|-----------------------------------------------------|
-| BUILD_TESTING     | BOOL | ON      | Enables unit testing                                |
+| BUILD_TESTING     | BOOL | OFF     | Enables unit testing                                |
 | ENABLE_UNITY      | BOOL | OFF     | Enables unity builds (requires cmake 3.16)          |
 | ENABLE_DEPLOYMENT | BOOL | OFF     | Enables the deploy target                           |
 

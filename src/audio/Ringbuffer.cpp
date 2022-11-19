@@ -50,7 +50,7 @@ size_t RingbufferBase::read(void *data, size_t sizeInBytes) {
 
     memcpy(data, src, bytesToRead);
     
-    result = ma_rb_commit_read(&mRingbuffer, bytesToRead, src);
+    result = ma_rb_commit_read(&mRingbuffer, bytesToRead);
     Q_ASSERT(result == MA_SUCCESS || result == MA_AT_END);
     
     Q_UNUSED(result)
@@ -66,7 +66,7 @@ size_t RingbufferBase::write(void const *data, size_t sizeInBytes) {
 
     memcpy(dest, data, bytesToWrite);
     
-    result = ma_rb_commit_write(&mRingbuffer, bytesToWrite, dest);
+    result = ma_rb_commit_write(&mRingbuffer, bytesToWrite);
     Q_ASSERT(result == MA_SUCCESS || result == MA_AT_END);
     
     Q_UNUSED(result)
@@ -122,8 +122,8 @@ void* RingbufferBase::acquireRead(size_t &outSize) {
     return buf;
 }
 
-void RingbufferBase::commitRead(void *buf, size_t size) {
-    auto result = ma_rb_commit_read(&mRingbuffer, size, buf);
+void RingbufferBase::commitRead(size_t size) {
+    auto result = ma_rb_commit_read(&mRingbuffer, size);
     Q_ASSERT(result == MA_SUCCESS);
     Q_UNUSED(result)
 }
@@ -136,8 +136,8 @@ void* RingbufferBase::acquireWrite(size_t &outSize) {
     return buf;
 }
 
-void RingbufferBase::commitWrite(void *buf, size_t size) {
-    auto result = ma_rb_commit_write(&mRingbuffer, size, buf);
+void RingbufferBase::commitWrite(size_t size) {
+    auto result = ma_rb_commit_write(&mRingbuffer, size);
     Q_ASSERT(result == MA_SUCCESS);
     Q_UNUSED(result)
 }

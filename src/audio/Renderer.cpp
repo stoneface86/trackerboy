@@ -631,7 +631,7 @@ void Renderer::render() {
             // send a copy to the visualizer buffer as well
             visHandle->write(writePtr, toWrite);
             
-            writer.commitWrite(writePtr, toWrite);
+            writer.commitWrite(toWrite);
             
             handle->writesSinceLastPeriod += toWrite;
             framesToRender -= toWrite;

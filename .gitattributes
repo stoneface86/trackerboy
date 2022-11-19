@@ -1,12 +1,14 @@
 *               text=auto
 *.bmp           binary
 *.cmake         text
+*.c             text
 *.cpp           text
 *.desktop       text eof=lf
 *.editorconfig  text
 *.gitattributes text
 *.gitignore     text
 *.gitmodules    text
+*.h             text
 *.hpp           text
 *.icns          binary
 *.ico           binary
@@ -18,3 +20,5 @@
 *.tbm           binary
 *.txt           text
 *.yml           text
+src/miniaudio/miniaudio.*   linguist-vendored
+src/nonstd/*                linguist-vendored

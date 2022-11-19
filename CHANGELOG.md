@@ -12,6 +12,7 @@
     - omega_bagel
 
 ### Changed
+ - Miniaudio library updated, v0.10.42 -> v0.11.11
  - RtMidi library updated, 4.0.0 -> 5.0.0
 
 ### Fixed

@@ -37,11 +37,11 @@ protected:
     // "low level" read/write access
     void* acquireRead(size_t &outSize);
 
-    void commitRead(void *buf, size_t size);
+    void commitRead(size_t size);
 
     void* acquireWrite(size_t &outSize);
 
-    void commitWrite(void *buf, size_t size);
+    void commitWrite(size_t size);
 
     size_t availableRead();
 
@@ -98,8 +98,8 @@ public:
             return result;
         }
 
-        void commitRead(T *buf, size_t count) {
-            mRb.commitRead(buf, count * SIZE_UNIT);
+        void commitRead(size_t count) {
+            mRb.commitRead(count * SIZE_UNIT);
         }
 
         size_t availableRead() {
@@ -145,8 +145,8 @@ public:
             return result;
         }
 
-        void commitWrite(T *buf, size_t count) {
-            mRb.commitWrite(buf, count * SIZE_UNIT);
+        void commitWrite(size_t count) {
+            mRb.commitWrite(count * SIZE_UNIT);
         }
 
         size_t availableWrite() {

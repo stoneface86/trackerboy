@@ -13,11 +13,18 @@ namespace TU {
 //
 // logging callback for miniaudio, redirects to Qt's message logging utility
 //
-void logCallback(ma_context* pContext, ma_device* pDevice, ma_uint32 logLevel, const char* message) {
-    Q_UNUSED(pContext)
-    Q_UNUSED(pDevice)
+void logCallback(void *pUserData, ma_uint32 logLevel, const char* message) {
+    Q_UNUSED(pUserData)
 
     QMessageLogger logger;
+
+    // - miniaudio logs with a newline at end
+    // - QDebug automatically adds a newline which we cannot disable
+    // so we have to remove the newline (if it exists) from message >.>
+    std::string msgFixed(message);
+    if (msgFixed.length() > 0 && *msgFixed.rbegin() == '\n') {
+        msgFixed.pop_back();
+    }
 
     [logLevel, &logger]() {
         switch (logLevel) {
@@ -28,7 +35,7 @@ void logCallback(ma_context* pContext, ma_device* pDevice, ma_uint32 logLevel, c
             default:
                 return logger.info();
         }
-    }() << "[Miniaudio]" << message;
+    }() << "[Miniaudio]" << msgFixed.c_str();
 }
 
 }
@@ -126,10 +133,16 @@ void AudioEnumerator::Context::probe() {
         // context not initialized, attempt to do so and log error on failure
 
         auto config = ma_context_config_init();
-        config.logCallback = TU::logCallback;
         auto result = ma_context_init(&mBackend, 1, &config, mContext.get());
         if (result == MA_SUCCESS) {
             mInitialized = true;
+            // register logging callback
+            auto result = ma_log_register_callback(
+                ma_context_get_log(mContext.get()),
+                ma_log_callback_init(TU::logCallback, nullptr)
+            );
+            Q_ASSERT(result == MA_SUCCESS);
+            Q_UNUSED(result)
         } else {
             qCritical().nospace() << "Failed to initialize audio backend '"
                                   << ma_get_backend_name(mBackend) << "': "

@@ -14,6 +14,7 @@ include(CPM)
 CPMAddPackage(
     NAME libtrackerboy
     GITHUB_REPOSITORY "stoneface86/libtrackerboy"
+    VERSION "cpp-last"
     GIT_TAG "cpp-last"
     OPTIONS
         "LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY}"

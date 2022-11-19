@@ -123,6 +123,7 @@ private:
 
         // a pointer is used for lazy loading
         // this way we only initialize the backends when they are used
+        // also shared_ptr cause the ma_contexts have a lifetime outside its container
 
 
         std::shared_ptr<ma_context> mContext;
