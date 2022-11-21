@@ -8,6 +8,7 @@ Requirements:
  * CMake 3.12 or higher
  * (Linux only) ALSA development libraries
  * Qt v6.0.0 or higher
+ * x86_64 system, supported OSes: Linux, MacOS, Windows
 
 Dependencies satisfied by CMake:
  * [Miniaudio](https://github.com/mackron/miniaudio)

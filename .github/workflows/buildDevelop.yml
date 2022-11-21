@@ -22,18 +22,13 @@ jobs:
           - os: macos-latest
             arch: x64
             platform: osx
-            qtArch: ''
           - os: ubuntu-latest
             arch: x64
             platform: linux
           - os: windows-latest
             arch: x64
             platform: windows
-            qtArch: win64_msvc2017_64
-          - os: windows-latest
-            arch: x86
-            platform: windows
-            qtArch: win32_msvc2017
+            qtArch: win64_msvc2019_64
     uses: ./.github/workflows/buildAndDeploy.yml
     with:
       buildType: Debug
