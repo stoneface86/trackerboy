@@ -7,7 +7,7 @@ Requirements:
  * C/C++ compiler with the C++17 standard or later
  * CMake 3.12 or higher
  * (Linux only) ALSA development libraries
- * Qt v5.12.10 or higher
+ * Qt v6.0.0 or higher
 
 Dependencies satisfied by CMake:
  * [Miniaudio](https://github.com/mackron/miniaudio)
@@ -33,13 +33,13 @@ You can also install Qt via [aqtinstall](https://github.com/miurahr/aqtinstall)
 
 Arch:
 ```sh
-sudo pacman -Sy --needed alsa-lib cmake qt5-base
+sudo pacman -Sy --needed alsa-lib cmake qt6-base
 ```
 
 Ubuntu:
 ```sh
 sudo apt update
-sudo apt install libasound2-dev cmake qtbase5-dev
+sudo apt install libasound2-dev cmake qtbase6-dev
 ```
 
 For other distros the package manager and package names may differ, but the

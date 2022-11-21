@@ -163,7 +163,7 @@ void PatternGrid::dragLeaveEvent(QDragLeaveEvent *evt) {
 
 void PatternGrid::dragMoveEvent(QDragMoveEvent *evt) {
 
-    auto pos = evt->pos();
+    auto pos = evt->position().toPoint();
 
     auto cursor = mouseToCursor(pos);
     cursor.column = std::clamp(cursor.column, 0, PatternCursor::MAX_COLUMNS - 1);

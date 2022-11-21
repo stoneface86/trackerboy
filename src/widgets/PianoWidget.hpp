@@ -58,7 +58,7 @@ private:
 
     QPixmap getPixmap(Pixmaps id);
     
-    int getNoteFromMouse(int x, int y);
+    int getNoteFromMouse(QPoint mousePos);
 
     bool mIsKeyDown;
     int mNote;

@@ -3,7 +3,7 @@
 
 
 Module::Editor::Editor(Module &mod) :
-    QMutexLocker(&mod.mMutex)
+    QMutexLocker<QMutex>(&mod.mMutex)
 {
 }
 

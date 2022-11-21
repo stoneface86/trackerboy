@@ -127,7 +127,7 @@ PatternEditor::PatternEditor(
     layout->addWidget(mVScroll,        0, 1, 2, 1);
     layout->addWidget(mHScroll,        2, 0);
     layout->setSpacing(0);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
 
     // connections

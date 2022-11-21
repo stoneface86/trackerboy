@@ -18,6 +18,7 @@ CPMAddPackage(
     GIT_TAG "cpp-last"
     OPTIONS
         "LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY}"
+    EXCLUDE_FROM_ALL ON
 )
 target_link_libraries(deps INTERFACE trackerboy)
 
@@ -31,6 +32,7 @@ CPMAddPackage(
         "BUILD_SHARED_LIBS OFF"
         "RTMIDI_API_JACK OFF"
         "RTMIDI_BUILD_TESTING OFF"
+    EXCLUDE_FROM_ALL ON
 )
 target_link_libraries(deps INTERFACE rtmidi)
 
@@ -41,7 +43,9 @@ target_link_libraries(deps INTERFACE miniaudio)
 # Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+set(CMAKE_AUTOUIC OFF)
+find_package(Qt6 COMPONENTS Widgets REQUIRED)
+qt_standard_project_setup()
 
 if (WIN32)
     set(GUI_TYPE WIN32)
@@ -204,7 +208,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # ui library
 #
 add_library(ui OBJECT ${UI_SRC})
-target_link_libraries(ui PUBLIC deps Qt5::Widgets)
+target_link_libraries(ui PUBLIC deps Qt6::Widgets)
 
 
 target_compile_features(ui PUBLIC cxx_std_17)
@@ -238,13 +242,13 @@ if (ENABLE_UNITY AND ${CMAKE_VERSION} VERSION_GREATER "3.15")
     set_target_properties(ui PROPERTIES UNITY_BUILD ON)
 endif ()
 
+if (APPLE)
+    set_source_files_properties(${MACOSX_APPICON_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+endif ()
 #
 # Target for the main ui, trackerboy_ui. We cannot use trackerboy as that name is used
 # for libtrackerboy. However, the resulting executable is named trackerboy, not trackerboy_ui
 #
-if (APPLE)
-    set_source_files_properties(${MACOSX_APPICON_ICNS} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-endif ()
 add_executable(trackerboy_ui ${GUI_TYPE} "main.cpp" $<TARGET_OBJECTS:ui> "${WINDOWS_APPICON_RC}" "${MACOSX_APPICON_ICNS}")
 target_link_libraries(trackerboy_ui PRIVATE ui)
 # output executable is "trackerboy" and not "trackerboy_ui"
@@ -261,16 +265,8 @@ if (ENABLE_DEPLOYMENT)
     set(DEPLOY_DIR "${CMAKE_CURRENT_BINARY_DIR}/deploy")
     set(HAS_DEPLOYMENT FALSE)
 
-    get_target_property(_qmake_executable Qt5::qmake IMPORTED_LOCATION)
+    get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
     get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-
-    find_program(MKDOCS mkdocs)
-    if (MKDOCS)
-        add_custom_target(
-            docs ${MKDOCS} build --no-directory-urls -d "${CMAKE_CURRENT_BINARY_DIR}/manual"
-            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-        )
-    endif ()
 
     if (WIN32)
         find_program(WINDEPLOYQT windeployqt HINTS "${_qt_bin_dir}")
@@ -309,31 +305,31 @@ if (ENABLE_DEPLOYMENT)
 
         # CI will download the tool into the tools folder in the source tree
         # you can do the same if deploying manually, or by just having it in your PATH
-        find_program(LINUXDEPLOYQT linuxdeployqt HINTS "${CMAKE_SOURCE_DIR}/tools")
-        if (LINUXDEPLOYQT)
+        find_program(LINUXDEPLOY linuxdeploy HINTS "${CMAKE_SOURCE_DIR}/tools")
+        find_program(LINUXDEPLOY_PLUGIN_QT linuxdeploy-plugin-qt HINTS "${CMAKE_SOURCE_DIR}/tools")
+        if (LINUXDEPLOY AND LINUXDEPLOY_PLUGIN_QT)
             set(HAS_DEPLOYMENT TRUE)
-
-            # linuxdeployqt creates an AppImage file with the following naming scheme:
-            #  <Appname>-<version>-<arch>.AppImage
-            # version is omitted if environment variable VERSION is unset and we are not in the repo folder
-            # otherwise it gets the value of $VERSION or the result of `git rev-parse --short HEAD` if unset
-            #
-            # linuxdeployqt offers no way to override this, and the dev seems adamant to keeping it this way so...
-            #
-            # this will be the filename of the generated AppImage
-            set(_linuxdeployqtOut "Trackerboy-v${CMAKE_PROJECT_VERSION}-x86_64.AppImage")
-
-            set(DEPLOY_TARGET "${DEPLOY_DIR}/${_linuxdeployqtOut}")
+            set(DEPLOY_TARGET "${DEPLOY_DIR}/trackerboy.AppImage")
             add_custom_command(
                 OUTPUT ${DEPLOY_TARGET}
-                COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/bin"
-                COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/lib"
-                COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/share/applications"
-                COMMAND ${CMAKE_COMMAND} -E make_directory "AppDir/usr/share/icons/hicolor/256x256"
-                COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" "AppDir/usr/bin"
-                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app/appicon-256.png" "AppDir/usr/share/icons/hicolor/256x256/trackerboy.png"
-                COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/trackerboy.desktop" "AppDir/usr/share/applications"
-                COMMAND ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" ${CMAKE_COMMAND} -E env VERSION="v${CMAKE_PROJECT_VERSION}" "${LINUXDEPLOYQT}" "${CMAKE_CURRENT_BINARY_DIR}/AppDir/usr/share/applications/trackerboy.desktop" -appimage -qmake="${_qmake_executable}"
+                COMMAND 
+                    ${CMAKE_COMMAND} -E env DESTDIR="${CMAKE_CURRENT_BINARY_DIR}/AppDir"
+                        ${CMAKE_COMMAND} --install ${CMAKE_BINARY_DIR} --prefix /usr
+                COMMAND 
+                    ${CMAKE_COMMAND} -E chdir "${DEPLOY_DIR}" 
+                        ${CMAKE_COMMAND} -E env OUTPUT="trackerboy.AppImage"
+                        ${CMAKE_COMMAND} -E env QMAKE="${_qmake_executable}"
+                            ${LINUXDEPLOY}
+                                --appdir="${CMAKE_CURRENT_BINARY_DIR}/AppDir"
+                                --desktop-file="${CMAKE_CURRENT_SOURCE_DIR}/trackerboy.desktop"
+                                --icon-file="${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app/appicon-16.png"
+                                --icon-file="${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app/appicon-24.png"
+                                --icon-file="${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app/appicon-32.png"
+                                --icon-file="${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app/appicon-48.png"
+                                --icon-file="${CMAKE_CURRENT_SOURCE_DIR}/resources/icons/app/appicon-256.png"
+                                --icon-filename="trackerboy"
+                                --plugin qt
+                                --output appimage
                 DEPENDS trackerboy_ui
             )
         endif ()
@@ -370,6 +366,5 @@ endif ()
 
 install(
     TARGETS trackerboy_ui
-    RUNTIME DESTINATION bin
-    BUNDLE DESTINATION bin
+    BUNDLE DESTINATION .
 )

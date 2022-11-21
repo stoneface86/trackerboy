@@ -7,7 +7,7 @@
 // QMutexLocker subclass holding a reference to a locked object.
 //
 template <class T>
-class Locked : public QMutexLocker {
+class Locked : public QMutexLocker<QMutex> {
 
     T &mRef;
 

@@ -28,7 +28,7 @@ public:
     // context is used for edits that can be undone, by using a QUndoCommand
     // subclass.
     //
-    class Editor : public QMutexLocker {
+    class Editor : public QMutexLocker<QMutex> {
 
         friend class Module;
 

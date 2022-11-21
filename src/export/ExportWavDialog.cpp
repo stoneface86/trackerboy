@@ -17,6 +17,7 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QStackedLayout>
+#include <QStringView>
 
 ExportWavDialog::ExportWavDialog(
     Module const& mod,
@@ -94,7 +95,7 @@ ExportWavDialog::ExportWavDialog(
     auto browseSingleButton = new QPushButton(tr("Browse"));
     singleLayout->addWidget(mSingleDestination, 1);
     singleLayout->addWidget(browseSingleButton);
-    singleLayout->setMargin(0);
+    singleLayout->setContentsMargins(0, 0, 0, 0);
     singleLayout->setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     singleContainer->setLayout(singleLayout);
 
@@ -108,7 +109,7 @@ ExportWavDialog::ExportWavDialog(
     separateLayout->addWidget(new QLabel(tr("Prefix")), 1, 0);
     mSeparatePrefix = new QLineEdit;
     separateLayout->addWidget(mSeparatePrefix, 1, 1);
-    separateLayout->setMargin(0);
+    separateLayout->setContentsMargins(0, 0, 0, 0);
     separateLayout->setColumnStretch(1, 1);
     separateContainer->setLayout(separateLayout);
 
@@ -154,15 +155,15 @@ ExportWavDialog::ExportWavDialog(
             mTimeRadio->setChecked(false);
 
             if (text.length() == 5) {
-                QStringRef minRef(&text, 0, 2);
-                QStringRef secRef(&text, 3, 2);
+                auto minView = QStringView{ text }.sliced(0, 2);
+                auto secView = QStringView{ text }.sliced(3, 2);
                 bool ok;
                 unsigned duration = 0;
-                int num = minRef.toUInt(&ok);
+                int num = minView.toUInt(&ok);
                 if (ok) {
                     duration += num * 60;
                 }
-                num = secRef.toUInt(&ok);
+                num = secView.toUInt(&ok);
                 if (ok) {
                     duration += num;
                 }

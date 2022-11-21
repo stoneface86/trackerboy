@@ -34,18 +34,18 @@ Sidebar::Sidebar(
     groupbox = new QGroupBox(tr("Song settings"));
     groupLayout = new QVBoxLayout;
     groupLayout->addWidget(mSongEditor);
-    groupLayout->setMargin(0);
+    groupLayout->setContentsMargins(0, 0, 0, 0);
     groupbox->setLayout(groupLayout);
     layout->addWidget(groupbox);
 
     groupbox = new QGroupBox(tr("Song order"));
     groupLayout = new QVBoxLayout;
     groupLayout->addWidget(mOrderEditor);
-    groupLayout->setMargin(0);
+    groupLayout->setContentsMargins(0, 0, 0, 0);
     groupbox->setLayout(groupLayout);
     layout->addWidget(groupbox, 1);
 
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     setLayout(layout);
 
     mNextAction = createAction(this, tr("Next song"), tr("Selects the next song in the list"), Icons::next);

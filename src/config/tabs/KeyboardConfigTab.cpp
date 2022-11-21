@@ -165,8 +165,9 @@ protected:
 
     virtual void mousePressEvent(QMouseEvent *evt) override {
         if (evt->button() == Qt::LeftButton) {
-            int row = evt->y() / mRowHeight;
-            int col = evt->x() / mColumnWidth;
+            auto const pos = evt->position();
+            auto const row = qRound( pos.y() / mRowHeight );
+            auto const col = qRound( pos.x() / mColumnWidth );
 
             if ((row >= 1 && row <= 4 && col >= 1 && col <= 12) || (row == 5 && col == 12)) {
                 mCursorRow = row - 1;

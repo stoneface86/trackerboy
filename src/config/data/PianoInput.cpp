@@ -325,11 +325,17 @@ static_assert(LAYOUT_KEYS.size() == PianoInput::LayoutCount, "missing key for a 
 
 static Qt::Key readBinding(QSettings &settings, QString const& keyname) {
     QKeySequence seq(settings.value(keyname).toString(), QKeySequence::PortableText);
-    if (seq.isEmpty()) {
-        return PianoInput::NoKey;
-    } else {
-        return (Qt::Key)seq[0];
+    // the key sequence must be 1 key and have no keyboard modifiers
+    if (seq.count() == 1) {
+        auto const combo = seq[0];
+        if (combo.keyboardModifiers() == Qt::NoModifier) {
+            return combo.key();
+        }
+
     }
+
+    return PianoInput::NoKey;
+
 }
 
 static void writeBinding(QSettings &settings, QString const& keyname, Qt::Key key) {

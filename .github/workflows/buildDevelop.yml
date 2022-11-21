@@ -23,7 +23,7 @@ jobs:
             arch: x64
             platform: osx
             qtArch: ''
-          - os: ubuntu-18.04
+          - os: ubuntu-latest
             arch: x64
             platform: linux
           - os: windows-latest
@@ -41,5 +41,5 @@ jobs:
       arch: ${{ matrix.arch }}
       platform: ${{ matrix.platform }}
       qtArch: ${{ matrix.qtArch }}
-      qtVersion: 5.12.10
+      qtVersion: 6.4.0
   

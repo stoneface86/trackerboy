@@ -298,7 +298,8 @@ void PatternGridHeader::mouseMoveEvent(QMouseEvent *evt) {
     }
 
     setHoverKind(HoverKind::track);
-    auto track = mLayout->mouseToTrack(evt->x());
+    auto const pos = evt->position().toPoint();
+    auto track = mLayout->mouseToTrack(pos.x());
     if (track == 4) {
         track = HOVER_NONE;
     }
@@ -313,7 +314,7 @@ void PatternGridHeader::mouseMoveEvent(QMouseEvent *evt) {
         );
         if (plusMinusRect.contains(evt->pos())) {
             HoverKind kind;
-            if (evt->y() < TU::PLUS_START_Y + TU::PM_HEIGHT / 2) {
+            if (pos.y() < TU::PLUS_START_Y + TU::PM_HEIGHT / 2) {
                 kind = HoverKind::addEffect;
             } else {
                 kind = HoverKind::removeEffect;

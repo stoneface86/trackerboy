@@ -266,7 +266,7 @@ int AudioEnumerator::deserializeDevice(int backend, const QVariant &data) const 
         return -1;
     }
 
-    if (data.type() != QVariant::ByteArray) {
+    if (data.typeId() != QMetaType::QByteArray) {
         return -1;
     }
 

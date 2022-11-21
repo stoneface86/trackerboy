@@ -70,7 +70,7 @@ WaveEditor::WaveEditor(
     layout->addWidget(mWaveEdit, 1);
     layout->addLayout(presetLayout);
     layout->addLayout(waveramLayout);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     editorWidget()->setLayout(layout);
 
     mWaveramEdit->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));

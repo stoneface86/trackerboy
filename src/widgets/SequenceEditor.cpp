@@ -98,7 +98,7 @@ void SequenceEditor::convertEditToSequence() {
     mEditDirty = false;
 
     auto const str = mSequenceInput->text();
-    auto tokens = str.splitRef(' ');
+    auto tokens = QStringView{ str }.split(' ');
     std::vector<uint8_t> newdata;
 
     auto min = mGraph->minimumValue();

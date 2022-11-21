@@ -48,8 +48,9 @@ jobs:
           sudo apt-get install libasound2-dev
           mkdir tools
           cd tools
-          wget https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage -nv -O linuxdeployqt
-          chmod a+x linuxdeployqt
+          wget 'https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage' -nv -O linuxdeploy
+          wget 'https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage' -nv -O linuxdeploy-plugin-qt
+          chmod a+x linuxdeploy*
 
       - name: CPM Cache
         id: cache-cpm

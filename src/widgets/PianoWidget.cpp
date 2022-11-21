@@ -172,7 +172,7 @@ void PianoWidget::keyReleaseEvent(QKeyEvent *evt) {
 
 void PianoWidget::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
-        play(getNoteFromMouse(event->x(), event->y()));
+        play(getNoteFromMouse(event->position().toPoint()));
     }
 
 }
@@ -189,10 +189,9 @@ void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
         return;
     }
 
-    int x = event->x();
-    int y = event->y();
-    if (rect().contains(x, y)) {
-        auto note = getNoteFromMouse(x, y);
+    auto const pos = event->position().toPoint();
+    if (rect().contains(pos)) {
+        auto note = getNoteFromMouse(pos);
         if (!mIsKeyDown || note != mNote) {
             play(note);
         }
@@ -238,7 +237,10 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
 
 
 
-int PianoWidget::getNoteFromMouse(int x, int y) {
+int PianoWidget::getNoteFromMouse(QPoint mousePos) {
+    auto const x = mousePos.x();
+    auto const y = mousePos.y();
+
     bool isBlack = false;
     int wkeyInOctave = x / TU::WKEY_WIDTH;
     int octave = wkeyInOctave / TU::N_WHITEKEYS;

@@ -56,7 +56,7 @@ InstrumentEditor::InstrumentEditor(
         mEnvelopeForm = new EnvelopeForm;
         layout->addWidget(mEnvelopeForm);
         layout->addStretch();
-        layout->setMargin(0);
+        layout->setContentsMargins(0, 0, 0, 0);
         mEnvelopeGroup->setLayout(layout);
     }
 
@@ -85,7 +85,7 @@ InstrumentEditor::InstrumentEditor(
     settingsLayout->addWidget(mWaveformGroup, 1);
     layout->addLayout(settingsLayout);
     layout->addWidget(mSequenceTabs, 1);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
     editorWidget()->setLayout(layout);
     
     mWaveformGroup->hide();

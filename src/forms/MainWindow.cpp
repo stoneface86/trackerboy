@@ -279,7 +279,7 @@ void MainWindow::setupUi() {
         auto layout = new QVBoxLayout;
         dock = new TableView(model, str);
         layout->addWidget(dock);
-        layout->setMargin(0);
+        layout->setContentsMargins(0, 0, 0, 0);
         group->setLayout(layout);
         return group;
     };
