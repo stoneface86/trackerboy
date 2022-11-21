@@ -30,8 +30,8 @@ void TestAudioEnumerator::deviceSerialization() {
         // check that invalid data results in -1
         QVERIFY(enumerator.deserializeDevice(backend, badData) == -1);
 
-        // check for invalid index
-        QVERIFY(enumerator.serializeDevice(backend, -1).isNull());
+        // check for invalid index, results in the default device (no device id)
+        QVERIFY(enumerator.serializeDevice(backend, -1) == QByteArray());
 
     }
 

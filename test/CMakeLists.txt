@@ -6,7 +6,7 @@ enable_testing()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
-find_package(Qt5Test REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Test)
 
 # each test in this list must have a cpp and hpp file in the units/ directory
 # IMPORTANT: your test class must have a constructor taking no arguments and is marked with Q_INVOKABLE
@@ -30,7 +30,7 @@ configure_file("config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/config.hpp" @ONLY)
 # create one big executable
 add_executable(test_trackerboy "main.cpp" "${TEST_SRC}" $<TARGET_OBJECTS:ui>)
 target_include_directories(test_trackerboy PRIVATE "${CMAKE_SOURCE_DIR}/src")
-target_link_libraries(test_trackerboy PRIVATE ui Qt5::Test)
+target_link_libraries(test_trackerboy PRIVATE ui Qt6::Test)
 
 foreach (test IN ITEMS ${TESTLIST})
     add_test(NAME "${test}" COMMAND test_trackerboy "${test}")
