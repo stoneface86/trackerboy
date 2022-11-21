@@ -9,6 +9,9 @@ target_compile_definitions(miniaudio PUBLIC
     -DMA_NO_ENCODING
     -DMA_NO_GENERATION
     -DMA_NO_CUSTOM
+    -DMA_NO_RESOURCE_MANAGER
+    -DMA_NO_NODE_GRAPH
+    -DMA_NO_ENGINE
 )
 
 # miniaudio dependencies

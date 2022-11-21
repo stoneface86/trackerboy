@@ -277,7 +277,7 @@ if (ENABLE_DEPLOYMENT)
             set(DEPLOY_TARGET "deploy_timestamp")
             add_custom_command(
                 OUTPUT ${DEPLOY_TARGET}
-                COMMAND ${WINDEPLOYQT} --dir ${DEPLOY_DIR} --no-translations --no-svg --no-angle --no-system-d3d-compiler --no-opengl-sw "$<TARGET_FILE:trackerboy_ui>"
+                COMMAND ${WINDEPLOYQT} --dir ${DEPLOY_DIR} --no-translations --no-svg --no-system-d3d-compiler --no-opengl-sw "$<TARGET_FILE:trackerboy_ui>"
                 COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:trackerboy_ui>" ${DEPLOY_DIR}
                 COMMAND ${CMAKE_COMMAND} -E touch ${DEPLOY_TARGET}
                 DEPENDS trackerboy_ui

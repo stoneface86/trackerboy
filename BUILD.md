@@ -84,11 +84,8 @@ This guide assumes you have [brew](https://brew.sh) installed.
 ## 1. Install dependencies
 
 ```sh
-brew install cmake qt5
+brew install cmake qt6
 ```
-
-Note: qt5 is keg-only, so cmake will not find it unless we set Qt5_DIR
-accordingly.
 
 ## 2. Get trackerboy
 
@@ -98,12 +95,12 @@ Same as the [linux instructions](#2-get-trackerboy)
 
 For a release build (users):
 ```sh
-cmake -S . -B build -DQt5_DIR=/usr/local/opt/qt@5/lib/cmake/Qt5 -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DENABLE_UNITY=ON
 ```
 
 For a debug build (developers):
 ```sh
-cmake -S . -B build -DQt5_DIR=/usr/local/opt/qt@5/lib/cmake/Qt5 -DCMAKE_BUILD_TYPE=Debug
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 ```
 
 ## 4. Build
