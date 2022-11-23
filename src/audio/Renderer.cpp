@@ -8,6 +8,8 @@
 #include <QMutexLocker>
 #include <QtDebug>
 
+#include <ratio>
+
 //static auto LOG_PREFIX = "[Renderer]";
 
 
@@ -53,6 +55,7 @@ Renderer::Renderer(Module &mod, QObject *parent) :
     mStream(),
     mVisBuffer(),
     mOutputFlags(ChannelOutput::AllOn),
+    mRenderStartTime(),
     mContext(mod)
 {
     mTimer->setCallback(timerCallback, this);
@@ -99,22 +102,27 @@ void Renderer::setSong() {
     }
 }
 
-Renderer::Diagnostics Renderer::diagnostics() {
+unsigned Renderer::statUnderruns() const {
+    return mStream.underruns();
+}
+
+Renderer::BufferStats Renderer::statBuffer() {
     auto handle = mContext.access();
+    // it is safe to access the writer since we have acquired access to mContext
 
-    auto size = mStream.bufferSize();
-    // it is safe to access the writer since we have acquired access to context
-    auto usage = size - mStream.writer().availableWrite();
-
-
+    auto const size = handle->bufferSize;
     return {
-        mStream.underruns(),
-        usage,
-        size,
-        handle->writesSinceLastPeriod,
-        handle->periodTime,
-        0.0
+        (int)(size - mStream.writer().availableWrite()),
+        (int)size,
+        (int)handle->writesSinceLastPeriod,
+        std::chrono::duration<double, std::milli>{handle->periodTime}.count()
     };
+}
+
+long Renderer::statElapsed() const {
+    return (long)std::chrono::duration_cast<std::chrono::milliseconds>(
+        Clock::now() - mRenderStartTime
+    ).count();
 }
 
 int Renderer::samplerate() {
@@ -212,8 +220,10 @@ void Renderer::beginRender(Handle &handle) {
         bool success = mStream.start();
 
         if (success) {
-            handle->lastPeriod = Clock::now();
-            handle->watchdog = handle->lastPeriod;
+            auto const now = Clock::now();
+            handle->lastPeriod = now;
+            handle->watchdog = now;
+            mRenderStartTime = now;
             mTimer->start();
             handle.unlock();
             emit audioStarted();

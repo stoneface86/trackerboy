@@ -39,8 +39,13 @@ private:
 
     void refresh();
 
+    void setRunningLabel(bool const isRunning);
+
+    void setElapsed(long const msecs);
+
     Renderer &mRenderer;
     int mTimerId;
+    bool mLastIsRunning;
 
     QVBoxLayout mLayout;
         QGroupBox mRenderGroup;

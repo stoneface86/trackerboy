@@ -36,26 +36,38 @@ class Renderer : public QObject {
 
 public:
 
-    struct Diagnostics {
-        unsigned underruns;
-        size_t bufferUse;
-        size_t bufferSize;
-        size_t writesSinceLastPeriod;
-        Clock::duration lastPeriod;
-        double elapsed;
-
-
+    struct BufferStats {
+        // usage, in number of samples, of the buffer
+        int usage;
+        // capacity, in number of samples, of the buffer
+        int capacity;
+        // number of samples written during the last period
+        int writesSinceLastPeriod;
+        // duration of the last period, in milliseconds
+        double lastPeriodMs;
     };
 
     explicit Renderer(Module &mod, QObject *parent = nullptr);
     ~Renderer();
 
-    // DIAGNOSTICS ====
+    // Statistics ===
 
     //
-    // Gets current diagnostic data
+    // Returns the total count of underruns that have occurred from all
+    // renders.
     //
-    Diagnostics diagnostics();
+    unsigned statUnderruns() const;
+
+    //
+    // Gets the current buffer statistics.
+    //
+    BufferStats statBuffer();
+
+    //
+    // Gets the elapsed time, in milliseconds, of the current render. Behavior
+    // is undefined when isRunning() is false.
+    //
+    long statElapsed() const;
 
     //
     // Get the current samplerate
@@ -321,6 +333,8 @@ private:
     Guarded<VisualizerBuffer> mVisBuffer;
 
     ChannelOutput::Flags mOutputFlags;
+
+    Clock::time_point mRenderStartTime;
 
     //
     // All variables accessible from multiple threads are stored in the RenderContext

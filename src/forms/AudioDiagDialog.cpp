@@ -14,6 +14,7 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
     QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
     mRenderer(renderer),
     mTimerId(-1),
+    mLastIsRunning(true),
     mLayout(),
     mRenderGroup(tr("Render statistics")),
     mRenderLayout(),
@@ -61,6 +62,8 @@ AudioDiagDialog::AudioDiagDialog(Renderer &renderer, QWidget *parent) :
 
     mCloseButton.setDefault(true);
 
+    setElapsed(0);
+    setRunningLabel(false);
     setWindowTitle(tr("Audio diagnostics"));
 
     connect(&mCloseButton, &QPushButton::clicked, this, &AudioDiagDialog::close);
@@ -117,31 +120,35 @@ void AudioDiagDialog::timerEvent(QTimerEvent *evt) {
 
 void AudioDiagDialog::refresh() {
 
-    auto diags = mRenderer.diagnostics();
+    mUnderrunLabel.setText(QString::number(mRenderer.statUnderruns()));
 
-    mUnderrunLabel.setText(QString::number(diags.underruns));
+    auto const isRunning = mRenderer.isRunning();
+    if (isRunning) {
+        setElapsed(mRenderer.statElapsed());        
+    }
+    setRunningLabel(isRunning);
 
-    mBufferProgress.setMaximum((int)diags.bufferSize);
-    mBufferProgress.setValue((int)diags.bufferUse);
-    /*mBufferLabel.setText(tr("%1% (%2 / %3 samples)")
-        .arg(diags.bufferUse * 100 / diags.bufferSize)
-        .arg(diags.bufferUse)
-        .arg(diags.bufferSize)
-    );*/
+    auto const bufferStat = mRenderer.statBuffer();
+    mBufferProgress.setMaximum(bufferStat.capacity);
+    mBufferProgress.setValue(bufferStat.usage);
+    mPeriodLabel.setText(tr("%1 ms").arg(bufferStat.lastPeriodMs, 0, 'f', 3));
+    mPeriodWrittenLabel.setText(QString::number(bufferStat.writesSinceLastPeriod));
+}
 
-    auto msecs = (long)(diags.elapsed * 1000.0);
+void AudioDiagDialog::setRunningLabel(bool const isRunning) {
+    if (mLastIsRunning != isRunning) {
+        mLastIsRunning = isRunning;
+        mStatusLabel.setText(isRunning ? tr("Playing") : tr("Stopped"));
+    }
+}
 
-    mElapsedLabel.setText(QStringLiteral("%1:%2.%3")
-        .arg(msecs / 60000, 2, 10, QChar('0'))
-        .arg((msecs % 60000) / 1000, 2, 10, QChar('0'))
-        .arg(msecs % 1000, 3, 10, QChar('0'))
-        );
-
-    mStatusLabel.setText(mRenderer.isRunning() ? tr("Playing") : tr("Stopped"));
-
-    double periodMs = std::chrono::duration<double>(diags.lastPeriod).count() * 1000.0;
-    mPeriodLabel.setText(tr("%1 ms").arg(periodMs, 0, 'f', 3));
-    mPeriodWrittenLabel.setText(QString::number(diags.writesSinceLastPeriod));
+void AudioDiagDialog::setElapsed(long const msecs) {
+    mElapsedLabel.setText(
+        QStringLiteral("%1:%2.%3")
+            .arg(msecs / 60000, 2, 10, QChar('0'))
+            .arg((msecs % 60000) / 1000, 2, 10, QChar('0'))
+            .arg(msecs % 1000, 3, 10, QChar('0'))
+    );
 }
 
 #undef TU

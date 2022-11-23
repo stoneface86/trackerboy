@@ -3,8 +3,8 @@
 ## Unreleased
 
 ### Added
- - Example modules to be included with each release. 
-   
+ - [#13] - Example modules to be included with each release.
+
    Thank you to the following authors who provided these modules:
     - forple
     - gazanmei
@@ -12,11 +12,16 @@
     - omega_bagel
 
 ### Changed
+ - Ported from Qt 5 to Qt 6
+ - i386/32-bit builds are no longer supported
  - Miniaudio library updated, v0.10.42 -> v0.11.11
  - RtMidi library updated, 4.0.0 -> 5.0.0
 
 ### Fixed
  - Bug when hitting enter in the Wave Editor sets the waveform to 50% duty.
+ - Elapsed counter in the Audio Diagnostic Dialog updates again.
+
+[#13]: https://github.com/stoneface86/trackerboy/issues/13
 
 ## [0.6.2] - 2022-08-22
 
