@@ -7,6 +7,7 @@ project(src CXX)
 
 # interface library containing all of our dependencies
 add_library(deps INTERFACE)
+target_link_libraries(deps INTERFACE vendoredIncludes)
 
 include(CPM)
 
@@ -37,7 +38,6 @@ CPMAddPackage(
 target_link_libraries(deps INTERFACE rtmidi)
 
 # Miniaudio
-add_subdirectory(miniaudio)
 target_link_libraries(deps INTERFACE miniaudio)
 
 # Qt

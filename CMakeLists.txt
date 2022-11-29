@@ -50,6 +50,9 @@ if (NOT DEBUG_BUILD)
     endif ()
 endif()
 
+# vendored code
+add_subdirectory(vendored EXCLUDE_FROM_ALL)
+
 #
 # Main program
 #

@@ -2,7 +2,7 @@
 project(miniaudio LANGUAGES C)
 
 add_library(miniaudio STATIC "miniaudio.c")
-target_include_directories(miniaudio PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/>")
+target_link_libraries(miniaudio PUBLIC vendoredIncludes)
 
 target_compile_definitions(miniaudio PUBLIC
     -DMA_NO_DECODING

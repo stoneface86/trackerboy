@@ -5,6 +5,7 @@ Directories
  * `cmake/`: CMake modules and utilities
  * `src/`: Source code
  * `test/`: Unit testing code
+ * `vendored/`: Third-party code/libraries
 
 
 ## Build system

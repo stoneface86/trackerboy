@@ -20,5 +20,5 @@
 *.tbm           binary
 *.txt           text
 *.yml           text
-src/miniaudio/miniaudio.*   linguist-vendored
-src/nonstd/*                linguist-vendored
+vendored/include/*              linguist-vendored
+vendored/miniaudio/miniaudio.c  linguist-vendored
