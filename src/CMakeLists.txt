@@ -45,7 +45,6 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC OFF)
 find_package(Qt6 COMPONENTS Widgets REQUIRED)
-qt_standard_project_setup()
 
 if (WIN32)
     set(GUI_TYPE WIN32)

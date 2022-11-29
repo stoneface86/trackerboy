@@ -46,6 +46,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libasound2-dev
+          UBUNTU_RELEASE=$(lsb_release -rs)
+          UBUNTU_RELEASE=(${UBUNTU_RELEASE//./ })
+          if [ ${UBUNTU_RELEASE[0]} -ge 22  ] && [ ${UBUNTU_RELEASE[1]} -ge 04 ]; then
+            sudo apt-get install -y libfuse2
+          else
+            sudo apt-get install -y fuse libfuse2
+          fi
           mkdir tools
           cd tools
           wget 'https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage' -nv -O linuxdeploy
