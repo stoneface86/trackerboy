@@ -51,6 +51,8 @@ public:
         EditInstrument,
         EditWaveform,
         ModuleProperties,
+        ShowEffectsList,
+        ShowUserManual,
 
         Count
     };

@@ -18,6 +18,7 @@
 #include "forms/AudioDiagDialog.hpp"
 #include "forms/TempoCalculator.hpp"
 #include "forms/CommentsDialog.hpp"
+#include "forms/EffectsListDialog.hpp"
 #include "midi/Midi.hpp"
 #include "widgets/PatternEditor.hpp"
 #include "widgets/Sidebar.hpp"
@@ -99,6 +100,8 @@ private:
     void showAboutDialog();
     void showAudioDiag();
     void showConfigDialog();
+    void showUserManual();
+    void showEffectsList();
     void showExportWavDialog();
     void showTempoCalculator();
     void showInstrumentEditor();
@@ -292,6 +295,7 @@ private:
     InstrumentEditor *mInstrumentEditor;
     WaveEditor *mWaveEditor;
     PersistantDialog *mHistoryDialog;
+    EffectsListDialog *mEffectsListDialog;
 
     // toolbars
     QToolBar *mToolbarFile;

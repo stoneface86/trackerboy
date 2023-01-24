@@ -62,7 +62,8 @@ MainWindow::MainWindow() :
     mCommentsDialog(nullptr),
     mInstrumentEditor(nullptr),
     mWaveEditor(nullptr),
-    mHistoryDialog(nullptr)
+    mHistoryDialog(nullptr),
+    mEffectsListDialog(nullptr)
 {
 
     // create models

@@ -15,6 +15,8 @@
 #include <QUndoView>
 #include <QShortcut>
 #include <QMenuBar>
+#include <QDesktopServices>
+#include <QUrl>
 
 #define TU MainWindowTU
 namespace TU {
@@ -411,6 +413,17 @@ void MainWindow::showConfigDialog() {
 #endif
     diag.exec();
 
+}
+
+void MainWindow::showUserManual() {
+    QDesktopServices::openUrl(QUrl("https://www.trackerboy.org/manual/"));
+}
+
+void MainWindow::showEffectsList() {
+    if (mEffectsListDialog == nullptr) {
+        mEffectsListDialog = new EffectsListDialog(this);
+    }
+    mEffectsListDialog->show();
 }
 
 void MainWindow::showExportWavDialog() {

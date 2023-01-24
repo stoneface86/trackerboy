@@ -92,6 +92,10 @@ QKeySequence ShortcutTable::getDefault(Shortcut shortcut) noexcept {
             return tr("Ctrl+W");
         case ModuleProperties:
             return tr("Ctrl+P");
+        case ShowEffectsList:
+            return tr("F1");
+        case ShowUserManual:
+            return tr("F2");
         default:
             return {};
     }

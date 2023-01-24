@@ -10,6 +10,9 @@
     - gazanmei
     - sttng
     - omega_bagel
+ - Effects List dialog (Help > Effects List...)
+ - Menu action in Help to open the online user manual (Help > User Manual...)
+ - Shortcuts for Effects List and User manual, defaults to F1 and F2, respectively
 
 ### Changed
  - Ported from Qt 5 to Qt 6

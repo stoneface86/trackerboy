@@ -135,6 +135,7 @@ makeSourceList(UI_SRC
     FILE "forms/MainWindow/slots.cpp"
     "forms/AudioDiagDialog"
     "forms/CommentsDialog"
+    "forms/EffectsListDialog"
     "forms/MainWindow"
     "forms/ModulePropertiesDialog"
     "forms/PersistantDialog"

@@ -341,9 +341,17 @@ void MainWindow::createActions(TableActions const& instrumentActions, TableActio
 
     #endif
 
-    act = setupAction(menuHelp, tr("Audio diagnostics..."), tr("Shows the audio diagnostics dialog"));
+    act = setupAction(menuHelp, tr("&Effects list..."), tr("Shows a list of all available effects"));
+    act->setData(ShortcutTable::ShowEffectsList);
+    connectActionToThis(act, showEffectsList);
+
+    act = setupAction(menuHelp, tr("User &manual..."), tr("Opens the online user manual"));
+    act->setData(ShortcutTable::ShowUserManual);
+    connectActionToThis(act, showUserManual);
+
+    act = setupAction(menuHelp, tr("Audio &diagnostics..."), tr("Shows the audio diagnostics dialog"));
     connectActionToThis(act, showAudioDiag);
-    
+
     menuHelp->addSeparator(); // ----------------------------------------------
     
     act = setupAction(menuHelp, tr("&About"), tr("About this program"));
