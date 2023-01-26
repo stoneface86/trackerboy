@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.6.3] - 2023-01-26
 
 ### Added
  - [#13] - Example modules to be included with each release.
