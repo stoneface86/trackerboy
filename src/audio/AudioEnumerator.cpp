@@ -137,12 +137,12 @@ void AudioEnumerator::Context::probe() {
         if (result == MA_SUCCESS) {
             mInitialized = true;
             // register logging callback
-            auto result = ma_log_register_callback(
+            auto logResult = ma_log_register_callback(
                 ma_context_get_log(mContext.get()),
                 ma_log_callback_init(TU::logCallback, nullptr)
             );
-            Q_ASSERT(result == MA_SUCCESS);
-            Q_UNUSED(result)
+            Q_ASSERT(logResult == MA_SUCCESS);
+            Q_UNUSED(logResult)
         } else {
             qCritical().nospace() << "Failed to initialize audio backend '"
                                   << ma_get_backend_name(mBackend) << "': "

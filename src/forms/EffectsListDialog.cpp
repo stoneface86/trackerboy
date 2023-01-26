@@ -113,7 +113,7 @@ public:
         if (parent.isValid()) {
             return 0;
         } else {
-            return TU::EffectListArray.size();
+            return (int)TU::EffectListArray.size();
         }
     }
 

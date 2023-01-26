@@ -9,8 +9,8 @@
 #include <QMutex>
 #include <QObject>
 
-#ifdef __APPLE__
-// std::optional<RtMidiIn> does not compile on Apple Clang
+#ifdef __clang__
+// std::optional<RtMidiIn> does not compile on Clang
 // use this nonstd implementation instead
 #define optional_CONFIG_SELECT_OPTIONAL optional_OPTIONAL_NONSTD
 #include "nonstd/optional.hpp"

@@ -373,7 +373,7 @@ void BackspaceCmd::undo() {
         auto editor = mModel.mModule.edit();
         auto &dest = mModel.source()->patterns().getTrack(static_cast<trackerboy::ChType>(mTrack), mPattern);
         auto const restoredRow = mRow - 1;
-        for (int i = dest.size() - 1; i > restoredRow; --i) {
+        for (int i = (int)dest.size() - 1; i > restoredRow; --i) {
             dest[i] = dest[i - 1];
         }
         dest[restoredRow] = mDeleted;
