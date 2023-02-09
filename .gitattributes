@@ -1,6 +1,5 @@
 *               text=auto
 *.bmp           binary
-*.cmake         text
 *.c             text
 *.cpp           text
 *.desktop       text eof=lf
@@ -14,11 +13,13 @@
 *.ico           binary
 *.in            text
 *.md            text
+*.nim           text
+*.nims          text
 *.png           binary
 *.qrc           text
 *.rc            text
 *.tbm           binary
 *.txt           text
+*.xml           text
 *.yml           text
-vendored/include/*              linguist-vendored
-vendored/miniaudio/miniaudio.c  linguist-vendored
+vendored/*      linguist-vendored

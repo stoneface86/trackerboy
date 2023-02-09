@@ -1,3 +1,11 @@
+# nim-rewrite2
+
+This branch contains the full rewrite of trackerboy in Nim. Very WIP.
+
+(Note: the nim-rewrite branch was the first attempt, by having C++ code
+interface with Nim. This attempt will instead by a 100% Nim implementation, by
+creating Nim bindings for our C/C++ dependencies as needed.)
+
 ![Trackerboy](/src/resources/images/logo.png)
 ---
 

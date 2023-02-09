@@ -1,6 +1,1 @@
-.vs/
-.vscode/
-out/
-tools/
-CMakeSettings.json
-CMakeLists.txt.user
+bin/
