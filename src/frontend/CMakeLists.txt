@@ -133,6 +133,7 @@ makeSourceList(UI_SRC
     "forms/editors/BaseEditor"
     "forms/editors/InstrumentEditor"
     "forms/editors/WaveEditor"
+    FILE "forms/MainWindow/aboutstr.cpp"
     FILE "forms/MainWindow/actions.cpp"
     FILE "forms/MainWindow/slots.cpp"
     "forms/AudioDiagDialog"
@@ -198,11 +199,7 @@ makeSourceList(UI_SRC
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 
-configure_file("version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
-list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" "version.hpp")
-
-configure_file("forms/MainWindow/aboutstr.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/aboutstr.cpp" @ONLY)
-list(APPEND UI_SRC "${CMAKE_CURRENT_BINARY_DIR}/aboutstr.cpp" "forms/MainWindow/aboutstr.hpp")
+configure_file("version.in.hpp" "${CMAKE_CURRENT_BINARY_DIR}/version.hpp" @ONLY)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -211,7 +208,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #
 add_library(ui OBJECT ${UI_SRC})
 target_link_libraries(ui PUBLIC deps Qt6::Widgets)
-
 
 target_compile_features(ui PUBLIC cxx_std_17)
 if (MSVC)

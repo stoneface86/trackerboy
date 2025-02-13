@@ -60,4 +60,4 @@ add_custom_command(
 add_library(backend STATIC IMPORTED GLOBAL)
 add_dependencies(backend compileBackend)
 set_target_properties(backend PROPERTIES IMPORTED_LOCATION "${BACKEND_LIB_PATH}")
-
+target_include_directories(backend INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}")

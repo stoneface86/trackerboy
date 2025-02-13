@@ -453,7 +453,7 @@ void MainWindow::setupUi() {
         statusbar->addPermanentWidget(label);
     }
 
-    statusbar->showMessage(tr("Trackerboy v%1").arg(QString::fromLatin1(VERSION_STR)));
+    statusbar->showMessage(tr("Trackerboy v%1").arg(cVersion));
 
     // default statuses
     setPlayingStatus(PlayingStatusText::ready);
