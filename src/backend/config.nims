@@ -1,11 +1,14 @@
 switch "app",       "staticLib"
 switch "noMain",    "on"
-switch "backend",   "c"
+switch "backend",   "cpp"
+switch "cppCompileToNamespace", "B"
 switch "p",         "@CMAKE_CURRENT_SOURCE_DIR@"
 switch "cc",        "@NIM_CC@"
 switch "nimcache",  "@CMAKE_CURRENT_BINARY_DIR@/nimcache"
 switch "out",       "@BACKEND_LIB_PATH@"
 switch "define",    "noSignalHandler"
+switch "header",    "tbb_nim"
+@BACKEND_INCLUDES_CODE@
 
 case "@CMAKE_BUILD_TYPE@"
 of "RelWithDebInfo":

@@ -4,21 +4,18 @@ import
   libtrackerboy/[data, version]
 
 type
-
-  BSlice* {.exportc.} = object
+  BSlice* {.exportc: "Slice".} = object
     len*: csizet
     data*: cstring
 
-  BPanicCallback* = proc(msg: BSlice) {.noconv, raises: [].}
-
-  BStr* {.exportc.} = object
-    owner*: ref string
-    len*: csizet
-    data*: cstring
+  PanicCallback* {.exportc.} = proc(msg: BSlice) {.noconv, raises: [].}
 
   Core = object
-    panicCallback: BPanicCallback
+    panicCallback: PanicCallback
     tempStr: string
+
+  ccstring* {. importc: "const char *" .} = distinct cstring
+    ## Immutable version of cstring
 
 var gCore: Core
 
@@ -76,55 +73,32 @@ template canPanic*(body) =
 macro front*(procDef) =
   ## Custom pragma that makes procs available to the front-end.
   ##
-  ## The proc definition is modified so that it has the exportc and noconv
-  ## pragmas.
+  ## The proc definition is modified so that it has the following pragmas:
+  ##  * exportc
+  ##  * noconv
+  ##  * used
+  ##  * raises: []
   ##
   expectKind(procDef, nnkProcDef)
   procDef.addPragma(ident("noconv"))
-  procDef.addPragma(ident("exportc"))
+  procDef.addPragma(ident("exportcpp"))
   procDef.addPragma(ident("used"))
+  procDef.addPragma(newTree(nnkExprColonExpr, ident("raises"), newTree(nnkBracket)))
   result = procDef
-
-proc assign(b: var BStr; s: string) =
-  b.owner[] = s
-  b.len = csizet(s.len)
-  b.data = cstring(b.owner[])
-
-proc bstr*(s: string): BStr =
-  result.owner = new(string)
-  GcRef(result.owner)
-  result.assign(s)
-
-proc bstr*(s: cstring): BStr =
-  result.len = csizet(s.len)
-  result.data = s
 
 # C API
 
-proc NimMain() {. importc, noconv .}
-
-proc bInit*() {.front.} =
-  NimMain()
+proc init*() {.front.} =
   gCore.panicCallback = nil
 
-proc bUninit*() {.front.} =
-  discard
+proc uninit*() {.front.} =
+  reset(gCore)
 
-proc bSetPanicCallback*(callback: BPanicCallback) {.front.} =
+proc setPanicCallback*(callback: PanicCallback) {.front.} =
   gCore.panicCallback = callback
 
-proc bVersion*(): cstring {.front.} =
-  result = cstring(currentVersionString)
+let versionStrCopy = ccstring(currentVersionString)
+proc version*(): ccstring {.front.} =
+  result = versionStrCopy
 
-proc bStrDestroy*(str: var BStr) {.front.} =
-  if str.owner != nil:
-    GcUnref(str.owner)
-    str.owner = nil
-
-proc bStrNew*(): BStr {.front.} =
-  new(result.owner)
-  GcRef(result.owner)
-
-proc bStrSet*(str: var BStr; data: cstring) {.front.} =
-  str.assign($data)
 

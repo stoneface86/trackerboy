@@ -37,7 +37,7 @@ Commit: %2
     return QString(cTemplate).arg(
         cVersion,
         cCommit,
-        bVersion(),
+        B::version(),
         qVersion(),
         ma_version_string(),
         QString::fromStdString(RtMidi::getVersion())

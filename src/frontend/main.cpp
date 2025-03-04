@@ -107,7 +107,7 @@ static void trackerboyMessage(QtMsgType type, QMessageLogContext const& ctx,
 //
 // Backend panic handler. Just calls qFatal with the error message.
 //
-extern "C" void backendPanic(BSlice msg) {
+extern "C" void backendPanic(B::Slice msg) {
     qFatal(msg.data);
 }
 
@@ -122,8 +122,9 @@ int main(int argc, char *argv[]) {
     timer.start();
 #endif
 
-    bInit();
-    bSetPanicCallback(backendPanic);
+    B::NimMain();
+    B::init();
+    B::setPanicCallback(backendPanic);
 
     gDefaultMessager = qInstallMessageHandler(trackerboyMessage);
 
@@ -195,7 +196,7 @@ int main(int argc, char *argv[]) {
 
     auto const code = app.exec();
 
-    bUninit();
+    B::uninit();
     return code;
 }
 
