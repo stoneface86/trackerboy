@@ -1,0 +1,10 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>images/blackkey-all.png</file>
+    <file>images/blackkey-down.png</file>
+    <file>images/headerFont.bmp</file>
+    <file>images/logo.png</file>
+    <file>images/whitekey-all.png</file>
+    <file>images/whitekey-down.png</file>
+</qresource>
+</RCC>
