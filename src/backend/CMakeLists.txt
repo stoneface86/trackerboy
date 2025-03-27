@@ -34,6 +34,7 @@ set(BACKEND_IN_NIMBLE "backend.nimble")
 set(BACKEND_IN_CONFIG "config.nims")
 set(BACKEND_PROJECT "backend.nim")
 set(BACKEND_PROJECT_SHIM "${CMAKE_CURRENT_BINARY_DIR}/${BACKEND_PROJECT}")
+set(BACKEND_NIMCACHE "${CMAKE_CURRENT_BINARY_DIR}/nimcache")
 configure_file("${BACKEND_IN_NIMBLE}" "${CMAKE_CURRENT_BINARY_DIR}/backend.nimble" @ONLY)
 configure_file("${BACKEND_IN_CONFIG}" "${CMAKE_CURRENT_BINARY_DIR}/config.nims" @ONLY)
 file(GENERATE OUTPUT "${BACKEND_PROJECT_SHIM}" CONTENT "include \"${CMAKE_CURRENT_SOURCE_DIR}/${BACKEND_PROJECT}\"")
@@ -72,9 +73,10 @@ add_custom_command(
 add_library(backend STATIC IMPORTED GLOBAL)
 add_dependencies(backend compileBackend)
 set_target_properties(backend PROPERTIES IMPORTED_LOCATION "${BACKEND_LIB_PATH}")
+file(MAKE_DIRECTORY "${BACKEND_NIMCACHE}")
 target_include_directories(backend INTERFACE 
-  "${CMAKE_CURRENT_BINARY_DIR}/nimcache"
-  "${NIM_LIB_PATH}"
+  "${BACKEND_NIMCACHE}"
+  "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
 add_executable(backendTest EXCLUDE_FROM_ALL "test/backendTest.cxx")

@@ -1,11 +1,15 @@
 
 import
-  std/[macros, strformat],
+  ./interop,
+  std/[strformat],
   libtrackerboy/[data, version]
 
 type
+  ccstring* {. importc: "const char *" .} = distinct cstring
+    ## Immutable version of cstring
+  
   BSlice* {.exportc: "Slice".} = object
-    len*: csizet
+    len*: int
     data*: cstring
 
   PanicCallback* {.exportc.} = proc(msg: BSlice) {.noconv, raises: [].}
@@ -14,8 +18,7 @@ type
     panicCallback: PanicCallback
     tempStr: string
 
-  ccstring* {. importc: "const char *" .} = distinct cstring
-    ## Immutable version of cstring
+
 
 var gCore: Core
 
@@ -39,11 +42,11 @@ StackTrace:
     discard
 
 proc slice*(s: string): BSlice =
-  result.len = csizet(s.len + 1)
+  result.len = s.len + 1
   result.data = s.cstring
 
 proc slice*(s: cstring): BSlice =
-  result.len = csizet(s.len + 1)
+  result.len = s.len + 1
   result.data = s
 
 proc toString*(s: BSlice): string =
@@ -52,6 +55,10 @@ proc toString*(s: BSlice): string =
     gCore.tempStr[i] = s.data[i]
   result = gCore.tempStr
 
+proc assign*(s: var string; slice: BSlice) =
+  s.setLen(slice.len)
+  for i, ch in pairs(slice.data):
+    s[i] = ch
 
 proc handleException*(ex: ref Exception) {.raises: [].} =
   ## General purpose exception handler for any unhandled exception.
@@ -70,35 +77,18 @@ template canPanic*(body) =
   except Exception as e:
     handleException(e)
 
-macro front*(procDef) =
-  ## Custom pragma that makes procs available to the front-end.
-  ##
-  ## The proc definition is modified so that it has the following pragmas:
-  ##  * exportc
-  ##  * noconv
-  ##  * used
-  ##  * raises: []
-  ##
-  expectKind(procDef, nnkProcDef)
-  procDef.addPragma(ident("noconv"))
-  procDef.addPragma(ident("exportcpp"))
-  procDef.addPragma(ident("used"))
-  procDef.addPragma(newTree(nnkExprColonExpr, ident("raises"), newTree(nnkBracket)))
-  result = procDef
-
 # C API
 
 proc init*() {.front.} =
   gCore.panicCallback = nil
 
-proc uninit*() {.front.} =
+proc deinit*() {.front.} =
   reset(gCore)
 
 proc setPanicCallback*(callback: PanicCallback) {.front.} =
   gCore.panicCallback = callback
 
-let versionStrCopy = ccstring(currentVersionString)
 proc version*(): ccstring {.front.} =
-  result = versionStrCopy
+  result = ccstring(currentVersionString)
 
 

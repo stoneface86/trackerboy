@@ -6,3 +6,5 @@ CMakeSettings.json
 CMakeLists.txt.user
 *.kdev4
 .kdev4/
+compile_commands.json
+.cache/

@@ -1,7 +1,7 @@
 
-#include "tbb.h"
+#include "tbb.hxx"
 
-#include <stdio.h>
+#include <cstdio>
 
 int main(void) {
 
@@ -10,6 +10,6 @@ int main(void) {
 
     printf("Version: %s\n", B::version());
 
-    B::uninit();
+    B::deinit();
     return 0;
 }
