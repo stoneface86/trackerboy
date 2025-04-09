@@ -1,14 +1,27 @@
 
 #include "utils/backendutils.hxx"
 
-QString toString(B::Slice slice) {
+#include <QStringEncoder>
+
+QString toQString(B::Slice slice) {
     return QString::fromUtf8(slice.data, slice.len);
 }
 
-Utf8Slice toUtf8(QString const& str) {
-    Utf8Slice result;
-    result.data = str.toUtf8();
-    result.slice.len = result.data.size() + 1;
-    result.slice.data =  result.data.data();
-    return result;
+B::String toNimString(QString const& str) {
+    auto nimstr = B::initString();
+    QStringEncoder encoder(QStringConverter::Utf8);
+
+    auto strIt = str.begin();
+    char codePoint[4];
+    for (auto i = str.size(); i > 0; --i) {
+        auto strNext = strIt + 1;
+        auto codePointEnd = encoder.appendToBuffer(codePoint, {strIt, strNext});
+        for (auto c = codePoint; c != codePointEnd; ++c) {
+            B::add(nimstr, *c);
+        }
+
+        strIt = strNext;
+    }
+
+    return { nimstr };
 }

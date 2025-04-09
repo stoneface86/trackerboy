@@ -3,13 +3,15 @@
 
 #include "backend.hxx"
 
-#include <QByteArray>
 #include <QString>
 
-struct Utf8Slice {
-    QByteArray data;
-    B::Slice slice;
-};
 
-extern QString toString(B::Slice slice);
-extern Utf8Slice toUtf8(QString const& str);
+//
+// Convert a slice from the backend to a QString
+//
+extern QString toQString(B::Slice slice);
+
+//
+// Convert a QString to a nim string. UTF-8 encoding is used.
+//
+extern B::String toNimString(QString const& str);

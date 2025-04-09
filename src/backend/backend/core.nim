@@ -5,8 +5,6 @@ import
   libtrackerboy/[data, version]
 
 type
-  ccstring* {. importc: "const char *" .} = distinct cstring
-    ## Immutable version of cstring
   
   BSlice* {.exportc: "Slice".} = object
     len*: int
@@ -90,5 +88,4 @@ proc setPanicCallback*(callback: PanicCallback) {.front.} =
 
 proc version*(): ccstring {.front.} =
   result = ccstring(currentVersionString)
-
 
