@@ -29,6 +29,8 @@ add_library(frontendObj OBJECT
   "forms/CommentsDialog.cxx"
   "forms/MainWindow.cxx"
   "forms/PersistantDialog.cxx"
+  "model/SongListModel.cxx"
+  "model/SongListEditorModel.cxx"
   "resources/icons.qrc"
   "resources/images.qrc"
   "utils/backendutils.cxx"
@@ -81,3 +83,12 @@ add_executable(
 )
 target_link_libraries(frontend PRIVATE frontendObj)
 set_target_properties(frontend PROPERTIES OUTPUT_NAME "trackerboy")
+
+if (BUILD_TESTING)
+  add_executable(
+    testSongListModel ${GUI_TYPE}
+    "test/testSongListModel.cxx"
+    $<TARGET_OBJECTS:frontendObj>
+  )
+  target_link_libraries(testSongListModel PRIVATE frontendObj)
+endif ()

@@ -33,14 +33,14 @@ CommentsDialog::CommentsDialog(Document *doc, QWidget *parent) :
 
 void CommentsDialog::reload() {
     QSignalBlocker blocker(mEdit);
-    mEdit->setPlainText(toString(B::comments(mDocument->source())));
+    mEdit->setPlainText(toQString(mDocument->source()->comments()));
     mModified = false;
 }
 
 void CommentsDialog::commit() {
     if (mModified) {
-        auto temp = toUtf8(mEdit->toPlainText());
-        B::setComments(mDocument->source(), temp.slice);
+        auto str = toNimString(mEdit->toPlainText());
+        mDocument->source()->setComments(str.s);
         mModified = false;
     }
 }

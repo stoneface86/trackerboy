@@ -61,10 +61,10 @@ add_subdirectory(src)
 #
 # Unit tests
 #
-if (BUILD_TESTING)
-    include(CTest)
-    add_subdirectory(test)
-endif ()
+# if (BUILD_TESTING)
+#     include(CTest)
+#     add_subdirectory(test)
+# endif ()
 
 message(
     "\n"

@@ -35,6 +35,14 @@ struct NimRef {
         return ref != nullptr; 
     }
 
+    T& operator*() const {
+        return *ref;
+    }
+
+    T* operator->() const {
+        return ref;
+    }
+
 };
 
 template <typename T>
