@@ -131,7 +131,7 @@ void PianoWidget::keyPressEvent(QKeyEvent *evt) {
     if (!evt->isAutoRepeat()) {
         if (mKeymap) {
             auto const key = evt->key();
-            auto const note = B::keyToNote(mKeymap.ref, key);
+            auto const note = mKeymap->keyToNote(key);
             if (note != -1) {
                 mLastKeyPressed = key;
                 play(note);

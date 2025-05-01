@@ -10,22 +10,22 @@
 #
 
 import
-  std/[compilesettings, macros, os, strformat]
+  std/[compilesettings, enumutils, macros, os, strformat, strutils]
 
 type
   ccstring* {. importc: "const char *" .} = distinct cstring
     ## Immutable version of cstring
     ##
 
+func intToC(bytes: int; isSigned: bool): string = 
+  result.add('N')
+  result.add(if isSigned: 'I' else: 'U')
+  result.add($(bytes * 8))
+
 func toC(T: typedesc[SomeInteger]): string =
   ## Get the nimbase type name of the given integer type.
   ##
-  result.add('N')
-  when T is SomeSignedInt:
-    result.add('I')
-  else:
-    result.add('U')
-  result.add($(sizeof(T) * 8))
+  result = intToC(sizeof(T), T is SomeSignedInt)
 
 func toC(T: typedesc[SomeFloat]): string =
   ## Get the nimbase type name for the given float type.
@@ -72,6 +72,15 @@ template frontDestroy*(T: typedesc[object|tuple]) {.dirty.} =
   proc destroy*(x: ptr T) {.front.} =
     `=destroy`(x[])
 
+proc constvar*(T: typedesc[enum]; name = "") =
+  let ctype = if name == "": $T else: name
+  
+  for member in T:
+    constvar(symbolName(member), ctype, $(ord(member)))
+  constvar(ctype & "Low", ctype, $ord(low(T)))
+  constvar(ctype & "High", ctype, $ord(high(T)))
+
+
 const 
   headerTmpl = """
 #pragma once
@@ -108,9 +117,73 @@ proc frontImpl(name: string; node: NimNode): NimNode =
   node.addPragma(ident("used"))
   node.addPragma(newTree(nnkExprColonExpr, ident("raises"), newTree(nnkBracket)))
   result = node
-  
+
+proc convertVarThisToPtrThis(procDef: NimNode): bool =
+  # the `member` pragma only accepts procs with the first parameter being
+  # `T` or `ptr T` where `T is object`. This modifies the procedure definition
+  # if the first parameter is `var T`. `true` is returned if the proc was
+  # modified.
+  #
+  #   proc foo(f: var Foo) =
+  #     discard # proc body
+  #
+  # becomes
+  #
+  #   proc foo(pf: ptr Foo) =
+  #     template f(): var Foo = pf[]
+  #     discard # proc body
+
+  let params = procDef.params
+  if params.len >= 2 and params[1][1].kind == nnkVarTy:
+    let
+      this = params[1]
+      thisIdent = this[0]
+      thisType = this[1]
+      thisPtr = ident("p" & thisIdent.strVal)
+    # insert a template that converts the var T parameter to the ptr T one
+    let code = quote do:
+      template `thisIdent`(): `thisType` = `thisPtr`[]
+    procDef.body.insert(0, code)
+    this[0] = thisPtr
+    this[1] = newTree(nnkPtrTy, this[1][0])
+    result = true
+
+proc nodeIsExportc(n: NimNode): bool =
+  result = n.eqIdent("exportc") or n.eqIdent("exportcpp")
+
+proc getIdent(node: NimNode): string =
+  case node.kind
+  of nnkPostfix:
+    if node[0].eqIdent("*"): 
+      result = node[1].strVal
+  of nnkSym, nnkIdent:
+    result = node.strVal
+  else:
+    discard
+
+proc getExportedName(sym: NimNode): string =
+  expectKind(sym, nnkSym)
+  let impl = getImpl(sym)
+  if impl != nil and impl.kind == nnkTypeDef:
+    if impl[0].kind == nnkPragmaExpr:
+      let typeName = getIdent(impl[0][0])
+      for p in impl[0][1]:
+        if nodeIsExportc(p):
+          result = typeName
+        elif p.kind == nnkExprColonExpr and nodeIsExportc(p[0]):
+          result = p[1].strVal % [typeName]
 
 {. pop .}
+
+template bycref*() {.pragma.}
+  ## Custom pragma to annotate that a parameter should be passed by a C++
+  ## const reference when using [automember]
+  ##
+
+template bymove*() {.pragma.}
+  ## Custom pragma to annotate that a parameter should be passed by a C++
+  ## move reference when using [automember]
+  ##
 
 macro front*(procDef) =
   ## Custom pragma that makes procs available to the front end.
@@ -126,6 +199,100 @@ macro frontx*(name: static string; procDef) =
   ## Same as [front] but allows you to specify the name passed to exportc
   ##
   result = frontImpl(name, procDef)
+
+macro destructorMember*(T: typed): string =
+  let exportedName = getExportedName(T)
+  if exportedName == "":
+    error("Type must have an exportc or exportcpp pragma", T)
+  result = newLit(&"~{exportedName}()")
+
+type
+  CxxPassStyle = enum
+    cxxByVal        # T t
+    cxxByConstRef   # T const& t
+    cxxByRef        # T& t
+    cxxByMoveRef    # T&& t
+
+  MemberStringBuilder = object
+    isConst: bool
+    parameters: seq[CxxPassStyle]
+
+func render(s: MemberStringBuilder): string =
+  result = "$1("
+  let last = s.parameters.len - 1
+  for i, style in pairs(s.parameters):
+    let n = $(i + 2)
+    result.add(&"'{n} ")
+    case style
+    of cxxByVal:
+      discard
+    of cxxByConstRef:
+      result.add("const& ")
+    of cxxByRef:
+      discard
+    of cxxByMoveRef:
+      result.add("& ")
+    result.add(&"#{n}")
+    if i != last:
+      result.add(", ")
+  result.add(") ")
+  if s.isConst:
+    result.add("const ")
+  result.add("-> '0")
+
+macro automember*(procDef) =
+  ## Enhanced version of the member pragma. The member pragma is added to the
+  ## proc with an auto-generated format string.
+  ##  * Allows for `var T` instead of `ptr T` for the first parameter (this)
+  ##  * Parameters annotated with [bycref] pragma will be passed by const reference
+  ##  * Parameters annotated with [bymove] pragma will be passed by move reference
+  ##  * The `const` specifier is added to the method signature when not
+  ##    using `var T` for the first parameter.
+  ## 
+  expectKind(procDef, nnkProcDef)
+  result = procDef
+  let params = procDef.params
+  expectMinLen(params, 2)
+  var builder: MemberStringBuilder
+  builder.isConst = not convertVarThisToPtrThis(procDef)
+  for i in 2..<params.len:
+    var style: CxxPassStyle
+    let paramIdent = params[i][0]
+    if paramIdent.kind == nnkPragmaExpr:
+      let pragmas = paramIdent[1]
+      for i in 0..<pragmas.len:
+        if pragmas[i].kind == nnkIdent:
+          case pragmas[i].strVal
+          of "bycref":
+            style = cxxByConstRef
+            pragmas[i] = ident("bycopy")
+          of "bymove":
+            style = cxxByMoveRef
+            pragmas[i] = ident("byref")
+          of "bycopy": style = cxxByVal
+          of "byref": style = cxxByRef
+          else: discard
+    builder.parameters.add(style)
+
+  result.addPragma(newTree(nnkExprColonExpr, ident("member"), newLit(render(builder))))
+
+macro autodestructor*(procDef) =
+  ## Adds the member pragma with the name of the type's C++ destructor.
+  ##
+  expectKind(procDef, nnkProcDef)
+  var thisType: NimNode
+  if convertVarThisToPtrThis(procDef):
+    thisType = procDef.params[1][1][0]
+  else:
+    thisType = procDef.params[1][1]
+  result = procDef
+  result.addPragma(
+    newTree(
+      nnkExprColonExpr, 
+      ident("member"),
+      newCall(ident("destructorMember"), thisType)
+    )
+  )
 
 # String interop
 

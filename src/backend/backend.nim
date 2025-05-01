@@ -2,7 +2,14 @@
 {. push warning[UnusedImport]: off .}
 
 import
-  ./backend/[core, data, input, interop, notes]
+  ./backend/[
+    core, 
+    document, 
+    input, 
+    io,
+    interop, 
+    notes
+  ]
 
 
 proc handleCtrlC() {.noconv.} =
