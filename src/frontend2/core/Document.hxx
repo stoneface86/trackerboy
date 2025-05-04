@@ -34,40 +34,6 @@ public:
     //
     EditContext edit(bool setModified = false);
 
-    // IO
-
-    //
-    // Sets this document to the module stored in the given file.
-    // `true` is returned on success. On failure, document is left unchanged.
-    //
-    bool open(QString const& filename);
-
-    //
-    // Saves the document to the previous filename used by open or save.
-    // `true` is returned on success.
-    //
-    bool save();
-
-    //
-    // Saves the document to the given filename and remembers it.
-    // `true` is returned on success.
-    //
-    bool save(QString const& filename);
-
-    QString crashSave();
-
-    QString name() const;
-
-    void setName(QString const& name);
-
-    QString path() const;
-
-    void clearPath();
-
-    bool hasFile() const;
-
-    void setAutoBackup(bool autoBackup);
-
     B::Document* source();
     B::Document const* source() const;
 
@@ -76,18 +42,9 @@ signals:
     void reloaded();
     void modifiedChanged(bool modified);
 
-
-
 private:
-    bool doSave(QString const& filename);
-    void updateFilename(QString const& filename);
-
 
     NimRef<B::Document> mSource;
     bool mModified;
-
-    QString mFilename;
-    QString mFilepath;
-    bool mAutoBackup;
 
 };

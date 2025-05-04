@@ -2,7 +2,7 @@
 import 
   ./[core, interop],
   libtrackerboy/data,
-  std/[locks, streams]
+  std/[locks]
 
 type
   DocumentPrivate = object
@@ -136,10 +136,3 @@ proc setSongList*(d: var Document; changes {.bycref.}: SongListChanges)
 
   d.p.module.songs.data() = list
 
-# proc openModule*(d: ptr Document; filename: string): IoResult
-#   {.front, member.} =
-#   result = openModule(d[].p.module, filename)
-
-# proc saveModule*(d: Document; filename: string): IoResult
-#   {.front, member: "$1('2 #2) const -> '0".} =
-#   result = saveModule(d.p.module, filename)

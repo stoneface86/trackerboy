@@ -17,6 +17,7 @@ of "RelWithDebInfo":
 of "MinSizeRel":
   switch "define", "release"
   switch "opt", "size"
+  switch "define", "strip"
 of "Release":
   switch "define", "release"
 else:

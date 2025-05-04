@@ -42,31 +42,3 @@ B::Document* Document::source() {
 B::Document const* Document::source() const {
     return mSource.ref;
 }
-
-bool Document::open(QString const& path) {
-    
-}
-
-bool Document::save() {
-    if (mFilepath.isEmpty()) {
-        return false;
-    } else {
-        return doSave(mFilepath);
-    }
-}
-
-bool Document::save(QString const& filename) {
-    auto const result = doSave(filename);
-    if (result) {
-        updateFilename(filename);
-    }
-    return result;
-}
-
-bool Document::doSave(QString const& filename) {
-    return false;
-}
-
-void Document::updateFilename(QString const& filename) {
-    
-}
