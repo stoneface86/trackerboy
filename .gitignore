@@ -8,3 +8,4 @@ CMakeLists.txt.user
 .kdev4/
 compile_commands.json
 .cache/
+.idea/

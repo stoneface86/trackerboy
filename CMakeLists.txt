@@ -50,6 +50,10 @@ if (NOT DEBUG_BUILD)
     endif ()
 endif()
 
+if (BUILD_TESTING)
+    include(CTest)
+endif ()
+
 # vendored code
 add_subdirectory(vendored EXCLUDE_FROM_ALL)
 
@@ -57,14 +61,6 @@ add_subdirectory(vendored EXCLUDE_FROM_ALL)
 # Main program
 #
 add_subdirectory(src)
-
-#
-# Unit tests
-#
-# if (BUILD_TESTING)
-#     include(CTest)
-#     add_subdirectory(test)
-# endif ()
 
 message(
     "\n"
