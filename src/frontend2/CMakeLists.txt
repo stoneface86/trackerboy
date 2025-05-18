@@ -92,3 +92,9 @@ if (BUILD_TESTING)
   )
   target_link_libraries(testSongListModel PRIVATE frontendObj)
 endif ()
+
+add_custom_target(
+  runFrontend
+  COMMAND frontend
+  COMMENT "Running frontend"
+)

@@ -67,10 +67,10 @@ endfunction ()
 
 
 set(LIB "${CMAKE_STATIC_LIBRARY_PREFIX}backend${CMAKE_STATIC_LIBRARY_SUFFIX}")
-nim_project(backendTarget lib/lib.nim "${LIB}")
+nim_project(buildBackend lib/lib.nim "${LIB}")
 
 add_library(backend STATIC IMPORTED GLOBAL)
-add_dependencies(backend backendTarget)
+add_dependencies(backend buildBackend)
 set_target_properties(backend PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${LIB}")
 target_include_directories(backend INTERFACE 
   "${NIMCACHE_DIR}"
@@ -80,9 +80,9 @@ target_include_directories(backend INTERFACE
 if (BUILD_TESTING)
 
   set(TESTER "backendTest${CMAKE_EXECUTABLE_SUFFIX}")
-  nim_project(backendTestTarget test/test.nim ${TESTER})
+  nim_project(buildBackendTest test/test.nim ${TESTER})
   add_executable(backendTest IMPORTED GLOBAL)
-  add_dependencies(backendTest backendTestTarget)
+  add_dependencies(backendTest buildBackendTest)
   set_target_properties(backendTest PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TESTER}")
 
   add_executable(backendLinkTest "test/linkTest.cxx")
@@ -91,6 +91,18 @@ if (BUILD_TESTING)
   enable_testing()
   add_test(NAME backendTest COMMAND backendTest)
   add_test(NAME backendLinkTest COMMAND backendLinkTest)
+
+  add_custom_target(
+    runBackendTest
+    COMMAND backendTest
+    COMMENT "Running backendTest"
+  )
+
+  add_custom_target(
+    runBackendLinkTest
+    COMMAND backendLinkTest
+    COMMENT "Running backendLinkTest"
+  )
 
 endif ()
 

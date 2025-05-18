@@ -5,11 +5,11 @@ import
   std/[algorithm, strformat]
 
 const
-  bindsPerRow = 24
-  bindsLowerRow = 0..(bindsPerRow-1)
-  bindsUpperRow = (bindsLowerRow.b+1)..(bindsLowerRow.b + bindsPerRow)
-  bindsSpecialNoteCut = bindsUpperRow.b + 1
-  bindingCount = bindsSpecialNoteCut + 1
+  bindsPerRow* = 24
+  bindsLowerRow* = 0..(bindsPerRow-1)
+  bindsUpperRow* = (bindsLowerRow.b+1)..(bindsLowerRow.b + bindsPerRow)
+  bindsSpecialNoteCut* = bindsUpperRow.b + 1
+  bindingCount* = bindsSpecialNoteCut + 1
 
   noteBindingsCodegen = &"""
 struct $1 {{
@@ -22,37 +22,30 @@ $2
 """
 
 type
-  NoteBinding = object
-    keycode: int32
-    note: int8
-
   NoteBindings* {.exportc, codegenDecl: noteBindingsCodegen.} = object
     map*: array[bindingCount, int32]
 
   NoteKeymapPrivate = object
     octave: int8
-    bindings: array[bindingCount, NoteBinding]
+    keycodes: array[bindingCount, int32]
+    notes: array[bindingCount, int8]
 
   NoteKeymap* {.exportc.} = object
     p: NoteKeymapPrivate
 
-func `<`(x, y: NoteBinding; ): bool =
-  result = x.keycode < y.keycode
-
 proc newNoteKeymap*(): ref NoteKeymap {.front.} =
-  result = (ref NoteKeymap)(p: NoteKeymapPrivate(octave: 5))
+  result = (ref NoteKeymap)(p: NoteKeymapPrivate(octave: 5 - 2))
+  result[].p.notes.fill(int8.low)
 
 frontRef(ref NoteKeymap)
 
 proc keyToNote*(m: NoteKeymap; key: int32): int8 
   {.front, automember.} =
-  let 
-    filter = NoteBinding(keycode: key)
-    index = binarySearch(m.p.bindings, filter)
+  let index = binarySearch(m.p.keycodes, key)
   if index == -1:
     result = -1
   else:
-    let note = m.p.bindings[index].note
+    let note = m.p.notes[index]
     if note == bindsSpecialNoteCut:
       result = int8(noteCut)
     else:
@@ -71,7 +64,17 @@ proc setOctave*(m: var NoteKeymap; octave: int8)
 
 proc setBindings*(m: var NoteKeymap; bindings {.bycref.}: NoteBindings)
   {.front, automember.} =
-  var i = 0
+  var 
+    i = 0
+    buffer: array[bindingCount, (int32, int8)]
   for note, keycode in pairs(bindings.map):
-    m.p.bindings[i] = NoteBinding(keycode: keycode, note: int8(note))
-  sort(m.p.bindings)
+    buffer[i] = (keycode, int8(note))
+    inc i
+  buffer.sort do (x, y: (int32, int8);) -> int:
+    result = cmp(x[0], y[0])
+  i = 0
+  for pair in buffer:
+    m.p.keycodes[i] = pair[0]
+    m.p.notes[i] = pair[1]
+    inc i
+ 
