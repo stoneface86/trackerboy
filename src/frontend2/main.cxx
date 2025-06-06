@@ -6,17 +6,16 @@
 
 #include <QApplication>
 #include <QCommandLineParser>
-#include <QFileInfo>
 #include <QElapsedTimer>
+#include <QFileInfo>
 #include <QMessageBox>
-#include <QStringBuilder>
-#include <QtDebug>
-#include <QTextStream>
-#include <QScopedPointer>
+#include <QPointer>
 #include <QSettings>
+#include <QStringBuilder>
+#include <QTextStream>
+#include <QtDebug>
 
 #include <cstdio>
-
 
 #ifdef __GNUG__
 #include <cstdlib>
@@ -35,10 +34,10 @@ struct Demangled {
     }
     ~Demangled() {
         if (owned) {
-            free((void*)val);
+            free((void *)val);
         }
     }
-  
+
 private:
     bool owned;
 };
@@ -48,15 +47,13 @@ private:
 struct Demangled {
     const char *val;
 
-    Demangled(const char *name) :
-        val(name)
-    {
-    }
+    Demangled(const char *name)
+        : val(name) {}
 };
 
 #endif
 
-static constexpr auto cUncaughtExceptionMsg = 
+static constexpr auto cUncaughtExceptionMsg =
     "Problem:      Unhandled C++ exception\n"
     "Exception:    %s\n"
     "Message:      %s";
@@ -73,26 +70,25 @@ public:
     virtual bool notify(QObject *receiver, QEvent *evt) override {
         try {
             return QApplication::notify(receiver, evt);
-        } catch (std::exception const& except) {
+        } catch (std::exception const &except) {
             Demangled demangled(typeid(except).name());
             qFatal(cUncaughtExceptionMsg, demangled.val, except.what());
         }
     }
 };
 
-
 // Message handler ---
 
 // globals
 static QtMessageHandler gDefaultMessager; // default message handler
-static QScopedPointer<MainWindow> gMainWindow;
+static QPointer<MainWindow> gMainWindow;
 
 //
 // custom message handler that passes any fatal message to the user before
 // exiting.
 //
-static void trackerboyMessage(QtMsgType type, QMessageLogContext const& ctx,
-                              QString const& msg) {
+static void trackerboyMessage(QtMsgType type, QMessageLogContext const &ctx,
+                              QString const &msg) {
     if (type == QtFatalMsg && gMainWindow) {
         gMainWindow->panic(msg);
     }
@@ -108,7 +104,6 @@ static void backendPanic(B::Slice msg) {
 
 static auto const cAppName = "TrackerBoy";
 static constexpr int cExitBadArguments = -1;
-
 
 int main(int argc, char *argv[]) {
 
@@ -136,50 +131,46 @@ int main(int argc, char *argv[]) {
     parser.setApplicationDescription(tr("Game Boy music tracker"));
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.addPositionalArgument("[module]", tr("(Optional) the module file to open"));
+    parser.addPositionalArgument("[module]",
+                                 tr("(Optional) the module file to open"));
 
     parser.process(app);
 
     QString fileToOpen;
     auto const positionals = parser.positionalArguments();
     switch (positionals.size()) {
-        case 0:
-            break;
-        case 1:
-            fileToOpen = positionals[0];
-            break;
-        default:
-            // we could just only take the first argument and ignore the rest
-            // but I prefer to be strict
-            fputs("too many arguments given\n", stderr);
-            fputs(qPrintable(parser.helpText()), stderr);
+    case 0:
+        break;
+    case 1:
+        fileToOpen = positionals[0];
+        break;
+    default:
+        // we could just only take the first argument and ignore the rest
+        // but I prefer to be strict
+        fputs("too many arguments given\n", stderr);
+        fputs(qPrintable(parser.helpText()), stderr);
 
-            return cExitBadArguments;
+        return cExitBadArguments;
     }
 
     // create and show MainWindow
-    gMainWindow.reset(new MainWindow());
+    gMainWindow = new MainWindow();
     gMainWindow->show();
 
     if (!fileToOpen.isEmpty()) {
         QFileInfo info(fileToOpen);
         if (!info.exists()) {
-            QMessageBox::critical(
-                gMainWindow.get(),
-                tr("File does not exist"),
-                tr("The module could not be opened because the file does not exist")
-            );
+            QMessageBox::critical(gMainWindow, tr("File does not exist"),
+                                  tr("The module could not be opened because "
+                                     "the file does not exist"));
         } else if (!info.isFile()) {
             QMessageBox::critical(
-                gMainWindow.get(),
-                tr("Invalid filename"),
-                tr("The module could not be opened because it is not a file")
-            );
+                gMainWindow, tr("Invalid filename"),
+                tr("The module could not be opened because it is not a file"));
         } else {
             gMainWindow->openFile(fileToOpen);
         }
     }
-
 
 #ifndef QT_NO_INFO_OUTPUT
     qInfo() << "Launch time:" << timer.elapsed() << "ms";
@@ -187,6 +178,7 @@ int main(int argc, char *argv[]) {
 
     auto const code = app.exec();
 
+    delete gMainWindow;
     B::deinit();
     return code;
 }

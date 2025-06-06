@@ -11,9 +11,7 @@ class CommentsDialog : public PersistantDialog {
     Q_OBJECT
 
 public:
-
     explicit CommentsDialog(Document *doc, QWidget *parent = nullptr);
-    virtual ~CommentsDialog() = default;
 
 private:
     Q_DISABLE_COPY(CommentsDialog)
@@ -27,5 +25,4 @@ private:
     Document *mDocument;
     QPlainTextEdit *mEdit;
     bool mModified;
-
 };

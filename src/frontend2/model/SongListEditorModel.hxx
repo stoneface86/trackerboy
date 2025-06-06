@@ -22,7 +22,6 @@ class SongListEditorModel final : public QAbstractItemModel {
 public:
     explicit SongListEditorModel(SongListModel *sourceModel,
                                  QObject *parent = nullptr);
-    virtual ~SongListEditorModel() = default;
 
     virtual Qt::ItemFlags flags(QModelIndex const &index) const override final;
 

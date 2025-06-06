@@ -1,7 +1,11 @@
 
+#pragma once
+
 #include <QMainWindow>
 
 #include "core/Document.hxx"
+#include "forms/SongListEditor.hxx"
+#include "model/SongListModel.hxx"
 #include "utils/RecentFiles.hxx"
 
 class MainWindow : public QMainWindow {
@@ -11,15 +15,21 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow();
 
-    void openFile(QString const& path);
+    void openFile(QString const &path);
 
-    void panic(QString const& msg);
+    void panic(QString const &msg);
 
 private:
     Q_DISABLE_COPY(MainWindow)
 
+    void showSongListEditor();
+
+    void stopPlayback();
+
     RecentFiles mRecentFiles;
     Document *mDocument;
+    SongListModel *mSongListModel;
+    SongListEditor *mSongListEditor;
 
     // Central widget
     // QHBoxLayout mLayout;
@@ -29,5 +39,4 @@ private:
     //     QSplitter mVSplitter;
     //       TableView mInstruments;
     //       TableView mWaveforms;
-
 };

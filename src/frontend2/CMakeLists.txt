@@ -29,6 +29,7 @@ add_library(frontendObj OBJECT
   "forms/CommentsDialog.cxx"
   "forms/MainWindow.cxx"
   "forms/PersistantDialog.cxx"
+  "forms/SongListEditor.cxx"
   "model/SongListModel.cxx"
   "model/SongListEditorModel.cxx"
   "resources/icons.qrc"
