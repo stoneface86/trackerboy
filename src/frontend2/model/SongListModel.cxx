@@ -19,7 +19,7 @@ Qt::ItemFlags SongListModel::flags(QModelIndex const &index) const {
 
 int SongListModel::rowCount(QModelIndex const &index) const {
     Q_UNUSED(index)
-    return (int)mDocument->source()->songCount();
+    return (int)mDocument->view()->songCount();
 }
 
 QVariant SongListModel::data(QModelIndex const &index, int role) const {
@@ -30,7 +30,7 @@ QVariant SongListModel::data(QModelIndex const &index, int role) const {
             auto const songNo = index.row();
             QString result = QString::number(songNo + 1);
             result.append(". ");
-            auto const name = mDocument->source()->songName(songNo);
+            auto const name = mDocument->view()->songName(songNo);
             result.append(name.data);
             return result;
         }

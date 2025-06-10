@@ -24,7 +24,9 @@ MainWindow::MainWindow()
     , mRecentFiles()
     , mDocument(new Document(this))
     , mSongListModel(new SongListModel(mDocument, this))
-    , mSongListEditor(nullptr) {
+    , mSongListEditor(nullptr)
+    , mModuleProperties{}
+    , mComments{} {
 
     lazyconnect(mDocument, modifiedChanged, this, setWindowModified);
 
@@ -43,6 +45,8 @@ MainWindow::MainWindow()
         geom.moveTo(availableGeometry.center() - geom.center());
         setGeometry(geom);
     }
+
+    initMenuBar();
 }
 
 void MainWindow::openFile(QString const &path) {
@@ -77,6 +81,61 @@ void MainWindow::showSongListEditor() {
     }
     // TODO: Stop playback
     mSongListEditor->open();
+}
+
+void MainWindow::showComments() {
+    if (mComments == nullptr) {
+        mComments = new CommentsDialog(mDocument, this);
+    }
+    mComments->show();
+}
+
+void MainWindow::showModuleProperties() {
+    if (mModuleProperties == nullptr) {
+        mModuleProperties = new ModulePropertiesDialog(this);
+        connectLambda(mModuleProperties, accepted, this, [this]() {
+            mModuleProperties->save(*mDocument);
+        });
+    }
+    mModuleProperties->load(*mDocument);
+    mModuleProperties->open();
+}
+
+void MainWindow::initMenuBar() {
+
+    auto const menubar = menuBar();
+    QMenu *menu{};
+
+    // File
+    menu = menubar->addMenu(tr("&File"));
+
+    // Edit
+    menu = menubar->addMenu(tr("&Edit"));
+
+    // Module
+    menu = menubar->addMenu(tr("&Module"));
+    menu->addAction(tr("Comments..."), this, &MainWindow::showComments);
+    menu->addAction(tr("Song List..."), this, &MainWindow::showSongListEditor);
+    menu->addAction(tr("Module Properties..."), tr("Ctrl+P"), this,
+                    &MainWindow::showModuleProperties);
+
+    // Song
+    menu = menubar->addMenu(tr("&Song"));
+
+    // Instrument
+    menu = menubar->addMenu(tr("&Instrument"));
+
+    // Waveform
+    menu = menubar->addMenu(tr("&Waveform"));
+
+    // Tracker
+    menu = menubar->addMenu(tr("&Tracker"));
+
+    // View
+    menu = menubar->addMenu(tr("&View"));
+
+    // Help
+    menu = menubar->addMenu(tr("&Help"));
 }
 
 #undef TU

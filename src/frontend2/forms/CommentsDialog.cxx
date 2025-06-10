@@ -1,16 +1,16 @@
 
 #include "forms/CommentsDialog.hxx"
-#include "utils/connectutils.hxx"
 #include "utils/backendutils.hxx"
+#include "utils/connectutils.hxx"
 
-#include <QVBoxLayout>
 #include <QPushButton>
+#include <QVBoxLayout>
 
-CommentsDialog::CommentsDialog(Document *doc, QWidget *parent) :
-    PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint),
-    mDocument(doc),
-    mEdit()
-{
+CommentsDialog::CommentsDialog(Document *doc, QWidget *parent)
+    : PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
+                                   Qt::WindowCloseButtonHint)
+    , mDocument(doc)
+    , mEdit() {
     setWindowTitle(tr("Comments"));
 
     auto layout = new QVBoxLayout;
@@ -33,14 +33,14 @@ CommentsDialog::CommentsDialog(Document *doc, QWidget *parent) :
 
 void CommentsDialog::reload() {
     QSignalBlocker blocker(mEdit);
-    mEdit->setPlainText(toQString(mDocument->source()->comments()));
+    mEdit->setPlainText(toQString(mDocument->view()->comments()));
     mModified = false;
 }
 
 void CommentsDialog::commit() {
     if (mModified) {
         auto str = toNimString(mEdit->toPlainText());
-        mDocument->source()->setComments(str.s);
+        mDocument->edit()->setComments(str.s);
         mModified = false;
     }
 }

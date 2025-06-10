@@ -28,6 +28,7 @@ add_library(frontendObj OBJECT
   "core/Document.cxx"
   "forms/CommentsDialog.cxx"
   "forms/MainWindow.cxx"
+  "forms/ModulePropertiesDialog.cxx"
   "forms/PersistantDialog.cxx"
   "forms/SongListEditor.cxx"
   "model/SongListModel.cxx"
@@ -39,6 +40,7 @@ add_library(frontendObj OBJECT
   "widgets/CustomSpinBox.cxx"
   "widgets/EnvelopeForm.cxx"
   "widgets/PianoWidget.cxx"
+  "widgets/TickrateForm.cxx"
 )
 target_link_libraries(frontendObj PUBLIC Qt6::Widgets backend)
 target_compile_features(frontendObj PUBLIC cxx_std_17)

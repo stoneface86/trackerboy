@@ -16,6 +16,14 @@ type
     panicCallback: PanicCallback
     tempStr: string
 
+  Wrapper*[T] = T
+    ## Allows for exporting existing types. For example:
+    ## 
+    ##   type XFoo* {.exportc: "Foo".} = Wrapper[Foo]
+    ## 
+    ## Will have the `Foo` type generated with the exported name (assuming 
+    ## there was no use of `Foo` beforehand).
+
 
 
 var gCore: Core

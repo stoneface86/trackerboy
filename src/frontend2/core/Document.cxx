@@ -2,11 +2,10 @@
 #include "core/Document.hxx"
 #include "utils/backendutils.hxx"
 
-Document::EditContext::EditContext(Document &doc, bool setModified) :
-    backend(doc.mSource.ref),
-    document(doc),
-    setModified(setModified)
-{
+Document::EditContext::EditContext(Document &doc, bool setModified)
+    : backend(doc.mSource.ref)
+    , document(doc)
+    , setModified(setModified) {
     backend->lock();
 }
 
@@ -17,11 +16,15 @@ Document::EditContext::~EditContext() {
     }
 }
 
-Document::Document(QObject *parent) :
-    QObject(parent),
-    mSource(makeNimRef(B::newDocument(toNimString(tr("New Song")).s)))
-{
-}
+Document::ViewContext::ViewContext(Document const &doc)
+    : backend(doc.mSource.ref)
+    , document(doc) {}
+
+Document::ViewContext::~ViewContext() {}
+
+Document::Document(QObject *parent)
+    : QObject(parent)
+    , mSource(makeNimRef(B::newDocument(toNimString(tr("New Song")).s))) {}
 
 void Document::setModified() {
     if (!mModified) {
@@ -35,10 +38,7 @@ Document::EditContext Document::edit(bool setModified) {
     return result;
 }
 
-B::Document* Document::source() {
-    return mSource.ref;
-}
-
-B::Document const* Document::source() const {
-    return mSource.ref;
+Document::ViewContext Document::view() const {
+    ViewContext result(*this);
+    return result;
 }

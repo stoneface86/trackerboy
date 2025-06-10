@@ -5,6 +5,10 @@ import
   std/[locks]
 
 type
+  BSystem* {.exportc: "System" .} = Wrapper[System]
+  BTickrate* {.exportc: "Tickrate".} = Wrapper[Tickrate]
+  BInfoString* {.exportc: "InfoString".} = Wrapper[InfoString]
+
   DocumentPrivate = object
     module: Module
     lock: Lock
@@ -12,6 +16,21 @@ type
 
   Document* {.exportc.} = object
     p: DocumentPrivate
+
+
+  ModuleProperties* {.exportc.} = object
+    title*: InfoString
+    artist*: InfoString
+    copyright*: InfoString
+    tickrate*: BTickrate
+    revMajor*: uint8
+    revMinor*: uint8
+
+static:
+  constvar("SystemDmg", systemDmg.uint8)
+  constvar("SystemSgb", systemSgb.uint8)
+  constvar("SystemCustom", systemCustom.uint8)
+  constvar("InfoStringLen", len(InfoString))
 
 template module*(d: Document): Module =
   d.p.module
@@ -71,6 +90,22 @@ proc songName*(d: Document; index: int): BSlice
   {.front, automember.} =
   let song = d.p.module.songs.get(index)
   result = slice(song[].name)
+
+proc moduleProperties*(d: Document): ModuleProperties
+  {.front, automember.} =
+  result.title = d.p.module.title
+  result.artist = d.p.module.artist
+  result.copyright = d.p.module.copyright
+  result.tickrate = d.p.module.tickrate
+  result.revMajor = uint8(d.p.module.revisionMajor())
+  result.revMinor = uint8(d.p.module.revisionMinor())
+
+proc setModuleProperties*(d: var Document; props {.byref.}: ModuleProperties)
+  {.front, automember.} =
+  d.p.module.title = props.title
+  d.p.module.artist = props.artist
+  d.p.module.copyright = props.copyright
+  d.p.module.tickrate = props.tickrate
 
 type
   SongListChangeKind = enum

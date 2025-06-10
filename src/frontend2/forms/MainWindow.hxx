@@ -4,6 +4,8 @@
 #include <QMainWindow>
 
 #include "core/Document.hxx"
+#include "forms/CommentsDialog.hxx"
+#include "forms/ModulePropertiesDialog.hxx"
 #include "forms/SongListEditor.hxx"
 #include "model/SongListModel.hxx"
 #include "utils/RecentFiles.hxx"
@@ -24,12 +26,20 @@ private:
 
     void showSongListEditor();
 
+    void showModuleProperties();
+
+    void showComments();
+
     void stopPlayback();
+
+    void initMenuBar();
 
     RecentFiles mRecentFiles;
     Document *mDocument;
     SongListModel *mSongListModel;
     SongListEditor *mSongListEditor;
+    ModulePropertiesDialog *mModuleProperties;
+    CommentsDialog *mComments;
 
     // Central widget
     // QHBoxLayout mLayout;

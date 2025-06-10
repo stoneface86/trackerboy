@@ -289,30 +289,26 @@ void SongListEditorModel::apply(Document &doc) {
             changes.setNameOfLast(toNimString(item.name).s);
         }
     }
-        
 
     mSource->beginResetModel();
     beginResetModel();
-    
-    {
-        auto ctx = doc.edit(true);
-        ctx.backend->setSongList(changes);
-    }
-    
+
+    doc.edit(true)->setSongList(changes);
     setListFromSource();
+
     mSource->endResetModel();
     endResetModel();
 }
 
 void SongListEditorModel::setListFromSource() {
-
+    auto ctx = mSource->mDocument->view();
     mItems.resize(mSource->rowCount());
     int index = 0;
     for (auto &item : mItems) {
         item.sourceId = (qint8)index;
         item.action = itemKeep;
         item.nameModified = false;
-        item.name = toQString(mSource->mDocument->source()->songName(index));
+        item.name = toQString(ctx->songName(index));
         ++index;
     }
 }

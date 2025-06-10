@@ -21,6 +21,21 @@ public:
 
         explicit EditContext(Document &doc, bool setModified = false);
         ~EditContext();
+
+        inline B::Document *operator->() { return backend; }
+    };
+
+    //
+    // An object representing a context for viewing the document's source data.
+    //
+    struct ViewContext {
+        B::Document const *backend;
+        Document const &document;
+
+        explicit ViewContext(Document const &doc);
+        ~ViewContext();
+
+        inline B::Document const *operator->() { return backend; }
     };
 
     explicit Document(QObject *parent = nullptr);
@@ -32,8 +47,10 @@ public:
     //
     EditContext edit(bool setModified = false);
 
-    B::Document *source();
-    B::Document const *source() const;
+    //
+    // Get a `ViewContext` for read-only access to the document's source data.
+    //
+    ViewContext view() const;
 
 signals:
     void aboutToSave();
