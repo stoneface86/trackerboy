@@ -86,6 +86,10 @@ proc songCount*(d: Document): int
   {.front, automember.} =
   result = d.p.module.songs.len()
 
+proc songId*(d: Document; index: int): int
+  {.front, automember.} =
+  result = cast[int](d.p.module.songs.get(index))
+
 proc songName*(d: Document; index: int): BSlice 
   {.front, automember.} =
   let song = d.p.module.songs.get(index)

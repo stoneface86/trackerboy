@@ -1,5 +1,7 @@
 
 #include "forms/MainWindow.hxx"
+#include "core/icons.hxx"
+#include "utils/actions.hxx"
 #include "utils/connectutils.hxx"
 
 #include "forms/SongListEditor.hxx"
@@ -45,8 +47,15 @@ MainWindow::MainWindow()
         geom.moveTo(availableGeometry.center() - geom.center());
         setGeometry(geom);
     }
-
     initMenuBar();
+
+    ColorTheme theme;
+    theme.colors[0] = qRgb(208, 208, 247);
+    theme.colors[1] = qRgb(113, 113, 191);
+    theme.colors[2] = qRgb(51, 51, 102);
+    theme.colors[3] = qRgb(31, 31, 61);
+    icons::generate(theme);
+    updateIcons();
 }
 
 void MainWindow::openFile(QString const &path) {
@@ -101,23 +110,118 @@ void MainWindow::showModuleProperties() {
     mModuleProperties->open();
 }
 
+void MainWindow::onNew() {}
+void MainWindow::onOpen() {}
+void MainWindow::onSave() {}
+void MainWindow::onSaveAs() {}
+void MainWindow::onExportToWav() {}
+void MainWindow::onConfiguration() {}
+
+void MainWindow::updateIcons() {
+    for (auto menuAct : menuBar()->actions()) {
+        for (auto act : menuAct->menu()->actions()) {
+            auto const data = getData(act);
+            if (data.icon != -1) {
+                act->setIcon(icons::get((icons::Icons)data.icon));
+            }
+        }
+    }
+}
+
 void MainWindow::initMenuBar() {
 
     auto const menubar = menuBar();
     QMenu *menu{};
 
+#define A(...) buildAction(menu, __VA_ARGS__)
+
     // File
+    mToolbarFile = icons::largeToolBar(this);
     menu = menubar->addMenu(tr("&File"));
+    A(tr("&New"), tr("Create a new module"))
+        .icon(icons::New)
+        .shortcut(QKeySequence::New)
+        .triggers(this, &MainWindow::onNew)
+        .addTo(mToolbarFile);
+    A(tr("&Open"), tr("Opens a module from a file"))
+        .icon(icons::Open)
+        .shortcut(QKeySequence::Open)
+        .triggers(this, &MainWindow::onOpen)
+        .addTo(mToolbarFile);
+    A(tr("&Save"), tr("Saves the module"))
+        .icon(icons::Save)
+        .shortcut(QKeySequence::Save)
+        .triggers(this, &MainWindow::onSave)
+        .addTo(mToolbarFile);
+    A(tr("Save As..."), tr("Saves the module to a new file"))
+        .shortcut(QKeySequence::SaveAs)
+        .triggers(this, &MainWindow::onSaveAs);
+    menu->addSeparator();
+    A(tr("Export to WAV..."), tr("Exports the module to a WAV file"))
+        .triggers(this, &MainWindow::onExportToWav);
+
+    mRecentFiles.setup(menu);
+    menu->addSeparator();
+    A(tr("Configuration..."), tr("Opens the configuration dialog"))
+        .icon(icons::Config)
+        .triggers(this, &MainWindow::onConfiguration)
+        .addTo(mToolbarFile);
+    menu->addSeparator();
+    A(tr("&Quit"), tr("Exits the application"))
+        .shortcut(QKeySequence::Quit)
+        .triggers(this, &MainWindow::close);
 
     // Edit
+    mToolbarEdit = icons::largeToolBar(this);
     menu = menubar->addMenu(tr("&Edit"));
+    A(mDocument->undoGroup()->createUndoAction(this))
+        .icon(icons::Undo)
+        .shortcut(QKeySequence::Undo)
+        .addTo(mToolbarEdit);
+    A(mDocument->undoGroup()->createRedoAction(this))
+        .icon(icons::Redo)
+        .shortcut(QKeySequence::Redo)
+        .addTo(mToolbarEdit);
+    menu->addSeparator();
+    mToolbarEdit->addSeparator();
+    A(tr("C&ut"), tr("Copies and deletes selection to the clipboard"))
+        .icon(icons::Cut)
+        .shortcut(QKeySequence::Cut)
+        // .triggers(mPatternEditor, &PatternEditor::cut)
+        .addTo(mToolbarEdit);
+    A(tr("&Copy"), tr("Copies selected rows to the clipboard"))
+        .icon(icons::Copy)
+        .shortcut(QKeySequence::Copy)
+        // .triggers(mPatternEditor, &PatternEditor::copy)
+        .addTo(mToolbarEdit);
+    A(tr("&Paste"), tr("Pastes contents at the cursor"))
+        .icon(icons::Paste)
+        .shortcut(QKeySequence::Paste)
+        // .triggers(mPatternEditor, &PatternEditor::paste)
+        .addTo(mToolbarEdit);
+    A(tr("Paste &Mix"),
+      tr("Pastes contents at the cursor, merging with existing rows"))
+        // .triggers(mPatternEditor, &PatternEditor::pasteMix)
+        .shortcut(tr("Ctrl+M"));
+    A(tr("&Insert Row"), tr("Inserts an empty row at the cursor"))
+        // .triggers(mPatternEditor, &PatternEditor::insertRow)
+        .shortcut(tr("Ins"));
+    A(tr("&Erase"), tr("Erases selection contents"))
+        // .triggers(mPatternEditor, &PatternEditor::erase)
+        .shortcut(QKeySequence::Delete);
+    menu->addSeparator();
+    A(tr("&Select All"), tr("Selects entire track/pattern"))
+        // .triggers(mPatternEditor, &PatternEditor::selectAll)
+        .shortcut(QKeySequence::SelectAll);
 
     // Module
     menu = menubar->addMenu(tr("&Module"));
-    menu->addAction(tr("Comments..."), this, &MainWindow::showComments);
-    menu->addAction(tr("Song List..."), this, &MainWindow::showSongListEditor);
-    menu->addAction(tr("Module Properties..."), tr("Ctrl+P"), this,
-                    &MainWindow::showModuleProperties);
+    A(tr("Comments..."), tr("Edit/view the module's comments"))
+        .triggers(this, &MainWindow::showComments);
+    A(tr("Song List..."), tr("Edit the module's song list"))
+        .triggers(this, &MainWindow::showSongListEditor);
+    A(tr("Module Properties..."), tr("Edit module properties"))
+        .triggers(this, &MainWindow::showModuleProperties);
 
     // Song
     menu = menubar->addMenu(tr("&Song"));
@@ -136,6 +240,11 @@ void MainWindow::initMenuBar() {
 
     // Help
     menu = menubar->addMenu(tr("&Help"));
+
+    addToolBar(mToolbarFile);
+    addToolBar(mToolbarEdit);
+
+#undef A
 }
 
 #undef TU

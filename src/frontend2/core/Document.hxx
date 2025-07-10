@@ -3,6 +3,7 @@
 #include "backend.hxx"
 
 #include <QObject>
+#include <QUndoGroup>
 
 class Document : public QObject {
 
@@ -52,6 +53,17 @@ public:
     //
     ViewContext view() const;
 
+    QUndoStack *undoStack(int songNo);
+
+    QUndoGroup const *undoGroup() const;
+
+    //
+    // Updates all song QUndoStacks after the song list has been changed. Call
+    // this after opening a module, creating a new module, or when the user
+    // has modified the song list via the Song List Editor.
+    //
+    void songListChanged();
+
 signals:
     void aboutToSave();
     void reloaded();
@@ -60,4 +72,14 @@ signals:
 private:
     NimRef<B::Document> mSource;
     bool mModified;
+    QUndoGroup *mUndoGroup;
+
+    struct SongHistory {
+        qintptr id; // this is actually the pointer of the song
+        QUndoStack *stack;
+    };
+
+    QList<SongHistory> initHistoryFromSource();
+
+    QList<SongHistory> mSongHistories;
 };

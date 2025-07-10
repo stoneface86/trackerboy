@@ -25,7 +25,9 @@ configure_file("version.in.hxx" "${CMAKE_CURRENT_BINARY_DIR}/version.hxx" @ONLY)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_library(frontendObj OBJECT
+  "core/ColorTheme.cxx"
   "core/Document.cxx"
+  "core/icons.cxx"
   "forms/CommentsDialog.cxx"
   "forms/MainWindow.cxx"
   "forms/ModulePropertiesDialog.cxx"
@@ -33,8 +35,8 @@ add_library(frontendObj OBJECT
   "forms/SongListEditor.cxx"
   "model/SongListModel.cxx"
   "model/SongListEditorModel.cxx"
-  "resources/icons.qrc"
-  "resources/images.qrc"
+  "resources/resources.qrc"
+  "utils/actions.cxx"
   "utils/backendutils.cxx"
   "utils/RecentFiles.cxx"
   "widgets/CustomSpinBox.cxx"

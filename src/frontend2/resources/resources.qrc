@@ -1,0 +1,16 @@
+<RCC>
+    <qresource>
+        <file>img/app-16.png</file>
+        <file>img/app-24.png</file>
+        <file>img/app-32.png</file>
+        <file>img/app-48.png</file>
+        <file>img/app-128.png</file>
+        <file>img/blackkey-all.png</file>
+        <file>img/blackkey-down.png</file>
+        <file>img/headerFont.bmp</file>
+        <file>img/logo.png</file>
+        <file>img/whitekey-all.png</file>
+        <file>img/whitekey-down.png</file>
+        <file>img/icons.png</file>
+    </qresource>
+</RCC>

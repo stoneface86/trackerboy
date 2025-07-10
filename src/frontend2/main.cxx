@@ -1,6 +1,7 @@
 
 #include "backend.hxx"
 
+#include "core/icons.hxx"
 #include "forms/MainWindow.hxx"
 #include "version.hxx"
 
@@ -119,9 +120,10 @@ int main(int argc, char *argv[]) {
     gDefaultMessager = qInstallMessageHandler(trackerboyMessage);
 
     Application app(argc, argv);
-    QCoreApplication::setOrganizationName(cAppName);
-    QCoreApplication::setApplicationName(cAppName);
-    QCoreApplication::setApplicationVersion(cVersion);
+    Application::setOrganizationName(cAppName);
+    Application::setApplicationName(cAppName);
+    Application::setApplicationVersion(cVersion);
+    Application::setWindowIcon(icons::getApp());
     // use INI on all systems, much easier to edit by hand
     QSettings::setDefaultFormat(QSettings::IniFormat);
 

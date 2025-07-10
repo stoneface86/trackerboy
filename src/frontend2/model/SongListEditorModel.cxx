@@ -298,6 +298,8 @@ void SongListEditorModel::apply(Document &doc) {
 
     mSource->endResetModel();
     endResetModel();
+
+    doc.songListChanged();
 }
 
 void SongListEditorModel::setListFromSource() {

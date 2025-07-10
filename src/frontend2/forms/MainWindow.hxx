@@ -2,6 +2,8 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QSpinBox>
+#include <QToolBar>
 
 #include "core/Document.hxx"
 #include "forms/CommentsDialog.hxx"
@@ -24,6 +26,17 @@ public:
 private:
     Q_DISABLE_COPY(MainWindow)
 
+    void updateIcons();
+
+    // slots
+    void onNew();
+    void onOpen();
+    void onSave();
+    void onSaveAs();
+    void onExportToWav();
+    void onRecentFile();
+    void onConfiguration();
+
     void showSongListEditor();
 
     void showModuleProperties();
@@ -33,6 +46,8 @@ private:
     void stopPlayback();
 
     void initMenuBar();
+    void initStatusBar();
+    void initUi();
 
     RecentFiles mRecentFiles;
     Document *mDocument;
@@ -40,6 +55,14 @@ private:
     SongListEditor *mSongListEditor;
     ModulePropertiesDialog *mModuleProperties;
     CommentsDialog *mComments;
+
+    // toolbars
+    QToolBar *mToolbarFile;
+    QToolBar *mToolbarEdit;
+    QToolBar *mToolbarSong;
+    QToolBar *mToolbarTracker;
+    QToolBar *mToolbarInput;
+    QSpinBox *mOctaveSpin;
 
     // Central widget
     // QHBoxLayout mLayout;

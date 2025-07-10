@@ -78,8 +78,6 @@ SongListEditor::SongListEditor(SongListModel *model, QWidget *parent)
         ->setToolTip(tr("Cancels all pending changes and closes the dialog"));
     dialogButtons->button(QDialogButtonBox::Reset)
         ->setToolTip(tr("Reverts all pending changes"));
-
-    dumpObjectTree();
 }
 
 void SongListEditor::applyChanges(Document &doc) {
