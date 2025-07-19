@@ -16,10 +16,12 @@
 struct ActionData {
     ActionData(i8 icon = -1, bool canShortcut = false)
         : icon(icon)
-        , canShortcut(canShortcut) {}
+        , canShortcut(canShortcut)
+        , defaultShortcut() {}
 
     i8 icon;          // index of the icon to get or -1 for no icon
     bool canShortcut; // if true, then the user can set a key sequence shortcut
+    QKeySequence defaultShortcut;
 };
 
 //
@@ -29,41 +31,93 @@ struct ActionBuilder {
     QAction *action;
     ActionData data;
 
-    ~ActionBuilder();
+    //
+    // Sets the action data to the action's data property.
+    //
+    inline ~ActionBuilder() { action->setData(QVariant::fromValue(data)); }
 
     //
     // Sets the icon for the action
     //
-    ActionBuilder &icon(icons::Icons icon);
+    inline ActionBuilder &icon(icons::Icons icon) {
+        data.icon = icon;
+        return *this;
+    }
 
     //
     // Sets the action's shortcut key sequence
     //
-    ActionBuilder &shortcut(QKeySequence const &seq);
+    inline ActionBuilder &shortcut(QKeySequence const &seq) {
+        action->setShortcut(seq);
+        data.defaultShortcut = seq;
+        return *this;
+    }
 
     //
     // Marks the action has having no user-configurable shortcut
     //
-    ActionBuilder &noShortcut();
+    inline ActionBuilder &noShortcut() {
+        data.canShortcut = false;
+        return *this;
+    }
 
     //
     // Connects the action's triggered signal to the given slot
     //
     template <typename... Args>
-    ActionBuilder &triggers(Args &&...args) {
+    inline ActionBuilder &triggers(Args &&...args) {
         QAction::connect(action, &QAction::triggered, args...);
+        return *this;
+    }
+
+    //
+    // Connects the action's toggled signal to the given slot
+    //
+    template <typename... Args>
+    inline ActionBuilder &toggles(Args &&...args) {
+        QAction::connect(action, &QAction::toggled, args...);
         return *this;
     }
 
     //
     // Sets the action's parent
     //
-    ActionBuilder &parent(QObject *parent);
+    inline ActionBuilder &parent(QObject *parent) {
+        action->setParent(parent);
+        return *this;
+    }
 
     //
     // Adds the action to the given widget
     //
-    ActionBuilder &addTo(QWidget *widget);
+    inline ActionBuilder &addTo(QWidget *widget) {
+        widget->addAction(action);
+        return *this;
+    }
+
+    //
+    // Assigns the action to the given reference `act`
+    //
+    inline ActionBuilder &store(QAction *&act) {
+        act = action;
+        return *this;
+    }
+
+    //
+    // Sets the action's checkable property to `state`
+    //
+    inline ActionBuilder &checkable(bool state = true) {
+        action->setCheckable(state);
+        return *this;
+    }
+
+    //
+    // Sets the action's checked property to `state`
+    //
+    inline ActionBuilder &checked(bool state = true) {
+        action->setChecked(state);
+        return *this;
+    }
 };
 
 ///
@@ -84,18 +138,20 @@ ActionBuilder buildAction(QWidget *w, QString const &text, QString const &tip);
 //
 ActionBuilder buildAction(QWidget *w, QAction *act);
 
-template <typename... Args>
-inline QAction *addAction(QWidget *w, QString const &text, QString const &tip,
-                          Args &&...args) {
-    auto result = w->addAction(text, args...);
-    result->setStatusTip(tip);
-    return result;
-}
-
-template <typename... Args>
-inline QAction *addAction(QWidget *w, QString const &text, QString const &tip,
-                          ActionData data, Args &&...args) {
-    auto result = addAction(w, text, tip, args...);
-    result->setData(data);
-    return result;
+//
+// Iterates all actions in a widget, recursively. Each QAction that is not a
+// separator or menu will be passed as an argument to the functor `f`.
+//
+template <typename Func>
+void iterateActions(QWidget *widget, Func f) {
+    for (const auto action : widget->actions()) {
+        if (!action->isSeparator()) {
+            auto menu = action->menu();
+            if (menu == nullptr) {
+                f(action);
+            } else {
+                iterateActions(menu, f);
+            }
+        }
+    }
 }

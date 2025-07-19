@@ -1,12 +1,36 @@
 
 #include "core/icons.hxx"
+#include "utils/aliases.hxx"
 
+#include <array>
 #include <utility>
 
 #define TU IconLocatorTU
 namespace TU {
 
-static constexpr auto cSmallIconOnly = icons::Ch1;
+using namespace icons;
+
+// template <typename... Args>
+// constexpr auto makeSet(Args &&...args) {
+//     using Array = std::array<i8, sizeof...(args)>;
+//     return Array{static_cast<i8>(args)...};
+// }
+
+static constexpr auto cLargeStart = New;
+static constexpr auto cLargeEnd = Down;
+static constexpr auto cDisableStart = Undo;
+static constexpr auto cDisableEnd = Edit;
+
+static void addTile(QIcon &icon, int &x, int &y, int const tileSize,
+                    int const tilesetWidth, QPixmap const &tileset,
+                    QIcon::Mode mode = QIcon::Normal) {
+    icon.addPixmap(tileset.copy(x, y, tileSize, tileSize), mode);
+    x += tileSize;
+    if (x >= tilesetWidth) {
+        x = 0;
+        y += tileSize;
+    }
+}
 
 class IconTable {
 
@@ -20,41 +44,33 @@ public:
 
         constexpr auto cTileSmall = icons::smallSize.width();
         constexpr auto cTileLarge = icons::largeSize.width();
-        // large tiles start after three rows of small tiles
-        constexpr auto cLargeStartY = cTileSmall * 3;
-
-        int smallX = 0;
-        int smallY = 0;
-        int largeX = 0;
-        int largeY = cLargeStartY;
         auto const tilesetWidth = tilesetPix.width();
 
-        auto addTile = [](QIcon &icon, int &x, int &y, int const tileSize,
-                          int const tilesetWidth, QPixmap const &tileset) {
-            icon.addPixmap(tileset.copy(x, y, tileSize, tileSize));
-            x += tileSize;
-            icon.addPixmap(tileset.copy(x, y, tileSize, tileSize),
-                           QIcon::Disabled);
-            x += tileSize;
-            if (x >= tilesetWidth) {
-                x = 0;
-                y += tileSize;
-            }
-        };
+        int x = 0;
+        int y = 0;
 
-        for (int i = 0; i < cSmallIconOnly; ++i) {
+        // small, normal icons
+        for (int i = 0; i < Count; ++i) {
             QIcon icon;
-            addTile(icon, smallX, smallY, cTileSmall, tilesetWidth, tilesetPix);
-            addTile(icon, largeX, largeY, cTileLarge, tilesetWidth, tilesetPix);
+            addTile(icon, x, y, cTileSmall, tilesetWidth, tilesetPix);
+            // overwrite existing icons in the table if present
             mTable[i] = std::move(icon);
         }
-        // these icons only have a small, normal, icon
-        for (int i = cSmallIconOnly; i < icons::Count; ++i) {
-            QIcon icon;
-            icon.addPixmap(
-                tilesetPix.copy(smallX, smallY, cTileSmall, cTileSmall));
-            smallX += cTileSmall;
-            mTable[i] = std::move(icon);
+        // small, disabled icons
+        for (int i = cDisableStart; i <= cDisableEnd; ++i) {
+            addTile(mTable[i], x, y, cTileSmall, tilesetWidth, tilesetPix,
+                    QIcon::Disabled);
+        }
+        x = 0;
+        y += cTileSmall;
+        // large, normal icons
+        for (int i = cLargeStart; i <= cLargeEnd; ++i) {
+            addTile(mTable[i], x, y, cTileLarge, tilesetWidth, tilesetPix);
+        }
+        // large, disabled icons
+        for (int i = cDisableStart; i <= cLargeEnd; ++i) {
+            addTile(mTable[i], x, y, cTileLarge, tilesetWidth, tilesetPix,
+                    QIcon::Disabled);
         }
     }
 

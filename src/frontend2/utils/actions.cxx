@@ -25,32 +25,3 @@ ActionBuilder buildAction(QWidget *w, QAction *act) {
     w->addAction(act);
     return result;
 }
-
-ActionBuilder::~ActionBuilder() {
-    action->setData(QVariant::fromValue(data));
-}
-
-ActionBuilder &ActionBuilder::icon(icons::Icons icon) {
-    data.icon = icon;
-    return *this;
-}
-
-ActionBuilder &ActionBuilder::shortcut(QKeySequence const &seq) {
-    action->setShortcut(seq);
-    return *this;
-}
-
-ActionBuilder &ActionBuilder::noShortcut() {
-    data.canShortcut = false;
-    return *this;
-}
-
-ActionBuilder &ActionBuilder::parent(QObject *parent) {
-    action->setParent(parent);
-    return *this;
-}
-
-ActionBuilder &ActionBuilder::addTo(QWidget *widget) {
-    widget->addAction(action);
-    return *this;
-}

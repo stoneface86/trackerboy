@@ -39,6 +39,7 @@ add_library(frontendObj OBJECT
   "utils/actions.cxx"
   "utils/backendutils.cxx"
   "utils/RecentFiles.cxx"
+  "utils/ToolbarLayout.cxx"
   "widgets/CustomSpinBox.cxx"
   "widgets/EnvelopeForm.cxx"
   "widgets/PianoWidget.cxx"

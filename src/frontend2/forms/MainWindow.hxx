@@ -3,7 +3,10 @@
 
 #include <QMainWindow>
 #include <QSpinBox>
+#include <QSplitter>
 #include <QToolBar>
+
+#include <array>
 
 #include "core/Document.hxx"
 #include "forms/CommentsDialog.hxx"
@@ -45,6 +48,7 @@ private:
 
     void stopPlayback();
 
+    void initToolBars();
     void initMenuBar();
     void initStatusBar();
     void initUi();
@@ -57,12 +61,28 @@ private:
     CommentsDialog *mComments;
 
     // toolbars
-    QToolBar *mToolbarFile;
-    QToolBar *mToolbarEdit;
-    QToolBar *mToolbarSong;
-    QToolBar *mToolbarTracker;
-    QToolBar *mToolbarInput;
+    enum Toolbars {
+        ToolbarFile,
+        ToolbarEdit,
+        ToolbarTracker,
+        ToolbarInput,
+        ToolbarView,
+        ToolbarCount
+    };
+    std::array<QToolBar *, ToolbarCount> mToolbars;
     QSpinBox *mOctaveSpin;
+
+    struct Ui {
+        // QLabel is a placeholder
+        QLabel *sidebar;
+        QSplitter *hsplitter;
+        QLabel *editor;
+        QSplitter *databar;
+        QLabel *instruments;
+        QLabel *waveforms;
+    };
+
+    Ui mUi;
 
     // Central widget
     // QHBoxLayout mLayout;

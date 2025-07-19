@@ -6,11 +6,14 @@
 
 #include "forms/SongListEditor.hxx"
 #include "model/SongListModel.hxx"
+#include "utils/ToolbarLayout.hxx"
 
 #include <QApplication>
+#include <QHBoxLayout>
 #include <QMenuBar>
 #include <QScreen>
 #include <QSettings>
+#include <QStatusBar>
 
 #define TU MainWindowTU
 namespace TU {
@@ -47,7 +50,10 @@ MainWindow::MainWindow()
         geom.moveTo(availableGeometry.center() - geom.center());
         setGeometry(geom);
     }
+    initToolBars();
+    initUi();
     initMenuBar();
+    initStatusBar();
 
     ColorTheme theme;
     theme.colors[0] = qRgb(208, 208, 247);
@@ -118,13 +124,43 @@ void MainWindow::onExportToWav() {}
 void MainWindow::onConfiguration() {}
 
 void MainWindow::updateIcons() {
-    for (auto menuAct : menuBar()->actions()) {
-        for (auto act : menuAct->menu()->actions()) {
-            auto const data = getData(act);
-            if (data.icon != -1) {
-                act->setIcon(icons::get((icons::Icons)data.icon));
-            }
+    iterateActions(menuBar(), [](QAction *act) {
+        auto const data = getData(act);
+        if (data.icon != -1) {
+            act->setIcon(icons::get((icons::Icons)data.icon));
         }
+    });
+}
+
+void MainWindow::initToolBars() {
+    auto initToolBar = [this](Toolbars toolbar, QString const &title) {
+        auto bar = icons::largeToolBar(this);
+        bar->setWindowTitle(title);
+        addToolBar(bar);
+        mToolbars[toolbar] = bar;
+    };
+
+    initToolBar(ToolbarFile, tr("File"));
+    initToolBar(ToolbarEdit, tr("Edit"));
+    initToolBar(ToolbarTracker, tr("Tracker"));
+    initToolBar(ToolbarInput, tr("Input"));
+    initToolBar(ToolbarView, tr("View"));
+    {
+        auto *bar = mToolbars[ToolbarInput];
+
+        auto container = new QWidget;
+        auto layout = new ToolbarLayout(QBoxLayout::LeftToRight);
+        layout->addWidget(new QLabel(tr("Octave")));
+        mOctaveSpin = new QSpinBox;
+        mOctaveSpin->setRange(2, 8);
+        layout->addWidget(mOctaveSpin);
+        layout->addWidget(new QLabel(tr("Edit Step")));
+        auto editStep = new QSpinBox;
+        editStep->setRange(1, 255);
+        layout->addWidget(editStep);
+        container->setLayout(layout);
+        bar->addWidget(container);
+        layout->setToolBar(bar);
     }
 }
 
@@ -134,71 +170,75 @@ void MainWindow::initMenuBar() {
     QMenu *menu{};
 
 #define A(...) buildAction(menu, __VA_ARGS__)
+#define SEP() menu->addSeparator()
+#define MENU(text) menu = menubar->addMenu(text)
+#define SUBMENU(text)                                                          \
+    const auto _menu = menu->addMenu(text);                                    \
+    auto menu = _menu
 
-    // File
-    mToolbarFile = icons::largeToolBar(this);
-    menu = menubar->addMenu(tr("&File"));
+    // =================================================================== File
+    MENU(tr("&File"));
     A(tr("&New"), tr("Create a new module"))
         .icon(icons::New)
         .shortcut(QKeySequence::New)
-        .triggers(this, &MainWindow::onNew)
-        .addTo(mToolbarFile);
+        .triggers(lazyslotx(this, onNew))
+        .addTo(mToolbars[ToolbarFile]);
     A(tr("&Open"), tr("Opens a module from a file"))
         .icon(icons::Open)
         .shortcut(QKeySequence::Open)
-        .triggers(this, &MainWindow::onOpen)
-        .addTo(mToolbarFile);
+        .triggers(lazyslotx(this, onOpen))
+        .addTo(mToolbars[ToolbarFile]);
     A(tr("&Save"), tr("Saves the module"))
         .icon(icons::Save)
         .shortcut(QKeySequence::Save)
-        .triggers(this, &MainWindow::onSave)
-        .addTo(mToolbarFile);
+        .triggers(lazyslotx(this, onSave))
+        .addTo(mToolbars[ToolbarFile]);
     A(tr("Save As..."), tr("Saves the module to a new file"))
         .shortcut(QKeySequence::SaveAs)
-        .triggers(this, &MainWindow::onSaveAs);
-    menu->addSeparator();
+        .triggers(lazyslotx(this, onSaveAs));
+    SEP(); // -----------------------------------------------------------------
     A(tr("Export to WAV..."), tr("Exports the module to a WAV file"))
-        .triggers(this, &MainWindow::onExportToWav);
+        .triggers(lazyslotx(this, onExportToWav));
 
     mRecentFiles.setup(menu);
-    menu->addSeparator();
+    SEP(); // -----------------------------------------------------------------
     A(tr("Configuration..."), tr("Opens the configuration dialog"))
         .icon(icons::Config)
-        .triggers(this, &MainWindow::onConfiguration)
-        .addTo(mToolbarFile);
-    menu->addSeparator();
+        .triggers(lazyslotx(this, onConfiguration))
+        .addTo(mToolbars[ToolbarFile]);
+    SEP(); // -----------------------------------------------------------------
     A(tr("&Quit"), tr("Exits the application"))
         .shortcut(QKeySequence::Quit)
-        .triggers(this, &MainWindow::close);
+        .triggers(lazyslotx(this, close));
 
-    // Edit
-    mToolbarEdit = icons::largeToolBar(this);
-    menu = menubar->addMenu(tr("&Edit"));
+    // =================================================================== Edit
+    MENU(tr("&Edit"));
     A(mDocument->undoGroup()->createUndoAction(this))
         .icon(icons::Undo)
         .shortcut(QKeySequence::Undo)
-        .addTo(mToolbarEdit);
+        .addTo(mToolbars[ToolbarEdit]);
     A(mDocument->undoGroup()->createRedoAction(this))
         .icon(icons::Redo)
         .shortcut(QKeySequence::Redo)
-        .addTo(mToolbarEdit);
-    menu->addSeparator();
-    mToolbarEdit->addSeparator();
+        .addTo(mToolbars[ToolbarEdit]);
+    A(tr("Undo History..."), tr("Shows the Undo History for the current song"));
+    SEP(); // -----------------------------------------------------------------
+    mToolbars[ToolbarEdit]->addSeparator();
     A(tr("C&ut"), tr("Copies and deletes selection to the clipboard"))
         .icon(icons::Cut)
         .shortcut(QKeySequence::Cut)
         // .triggers(mPatternEditor, &PatternEditor::cut)
-        .addTo(mToolbarEdit);
+        .addTo(mToolbars[ToolbarEdit]);
     A(tr("&Copy"), tr("Copies selected rows to the clipboard"))
         .icon(icons::Copy)
         .shortcut(QKeySequence::Copy)
         // .triggers(mPatternEditor, &PatternEditor::copy)
-        .addTo(mToolbarEdit);
+        .addTo(mToolbars[ToolbarEdit]);
     A(tr("&Paste"), tr("Pastes contents at the cursor"))
         .icon(icons::Paste)
         .shortcut(QKeySequence::Paste)
         // .triggers(mPatternEditor, &PatternEditor::paste)
-        .addTo(mToolbarEdit);
+        .addTo(mToolbars[ToolbarEdit]);
     A(tr("Paste &Mix"),
       tr("Pastes contents at the cursor, merging with existing rows"))
         // .triggers(mPatternEditor, &PatternEditor::pasteMix)
@@ -209,42 +249,247 @@ void MainWindow::initMenuBar() {
     A(tr("&Erase"), tr("Erases selection contents"))
         // .triggers(mPatternEditor, &PatternEditor::erase)
         .shortcut(QKeySequence::Delete);
-    menu->addSeparator();
+    SEP(); // -----------------------------------------------------------------
     A(tr("&Select All"), tr("Selects entire track/pattern"))
         // .triggers(mPatternEditor, &PatternEditor::selectAll)
         .shortcut(QKeySequence::SelectAll);
+    SEP(); // -----------------------------------------------------------------
+    {
+        SUBMENU(tr("Transpose"));
+        A(tr("Decrease Note"), tr("Decreases note/notes by 1 step"))
+            // .triggers(mPatternEditor, &PatternEditor::decreaseNote)
+            .shortcut(tr("Ctrl+F1"));
+        A(tr("Increase Note"), tr("Increases note/notes by 1 step"))
+            // .triggers(mPatternEditor, &PatternEditor::increaseNote)
+            .shortcut(tr("Ctrl+F2"));
+        A(tr("Decrease Octave"), tr("Decreases note/notes by 12 steps"))
+            // .triggers(mPatternEditor, &PatternEditor::decreaseOctave)
+            .shortcut(tr("Ctrl+F3"));
+        A(tr("Increase Octave"), tr("Increases note/notes by 12 steps"))
+            // .triggers(mPatternEditor, &PatternEditor::increaseOctave)
+            .shortcut(tr("Ctrl+F4"));
+        A(tr("Custom..."), tr("Transpose by a custom amount"))
+            // .triggers(mPatternEditor, &PatternEditor::transpose)
+            .shortcut(tr("Ctrl+T"));
+    }
+    A(tr("&Reverse"), tr("Reverses selected rows"))
+        // .triggers(mPatternEditor, &PatternEditor::reverse)
+        .shortcut(tr("Ctrl+R"));
+    A(tr("Replace Instrument"),
+      tr("Replaces all instrument columns with the current one"))
+    // .triggers(mPatternEditor, &PatternEditor::replaceInstrument)
+    ;
+    SEP(); // -----------------------------------------------------------------
+    A(tr("Grow Pattern"),
+      tr("Grows a selection by adding spaces in between rows"))
+        // .triggers(mPatternEditor, &PatternEditor::growPattern)
+        .shortcut(tr("Ctrl+G"));
+    A(tr("Shrink Pattern"),
+      tr("Shrinks a selection by removing spaces in between rows"))
+        // .triggers(mPatternEditor, &PatternEditor::shrinkPattern)
+        .shortcut(tr("Ctrl+H"));
+    SEP(); // -----------------------------------------------------------------
+    A(tr("Key Repetition"), tr("Toggles key repetition for the pattern editor"))
+        .checkable()
+        .checked()
+        // .toggles(mPatternEditor, &PatternEditor::setKeyRepeat)
+        .addTo(mToolbars[ToolbarInput]);
 
-    // Module
-    menu = menubar->addMenu(tr("&Module"));
+    // ================================================================= Module
+    MENU(tr("&Module"));
+    QAction *prevAction;
+    QAction *nextAction;
+    A(tr("Previous song"), tr("Selects the previous song in the list"))
+        .icon(icons::SongPrev)
+        .store(prevAction);
+    A(tr("Next song"), tr("Selects the next song in the list"))
+        .icon(icons::SongNext)
+        .store(nextAction);
+    SEP(); // -----------------------------------------------------------------
     A(tr("Comments..."), tr("Edit/view the module's comments"))
-        .triggers(this, &MainWindow::showComments);
+        .triggers(lazyslotx(this, showComments));
     A(tr("Song List..."), tr("Edit the module's song list"))
-        .triggers(this, &MainWindow::showSongListEditor);
+        .triggers(lazyslotx(this, showSongListEditor));
     A(tr("Module Properties..."), tr("Edit module properties"))
-        .triggers(this, &MainWindow::showModuleProperties);
+        .triggers(lazyslotx(this, showModuleProperties));
 
-    // Song
-    menu = menubar->addMenu(tr("&Song"));
+    // =================================================================== Song
+    MENU(tr("&Song"));
+    A(tr("&Insert Order Row"),
+      tr("Inserts a new order row at the current pattern"))
+        // .triggers(mPatternModel, &PatternModel::insertOrder)
+        // .store(mActionInsertOrder)
+        .icon(icons::Add);
+    A(tr("&Remove order row"), tr("Removes the order at the current pattern"))
+        .icon(icons::Remove);
+    A(tr("&Duplicate order row"),
+      tr("Duplicates the order at the current pattern"))
+        .icon(icons::Duplicate);
+    A(tr("Move order &up"), tr("Moves the order up 1")).icon(icons::Up);
+    A(tr("Move order dow&n"), tr("Moves the order down 1")).icon(icons::Down);
+    A(tr("Increment order"), tr("Increments all selected order cells by 1"))
+        .icon(icons::Increment);
+    A(tr("Decrement order"), tr("Decrements all selected order cells by 1"))
+        .icon(icons::Decrement);
+    A(tr("Change all"), tr("Toggles change all tracks mode"))
+        .icon(icons::AllTracks)
+        .checkable();
+    SEP(); // -----------------------------------------------------------------
+    A(tr("Tempo calculator..."), tr("Shows the tempo calculator dialog"));
 
-    // Instrument
-    menu = menubar->addMenu(tr("&Instrument"));
+    // ============================================================= Instrument
+    MENU(tr("&Instrument"));
+    auto setupTableMenu = [](QMenu *menu, QString const &kind) {
+        A(tr("&Add"), tr("Add a new %1").arg(kind)).icon(icons::Add);
+        A(tr("&Remove"), tr("Removes the current %1").arg(kind))
+            .icon(icons::Remove);
+        A(tr("&Duplicate"), tr("Duplicates the current %1").arg(kind))
+            .icon(icons::Duplicate);
+        SEP();
+        A(tr("&Import"), tr("Imports a %1 from a file").arg(kind))
+            .icon(icons::Import);
+        A(tr("E&xport"), tr("Exports the current %s to a file").arg(kind))
+            .icon(icons::Export);
+        SEP();
+        A(tr("&Edit"), tr("Opens the editor for the current %1").arg(kind))
+            .icon(icons::Edit);
+    };
+    setupTableMenu(menu, tr("instrument"));
 
-    // Waveform
-    menu = menubar->addMenu(tr("&Waveform"));
+    // =============================================================== Waveform
+    MENU(tr("&Waveform"));
+    setupTableMenu(menu, tr("waveform"));
 
-    // Tracker
-    menu = menubar->addMenu(tr("&Tracker"));
+    // ================================================================ Tracker
+    MENU(tr("&Tracker"));
+    A(tr("&Play"),
+      tr("Resume playing or play the song from the current position"))
+        .addTo(mToolbars[ToolbarTracker])
+        .icon(icons::Play);
+    A(tr("Play from start"), tr("Begin playback of the song from the start"))
+        .addTo(mToolbars[ToolbarTracker])
+        .shortcut(tr("F5"))
+        .icon(icons::PlayStart);
+    A(tr("Play at cursor"), tr("Begin playback from the cursor"))
+        .addTo(mToolbars[ToolbarTracker])
+        .shortcut(tr("F6"))
+        .icon(icons::PlayCursor);
+    A(tr("Step row"), tr("Play and hold the row at the cursor"))
+        .addTo(mToolbars[ToolbarTracker])
+        .shortcut(tr("F7"))
+        .icon(icons::Step);
+    A(tr("&Stop"), tr("Stop playing"))
+        .addTo(mToolbars[ToolbarTracker])
+        .shortcut(tr("F8"))
+        .icon(icons::Stop);
+    A("Pattern repeat", "Toggles pattern repeat mode")
+        .addTo(mToolbars[ToolbarTracker])
+        .checkable()
+        .shortcut(tr("F9"))
+        .icon(icons::Repeat);
+    A(tr("Record"), tr("Toggles record mode"))
+        .addTo(mToolbars[ToolbarTracker])
+        .checkable()
+        .shortcut(tr("Space"))
+        .icon(icons::Record);
+    mToolbars[ToolbarTracker]->addAction(prevAction);
+    mToolbars[ToolbarTracker]->addAction(nextAction);
+    A(tr("Follow-mode"), tr("Toggles follow mode"))
+        .checkable()
+        .checked()
+        .shortcut(tr("ScrollLock"))
+        .addTo(mToolbars[ToolbarTracker]);
+    SEP(); // -----------------------------------------------------------------
+    A(tr("Toggle channel output"),
+      tr("Enables/disables sound output for the current track"))
+        .shortcut(tr("F10"));
+    A(tr("Solo"), tr("Solos the current track")).shortcut(tr("F11"));
+    SEP(); // -----------------------------------------------------------------
+    A(tr("Reset volume"), tr("Resets the APU global volume setting"));
+    A(tr("&Kill sound"), tr("Immediately stops sound output"))
+        .shortcut(tr("F12"));
 
-    // View
-    menu = menubar->addMenu(tr("&View"));
+    // =================================================================== View
+    MENU(tr("&View"));
+    A(tr("Side Bar"), tr("Toggles visibility of the Side Bar"))
+        .addTo(mToolbars[ToolbarView])
+        .checkable()
+        .checked()
+        .toggles(lazyslotx(mUi.sidebar, setVisible))
+        .icon(icons::Sidebar);
+    A(tr("Data Bar"), tr("Toggles visibility of the Data Bar"))
+        .addTo(mToolbars[ToolbarView])
+        .checkable()
+        .checked()
+        .toggles(lazyslotx(mUi.databar, setVisible))
+        .icon(icons::Databar);
+    A(tr("Audio Scope"), tr("Enables the audio oscilloscope in the Side Bar"))
+        .checkable()
+        .checked();
+    A(tr("Status Bar"), tr("Toggles visibility of the Status Bar"))
+        .checkable()
+        .checked()
+        .toggles(statusBar(), &QStatusBar::setVisible);
+    SEP(); // -----------------------------------------------------------------
+    {
+        SUBMENU(tr("Toolbars"));
+        for (auto toolbar : mToolbars) {
+            menu->addAction(toolbar->toggleViewAction());
+        }
+    }
+    SEP(); // -----------------------------------------------------------------
+    A(tr("Reset layout"),
+      tr("Rearranges all docks and toolbars to the default layout"));
 
-    // Help
-    menu = menubar->addMenu(tr("&Help"));
-
-    addToolBar(mToolbarFile);
-    addToolBar(mToolbarEdit);
+    // =================================================================== Help
+    MENU(tr("&Help"));
+    A(tr("&Effects list..."), tr("Shows a list of all available effects"))
+        .shortcut(tr("F1"));
+    A(tr("User &manual..."), tr("Opens the online user manual"))
+        .shortcut(tr("F2"));
+    A(tr("Audio &diagnostics..."), tr("Shows the audio diagnostics dialog"));
+    SEP(); // -----------------------------------------------------------------
+    A(tr("&About"), tr("About this program"));
+    A(tr("About &Qt"), tr("Shows information about Qt"))
+        .triggers(&QApplication::aboutQt);
 
 #undef A
+#undef SEP
+#undef MENU
+#undef SUBMENU
+}
+
+void MainWindow::initStatusBar() {
+    /* auto status = */ statusBar();
+}
+
+void MainWindow::initUi() {
+
+    auto container = new QWidget;
+    auto layout = new QHBoxLayout;
+
+    auto newPlaceholder = [](QString text) -> QLabel * {
+        auto result = new QLabel(text);
+        result->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        return result;
+    };
+
+    mUi.sidebar = newPlaceholder("Side Bar");
+    mUi.editor = newPlaceholder("Pattern Editor");
+    mUi.databar = new QSplitter(Qt::Vertical);
+    mUi.instruments = newPlaceholder("Instruments");
+    mUi.waveforms = newPlaceholder("Waveforms");
+    mUi.databar->addWidget(mUi.instruments);
+    mUi.databar->addWidget(mUi.waveforms);
+    mUi.hsplitter = new QSplitter(Qt::Horizontal);
+    mUi.hsplitter->addWidget(mUi.editor);
+    mUi.hsplitter->addWidget(mUi.databar);
+
+    layout->addWidget(mUi.sidebar);
+    layout->addWidget(mUi.hsplitter, 1);
+    container->setLayout(layout);
+
+    setCentralWidget(container);
 }
 
 #undef TU

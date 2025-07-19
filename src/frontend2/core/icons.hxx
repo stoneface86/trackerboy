@@ -11,6 +11,7 @@ namespace icons {
 // Enumeration of all icons available to use in the application
 //
 enum Icons {
+    // Large + Small icons
     New,
     Open,
     Save,
@@ -18,6 +19,16 @@ enum Icons {
     Cut,
     Copy,
     Paste,
+    Play,
+    PlayStart,
+    PlayCursor,
+    Step,
+    Stop,
+    Repeat,
+    Record,
+    Sidebar,
+    Databar,
+    // Large + Small + Disabled icons
     Undo,
     Redo,
     SongPrev,
@@ -25,21 +36,16 @@ enum Icons {
     Add,
     Remove,
     Duplicate,
-    Import,
-    Export,
     Up,
     Down,
+    // Small + Disabled icons
+    Import,
+    Export,
+    Edit,
+    // Small icons
     Increment,
     Decrement,
     AllTracks,
-    Edit,
-    TrackerPlay,
-    TrackerPlayStart,
-    TrackerPlayCursor,
-    TrackerStep,
-    TrackerStop,
-    TrackerRepeat,
-    TrackerRecord,
     Ch1,
     Ch2,
     Ch3,
