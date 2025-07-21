@@ -1,12 +1,12 @@
 
 #include "forms/MainWindow.hxx"
-#include "core/icons.hxx"
-#include "utils/actions.hxx"
-#include "utils/connectutils.hxx"
 
-#include "forms/SongListEditor.hxx"
-#include "model/SongListModel.hxx"
+#include "core/icons.hxx"
+#include "core/settings.hxx"
 #include "utils/ToolbarLayout.hxx"
+#include "utils/actions.hxx"
+#include "utils/aliases.hxx"
+#include "utils/connectutils.hxx"
 
 #include <QApplication>
 #include <QHBoxLayout>
@@ -18,9 +18,26 @@
 #define TU MainWindowTU
 namespace TU {
 
-constexpr auto cGroup = "MainWindow";
-constexpr auto cKeyGeometry = "geometry";
-constexpr auto cKeySongListEditorSize = "songListEditorSize";
+static strlit cGroup = "MainWindow";
+static strlit cKeyShowSidebar = "showSidebar";
+static strlit cKeyShowDatabar = "showDatabar";
+static strlit cKeyShowStatusbar = "showStatusBar";
+static strlit cKeyOctave = "octave";
+static strlit cKeyEditStep = "editStep";
+static strlit cKeyKeyRepeat = "keyRepetition";
+static strlit cKeyFollowMode = "followMode";
+static strlit cKeyPatternRepeat = "patternRepeat";
+static strlit cKeyRecord = "record";
+static strlit cKeySplitterV = "splitterV";
+static strlit cKeySplitterH = "splitterH";
+
+//
+// increment this constant when adding new docks or toolbars
+// v3 - Removed Song toolbar, added View toolbar
+// v2 - removed all dock widgets (no longer using QDockWidget)
+// v1 - initial version
+//
+static const int cWindowStateVers = 3;
 
 } // namespace TU
 
@@ -35,26 +52,14 @@ MainWindow::MainWindow()
 
     lazyconnect(mDocument, modifiedChanged, this, setWindowModified);
 
-    QSettings settings;
-    settings.beginGroup(TU::cGroup);
-    if (!restoreGeometry(settings.value(TU::cKeyGeometry).toByteArray())) {
-        // use a default geometry of 3/4 the primary screen's size
-        auto const availableGeometry =
-            QApplication::primaryScreen()->availableGeometry();
-
-        auto scaled = [](int x) -> int {
-            return x * 3 / 4;
-        };
-        QRect geom(0, 0, scaled(availableGeometry.width()),
-                   scaled(availableGeometry.height()));
-        geom.moveTo(availableGeometry.center() - geom.center());
-        setGeometry(geom);
-    }
     initToolBars();
     initUi();
     initMenuBar();
     initStatusBar();
 
+    loadSettings();
+
+    // TODO: remove this when configuration is done
     ColorTheme theme;
     theme.colors[0] = qRgb(208, 208, 247);
     theme.colors[1] = qRgb(113, 113, 191);
@@ -72,26 +77,20 @@ void MainWindow::panic(QString const &msg) {
     Q_UNUSED(msg)
 }
 
+void MainWindow::closeEvent(QCloseEvent *evt) {
+    saveSettings();
+    evt->accept();
+}
+
 void MainWindow::showSongListEditor() {
     if (mSongListEditor == nullptr) {
         mSongListEditor = new SongListEditor(mSongListModel, this);
-        // restore previous sizing
-        QSettings settings;
-        settings.beginGroup(TU::cGroup);
-        auto const size = settings.value(TU::cKeySongListEditorSize);
-        if (!size.isNull()) {
-            mSongListEditor->resize(size.toSize());
-        }
         connectLambda(mSongListEditor, finished, this, [this](int result) {
             if (result == QDialog::Accepted) {
                 mSongListEditor->applyChanges(*mDocument);
             } else {
                 mSongListEditor->revertChanges();
             }
-            QSettings settings;
-            settings.beginGroup(TU::cGroup);
-            settings.setValue(TU::cKeySongListEditorSize,
-                              mSongListEditor->size());
         });
     }
     // TODO: Stop playback
@@ -136,6 +135,7 @@ void MainWindow::initToolBars() {
     auto initToolBar = [this](Toolbars toolbar, QString const &title) {
         auto bar = icons::largeToolBar(this);
         bar->setWindowTitle(title);
+        bar->setObjectName(title);
         addToolBar(bar);
         mToolbars[toolbar] = bar;
     };
@@ -151,13 +151,14 @@ void MainWindow::initToolBars() {
         auto container = new QWidget;
         auto layout = new ToolbarLayout(QBoxLayout::LeftToRight);
         layout->addWidget(new QLabel(tr("Octave")));
-        mOctaveSpin = new QSpinBox;
-        mOctaveSpin->setRange(2, 8);
-        layout->addWidget(mOctaveSpin);
+        mUi.inputOctaveSpin = new QSpinBox;
+        mUi.inputOctaveSpin->setValue(5);
+        mUi.inputOctaveSpin->setRange(2, 8);
+        layout->addWidget(mUi.inputOctaveSpin);
         layout->addWidget(new QLabel(tr("Edit Step")));
-        auto editStep = new QSpinBox;
-        editStep->setRange(1, 255);
-        layout->addWidget(editStep);
+        mUi.inputEditStep = new QSpinBox;
+        mUi.inputEditStep->setRange(1, 255);
+        layout->addWidget(mUi.inputEditStep);
         container->setLayout(layout);
         bar->addWidget(container);
         layout->setToolBar(bar);
@@ -293,6 +294,7 @@ void MainWindow::initMenuBar() {
         .checkable()
         .checked()
         // .toggles(mPatternEditor, &PatternEditor::setKeyRepeat)
+        .store(mUi.actKeyRepeat)
         .addTo(mToolbars[ToolbarInput]);
 
     // ================================================================= Module
@@ -386,11 +388,13 @@ void MainWindow::initMenuBar() {
         .addTo(mToolbars[ToolbarTracker])
         .checkable()
         .shortcut(tr("F9"))
+        .store(mUi.actPatternRepeat)
         .icon(icons::Repeat);
     A(tr("Record"), tr("Toggles record mode"))
         .addTo(mToolbars[ToolbarTracker])
         .checkable()
         .shortcut(tr("Space"))
+        .store(mUi.actRecord)
         .icon(icons::Record);
     mToolbars[ToolbarTracker]->addAction(prevAction);
     mToolbars[ToolbarTracker]->addAction(nextAction);
@@ -398,6 +402,7 @@ void MainWindow::initMenuBar() {
         .checkable()
         .checked()
         .shortcut(tr("ScrollLock"))
+        .store(mUi.actFollowMode)
         .addTo(mToolbars[ToolbarTracker]);
     SEP(); // -----------------------------------------------------------------
     A(tr("Toggle channel output"),
@@ -416,12 +421,14 @@ void MainWindow::initMenuBar() {
         .checkable()
         .checked()
         .toggles(lazyslotx(mUi.sidebar, setVisible))
+        .store(mUi.actShowSidebar)
         .icon(icons::Sidebar);
     A(tr("Data Bar"), tr("Toggles visibility of the Data Bar"))
         .addTo(mToolbars[ToolbarView])
         .checkable()
         .checked()
         .toggles(lazyslotx(mUi.databar, setVisible))
+        .store(mUi.actShowDatabar)
         .icon(icons::Databar);
     A(tr("Audio Scope"), tr("Enables the audio oscilloscope in the Side Bar"))
         .checkable()
@@ -429,6 +436,7 @@ void MainWindow::initMenuBar() {
     A(tr("Status Bar"), tr("Toggles visibility of the Status Bar"))
         .checkable()
         .checked()
+        .store(mUi.actShowStatusbar)
         .toggles(statusBar(), &QStatusBar::setVisible);
     SEP(); // -----------------------------------------------------------------
     {
@@ -490,6 +498,62 @@ void MainWindow::initUi() {
     container->setLayout(layout);
 
     setCentralWidget(container);
+}
+
+void MainWindow::loadSettings() {
+    Settings s(SettingsState, TU::cGroup);
+    if (!restoreGeometry(s.value(lit::geometry).toByteArray())) {
+        // use a default geometry of 3/4 the primary screen's size
+        auto const availableGeometry =
+            QApplication::primaryScreen()->availableGeometry();
+
+        auto scaled = [](int x) -> int {
+            return x * 3 / 4;
+        };
+        QRect geom(0, 0, scaled(availableGeometry.width()),
+                   scaled(availableGeometry.height()));
+        geom.moveTo(availableGeometry.center() - geom.center());
+        setGeometry(geom);
+    }
+    auto setActionChecked = [](QAction *act, QVariant const &val) {
+        if (!val.isNull() && val.canConvert<bool>()) {
+            act->setChecked(val.toBool());
+        }
+    };
+    restoreState(s.value(lit::state).toByteArray(), TU::cWindowStateVers);
+    setActionChecked(mUi.actShowDatabar, s.value(TU::cKeyShowDatabar));
+    setActionChecked(mUi.actShowSidebar, s.value(TU::cKeyShowSidebar));
+    setActionChecked(mUi.actShowStatusbar, s.value(TU::cKeyShowStatusbar));
+    setActionChecked(mUi.actKeyRepeat, s.value(TU::cKeyKeyRepeat));
+    setActionChecked(mUi.actFollowMode, s.value(TU::cKeyFollowMode));
+    setActionChecked(mUi.actPatternRepeat, s.value(TU::cKeyPatternRepeat));
+    setActionChecked(mUi.actRecord, s.value(TU::cKeyRecord));
+    auto setSpinValue = [](QSpinBox *spin, QVariant const &val) {
+        if (!val.isNull() && val.canConvert<int>()) {
+            spin->setValue(val.toInt());
+        }
+    };
+    setSpinValue(mUi.inputOctaveSpin, s.value(TU::cKeyOctave));
+    setSpinValue(mUi.inputEditStep, s.value(TU::cKeyEditStep));
+    mUi.hsplitter->restoreState(s.value(TU::cKeySplitterH).toByteArray());
+    mUi.databar->restoreState(s.value(TU::cKeySplitterV).toByteArray());
+}
+
+void MainWindow::saveSettings() {
+    Settings s(SettingsState, TU::cGroup);
+    s.setValue(lit::geometry, saveGeometry());
+    s.setValue(lit::state, saveState(TU::cWindowStateVers));
+    s.setValue(TU::cKeyShowSidebar, mUi.actShowSidebar->isChecked());
+    s.setValue(TU::cKeyShowDatabar, mUi.actShowDatabar->isChecked());
+    s.setValue(TU::cKeyShowStatusbar, mUi.actShowStatusbar->isChecked());
+    s.setValue(TU::cKeyOctave, mUi.inputOctaveSpin->value());
+    s.setValue(TU::cKeyEditStep, mUi.inputEditStep->value());
+    s.setValue(TU::cKeyKeyRepeat, mUi.actKeyRepeat->isChecked());
+    s.setValue(TU::cKeyFollowMode, mUi.actFollowMode->isChecked());
+    s.setValue(TU::cKeyPatternRepeat, mUi.actPatternRepeat->isChecked());
+    s.setValue(TU::cKeyRecord, mUi.actRecord->isChecked());
+    s.setValue(TU::cKeySplitterV, mUi.databar->saveState());
+    s.setValue(TU::cKeySplitterH, mUi.hsplitter->saveState());
 }
 
 #undef TU

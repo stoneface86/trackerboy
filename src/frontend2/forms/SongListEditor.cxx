@@ -1,5 +1,7 @@
 
 #include "forms/SongListEditor.hxx"
+#include "core/settings.hxx"
+#include "utils/aliases.hxx"
 #include "utils/connectutils.hxx"
 
 #include <QDialogButtonBox>
@@ -23,11 +25,13 @@ void selectRow(QAbstractItemView *view, int row) {
     view->setCurrentIndex(view->model()->index(row, 0));
 }
 
+static strlit cGroup = "SongListEditor";
+
 } // namespace TU
 
 SongListEditor::SongListEditor(SongListModel *model, QWidget *parent)
-    : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
-                          Qt::WindowCloseButtonHint)
+    : PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
+                                   Qt::WindowCloseButtonHint)
     , mModel(new SongListEditorModel(model, this))
     , mView(new QTreeView) {
 
@@ -71,13 +75,26 @@ SongListEditor::SongListEditor(SongListModel *model, QWidget *parent)
     lazyconnect(dialogButtons->button(QDialogButtonBox::Reset), clicked, mModel,
                 reset);
 
-    setWindowTitle(tr("Song list"));
+    setWindowTitle(tr("Song List"));
     dialogButtons->button(QDialogButtonBox::Save)
         ->setToolTip(tr("Applies all pending changes to the song list"));
     dialogButtons->button(QDialogButtonBox::Cancel)
         ->setToolTip(tr("Cancels all pending changes and closes the dialog"));
     dialogButtons->button(QDialogButtonBox::Reset)
         ->setToolTip(tr("Reverts all pending changes"));
+
+    // restore previous size
+    Settings s(SettingsState, TU::cGroup);
+    auto size = s.value(lit::size);
+    if (!size.isNull()) {
+        resize(size.toSize());
+    }
+}
+
+void SongListEditor::closeEvent(QCloseEvent *evt) {
+    Settings s(SettingsState, TU::cGroup);
+    s.setValue(lit::size, size());
+    PersistantDialog::closeEvent(evt);
 }
 
 void SongListEditor::applyChanges(Document &doc) {

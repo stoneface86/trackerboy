@@ -26,6 +26,9 @@ public:
 
     void panic(QString const &msg);
 
+protected:
+    virtual void closeEvent(QCloseEvent *evt) override;
+
 private:
     Q_DISABLE_COPY(MainWindow)
 
@@ -52,6 +55,8 @@ private:
     void initMenuBar();
     void initStatusBar();
     void initUi();
+    void loadSettings();
+    void saveSettings();
 
     RecentFiles mRecentFiles;
     Document *mDocument;
@@ -70,7 +75,6 @@ private:
         ToolbarCount
     };
     std::array<QToolBar *, ToolbarCount> mToolbars;
-    QSpinBox *mOctaveSpin;
 
     struct Ui {
         // QLabel is a placeholder
@@ -80,16 +84,18 @@ private:
         QSplitter *databar;
         QLabel *instruments;
         QLabel *waveforms;
+        // toolbar widgets
+        QSpinBox *inputOctaveSpin;
+        QSpinBox *inputEditStep;
+        // actions that we need to reference later
+        QAction *actKeyRepeat;
+        QAction *actFollowMode;
+        QAction *actPatternRepeat;
+        QAction *actRecord;
+        QAction *actShowSidebar;
+        QAction *actShowDatabar;
+        QAction *actShowStatusbar;
     };
 
     Ui mUi;
-
-    // Central widget
-    // QHBoxLayout mLayout;
-    //   Sidebar mSidebar;
-    //   QSplitter mHSplitter;
-    //     PatternEditor mPatternEditor;
-    //     QSplitter mVSplitter;
-    //       TableView mInstruments;
-    //       TableView mWaveforms;
 };

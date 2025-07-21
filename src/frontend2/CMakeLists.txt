@@ -28,6 +28,7 @@ add_library(frontendObj OBJECT
   "core/ColorTheme.cxx"
   "core/Document.cxx"
   "core/icons.cxx"
+  "core/settings.cxx"
   "forms/CommentsDialog.cxx"
   "forms/MainWindow.cxx"
   "forms/ModulePropertiesDialog.cxx"
