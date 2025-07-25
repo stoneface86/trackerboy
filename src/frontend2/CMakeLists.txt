@@ -98,6 +98,13 @@ if (BUILD_TESTING)
     $<TARGET_OBJECTS:frontendObj>
   )
   target_link_libraries(testSongListModel PRIVATE frontendObj)
+
+  add_executable(
+    testPianoWidget ${GUI_TYPE}
+    "test/testPianoWidget.cxx"
+    $<TARGET_OBJECTS:frontendObj>
+  )
+  target_link_libraries(testPianoWidget PRIVATE frontendObj)
 endif ()
 
 add_custom_target(

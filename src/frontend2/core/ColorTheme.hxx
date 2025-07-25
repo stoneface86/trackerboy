@@ -29,6 +29,8 @@ struct ColorTheme {
     ///
     std::array<QRgb, ColorCount> colors;
 
+    ColorTheme();
+
     ///
     /// Sets the given image's color table to this theme. `image` is expected
     /// to have an image format of `QImage::Format_Indexed8`.

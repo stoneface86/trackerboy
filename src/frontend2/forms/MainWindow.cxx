@@ -61,10 +61,6 @@ MainWindow::MainWindow()
 
     // TODO: remove this when configuration is done
     ColorTheme theme;
-    theme.colors[0] = qRgb(208, 208, 247);
-    theme.colors[1] = qRgb(113, 113, 191);
-    theme.colors[2] = qRgb(51, 51, 102);
-    theme.colors[3] = qRgb(31, 31, 61);
     icons::generate(theme);
     updateIcons();
 }
