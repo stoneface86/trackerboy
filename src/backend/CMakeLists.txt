@@ -51,14 +51,15 @@ execute_process(
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS backend.nimble)
 
 function (nim_project targetName projectFile outFile)
-  set(dummy "${outFile}.dummy")
   add_custom_target(
     ${targetName}
-    DEPENDS "${dummy}"
+    DEPENDS "${outFile}"
     COMMENT "Compiling Nim Target ${targetName}"
   )
   add_custom_command(
-    OUTPUT "${dummy}" "${outFile}"
+    OUTPUT "${outFile}"
+    DEPENDS "${projectFile}" "${ARGN}"
+    BYPRODUCTS "${NIMCACHE_DIR}/tbb_nim.h" "${NIMCACHE_DIR}/tbb.hxx"
     COMMAND "${NIM}" ${NIM_ARGS} -o:"${CMAKE_CURRENT_BINARY_DIR}/${outFile}" cpp "${projectFile}"
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     COMMENT "Compiling Nim Output ${outFile}"
@@ -67,7 +68,14 @@ endfunction ()
 
 
 set(LIB "${CMAKE_STATIC_LIBRARY_PREFIX}backend${CMAKE_STATIC_LIBRARY_SUFFIX}")
-nim_project(buildBackend lib/lib.nim "${LIB}")
+nim_project(buildBackend lib/lib.nim "${LIB}"
+  "lib/backend/core.nim"
+  "lib/backend/document.nim"
+  "lib/backend/input.nim"
+  "lib/backend/interop.nim"
+  "lib/backend/io.nim"
+  "lib/backend/notes.nim"
+)
 
 add_library(backend STATIC IMPORTED GLOBAL)
 add_dependencies(backend buildBackend)
