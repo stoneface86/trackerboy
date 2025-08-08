@@ -44,6 +44,7 @@ add_library(frontendObj OBJECT
   "widgets/CustomSpinBox.cxx"
   "widgets/EnvelopeForm.cxx"
   "widgets/PianoWidget.cxx"
+  "widgets/Sidebar.cxx"
   "widgets/TickrateForm.cxx"
 )
 target_link_libraries(frontendObj PUBLIC Qt6::Widgets backend)

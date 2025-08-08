@@ -14,6 +14,7 @@
 #include "forms/SongListEditor.hxx"
 #include "model/SongListModel.hxx"
 #include "utils/RecentFiles.hxx"
+#include "widgets/Sidebar.hxx"
 
 class MainWindow : public QMainWindow {
 
@@ -78,7 +79,7 @@ private:
 
     struct Ui {
         // QLabel is a placeholder
-        QLabel *sidebar;
+        Sidebar *sidebar;
         QSplitter *hsplitter;
         QLabel *editor;
         QSplitter *databar;

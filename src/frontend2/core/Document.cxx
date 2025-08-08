@@ -41,18 +41,31 @@ void Document::setModified() {
     }
 }
 
+void Document::selectSong(int songNo) {
+    if (mCurrentSong != songNo) {
+        mSource->selectSong(songNo);
+        mCurrentSong = songNo;
+        mUndoGroup->setActiveStack(mSongHistories[songNo].stack);
+        emit songChanged(songNo);
+    }
+}
+
+int Document::song() const {
+    return mCurrentSong;
+}
+
 Document::EditContext Document::edit(bool setModified) {
     EditContext result(*this, setModified);
     return result;
 }
 
+void Document::edit(QUndoCommand *cmd) {
+    mUndoGroup->activeStack()->push(cmd);
+}
+
 Document::ViewContext Document::view() const {
     ViewContext result(*this);
     return result;
-}
-
-QUndoStack *Document::undoStack(int songNo) {
-    return mSongHistories[songNo].stack;
 }
 
 QUndoGroup const *Document::undoGroup() const {

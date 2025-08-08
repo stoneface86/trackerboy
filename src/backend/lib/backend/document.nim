@@ -13,6 +13,7 @@ type
     module: Module
     lock: Lock
     defaultSongName: string
+    song: ref Song
 
   Document* {.exportc.} = object
     p: DocumentPrivate
@@ -110,6 +111,11 @@ proc setModuleProperties*(d: var Document; props {.byref.}: ModuleProperties)
   d.p.module.artist = props.artist
   d.p.module.copyright = props.copyright
   d.p.module.tickrate = props.tickrate
+
+proc selectSong*(d: var Document; songNo: int)
+  {.front, automember.} =
+  if songNo in 0..<d.p.module.songs.len:
+    d.p.song = d.p.module.songs.mget(songNo)
 
 type
   SongListChangeKind = enum

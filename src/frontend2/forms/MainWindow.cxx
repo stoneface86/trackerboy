@@ -478,7 +478,7 @@ void MainWindow::initUi() {
         return result;
     };
 
-    mUi.sidebar = newPlaceholder("Side Bar");
+    mUi.sidebar = new Sidebar;
     mUi.editor = newPlaceholder("Pattern Editor");
     mUi.databar = new QSplitter(Qt::Vertical);
     mUi.instruments = newPlaceholder("Instruments");
