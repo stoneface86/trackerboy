@@ -4,10 +4,10 @@
 #include <QStringEncoder>
 
 QString toQString(B::Slice slice) {
-    return QString::fromUtf8(slice.data, slice.len);
+    return QString::fromUtf8(slice.data, slice.len - 1);
 }
 
-B::String toNimString(QString const& str) {
+B::String toNimString(QString const &str) {
     auto nimstr = B::initString();
     QStringEncoder encoder(QStringConverter::Utf8);
 
@@ -23,5 +23,5 @@ B::String toNimString(QString const& str) {
         strIt = strNext;
     }
 
-    return { nimstr };
+    return {nimstr};
 }

@@ -8,8 +8,8 @@
 SongListEditorModel::SongListEditorModel(SongListModel *sourceModel,
                                          QObject *parent)
     : QAbstractItemModel(parent)
-    , mSource(sourceModel)
-    , mItems() {
+    , _source(sourceModel)
+    , _items() {
     setListFromSource();
 }
 
@@ -25,7 +25,7 @@ Qt::ItemFlags SongListEditorModel::flags(QModelIndex const &index) const {
             result = enDefault | Qt::ItemIsEditable;
             break;
         case colRemove:
-            if (mItems.size() > 1) {
+            if (_items.size() > 1) {
                 result = enDefault | Qt::ItemIsUserCheckable;
             } else {
                 // song list must have at least 1 song, disable the checkbox
@@ -65,7 +65,7 @@ int SongListEditorModel::rowCount(QModelIndex const &parent) const {
     if (parent.isValid()) {
         return 0;
     } else {
-        return mItems.size();
+        return _items.size();
     }
 }
 
@@ -80,18 +80,18 @@ QVariant SongListEditorModel::data(QModelIndex const &index, int role) const {
             break;
         case colName:
             if (role == Qt::DisplayRole || role == Qt::EditRole) {
-                return mItems[row].name;
+                return _items[row].name;
             }
             break;
         case colRemove:
             if (role == Qt::CheckStateRole) {
-                return (mItems[row].action == itemRemove) ? Qt::Checked
+                return (_items[row].action == itemRemove) ? Qt::Checked
                                                           : Qt::Unchecked;
             }
             break;
         case colStatus:
             if (role == Qt::DisplayRole) {
-                auto const &item = mItems[row];
+                auto const &item = _items[row];
                 switch (item.action) {
                 case itemKeep:
                     if (item.nameModified) {
@@ -122,7 +122,7 @@ bool SongListEditorModel::setData(QModelIndex const &index,
             return false;
         case colName:
             if (role == Qt::EditRole) {
-                auto &item = mItems[row];
+                auto &item = _items[row];
                 auto const newName = value.toString();
                 if (item.name != newName) {
                     item.nameModified = true;
@@ -133,17 +133,17 @@ bool SongListEditorModel::setData(QModelIndex const &index,
             break;
         case colRemove:
             if (role == Qt::CheckStateRole) {
-                auto &item = mItems[row];
+                auto &item = _items[row];
                 auto const prevaction = item.action;
                 if (value.toInt() == Qt::Checked) {
                     if (item.action == itemNew ||
                         item.action == itemDuplicate) {
                         // remove from the list
                         beginRemoveRows(QModelIndex(), row, row);
-                        mItems.removeAt(row);
+                        _items.removeAt(row);
                         endRemoveRows();
                     } else {
-                        if (mItems.size() - countRemoved() > 1) {
+                        if (_items.size() - countRemoved() > 1) {
                             item.action = itemRemove;
                         } else {
                             // user is trying to remove all songs:
@@ -202,7 +202,7 @@ bool SongListEditorModel::dropMimeData(QMimeData const *data,
             } else {
                 destRow = row;
             }
-            mItems.move(srcRow, destRow);
+            _items.move(srcRow, destRow);
             emit dataChanged(createIndex(qMin(srcRow, destRow), 0),
                              createIndex(qMax(srcRow, destRow), colStatus));
             return true;
@@ -230,20 +230,21 @@ QVariant SongListEditorModel::headerData(int section,
 }
 
 void SongListEditorModel::add() {
-    auto const at = mItems.size();
+    auto const at = _items.size();
     beginInsertRows(QModelIndex(), at, at);
-    mItems.append({-1, itemNew, true, tr("New Song")});
+    _items.append({-1, itemNew, true, _source->_document->defaultSongName()});
     endInsertRows();
 }
 
 void SongListEditorModel::duplicate(int index) {
-    Q_ASSERT(index >= 0 && index < mItems.size());
+    Q_ASSERT(index >= 0 && index < _items.size());
     auto const at = index + 1;
     beginInsertRows({}, at, at);
-    auto dup = mItems[index];
+    auto dup = _items[index];
     dup.action = itemDuplicate;
+    dup.nameModified = true;
     dup.name = tr("Copy of %1").arg(dup.name);
-    mItems.append(dup);
+    _items.append(dup);
     endInsertRows();
 }
 
@@ -255,8 +256,8 @@ void SongListEditorModel::moveUp(int index) {
 
 void SongListEditorModel::moveDown(int index) {
     auto const neighbor = index + 1;
-    if (neighbor < mItems.size()) {
-        mItems.swapItemsAt(index, neighbor);
+    if (neighbor < _items.size()) {
+        _items.swapItemsAt(index, neighbor);
         emit dataChanged(createIndex(index, colNumber),
                          createIndex(neighbor, colStatus));
     }
@@ -271,7 +272,8 @@ void SongListEditorModel::reset() {
 void SongListEditorModel::apply(Document &doc) {
     // see backend/data.nim
     auto changes = B::initSongListChanges();
-    for (auto const &item : mItems) {
+    QStringList newNames;
+    for (auto const &item : _items) {
         switch (item.action) {
         case itemKeep:
             changes.keepOriginal(item.sourceId);
@@ -283,41 +285,35 @@ void SongListEditorModel::apply(Document &doc) {
             changes.duplicate(item.sourceId);
             break;
         case itemRemove:
-            break;
+            continue; // don't add the name to newNames
         }
-        if (item.action != itemRemove && item.nameModified) {
-            changes.setNameOfLast(toNimString(item.name).s);
-        }
+        newNames.append(item.name);
     }
 
-    mSource->beginResetModel();
     beginResetModel();
 
-    doc.edit(true)->setSongList(changes);
+    doc.changeSongList(changes);
+    _source->setNames(newNames);
     setListFromSource();
 
-    mSource->endResetModel();
     endResetModel();
-
-    doc.songListChanged();
 }
 
 void SongListEditorModel::setListFromSource() {
-    auto ctx = mSource->mDocument->view();
-    mItems.resize(mSource->rowCount());
+    _items.resize(_source->rowCount());
     int index = 0;
-    for (auto &item : mItems) {
+    for (auto &item : _items) {
         item.sourceId = (qint8)index;
         item.action = itemKeep;
         item.nameModified = false;
-        item.name = toQString(ctx->songName(index));
+        item.name = _source->name(index);
         ++index;
     }
 }
 
 int SongListEditorModel::countRemoved() const {
     int result = 0;
-    for (auto const &item : mItems) {
+    for (auto const &item : _items) {
         if (item.action == itemRemove) {
             ++result;
         }

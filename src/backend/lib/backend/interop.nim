@@ -36,6 +36,7 @@ func toC(T: typedesc[SomeFloat]): string =
 var 
   defines {.compileTime.}: string
   vars {.compileTime.}: string
+  aliases {.compileTime.}: string
 
 {. push compileTime .}
 
@@ -61,6 +62,9 @@ proc constvar*(name: string; value: SomeInteger) =
 proc constvar*(name: string; R: typedesc[range]) =
   constvar(name & "Low", low(R))
   constvar(name & "High", high(R))
+
+proc alias*(ident, expression: string; ) =
+  aliases.add(&"using {ident} = {expression};\n")
 
 template frontRef*(T: typedesc[ref]) {.dirty.} =
   proc `ref`*(x: T) {.front.} =
@@ -94,6 +98,7 @@ $defines@
 namespace B {
 // Nim-generated variables
 $vars@
+$aliases@
 }
 
 """

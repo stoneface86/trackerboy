@@ -61,7 +61,7 @@ ModulePropertiesDialog::ModulePropertiesDialog(QWidget *parent)
 }
 
 void ModulePropertiesDialog::load(Document const &doc) {
-    auto const props = doc.view()->moduleProperties();
+    auto const props = doc.view()->mod.moduleProperties();
     auto loadInfoString = [](QLineEdit *edit, const char *data) {
         auto len = 0;
         do {
@@ -86,7 +86,7 @@ void ModulePropertiesDialog::save(Document &doc) const {
     auto setInfoString = [](QLineEdit *edit, char *out) {
         auto tmp = edit->text().toUtf8();
         int i = 0;
-        int const tmpLen = qMax((int)tmp.size(), (int)B::InfoStringLen);
+        int const tmpLen = qMin((int)tmp.size(), (int)B::InfoStringLen);
         for (; i < tmpLen; ++i) {
             out[i] = tmp[i];
         }
@@ -98,7 +98,7 @@ void ModulePropertiesDialog::save(Document &doc) const {
     setInfoString(mLineArtist, props.artist);
     setInfoString(mLineCopyright, props.copyright);
     props.tickrate = mTickrate->tickrate();
-    doc.edit(true)->setModuleProperties(props);
+    doc.edit(true)->mod.setModuleProperties(props);
     mSaveButton->setEnabled(false);
 }
 

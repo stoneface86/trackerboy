@@ -81,6 +81,6 @@ private:
         QString name;
     };
 
-    SongListModel *mSource;
-    QList<Item> mItems;
+    SongListModel *_source;
+    QList<Item> _items;
 };

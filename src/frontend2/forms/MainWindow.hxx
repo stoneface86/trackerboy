@@ -62,6 +62,7 @@ private:
     RecentFiles mRecentFiles;
     Document *mDocument;
     SongListModel *mSongListModel;
+    SongModel *mSongModel;
     SongListEditor *mSongListEditor;
     ModulePropertiesDialog *mModuleProperties;
     CommentsDialog *mComments;

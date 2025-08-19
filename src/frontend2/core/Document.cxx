@@ -27,11 +27,17 @@ Document::ViewContext::~ViewContext() {}
 
 Document::Document(QObject *parent)
     : QObject(parent)
-    , mSource(makeNimRef(B::newDocument(toNimString(tr("New Song")).s)))
+    , mSource(makeNimRef(B::newDocument()))
     , mModified(false)
     , mUndoGroup(new QUndoGroup(this))
-    , mSongHistories() {
-    songListChanged();
+    , mSongHistories()
+    , mCurrentSong(0) {
+    mSongHistories = initHistoryFromSource();
+    mUndoGroup->setActiveStack(mSongHistories[0].stack);
+}
+
+QString Document::defaultSongName() const {
+    return tr("New Song");
 }
 
 void Document::setModified() {
@@ -43,10 +49,7 @@ void Document::setModified() {
 
 void Document::selectSong(int songNo) {
     if (mCurrentSong != songNo) {
-        mSource->selectSong(songNo);
-        mCurrentSong = songNo;
-        mUndoGroup->setActiveStack(mSongHistories[songNo].stack);
-        emit songChanged(songNo);
+        selectSongImpl(songNo);
     }
 }
 
@@ -74,14 +77,16 @@ QUndoGroup const *Document::undoGroup() const {
 
 QList<Document::SongHistory> Document::initHistoryFromSource() {
     QList<Document::SongHistory> result;
-    auto const songCount = mSource->songCount();
+    auto const songCount = mSource->mod.songCount();
     for (B::NI i = 0; i < songCount; ++i) {
-        result.append({mSource->songId(i), nullptr});
+        result.append({mSource->mod.songId(i), nullptr});
     }
     return result;
 }
 
-void Document::songListChanged() {
+void Document::changeSongList(B::SongListChanges const &changes) {
+    edit(true)->setSongList(changes);
+
     auto findHistoryById = [](QList<SongHistory> const &list,
                               qintptr id) -> int {
         int i = 0;
@@ -120,5 +125,18 @@ void Document::songListChanged() {
             mUndoGroup->addStack(h.stack);
         }
     }
+    auto const song =
+        findHistoryById(nextHistory, mSongHistories[mCurrentSong].id);
+
     mSongHistories = std::move(nextHistory);
+    // re-select the current song. If the current song was deleted, select the
+    // first one
+    selectSongImpl(song == -1 ? 0 : song);
+}
+
+void Document::selectSongImpl(int songNo) {
+    mSource->selectSong(songNo);
+    mCurrentSong = songNo;
+    mUndoGroup->setActiveStack(mSongHistories[songNo].stack);
+    emit songChanged(songNo);
 }

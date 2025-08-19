@@ -46,6 +46,7 @@ MainWindow::MainWindow()
     , mRecentFiles()
     , mDocument(new Document(this))
     , mSongListModel(new SongListModel(mDocument, this))
+    , mSongModel(new SongModel(mDocument, mSongListModel, this))
     , mSongListEditor(nullptr)
     , mModuleProperties{}
     , mComments{} {
@@ -478,7 +479,7 @@ void MainWindow::initUi() {
         return result;
     };
 
-    mUi.sidebar = new Sidebar;
+    mUi.sidebar = new Sidebar(mSongListModel, mSongModel);
     mUi.editor = newPlaceholder("Pattern Editor");
     mUi.databar = new QSplitter(Qt::Vertical);
     mUi.instruments = newPlaceholder("Instruments");

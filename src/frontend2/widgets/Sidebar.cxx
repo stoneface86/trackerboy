@@ -1,5 +1,7 @@
 
 #include "widgets/Sidebar.hxx"
+#include "Sidebar/SongSettingsWidget.hxx"
+#include "utils/connectutils.hxx"
 
 #include <QComboBox>
 #include <QGroupBox>
@@ -7,7 +9,8 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 
-Sidebar::Sidebar(QWidget *parent)
+Sidebar::Sidebar(SongListModel *listModel, SongModel *songModel,
+                 QWidget *parent)
     : QWidget(parent) {
 
     auto layout = new QVBoxLayout;
@@ -17,13 +20,14 @@ Sidebar::Sidebar(QWidget *parent)
 
     auto songGroup = new QGroupBox(tr("Song"));
     auto songGroupLayout = new QVBoxLayout;
-    auto songBox = new QComboBox;
-    songGroupLayout->addWidget(songBox);
+    _songCombo = new QComboBox;
+    _songCombo->setModel(listModel);
+    songGroupLayout->addWidget(_songCombo);
     songGroup->setLayout(songGroupLayout);
 
     auto tabs = new QTabWidget;
     auto orderTab = new QLabel("Order Editor");
-    auto songTab = new QLabel("Song editor");
+    auto songTab = new SongSettingsWidget(songModel);
     tabs->addTab(orderTab, tr("Song Order"));
     tabs->addTab(songTab, tr("Song Settings"));
 
@@ -31,4 +35,13 @@ Sidebar::Sidebar(QWidget *parent)
     layout->addWidget(songGroup);
     layout->addWidget(tabs, 1);
     setLayout(layout);
+
+    _document = songModel->document();
+    lazyconnect(_songCombo, activated, _document, selectSong);
+    lazyconnect(_document, songChanged, _songCombo, setCurrentIndex);
+    lazyconnect(listModel, modelReset, this, songListReset);
+}
+
+void Sidebar::songListReset() {
+    _songCombo->setCurrentIndex(_document->song());
 }

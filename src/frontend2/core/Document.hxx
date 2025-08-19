@@ -67,6 +67,11 @@ public:
     QUndoGroup const *undoGroup() const;
 
     //
+    // Gets a QString containing the default song name to be used for new songs.
+    //
+    QString defaultSongName() const;
+
+    //
     // Select the current song for editing and playback. The `songChanged`
     // signal will be emitted and the song's QUndoStack will be set to the
     // active stack in this document's QUndoGroup.
@@ -79,16 +84,37 @@ public:
     int song() const;
 
     //
-    // Updates all song QUndoStacks after the song list has been changed. Call
-    // this after opening a module, creating a new module, or when the user
-    // has modified the song list via the Song List Editor.
+    // Applies the given list of changes to the document's song list.
     //
-    void songListChanged();
+    void changeSongList(B::SongListChanges const &changes);
 
 signals:
+    //
+    // Signal emitted before saving the module to file, models should use this
+    // signal to commit any pending changes to the module. Common example is
+    // models that keep QString versions of names cached.
+    //
     void aboutToSave();
-    void reloaded();
+
+    //
+    // The module has been loaded from a file, or a new module was created.
+    // `newModule` is `true` if the document is a new module, and `false` if
+    // an existing one was loaded.
+    //
+    void reloaded(bool newModule);
+
+    //
+    // The current song selected for editing has changed. This signal is always
+    // emitted after the [reloaded] signal, so models should not respond to
+    // both.
+    //
     void songChanged(int songNo);
+
+    //
+    // Signal that is emitted when a permanent change has been made to the
+    // document, or if a previous change was reset due to the document being
+    // saved or reloaded.
+    //
     void modifiedChanged(bool modified);
 
 private:
@@ -102,6 +128,7 @@ private:
     };
 
     QList<SongHistory> initHistoryFromSource();
+    void selectSongImpl(int song);
 
     QList<SongHistory> mSongHistories;
     int mCurrentSong;
