@@ -59,13 +59,13 @@ private:
     void loadSettings();
     void saveSettings();
 
-    RecentFiles mRecentFiles;
-    Document *mDocument;
-    SongListModel *mSongListModel;
-    SongModel *mSongModel;
-    SongListEditor *mSongListEditor;
-    ModulePropertiesDialog *mModuleProperties;
-    CommentsDialog *mComments;
+    RecentFiles _recentFiles;
+    Document *_document;
+    SongListModel *_songListModel;
+    SongModel *_songModel;
+    SongListEditor *_songListEditor;
+    ModulePropertiesDialog *_moduleProperties;
+    CommentsDialog *_comments;
 
     // toolbars
     enum Toolbars {
@@ -76,7 +76,7 @@ private:
         ToolbarView,
         ToolbarCount
     };
-    std::array<QToolBar *, ToolbarCount> mToolbars;
+    std::array<QToolBar *, ToolbarCount> _toolbars;
 
     struct Ui {
         // QLabel is a placeholder
@@ -99,5 +99,5 @@ private:
         QAction *actShowStatusbar;
     };
 
-    Ui mUi;
+    Ui _ui;
 };

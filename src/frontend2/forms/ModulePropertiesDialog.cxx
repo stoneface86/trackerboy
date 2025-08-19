@@ -11,12 +11,12 @@
 ModulePropertiesDialog::ModulePropertiesDialog(QWidget *parent)
     : QDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
                           Qt::WindowCloseButtonHint)
-    , mLineTitle{}
-    , mLineArtist{}
-    , mLineCopyright{}
-    , mTickrate{}
-    , mRevisionLabel{}
-    , mSaveButton{} {
+    , _lineTitle(nullptr)
+    , _lineArtist(nullptr)
+    , _lineCopyright(nullptr)
+    , _tickrate(nullptr)
+    , _revisionLabel(nullptr)
+    , _saveButton(nullptr) {
 
     setWindowTitle(tr("Module Properties"));
     auto layout = new QVBoxLayout;
@@ -29,35 +29,35 @@ ModulePropertiesDialog::ModulePropertiesDialog(QWidget *parent)
         result->setMaxLength(32);
         return result;
     };
-    mLineTitle = makeInfoStringEdit(tr("Title"));
-    mLineArtist = makeInfoStringEdit(tr("Artist"));
-    mLineCopyright = makeInfoStringEdit(tr("Copyright"));
-    infoLayout->addWidget(mLineTitle);
-    infoLayout->addWidget(mLineArtist);
-    infoLayout->addWidget(mLineCopyright);
+    _lineTitle = makeInfoStringEdit(tr("Title"));
+    _lineArtist = makeInfoStringEdit(tr("Artist"));
+    _lineCopyright = makeInfoStringEdit(tr("Copyright"));
+    infoLayout->addWidget(_lineTitle);
+    infoLayout->addWidget(_lineArtist);
+    infoLayout->addWidget(_lineCopyright);
     infoGroup->setLayout(infoLayout);
 
-    mTickrate = new TickrateForm;
+    _tickrate = new TickrateForm;
 
-    mRevisionLabel = new QLabel;
+    _revisionLabel = new QLabel;
 
     auto dialogButtons =
         new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
-    mSaveButton = dialogButtons->button(QDialogButtonBox::Save);
-    mSaveButton->setEnabled(false);
+    _saveButton = dialogButtons->button(QDialogButtonBox::Save);
+    _saveButton->setEnabled(false);
 
     layout->addWidget(infoGroup);
-    layout->addWidget(mTickrate);
-    layout->addWidget(mRevisionLabel);
+    layout->addWidget(_tickrate);
+    layout->addWidget(_revisionLabel);
     layout->addWidget(dialogButtons);
     setLayout(layout);
 
     lazyconnect(dialogButtons, accepted, this, accept);
     lazyconnect(dialogButtons, rejected, this, reject);
-    lazyconnect(mLineTitle, textChanged, this, setDirty);
-    lazyconnect(mLineArtist, textChanged, this, setDirty);
-    lazyconnect(mLineCopyright, textChanged, this, setDirty);
-    lazyconnect(mTickrate, tickrateChanged, this, setDirty);
+    lazyconnect(_lineTitle, textChanged, this, setDirty);
+    lazyconnect(_lineArtist, textChanged, this, setDirty);
+    lazyconnect(_lineCopyright, textChanged, this, setDirty);
+    lazyconnect(_tickrate, tickrateChanged, this, setDirty);
 }
 
 void ModulePropertiesDialog::load(Document const &doc) {
@@ -71,13 +71,13 @@ void ModulePropertiesDialog::load(Document const &doc) {
         } while (++len < B::InfoStringLen);
         edit->setText(QString::fromUtf8(data, len));
     };
-    loadInfoString(mLineTitle, props.title);
-    loadInfoString(mLineArtist, props.artist);
-    loadInfoString(mLineCopyright, props.copyright);
-    mTickrate->setTickrate(props.tickrate);
-    mRevisionLabel->setText(tr("Module Revision: %1.%1")
+    loadInfoString(_lineTitle, props.title);
+    loadInfoString(_lineArtist, props.artist);
+    loadInfoString(_lineCopyright, props.copyright);
+    _tickrate->setTickrate(props.tickrate);
+    _revisionLabel->setText(tr("Module Revision: %1.%1")
                                 .arg((int)props.revMajor, (int)props.revMinor));
-    mSaveButton->setEnabled(false);
+    _saveButton->setEnabled(false);
 }
 
 void ModulePropertiesDialog::save(Document &doc) const {
@@ -94,14 +94,14 @@ void ModulePropertiesDialog::save(Document &doc) const {
             out[i] = '\0';
         }
     };
-    setInfoString(mLineTitle, props.title);
-    setInfoString(mLineArtist, props.artist);
-    setInfoString(mLineCopyright, props.copyright);
-    props.tickrate = mTickrate->tickrate();
+    setInfoString(_lineTitle, props.title);
+    setInfoString(_lineArtist, props.artist);
+    setInfoString(_lineCopyright, props.copyright);
+    props.tickrate = _tickrate->tickrate();
     doc.edit(true)->mod.setModuleProperties(props);
-    mSaveButton->setEnabled(false);
+    _saveButton->setEnabled(false);
 }
 
 void ModulePropertiesDialog::setDirty() {
-    mSaveButton->setEnabled(true);
+    _saveButton->setEnabled(true);
 }

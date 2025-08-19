@@ -22,7 +22,7 @@ private:
 
     void onTextChanged();
 
-    Document *mDocument;
-    QPlainTextEdit *mEdit;
-    bool mModified;
+    Document *_document;
+    QPlainTextEdit *_edit;
+    bool _modified;
 };

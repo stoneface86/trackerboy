@@ -6,7 +6,7 @@
 #include <QtDebug>
 
 Document::EditContext::EditContext(Document &doc, bool setModified)
-    : backend(doc.mSource.ref)
+    : backend(doc._source.ref)
     , document(doc)
     , setModified(setModified) {
     backend->lock();
@@ -20,20 +20,20 @@ Document::EditContext::~EditContext() {
 }
 
 Document::ViewContext::ViewContext(Document const &doc)
-    : backend(doc.mSource.ref)
+    : backend(doc._source.ref)
     , document(doc) {}
 
 Document::ViewContext::~ViewContext() {}
 
 Document::Document(QObject *parent)
     : QObject(parent)
-    , mSource(makeNimRef(B::newDocument()))
-    , mModified(false)
-    , mUndoGroup(new QUndoGroup(this))
-    , mSongHistories()
-    , mCurrentSong(0) {
-    mSongHistories = initHistoryFromSource();
-    mUndoGroup->setActiveStack(mSongHistories[0].stack);
+    , _source(makeNimRef(B::newDocument()))
+    , _modified(false)
+    , _undoGroup(new QUndoGroup(this))
+    , _songHistories()
+    , _currentSong(0) {
+    _songHistories = initHistoryFromSource();
+    _undoGroup->setActiveStack(_songHistories[0].stack);
 }
 
 QString Document::defaultSongName() const {
@@ -41,20 +41,20 @@ QString Document::defaultSongName() const {
 }
 
 void Document::setModified() {
-    if (!mModified) {
-        mModified = true;
+    if (!_modified) {
+        _modified = true;
         emit modifiedChanged(true);
     }
 }
 
 void Document::selectSong(int songNo) {
-    if (mCurrentSong != songNo) {
+    if (_currentSong != songNo) {
         selectSongImpl(songNo);
     }
 }
 
 int Document::song() const {
-    return mCurrentSong;
+    return _currentSong;
 }
 
 Document::EditContext Document::edit(bool setModified) {
@@ -63,7 +63,7 @@ Document::EditContext Document::edit(bool setModified) {
 }
 
 void Document::edit(QUndoCommand *cmd) {
-    mUndoGroup->activeStack()->push(cmd);
+    _undoGroup->activeStack()->push(cmd);
 }
 
 Document::ViewContext Document::view() const {
@@ -72,14 +72,14 @@ Document::ViewContext Document::view() const {
 }
 
 QUndoGroup const *Document::undoGroup() const {
-    return mUndoGroup;
+    return _undoGroup;
 }
 
 QList<Document::SongHistory> Document::initHistoryFromSource() {
     QList<Document::SongHistory> result;
-    auto const songCount = mSource->mod.songCount();
+    auto const songCount = _source->mod.songCount();
     for (B::NI i = 0; i < songCount; ++i) {
-        result.append({mSource->mod.songId(i), nullptr});
+        result.append({_source->mod.songId(i), nullptr});
     }
     return result;
 }
@@ -101,12 +101,12 @@ void Document::changeSongList(B::SongListChanges const &changes) {
 
     auto nextHistory = initHistoryFromSource();
     // scan current for removed songs
-    for (auto const &h : mSongHistories) {
+    for (auto const &h : _songHistories) {
         auto index = findHistoryById(nextHistory, h.id);
         if (index == -1) {
             // not found, delete the stack and remove it from the group
             qDebug() << "Deleting history for song id " << h.id;
-            mUndoGroup->removeStack(h.stack);
+            _undoGroup->removeStack(h.stack);
             delete h.stack;
         } else {
             // move stack to the new history list
@@ -122,21 +122,21 @@ void Document::changeSongList(B::SongListChanges const &changes) {
         if (h.stack == nullptr) {
             qDebug() << "Creating new history for song id " << h.id;
             h.stack = new QUndoStack(this);
-            mUndoGroup->addStack(h.stack);
+            _undoGroup->addStack(h.stack);
         }
     }
     auto const song =
-        findHistoryById(nextHistory, mSongHistories[mCurrentSong].id);
+        findHistoryById(nextHistory, _songHistories[_currentSong].id);
 
-    mSongHistories = std::move(nextHistory);
+    _songHistories = std::move(nextHistory);
     // re-select the current song. If the current song was deleted, select the
     // first one
     selectSongImpl(song == -1 ? 0 : song);
 }
 
 void Document::selectSongImpl(int songNo) {
-    mSource->selectSong(songNo);
-    mCurrentSong = songNo;
-    mUndoGroup->setActiveStack(mSongHistories[songNo].stack);
+    _source->selectSong(songNo);
+    _currentSong = songNo;
+    _undoGroup->setActiveStack(_songHistories[songNo].stack);
     emit songChanged(songNo);
 }

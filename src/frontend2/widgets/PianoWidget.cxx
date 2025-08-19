@@ -73,15 +73,15 @@ static std::array<i8, 5> const cBlackToNote = {
 
 PianoWidget::PianoWidget(QWidget *parent)
     : QWidget(parent)
-    , mIsKeyDown(false)
-    , mNote(0)
-    , mLastKeyPressed(Qt::Key_unknown)
-    , mKeymap()
-    , mTheme()
-    , mScheme()
-    , mRedrawKeys(true)
-    , mWhiteKeys()
-    , mBlackKeys() {
+    , _isKeyDown(false)
+    , _note(0)
+    , _lastKeyPressed(Qt::Key_unknown)
+    , _keymap()
+    , _theme()
+    , _scheme()
+    , _redrawKeys(true)
+    , _whiteKeys()
+    , _blackKeys() {
     setFocusPolicy(Qt::StrongFocus);
 
     setMinimumWidth(TU::cMinWidth);
@@ -92,51 +92,51 @@ PianoWidget::PianoWidget(QWidget *parent)
 }
 
 void PianoWidget::setKeymap(NimRef<B::NoteKeymap> map) {
-    mKeymap = std::move(map);
+    _keymap = std::move(map);
 }
 
 void PianoWidget::play(int note) {
-    auto const oldnote = mNote;
-    mNote = note;
+    auto const oldnote = _note;
+    _note = note;
     update();
-    if (mIsKeyDown && oldnote != note) {
+    if (_isKeyDown && oldnote != note) {
         emit keyChange(note);
     } else {
-        mIsKeyDown = true;
+        _isKeyDown = true;
         emit keyDown(note);
     }
 }
 
 void PianoWidget::release() {
-    if (mIsKeyDown) {
-        mIsKeyDown = false;
+    if (_isKeyDown) {
+        _isKeyDown = false;
         update();
         emit keyUp();
     }
 }
 
 void PianoWidget::setColorTheme(ColorTheme const &theme) {
-    mTheme = theme;
-    mRedrawKeys = true;
+    _theme = theme;
+    _redrawKeys = true;
     update();
 }
 
 void PianoWidget::focusOutEvent(QFocusEvent *evt) {
     Q_UNUSED(evt);
 
-    if (mIsKeyDown) {
+    if (_isKeyDown) {
         release();
-        mLastKeyPressed = Qt::Key_unknown;
+        _lastKeyPressed = Qt::Key_unknown;
     }
 }
 
 void PianoWidget::keyPressEvent(QKeyEvent *evt) {
     if (!evt->isAutoRepeat()) {
-        if (mKeymap) {
+        if (_keymap) {
             auto const key = evt->key();
-            auto const note = mKeymap->keyToNote(key);
+            auto const note = _keymap->keyToNote(key);
             if (note != -1) {
-                mLastKeyPressed = key;
+                _lastKeyPressed = key;
                 play(note);
                 return;
             }
@@ -148,7 +148,7 @@ void PianoWidget::keyPressEvent(QKeyEvent *evt) {
 
 void PianoWidget::keyReleaseEvent(QKeyEvent *evt) {
     if (!evt->isAutoRepeat()) {
-        if (evt->key() == mLastKeyPressed) {
+        if (evt->key() == _lastKeyPressed) {
             release();
             return;
         }
@@ -181,7 +181,7 @@ void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
     auto const pos = event->position().toPoint();
     if (mouseHasNote(pos)) {
         auto const note = getNoteFromMouse(pos);
-        if (!mIsKeyDown || note != mNote) {
+        if (!_isKeyDown || note != _note) {
             play(note);
         }
     } else {
@@ -192,35 +192,35 @@ void PianoWidget::mouseMoveEvent(QMouseEvent *event) {
 void PianoWidget::paintEvent(QPaintEvent *event) {
     (void)event;
 
-    if (mRedrawKeys) {
-        mRedrawKeys = false;
+    if (_redrawKeys) {
+        _redrawKeys = false;
         renderPiano();
     }
 
     QPainter p(this);
 
-    p.fillRect(rect(), mTheme.colors[ColorTheme::ColorDarkest]);
+    p.fillRect(rect(), _theme.colors[ColorTheme::ColorDarkest]);
 
-    auto const x = mScheme.leftPad + 1;
-    p.drawPicture(x, 1, mWhiteKeys);
+    auto const x = _scheme.leftPad + 1;
+    p.drawPicture(x, 1, _whiteKeys);
 
-    if (mIsKeyDown) {
-        auto const octave = mNote / 12;
-        auto const noteInOctave = mNote % 12;
+    if (_isKeyDown) {
+        auto const octave = _note / 12;
+        auto const noteInOctave = _note % 12;
         auto const info = TU::cKeyInfo[noteInOctave];
         auto const whiteKeyStart =
-            x + ((info.whiteKeyIndex + (octave * 7)) * mScheme.ww);
+            x + ((info.whiteKeyIndex + (octave * 7)) * _scheme.ww);
         if (info.isBlack) {
-            p.drawPicture(x, 1, mBlackKeys);
-            p.fillRect(whiteKeyStart + mScheme.boff, 1, mScheme.bw, mScheme.bh,
-                       mTheme.colors[ColorTheme::ColorLight]);
+            p.drawPicture(x, 1, _blackKeys);
+            p.fillRect(whiteKeyStart + _scheme.boff, 1, _scheme.bw, _scheme.bh,
+                       _theme.colors[ColorTheme::ColorLight]);
         } else {
-            p.fillRect(whiteKeyStart, 1, mScheme.ww, mScheme.wh,
-                       mTheme.colors[ColorTheme::ColorLight]);
-            p.drawPicture(x, 1, mBlackKeys);
+            p.fillRect(whiteKeyStart, 1, _scheme.ww, _scheme.wh,
+                       _theme.colors[ColorTheme::ColorLight]);
+            p.drawPicture(x, 1, _blackKeys);
         }
     } else {
-        p.drawPicture(x, 1, mBlackKeys);
+        p.drawPicture(x, 1, _blackKeys);
     }
 
     if (!isEnabled()) {
@@ -232,30 +232,30 @@ void PianoWidget::paintEvent(QPaintEvent *event) {
 void PianoWidget::resizeEvent(QResizeEvent *event) {
     Q_UNUSED(event)
     calculateScheme();
-    mRedrawKeys = true;
+    _redrawKeys = true;
 }
 
 bool PianoWidget::mouseHasNote(QPoint pos) {
-    QRect rect(mScheme.leftPad, 0, mScheme.width, mScheme.wh);
+    QRect rect(_scheme.leftPad, 0, _scheme.width, _scheme.wh);
     return rect.contains(pos);
 }
 
 int PianoWidget::getNoteFromMouse(QPoint mousePos) {
-    auto const x = mousePos.x() - mScheme.leftPad;
+    auto const x = mousePos.x() - _scheme.leftPad;
     auto const y = mousePos.y() - 1;
 
     bool isBlack = false;
-    int wkeyInOctave = x / mScheme.ww;
+    int wkeyInOctave = x / _scheme.ww;
     int octave = wkeyInOctave / 7;
     wkeyInOctave %= 7;
     int bkeyInOctave = 0;
 
-    if (y < mScheme.bh) {
+    if (y < _scheme.bh) {
         // check if the mouse is over a black key
         bkeyInOctave = TU::cBlackLeftOf[wkeyInOctave];
-        int wkeyx = x % mScheme.ww;
+        int wkeyx = x % _scheme.ww;
 
-        if (bkeyInOctave != TU::cKeyIndexNull && wkeyx <= (mScheme.bw / 2)) {
+        if (bkeyInOctave != TU::cKeyIndexNull && wkeyx <= (_scheme.bw / 2)) {
             // mouse is over the black key to the left of the white key
             isBlack = true;
         } else {
@@ -264,7 +264,7 @@ int PianoWidget::getNoteFromMouse(QPoint mousePos) {
             // get the black key to the left of the next white key
             bkeyInOctave = TU::cBlackLeftOf[(wkeyInOctave + 1) % 7];
 
-            if (bkeyInOctave != TU::cKeyIndexNull && wkeyx >= mScheme.boff) {
+            if (bkeyInOctave != TU::cKeyIndexNull && wkeyx >= _scheme.boff) {
                 isBlack = true;
             }
         }
@@ -285,17 +285,17 @@ void PianoWidget::calculateScheme() {
     auto const contentWidth = sz.width() - 2;
     auto const contentHeight = sz.height() - 2;
     // divide total available width by the total number of white keys
-    mScheme.ww = contentWidth / TU::cTotalWhiteKeys;
+    _scheme.ww = contentWidth / TU::cTotalWhiteKeys;
     // white key height always takes up the available height
-    mScheme.wh = contentHeight;
+    _scheme.wh = contentHeight;
     // black keys have 75% width and 60% height of white keys
-    mScheme.bw = mScheme.ww * 3 / 4;
-    mScheme.bh = mScheme.wh * 6 / 10;
+    _scheme.bw = _scheme.ww * 3 / 4;
+    _scheme.bh = _scheme.wh * 6 / 10;
     // offset from the white key left of the black key
-    mScheme.boff = mScheme.ww - (mScheme.bw / 2);
-    mScheme.width = mScheme.ww * TU::cTotalWhiteKeys;
+    _scheme.boff = _scheme.ww - (_scheme.bw / 2);
+    _scheme.width = _scheme.ww * TU::cTotalWhiteKeys;
     // left-pad value for centering
-    mScheme.leftPad = (contentWidth - mScheme.width) / 2;
+    _scheme.leftPad = (contentWidth - _scheme.width) / 2;
 }
 
 void PianoWidget::renderPiano() {
@@ -304,40 +304,40 @@ void PianoWidget::renderPiano() {
         QPicture pic;
         {
             QPainter p(&pic);
-            p.fillRect(0, 0, mScheme.width, mScheme.wh,
-                       mTheme.colors[ColorTheme::ColorLightest]);
-            p.setPen(mTheme.colors[ColorTheme::ColorDarkest]);
-            int x = mScheme.ww;
-            int const y = mScheme.wh - 1;
+            p.fillRect(0, 0, _scheme.width, _scheme.wh,
+                       _theme.colors[ColorTheme::ColorLightest]);
+            p.setPen(_theme.colors[ColorTheme::ColorDarkest]);
+            int x = _scheme.ww;
+            int const y = _scheme.wh - 1;
             for (int i = 0; i < TU::cTotalWhiteKeys - 1; ++i) {
                 p.drawLine(x, 0, x, y);
-                x += mScheme.ww;
+                x += _scheme.ww;
             }
         }
-        mWhiteKeys = std::move(pic);
+        _whiteKeys = std::move(pic);
     }
 
     {
         QPicture pic;
         {
             QPainter p(&pic);
-            int x = mScheme.boff;
-            QColor const color = mTheme.colors[ColorTheme::ColorDark];
-            int const twokeys = mScheme.ww * 2;
+            int x = _scheme.boff;
+            QColor const color = _theme.colors[ColorTheme::ColorDark];
+            int const twokeys = _scheme.ww * 2;
             for (int o = 0; o < TU::cOctaves; ++o) {
-                p.fillRect(x, 0, mScheme.bw, mScheme.bh, color); // C#
-                x += mScheme.ww;
-                p.fillRect(x, 0, mScheme.bw, mScheme.bh, color); // D#
+                p.fillRect(x, 0, _scheme.bw, _scheme.bh, color); // C#
+                x += _scheme.ww;
+                p.fillRect(x, 0, _scheme.bw, _scheme.bh, color); // D#
                 x += twokeys;
-                p.fillRect(x, 0, mScheme.bw, mScheme.bh, color); // F#
-                x += mScheme.ww;
-                p.fillRect(x, 0, mScheme.bw, mScheme.bh, color); // G#
-                x += mScheme.ww;
-                p.fillRect(x, 0, mScheme.bw, mScheme.bh, color); // A#
+                p.fillRect(x, 0, _scheme.bw, _scheme.bh, color); // F#
+                x += _scheme.ww;
+                p.fillRect(x, 0, _scheme.bw, _scheme.bh, color); // G#
+                x += _scheme.ww;
+                p.fillRect(x, 0, _scheme.bw, _scheme.bh, color); // A#
                 x += twokeys;
             }
         }
-        mBlackKeys = std::move(pic);
+        _blackKeys = std::move(pic);
     }
 }
 

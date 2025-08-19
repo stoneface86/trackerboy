@@ -29,15 +29,14 @@ private:
     Q_DISABLE_COPY(EnvelopeForm)
 
     void setPeriodLabel(int value);
-    
+
     void updateEnvelope();
 
-    bool mIgnoreChanges;
-    u8 mEnvelope;
+    bool _ignoreChanges;
+    u8 _envelope;
 
-    QSpinBox *mInitVolumeSpin;
-    QCheckBox *mIncreasingCheckbox;
-    QSpinBox *mPeriodSpin;
-    QLabel *mPeriodRateLabel;
-
+    QSpinBox *_initVolumeSpin;
+    QCheckBox *_increasingCheckbox;
+    QSpinBox *_periodSpin;
+    QLabel *_periodRateLabel;
 };

@@ -56,15 +56,15 @@ private:
 
     void calculateScheme();
 
-    bool mIsKeyDown;
-    int mNote;
+    bool _isKeyDown;
+    int _note;
 
-    int mLastKeyPressed;
-    NimRef<B::NoteKeymap> mKeymap;
+    int _lastKeyPressed;
+    NimRef<B::NoteKeymap> _keymap;
 
-    ColorTheme mTheme;
-    Scheme mScheme;
-    bool mRedrawKeys;
-    QPicture mWhiteKeys;
-    QPicture mBlackKeys;
+    ColorTheme _theme;
+    Scheme _scheme;
+    bool _redrawKeys;
+    QPicture _whiteKeys;
+    QPicture _blackKeys;
 };

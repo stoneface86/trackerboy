@@ -118,10 +118,6 @@ signals:
     void modifiedChanged(bool modified);
 
 private:
-    NimRef<B::Document> mSource;
-    bool mModified;
-    QUndoGroup *mUndoGroup;
-
     struct SongHistory {
         qintptr id; // this is actually the pointer of the song
         QUndoStack *stack;
@@ -130,6 +126,9 @@ private:
     QList<SongHistory> initHistoryFromSource();
     void selectSongImpl(int song);
 
-    QList<SongHistory> mSongHistories;
-    int mCurrentSong;
+    NimRef<B::Document> _source;
+    bool _modified;
+    QUndoGroup *_undoGroup;
+    QList<SongHistory> _songHistories;
+    int _currentSong;
 };

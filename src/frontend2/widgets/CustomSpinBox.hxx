@@ -3,7 +3,6 @@
 
 #include <QSpinBox>
 
-
 //
 // Custom spinbox widget that zero pads and outputs the string
 // in uppercase.
@@ -11,7 +10,7 @@
 class CustomSpinBox : public QSpinBox {
 
     // not needed, no signals, slots or properties defined
-    //Q_OBJECT
+    // Q_OBJECT
 
 public:
     explicit CustomSpinBox(QWidget *parent = nullptr);
@@ -25,6 +24,5 @@ protected:
 private:
     Q_DISABLE_COPY(CustomSpinBox)
 
-    int mDigits;
-
+    int _digits;
 };

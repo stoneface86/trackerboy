@@ -20,6 +20,6 @@ signals:
     void tickrateChanged();
 
 private:
-    QButtonGroup *mButtons;
-    QDoubleSpinBox *mCustomRate;
+    QButtonGroup *_buttons;
+    QDoubleSpinBox *_customRate;
 };

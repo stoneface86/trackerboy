@@ -32,8 +32,8 @@ static strlit cGroup = "SongListEditor";
 SongListEditor::SongListEditor(SongListModel *model, QWidget *parent)
     : PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
                                    Qt::WindowCloseButtonHint)
-    , mModel(new SongListEditorModel(model, this))
-    , mView(new QTreeView) {
+    , _model(new SongListEditorModel(model, this))
+    , _view(new QTreeView) {
 
     auto layout = new QVBoxLayout;
 
@@ -50,7 +50,7 @@ SongListEditor::SongListEditor(SongListModel *model, QWidget *parent)
                              QDialogButtonBox::Reset);
 
     layout->addLayout(contentLayout, 1);
-    contentLayout->addWidget(mView, 1);
+    contentLayout->addWidget(_view, 1);
     contentLayout->addLayout(buttonLayout);
     buttonLayout->addWidget(buttonNew);
     buttonLayout->addWidget(buttonDup);
@@ -60,19 +60,19 @@ SongListEditor::SongListEditor(SongListModel *model, QWidget *parent)
     layout->addWidget(dialogButtons);
     setLayout(layout);
 
-    mView->setModel(mModel);
-    mView->setSelectionMode(QAbstractItemView::SingleSelection);
-    mView->setDragEnabled(true);
-    mView->viewport()->setAcceptDrops(true);
-    mView->setDragDropMode(QAbstractItemView::InternalMove);
+    _view->setModel(_model);
+    _view->setSelectionMode(QAbstractItemView::SingleSelection);
+    _view->setDragEnabled(true);
+    _view->viewport()->setAcceptDrops(true);
+    _view->setDragDropMode(QAbstractItemView::InternalMove);
 
-    lazyconnect(buttonNew, clicked, mModel, add);
+    lazyconnect(buttonNew, clicked, _model, add);
     lazyconnect(buttonDup, clicked, this, duplicate);
     lazyconnect(buttonMoveUp, clicked, this, moveUp);
     lazyconnect(buttonMoveDown, clicked, this, moveDown);
     lazyconnect(dialogButtons, accepted, this, accept);
     lazyconnect(dialogButtons, rejected, this, reject);
-    lazyconnect(dialogButtons->button(QDialogButtonBox::Reset), clicked, mModel,
+    lazyconnect(dialogButtons->button(QDialogButtonBox::Reset), clicked, _model,
                 reset);
 
     setWindowTitle(tr("Song List"));
@@ -98,33 +98,33 @@ void SongListEditor::closeEvent(QCloseEvent *evt) {
 }
 
 void SongListEditor::applyChanges(Document &doc) {
-    mModel->apply(doc);
+    _model->apply(doc);
 }
 
 void SongListEditor::revertChanges() {
-    mModel->revert();
+    _model->revert();
 }
 
 void SongListEditor::duplicate() {
-    auto const row = TU::selectedRow(mView);
+    auto const row = TU::selectedRow(_view);
     if (row != -1) {
-        mModel->duplicate(row);
+        _model->duplicate(row);
     }
 }
 
 void SongListEditor::moveUp() {
-    auto const row = TU::selectedRow(mView);
+    auto const row = TU::selectedRow(_view);
     if (row != -1) {
-        mModel->moveUp(row);
-        TU::selectRow(mView, row - 1);
+        _model->moveUp(row);
+        TU::selectRow(_view, row - 1);
     }
 }
 
 void SongListEditor::moveDown() {
-    auto const row = TU::selectedRow(mView);
+    auto const row = TU::selectedRow(_view);
     if (row != -1) {
-        mModel->moveDown(row);
-        TU::selectRow(mView, row + 1);
+        _model->moveDown(row);
+        TU::selectRow(_view, row + 1);
     }
 }
 

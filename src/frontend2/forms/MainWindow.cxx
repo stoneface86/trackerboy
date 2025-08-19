@@ -43,15 +43,17 @@ static const int cWindowStateVers = 3;
 
 MainWindow::MainWindow()
     : QMainWindow()
-    , mRecentFiles()
-    , mDocument(new Document(this))
-    , mSongListModel(new SongListModel(mDocument, this))
-    , mSongModel(new SongModel(mDocument, mSongListModel, this))
-    , mSongListEditor(nullptr)
-    , mModuleProperties{}
-    , mComments{} {
+    , _recentFiles()
+    , _document(new Document(this))
+    , _songListModel(new SongListModel(_document, this))
+    , _songModel(new SongModel(_document, _songListModel, this))
+    , _songListEditor(nullptr)
+    , _moduleProperties(nullptr)
+    , _comments(nullptr)
+    , _toolbars{}
+    , _ui{} {
 
-    lazyconnect(mDocument, modifiedChanged, this, setWindowModified);
+    lazyconnect(_document, modifiedChanged, this, setWindowModified);
 
     initToolBars();
     initUi();
@@ -80,36 +82,36 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
 }
 
 void MainWindow::showSongListEditor() {
-    if (mSongListEditor == nullptr) {
-        mSongListEditor = new SongListEditor(mSongListModel, this);
-        connectLambda(mSongListEditor, finished, this, [this](int result) {
+    if (_songListEditor == nullptr) {
+        _songListEditor = new SongListEditor(_songListModel, this);
+        connectLambda(_songListEditor, finished, this, [this](int result) {
             if (result == QDialog::Accepted) {
-                mSongListEditor->applyChanges(*mDocument);
+                _songListEditor->applyChanges(*_document);
             } else {
-                mSongListEditor->revertChanges();
+                _songListEditor->revertChanges();
             }
         });
     }
     // TODO: Stop playback
-    mSongListEditor->open();
+    _songListEditor->open();
 }
 
 void MainWindow::showComments() {
-    if (mComments == nullptr) {
-        mComments = new CommentsDialog(mDocument, this);
+    if (_comments == nullptr) {
+        _comments = new CommentsDialog(_document, this);
     }
-    mComments->show();
+    _comments->show();
 }
 
 void MainWindow::showModuleProperties() {
-    if (mModuleProperties == nullptr) {
-        mModuleProperties = new ModulePropertiesDialog(this);
-        connectLambda(mModuleProperties, accepted, this, [this]() {
-            mModuleProperties->save(*mDocument);
+    if (_moduleProperties == nullptr) {
+        _moduleProperties = new ModulePropertiesDialog(this);
+        connectLambda(_moduleProperties, accepted, this, [this]() {
+            _moduleProperties->save(*_document);
         });
     }
-    mModuleProperties->load(*mDocument);
-    mModuleProperties->open();
+    _moduleProperties->load(*_document);
+    _moduleProperties->open();
 }
 
 void MainWindow::onNew() {}
@@ -134,7 +136,7 @@ void MainWindow::initToolBars() {
         bar->setWindowTitle(title);
         bar->setObjectName(title);
         addToolBar(bar);
-        mToolbars[toolbar] = bar;
+        _toolbars[toolbar] = bar;
     };
 
     initToolBar(ToolbarFile, tr("File"));
@@ -143,19 +145,19 @@ void MainWindow::initToolBars() {
     initToolBar(ToolbarInput, tr("Input"));
     initToolBar(ToolbarView, tr("View"));
     {
-        auto *bar = mToolbars[ToolbarInput];
+        auto *bar = _toolbars[ToolbarInput];
 
         auto container = new QWidget;
         auto layout = new ToolbarLayout(QBoxLayout::LeftToRight);
         layout->addWidget(new QLabel(tr("Octave")));
-        mUi.inputOctaveSpin = new QSpinBox;
-        mUi.inputOctaveSpin->setValue(5);
-        mUi.inputOctaveSpin->setRange(2, 8);
-        layout->addWidget(mUi.inputOctaveSpin);
+        _ui.inputOctaveSpin = new QSpinBox;
+        _ui.inputOctaveSpin->setValue(5);
+        _ui.inputOctaveSpin->setRange(2, 8);
+        layout->addWidget(_ui.inputOctaveSpin);
         layout->addWidget(new QLabel(tr("Edit Step")));
-        mUi.inputEditStep = new QSpinBox;
-        mUi.inputEditStep->setRange(1, 255);
-        layout->addWidget(mUi.inputEditStep);
+        _ui.inputEditStep = new QSpinBox;
+        _ui.inputEditStep->setRange(1, 255);
+        layout->addWidget(_ui.inputEditStep);
         container->setLayout(layout);
         bar->addWidget(container);
         layout->setToolBar(bar);
@@ -180,17 +182,17 @@ void MainWindow::initMenuBar() {
         .icon(icons::New)
         .shortcut(QKeySequence::New)
         .triggers(lazyslotx(this, onNew))
-        .addTo(mToolbars[ToolbarFile]);
+        .addTo(_toolbars[ToolbarFile]);
     A(tr("&Open"), tr("Opens a module from a file"))
         .icon(icons::Open)
         .shortcut(QKeySequence::Open)
         .triggers(lazyslotx(this, onOpen))
-        .addTo(mToolbars[ToolbarFile]);
+        .addTo(_toolbars[ToolbarFile]);
     A(tr("&Save"), tr("Saves the module"))
         .icon(icons::Save)
         .shortcut(QKeySequence::Save)
         .triggers(lazyslotx(this, onSave))
-        .addTo(mToolbars[ToolbarFile]);
+        .addTo(_toolbars[ToolbarFile]);
     A(tr("Save As..."), tr("Saves the module to a new file"))
         .shortcut(QKeySequence::SaveAs)
         .triggers(lazyslotx(this, onSaveAs));
@@ -198,12 +200,12 @@ void MainWindow::initMenuBar() {
     A(tr("Export to WAV..."), tr("Exports the module to a WAV file"))
         .triggers(lazyslotx(this, onExportToWav));
 
-    mRecentFiles.setup(menu);
+    _recentFiles.setup(menu);
     SEP(); // -----------------------------------------------------------------
     A(tr("Configuration..."), tr("Opens the configuration dialog"))
         .icon(icons::Config)
         .triggers(lazyslotx(this, onConfiguration))
-        .addTo(mToolbars[ToolbarFile]);
+        .addTo(_toolbars[ToolbarFile]);
     SEP(); // -----------------------------------------------------------------
     A(tr("&Quit"), tr("Exits the application"))
         .shortcut(QKeySequence::Quit)
@@ -211,32 +213,32 @@ void MainWindow::initMenuBar() {
 
     // =================================================================== Edit
     MENU(tr("&Edit"));
-    A(mDocument->undoGroup()->createUndoAction(this))
+    A(_document->undoGroup()->createUndoAction(this))
         .icon(icons::Undo)
         .shortcut(QKeySequence::Undo)
-        .addTo(mToolbars[ToolbarEdit]);
-    A(mDocument->undoGroup()->createRedoAction(this))
+        .addTo(_toolbars[ToolbarEdit]);
+    A(_document->undoGroup()->createRedoAction(this))
         .icon(icons::Redo)
         .shortcut(QKeySequence::Redo)
-        .addTo(mToolbars[ToolbarEdit]);
+        .addTo(_toolbars[ToolbarEdit]);
     A(tr("Undo History..."), tr("Shows the Undo History for the current song"));
     SEP(); // -----------------------------------------------------------------
-    mToolbars[ToolbarEdit]->addSeparator();
+    _toolbars[ToolbarEdit]->addSeparator();
     A(tr("C&ut"), tr("Copies and deletes selection to the clipboard"))
         .icon(icons::Cut)
         .shortcut(QKeySequence::Cut)
         // .triggers(mPatternEditor, &PatternEditor::cut)
-        .addTo(mToolbars[ToolbarEdit]);
+        .addTo(_toolbars[ToolbarEdit]);
     A(tr("&Copy"), tr("Copies selected rows to the clipboard"))
         .icon(icons::Copy)
         .shortcut(QKeySequence::Copy)
         // .triggers(mPatternEditor, &PatternEditor::copy)
-        .addTo(mToolbars[ToolbarEdit]);
+        .addTo(_toolbars[ToolbarEdit]);
     A(tr("&Paste"), tr("Pastes contents at the cursor"))
         .icon(icons::Paste)
         .shortcut(QKeySequence::Paste)
         // .triggers(mPatternEditor, &PatternEditor::paste)
-        .addTo(mToolbars[ToolbarEdit]);
+        .addTo(_toolbars[ToolbarEdit]);
     A(tr("Paste &Mix"),
       tr("Pastes contents at the cursor, merging with existing rows"))
         // .triggers(mPatternEditor, &PatternEditor::pasteMix)
@@ -291,8 +293,8 @@ void MainWindow::initMenuBar() {
         .checkable()
         .checked()
         // .toggles(mPatternEditor, &PatternEditor::setKeyRepeat)
-        .store(mUi.actKeyRepeat)
-        .addTo(mToolbars[ToolbarInput]);
+        .store(_ui.actKeyRepeat)
+        .addTo(_toolbars[ToolbarInput]);
 
     // ================================================================= Module
     MENU(tr("&Module"));
@@ -363,44 +365,44 @@ void MainWindow::initMenuBar() {
     MENU(tr("&Tracker"));
     A(tr("&Play"),
       tr("Resume playing or play the song from the current position"))
-        .addTo(mToolbars[ToolbarTracker])
+        .addTo(_toolbars[ToolbarTracker])
         .icon(icons::Play);
     A(tr("Play from start"), tr("Begin playback of the song from the start"))
-        .addTo(mToolbars[ToolbarTracker])
+        .addTo(_toolbars[ToolbarTracker])
         .shortcut(tr("F5"))
         .icon(icons::PlayStart);
     A(tr("Play at cursor"), tr("Begin playback from the cursor"))
-        .addTo(mToolbars[ToolbarTracker])
+        .addTo(_toolbars[ToolbarTracker])
         .shortcut(tr("F6"))
         .icon(icons::PlayCursor);
     A(tr("Step row"), tr("Play and hold the row at the cursor"))
-        .addTo(mToolbars[ToolbarTracker])
+        .addTo(_toolbars[ToolbarTracker])
         .shortcut(tr("F7"))
         .icon(icons::Step);
     A(tr("&Stop"), tr("Stop playing"))
-        .addTo(mToolbars[ToolbarTracker])
+        .addTo(_toolbars[ToolbarTracker])
         .shortcut(tr("F8"))
         .icon(icons::Stop);
     A("Pattern repeat", "Toggles pattern repeat mode")
-        .addTo(mToolbars[ToolbarTracker])
+        .addTo(_toolbars[ToolbarTracker])
         .checkable()
         .shortcut(tr("F9"))
-        .store(mUi.actPatternRepeat)
+        .store(_ui.actPatternRepeat)
         .icon(icons::Repeat);
     A(tr("Record"), tr("Toggles record mode"))
-        .addTo(mToolbars[ToolbarTracker])
+        .addTo(_toolbars[ToolbarTracker])
         .checkable()
         .shortcut(tr("Space"))
-        .store(mUi.actRecord)
+        .store(_ui.actRecord)
         .icon(icons::Record);
-    mToolbars[ToolbarTracker]->addAction(prevAction);
-    mToolbars[ToolbarTracker]->addAction(nextAction);
+    _toolbars[ToolbarTracker]->addAction(prevAction);
+    _toolbars[ToolbarTracker]->addAction(nextAction);
     A(tr("Follow-mode"), tr("Toggles follow mode"))
         .checkable()
         .checked()
         .shortcut(tr("ScrollLock"))
-        .store(mUi.actFollowMode)
-        .addTo(mToolbars[ToolbarTracker]);
+        .store(_ui.actFollowMode)
+        .addTo(_toolbars[ToolbarTracker]);
     SEP(); // -----------------------------------------------------------------
     A(tr("Toggle channel output"),
       tr("Enables/disables sound output for the current track"))
@@ -414,18 +416,18 @@ void MainWindow::initMenuBar() {
     // =================================================================== View
     MENU(tr("&View"));
     A(tr("Side Bar"), tr("Toggles visibility of the Side Bar"))
-        .addTo(mToolbars[ToolbarView])
+        .addTo(_toolbars[ToolbarView])
         .checkable()
         .checked()
-        .toggles(lazyslotx(mUi.sidebar, setVisible))
-        .store(mUi.actShowSidebar)
+        .toggles(lazyslotx(_ui.sidebar, setVisible))
+        .store(_ui.actShowSidebar)
         .icon(icons::Sidebar);
     A(tr("Data Bar"), tr("Toggles visibility of the Data Bar"))
-        .addTo(mToolbars[ToolbarView])
+        .addTo(_toolbars[ToolbarView])
         .checkable()
         .checked()
-        .toggles(lazyslotx(mUi.databar, setVisible))
-        .store(mUi.actShowDatabar)
+        .toggles(lazyslotx(_ui.databar, setVisible))
+        .store(_ui.actShowDatabar)
         .icon(icons::Databar);
     A(tr("Audio Scope"), tr("Enables the audio oscilloscope in the Side Bar"))
         .checkable()
@@ -433,12 +435,12 @@ void MainWindow::initMenuBar() {
     A(tr("Status Bar"), tr("Toggles visibility of the Status Bar"))
         .checkable()
         .checked()
-        .store(mUi.actShowStatusbar)
+        .store(_ui.actShowStatusbar)
         .toggles(statusBar(), &QStatusBar::setVisible);
     SEP(); // -----------------------------------------------------------------
     {
         SUBMENU(tr("Toolbars"));
-        for (auto toolbar : mToolbars) {
+        for (auto toolbar : _toolbars) {
             menu->addAction(toolbar->toggleViewAction());
         }
     }
@@ -479,19 +481,19 @@ void MainWindow::initUi() {
         return result;
     };
 
-    mUi.sidebar = new Sidebar(mSongListModel, mSongModel);
-    mUi.editor = newPlaceholder("Pattern Editor");
-    mUi.databar = new QSplitter(Qt::Vertical);
-    mUi.instruments = newPlaceholder("Instruments");
-    mUi.waveforms = newPlaceholder("Waveforms");
-    mUi.databar->addWidget(mUi.instruments);
-    mUi.databar->addWidget(mUi.waveforms);
-    mUi.hsplitter = new QSplitter(Qt::Horizontal);
-    mUi.hsplitter->addWidget(mUi.editor);
-    mUi.hsplitter->addWidget(mUi.databar);
+    _ui.sidebar = new Sidebar(_songListModel, _songModel);
+    _ui.editor = newPlaceholder("Pattern Editor");
+    _ui.databar = new QSplitter(Qt::Vertical);
+    _ui.instruments = newPlaceholder("Instruments");
+    _ui.waveforms = newPlaceholder("Waveforms");
+    _ui.databar->addWidget(_ui.instruments);
+    _ui.databar->addWidget(_ui.waveforms);
+    _ui.hsplitter = new QSplitter(Qt::Horizontal);
+    _ui.hsplitter->addWidget(_ui.editor);
+    _ui.hsplitter->addWidget(_ui.databar);
 
-    layout->addWidget(mUi.sidebar);
-    layout->addWidget(mUi.hsplitter, 1);
+    layout->addWidget(_ui.sidebar);
+    layout->addWidget(_ui.hsplitter, 1);
     container->setLayout(layout);
 
     setCentralWidget(container);
@@ -518,39 +520,39 @@ void MainWindow::loadSettings() {
         }
     };
     restoreState(s.value(lit::state).toByteArray(), TU::cWindowStateVers);
-    setActionChecked(mUi.actShowDatabar, s.value(TU::cKeyShowDatabar));
-    setActionChecked(mUi.actShowSidebar, s.value(TU::cKeyShowSidebar));
-    setActionChecked(mUi.actShowStatusbar, s.value(TU::cKeyShowStatusbar));
-    setActionChecked(mUi.actKeyRepeat, s.value(TU::cKeyKeyRepeat));
-    setActionChecked(mUi.actFollowMode, s.value(TU::cKeyFollowMode));
-    setActionChecked(mUi.actPatternRepeat, s.value(TU::cKeyPatternRepeat));
-    setActionChecked(mUi.actRecord, s.value(TU::cKeyRecord));
+    setActionChecked(_ui.actShowDatabar, s.value(TU::cKeyShowDatabar));
+    setActionChecked(_ui.actShowSidebar, s.value(TU::cKeyShowSidebar));
+    setActionChecked(_ui.actShowStatusbar, s.value(TU::cKeyShowStatusbar));
+    setActionChecked(_ui.actKeyRepeat, s.value(TU::cKeyKeyRepeat));
+    setActionChecked(_ui.actFollowMode, s.value(TU::cKeyFollowMode));
+    setActionChecked(_ui.actPatternRepeat, s.value(TU::cKeyPatternRepeat));
+    setActionChecked(_ui.actRecord, s.value(TU::cKeyRecord));
     auto setSpinValue = [](QSpinBox *spin, QVariant const &val) {
         if (!val.isNull() && val.canConvert<int>()) {
             spin->setValue(val.toInt());
         }
     };
-    setSpinValue(mUi.inputOctaveSpin, s.value(TU::cKeyOctave));
-    setSpinValue(mUi.inputEditStep, s.value(TU::cKeyEditStep));
-    mUi.hsplitter->restoreState(s.value(TU::cKeySplitterH).toByteArray());
-    mUi.databar->restoreState(s.value(TU::cKeySplitterV).toByteArray());
+    setSpinValue(_ui.inputOctaveSpin, s.value(TU::cKeyOctave));
+    setSpinValue(_ui.inputEditStep, s.value(TU::cKeyEditStep));
+    _ui.hsplitter->restoreState(s.value(TU::cKeySplitterH).toByteArray());
+    _ui.databar->restoreState(s.value(TU::cKeySplitterV).toByteArray());
 }
 
 void MainWindow::saveSettings() {
     Settings s(SettingsState, TU::cGroup);
     s.setValue(lit::geometry, saveGeometry());
     s.setValue(lit::state, saveState(TU::cWindowStateVers));
-    s.setValue(TU::cKeyShowSidebar, mUi.actShowSidebar->isChecked());
-    s.setValue(TU::cKeyShowDatabar, mUi.actShowDatabar->isChecked());
-    s.setValue(TU::cKeyShowStatusbar, mUi.actShowStatusbar->isChecked());
-    s.setValue(TU::cKeyOctave, mUi.inputOctaveSpin->value());
-    s.setValue(TU::cKeyEditStep, mUi.inputEditStep->value());
-    s.setValue(TU::cKeyKeyRepeat, mUi.actKeyRepeat->isChecked());
-    s.setValue(TU::cKeyFollowMode, mUi.actFollowMode->isChecked());
-    s.setValue(TU::cKeyPatternRepeat, mUi.actPatternRepeat->isChecked());
-    s.setValue(TU::cKeyRecord, mUi.actRecord->isChecked());
-    s.setValue(TU::cKeySplitterV, mUi.databar->saveState());
-    s.setValue(TU::cKeySplitterH, mUi.hsplitter->saveState());
+    s.setValue(TU::cKeyShowSidebar, _ui.actShowSidebar->isChecked());
+    s.setValue(TU::cKeyShowDatabar, _ui.actShowDatabar->isChecked());
+    s.setValue(TU::cKeyShowStatusbar, _ui.actShowStatusbar->isChecked());
+    s.setValue(TU::cKeyOctave, _ui.inputOctaveSpin->value());
+    s.setValue(TU::cKeyEditStep, _ui.inputEditStep->value());
+    s.setValue(TU::cKeyKeyRepeat, _ui.actKeyRepeat->isChecked());
+    s.setValue(TU::cKeyFollowMode, _ui.actFollowMode->isChecked());
+    s.setValue(TU::cKeyPatternRepeat, _ui.actPatternRepeat->isChecked());
+    s.setValue(TU::cKeyRecord, _ui.actRecord->isChecked());
+    s.setValue(TU::cKeySplitterV, _ui.databar->saveState());
+    s.setValue(TU::cKeySplitterH, _ui.hsplitter->saveState());
 }
 
 #undef TU

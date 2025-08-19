@@ -3,14 +3,12 @@
 
 #include <QShowEvent>
 
-PersistantDialog::PersistantDialog(QWidget *parent, Qt::WindowFlags flags) :
-    QDialog(parent, flags),
-    mShown(false)
-{
-}
+PersistantDialog::PersistantDialog(QWidget *parent, Qt::WindowFlags flags)
+    : QDialog(parent, flags)
+    , _shown(false) {}
 
 void PersistantDialog::showEvent(QShowEvent *evt) {
-    if (mShown) {
+    if (_shown) {
         // accepting the event prevents the dialog from being centered within
         // the parent widget (MainWindow).
 
@@ -18,8 +16,7 @@ void PersistantDialog::showEvent(QShowEvent *evt) {
         evt->accept();
     } else {
         // dialog hasn't been shown yet, center it within the parent widget
-        mShown = true;
+        _shown = true;
         QDialog::showEvent(evt);
     }
-
 }

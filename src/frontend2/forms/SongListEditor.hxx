@@ -26,6 +26,6 @@ private:
     void moveUp();
     void moveDown();
 
-    SongListEditorModel *mModel;
-    QTreeView *mView;
+    SongListEditorModel *_model;
+    QTreeView *_view;
 };

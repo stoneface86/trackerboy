@@ -33,12 +33,12 @@ private:
 
     void setDirty();
 
-    QLineEdit *mLineTitle;
-    QLineEdit *mLineArtist;
-    QLineEdit *mLineCopyright;
+    QLineEdit *_lineTitle;
+    QLineEdit *_lineArtist;
+    QLineEdit *_lineCopyright;
 
-    TickrateForm *mTickrate;
+    TickrateForm *_tickrate;
 
-    QLabel *mRevisionLabel;
-    QPushButton *mSaveButton;
+    QLabel *_revisionLabel;
+    QPushButton *_saveButton;
 };
