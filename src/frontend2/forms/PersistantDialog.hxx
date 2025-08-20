@@ -13,13 +13,13 @@ class PersistantDialog : public QDialog {
 public:
     explicit PersistantDialog(QWidget *parent = nullptr,
                               Qt::WindowFlags flags = Qt::WindowFlags());
-    // virtual destructor not needed
 
 protected:
+    virtual void hideEvent(QHideEvent *evt) override;
     virtual void showEvent(QShowEvent *evt) override;
 
 private:
     Q_DISABLE_COPY(PersistantDialog)
 
-    bool _shown;
+    QRect _geometry;
 };
