@@ -34,6 +34,7 @@ private:
     Q_DISABLE_COPY(MainWindow)
 
     void updateIcons();
+    void updateSongSelectActions();
 
     // slots
     void onNew();
@@ -43,6 +44,8 @@ private:
     void onExportToWav();
     void onRecentFile();
     void onConfiguration();
+    void onModulePrevSong();
+    void onModuleNextSong();
 
     void showSongListEditor();
 
@@ -90,6 +93,8 @@ private:
         QSpinBox *inputOctaveSpin;
         QSpinBox *inputEditStep;
         // actions that we need to reference later
+        QAction *actSongPrev;
+        QAction *actSongNext;
         QAction *actKeyRepeat;
         QAction *actFollowMode;
         QAction *actPatternRepeat;

@@ -17,8 +17,8 @@ SongSettingsWidget::SongSettingsWidget(SongModel *model, QWidget *parent)
     };
 
     _nameEdit = new QLineEdit;
-    _rpbSpin = makeSpinBox(0, 255);
-    _rpmSpin = makeSpinBox(0, 255);
+    _rpbSpin = makeSpinBox(1, 255);
+    _rpmSpin = makeSpinBox(1, 255);
     _patternSizeSpin = makeSpinBox(1, 256);
     _speedSpin = new CustomSpinBox;
     _speedSpin->setDigits(2);
@@ -69,6 +69,8 @@ SongSettingsWidget::SongSettingsWidget(SongModel *model, QWidget *parent)
     lazyconnect(_nameEdit, textEdited, _model, setName);
     lazyconnect(_model->listModel(), modelReset, this, loadName);
     lazyconnect(_model, speedChanged, this, setSpeedDisplay);
+    lazyconnect(_model, speedChanged, this, setTempoDisplay);
+    lazyconnect(_model, rowsPerBeatChanged, this, setTempoDisplay);
     lazyconnect(_model, tickrateChanged, this, setTempoDisplay);
 
     lazyconnect(_rpbSpin, valueChanged, _model, setRowsPerBeat);

@@ -298,14 +298,14 @@ void MainWindow::initMenuBar() {
 
     // ================================================================= Module
     MENU(tr("&Module"));
-    QAction *prevAction;
-    QAction *nextAction;
     A(tr("Previous song"), tr("Selects the previous song in the list"))
         .icon(icons::SongPrev)
-        .store(prevAction);
+        .store(_ui.actSongPrev)
+        .triggers(lazyslotx(this, onModulePrevSong));
     A(tr("Next song"), tr("Selects the next song in the list"))
         .icon(icons::SongNext)
-        .store(nextAction);
+        .store(_ui.actSongNext)
+        .triggers(lazyslotx(this, onModuleNextSong));
     SEP(); // -----------------------------------------------------------------
     A(tr("Comments..."), tr("Edit/view the module's comments"))
         .triggers(lazyslotx(this, showComments));
@@ -395,8 +395,8 @@ void MainWindow::initMenuBar() {
         .shortcut(tr("Space"))
         .store(_ui.actRecord)
         .icon(icons::Record);
-    _toolbars[ToolbarTracker]->addAction(prevAction);
-    _toolbars[ToolbarTracker]->addAction(nextAction);
+    _toolbars[ToolbarTracker]->addAction(_ui.actSongPrev);
+    _toolbars[ToolbarTracker]->addAction(_ui.actSongNext);
     A(tr("Follow-mode"), tr("Toggles follow mode"))
         .checkable()
         .checked()
@@ -464,6 +464,8 @@ void MainWindow::initMenuBar() {
 #undef SEP
 #undef MENU
 #undef SUBMENU
+
+    updateSongSelectActions();
 }
 
 void MainWindow::initStatusBar() {
@@ -497,6 +499,8 @@ void MainWindow::initUi() {
     container->setLayout(layout);
 
     setCentralWidget(container);
+    lazyconnect(_document, songChanged, this, updateSongSelectActions);
+    lazyconnect(_songListModel, modelReset, this, updateSongSelectActions);
 }
 
 void MainWindow::loadSettings() {
@@ -553,6 +557,20 @@ void MainWindow::saveSettings() {
     s.setValue(TU::cKeyRecord, _ui.actRecord->isChecked());
     s.setValue(TU::cKeySplitterV, _ui.databar->saveState());
     s.setValue(TU::cKeySplitterH, _ui.hsplitter->saveState());
+}
+
+void MainWindow::updateSongSelectActions() {
+    auto const currentSong = _document->song();
+    _ui.actSongPrev->setEnabled(currentSong > 0);
+    _ui.actSongNext->setEnabled(currentSong + 1 < _songListModel->rowCount());
+}
+
+void MainWindow::onModuleNextSong() {
+    _document->selectSong(_document->song() + 1);
+}
+
+void MainWindow::onModulePrevSong() {
+    _document->selectSong(_document->song() - 1);
 }
 
 #undef TU
