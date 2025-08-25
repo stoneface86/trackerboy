@@ -11,7 +11,7 @@
 class SongListEditor : public PersistantDialog {
     Q_OBJECT
 public:
-    explicit SongListEditor(SongListModel *model, QWidget *parent = nullptr);
+    explicit SongListEditor(NameListModel *model, QWidget *parent = nullptr);
 
     void applyChanges(Document &document);
     void revertChanges();

@@ -66,6 +66,11 @@ proc constvar*(name: string; R: typedesc[range]) =
 proc alias*(ident, expression: string; ) =
   aliases.add(&"using {ident} = {expression};\n")
 
+proc frontEnum*(E: typedesc[enum]) =
+  alias($E, intToC(sizeof(E), false))
+  for e in E:
+    constvar(symbolName(e), $E, $ord(e))
+
 template frontRef*(T: typedesc[ref]) {.dirty.} =
   proc `ref`*(x: T) {.front.} =
     GcRef(x)
@@ -97,8 +102,8 @@ $defines@
 
 namespace B {
 // Nim-generated variables
-$vars@
 $aliases@
+$vars@
 }
 
 """

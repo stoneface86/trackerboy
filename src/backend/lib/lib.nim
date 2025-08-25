@@ -8,7 +8,8 @@ import
     input, 
     io,
     interop, 
-    notes
+    notes,
+    text
   ]
 
 

@@ -1,7 +1,7 @@
 
 import 
   ./[core, interop],
-  libtrackerboy/data,
+  libtrackerboy/[data, text],
   std/[locks]
 
 const nonCopyableDecl = """
@@ -15,20 +15,27 @@ $2
 {.pragma: nonCopyable, codegenDecl: nonCopyableDecl.}
 
 type
-  SongCursor* {.exportc, nonCopyable.} = object
-    song: ref Song
-    parent: ptr Module
-
   ModuleCursor* {.exportc, nonCopyable.} = object
     obj: Module
+  
+  SongCursor* {.exportc, nonCopyable.} = object
+    `ref`*: ref Song
+    parent*: ptr Module
+
+  InstrumentCursor* {.exportc, nonCopyable.} = object
+    `ref`: ref Instrument
+  
+  WaveformCursor* {.exportc, nonCopyable.} = object
+    `ref`: ref Waveform
 
   Document* {.exportc.} = object
     # public
-    song*: SongCursor
     `mod`*: ModuleCursor
+    song*: SongCursor
+    inst*: InstrumentCursor
+    wave*: WaveformCursor
     # private
     pLock: Lock
-
 
   ModuleProperties* {.exportc.} = object
     title*: InfoString
@@ -38,17 +45,28 @@ type
     revMajor*: uint8
     revMinor*: uint8
 
+  ItemCategory* {.exportc.} = enum
+    catSong
+    catInstrument
+    catWaveform
+
+  ItemName* {.exportc.} = object
+    id*: uint8
+    value*: BSlice
+
+
 static:
-  constvar("SystemDmg", systemDmg.uint8)
-  constvar("SystemSgb", systemSgb.uint8)
-  constvar("SystemCustom", systemCustom.uint8)
   constvar("InfoStringLen", len(InfoString))
   constvar("SpeedLow", rangeSpeed.a.int)
   constvar("SpeedHigh", rangeSpeed.b.int)
   # provide aliases for the ugly identifiers nim generates
   alias("Tickrate", "decltype(ModuleProperties::tickrate)")
-  alias("System", "decltype(Tickrate::system)")
   alias("InfoString", "decltype(ModuleProperties::title)")
+  # expose enums to the front-end as constexpr variables
+  frontEnum(ChannelId)
+  frontEnum(System)
+  frontEnum(SequenceKind)
+  frontEnum(ItemCategory)
 
 template module*(d: Document): Module =
   d.`mod`.obj
@@ -56,14 +74,14 @@ template module*(d: Document): Module =
 template `module=`(d: var Document; m: Module) =
   d.`mod`.obj = m
 
-template `@`(s: SongCursor): Song =
-  s.song[]
+template `@`(c: SongCursor | InstrumentCursor | WaveformCursor): auto =
+  c.`ref`[]
 
 template `@`(m: ModuleCursor): Module =
   m.obj
 
 proc resetCursors(d: var Document) =
-  d.song.song = d.module.songs.mget(0)
+  d.song.`ref` = d.module.songs.mget(0)
 
 proc destructor(d: var Document) 
   {.front, autodestructor.} =
@@ -101,7 +119,17 @@ proc unlock*(d: var Document)
 proc selectSong*(d: var Document; songNo: int)
   {.front, automember.} =
   if songNo in 0 ..< d.module.songs.len:
-    d.song.song = d.module.songs.mget(songNo)
+    d.song.`ref` = d.module.songs.mget(songNo)
+
+proc getOrNil(t: var SomeTable; id: int): auto =
+  if id in 0 .. high(TableId).int:
+    result = t[TableId(id)]
+
+proc selectInstrument*(d: var Document; id: int) =
+  d.inst.`ref` = getOrNil(d.module.instruments, id)
+
+proc selectWaveform*(d: var Document; id: int) =
+  d.wave.`ref` = getOrNil(d.module.waveforms, id)
 
 # ModuleCursor methods
 
@@ -145,6 +173,54 @@ proc setModuleProperties*(m: var ModuleCursor; props {.byref.}: ModuleProperties
   @m.artist = props.artist
   @m.copyright = props.copyright
   @m.tickrate = props.tickrate
+
+# item management
+
+proc itemCount*(m: ModuleCursor; cat: ItemCategory): int
+  {.front, automember.} =
+  case cat
+  of catSong: @m.songs.len()
+  of catInstrument: @m.instruments.len()
+  of catWaveform: @m.waveforms.len()
+
+proc itemName*(m: ModuleCursor; cat: ItemCategory; id: uint8): ItemName
+  {.front, automember.} =
+
+  proc itemNameInTable(t: SomeTable; startingId: uint8): ItemName =
+    var id = TableId(startingId)
+    while id < high(TableId):
+      if id in t:
+        result.id = id
+        result.value = slice(t[id][].name)
+        break
+      inc id
+
+  case cat
+  of catSong:
+    result.id = id
+    result.value = slice(@m.songs.get(id)[].name)
+  of catInstrument:
+    result = itemNameInTable(@m.instruments, id)
+  of catWaveform:
+    result = itemNameInTable(@m.waveforms, id)
+  
+
+proc itemSetName*(m: var ModuleCursor; cat: ItemCategory; id: uint8;
+                  name: string)
+  {.front, automember.} =
+  proc setName(t: var SomeTable; id: uint8; name: string) =
+    t[TableId(id)].name = name
+  
+  case cat
+  of catSong:
+    @m.songs.mget(id).name = name
+  of catInstrument:
+    setName(@m.instruments, id, name)
+  of catWaveform:
+    setName(@m.waveforms, id, name)
+  
+
+# SongCursor methods
 
 proc rowsPerBeat*(s: SongCursor): int
   {.front, automember.} =
@@ -239,13 +315,6 @@ proc duplicate*(t: var SongListChanges; index: uint8)
   {.front, automember.} =
   t.data.add(SongListChange(kind: duplicate, index: index))
 
-# proc setNameOfLast*(t: var SongListChanges; name: string)
-#   {.front, automember.} =
-#   proc setName(c: var SongListChange; name: string) =
-#     c.name = name
-#     c.setName = true
-#   t.data[^1].setName(name)
-
 proc setSongList*(d: var Document; changes {.bycref.}: SongListChanges)
   {.front, automember.} =
   var list: seq[ref Song]
@@ -267,4 +336,71 @@ proc setSongList*(d: var Document; changes {.bycref.}: SongListChanges)
     list.add(song)
 
   d.module.songs.data() = list
+
+# InstrumentCursor methods
+
+proc channel*(i: InstrumentCursor): ChannelId
+  {.front, automember.} =
+  result = @i.channel
+
+proc setChannel*(i: var InstrumentCursor; ch: ChannelId)
+  {.front, automember.} =
+  @i.channel = ch
+
+proc sample*(c: InstrumentCursor; sk: SequenceKind; i: int): int8
+  {.front, automember.} =
+  result = cast[int8](@c.sequences[sk][i])
+
+proc setSample*(c: var InstrumentCursor; sk: SequenceKind; i: int; sample: int8)
+  {.front, automember.} =
+  @c.sequences[sk][i] = cast[uint8](sample)
+
+proc sequenceLen*(c: InstrumentCursor; sk: SequenceKind): int
+  {.front, automember.} =
+  result = @c.sequences[sk].len()
+
+proc setSequenceLen*(c: var InstrumentCursor; sk: SequenceKind; len: int)
+  {.front, automember.} =
+  @c.sequences[sk].setLen(len)
+
+proc sequenceAsText*(c: InstrumentCursor; sk: SequenceKind): string
+  {.front, automember.} =
+  result = sequenceText(@c.sequences[sk])
+
+proc setSequence*(c: var InstrumentCursor; sk: SequenceKind; text: string;
+                  minVal: int8; maxVal: int8;
+                  ): bool
+  {.front, automember.} =
+  let parsed = parseSequence(text, minVal, maxVal)
+  result = parsed.isSome()
+  if result:
+    @c.sequences[sk] = parsed.get()
+
+# WaveformCursor methods
+
+proc sample*(w: WaveformCursor; i: int): int8
+  {.front, automember.} =
+  let pair = @w.data[i]
+  if (uint(i) and 1) == 0:
+    result = int8(pair shr 4)
+  else:
+    result = int8(pair and 0xF)
+
+proc setSample*(w: var WaveformCursor; i: int; sample: int8)
+  {.front, automember.} =
+  let pair = addr(@w.data[i div 2])
+  if (uint(i) and 1) == 0:
+    pair[] = (pair[] and 0x0F) or (uint8(sample) shl 4)
+  else:
+    pair[] = (pair[] and 0xF0) or uint8(sample)
+
+proc asText*(w: WaveformCursor; outText: var WaveDataString)
+  {.front, automember.} =
+  outText = waveText(@w.data)
+
+proc setFromText*(w: var WaveformCursor; text: WaveDataString)
+  {.front, automember.} =
+  let parsed = parseWave(text)
+  if parsed.isSome():
+    @w.data = parsed.get()
 

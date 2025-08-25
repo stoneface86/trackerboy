@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "model/SongListModel.hxx"
+#include "model/NameListModel.hxx"
 #include "model/SongModel.hxx"
 
 #include <QComboBox>
@@ -11,7 +11,7 @@ class Sidebar : public QWidget {
     Q_OBJECT
 
 public:
-    explicit Sidebar(SongListModel *listModel, SongModel *songModel,
+    explicit Sidebar(NameListModel *listModel, SongModel *songModel,
                      QWidget *parent = nullptr);
 
 private:

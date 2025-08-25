@@ -29,7 +29,7 @@ static strlit cGroup = "SongListEditor";
 
 } // namespace TU
 
-SongListEditor::SongListEditor(SongListModel *model, QWidget *parent)
+SongListEditor::SongListEditor(NameListModel *model, QWidget *parent)
     : PersistantDialog(parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint |
                                    Qt::WindowCloseButtonHint)
     , _model(new SongListEditorModel(model, this))

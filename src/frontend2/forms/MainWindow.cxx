@@ -45,7 +45,7 @@ MainWindow::MainWindow()
     : QMainWindow()
     , _recentFiles()
     , _document(new Document(this))
-    , _songListModel(new SongListModel(_document, this))
+    , _songListModel(new NameListModel(_document, B::catSong, this))
     , _songModel(new SongModel(_document, _songListModel, this))
     , _songListEditor(nullptr)
     , _moduleProperties(nullptr)
@@ -455,6 +455,13 @@ void MainWindow::initMenuBar() {
     A(tr("User &manual..."), tr("Opens the online user manual"))
         .shortcut(tr("F2"));
     A(tr("Audio &diagnostics..."), tr("Shows the audio diagnostics dialog"));
+#ifdef QT_DEBUG
+    {
+        SUBMENU(tr("Debug"));
+        A(tr("Commit"), tr("Commit all pending data to module"))
+            .triggers(_document, &Document::aboutToSave);
+    }
+#endif
     SEP(); // -----------------------------------------------------------------
     A(tr("&About"), tr("About this program"));
     A(tr("About &Qt"), tr("Shows information about Qt"))

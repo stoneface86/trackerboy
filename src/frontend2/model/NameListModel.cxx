@@ -1,0 +1,129 @@
+
+#include "model/NameListModel.hxx"
+#include "utils/backendutils.hxx"
+#include "utils/connectutils.hxx"
+
+NameListModel::NameListModel(Document *doc, B::ItemCategory cat,
+                             QObject *parent)
+    : QAbstractListModel(parent)
+    , _document(doc)
+    , _list()
+    , _cat(cat) {
+
+    lazyconnect(_document, reloaded, this, load);
+    lazyconnect(_document, aboutToSave, this, commit);
+
+    load(true);
+}
+
+Document *NameListModel::document() const {
+    return _document;
+}
+
+Qt::ItemFlags NameListModel::flags(QModelIndex const &index) const {
+    if (index.isValid()) {
+        return Qt::ItemIsSelectable | Qt::ItemIsEnabled |
+               Qt::ItemNeverHasChildren;
+    }
+
+    return Qt::NoItemFlags;
+}
+
+int NameListModel::rowCount(QModelIndex const &index) const {
+    Q_UNUSED(index)
+    return _list.size();
+}
+
+QVariant NameListModel::data(QModelIndex const &index, int role) const {
+    if (index.isValid()) {
+        switch (role) {
+        case Qt::DisplayRole: {
+            auto const &name = _list[index.row()];
+            QString result;
+            if (_cat == B::catSong) {
+                result = QString::number(name.id + 1);
+                result.append(". ");
+            } else {
+                // catInstrument, catWaveform
+                auto const idstr = B::text(name.id);
+                result.append(QChar(idstr.data[0]));
+                result.append(QChar(idstr.data[1]));
+                result.append(" - ");
+            }
+            result.append(name.value);
+#ifdef QT_DEBUG
+            // add a '*' for changed names for debugging purposes
+            if (name.changed) {
+                result.append('*');
+            }
+#endif
+            return result;
+        }
+        default:
+            break;
+        }
+    }
+
+    return {};
+}
+
+QString const &NameListModel::name(int index) const {
+    return _list[index].value;
+}
+
+void NameListModel::setName(int index, QString const &name) {
+    auto &at = _list[index];
+    if (at.value != name) {
+        at.value = name;
+        at.changed = true;
+        auto const mindex = createIndex(index, 0);
+        emit dataChanged(mindex, mindex);
+    }
+}
+
+NameList const &NameListModel::list() const {
+    return _list;
+}
+
+void NameListModel::setList(NameList const &list) {
+    beginResetModel();
+    _list = list;
+    endResetModel();
+}
+
+void NameListModel::load(bool newModule) {
+    beginResetModel();
+    if (newModule) {
+        _list.clear();
+        if (_cat == B::catSong) {
+            _list.append({true, 0, _document->defaultSongName()});
+        }
+    } else {
+        auto view = _document->view();
+        auto const size = view->mod.itemCount(_cat);
+        u8 lastId = 0;
+        _list.resize(size);
+        for (B::NI i = 0; i < size; ++i) {
+            auto &item = _list[i];
+            item.changed = false;
+            auto const name = view->mod.itemName(_cat, lastId);
+            item.id = name.id;
+            item.value = toQString(name.value);
+            lastId = name.id + 1;
+        }
+    }
+    endResetModel();
+}
+
+void NameListModel::commit() {
+    auto edit = _document->edit();
+    for (auto &name : _list) {
+        if (name.changed) {
+            name.changed = false;
+            edit->mod.itemSetName(_cat, name.id, toNimString(name.value).s);
+#ifdef QT_DEBUG
+            emit dataChanged(createIndex(name.id, 0), createIndex(name.id, 0));
+#endif
+        }
+    }
+}

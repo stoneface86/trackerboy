@@ -21,9 +21,9 @@ TickrateForm::TickrateForm(QWidget *parent)
     _customRate->setRange(1.0, 131072.0);
     _customRate->setSuffix(tr(" Hz"));
     _customRate->setDecimals(4);
-    _buttons->addButton(tickrateDmg, B::SystemDmg);
-    _buttons->addButton(tickrateSgb, B::SystemSgb);
-    _buttons->addButton(tickrateCustom, B::SystemCustom);
+    _buttons->addButton(tickrateDmg, B::systemDmg);
+    _buttons->addButton(tickrateSgb, B::systemSgb);
+    _buttons->addButton(tickrateCustom, B::systemCustom);
     layout->addWidget(tickrateDmg);
     layout->addWidget(tickrateSgb);
     tickrateCustomLayout->addWidget(tickrateCustom);
@@ -34,7 +34,7 @@ TickrateForm::TickrateForm(QWidget *parent)
     lazyconnect(_customRate, valueChanged, this, tickrateChanged);
     connectLambda(_buttons, idToggled, this, [this](int id, bool on) {
         if (on) {
-            _customRate->setEnabled(id == B::SystemCustom);
+            _customRate->setEnabled(id == B::systemCustom);
             emit tickrateChanged();
         }
     });
@@ -47,6 +47,6 @@ B::Tickrate TickrateForm::tickrate() const {
 void TickrateForm::setTickrate(B::Tickrate const &tickrate) {
     QSignalBlocker blocker(this);
     _customRate->setValue(tickrate.customFramerate);
-    _customRate->setEnabled(tickrate.system == B::SystemCustom);
+    _customRate->setEnabled(tickrate.system == B::systemCustom);
     _buttons->button((int)tickrate.system)->setChecked(true);
 }

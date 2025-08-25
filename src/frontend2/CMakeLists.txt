@@ -34,7 +34,7 @@ add_library(frontendObj OBJECT
   "forms/ModulePropertiesDialog.cxx"
   "forms/PersistantDialog.cxx"
   "forms/SongListEditor.cxx"
-  "model/SongListModel.cxx"
+  "model/NameListModel.cxx"
   "model/SongListEditorModel.cxx"
   "model/SongModel.cxx"
   "resources/resources.qrc"

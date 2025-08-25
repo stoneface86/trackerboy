@@ -75,6 +75,7 @@ nim_project(buildBackend lib/lib.nim "${LIB}"
   "lib/backend/interop.nim"
   "lib/backend/io.nim"
   "lib/backend/notes.nim"
+  "lib/backend/text.nim"
 )
 
 add_library(backend STATIC IMPORTED GLOBAL)

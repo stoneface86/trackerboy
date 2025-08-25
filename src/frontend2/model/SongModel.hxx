@@ -2,7 +2,7 @@
 #pragma once
 
 #include "core/Document.hxx"
-#include "model/SongListModel.hxx"
+#include "model/NameListModel.hxx"
 
 #include <QObject>
 
@@ -11,11 +11,11 @@ class SongModel : public QObject {
     Q_OBJECT
 
 public:
-    explicit SongModel(Document *doc, SongListModel *listModel,
+    explicit SongModel(Document *doc, NameListModel *listModel,
                        QObject *parent = nullptr);
 
     Document *document() const;
-    SongListModel *listModel() const;
+    NameListModel *listModel() const;
 
     QString name() const;
 
@@ -49,5 +49,5 @@ private:
     Q_DISABLE_COPY(SongModel)
 
     Document *_document;
-    SongListModel *_listModel;
+    NameListModel *_listModel;
 };

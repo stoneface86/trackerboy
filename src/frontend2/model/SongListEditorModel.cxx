@@ -1,11 +1,10 @@
 
 #include "model/SongListEditorModel.hxx"
-#include "model/SongListModel.hxx"
 #include "utils/backendutils.hxx"
 
 #include <QMimeData>
 
-SongListEditorModel::SongListEditorModel(SongListModel *sourceModel,
+SongListEditorModel::SongListEditorModel(NameListModel *sourceModel,
                                          QObject *parent)
     : QAbstractItemModel(parent)
     , _source(sourceModel)
@@ -232,7 +231,7 @@ QVariant SongListEditorModel::headerData(int section,
 void SongListEditorModel::add() {
     auto const at = _items.size();
     beginInsertRows(QModelIndex(), at, at);
-    _items.append({-1, itemNew, true, _source->_document->defaultSongName()});
+    _items.append({-1, itemNew, true, _source->document()->defaultSongName()});
     endInsertRows();
 }
 
@@ -272,28 +271,35 @@ void SongListEditorModel::reset() {
 void SongListEditorModel::apply(Document &doc) {
     // see backend/data.nim
     auto changes = B::initSongListChanges();
-    QStringList newNames;
+    NameList newNames;
     for (auto const &item : _items) {
+        Name name;
         switch (item.action) {
         case itemKeep:
             changes.keepOriginal(item.sourceId);
+            name.changed =
+                _source->list()[item.sourceId].changed || item.nameModified;
             break;
         case itemNew:
             changes.addNew();
+            name.changed = true;
             break;
         case itemDuplicate:
             changes.duplicate(item.sourceId);
+            name.changed = true;
             break;
         case itemRemove:
             continue; // don't add the name to newNames
         }
-        newNames.append(item.name);
+        name.id = (i8)newNames.size();
+        name.value = item.name;
+        newNames.append(std::move(name));
     }
 
     beginResetModel();
 
     doc.changeSongList(changes);
-    _source->setNames(newNames);
+    _source->setList(newNames);
     setListFromSource();
 
     endResetModel();

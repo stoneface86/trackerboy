@@ -15,14 +15,13 @@ type
   Core = object
     panicCallback: PanicCallback
     tempStr: string
-
-  Wrapper*[T] = T
-    ## Allows for exporting existing types. For example:
+  
+  Box*[T] = object
+    ## Wraps a type T into a single-member object. This is typically used for
+    ## exporting Nim arrays to C, to ensure that value-semantics are used in
+    ## function parameters/return values.
     ## 
-    ##   type XFoo* {.exportc: "Foo".} = Wrapper[Foo]
-    ## 
-    ## Will have the `Foo` type generated with the exported name (assuming 
-    ## there was no use of `Foo` beforehand).
+    data*: T
 
 
 

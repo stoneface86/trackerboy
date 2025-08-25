@@ -12,7 +12,7 @@
 #include "forms/CommentsDialog.hxx"
 #include "forms/ModulePropertiesDialog.hxx"
 #include "forms/SongListEditor.hxx"
-#include "model/SongListModel.hxx"
+#include "model/NameListModel.hxx"
 #include "utils/RecentFiles.hxx"
 #include "widgets/Sidebar.hxx"
 
@@ -64,7 +64,7 @@ private:
 
     RecentFiles _recentFiles;
     Document *_document;
-    SongListModel *_songListModel;
+    NameListModel *_songListModel;
     SongModel *_songModel;
     SongListEditor *_songListEditor;
     ModulePropertiesDialog *_moduleProperties;

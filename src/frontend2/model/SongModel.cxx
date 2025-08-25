@@ -2,7 +2,7 @@
 #include "model/SongModel.hxx"
 #include "utils/backendutils.hxx"
 
-SongModel::SongModel(Document *doc, SongListModel *listModel, QObject *parent)
+SongModel::SongModel(Document *doc, NameListModel *listModel, QObject *parent)
     : QObject(parent)
     , _document(doc)
     , _listModel(listModel) {}
@@ -11,7 +11,7 @@ Document *SongModel::document() const {
     return _document;
 }
 
-SongListModel *SongModel::listModel() const {
+NameListModel *SongModel::listModel() const {
     return _listModel;
 }
 

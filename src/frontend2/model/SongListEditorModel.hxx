@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "model/SongListModel.hxx"
+#include "model/NameListModel.hxx"
 
 #include <QAbstractItemModel>
 #include <QList>
@@ -20,7 +20,7 @@ class SongListEditorModel final : public QAbstractItemModel {
     Q_OBJECT
 
 public:
-    explicit SongListEditorModel(SongListModel *sourceModel,
+    explicit SongListEditorModel(NameListModel *sourceModel,
                                  QObject *parent = nullptr);
 
     virtual Qt::ItemFlags flags(QModelIndex const &index) const override final;
@@ -81,6 +81,6 @@ private:
         QString name;
     };
 
-    SongListModel *_source;
+    NameListModel *_source;
     QList<Item> _items;
 };

@@ -9,7 +9,7 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 
-Sidebar::Sidebar(SongListModel *listModel, SongModel *songModel,
+Sidebar::Sidebar(NameListModel *listModel, SongModel *songModel,
                  QWidget *parent)
     : QWidget(parent) {
 
