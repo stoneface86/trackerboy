@@ -19,3 +19,5 @@ QString tempoToString(float tempo);
 // ie 4.125f -> "4.125 FPR"
 //
 QString speedToString(float speed);
+
+QString toHex(quint8 byte);

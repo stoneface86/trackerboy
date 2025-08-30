@@ -37,6 +37,7 @@ add_library(frontendObj OBJECT
   "model/NameListModel.cxx"
   "model/SongListEditorModel.cxx"
   "model/SongModel.cxx"
+  "model/TableModel.cxx"
   "resources/resources.qrc"
   "utils/actions.cxx"
   "utils/backendutils.cxx"

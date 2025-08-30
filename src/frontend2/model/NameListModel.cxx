@@ -2,6 +2,7 @@
 #include "model/NameListModel.hxx"
 #include "utils/backendutils.hxx"
 #include "utils/connectutils.hxx"
+#include "utils/string.hxx"
 
 NameListModel::NameListModel(Document *doc, B::ItemCategory cat,
                              QObject *parent)
@@ -9,6 +10,8 @@ NameListModel::NameListModel(Document *doc, B::ItemCategory cat,
     , _document(doc)
     , _list()
     , _cat(cat) {
+
+    _itemizer = B::initItemizer(cat);
 
     lazyconnect(_document, reloaded, this, load);
     lazyconnect(_document, aboutToSave, this, commit);
@@ -39,17 +42,7 @@ QVariant NameListModel::data(QModelIndex const &index, int role) const {
         switch (role) {
         case Qt::DisplayRole: {
             auto const &name = _list[index.row()];
-            QString result;
-            if (_cat == B::catSong) {
-                result = QString::number(name.id + 1);
-                result.append(". ");
-            } else {
-                // catInstrument, catWaveform
-                auto const idstr = B::text(name.id);
-                result.append(QChar(idstr.data[0]));
-                result.append(QChar(idstr.data[1]));
-                result.append(" - ");
-            }
+            QString result = prefixId(name.id);
             result.append(name.value);
 #ifdef QT_DEBUG
             // add a '*' for changed names for debugging purposes
@@ -65,6 +58,19 @@ QVariant NameListModel::data(QModelIndex const &index, int role) const {
     }
 
     return {};
+}
+
+QString NameListModel::prefixId(u8 id) const {
+    QString result;
+    if (_cat == B::catSong) {
+        result = QString::number((int)id + 1);
+        result.append(". ");
+    } else {
+        // catInstrument, catWaveform
+        result = toHex(id);
+        result.append(" - ");
+    }
+    return result;
 }
 
 QString const &NameListModel::name(int index) const {
@@ -100,13 +106,13 @@ void NameListModel::load(bool newModule) {
         }
     } else {
         auto view = _document->view();
-        auto const size = view->mod.itemCount(_cat);
+        auto const size = _itemizer.count(view->mod);
         u8 lastId = 0;
         _list.resize(size);
         for (B::NI i = 0; i < size; ++i) {
             auto &item = _list[i];
             item.changed = false;
-            auto const name = view->mod.itemName(_cat, lastId);
+            auto const name = _itemizer.name(view->mod, lastId);
             item.id = name.id;
             item.value = toQString(name.value);
             lastId = name.id + 1;
@@ -120,7 +126,7 @@ void NameListModel::commit() {
     for (auto &name : _list) {
         if (name.changed) {
             name.changed = false;
-            edit->mod.itemSetName(_cat, name.id, toNimString(name.value).s);
+            _itemizer.setName(edit->mod, name.id, toNimString(name.value).s);
 #ifdef QT_DEBUG
             emit dataChanged(createIndex(name.id, 0), createIndex(name.id, 0));
 #endif

@@ -34,8 +34,11 @@ public:
 
     void commit();
 
+    QString prefixId(u8 id) const;
+
 private:
     Document *_document;
     NameList _list;
     B::ItemCategory const _cat;
+    B::Itemizer _itemizer;
 };

@@ -291,7 +291,7 @@ void SongListEditorModel::apply(Document &doc) {
         case itemRemove:
             continue; // don't add the name to newNames
         }
-        name.id = (i8)newNames.size();
+        name.id = (u8)newNames.size();
         name.value = item.name;
         newNames.append(std::move(name));
     }

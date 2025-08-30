@@ -54,9 +54,19 @@ type
     id*: uint8
     value*: BSlice
 
+  ItemizerImpl = object
+    count: proc(m: Module): int {.nimcall, raises: [].}
+    name: proc(m: Module; id: uint8): ItemName {.nimcall, raises: [].}
+    setName: proc(m: var Module; id: uint8; name: string) {.nimcall, raises: [].}
+
+  Itemizer* {.exportc.} = object
+    impl: ptr ItemizerImpl
+
 
 static:
   constvar("InfoStringLen", len(InfoString))
+  constvar("TableCap", 64)
+  constvar("SongCap", 256)
   constvar("SpeedLow", rangeSpeed.a.int)
   constvar("SpeedHigh", rangeSpeed.b.int)
   # provide aliases for the ugly identifiers nim generates
@@ -167,7 +177,7 @@ proc moduleProperties*(m: ModuleCursor): ModuleProperties
   result.revMajor = uint8(@m.revisionMajor())
   result.revMinor = uint8(@m.revisionMinor())
 
-proc setModuleProperties*(m: var ModuleCursor; props {.byref.}: ModuleProperties)
+proc setModuleProperties*(m: var ModuleCursor; props {.bycref.}: ModuleProperties)
   {.front, automember.} =
   @m.title = props.title
   @m.artist = props.artist
@@ -176,49 +186,61 @@ proc setModuleProperties*(m: var ModuleCursor; props {.byref.}: ModuleProperties
 
 # item management
 
-proc itemCount*(m: ModuleCursor; cat: ItemCategory): int
-  {.front, automember.} =
-  case cat
-  of catSong: @m.songs.len()
-  of catInstrument: @m.instruments.len()
-  of catWaveform: @m.waveforms.len()
-
-proc itemName*(m: ModuleCursor; cat: ItemCategory; id: uint8): ItemName
-  {.front, automember.} =
-
-  proc itemNameInTable(t: SomeTable; startingId: uint8): ItemName =
-    var id = TableId(startingId)
-    while id < high(TableId):
-      if id in t:
-        result.id = id
-        result.value = slice(t[id][].name)
-        break
-      inc id
-
-  case cat
-  of catSong:
-    result.id = id
-    result.value = slice(@m.songs.get(id)[].name)
-  of catInstrument:
-    result = itemNameInTable(@m.instruments, id)
-  of catWaveform:
-    result = itemNameInTable(@m.waveforms, id)
+proc makeItemizer(T: typedesc[SomeData]): ItemizerImpl {.compileTime.} =
+  template getTable(m: Module): auto =
+    when T is Instrument:
+      m.instruments
+    else:
+      m.waveforms
   
+  result.count = proc(m: Module): int =
+    result = getTable(m).len()
+  
+  result.name = proc(m: Module; id: uint8): ItemName =
+    proc getNearest(t: SomeTable; startingId: uint8): ItemName =
+      var id = TableId(startingId)
+      while id < high(TableId):
+        if id in t:
+          result.id = id
+          result.value = slice(t[id][].name)
+          break
+        inc id
+    result = getNearest(getTable(m), id)
 
-proc itemSetName*(m: var ModuleCursor; cat: ItemCategory; id: uint8;
-                  name: string)
+  result.setName = proc(m: var Module; id: uint8; name: string) =
+    getTable(m)[TableId(id)].name = name
+
+const
+  SongItemizer = ItemizerImpl(
+    count: proc(m: Module): int =
+      result = m.songs.len()
+    , name: proc(m: Module; id: uint8): ItemName =
+      result.id = id
+      result.value = slice(m.songs.get(id)[].name)
+    , setName: proc(m: var Module; id: uint8; name: string) =
+      m.songs.mget(id).name = name
+  )
+  InstrumentItemizer = makeItemizer(Instrument)
+  WaveformItemizer = makeItemizer(Waveform)
+
+proc initItemizer(cat: ItemCategory): Itemizer
+  {.front.} =
+  result.impl = case cat
+  of catSong: addr(SongItemizer)
+  of catInstrument: addr(InstrumentItemizer)
+  of catWaveform: addr(WaveformItemizer)
+
+proc count*(i: Itemizer; m {.bycref.}: ModuleCursor): int
   {.front, automember.} =
-  proc setName(t: var SomeTable; id: uint8; name: string) =
-    t[TableId(id)].name = name
-  
-  case cat
-  of catSong:
-    @m.songs.mget(id).name = name
-  of catInstrument:
-    setName(@m.instruments, id, name)
-  of catWaveform:
-    setName(@m.waveforms, id, name)
-  
+  result = i.impl[].count(@m)
+
+proc name*(i: Itemizer; m {.bycref.}: ModuleCursor; id: uint8): ItemName
+  {.front, automember.} =
+  result = i.impl[].name(@m, id)
+
+proc setName*(i: var Itemizer; m: var ModuleCursor; id: uint8; name: string)
+  {.front, automember.} =
+  i.impl[].setName(@m, id, name)
 
 # SongCursor methods
 
@@ -403,4 +425,3 @@ proc setFromText*(w: var WaveformCursor; text: WaveDataString)
   let parsed = parseWave(text)
   if parsed.isSome():
     @w.data = parsed.get()
-
