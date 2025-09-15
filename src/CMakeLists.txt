@@ -9,6 +9,11 @@ project(src CXX)
 add_library(deps INTERFACE)
 target_link_libraries(deps INTERFACE vendoredIncludes)
 
+# CPM_SOURCE_CACHE is recommended when using patch files
+if (NOT DEFINED ENV{CPM_SOURCE_CACHE})
+    set(CPM_SOURCE_CACHE "${CMAKE_BINARY_DIR}/.cpm-cache")
+endif ()
+
 include(CPM)
 
 # libtrackerboy
@@ -17,6 +22,7 @@ CPMAddPackage(
     GITHUB_REPOSITORY "stoneface86/libtrackerboy"
     VERSION "cpp-last"
     GIT_TAG "cpp-last"
+    PATCHES "sweepfix.patch"
     OPTIONS
         "LIBTRACKERBOY_ENABLE_UNITY ${ENABLE_UNITY}"
     EXCLUDE_FROM_ALL ON

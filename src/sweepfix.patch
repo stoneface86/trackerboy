@@ -1,0 +1,12 @@
+diff --git a/src/engine/MusicRuntime.cpp b/src/engine/MusicRuntime.cpp
+index 61d4a22..d5ea85d 100644
+--- a/src/engine/MusicRuntime.cpp
++++ b/src/engine/MusicRuntime.cpp
+@@ -212,6 +212,7 @@ void MusicRuntime::update(RuntimeContext const& rc) {
+             if (mGlobal.sweep >= 0x80) {
+                 rc.apu.writeRegister(IApuIo::REG_NR10, mGlobal.sweep & 0x7F);
+                 state.retrigger = true;
++                mStates[+ch].frequency = 0xFFFF; // force frequency to be written
+             }
+         }
+         ChannelControl<ch>::update(rc.apu, rc.waveTable, mStates[+ch], state);

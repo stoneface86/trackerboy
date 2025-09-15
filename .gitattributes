@@ -22,3 +22,6 @@
 *.yml           text
 vendored/include/*              linguist-vendored
 vendored/miniaudio/miniaudio.c  linguist-vendored
+cmake/CPM.cmake                             linquist-vendored
+cmake/GetGitRevisionDescription.cmake       linquist-vendored
+cmake/GetGitRevisionDescription.cmake.in    linquist-vendored
