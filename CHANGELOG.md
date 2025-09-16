@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.6.6] - 2025-09-15
+
+### Fixed
+ - [#13] Frequency not set correctly when using Hxy effect
+
 ## [0.6.5] - 2024-04-23
 
 ### Fixed
