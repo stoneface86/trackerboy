@@ -6,6 +6,7 @@ out/
 tools/
 .vs/
 .vscode/
+build/
 CMakeSettings.json
 CMakeLists.txt.user
 compile_commands.json

@@ -91,7 +91,7 @@ if (BUILD_TESTING)
   set(TESTER "backendTest${CMAKE_EXECUTABLE_SUFFIX}")
   nim_project(buildBackendTest test/test.nim ${TESTER})
   add_executable(backendTest IMPORTED GLOBAL)
-  add_dependencies(backendTest buildBackendTest)
+  add_dependencies(backendTest ${TESTER})
   set_target_properties(backendTest PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/${TESTER}")
 
   add_executable(backendLinkTest "test/linkTest.cxx")

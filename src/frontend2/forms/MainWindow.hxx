@@ -14,6 +14,7 @@
 #include "forms/SongListEditor.hxx"
 #include "model/NameListModel.hxx"
 #include "utils/RecentFiles.hxx"
+#include "widgets/DataWidget.hxx"
 #include "widgets/Sidebar.hxx"
 
 class MainWindow : public QMainWindow {
@@ -65,6 +66,8 @@ private:
     RecentFiles _recentFiles;
     Document *_document;
     NameListModel *_songListModel;
+    NameListModel *_instrumentListModel;
+    NameListModel *_waveformListModel;
     SongModel *_songModel;
     SongListEditor *_songListEditor;
     ModulePropertiesDialog *_moduleProperties;
@@ -87,8 +90,8 @@ private:
         QSplitter *hsplitter;
         QLabel *editor;
         QSplitter *databar;
-        QLabel *instruments;
-        QLabel *waveforms;
+        DataWidget *instruments;
+        DataWidget *waveforms;
         // toolbar widgets
         QSpinBox *inputOctaveSpin;
         QSpinBox *inputEditStep;

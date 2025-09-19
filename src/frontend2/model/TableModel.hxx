@@ -5,29 +5,51 @@
 
 #include <QAbstractListModel>
 
-class TableModel : public QAbstractListModel {
+class TableModel final : public QAbstractListModel {
 
     Q_OBJECT
 
 public:
     explicit TableModel(NameListModel *model, QObject *parent = nullptr);
 
-    virtual Qt::ItemFlags flags(QModelIndex const &index) const override;
+    [[nodiscard]]
+    Qt::ItemFlags flags(QModelIndex const &index) const override;
 
-    virtual int
-    rowCount(QModelIndex const &index = QModelIndex()) const override;
+    [[nodiscard]]
+    int rowCount(QModelIndex const &parent = QModelIndex()) const override;
 
-    virtual QVariant data(QModelIndex const &index,
-                          int role = Qt::DisplayRole) const override;
+    [[nodiscard]] QVariant data(QModelIndex const &index,
+                                int role = Qt::DisplayRole) const override;
+
+    void setShowEmpty(bool show);
+
+    //
+    // Gets a model index for the given table id.
+    //
+    [[nodiscard]] QModelIndex indexFromTable(int tableId) const;
+
+    //
+    // Gets the table id from the model index
+    //
+    [[nodiscard]] int id(QModelIndex const &index) const;
+
+    [[nodiscard]] bool hasId(int id) const;
+
+    [[nodiscard]] bool canAdd() const;
 
     void load();
+
+    void add(int at);
+    void remove(int at);
+    void duplicate(int at);
 
 private:
     Q_DISABLE_COPY(TableModel)
 
-    static constexpr u8 cEmptyId = (u8)(B::TableCap);
+    void itemChanged(u8 id);
+    void itemAdded(u8 id, QString const &name);
+    void itemRemoved(u8 id);
 
     NameListModel *_source;
-    std::array<u8, B::TableCap> _idMap;
-    bool _showEmpty;
+    B::TableModel _backend;
 };

@@ -46,6 +46,8 @@ MainWindow::MainWindow()
     , _recentFiles()
     , _document(new Document(this))
     , _songListModel(new NameListModel(_document, B::catSong, this))
+    , _instrumentListModel(new NameListModel(_document, B::catInstrument, this))
+    , _waveformListModel(new NameListModel(_document, B::catWaveform, this))
     , _songModel(new SongModel(_document, _songListModel, this))
     , _songListEditor(nullptr)
     , _moduleProperties(nullptr)
@@ -53,6 +55,9 @@ MainWindow::MainWindow()
     , _toolbars{}
     , _ui{} {
 
+    _instrumentListModel->setDefaultName(tr("New Instrument"));
+    _waveformListModel->setDefaultName(tr("New Waveform"));
+    _songListModel->setDefaultName(tr("New Song"));
     lazyconnect(_document, modifiedChanged, this, setWindowModified);
 
     initToolBars();
@@ -340,26 +345,36 @@ void MainWindow::initMenuBar() {
 
     // ============================================================= Instrument
     MENU(tr("&Instrument"));
-    auto setupTableMenu = [](QMenu *menu, QString const &kind) {
-        A(tr("&Add"), tr("Add a new %1").arg(kind)).icon(icons::Add);
+    auto setupTableMenu = [](QMenu *menu, QString const &kind,
+                             DataWidget *widget) {
+        DataWidget::Actions actions;
+        A(tr("&Add"), tr("Add a new %1").arg(kind))
+            .icon(icons::Add)
+            .store(actions.add);
         A(tr("&Remove"), tr("Removes the current %1").arg(kind))
-            .icon(icons::Remove);
+            .icon(icons::Remove)
+            .store(actions.remove);
         A(tr("&Duplicate"), tr("Duplicates the current %1").arg(kind))
-            .icon(icons::Duplicate);
+            .icon(icons::Duplicate)
+            .store(actions.duplicate);
         SEP();
         A(tr("&Import"), tr("Imports a %1 from a file").arg(kind))
-            .icon(icons::Import);
-        A(tr("E&xport"), tr("Exports the current %s to a file").arg(kind))
-            .icon(icons::Export);
+            .icon(icons::Import)
+            .store(actions.imp);
+        A(tr("E&xport"), tr("Exports the current %1 to a file").arg(kind))
+            .icon(icons::Export)
+            .store(actions.exp);
         SEP();
         A(tr("&Edit"), tr("Opens the editor for the current %1").arg(kind))
-            .icon(icons::Edit);
+            .icon(icons::Edit)
+            .store(actions.edit);
+        widget->setActions(actions);
     };
-    setupTableMenu(menu, tr("instrument"));
+    setupTableMenu(menu, tr("instrument"), _ui.instruments);
 
     // =============================================================== Waveform
     MENU(tr("&Waveform"));
-    setupTableMenu(menu, tr("waveform"));
+    setupTableMenu(menu, tr("waveform"), _ui.waveforms);
 
     // ================================================================ Tracker
     MENU(tr("&Tracker"));
@@ -493,8 +508,8 @@ void MainWindow::initUi() {
     _ui.sidebar = new Sidebar(_songListModel, _songModel);
     _ui.editor = newPlaceholder("Pattern Editor");
     _ui.databar = new QSplitter(Qt::Vertical);
-    _ui.instruments = newPlaceholder("Instruments");
-    _ui.waveforms = newPlaceholder("Waveforms");
+    _ui.instruments = new DataWidget(_instrumentListModel, tr("Instruments"));
+    _ui.waveforms = new DataWidget(_waveformListModel, tr("Waveforms"));
     _ui.databar->addWidget(_ui.instruments);
     _ui.databar->addWidget(_ui.waveforms);
     _ui.hsplitter = new QSplitter(Qt::Horizontal);

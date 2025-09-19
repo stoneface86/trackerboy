@@ -9,7 +9,8 @@ NameListModel::NameListModel(Document *doc, B::ItemCategory cat,
     : QAbstractListModel(parent)
     , _document(doc)
     , _list()
-    , _cat(cat) {
+    , _cat(cat)
+    , _itemizer() {
 
     _itemizer = B::initItemizer(cat);
 
@@ -23,6 +24,18 @@ Document *NameListModel::document() const {
     return _document;
 }
 
+B::ItemCategory NameListModel::category() const {
+    return _cat;
+}
+
+QString const &NameListModel::defaultName() const {
+    return _defaultName;
+}
+
+void NameListModel::setDefaultName(QString const &name) {
+    _defaultName = name;
+}
+
 Qt::ItemFlags NameListModel::flags(QModelIndex const &index) const {
     if (index.isValid()) {
         return Qt::ItemIsSelectable | Qt::ItemIsEnabled |
@@ -34,13 +47,12 @@ Qt::ItemFlags NameListModel::flags(QModelIndex const &index) const {
 
 int NameListModel::rowCount(QModelIndex const &index) const {
     Q_UNUSED(index)
-    return _list.size();
+    return (int)_list.size();
 }
 
-QVariant NameListModel::data(QModelIndex const &index, int role) const {
+QVariant NameListModel::data(QModelIndex const &index, int const role) const {
     if (index.isValid()) {
-        switch (role) {
-        case Qt::DisplayRole: {
+        if (role == Qt::DisplayRole) {
             auto const &name = _list[index.row()];
             QString result = prefixId(name.id);
             result.append(name.value);
@@ -52,15 +64,12 @@ QVariant NameListModel::data(QModelIndex const &index, int role) const {
 #endif
             return result;
         }
-        default:
-            break;
-        }
     }
 
     return {};
 }
 
-QString NameListModel::prefixId(u8 id) const {
+QString NameListModel::prefixId(u8 const id) const {
     QString result;
     if (_cat == B::catSong) {
         result = QString::number((int)id + 1);
@@ -73,13 +82,12 @@ QString NameListModel::prefixId(u8 id) const {
     return result;
 }
 
-QString const &NameListModel::name(int index) const {
+QString const &NameListModel::name(int const index) const {
     return _list[index].value;
 }
 
-void NameListModel::setName(int index, QString const &name) {
-    auto &at = _list[index];
-    if (at.value != name) {
+void NameListModel::setName(int const index, QString const &name) {
+    if (auto &at = _list[index]; at.value != name) {
         at.value = name;
         at.changed = true;
         auto const mindex = createIndex(index, 0);
@@ -97,7 +105,7 @@ void NameListModel::setList(NameList const &list) {
     endResetModel();
 }
 
-void NameListModel::load(bool newModule) {
+void NameListModel::load(bool const newModule) {
     beginResetModel();
     if (newModule) {
         _list.clear();
@@ -132,4 +140,20 @@ void NameListModel::commit() {
 #endif
         }
     }
+}
+
+void NameListModel::insert(int const at, u8 const id, QString const &name) {
+    beginInsertRows({}, at, at);
+    _document->setModified();
+    _list.insert(at, {true, id, name});
+    endInsertRows();
+}
+
+u8 NameListModel::remove(int const at) {
+    beginRemoveRows({}, at, at);
+    _document->setModified();
+    auto const result = _list[at].id;
+    _list.remove(at);
+    endRemoveRows();
+    return result;
 }

@@ -2,7 +2,7 @@
 import 
   ./[core, interop],
   libtrackerboy/[data, text],
-  std/[locks]
+  std/[locks, sugar]
 
 const nonCopyableDecl = """
 struct $1 {
@@ -62,6 +62,28 @@ type
   Itemizer* {.exportc.} = object
     impl: ptr ItemizerImpl
 
+  TableModelImpl = object
+    add: proc(m: var Module; id: TableId) {.nimcall, raises: [].}
+    addNext: proc(m: var Module): TableId {.nimcall, raises: [].}
+    remove: proc(m: var Module; id: TableId) {.nimcall, raises: [].}
+    duplicate: proc(m: var Module; id: TableId): TableId {.nimcall, raises: [].}
+
+  TableIdMap = object
+    ## Maps a TableId to an integer index in a list.
+    ## 
+    map: array[TableId, uint8]
+
+  TableModel* {.exportc.} = object
+    ## API object used by the TableModel class. Allows the model to add, remove
+    ## duplicate new items and also maintains a table id to list id mapping.
+    ## 
+    impl: ptr TableModelImpl
+    showEmpty: bool
+    idMap: TableIdMap
+
+  HasImpl = concept a
+    a.impl is ptr
+
 
 static:
   constvar("InfoStringLen", len(InfoString))
@@ -78,6 +100,9 @@ static:
   frontEnum(SequenceKind)
   frontEnum(ItemCategory)
 
+const
+  TableIdMapNone = high(TableId) + 1
+
 template module*(d: Document): Module =
   d.`mod`.obj
 
@@ -89,6 +114,9 @@ template `@`(c: SongCursor | InstrumentCursor | WaveformCursor): auto =
 
 template `@`(m: ModuleCursor): Module =
   m.obj
+
+template `@`[T: HasImpl](x: T): auto =
+  x.impl[]
 
 proc resetCursors(d: var Document) =
   d.song.`ref` = d.module.songs.mget(0)
@@ -185,16 +213,16 @@ proc setModuleProperties*(m: var ModuleCursor; props {.bycref.}: ModulePropertie
   @m.tickrate = props.tickrate
 
 # item management
+template getTable(m: Module, T: typedesc[SomeData]): auto =
+  when T is Instrument:
+    m.instruments
+  else:
+    m.waveforms
+
 
 proc makeItemizer(T: typedesc[SomeData]): ItemizerImpl {.compileTime.} =
-  template getTable(m: Module): auto =
-    when T is Instrument:
-      m.instruments
-    else:
-      m.waveforms
-  
   result.count = proc(m: Module): int =
-    result = getTable(m).len()
+    result = getTable(m, T).len()
   
   result.name = proc(m: Module; id: uint8): ItemName =
     proc getNearest(t: SomeTable; startingId: uint8): ItemName =
@@ -205,10 +233,10 @@ proc makeItemizer(T: typedesc[SomeData]): ItemizerImpl {.compileTime.} =
           result.value = slice(t[id][].name)
           break
         inc id
-    result = getNearest(getTable(m), id)
+    result = getNearest(getTable(m, T), id)
 
   result.setName = proc(m: var Module; id: uint8; name: string) =
-    getTable(m)[TableId(id)].name = name
+    getTable(m, T)[TableId(id)].name = name
 
 const
   SongItemizer = ItemizerImpl(
@@ -232,15 +260,85 @@ proc initItemizer(cat: ItemCategory): Itemizer
 
 proc count*(i: Itemizer; m {.bycref.}: ModuleCursor): int
   {.front, automember.} =
-  result = i.impl[].count(@m)
+  result = @i.count(@m)
 
 proc name*(i: Itemizer; m {.bycref.}: ModuleCursor; id: uint8): ItemName
   {.front, automember.} =
-  result = i.impl[].name(@m, id)
+  result = @i.name(@m, id)
 
 proc setName*(i: var Itemizer; m: var ModuleCursor; id: uint8; name: string)
   {.front, automember.} =
-  i.impl[].setName(@m, id, name)
+  @i.setName(@m, id, name)
+
+# TableModel
+
+proc makeTableModel(T: typedesc[SomeData]): TableModelImpl =
+  result.add = (m: var Module, id: TableId) => getTable(m, T).add(id)
+  result.addNext = (m: var Module) => getTable(m, T).add()
+  result.remove = (m: var Module, id: TableId) => getTable(m, T).remove(id)
+  result.duplicate = (m: var Module, id: TableId) => getTable(m, T).duplicate(id)
+
+const
+  InstrumentTableModel = makeTableModel(Instrument)
+  WaveformTableModel = makeTableModel(Waveform)
+
+proc initTableModel*(cat: ItemCategory): TableModel
+  {.front.} =
+  result.impl = case cat
+  of catSong: nil
+  of catInstrument: addr(InstrumentTableModel)
+  of catWaveform: addr(WaveformTableModel)
+
+proc put(m: var TableIdMap; id: TableId) =
+  # find the previous index
+  var index = 0.uint8
+  for i in countDown(id, TableId.low):
+    let val = m.map[i]
+    if val > 0:
+      index = val
+      break
+  m.map[id] = index + 1
+  for i in (id + 1)..TableId.high:
+    if m.map[i] > 0:
+      inc m.map[i]
+
+proc del(m: var TableIdMap; id: TableId) =
+  m.map[id] = 0
+  for i in (id+1)..TableId.high:
+    if m.map[i] > 0:
+      dec m.map[i]
+
+proc listIndex*(t: TableModel; id: TableId): int
+  {.front, automember.} =
+  result = int(t.idMap.map[id]) - 1
+
+proc reset*(t: var TableModel)
+  {.front, automember.} =
+  reset(t.idMap)
+
+proc add*(t: var TableModel; m: var ModuleCursor; id: int): TableId
+  {.front, automember.} =
+  if id == -1 or t.idMap.map[TableId(id)] != 0:
+    result = @t.addNext(@m)
+  else:
+    result = TableId(id)
+    @t.add(@m, result)
+  t.idMap.put(result)
+
+
+proc remove*(t: var TableModel; m: var ModuleCursor; id: TableId)
+  {.front, automember.} =
+  @t.remove(@m, id)
+  t.idMap.del(id)
+
+proc duplicate*(t: var TableModel; m: var ModuleCursor; id: TableId): TableId
+  {.front, automember.} =
+  result = @t.duplicate(@m, id)
+  t.idMap.put(result)
+
+proc assignId*(t: var TableModel; id: uint8; index: uint8; )
+  {.front, automember.} =
+  t.idMap.map[id] = index + 1
 
 # SongCursor methods
 

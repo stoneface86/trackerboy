@@ -46,6 +46,7 @@ add_library(frontendObj OBJECT
   "utils/string.cxx"
   "widgets/Sidebar/SongSettingsWidget.cxx"
   "widgets/CustomSpinBox.cxx"
+  "widgets/DataWidget.cxx"
   "widgets/EnvelopeForm.cxx"
   "widgets/PianoWidget.cxx"
   "widgets/Sidebar.cxx"
