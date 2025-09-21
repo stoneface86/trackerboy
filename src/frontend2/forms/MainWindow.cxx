@@ -30,6 +30,8 @@ static strlit cKeyPatternRepeat = "patternRepeat";
 static strlit cKeyRecord = "record";
 static strlit cKeySplitterV = "splitterV";
 static strlit cKeySplitterH = "splitterH";
+static strlit cKeyInstrumentsShowEmpty = "instrumentsShowEmpty";
+static strlit cKeyWaveformsShowEmpty = "waveformsShowEmpty";
 
 //
 // increment this constant when adding new docks or toolbars
@@ -45,9 +47,12 @@ MainWindow::MainWindow()
     : QMainWindow()
     , _recentFiles()
     , _document(new Document(this))
-    , _songListModel(new NameListModel(_document, B::catSong, this))
-    , _instrumentListModel(new NameListModel(_document, B::catInstrument, this))
-    , _waveformListModel(new NameListModel(_document, B::catWaveform, this))
+    , _songListModel(
+          new NameListModel(_document, B::catSong, tr("New Song"), this))
+    , _instrumentListModel(new NameListModel(_document, B::catInstrument,
+                                             tr("New Instrument"), this))
+    , _waveformListModel(new NameListModel(_document, B::catWaveform,
+                                           tr("New Waveform"), this))
     , _songModel(new SongModel(_document, _songListModel, this))
     , _songListEditor(nullptr)
     , _moduleProperties(nullptr)
@@ -55,9 +60,6 @@ MainWindow::MainWindow()
     , _toolbars{}
     , _ui{} {
 
-    _instrumentListModel->setDefaultName(tr("New Instrument"));
-    _waveformListModel->setDefaultName(tr("New Waveform"));
-    _songListModel->setDefaultName(tr("New Song"));
     lazyconnect(_document, modifiedChanged, this, setWindowModified);
 
     initToolBars();
@@ -68,7 +70,7 @@ MainWindow::MainWindow()
     loadSettings();
 
     // TODO: remove this when configuration is done
-    ColorTheme theme;
+    ColorTheme const theme;
     icons::generate(theme);
     updateIcons();
 }
@@ -89,13 +91,11 @@ void MainWindow::closeEvent(QCloseEvent *evt) {
 void MainWindow::showSongListEditor() {
     if (_songListEditor == nullptr) {
         _songListEditor = new SongListEditor(_songListModel, this);
-        connectLambda(_songListEditor, finished, this, [this](int result) {
-            if (result == QDialog::Accepted) {
-                _songListEditor->applyChanges(*_document);
-            } else {
-                _songListEditor->revertChanges();
-            }
+        connectLambda(_songListEditor, accepted, this, [this]() {
+            _songListEditor->applyChanges(*_document);
         });
+    } else {
+        _songListEditor->revertChanges();
     }
     // TODO: Stop playback
     _songListEditor->open();
@@ -119,7 +119,9 @@ void MainWindow::showModuleProperties() {
     _moduleProperties->open();
 }
 
-void MainWindow::onNew() {}
+void MainWindow::onNew() {
+    _document->clear();
+}
 void MainWindow::onOpen() {}
 void MainWindow::onSave() {}
 void MainWindow::onSaveAs() {}
@@ -368,7 +370,11 @@ void MainWindow::initMenuBar() {
         A(tr("&Edit"), tr("Opens the editor for the current %1").arg(kind))
             .icon(icons::Edit)
             .store(actions.edit);
-        widget->setActions(actions);
+        A(tr("Show Empty Slots"),
+          tr("Toggles the showing of all slots in the table"))
+            .checkable()
+            .store(actions.showEmpty);
+        widget->setDataActions(actions);
     };
     setupTableMenu(menu, tr("instrument"), _ui.instruments);
 
@@ -562,6 +568,11 @@ void MainWindow::loadSettings() {
     setSpinValue(_ui.inputEditStep, s.value(TU::cKeyEditStep));
     _ui.hsplitter->restoreState(s.value(TU::cKeySplitterH).toByteArray());
     _ui.databar->restoreState(s.value(TU::cKeySplitterV).toByteArray());
+    auto setShowEmpty = [](DataWidget const *widget, QVariant const &val) {
+        widget->dataActions().showEmpty->setChecked(val.toBool());
+    };
+    setShowEmpty(_ui.instruments, s.value(TU::cKeyInstrumentsShowEmpty, false));
+    setShowEmpty(_ui.waveforms, s.value(TU::cKeyWaveformsShowEmpty, false));
 }
 
 void MainWindow::saveSettings() {
@@ -579,6 +590,8 @@ void MainWindow::saveSettings() {
     s.setValue(TU::cKeyRecord, _ui.actRecord->isChecked());
     s.setValue(TU::cKeySplitterV, _ui.databar->saveState());
     s.setValue(TU::cKeySplitterH, _ui.hsplitter->saveState());
+    s.setValue(TU::cKeyInstrumentsShowEmpty, _ui.instruments->showEmpty());
+    s.setValue(TU::cKeyWaveformsShowEmpty, _ui.waveforms->showEmpty());
 }
 
 void MainWindow::updateSongSelectActions() {

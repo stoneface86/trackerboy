@@ -11,7 +11,7 @@ class NameListModel final : public QAbstractListModel {
 
 public:
     explicit NameListModel(Document *doc, B::ItemCategory cat,
-                           QObject *parent = nullptr);
+                           QString defaultName, QObject *parent = nullptr);
 
     [[nodiscard]] Qt::ItemFlags flags(QModelIndex const &index) const override;
 
@@ -26,8 +26,6 @@ public:
     [[nodiscard]] B::ItemCategory category() const;
 
     [[nodiscard]] QString const &defaultName() const;
-
-    void setDefaultName(QString const &name);
 
     [[nodiscard]] QString const &name(int index) const;
 

@@ -44,6 +44,8 @@ public:
 
     void setModified();
 
+    void clear();
+
     //
     // Get an `EditContext` for editing the document's source data.
     //
@@ -65,11 +67,6 @@ public:
     // QUndoStack. To change the active stack, use `selectSong`.
     //
     QUndoGroup const *undoGroup() const;
-
-    //
-    // Gets a QString containing the default song name to be used for new songs.
-    //
-    QString defaultSongName() const;
 
     //
     // Select the current song for editing and playback. The `songChanged`
@@ -123,8 +120,12 @@ private:
         QUndoStack *stack;
     };
 
+    void clean();
+
+    void initHistory();
+
     QList<SongHistory> initHistoryFromSource();
-    void selectSongImpl(int song);
+    void selectSongImpl(int songNo);
 
     NimRef<B::Document> _source;
     bool _modified;

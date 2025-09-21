@@ -39,7 +39,7 @@ Qt::ItemFlags SongListEditorModel::flags(QModelIndex const &index) const {
     return result;
 }
 
-QModelIndex SongListEditorModel::index(int row, int column,
+QModelIndex SongListEditorModel::index(int const row, int const column,
                                        QModelIndex const &parent) const {
     if (parent.isValid()) {
         return {};
@@ -68,7 +68,8 @@ int SongListEditorModel::rowCount(QModelIndex const &parent) const {
     }
 }
 
-QVariant SongListEditorModel::data(QModelIndex const &index, int role) const {
+QVariant SongListEditorModel::data(QModelIndex const &index,
+                                   int const role) const {
     if (index.isValid()) {
         auto const row = index.row();
         switch (index.column()) {
@@ -90,8 +91,7 @@ QVariant SongListEditorModel::data(QModelIndex const &index, int role) const {
             break;
         case colStatus:
             if (role == Qt::DisplayRole) {
-                auto const &item = _items[row];
-                switch (item.action) {
+                switch (auto const &item = _items[row]; item.action) {
                 case itemKeep:
                     if (item.nameModified) {
                         return tr("Renamed");
@@ -104,8 +104,12 @@ QVariant SongListEditorModel::data(QModelIndex const &index, int role) const {
                     return tr("Duplicate of #%1").arg(1 + (int)item.sourceId);
                 case itemRemove:
                     return tr("Pending removal");
+                default:
+                    break;
                 }
             }
+            break;
+        default:
             break;
         }
     }
@@ -122,10 +126,9 @@ bool SongListEditorModel::setData(QModelIndex const &index,
         case colName:
             if (role == Qt::EditRole) {
                 auto &item = _items[row];
-                auto const newName = value.toString();
-                if (item.name != newName) {
+                if (auto newName = value.toString(); item.name != newName) {
                     item.nameModified = true;
-                    item.name = newName;
+                    item.name = std::move(newName);
                 }
                 return true;
             }
@@ -133,7 +136,7 @@ bool SongListEditorModel::setData(QModelIndex const &index,
         case colRemove:
             if (role == Qt::CheckStateRole) {
                 auto &item = _items[row];
-                auto const prevaction = item.action;
+                auto const prevAction = item.action;
                 if (value.toInt() == Qt::Checked) {
                     if (item.action == itemNew ||
                         item.action == itemDuplicate) {
@@ -154,13 +157,15 @@ bool SongListEditorModel::setData(QModelIndex const &index,
                 } else {
                     item.action = itemKeep;
                 }
-                if (item.action != prevaction) {
+                if (item.action != prevAction) {
                     // status column changes when changing action
-                    auto const index = createIndex(row, colStatus);
-                    emit dataChanged(index, index);
+                    auto const statusIndex = createIndex(row, colStatus);
+                    emit dataChanged(statusIndex, statusIndex);
                 }
                 return true;
             }
+            break;
+        default:
             break;
         }
     }
@@ -187,8 +192,9 @@ QStringList SongListEditorModel::mimeTypes() const {
 }
 
 bool SongListEditorModel::dropMimeData(QMimeData const *data,
-                                       Qt::DropAction action, int row,
-                                       int column, QModelIndex const &parent) {
+                                       Qt::DropAction const action,
+                                       int const row, int const column,
+                                       QModelIndex const &parent) {
     Q_UNUSED(column)
     if (action == Qt::MoveAction && data && data->hasText()) {
         bool ok = false;
@@ -210,9 +216,9 @@ bool SongListEditorModel::dropMimeData(QMimeData const *data,
     return false;
 }
 
-QVariant SongListEditorModel::headerData(int section,
-                                         Qt::Orientation orientation,
-                                         int role) const {
+QVariant SongListEditorModel::headerData(int const section,
+                                         Qt::Orientation const orientation,
+                                         int const role) const {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole) {
         switch (section) {
         case colNumber:
@@ -223,6 +229,8 @@ QVariant SongListEditorModel::headerData(int section,
             return tr("Remove?");
         case colStatus:
             return tr("Pending result");
+        default:
+            break;
         }
     }
     return {};
@@ -231,11 +239,11 @@ QVariant SongListEditorModel::headerData(int section,
 void SongListEditorModel::add() {
     auto const at = _items.size();
     beginInsertRows(QModelIndex(), at, at);
-    _items.append({-1, itemNew, true, _source->document()->defaultSongName()});
+    _items.append({-1, itemNew, true, _source->defaultName()});
     endInsertRows();
 }
 
-void SongListEditorModel::duplicate(int index) {
+void SongListEditorModel::duplicate(int const index) {
     Q_ASSERT(index >= 0 && index < _items.size());
     auto const at = index + 1;
     beginInsertRows({}, at, at);
@@ -247,13 +255,13 @@ void SongListEditorModel::duplicate(int index) {
     endInsertRows();
 }
 
-void SongListEditorModel::moveUp(int index) {
+void SongListEditorModel::moveUp(int const index) {
     if (index > 0) {
         moveDown(index - 1);
     }
 }
 
-void SongListEditorModel::moveDown(int index) {
+void SongListEditorModel::moveDown(int const index) {
     auto const neighbor = index + 1;
     if (neighbor < _items.size()) {
         _items.swapItemsAt(index, neighbor);
@@ -288,7 +296,7 @@ void SongListEditorModel::apply(Document &doc) {
             changes.duplicate(item.sourceId);
             name.changed = true;
             break;
-        case itemRemove:
+        default:      // itemRemove
             continue; // don't add the name to newNames
         }
         name.id = (u8)newNames.size();
@@ -298,8 +306,8 @@ void SongListEditorModel::apply(Document &doc) {
 
     beginResetModel();
 
-    doc.changeSongList(changes);
     _source->setList(newNames);
+    doc.changeSongList(changes);
     setListFromSource();
 
     endResetModel();

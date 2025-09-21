@@ -4,13 +4,14 @@
 #include "utils/connectutils.hxx"
 #include "utils/string.hxx"
 
-NameListModel::NameListModel(Document *doc, B::ItemCategory cat,
-                             QObject *parent)
+NameListModel::NameListModel(Document *doc, B::ItemCategory const cat,
+                             QString defaultName, QObject *parent)
     : QAbstractListModel(parent)
     , _document(doc)
     , _list()
     , _cat(cat)
-    , _itemizer() {
+    , _itemizer()
+    , _defaultName(std::move(defaultName)) {
 
     _itemizer = B::initItemizer(cat);
 
@@ -30,10 +31,6 @@ B::ItemCategory NameListModel::category() const {
 
 QString const &NameListModel::defaultName() const {
     return _defaultName;
-}
-
-void NameListModel::setDefaultName(QString const &name) {
-    _defaultName = name;
 }
 
 Qt::ItemFlags NameListModel::flags(QModelIndex const &index) const {
@@ -110,7 +107,7 @@ void NameListModel::load(bool const newModule) {
     if (newModule) {
         _list.clear();
         if (_cat == B::catSong) {
-            _list.append({true, 0, _document->defaultSongName()});
+            _list.append({true, 0, _defaultName});
         }
     } else {
         auto view = _document->view();

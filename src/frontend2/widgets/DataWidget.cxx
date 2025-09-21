@@ -44,7 +44,15 @@ void DataWidget::setCurrentId(int const id) {
     }
 }
 
-void DataWidget::setActions(Actions const &actions) {
+bool DataWidget::showEmpty() const {
+    return _actions.showEmpty->isChecked();
+}
+
+DataWidget::Actions const &DataWidget::dataActions() const {
+    return _actions;
+}
+
+void DataWidget::setDataActions(Actions const &actions) {
     _actions = actions;
 
     for (auto const act : {actions.add, actions.remove, actions.duplicate,
@@ -52,16 +60,13 @@ void DataWidget::setActions(Actions const &actions) {
         _toolbar->addAction(act);
     }
     _toolbar->addSeparator();
-    buildAction(_toolbar, tr("Show Empty Slots"),
-                tr("Toggles the showing of all slots in the table"))
-        .checkable()
-        .checked()
-        .toggles(_model, &TableModel::setShowEmpty);
+    _toolbar->addAction(actions.showEmpty);
 
     lazyconnect(actions.add, triggered, this, add);
     lazyconnect(actions.remove, triggered, this, remove);
     lazyconnect(actions.duplicate, triggered, this, duplicate);
     lazyconnect(actions.edit, triggered, this, edit);
+    lazyconnect(actions.showEmpty, toggled, _model, setShowEmpty);
     updateActions();
 }
 

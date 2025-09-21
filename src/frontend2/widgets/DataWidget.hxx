@@ -22,12 +22,17 @@ public:
         QAction *imp;
         QAction *exp;
         QAction *edit;
+        QAction *showEmpty;
     };
 
     explicit DataWidget(NameListModel *model, QString const &title,
                         QWidget *parent = nullptr);
 
-    void setActions(Actions const &actions);
+    [[nodiscard]] Actions const &dataActions() const;
+
+    [[nodiscard]] bool showEmpty() const;
+
+    void setDataActions(Actions const &actions);
 
     [[nodiscard]] int currentId() const;
 

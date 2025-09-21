@@ -102,7 +102,7 @@ void SongListEditor::applyChanges(Document &doc) {
 }
 
 void SongListEditor::revertChanges() {
-    _model->revert();
+    _model->reset();
 }
 
 void SongListEditor::duplicate() {

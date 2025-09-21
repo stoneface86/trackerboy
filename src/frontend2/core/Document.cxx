@@ -5,7 +5,7 @@
 #include <QUndoStack>
 #include <QtDebug>
 
-Document::EditContext::EditContext(Document &doc, bool setModified)
+Document::EditContext::EditContext(Document &doc, bool const setModified)
     : backend(doc._source.ref)
     , document(doc)
     , setModified(setModified) {
@@ -30,14 +30,8 @@ Document::Document(QObject *parent)
     , _source(makeNimRef(B::newDocument()))
     , _modified(false)
     , _undoGroup(new QUndoGroup(this))
-    , _songHistories()
     , _currentSong(0) {
-    _songHistories = initHistoryFromSource();
-    _undoGroup->setActiveStack(_songHistories[0].stack);
-}
-
-QString Document::defaultSongName() const {
-    return tr("New Song");
+    initHistory();
 }
 
 void Document::setModified() {
@@ -47,7 +41,22 @@ void Document::setModified() {
     }
 }
 
-void Document::selectSong(int songNo) {
+void Document::clear() {
+    _source->lock();
+    _source->pushNew();
+    _source->unlock();
+
+    clean();
+    for (auto const &history : _songHistories) {
+        _undoGroup->removeStack(history.stack);
+        delete history.stack;
+    }
+    initHistory();
+    reloaded(true);
+    selectSongImpl(0);
+}
+
+void Document::selectSong(int const songNo) {
     if (_currentSong != songNo) {
         selectSongImpl(songNo);
     }
@@ -57,7 +66,7 @@ int Document::song() const {
     return _currentSong;
 }
 
-Document::EditContext Document::edit(bool setModified) {
+Document::EditContext Document::edit(bool const setModified) {
     EditContext result(*this, setModified);
     return result;
 }
@@ -84,11 +93,23 @@ QList<Document::SongHistory> Document::initHistoryFromSource() {
     return result;
 }
 
+void Document::clean() {
+    if (_modified) {
+        _modified = false;
+        modifiedChanged(false);
+    }
+}
+
+void Document::initHistory() {
+    _songHistories = initHistoryFromSource();
+    _undoGroup->setActiveStack(_songHistories[0].stack);
+}
+
 void Document::changeSongList(B::SongListChanges const &changes) {
     edit(true)->setSongList(changes);
 
     auto findHistoryById = [](QList<SongHistory> const &list,
-                              qintptr id) -> int {
+                              qintptr const id) -> int {
         int i = 0;
         for (auto const &h : list) {
             if (h.id == id) {
@@ -102,8 +123,8 @@ void Document::changeSongList(B::SongListChanges const &changes) {
     auto nextHistory = initHistoryFromSource();
     // scan current for removed songs
     for (auto const &h : _songHistories) {
-        auto index = findHistoryById(nextHistory, h.id);
-        if (index == -1) {
+        if (auto const index = findHistoryById(nextHistory, h.id);
+            index == -1) {
             // not found, delete the stack and remove it from the group
             qDebug() << "Deleting history for song id " << h.id;
             _undoGroup->removeStack(h.stack);
@@ -134,7 +155,7 @@ void Document::changeSongList(B::SongListChanges const &changes) {
     selectSongImpl(song == -1 ? 0 : song);
 }
 
-void Document::selectSongImpl(int songNo) {
+void Document::selectSongImpl(int const songNo) {
     _source->selectSong(songNo);
     _currentSong = songNo;
     _undoGroup->setActiveStack(_songHistories[songNo].stack);

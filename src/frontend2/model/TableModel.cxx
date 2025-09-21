@@ -11,7 +11,6 @@ TableModel::TableModel(NameListModel *model, QObject *parent)
     , _source(model)
     , _backend() {
     B::initTableModel(model->category(), &_backend);
-    _backend.showEmpty = true;
     load();
     lazyconnect(model, modelReset, this, load);
 }
@@ -36,11 +35,8 @@ QVariant TableModel::data(QModelIndex const &index, int const role) const {
             return _source->data(createIndex(listIndex, 0), role);
         } else {
             switch (role) {
-            case Qt::DisplayRole: {
-                auto result = _source->prefixId(id);
-                result.append(tr("[empty]"));
-                return result;
-            }
+            case Qt::DisplayRole:
+                return _source->prefixId(id);
             case Qt::FontRole: {
                 QFont result;
                 result.setItalic(true);

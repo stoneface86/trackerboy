@@ -67,7 +67,6 @@ SongSettingsWidget::SongSettingsWidget(SongModel *model, QWidget *parent)
     auto const doc = _model->document();
     lazyconnect(doc, songChanged, this, onSongChange);
     lazyconnect(_nameEdit, textEdited, _model, setName);
-    lazyconnect(_model->listModel(), modelReset, this, loadName);
     lazyconnect(_model, speedChanged, this, setSpeedDisplay);
     lazyconnect(_model, speedChanged, this, setTempoDisplay);
     lazyconnect(_model, rowsPerBeatChanged, this, setTempoDisplay);
@@ -80,7 +79,6 @@ SongSettingsWidget::SongSettingsWidget(SongModel *model, QWidget *parent)
     lazyconnect(_tickrateOverride, toggled, this, tickrateToggled);
     lazyconnect(_tickrateOverride, tickrateChanged, this, updateTickrate);
 
-    // lazyconnect(_tickrateOverride, tickrateChanged, this, onTickrateChanged);
     //  initialize form data
     onSongChange();
 }
