@@ -5,13 +5,12 @@
 
 #include <QString>
 
-
 //
 // Convert a slice from the backend to a QString
 //
-extern QString toQString(B::Slice slice);
+extern QString toQString(BSlice slice);
 
 //
 // Convert a QString to a nim string. UTF-8 encoding is used.
 //
-extern B::String toNimString(QString const& str);
+extern BString toNimString(QString const &str);

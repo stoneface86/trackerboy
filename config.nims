@@ -36,3 +36,11 @@ task test, "Test all":
   testBackendLinkTask()
   testBackendTask()
 
+task watchBackend, "Wait for changes to backend source files, then rebuild":
+  exec &"""
+inotifywait -e modify,create,delete,move --monitor -r src/backend | \
+while read line
+do
+  {BuildCmd} --target buildBackend
+done
+"""

@@ -76,7 +76,7 @@ PianoWidget::PianoWidget(QWidget *parent)
     , _isKeyDown(false)
     , _note(0)
     , _lastKeyPressed(Qt::Key_unknown)
-    , _keymap()
+    , _keymap{}
     , _theme()
     , _scheme()
     , _redrawKeys(true)
@@ -91,8 +91,8 @@ PianoWidget::PianoWidget(QWidget *parent)
     calculateScheme();
 }
 
-void PianoWidget::setKeymap(NimRef<B::NoteKeymap> map) {
-    _keymap = std::move(map);
+void PianoWidget::setKeymap(BNoteKeymap *map) {
+    _keymap = map;
 }
 
 void PianoWidget::play(int note) {

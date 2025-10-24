@@ -3,8 +3,8 @@ import
   libtrackerboy/[data, text]
 
 type
-  IdString* {.exportc.} = Box[InstrumentString]
+  BIdString* {.exportc.} = Box[InstrumentString]
 
-proc text*(id: TableId): IdString
+proc bText*(id: TableId): BIdString
   {.front.} =
   result.data = instrumentText(instrumentColumn(id))

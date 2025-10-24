@@ -15,29 +15,32 @@ $2
 {.pragma: nonCopyable, codegenDecl: nonCopyableDecl.}
 
 type
-  ModuleCursor* {.exportc, nonCopyable.} = object
-    obj: Module
+  BModuleCursor* {.exportc, nonCopyable.} = object
+    `ref`: ref Module
   
-  SongCursor* {.exportc, nonCopyable.} = object
+  BSongCursor* {.exportc, nonCopyable.} = object
     `ref`*: ref Song
-    parent*: ptr Module
+    parent*: ref Module
 
-  InstrumentCursor* {.exportc, nonCopyable.} = object
+  BInstrumentCursor* {.exportc, nonCopyable.} = object
     `ref`: ref Instrument
   
-  WaveformCursor* {.exportc, nonCopyable.} = object
+  BWaveformCursor* {.exportc, nonCopyable.} = object
     `ref`: ref Waveform
 
-  Document* {.exportc.} = object
-    # public
-    `mod`*: ModuleCursor
-    song*: SongCursor
-    inst*: InstrumentCursor
-    wave*: WaveformCursor
-    # private
-    pLock: Lock
+  BDocumentPrivate = object
+    lock: Lock
 
-  ModuleProperties* {.exportc.} = object
+  BDocument* {.exportc.} = object
+    # public
+    `mod`*: BModuleCursor
+    song*: BSongCursor
+    inst*: BInstrumentCursor
+    wave*: BWaveformCursor
+    # private
+    pd: BDocumentPrivate
+
+  BModuleProperties* {.exportc.} = object
     title*: InfoString
     artist*: InfoString
     copyright*: InfoString
@@ -45,21 +48,21 @@ type
     revMajor*: uint8
     revMinor*: uint8
 
-  ItemCategory* {.exportc.} = enum
+  BItemCategory* {.exportc.} = enum
     catSong
     catInstrument
     catWaveform
 
-  ItemName* {.exportc.} = object
+  BItemName* {.exportc.} = object
     id*: uint8
     value*: BSlice
 
   ItemizerImpl = object
     count: proc(m: Module): int {.nimcall, raises: [].}
-    name: proc(m: Module; id: uint8): ItemName {.nimcall, raises: [].}
+    name: proc(m: Module; id: uint8): BItemName {.nimcall, raises: [].}
     setName: proc(m: var Module; id: uint8; name: string) {.nimcall, raises: [].}
 
-  Itemizer* {.exportc.} = object
+  BItemizer* {.exportc.} = object
     impl: ptr ItemizerImpl
 
   TableModelImpl = object
@@ -73,8 +76,8 @@ type
     ## 
     map: array[TableId, uint8]
 
-  TableModel* {.exportc.} = object
-    ## API object used by the TableModel class. Allows the model to add, remove
+  BTableModel* {.exportc.} = object
+    ## API object used by the BTableModel class. Allows the model to add, remove
     ## duplicate new items and also maintains a table id to list id mapping.
     ## 
     impl: ptr TableModelImpl
@@ -84,133 +87,110 @@ type
   HasImpl = concept a
     a.impl is ptr
 
-
-static:
-  constvar("InfoStringLen", len(InfoString))
-  constvar("TableCap", 64)
-  constvar("SongCap", 256)
-  constvar("SpeedLow", rangeSpeed.a.int)
-  constvar("SpeedHigh", rangeSpeed.b.int)
+header:
+  constexpr("InfoStringLen", len(InfoString))
+  constexpr("TableCap", 64)
+  constexpr("SongCap", 256)
+  constexpr("SpeedLow", rangeSpeed.a.int)
+  constexpr("SpeedHigh", rangeSpeed.b.int)
   # provide aliases for the ugly identifiers nim generates
-  alias("Tickrate", "decltype(ModuleProperties::tickrate)")
-  alias("InfoString", "decltype(ModuleProperties::title)")
+  alias("BTickrate", "decltype(BModuleProperties::tickrate)")
+  alias("BInfoString", "decltype(BModuleProperties::title)")
   # expose enums to the front-end as constexpr variables
-  frontEnum(ChannelId)
-  frontEnum(System)
-  frontEnum(SequenceKind)
-  frontEnum(ItemCategory)
+  addEnum(ChannelId, true)
+  addEnum(System, true)
+  addEnum(SequenceKind, true)
+  addEnum(BItemCategory)
+
 
 const
   TableIdMapNone = high(TableId) + 1
 
-template module*(d: Document): Module =
-  d.`mod`.obj
+template module*(d: BDocument): Module =
+  d.`mod`.`ref`[]
 
-template `module=`(d: var Document; m: Module) =
-  d.`mod`.obj = m
+template `module=`(d: var BDocument; m: Module) =
+  d.`mod`.`ref`[] = m
 
-template `@`(c: SongCursor | InstrumentCursor | WaveformCursor): auto =
+template `@`(c: BModuleCursor | BSongCursor | BInstrumentCursor | BWaveformCursor): auto =
   c.`ref`[]
-
-template `@`(m: ModuleCursor): Module =
-  m.obj
 
 template `@`[T: HasImpl](x: T): auto =
   x.impl[]
 
-proc resetCursors(d: var Document) =
+proc resetCursors(d: var BDocument) =
   d.song.`ref` = d.module.songs.mget(0)
-
-proc destructor(d: var Document) 
-  {.front, autodestructor.} =
-  d.pLock.deinitLock()
-  `=destroy`(d)
-
-# Document methods
-
-proc pushNew*(d: var Document)
-  {.front, automember.} =
-  d.module = initModule()
-  d.resetCursors()
-
-proc newDocument*(): ref Document
-  {.front.} =
-  result = (ref Document)(
-    `mod`: ModuleCursor(
-      obj: initModule()
-    )
-  )
-  result[].song.parent = addr(result[].`mod`.obj)
-  resetCursors(result[])
-  result[].pLock.initLock()
-
-frontRef(ref Document)
-
-proc lock*(d: var Document)
-  {.front, automember.} =
-  d.pLock.acquire()
-
-proc unlock*(d: var Document) 
-  {.front, automember.} =
-  d.pLock.release()
-
-proc selectSong*(d: var Document; songNo: int)
-  {.front, automember.} =
-  if songNo in 0 ..< d.module.songs.len:
-    d.song.`ref` = d.module.songs.mget(songNo)
 
 proc getOrNil(t: var SomeTable; id: int): auto =
   if id in 0 .. high(TableId).int:
     result = t[TableId(id)]
 
-proc selectInstrument*(d: var Document; id: int) =
-  d.inst.`ref` = getOrNil(d.module.instruments, id)
+members(BDocument):
+  constructor:
+    proc _(): _ =
+      result.`mod`.`ref` = newModule()
+      result.song.parent = result.`mod`.`ref`
+      result.resetCursors()
+      @result.lock.initLock()
+  
+  destructor(d):
+    @d.lock.deinitLock()
+    `=destroy`(d)
 
-proc selectWaveform*(d: var Document; id: int) =
-  d.wave.`ref` = getOrNil(d.module.waveforms, id)
+  proc pushNew(d: var _) =
+    d.module = initModule()
+    d.resetCursors()
 
-# ModuleCursor methods
+  proc lock*(d: var _) =
+    @d.lock.acquire()
 
-proc comments*(m: ModuleCursor): BSlice 
-  {.front, automember.} =
-  result = slice(@m.comments)
+  proc unlock*(d: var _) =
+    @d.lock.release()
 
-proc setComments*(m: var ModuleCursor; comments: string)
-  {.front, automember.} =
-  @m.comments = comments
+  proc selectSong*(d: var _; songNo: int) =
+    if songNo in 0 ..< d.module.songs.len:
+      d.song.`ref` = d.module.songs.mget(songNo)
+  
+  proc selectInstrument*(d: var _; id: int) =
+    d.inst.`ref` = getOrNil(d.module.instruments, id)
 
-proc songCount*(m: ModuleCursor): int 
-  {.front, automember.} =
-  result = @m.songs.len()
+  proc selectWaveform*(d: var _; id: int) =
+    d.wave.`ref` = getOrNil(d.module.waveforms, id)
 
-proc songId*(m: ModuleCursor; index: int): int
-  {.front, automember.} =
-  result = cast[int](@m.songs.get(index))
+members(BModuleCursor):
 
-proc songName*(m: ModuleCursor; index: int): BSlice 
-  {.front, automember.} =
-  let song = @m.songs.get(index)
-  result = slice(song[].name)
+  proc comments*(m: _): BSlice =
+    result = slice(@m.comments)
 
-proc setSongName*(m: var ModuleCursor; index: int; name: string)
-  {.front, automember.} =
-  @m.songs.mget(index)[].name = name
+  proc setComments*(m: var _; comments: string) =
+    @m.comments = comments
 
-proc moduleProperties*(m: ModuleCursor): ModuleProperties
-  {.front, automember.} =
-  result.title = @m.title
-  result.artist = @m.artist
-  result.copyright = @m.copyright
-  result.tickrate = @m.tickrate
-  result.revMajor = uint8(@m.revisionMajor())
-  result.revMinor = uint8(@m.revisionMinor())
+  proc songCount*(m: _): int =
+    result = @m.songs.len()
 
-proc setModuleProperties*(m: var ModuleCursor; props {.bycref.}: ModuleProperties)
-  {.front, automember.} =
-  @m.title = props.title
-  @m.artist = props.artist
-  @m.copyright = props.copyright
-  @m.tickrate = props.tickrate
+  proc songId*(m: _; index: int): int =
+    result = cast[int](@m.songs.get(index))
+
+  proc songName*(m: _; index: int): BSlice =
+    let song = @m.songs.get(index)
+    result = slice(song[].name)
+
+  proc setSongName*(m: var _; index: int; name: string) =
+    @m.songs.mget(index)[].name = name
+
+  proc moduleProperties*(m: _; outProps: var BModuleProperties) =
+    outProps.title = @m.title
+    outProps.artist = @m.artist
+    outProps.copyright = @m.copyright
+    outProps.tickrate = @m.tickrate
+    outProps.revMajor = uint8(@m.revisionMajor())
+    outProps.revMinor = uint8(@m.revisionMinor())
+
+  proc setModuleProperties*(m: var _; props {.bycref.}: BModuleProperties) =
+    @m.title = props.title
+    @m.artist = props.artist
+    @m.copyright = props.copyright
+    @m.tickrate = props.tickrate
 
 # item management
 template getTable(m: Module, T: typedesc[SomeData]): auto =
@@ -219,13 +199,12 @@ template getTable(m: Module, T: typedesc[SomeData]): auto =
   else:
     m.waveforms
 
-
 proc makeItemizer(T: typedesc[SomeData]): ItemizerImpl {.compileTime.} =
   result.count = proc(m: Module): int =
     result = getTable(m, T).len()
   
-  result.name = proc(m: Module; id: uint8): ItemName =
-    proc getNearest(t: SomeTable; startingId: uint8): ItemName =
+  result.name = proc(m: Module; id: uint8): BItemName =
+    proc getNearest(t: SomeTable; startingId: uint8): BItemName =
       var id = TableId(startingId)
       while id < high(TableId):
         if id in t:
@@ -242,7 +221,7 @@ const
   SongItemizer = ItemizerImpl(
     count: proc(m: Module): int =
       result = m.songs.len()
-    , name: proc(m: Module; id: uint8): ItemName =
+    , name: proc(m: Module; id: uint8): BItemName =
       result.id = id
       result.value = slice(m.songs.get(id)[].name)
     , setName: proc(m: var Module; id: uint8; name: string) =
@@ -251,26 +230,24 @@ const
   InstrumentItemizer = makeItemizer(Instrument)
   WaveformItemizer = makeItemizer(Waveform)
 
-proc initItemizer(cat: ItemCategory): Itemizer
-  {.front.} =
-  result.impl = case cat
-  of catSong: addr(SongItemizer)
-  of catInstrument: addr(InstrumentItemizer)
-  of catWaveform: addr(WaveformItemizer)
+members(BItemizer):
+  constructor:
+    proc _(cat: BItemCategory): _ =
+      result.impl = case cat
+      of catSong: addr(SongItemizer)
+      of catInstrument: addr(InstrumentItemizer)
+      of catWaveform: addr(WaveformItemizer)
 
-proc count*(i: Itemizer; m {.bycref.}: ModuleCursor): int
-  {.front, automember.} =
-  result = @i.count(@m)
+  proc count*(i: _; m {.bycref.}: BModuleCursor): int =
+    result = @i.count(@m)
 
-proc name*(i: Itemizer; m {.bycref.}: ModuleCursor; id: uint8): ItemName
-  {.front, automember.} =
-  result = @i.name(@m, id)
+  proc name*(i: _; m {.bycref.}: BModuleCursor; id: uint8): BItemName =
+    result = @i.name(@m, id)
 
-proc setName*(i: var Itemizer; m: var ModuleCursor; id: uint8; name: string)
-  {.front, automember.} =
-  @i.setName(@m, id, name)
+  proc setName*(i: var _; m: var BModuleCursor; id: uint8; name: string) =
+    @i.setName(@m, id, name)
 
-# TableModel
+# BTableModel
 
 proc makeTableModel(T: typedesc[SomeData]): TableModelImpl =
   result.add = (m: var Module, id: TableId) => getTable(m, T).add(id)
@@ -281,13 +258,6 @@ proc makeTableModel(T: typedesc[SomeData]): TableModelImpl =
 const
   InstrumentTableModel = makeTableModel(Instrument)
   WaveformTableModel = makeTableModel(Waveform)
-
-proc initTableModel*(cat: ItemCategory): TableModel
-  {.front.} =
-  result.impl = case cat
-  of catSong: nil
-  of catInstrument: addr(InstrumentTableModel)
-  of catWaveform: addr(WaveformTableModel)
 
 proc put(m: var TableIdMap; id: TableId) =
   # find the previous index
@@ -308,99 +278,87 @@ proc del(m: var TableIdMap; id: TableId) =
     if m.map[i] > 0:
       dec m.map[i]
 
-proc listIndex*(t: TableModel; id: TableId): int
-  {.front, automember.} =
-  result = int(t.idMap.map[id]) - 1
+members(BTableModel):
+  constructor:
+    proc _(cat: BItemCategory): _ =
+      result.impl = case cat
+      of catSong: nil
+      of catInstrument: addr(InstrumentTableModel)
+      of catWaveform: addr(WaveformTableModel)
 
-proc reset*(t: var TableModel)
-  {.front, automember.} =
-  reset(t.idMap)
+  proc listIndex*(t: _; id: TableId): int =
+    result = int(t.idMap.map[id]) - 1
 
-proc add*(t: var TableModel; m: var ModuleCursor; id: int): TableId
-  {.front, automember.} =
-  if id == -1 or t.idMap.map[TableId(id)] != 0:
-    result = @t.addNext(@m)
-  else:
-    result = TableId(id)
-    @t.add(@m, result)
-  t.idMap.put(result)
+  proc reset*(t: var _) =
+    reset(t.idMap)
 
+  proc add*(t: var _; m: var BModuleCursor; id: int): TableId =
+    if id == -1 or t.idMap.map[TableId(id)] != 0:
+      result = @t.addNext(@m)
+    else:
+      result = TableId(id)
+      @t.add(@m, result)
+    t.idMap.put(result)
 
-proc remove*(t: var TableModel; m: var ModuleCursor; id: TableId)
-  {.front, automember.} =
-  @t.remove(@m, id)
-  t.idMap.del(id)
+  proc remove*(t: var _; m: var BModuleCursor; id: TableId) =
+    @t.remove(@m, id)
+    t.idMap.del(id)
 
-proc duplicate*(t: var TableModel; m: var ModuleCursor; id: TableId): TableId
-  {.front, automember.} =
-  result = @t.duplicate(@m, id)
-  t.idMap.put(result)
+  proc duplicate*(t: var _; m: var BModuleCursor; id: TableId): TableId =
+    result = @t.duplicate(@m, id)
+    t.idMap.put(result)
 
-proc assignId*(t: var TableModel; id: uint8; index: uint8; )
-  {.front, automember.} =
-  t.idMap.map[id] = index + 1
+  proc assignId*(t: var _; id: uint8; index: uint8; ) =
+    t.idMap.map[id] = index + 1
 
-# SongCursor methods
+# BSongCursor methods
 
-proc rowsPerBeat*(s: SongCursor): int
-  {.front, automember.} =
-  result = @s.rowsPerBeat
+members(BSongCursor):
 
-proc rowsPerMeasure*(s: SongCursor): int
-  {.front, automember.} =
-  result = @s.rowsPerMeasure
+  proc rowsPerBeat*(s: _): int =
+    result = @s.rowsPerBeat
 
-proc speed*(s: SongCursor): Speed
-  {.front, automember.} =
-  result = @s.speed
+  proc rowsPerMeasure*(s: _): int =
+    result = @s.rowsPerMeasure
 
-proc speedFloat*(s: SongCursor): float32
-  {.front, automember.} =
-  result = toFloat(@s.speed)
+  proc speed*(s: _): Speed =
+    result = @s.speed
 
-proc tempo*(s: SongCursor): float32
-  {.front, automember.} =
-  result = @s.tempo(@s.effectiveTickrate(s.parent[].tickrate).hertz)
+  proc speedFloat*(s: _): float32 =
+    result = toFloat(@s.speed)
 
-proc trackLen*(s: SongCursor): int
-  {.front, automember.} =
-  result = @s.trackLen
+  proc tempo*(s: _): float32 =
+    result = @s.tempo(@s.effectiveTickrate(s.parent[].tickrate).hertz)
 
-proc hasTickrate*(s: SongCursor): bool
-  {.front, automember.} =
-  result = @s.tickrate.isSome()
+  proc trackLen*(s: _): int =
+    result = @s.trackLen
 
-proc tickrate*(s: SongCursor): Tickrate
-  {.front, automember.} =
-  result = @s.tickrate.get(defaultTickrate)
+  proc hasTickrate*(s: _): bool =
+    result = @s.tickrate.isSome()
 
-proc setRowsPerBeat*(s: var SongCursor; rowsPerBeat: int)
-  {.front, automember.} =
-  @s.rowsPerBeat = ByteIndex(rowsPerBeat)
+  proc tickrate*(s: _): Tickrate =
+    result = @s.tickrate.get(defaultTickrate)
 
-proc setRowsPerMeasure*(s: var SongCursor; rowsPerMeasure: int)
-  {.front, automember.} =
-  @s.rowsPerMeasure = ByteIndex(rowsPerMeasure)
+  proc setRowsPerBeat*(s: var _; rowsPerBeat: int) =
+    @s.rowsPerBeat = ByteIndex(rowsPerBeat)
 
-proc setSpeed*(s: var SongCursor; speed: int)
-  {.front, automember.} =
-  @s.speed = Speed(speed)
+  proc setRowsPerMeasure*(s: var _; rowsPerMeasure: int) =
+    @s.rowsPerMeasure = ByteIndex(rowsPerMeasure)
 
-proc setTrackLen*(s: var SongCursor; len: int)
-  {.front, automember.} =
-  @s.trackLen = PositiveByte(len)
+  proc setSpeed*(s: var _; speed: int) =
+    @s.speed = Speed(speed)
 
-proc tickrateEqual(s: SongCursor; rate: Tickrate): bool
-  {.front, automember.} =
-  result = @s.tickrate.isSome() and @s.tickrate.unsafeGet() == rate
+  proc setTrackLen*(s: var _; len: int) =
+    @s.trackLen = PositiveByte(len)
 
-proc setTickrate*(s: var SongCursor; rate: Tickrate)
-  {.front, automember.} =
-  @s.tickrate = some(rate)
+  proc tickrateEqual(s: _; rate: Tickrate): bool =
+    result = @s.tickrate.isSome() and @s.tickrate.unsafeGet() == rate
 
-proc clearTickrate*(s: var SongCursor)
-  {.front, automember.} =
-  @s.tickrate = none(Tickrate)
+  proc setTickrate*(s: var _; rate: Tickrate) =
+    @s.tickrate = some(rate)
+
+  proc clearTickrate*(s: var _) =
+    @s.tickrate = none(Tickrate)
 
 type
   SongListChangeKind = enum
@@ -412,114 +370,100 @@ type
     kind: SongListChangeKind
     index: uint8
 
-  SongListChanges* {.exportc.} = object
+  BSongListChanges* {.exportc.} = object
     data: seq[SongListChange]
 
-proc initSongListChanges*(): SongListChanges
-  {.front.} =
-  result.data = newSeq[SongListChange]()
+members(BSongListChanges):
+  constructor:
+    proc _(): _ =
+      result.data = newSeq[SongListChange]()
+  destructor
 
-proc destructor*(t: var SongListChanges)
-  {.front, autodestructor.} =
-  `=destroy`(t)
+  proc keepOriginal*(t: var _; index: uint8) =
+    t.data.add(SongListChange(kind: keep, index: index))
 
-proc keepOriginal*(t: var SongListChanges; index: uint8)
-  {.front, automember.} =
-  t.data.add(SongListChange(kind: keep, index: index))
+  proc addNew*(t: var _) =
+    t.data.add(SongListChange(kind: add))
 
-proc addNew*(t: var SongListChanges)
-  {.front, automember.} =
-  t.data.add(SongListChange(kind: add))
+  proc duplicate*(t: var _; index: uint8) =
+    t.data.add(SongListChange(kind: duplicate, index: index))
 
-proc duplicate*(t: var SongListChanges; index: uint8)
-  {.front, automember.} =
-  t.data.add(SongListChange(kind: duplicate, index: index))
+members(BDocument):
+  proc setSongList*(d: var _; changes {.bycref.}: BSongListChanges) =
+    var list: seq[ref Song]
 
-proc setSongList*(d: var Document; changes {.bycref.}: SongListChanges)
-  {.front, automember.} =
-  var list: seq[ref Song]
+    for change in changes.data:
+      var song: ref Song
+      
+      case change.kind
+      of keep:
+        song = d.module.songs.mget(change.index)
+      of add:
+        song = newSong()
+      of duplicate:
+        new(song)
+        song[] = d.module.songs.get(change.index)[]
+      
+      # if change.setName:
+      #   song.name = change.name
+      list.add(song)
 
-  for change in changes.data:
-    var song: ref Song
-    
-    case change.kind
-    of keep:
-      song = d.module.songs.mget(change.index)
-    of add:
-      song = newSong()
-    of duplicate:
-      new(song)
-      song[] = d.module.songs.get(change.index)[]
-    
-    # if change.setName:
-    #   song.name = change.name
-    list.add(song)
+    d.module.songs.data() = list
 
-  d.module.songs.data() = list
+# BInstrumentCursor methods
 
-# InstrumentCursor methods
+members(BInstrumentCursor):
 
-proc channel*(i: InstrumentCursor): ChannelId
-  {.front, automember.} =
-  result = @i.channel
+  proc channel*(i: _): ChannelId =
+    result = @i.channel
 
-proc setChannel*(i: var InstrumentCursor; ch: ChannelId)
-  {.front, automember.} =
-  @i.channel = ch
+  proc setChannel*(i: var _; ch: ChannelId) =
+    @i.channel = ch
 
-proc sample*(c: InstrumentCursor; sk: SequenceKind; i: int): int8
-  {.front, automember.} =
-  result = cast[int8](@c.sequences[sk][i])
+  proc sample*(c: _; sk: SequenceKind; i: int): int8 = 
+    result = cast[int8](@c.sequences[sk][i])
 
-proc setSample*(c: var InstrumentCursor; sk: SequenceKind; i: int; sample: int8)
-  {.front, automember.} =
-  @c.sequences[sk][i] = cast[uint8](sample)
+  proc setSample*(c: var _; sk: SequenceKind; i: int; sample: int8) = 
+    @c.sequences[sk][i] = cast[uint8](sample)
 
-proc sequenceLen*(c: InstrumentCursor; sk: SequenceKind): int
-  {.front, automember.} =
-  result = @c.sequences[sk].len()
+  proc sequenceLen*(c: _; sk: SequenceKind): int = 
+    result = @c.sequences[sk].len()
 
-proc setSequenceLen*(c: var InstrumentCursor; sk: SequenceKind; len: int)
-  {.front, automember.} =
-  @c.sequences[sk].setLen(len)
+  proc setSequenceLen*(c: var _; sk: SequenceKind; len: int) =
+    @c.sequences[sk].setLen(len)
 
-proc sequenceAsText*(c: InstrumentCursor; sk: SequenceKind): string
-  {.front, automember.} =
-  result = sequenceText(@c.sequences[sk])
+  proc sequenceAsText*(c: _; sk: SequenceKind): string =
+    result = sequenceText(@c.sequences[sk])
 
-proc setSequence*(c: var InstrumentCursor; sk: SequenceKind; text: string;
-                  minVal: int8; maxVal: int8;
-                  ): bool
-  {.front, automember.} =
-  let parsed = parseSequence(text, minVal, maxVal)
-  result = parsed.isSome()
-  if result:
-    @c.sequences[sk] = parsed.get()
+  proc setSequence*(c: var _; sk: SequenceKind; text: string;
+                    minVal: int8; maxVal: int8;
+                    ): bool =
+    let parsed = parseSequence(text, minVal, maxVal)
+    result = parsed.isSome()
+    if result:
+      @c.sequences[sk] = parsed.get()
 
-# WaveformCursor methods
+# BWaveformCursor methods
 
-proc sample*(w: WaveformCursor; i: int): int8
-  {.front, automember.} =
-  let pair = @w.data[i]
-  if (uint(i) and 1) == 0:
-    result = int8(pair shr 4)
-  else:
-    result = int8(pair and 0xF)
+members(BWaveformCursor):
+  proc sample*(w: _; i: int): int8 =
+    let pair = @w.data[i]
+    if (uint(i) and 1) == 0:
+      result = int8(pair shr 4)
+    else:
+      result = int8(pair and 0xF)
 
-proc setSample*(w: var WaveformCursor; i: int; sample: int8)
-  {.front, automember.} =
-  let pair = addr(@w.data[i div 2])
-  if (uint(i) and 1) == 0:
-    pair[] = (pair[] and 0x0F) or (uint8(sample) shl 4)
-  else:
-    pair[] = (pair[] and 0xF0) or uint8(sample)
+  proc setSample*(w: var _; i: int; sample: int8) =
+    let pair = addr(@w.data[i div 2])
+    if (uint(i) and 1) == 0:
+      pair[] = (pair[] and 0x0F) or (uint8(sample) shl 4)
+    else:
+      pair[] = (pair[] and 0xF0) or uint8(sample)
 
-proc asText*(w: WaveformCursor; outText: var WaveDataString)
-  {.front, automember.} =
-  outText = waveText(@w.data)
+  proc asText*(w: _; outText: var WaveDataString) =
+    outText = waveText(@w.data)
 
-proc setFromText*(w: var WaveformCursor; text: WaveDataString)
-  {.front, automember.} =
-  let parsed = parseWave(text)
-  if parsed.isSome():
-    @w.data = parsed.get()
+  proc setFromText*(w: var _; text: WaveDataString) =
+    let parsed = parseWave(text)
+    if parsed.isSome():
+      @w.data = parsed.get()

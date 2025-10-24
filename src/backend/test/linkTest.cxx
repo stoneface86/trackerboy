@@ -5,11 +5,11 @@
 
 int main(void) {
 
-    B::NimMain();
-    B::init();
+    bNimMain();
+    bInit();
 
-    printf("Version: %s\n", B::version());
+    printf("Version: %s\n", bVersion());
 
-    B::deinit();
+    bDeinit();
     return 0;
 }

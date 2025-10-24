@@ -13,8 +13,8 @@ class TickrateForm : public QGroupBox {
 public:
     explicit TickrateForm(QWidget *parent = nullptr);
 
-    B::Tickrate tickrate() const;
-    void setTickrate(B::Tickrate const &tickrate);
+    BTickrate tickrate() const;
+    void setTickrate(BTickrate const &tickrate);
 
 signals:
     void tickrateChanged();

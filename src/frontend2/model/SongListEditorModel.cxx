@@ -278,7 +278,7 @@ void SongListEditorModel::reset() {
 
 void SongListEditorModel::apply(Document &doc) {
     // see backend/data.nim
-    auto changes = B::initSongListChanges();
+    BSongListChanges changes;
     NameList newNames;
     for (auto const &item : _items) {
         Name name;

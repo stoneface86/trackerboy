@@ -18,5 +18,4 @@ proc handleCtrlC() {.noconv.} =
 
 setControlCHook(handleCtrlC)
 
-static:
-  writeHeader()
+writeHeader()

@@ -17,7 +17,7 @@
 #include "widgets/DataWidget.hxx"
 #include "widgets/Sidebar.hxx"
 
-class MainWindow : public QMainWindow {
+class MainWindow final : public QMainWindow {
 
     Q_OBJECT
 
@@ -29,7 +29,7 @@ public:
     void panic(QString const &msg);
 
 protected:
-    virtual void closeEvent(QCloseEvent *evt) override;
+    void closeEvent(QCloseEvent *evt) override;
 
 private:
     Q_DISABLE_COPY(MainWindow)
@@ -40,7 +40,7 @@ private:
     // slots
     void onNew();
     void onOpen();
-    void onSave();
+    [[nodiscard]] bool onSave();
     void onSaveAs();
     void onExportToWav();
     void onRecentFile();
@@ -56,6 +56,11 @@ private:
 
     void stopPlayback();
 
+    [[nodiscard]] bool canReload();
+
+    void setDocumentName(QString name);
+    void setDocumentName();
+
     void initToolBars();
     void initMenuBar();
     void initStatusBar();
@@ -65,6 +70,14 @@ private:
 
     RecentFiles _recentFiles;
     Document *_document;
+
+    struct Io {
+        BDocumentFile backend;
+        QString filepath;
+        QString filename;
+    };
+    Io _io;
+
     NameListModel *_songListModel;
     NameListModel *_instrumentListModel;
     NameListModel *_waveformListModel;

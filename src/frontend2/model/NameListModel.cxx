@@ -4,16 +4,14 @@
 #include "utils/connectutils.hxx"
 #include "utils/string.hxx"
 
-NameListModel::NameListModel(Document *doc, B::ItemCategory const cat,
+NameListModel::NameListModel(Document *doc, BItemCategory const cat,
                              QString defaultName, QObject *parent)
     : QAbstractListModel(parent)
     , _document(doc)
     , _list()
     , _cat(cat)
-    , _itemizer()
+    , _itemizer(cat)
     , _defaultName(std::move(defaultName)) {
-
-    _itemizer = B::initItemizer(cat);
 
     lazyconnect(_document, reloaded, this, load);
     lazyconnect(_document, aboutToSave, this, commit);
@@ -25,7 +23,7 @@ Document *NameListModel::document() const {
     return _document;
 }
 
-B::ItemCategory NameListModel::category() const {
+BItemCategory NameListModel::category() const {
     return _cat;
 }
 
@@ -110,11 +108,11 @@ void NameListModel::load(bool const newModule) {
             _list.append({true, 0, _defaultName});
         }
     } else {
-        auto view = _document->view();
+        auto const view = _document->view();
         auto const size = _itemizer.count(view->mod);
         u8 lastId = 0;
         _list.resize(size);
-        for (B::NI i = 0; i < size; ++i) {
+        for (NI i = 0; i < size; ++i) {
             auto &item = _list[i];
             item.changed = false;
             auto const name = _itemizer.name(view->mod, lastId);

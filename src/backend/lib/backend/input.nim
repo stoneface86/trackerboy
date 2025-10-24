@@ -22,7 +22,7 @@ $2
 """
 
 type
-  NoteBindings* {.exportc, codegenDecl: noteBindingsCodegen.} = object
+  BNoteBindings* {.exportc, codegenDecl: noteBindingsCodegen.} = object
     map*: array[bindingCount, int32]
 
   NoteKeymapPrivate = object
@@ -30,51 +30,51 @@ type
     keycodes: array[bindingCount, int32]
     notes: array[bindingCount, int8]
 
-  NoteKeymap* {.exportc.} = object
-    p: NoteKeymapPrivate
+  BNoteKeymap* {.exportc.} = object
+    pd: NoteKeymapPrivate
 
-proc newNoteKeymap*(): ref NoteKeymap {.front.} =
-  result = (ref NoteKeymap)(p: NoteKeymapPrivate(octave: 5 - 2))
-  result[].p.notes.fill(int8.low)
+members(BNoteKeymap):
+  constructor:
+    proc _(): _ =
+      result = BNoteKeymap(
+        pd: NoteKeymapPrivate(
+          octave: 5 - 2
+        )
+      )
+      @result.notes.fill(int8.low)
 
-frontRef(ref NoteKeymap)
-
-proc keyToNote*(m: NoteKeymap; key: int32): int8 
-  {.front, automember.} =
-  let index = binarySearch(m.p.keycodes, key)
-  if index == -1:
-    result = -1
-  else:
-    let note = m.p.notes[index]
-    if note == bindsSpecialNoteCut:
-      result = int8(noteCut)
+  proc keyToNote*(m: _; key: int32): int8 =
+    let index = binarySearch(@m.keycodes, key)
+    if index == -1:
+      result = -1
     else:
-      result = note + (m.p.octave * 12)
-      if result.int notin NoteRange.low..NoteRange.high:
-        result = -1
+      let note = @m.notes[index]
+      if note == bindsSpecialNoteCut:
+        result = int8(noteCut)
+      else:
+        result = note + (@m.octave * 12)
+        if result.int notin NoteRange.low..NoteRange.high:
+          result = -1
 
-proc octave*(m: NoteKeymap): int8 
-  {.front, automember.} =
-  result = m.p.octave + 2
+  proc octave*(m: _): int8 =
+    result = @m.octave + 2
 
-proc setOctave*(m: var NoteKeymap; octave: int8)
-  {.front, automember.} =
-  if octave.int in Octave.low..Octave.high:
-    m.p.octave = octave - 2
+  proc setOctave*(m: var _; octave: int8) =
+    if octave.int in Octave.low..Octave.high:
+      @m.octave = octave - 2
 
-proc setBindings*(m: var NoteKeymap; bindings {.bycref.}: NoteBindings)
-  {.front, automember.} =
-  var 
+  proc setBindings*(m: var _; bindings {.bycref.}: BNoteBindings) =
+    var 
+      i = 0
+      buffer: array[bindingCount, (int32, int8)]
+    for note, keycode in pairs(bindings.map):
+      buffer[i] = (keycode, int8(note))
+      inc i
+    buffer.sort do (x, y: (int32, int8);) -> int:
+      result = cmp(x[0], y[0])
     i = 0
-    buffer: array[bindingCount, (int32, int8)]
-  for note, keycode in pairs(bindings.map):
-    buffer[i] = (keycode, int8(note))
-    inc i
-  buffer.sort do (x, y: (int32, int8);) -> int:
-    result = cmp(x[0], y[0])
-  i = 0
-  for pair in buffer:
-    m.p.keycodes[i] = pair[0]
-    m.p.notes[i] = pair[1]
-    inc i
- 
+    for pair in buffer:
+      @m.keycodes[i] = pair[0]
+      @m.notes[i] = pair[1]
+      inc i
+  

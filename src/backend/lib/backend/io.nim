@@ -6,7 +6,7 @@ import
 
 
 type
-  IoResult* {.exportc.} = enum
+  BIoResult* {.exportc.} = enum
     ioSuccess
     ioNotRecognized
     ioRevisionTooNew
@@ -16,7 +16,7 @@ type
     ioWriteError
     ioFileError
 
-  AutoBackupResult* {.exportc.} = enum
+  BAutoBackupResult* {.exportc.} = enum
     backupSuccess
     backupFailed
     backupFailedLocationInUse
@@ -24,12 +24,12 @@ type
   DocumentFilePrivate = object
     path: Path
     autoBackup: bool
-    lastBackupResult: AutoBackupResult
+    lastBackupResult: BAutoBackupResult
 
-  DocumentFile* {.exportc.} = object
+  BDocumentFile* {.exportc.} = object
     p: DocumentFilePrivate
 
-func toIoResult(fr: FormatResult): IoResult =
+func toIoResult(fr: FormatResult): BIoResult =
   case fr
   of frNone: ioSuccess
   of frInvalidSignature: ioNotRecognized
@@ -39,9 +39,9 @@ func toIoResult(fr: FormatResult): IoResult =
   of frReadError: ioReadError
   of frWriteError: ioWriteError
 
-static: 
-  constvar(IoResult)
-  constvar(AutoBackupResult)
+header:
+  addEnum(BIoResult)
+  addEnum(BAutoBackupResult)
 
 proc safeClose(s: Stream) =
   try:
@@ -49,37 +49,7 @@ proc safeClose(s: Stream) =
   except IoError, OsError:
     discard
 
-proc initDocumentFile*(): DocumentFile {.front.} =
-  discard
-
-proc destructor*(d: var DocumentFile)
-  {.front, autodestructor.} =
-  `=destroy`(d)
-
-proc setAutoBackup*(d: var DocumentFile; on: bool)
-  {.front, automember.} =
-  d.p.autoBackup = on
-
-proc lastBackupResult*(d: DocumentFile): AutoBackupResult
-  {.front, automember.} =
-  result = d.p.lastBackupResult
-
-proc open*(df: var DocumentFile; doc: var Document; filename: string): IoResult
-  {.front, automember.} =
-  # deserialize the module stored in the given file, updating doc's module on success
-  let fs = newFileStream(filename, fmRead)
-  if fs == nil:
-    result = ioFileError
-  else:
-    var module: Module
-    result = toIoResult(module.deserialize(fs))
-    if result == ioSuccess:
-      doc.module() = module
-      df.p.path = filename.Path
-    fs.safeClose()
-
-proc saveImpl(df: var DocumentFile; doc: Document; filename: string): IoResult 
-  {. raises: [] .} =
+proc saveImpl(df: var BDocumentFile; doc: BDocument; filename: string): BIoResult =
   if filename == "":
     result = ioFileError
   else:
@@ -102,13 +72,37 @@ proc saveImpl(df: var DocumentFile; doc: Document; filename: string): IoResult
       result = toIoResult(serialize(doc.module, fs))
       fs.safeClose()
 
-proc save*(df: var DocumentFile; doc {.bycref.}: Document): IoResult
-  {.front, automember.} =
-  result = df.saveImpl(doc, df.p.path.string)
+members(BDocumentFile):
+  constructor:
+    proc _(): _ =
+      discard
+  
+  destructor
 
-proc save*(df: var DocumentFile; doc {.bycref.}: Document; filename: string): IoResult
-  {.front, automember.} =
-  result = df.saveImpl(doc, filename)
-  if result == ioSuccess:
-    df.p.path = filename.Path
+  proc setAutoBackup*(d: var _; on: bool) =
+    d.p.autoBackup = on
+
+  proc lastBackupResult*(d: _): BAutoBackupResult =
+    result = d.p.lastBackupResult
+
+  proc open*(df: var _; doc: var BDocument; filename: string): BIoResult =
+    # deserialize the module stored in the given file, updating doc's module on success
+    let fs = newFileStream(filename, fmRead)
+    if fs == nil:
+      result = ioFileError
+    else:
+      var module: Module
+      result = toIoResult(module.deserialize(fs))
+      if result == ioSuccess:
+        doc.module() = module
+        df.p.path = filename.Path
+      fs.safeClose()
+
+  proc save*(df: var _; doc {.bycref.}: BDocument): BIoResult =
+    result = df.saveImpl(doc, df.p.path.string)
+
+  proc save*(df: var _; doc {.bycref.}: BDocument; filename: string): BIoResult =
+    result = df.saveImpl(doc, filename)
+    if result == ioSuccess:
+      df.p.path = filename.Path
 

@@ -11,6 +11,7 @@
 #include <QApplication>
 #include <QHBoxLayout>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QScreen>
 #include <QSettings>
 #include <QStatusBar>
@@ -61,6 +62,7 @@ MainWindow::MainWindow()
     , _ui{} {
 
     lazyconnect(_document, modifiedChanged, this, setWindowModified);
+    setDocumentName();
 
     initToolBars();
     initUi();
@@ -120,10 +122,15 @@ void MainWindow::showModuleProperties() {
 }
 
 void MainWindow::onNew() {
-    _document->clear();
+    if (canReload()) {
+        _document->clear();
+        setDocumentName();
+    }
 }
 void MainWindow::onOpen() {}
-void MainWindow::onSave() {}
+bool MainWindow::onSave() {
+    return false;
+}
 void MainWindow::onSaveAs() {}
 void MainWindow::onExportToWav() {}
 void MainWindow::onConfiguration() {}
@@ -135,6 +142,44 @@ void MainWindow::updateIcons() {
             act->setIcon(icons::get((icons::Icons)data.icon));
         }
     });
+}
+
+bool MainWindow::canReload() {
+    if (_document->isModified()) {
+        // prompt the user if they want to save any changes
+        auto const result = QMessageBox::warning(
+            this, QApplication::applicationName(),
+            tr("Save changes to %1?").arg(_io.filename),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+        switch (result) {
+        case QMessageBox::Save:
+            if (!onSave()) {
+                // save failed, do not close document
+                return false;
+            }
+            break;
+        case QMessageBox::Cancel:
+            // user cancelled, do not close document
+            return false;
+        default:
+            break;
+        }
+    }
+    return true;
+}
+
+void MainWindow::setDocumentName() {
+    setDocumentName(tr("New Module"));
+}
+
+void MainWindow::setDocumentName(QString name) {
+    _io.filename = std::move(name);
+    auto title = QApplication::applicationName();
+    title.append(" - ");
+    title.append(_io.filename);
+    title.append("[*]");
+    setWindowTitle(title);
 }
 
 void MainWindow::initToolBars() {

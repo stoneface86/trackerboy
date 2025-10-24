@@ -9,3 +9,6 @@ indent_size = 2
 
 [CMakeLists.txt]
 indent_size = 2
+
+[*.{nim,nims,nimble}]
+indent_size = 2

@@ -6,7 +6,7 @@
 #include <QtDebug>
 
 Document::EditContext::EditContext(Document &doc, bool const setModified)
-    : backend(doc._source.ref)
+    : backend(&doc._source)
     , document(doc)
     , setModified(setModified) {
     backend->lock();
@@ -20,18 +20,24 @@ Document::EditContext::~EditContext() {
 }
 
 Document::ViewContext::ViewContext(Document const &doc)
-    : backend(doc._source.ref)
+    : backend(&doc._source)
     , document(doc) {}
 
-Document::ViewContext::~ViewContext() {}
+Document::ViewContext::~ViewContext() = default;
 
 Document::Document(QObject *parent)
     : QObject(parent)
-    , _source(makeNimRef(B::newDocument()))
+    , _source()
     , _modified(false)
     , _undoGroup(new QUndoGroup(this))
     , _currentSong(0) {
     initHistory();
+}
+
+Document::~Document() = default;
+
+bool Document::isModified() const {
+    return _modified;
 }
 
 void Document::setModified() {
@@ -42,9 +48,9 @@ void Document::setModified() {
 }
 
 void Document::clear() {
-    _source->lock();
-    _source->pushNew();
-    _source->unlock();
+    _source.lock();
+    _source.pushNew();
+    _source.unlock();
 
     clean();
     for (auto const &history : _songHistories) {
@@ -84,11 +90,11 @@ QUndoGroup const *Document::undoGroup() const {
     return _undoGroup;
 }
 
-QList<Document::SongHistory> Document::initHistoryFromSource() {
+QList<Document::SongHistory> Document::initHistoryFromSource() const {
     QList<Document::SongHistory> result;
-    auto const songCount = _source->mod.songCount();
-    for (B::NI i = 0; i < songCount; ++i) {
-        result.append({_source->mod.songId(i), nullptr});
+    auto const songCount = _source.mod.songCount();
+    for (NI i = 0; i < songCount; ++i) {
+        result.append({_source.mod.songId(i), nullptr});
     }
     return result;
 }
@@ -105,7 +111,7 @@ void Document::initHistory() {
     _undoGroup->setActiveStack(_songHistories[0].stack);
 }
 
-void Document::changeSongList(B::SongListChanges const &changes) {
+void Document::changeSongList(BSongListChanges const &changes) {
     edit(true)->setSongList(changes);
 
     auto findHistoryById = [](QList<SongHistory> const &list,
@@ -142,8 +148,7 @@ void Document::changeSongList(B::SongListChanges const &changes) {
     for (auto &h : nextHistory) {
         if (h.stack == nullptr) {
             qDebug() << "Creating new history for song id " << h.id;
-            h.stack = new QUndoStack(this);
-            _undoGroup->addStack(h.stack);
+            h.stack = new QUndoStack(_undoGroup);
         }
     }
     auto const song =
@@ -156,7 +161,7 @@ void Document::changeSongList(B::SongListChanges const &changes) {
 }
 
 void Document::selectSongImpl(int const songNo) {
-    _source->selectSong(songNo);
+    _source.selectSong(songNo);
     _currentSong = songNo;
     _undoGroup->setActiveStack(_songHistories[songNo].stack);
     emit songChanged(songNo);

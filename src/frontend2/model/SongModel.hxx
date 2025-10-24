@@ -27,7 +27,7 @@ public:
     int patternSize() const;
 
     bool hasTickrate() const;
-    B::Tickrate tickrate() const;
+    BTickrate tickrate() const;
 
     void setName(QString const &name);
     void setRowsPerBeat(int rpb);
@@ -35,7 +35,7 @@ public:
     void setSpeed(int speed);
     void setSpeedFromTempo(int tempo);
     void setPatternSize(int rows);
-    void setTickrate(B::Tickrate tickrate);
+    void setTickrate(BTickrate tickrate);
     void clearTickrate();
 
 signals:

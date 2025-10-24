@@ -4,29 +4,29 @@ import
 
 import libtrackerboy/notes as lib
 
-static:
-  constvar("Letter", Letter)
-  constvar("NoiseNote", NoiseNote)
-  constvar("ToneNote", ToneNote)
-  constvar("NoteRange", NoteRange)
-  constvar("Octave", Octave)
-  constvar("NoteCut", lib.noteCut)
-  constvar("NoteC", lib.C)
-  constvar("NoteDb", lib.DFlat)
-  constvar("NoteD", lib.D)
-  constvar("NoteEb", lib.EFlat)
-  constvar("NoteE", lib.E)
-  constvar("NoteF", lib.F)
-  constvar("NoteGb", lib.GFlat)
-  constvar("NoteG", lib.G)
-  constvar("NoteAb", lib.AFlat)
-  constvar("NoteA", lib.A)
-  constvar("NoteBb", lib.BFlat)
-  constvar("NoteB", lib.B)
+header:
+  constexpr("Letter", Letter)
+  constexpr("NoiseNote", NoiseNote)
+  constexpr("ToneNote", ToneNote)
+  constexpr("NoteRange", NoteRange)
+  constexpr("Octave", Octave)
+  constexpr("NoteCut", lib.noteCut)
+  constexpr("NoteC", lib.C)
+  constexpr("NoteDb", lib.DFlat)
+  constexpr("NoteD", lib.D)
+  constexpr("NoteEb", lib.EFlat)
+  constexpr("NoteE", lib.E)
+  constexpr("NoteF", lib.F)
+  constexpr("NoteGb", lib.GFlat)
+  constexpr("NoteG", lib.G)
+  constexpr("NoteAb", lib.AFlat)
+  constexpr("NoteA", lib.A)
+  constexpr("NoteBb", lib.BFlat)
+  constexpr("NoteB", lib.B)
 
-proc lookupNoiseNote*(note: int): uint8 {.front.} =
+proc bLookupNoiseNote*(note: int): uint8 {.front.} =
   result = lib.lookupNoiseNote(note)
 
-proc lookupToneNote*(note: int): uint16 {.front.} =
+proc bLookupToneNote*(note: int): uint16 {.front.} =
   result = lib.lookupToneNote(note)
 

@@ -9,8 +9,7 @@
 TableModel::TableModel(NameListModel *model, QObject *parent)
     : QAbstractListModel(parent)
     , _source(model)
-    , _backend() {
-    B::initTableModel(model->category(), &_backend);
+    , _backend(model->category()) {
     load();
     lazyconnect(model, modelReset, this, load);
 }

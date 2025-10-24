@@ -14,7 +14,7 @@ class PianoWidget final : public QWidget {
 public:
     explicit PianoWidget(QWidget *parent = nullptr);
 
-    void setKeymap(NimRef<B::NoteKeymap> map);
+    void setKeymap(BNoteKeymap *map);
 
     void play(int note);
     void release();
@@ -60,7 +60,7 @@ private:
     int _note;
 
     int _lastKeyPressed;
-    NimRef<B::NoteKeymap> _keymap;
+    BNoteKeymap *_keymap;
 
     ColorTheme _theme;
     Scheme _scheme;

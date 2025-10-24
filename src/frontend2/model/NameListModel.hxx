@@ -10,7 +10,7 @@ class NameListModel final : public QAbstractListModel {
     Q_OBJECT
 
 public:
-    explicit NameListModel(Document *doc, B::ItemCategory cat,
+    explicit NameListModel(Document *doc, BItemCategory cat,
                            QString defaultName, QObject *parent = nullptr);
 
     [[nodiscard]] Qt::ItemFlags flags(QModelIndex const &index) const override;
@@ -23,7 +23,7 @@ public:
 
     [[nodiscard]] Document *document() const;
 
-    [[nodiscard]] B::ItemCategory category() const;
+    [[nodiscard]] BItemCategory category() const;
 
     [[nodiscard]] QString const &defaultName() const;
 
@@ -54,7 +54,7 @@ public:
 private:
     Document *_document;
     NameList _list;
-    B::ItemCategory const _cat;
-    B::Itemizer _itemizer;
+    BItemCategory const _cat;
+    BItemizer _itemizer;
     QString _defaultName;
 };

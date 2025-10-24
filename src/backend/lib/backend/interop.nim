@@ -10,12 +10,34 @@
 #
 
 import
-  std/[compilesettings, enumutils, macros, os, strformat, strutils]
+  std/[compilesettings, enumutils, macros, os, strformat, sequtils, strutils, with],
+  ./interop/macroutils
 
 type
   ccstring* {. importc: "const char *" .} = distinct cstring
     ## Immutable version of cstring
     ##
+
+  HasPrivateData* = concept a
+    ## Concept for a type that is an object that has a private data field.
+    ##
+    a is object
+    a.pd is object|tuple
+
+template `@`*[T: HasPrivateData](o: T): auto =
+  ## Shortcut for accessing the private data in an object
+  ## 
+  o.pd
+
+# Header generation ===========================================================
+
+type
+  Header = object
+    defines: string
+    vars: string
+    aliases: string
+
+{.push compileTime .}
 
 func intToC(bytes: int; isSigned: bool): string = 
   result.add('N')
@@ -32,65 +54,79 @@ func toC(T: typedesc[SomeFloat]): string =
   ##
   result = &"NF{sizeof(T) * 8}"
 
-  
-var 
-  defines {.compileTime.}: string
-  vars {.compileTime.}: string
-  aliases {.compileTime.}: string
+proc alias*(h: var Header; ident, expression: string; ) =
+  ## Adds a type alias (using declaration) to the header with the given
+  ## identifier and type expression. The expression and identifier must
+  ## be valid C++ code.
+  ## 
+  h.aliases.add(&"using {ident} = {expression};\n")
 
-{. push compileTime .}
+proc constexpr*(h: var Header; name, typeEx, valueEx: string; ) =
+  ## Adds a constexpr variable to the header with the given name,
+  ## type and value expression, which must be valid C++ code.
+  ##
+  h.vars.add(&"static constexpr {typeEx} {name} = {valueEx};\n")
 
-proc define*(name: string; value: string) =
-  defines.add(&"#define {name} {value}\n")
+proc constexpr*(h: var Header; name: string; value: SomeInteger)  =
+  ## Adds a constexpr variable with name set to the given Nim integer value
+  ## 
+  constexpr(h, name, toC(typeOf(value)), $value)
 
-proc typedDefine*(name, typing, value: string; ) =
-  define(name, &"(({typing}){value})")
+proc constexpr*(h: var Header; name: string; R: typedesc[range]) =
+  ## Adds lower and upper bounds of the range as constexpr variables.
+  ## 
+  constexpr(h, name & "Low", low(R))
+  constexpr(h, name & "High", high(R))
 
-proc define*(name: string; value: SomeInteger) =
-  typedDefine(name, toC(typeOf(value)), $value)
-
-proc define*(name: string; R: typedesc[range]) =
-  define(name & "Low", low(R))
-  define(name & "High", high(R))
-
-proc constvar*(name, typeExpr, valExpr: string;) =
-  vars.add(&"static constexpr {typeExpr} {name} = {valExpr};\n")
-
-proc constvar*(name: string; value: SomeInteger) =
-  constvar(name, toC(typeOf(value)), $value)
-
-proc constvar*(name: string; R: typedesc[range]) =
-  constvar(name & "Low", low(R))
-  constvar(name & "High", high(R))
-
-proc alias*(ident, expression: string; ) =
-  aliases.add(&"using {ident} = {expression};\n")
-
-proc frontEnum*(E: typedesc[enum]) =
-  alias($E, intToC(sizeof(E), false))
+proc addEnum*(h: var Header; E: typedesc[enum]; foreign = false) =
+  ## Adds a Nim enum to the header. A type alias is created for the enum's
+  ## underlying ordinal type, and a constexpr variable is added for each
+  ## member of the enum.
+  ## 
+  ## If `foreign` is true then `B` is prefixed to the name of the type alias.
+  ## 
+  var name: string
+  if foreign:
+    name.add("B")
+  name.add($E)
+  let ctype = intToC(sizeof(E), false)
+  alias(h, name, ctype)
   for e in E:
-    constvar(symbolName(e), $E, $ord(e))
+    constexpr(h, symbolName(e), name, $ord(e))
+  constexpr(h, $E & "Low", ctype, $ord(low(E)))
+  constexpr(h, $E & "High", ctype, $ord(high(E)))
 
-template frontRef*(T: typedesc[ref]) {.dirty.} =
-  proc `ref`*(x: T) {.front.} =
-    GcRef(x)
-  proc unref*(x: T) {.front.} =
-    GcUnref(x)
+proc define*(h: var Header; name, value: string; ) =
+  ## Adds a preprocessor definition with the given name and value.
+  ## 
+  h.defines.add(&"#define {name} {value}\n")
 
-template frontDestroy*(T: typedesc[object|tuple]) {.dirty.} =
-  proc destroy*(x: ptr T) {.front.} =
-    `=destroy`(x[])
+proc define*(h: var Header; name, typing, value: string; ) =
+  ## Adds a preprocessor definition with value type casted using a C-style cast.
+  ## 
+  define(h, name, &"((typing)value)")
 
-proc constvar*(T: typedesc[enum]; name = "") =
-  let ctype = if name == "": $T else: name
-  
-  for member in T:
-    constvar(symbolName(member), ctype, $(ord(member)))
-  constvar(ctype & "Low", ctype, $ord(low(T)))
-  constvar(ctype & "High", ctype, $ord(high(T)))
+{.pop.}
+
+var 
+  headerCache {.compileTime.}: Header
+
+template header*(body) =
+  ## Add content to the generated header
+  ## Things you can add:
+  ##  - constexpr variables
+  ##  - Preprocessor defines
+  ##  - Type aliases
+  ## 
+  ## Only the procs with the first parameter being `var Header` can be used in
+  ## `body`
+  ##
+  static:
+    with headerCache:
+      body
 
 
-const 
+const
   headerTmpl = """
 #pragma once
 
@@ -98,12 +134,13 @@ const
 #include "unnimbase.h"
 
 // Nim-generated defines
-$defines@
+$headerCache.defines@
+
+// Nim-generated variables
+$headerCache.aliases@
 
 namespace B {
-// Nim-generated variables
-$aliases@
-$vars@
+$headerCache.vars@
 }
 
 """
@@ -111,89 +148,36 @@ $vars@
   nimcacheDir = querySetting(SingleValueSetting.nimcacheDir)
   headerPath = nimcacheDir / "tbb.hxx"
 
-proc writeHeader*() =
+proc writeHeaderImpl() {.compileTime.} =
+  writeFile(headerPath, fmt(headerTmpl, '$', '@'))
+
+template writeHeader*() =
   ## Generates the header in the nimcache directory with name tbb.hxx
   ## The header includes the header generated by the nim compiler
   ##
-  var header = fmt(headerTmpl, '$', '@')
-  writeFile(headerPath, header)
+  static:
+    writeHeaderImpl()
 
-proc frontImpl(name: string; node: NimNode): NimNode =
+# C++ Interop =================================================================
+
+{. push compileTime .}
+  
+proc frontImpl(name: string; node: NimNode) =
+  # adds pragmas specified by [front]
   expectKind(node, nnkProcDef)
   if name == "":
     node.addPragma(ident("exportcpp"))
   else:
-    node.addPragma(newTree(nnkExprColonExpr, ident("exportcpp"), newLit(name)))
+    node.addColonPragma("exportcpp", name)
   node.addPragma(ident("used"))
-  node.addPragma(newTree(nnkExprColonExpr, ident("raises"), newTree(nnkBracket)))
-  result = node
-
-proc convertVarThisToPtrThis(procDef: NimNode): bool =
-  # the `member` pragma only accepts procs with the first parameter being
-  # `T` or `ptr T` where `T is object`. This modifies the procedure definition
-  # if the first parameter is `var T`. `true` is returned if the proc was
-  # modified.
-  #
-  #   proc foo(f: var Foo) =
-  #     discard # proc body
-  #
-  # becomes
-  #
-  #   proc foo(pf: ptr Foo) =
-  #     template f(): var Foo = pf[]
-  #     discard # proc body
-
-  let params = procDef.params
-  if params.len >= 2 and params[1][1].kind == nnkVarTy:
-    let
-      this = params[1]
-      thisIdent = this[0]
-      thisType = this[1]
-      thisPtr = ident("p" & thisIdent.strVal)
-    # insert a template that converts the var T parameter to the ptr T one
-    let code = quote do:
-      template `thisIdent`(): `thisType` = `thisPtr`[]
-    procDef.body.insert(0, code)
-    this[0] = thisPtr
-    this[1] = newTree(nnkPtrTy, this[1][0])
-    result = true
-
-proc nodeIsExportc(n: NimNode): bool =
-  result = n.eqIdent("exportc") or n.eqIdent("exportcpp")
-
-proc getIdent(node: NimNode): string =
-  case node.kind
-  of nnkPostfix:
-    if node[0].eqIdent("*"): 
-      result = node[1].strVal
-  of nnkSym, nnkIdent:
-    result = node.strVal
-  else:
-    discard
-
-proc getExportedName(sym: NimNode): string =
-  expectKind(sym, nnkSym)
-  let impl = getImpl(sym)
-  if impl != nil and impl.kind == nnkTypeDef:
-    if impl[0].kind == nnkPragmaExpr:
-      let typeName = getIdent(impl[0][0])
-      for p in impl[0][1]:
-        if nodeIsExportc(p):
-          result = typeName
-        elif p.kind == nnkExprColonExpr and nodeIsExportc(p[0]):
-          result = p[1].strVal % [typeName]
+  node.addColonPragma("raises", newTree(nnkBracket))
 
 {. pop .}
 
-template bycref*() {.pragma.}
-  ## Custom pragma to annotate that a parameter should be passed by a C++
-  ## const reference when using [automember]
-  ##
+# C++ export ==================================================================
 
-template bymove*() {.pragma.}
-  ## Custom pragma to annotate that a parameter should be passed by a C++
-  ## move reference when using [automember]
-  ##
+import ./interop/members
+export members
 
 macro front*(procDef) =
   ## Custom pragma that makes procs available to the front end.
@@ -203,128 +187,36 @@ macro front*(procDef) =
   ##  * `used`
   ##  * `raises: []`
   ##
-  result = frontImpl("", procDef)
+  frontImpl("", procDef)
+  result = procDef
 
 macro frontx*(name: static string; procDef) =
   ## Same as [front] but allows you to specify the name passed to exportc
   ##
-  result = frontImpl(name, procDef)
-
-macro destructorMember*(T: typed): string =
-  let exportedName = getExportedName(T)
-  if exportedName == "":
-    error("Type must have an exportc or exportcpp pragma", T)
-  result = newLit(&"~{exportedName}()")
-
-type
-  CxxPassStyle = enum
-    cxxByVal        # T t
-    cxxByConstRef   # T const& t
-    cxxByRef        # T& t
-    cxxByMoveRef    # T&& t
-
-  MemberStringBuilder = object
-    isConst: bool
-    parameters: seq[CxxPassStyle]
-
-func render(s: MemberStringBuilder): string =
-  result = "$1("
-  let last = s.parameters.len - 1
-  for i, style in pairs(s.parameters):
-    let n = $(i + 2)
-    result.add(&"'{n} ")
-    case style
-    of cxxByVal:
-      discard
-    of cxxByConstRef:
-      result.add("const& ")
-    of cxxByRef:
-      discard
-    of cxxByMoveRef:
-      result.add("& ")
-    result.add(&"#{n}")
-    if i != last:
-      result.add(", ")
-  result.add(") ")
-  if s.isConst:
-    result.add("const ")
-  result.add("-> '0")
-
-macro automember*(procDef) =
-  ## Enhanced version of the member pragma. The member pragma is added to the
-  ## proc with an auto-generated format string.
-  ##  * Allows for `var T` instead of `ptr T` for the first parameter (this)
-  ##  * Parameters annotated with [bycref] pragma will be passed by const reference
-  ##  * Parameters annotated with [bymove] pragma will be passed by move reference
-  ##  * The `const` specifier is added to the method signature when not
-  ##    using `var T` for the first parameter.
-  ## 
-  expectKind(procDef, nnkProcDef)
+  frontImpl(name, procDef)
   result = procDef
-  let params = procDef.params
-  expectMinLen(params, 2)
-  var builder: MemberStringBuilder
-  builder.isConst = not convertVarThisToPtrThis(procDef)
-  for i in 2..<params.len:
-    var style: CxxPassStyle
-    let paramIdent = params[i][0]
-    if paramIdent.kind == nnkPragmaExpr:
-      let pragmas = paramIdent[1]
-      for i in 0..<pragmas.len:
-        if pragmas[i].kind == nnkIdent:
-          case pragmas[i].strVal
-          of "bycref":
-            style = cxxByConstRef
-            pragmas[i] = ident("bycopy")
-          of "bymove":
-            style = cxxByMoveRef
-            pragmas[i] = ident("byref")
-          of "bycopy": style = cxxByVal
-          of "byref": style = cxxByRef
-          else: discard
-    builder.parameters.add(style)
-
-  result.addPragma(newTree(nnkExprColonExpr, ident("member"), newLit(render(builder))))
-
-macro autodestructor*(procDef) =
-  ## Adds the member pragma with the name of the type's C++ destructor.
-  ##
-  expectKind(procDef, nnkProcDef)
-  var thisType: NimNode
-  if convertVarThisToPtrThis(procDef):
-    thisType = procDef.params[1][1][0]
-  else:
-    thisType = procDef.params[1][1]
-  result = procDef
-  result.addPragma(
-    newTree(
-      nnkExprColonExpr, 
-      ident("member"),
-      newCall(ident("destructorMember"), thisType)
-    )
-  )
 
 # String interop
 
-proc initString*(): string {.front.} =
+proc bInitString*(): string {.front.} =
   result = ""
 
-proc initString*(len: int): string {.front.} =
+proc bInitString*(len: int): string {.front.} =
   result = newString(len)
 
-proc initString*(str: ccstring): string {.front.} =
+proc bInitString*(str: ccstring): string {.front.} =
   result = $(cstring(str))
 
-proc initString*(str: string): string {.front.} =
+proc bInitString*(str: string): string {.front.} =
   result = str
 
-proc destroy*(s: string) {.front.} =
+proc bDestroy*(s: string) {.front.} =
   `=destroy`(s)
 
-proc stringReset*(s: var string) {.frontx: "reset".} =
+proc stringReset*(s: var string) {.frontx: "bReset".} =
   s = ""
 
-proc stringAdd*(s: var string; ch: char) {.frontx: "add".} =
+proc stringAdd*(s: var string; ch: char) {.frontx: "bAdd".} =
   s.add(ch)
 
 proc data*(s: string): ccstring {.front.} =
@@ -343,42 +235,42 @@ $1& operator=($1 &&str);
 """
 
 type
-  String {.exportc, codegenDecl: stringCodegen.} = object
+  BString {.exportc, codegenDecl: stringCodegen.} = object
     s*: string
 
 {. emit: """
 
-String::String(NimStringV2 s) :
+BString::BString(NimStringV2 s) :
     s(s) 
 {
 }
 
-String::String(String const& str) :
-    s(initString(str.s)) 
+BString::BString(BString const& str) :
+    s(bInitString(str.s))
 {
 }
 
-String::String(String &&str) : 
+BString::BString(BString &&str) :
     s(str.s) 
 { 
-    reset(str.s); 
+    bReset(str.s);
 }
 
-String::~String() { 
-    reset(s); 
+BString::~BString() {
+    bReset(s);
 }
 
-String& String::operator=(String const& str) {
-    reset(s);
-    s = initString(str.s);
+BString& BString::operator=(BString const& str) {
+    bReset(s);
+    s = bInitString(str.s);
     return *this;
 }
 
-String& String::operator=(String &&str) {
+BString& BString::operator=(BString &&str) {
     auto tmp = s;
     s = str.s;
     str.s = tmp;
-    reset(str.s);
+    bReset(str.s);
     return *this;
 }
 

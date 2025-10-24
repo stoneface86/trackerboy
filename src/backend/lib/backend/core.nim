@@ -6,14 +6,14 @@ import
 
 type
   
-  BSlice* {.exportc: "Slice".} = object
+  BSlice* {.exportc.} = object
     len*: int
     data*: cstring
 
-  PanicCallback* {.exportc.} = proc(msg: BSlice) {.noconv, raises: [].}
+  BPanicCallback* {.exportc.} = proc(msg: BSlice) {.noconv, raises: [].}
 
   Core = object
-    panicCallback: PanicCallback
+    panicCallback: BPanicCallback
     tempStr: string
   
   Box*[T] = object
@@ -84,15 +84,15 @@ template canPanic*(body) =
 
 # C API
 
-proc init*() {.front.} =
+proc bInit*() {.front.} =
   gCore.panicCallback = nil
 
-proc deinit*() {.front.} =
+proc bDeinit*() {.front.} =
   reset(gCore)
 
-proc setPanicCallback*(callback: PanicCallback) {.front.} =
+proc bSetPanicCallback*(callback: BPanicCallback) {.front.} =
   gCore.panicCallback = callback
 
-proc version*(): ccstring {.front.} =
+proc bVersion*(): ccstring {.front.} =
   result = ccstring(currentVersionString)
 

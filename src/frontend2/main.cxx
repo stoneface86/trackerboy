@@ -10,9 +10,7 @@
 #include <QElapsedTimer>
 #include <QFileInfo>
 #include <QMessageBox>
-#include <QPointer>
 #include <QSettings>
-#include <QStringBuilder>
 #include <QTextStream>
 #include <QtDebug>
 
@@ -25,7 +23,7 @@
 struct Demangled {
     const char *val;
 
-    Demangled(const char *name) {
+    explicit Demangled(const char *name) {
         int status = -1;
         val = abi::__cxa_demangle(name, nullptr, nullptr, &status);
         owned = status == 0;
@@ -72,7 +70,7 @@ public:
         try {
             return QApplication::notify(receiver, evt);
         } catch (std::exception const &except) {
-            Demangled demangled(typeid(except).name());
+            Demangled const demangled(typeid(except).name());
             qFatal(cUncaughtExceptionMsg, demangled.val, except.what());
         }
     }
@@ -81,25 +79,26 @@ public:
 // Message handler ---
 
 // globals
-static QtMessageHandler gDefaultMessager; // default message handler
-static QPointer<MainWindow> gMainWindow;
+static QtMessageHandler gDefaultMessenger; // default message handler
+static MainWindow *gMainWindow;
 
 //
 // custom message handler that passes any fatal message to the user before
 // exiting.
 //
-static void trackerboyMessage(QtMsgType type, QMessageLogContext const &ctx,
+static void trackerboyMessage(QtMsgType const type,
+                              QMessageLogContext const &ctx,
                               QString const &msg) {
     if (type == QtFatalMsg && gMainWindow) {
         gMainWindow->panic(msg);
     }
-    gDefaultMessager(type, ctx, msg);
+    gDefaultMessenger(type, ctx, msg);
 }
 
 //
 // Backend panic handler. Just calls qFatal with the error message.
 //
-static void backendPanic(B::Slice msg) {
+static void backendPanic(BSlice const msg) {
     qFatal("%s", msg.data);
 }
 
@@ -113,13 +112,13 @@ int main(int argc, char *argv[]) {
     timer.start();
 #endif
 
-    B::NimMain();
-    B::init();
-    B::setPanicCallback(backendPanic);
+    bNimMain();
+    bInit();
+    bSetPanicCallback(backendPanic);
 
-    gDefaultMessager = qInstallMessageHandler(trackerboyMessage);
+    gDefaultMessenger = qInstallMessageHandler(trackerboyMessage);
 
-    Application app(argc, argv);
+    Application const app(argc, argv);
     Application::setOrganizationName(cAppName);
     Application::setApplicationName(cAppName);
     Application::setApplicationVersion(cVersion);
@@ -139,15 +138,15 @@ int main(int argc, char *argv[]) {
     parser.process(app);
 
     QString fileToOpen;
-    auto const positionals = parser.positionalArguments();
-    switch (positionals.size()) {
+    switch (auto const positionals = parser.positionalArguments();
+            positionals.size()) {
     case 0:
         break;
     case 1:
         fileToOpen = positionals[0];
         break;
     default:
-        // we could just only take the first argument and ignore the rest
+        // we could just only take the first argument and ignore the rest,
         // but I prefer to be strict
         fputs("too many arguments given\n", stderr);
         fputs(qPrintable(parser.helpText()), stderr);
@@ -181,7 +180,7 @@ int main(int argc, char *argv[]) {
     auto const code = app.exec();
 
     delete gMainWindow;
-    B::deinit();
+    bDeinit();
     return code;
 }
 

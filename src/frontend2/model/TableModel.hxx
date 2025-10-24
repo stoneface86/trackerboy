@@ -51,5 +51,5 @@ private:
     void itemRemoved(u8 id);
 
     NameListModel *_source;
-    B::TableModel _backend;
+    BTableModel _backend;
 };

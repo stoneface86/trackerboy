@@ -47,7 +47,7 @@ bool SongModel::hasTickrate() const {
     return _document->view()->song.hasTickrate();
 }
 
-B::Tickrate SongModel::tickrate() const {
+BTickrate SongModel::tickrate() const {
     return _document->view()->song.tickrate();
 }
 
@@ -92,7 +92,7 @@ void SongModel::clearTickrate() {
     }
 }
 
-void SongModel::setTickrate(B::Tickrate tickrate) {
+void SongModel::setTickrate(BTickrate tickrate) {
     if (!_document->view()->song.tickrateEqual(tickrate)) {
         _document->edit(true)->song.setTickrate(tickrate);
         emit tickrateChanged();

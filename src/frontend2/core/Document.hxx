@@ -17,30 +17,35 @@ public:
     // only be made when you have an EditContext object.
     //
     struct EditContext {
-        B::Document *backend;
+        BDocument *backend;
         Document &document;
         bool setModified;
 
         explicit EditContext(Document &doc, bool setModified = false);
         ~EditContext();
 
-        inline B::Document *operator->() { return backend; }
+        [[nodiscard]] inline BDocument *operator->() const { return backend; }
     };
 
     //
     // An object representing a context for viewing the document's source data.
     //
     struct ViewContext {
-        B::Document const *backend;
+        BDocument const *backend;
         Document const &document;
 
         explicit ViewContext(Document const &doc);
         ~ViewContext();
 
-        inline B::Document const *operator->() { return backend; }
+        [[nodiscard]] inline BDocument const *operator->() const {
+            return backend;
+        }
     };
 
     explicit Document(QObject *parent = nullptr);
+    ~Document() override;
+
+    [[nodiscard]] bool isModified() const;
 
     void setModified();
 
@@ -60,13 +65,13 @@ public:
     //
     // Get a `ViewContext` for read-only access to the document's source data.
     //
-    ViewContext view() const;
+    [[nodiscard]] ViewContext view() const;
 
     //
     // Gets the QUndoGroup in use by this document. Each song has its own
     // QUndoStack. To change the active stack, use `selectSong`.
     //
-    QUndoGroup const *undoGroup() const;
+    [[nodiscard]] QUndoGroup const *undoGroup() const;
 
     //
     // Select the current song for editing and playback. The `songChanged`
@@ -78,12 +83,12 @@ public:
     //
     // Gets the current song index that was selected.
     //
-    int song() const;
+    [[nodiscard]] int song() const;
 
     //
     // Applies the given list of changes to the document's song list.
     //
-    void changeSongList(B::SongListChanges const &changes);
+    void changeSongList(BSongListChanges const &changes);
 
 signals:
     //
@@ -124,10 +129,10 @@ private:
 
     void initHistory();
 
-    QList<SongHistory> initHistoryFromSource();
+    QList<SongHistory> initHistoryFromSource() const;
     void selectSongImpl(int songNo);
 
-    NimRef<B::Document> _source;
+    BDocument _source;
     bool _modified;
     QUndoGroup *_undoGroup;
     QList<SongHistory> _songHistories;

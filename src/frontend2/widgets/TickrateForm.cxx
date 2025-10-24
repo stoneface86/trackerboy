@@ -40,11 +40,11 @@ TickrateForm::TickrateForm(QWidget *parent)
     });
 }
 
-B::Tickrate TickrateForm::tickrate() const {
-    return {(B::System)_buttons->checkedId(), (B::NF32)_customRate->value()};
+BTickrate TickrateForm::tickrate() const {
+    return {(BSystem)_buttons->checkedId(), (NF32)_customRate->value()};
 }
 
-void TickrateForm::setTickrate(B::Tickrate const &tickrate) {
+void TickrateForm::setTickrate(BTickrate const &tickrate) {
     QSignalBlocker blocker(this);
     _customRate->setValue(tickrate.customFramerate);
     _customRate->setEnabled(tickrate.system == B::systemCustom);

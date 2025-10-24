@@ -61,7 +61,8 @@ ModulePropertiesDialog::ModulePropertiesDialog(QWidget *parent)
 }
 
 void ModulePropertiesDialog::load(Document const &doc) {
-    auto const props = doc.view()->mod.moduleProperties();
+    BModuleProperties props;
+    doc.view()->mod.moduleProperties(props);
     auto loadInfoString = [](QLineEdit *edit, const char *data) {
         auto len = 0;
         do {
@@ -81,7 +82,7 @@ void ModulePropertiesDialog::load(Document const &doc) {
 }
 
 void ModulePropertiesDialog::save(Document &doc) const {
-    B::ModuleProperties props;
+    BModuleProperties props;
 
     auto setInfoString = [](QLineEdit *edit, char *out) {
         auto tmp = edit->text().toUtf8();
