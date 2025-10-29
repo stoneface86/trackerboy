@@ -13,6 +13,8 @@ if (WIN32)
 elseif (APPLE)
   set(GUI_TYPE MACOSX_BUNDLE)
   set(MACOSX_APPICON_ICNS "resources/img/app.icns")
+  set(MACOSX_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist")
+  configure_file("Info.plist.in" "${MACOSX_PLIST}" @ONLY)
 else ()
   set(GUI_TYPE "")
 endif ()
@@ -96,6 +98,9 @@ add_executable(
 )
 target_link_libraries(frontend PRIVATE frontendObj)
 set_target_properties(frontend PROPERTIES OUTPUT_NAME "trackerboy")
+if (APPLE)
+  set_target_properties(frontend PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${MACOSX_PLIST}")
+endif ()
 
 if (BUILD_TESTING)
   add_executable(
