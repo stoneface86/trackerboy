@@ -18,7 +18,6 @@
 #include "widgets/Sidebar.hxx"
 
 class MainWindow final : public QMainWindow {
-
     Q_OBJECT
 
 public:
@@ -56,10 +55,16 @@ private:
 
     void stopPlayback();
 
+    void visitFile(QString const &path);
+    [[nodiscard]] bool save(QString const &dest, bool updateName);
+    [[nodiscard]] bool saveAs(QString const &startingPath);
     [[nodiscard]] bool canReload();
 
-    void setDocumentName(QString name);
-    void setDocumentName();
+    void setModulePath();
+    void setModulePath(QString const &path);
+    QString modulePath() const;
+
+    void statusMessage(QString const &message);
 
     void initToolBars();
     void initMenuBar();
@@ -71,13 +76,6 @@ private:
     RecentFiles _recentFiles;
     Document *_document;
 
-    struct Io {
-        BDocumentFile backend;
-        QString filepath;
-        QString filename;
-    };
-    Io _io;
-
     NameListModel *_songListModel;
     NameListModel *_instrumentListModel;
     NameListModel *_waveformListModel;
@@ -85,6 +83,10 @@ private:
     SongListEditor *_songListEditor;
     ModulePropertiesDialog *_moduleProperties;
     CommentsDialog *_comments;
+
+    QString _lastFileDir;
+    bool _isUntitled;
+    bool _autoBackup;
 
     // toolbars
     enum Toolbars {
@@ -95,6 +97,7 @@ private:
         ToolbarView,
         ToolbarCount
     };
+
     std::array<QToolBar *, ToolbarCount> _toolbars;
 
     struct Ui {

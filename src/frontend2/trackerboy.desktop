@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=TrackerBoy
+Comment=Game Boy music tracker
+Keywords=game;boy;gameboy;color;tracker
+Categories=Audio;AudioVideo;
+Exec=trackerboy
+Icon=trackerboy
+Terminal=false
+StartupNotify=true
+StartupWMClass=trackerboy
+MimeType=application/x-trackerboy-module

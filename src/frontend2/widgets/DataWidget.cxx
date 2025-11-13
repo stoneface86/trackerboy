@@ -30,6 +30,7 @@ DataWidget::DataWidget(NameListModel *model, QString const &title,
     lazyconnect(_model, modelReset, this, selectCurrentId);
     lazyconnect(selectionModel, selectionChanged, this, viewSelectionChanged);
     lazyconnect(_view, activated, this, edit);
+    lazyconnect(model->document(), reloaded, this, onReload);
 }
 
 int DataWidget::currentId() const {
@@ -123,4 +124,8 @@ void DataWidget::updateActions() {
     _actions.imp->setEnabled(canAdd);
     _actions.exp->setEnabled(selectedExists);
     _actions.edit->setEnabled(selectedExists);
+}
+
+void DataWidget::onReload() {
+    setCurrentId(-1);
 }

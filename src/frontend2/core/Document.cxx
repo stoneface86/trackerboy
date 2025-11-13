@@ -7,8 +7,8 @@
 
 Document::EditContext::EditContext(Document &doc, bool const setModified)
     : backend(&doc._source)
-    , document(doc)
-    , setModified(setModified) {
+      , document(doc)
+      , setModified(setModified) {
     backend->lock();
 }
 
@@ -21,16 +21,17 @@ Document::EditContext::~EditContext() {
 
 Document::ViewContext::ViewContext(Document const &doc)
     : backend(&doc._source)
-    , document(doc) {}
+      , document(doc) {
+}
 
 Document::ViewContext::~ViewContext() = default;
 
 Document::Document(QObject *parent)
     : QObject(parent)
-    , _source()
-    , _modified(false)
-    , _undoGroup(new QUndoGroup(this))
-    , _currentSong(0) {
+      , _source()
+      , _modified(false)
+      , _undoGroup(new QUndoGroup(this))
+      , _currentSong(0) {
     initHistory();
 }
 
@@ -51,15 +52,7 @@ void Document::clear() {
     _source.lock();
     _source.pushNew();
     _source.unlock();
-
-    clean();
-    for (auto const &history : _songHistories) {
-        _undoGroup->removeStack(history.stack);
-        delete history.stack;
-    }
-    initHistory();
-    reloaded(true);
-    selectSongImpl(0);
+    onLoad(true);
 }
 
 void Document::selectSong(int const songNo) {
@@ -90,6 +83,23 @@ QUndoGroup const *Document::undoGroup() const {
     return _undoGroup;
 }
 
+BSaveResult Document::save(QString const &path, bool backup) {
+    aboutToSave();
+    auto const result = BIo::save(_source, toNimString(path).s, backup);
+    if (result.io == B::ioSuccess) {
+        clean();
+    }
+    return result;
+}
+
+BIoResult Document::open(QString const &path) {
+    auto const result = BIo::load(_source, toNimString(path).s);
+    if (result == B::ioSuccess) {
+        onLoad(false);
+    }
+    return result;
+}
+
 QList<Document::SongHistory> Document::initHistoryFromSource() const {
     QList<Document::SongHistory> result;
     auto const songCount = _source.mod.songCount();
@@ -117,7 +127,7 @@ void Document::changeSongList(BSongListChanges const &changes) {
     auto findHistoryById = [](QList<SongHistory> const &list,
                               qintptr const id) -> int {
         int i = 0;
-        for (auto const &h : list) {
+        for (auto const &h: list) {
             if (h.id == id) {
                 return i;
             }
@@ -128,7 +138,7 @@ void Document::changeSongList(BSongListChanges const &changes) {
 
     auto nextHistory = initHistoryFromSource();
     // scan current for removed songs
-    for (auto const &h : _songHistories) {
+    for (auto const &h: _songHistories) {
         if (auto const index = findHistoryById(nextHistory, h.id);
             index == -1) {
             // not found, delete the stack and remove it from the group
@@ -145,14 +155,14 @@ void Document::changeSongList(BSongListChanges const &changes) {
     // was added (or duplicated) and will need a new stack
     // There is no way to deep-copy a QUndoStack so duplicated songs will have
     // a brand new stack.
-    for (auto &h : nextHistory) {
+    for (auto &h: nextHistory) {
         if (h.stack == nullptr) {
             qDebug() << "Creating new history for song id " << h.id;
             h.stack = new QUndoStack(_undoGroup);
         }
     }
     auto const song =
-        findHistoryById(nextHistory, _songHistories[_currentSong].id);
+            findHistoryById(nextHistory, _songHistories[_currentSong].id);
 
     _songHistories = std::move(nextHistory);
     // re-select the current song. If the current song was deleted, select the
@@ -165,4 +175,15 @@ void Document::selectSongImpl(int const songNo) {
     _currentSong = songNo;
     _undoGroup->setActiveStack(_songHistories[songNo].stack);
     emit songChanged(songNo);
+}
+
+void Document::onLoad(bool const newModule) {
+    clean();
+    for (auto const &history: _songHistories) {
+        _undoGroup->removeStack(history.stack);
+        delete history.stack;
+    }
+    initHistory();
+    reloaded(newModule);
+    selectSongImpl(0);
 }

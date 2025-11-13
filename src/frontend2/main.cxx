@@ -121,6 +121,7 @@ int main(int argc, char *argv[]) {
     Application const app(argc, argv);
     Application::setOrganizationName(cAppName);
     Application::setApplicationName(cAppName);
+    Application::setApplicationDisplayName(cAppName);
     Application::setApplicationVersion(cVersion);
     Application::setWindowIcon(icons::getApp());
     // use INI on all systems, much easier to edit by hand

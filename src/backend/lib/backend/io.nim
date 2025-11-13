@@ -2,7 +2,7 @@
 import
   ./[document, interop],
   libtrackerboy/[data, io],
-  std/[os, paths, streams]
+  std/[os, streams]
 
 
 type
@@ -21,13 +21,11 @@ type
     backupFailed
     backupFailedLocationInUse
   
-  DocumentFilePrivate = object
-    path: Path
-    autoBackup: bool
-    lastBackupResult: BAutoBackupResult
+  BSaveResult* {.exportc.} = object
+    io: BIoResult
+    backup: BAutoBackupResult
 
-  BDocumentFile* {.exportc.} = object
-    p: DocumentFilePrivate
+  BIo* {.exportc.} = object
 
 func toIoResult(fr: FormatResult): BIoResult =
   case fr
@@ -49,43 +47,33 @@ proc safeClose(s: Stream) =
   except IoError, OsError:
     discard
 
-proc saveImpl(df: var BDocumentFile; doc: BDocument; filename: string): BIoResult =
-  if filename == "":
-    result = ioFileError
-  else:
-    # auto backup if configured
-    if df.p.autoBackup and fileExists(filename):
-      let backupPath = filename & ".bak"
-      if dirExists(backupPath):
-        df.p.lastBackupResult = backupFailedLocationInUse
-      else:
-        try:
-          copyFile(filename, backupPath)
-          df.p.lastBackupResult = backupSuccess
-        except IoError, OsError:
-          df.p.lastBackupResult = backupFailed
-    # serialize the document's module to the given filename
-    let fs = newFileStream(filename, fmWrite)
-    if fs == nil:
-      result = ioFileError
+members(BIo):
+  proc save*(_: static _; doc {.bycref.}: BDocument; filename: string;
+             backup: bool
+             ): BSaveResult =
+    if filename == "":
+      result.io = ioFileError
     else:
-      result = toIoResult(serialize(doc.module, fs))
-      fs.safeClose()
-
-members(BDocumentFile):
-  constructor:
-    proc _(): _ =
-      discard
+      # auto backup if configured
+      if backup and fileExists(filename):
+        let backupPath = filename & ".bak"
+        if dirExists(backupPath):
+          result.backup = backupFailedLocationInUse
+        else:
+          try:
+            copyFile(filename, backupPath)
+            result.backup = backupSuccess
+          except IoError, OsError:
+            result.backup = backupFailed
+      # serialize the document's module to the given filename
+      let fs = newFileStream(filename, fmWrite)
+      if fs == nil:
+        result.io = ioFileError
+      else:
+        result.io = toIoResult(serialize(doc.module, fs))
+        fs.safeClose()
   
-  destructor
-
-  proc setAutoBackup*(d: var _; on: bool) =
-    d.p.autoBackup = on
-
-  proc lastBackupResult*(d: _): BAutoBackupResult =
-    result = d.p.lastBackupResult
-
-  proc open*(df: var _; doc: var BDocument; filename: string): BIoResult =
+  proc load*(_: static _; doc: var BDocument; filename: string): BIoResult =
     # deserialize the module stored in the given file, updating doc's module on success
     let fs = newFileStream(filename, fmRead)
     if fs == nil:
@@ -94,15 +82,5 @@ members(BDocumentFile):
       var module: Module
       result = toIoResult(module.deserialize(fs))
       if result == ioSuccess:
-        doc.module() = module
-        df.p.path = filename.Path
+        doc.module = move(module)
       fs.safeClose()
-
-  proc save*(df: var _; doc {.bycref.}: BDocument): BIoResult =
-    result = df.saveImpl(doc, df.p.path.string)
-
-  proc save*(df: var _; doc {.bycref.}: BDocument; filename: string): BIoResult =
-    result = df.saveImpl(doc, filename)
-    if result == ioSuccess:
-      df.p.path = filename.Path
-

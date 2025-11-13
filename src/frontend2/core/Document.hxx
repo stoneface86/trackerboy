@@ -7,7 +7,6 @@
 #include <QUndoGroup>
 
 class Document : public QObject {
-
     Q_OBJECT
 
 public:
@@ -22,6 +21,7 @@ public:
         bool setModified;
 
         explicit EditContext(Document &doc, bool setModified = false);
+
         ~EditContext();
 
         [[nodiscard]] inline BDocument *operator->() const { return backend; }
@@ -35,6 +35,7 @@ public:
         Document const &document;
 
         explicit ViewContext(Document const &doc);
+
         ~ViewContext();
 
         [[nodiscard]] inline BDocument const *operator->() const {
@@ -43,6 +44,7 @@ public:
     };
 
     explicit Document(QObject *parent = nullptr);
+
     ~Document() override;
 
     [[nodiscard]] bool isModified() const;
@@ -90,6 +92,10 @@ public:
     //
     void changeSongList(BSongListChanges const &changes);
 
+    [[nodiscard]] BSaveResult save(QString const &path, bool backup = false);
+
+    [[nodiscard]] BIoResult open(QString const &path);
+
 signals:
     //
     // Signal emitted before saving the module to file, models should use this
@@ -130,7 +136,10 @@ private:
     void initHistory();
 
     QList<SongHistory> initHistoryFromSource() const;
+
     void selectSongImpl(int songNo);
+
+    void onLoad(bool newModule);
 
     BDocument _source;
     bool _modified;

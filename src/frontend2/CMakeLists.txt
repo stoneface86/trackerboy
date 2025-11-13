@@ -97,7 +97,7 @@ add_executable(
   "${MACOSX_APPICON_ICNS}"
 )
 target_link_libraries(frontend PRIVATE frontendObj)
-set_target_properties(frontend PROPERTIES OUTPUT_NAME "trackerboy")
+set_target_properties(frontend PROPERTIES OUTPUT_NAME "TrackerBoy")
 if (APPLE)
   set_target_properties(frontend PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${MACOSX_PLIST}")
 endif ()

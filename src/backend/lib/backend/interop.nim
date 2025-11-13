@@ -10,7 +10,7 @@
 #
 
 import
-  std/[compilesettings, enumutils, macros, os, strformat, sequtils, strutils, with],
+  std/[compilesettings, enumutils, macros, os, strformat, with],
   ./interop/macroutils
 
 type

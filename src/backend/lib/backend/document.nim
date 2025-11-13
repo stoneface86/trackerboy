@@ -109,7 +109,7 @@ const
 template module*(d: BDocument): Module =
   d.`mod`.`ref`[]
 
-template `module=`(d: var BDocument; m: Module) =
+template `module=`*(d: var BDocument; m: Module) =
   d.`mod`.`ref`[] = m
 
 template `@`(c: BModuleCursor | BSongCursor | BInstrumentCursor | BWaveformCursor): auto =

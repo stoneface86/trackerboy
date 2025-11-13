@@ -6,19 +6,22 @@
 #include "utils/ToolbarLayout.hxx"
 #include "utils/actions.hxx"
 #include "utils/aliases.hxx"
+#include "utils/backendutils.hxx"
 #include "utils/connectutils.hxx"
 
 #include <QApplication>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QScreen>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QStatusBar>
 
 #define TU MainWindowTU
-namespace TU {
 
+namespace TU {
 static strlit cGroup = "MainWindow";
 static strlit cKeyShowSidebar = "showSidebar";
 static strlit cKeyShowDatabar = "showDatabar";
@@ -33,6 +36,9 @@ static strlit cKeySplitterV = "splitterV";
 static strlit cKeySplitterH = "splitterH";
 static strlit cKeyInstrumentsShowEmpty = "instrumentsShowEmpty";
 static strlit cKeyWaveformsShowEmpty = "waveformsShowEmpty";
+static strlit cKeyLastSaveDir = "lastSaveDir";
+
+static strlit cModuleFileFilter = QT_TR_NOOP("TrackerBoy Module (*.tbm)");
 
 //
 // increment this constant when adding new docks or toolbars
@@ -41,6 +47,11 @@ static strlit cKeyWaveformsShowEmpty = "waveformsShowEmpty";
 // v1 - initial version
 //
 static const int cWindowStateVers = 3;
+
+static void logFile(QDebug log, const char *prefix, QString const &file,
+                    QString const &msg) {
+    log.noquote().nospace() << prefix << file << ": " << msg;
+}
 
 } // namespace TU
 
@@ -58,11 +69,13 @@ MainWindow::MainWindow()
     , _songListEditor(nullptr)
     , _moduleProperties(nullptr)
     , _comments(nullptr)
+    , _lastFileDir()
+    , _isUntitled(true)
+    , _autoBackup(false)
     , _toolbars{}
     , _ui{} {
-
     lazyconnect(_document, modifiedChanged, this, setWindowModified);
-    setDocumentName();
+    setModulePath();
 
     initToolBars();
     initUi();
@@ -78,7 +91,34 @@ MainWindow::MainWindow()
 }
 
 void MainWindow::openFile(QString const &path) {
-    Q_UNUSED(path)
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    auto const openResult = _document->open(path);
+    QApplication::restoreOverrideCursor();
+
+    if (openResult == B::ioSuccess) {
+        visitFile(path);
+        setModulePath(path);
+        statusMessage(tr("Opened %1").arg(path));
+    } else {
+        auto const errorMsg = [](BIoResult const err) -> QString {
+            switch (err) {
+            case B::ioNotRecognized:
+                return tr("The file is not a TrackerBoy module");
+            case B::ioRevisionTooNew:
+                return tr("The module is from a newer version of TrackerBoy");
+            case B::ioRevisionTooOld:
+                return tr("Failed to upgrade the module");
+            case B::ioCorrupted:
+                return tr("The module is corrupted");
+            case B::ioReadError:
+                return tr("A read error occurred when loading the module");
+            default:
+                return tr("The file could not be read");
+            }
+        }(openResult);
+        TU::logFile(qWarning(), "Cannot open ", path, errorMsg);
+        QMessageBox::critical(this, tr("Could not open module"), errorMsg);
+    }
 }
 
 void MainWindow::panic(QString const &msg) {
@@ -86,8 +126,12 @@ void MainWindow::panic(QString const &msg) {
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
-    saveSettings();
-    evt->accept();
+    if (canReload()) {
+        saveSettings();
+        evt->accept();
+    } else {
+        evt->ignore();
+    }
 }
 
 void MainWindow::showSongListEditor() {
@@ -121,18 +165,117 @@ void MainWindow::showModuleProperties() {
     _moduleProperties->open();
 }
 
+void MainWindow::visitFile(QString const &path) {
+    _lastFileDir = QFileInfo(path).absolutePath();
+    _recentFiles.push(path);
+}
+
+QString MainWindow::modulePath() const {
+    if (_isUntitled) {
+        return _lastFileDir;
+    } else {
+        return windowFilePath();
+    }
+}
+void MainWindow::statusMessage(QString const &message) {
+    statusBar()->showMessage(message);
+    qInfo().noquote().nospace() << "[Status] " << message;
+}
+
+bool MainWindow::save(QString const &dest, bool const updateName) {
+    if (auto const err = _document->save(dest, _autoBackup);
+        err.io == B::ioSuccess) {
+        if (updateName) {
+            setModulePath(dest);
+        }
+        statusMessage(tr("Module saved to %1").arg(dest));
+        // check if the backup was successful
+        if (_autoBackup) {
+            auto const logAutoBackup = [](QDebug log, QString const &path,
+                                          const char *msg) {
+                log.noquote().nospace() << "[AutoBackup] "
+                                        << ".bak: " << path << msg;
+            };
+            switch (err.backup) {
+            case B::backupSuccess:
+                logAutoBackup(qInfo(), dest, "backup successful");
+                break;
+            case B::backupFailedLocationInUse:
+                logAutoBackup(
+                    qWarning(), dest,
+                    "backup failed, destination cannot be overwritten");
+                break;
+            case B::backupFailed:
+                logAutoBackup(qWarning(), dest, "backup failed");
+                break;
+            default:
+                break;
+            }
+        }
+        return true;
+    } else {
+        // display message box with the error
+        auto const errorMsg = [](BIoResult const result) -> QString {
+            switch (result) {
+            case B::ioFileError:
+                return tr(
+                    "Could not open file for writing, file path is either "
+                    "invalid or you do not have permission.");
+            case B::ioWriteError:
+            default:
+                return tr("An error occurred while writing to the file.");
+            }
+        }(err.io);
+        TU::logFile(qWarning(), "Cannot save ", dest, errorMsg);
+        QMessageBox::critical(this, tr("Save error"), errorMsg);
+        return false;
+    }
+}
+
+bool MainWindow::saveAs(QString const &startingPath) {
+    auto const dest = QFileDialog::getSaveFileName(
+        this, tr("Save Module"), startingPath, TU::cModuleFileFilter);
+
+    if (!dest.isEmpty()) {
+        if (save(dest, true)) {
+            visitFile(dest);
+            return true;
+        }
+    }
+    return false;
+}
+
 void MainWindow::onNew() {
     if (canReload()) {
         _document->clear();
-        setDocumentName();
+        setModulePath();
     }
 }
-void MainWindow::onOpen() {}
-bool MainWindow::onSave() {
-    return false;
+
+void MainWindow::onOpen() {
+    if (canReload()) {
+        auto const path = QFileDialog::getOpenFileName(
+            this, tr("Open Module"), modulePath(), TU::cModuleFileFilter);
+        if (!path.isEmpty()) {
+            openFile(path);
+        }
+    }
 }
-void MainWindow::onSaveAs() {}
+
+bool MainWindow::onSave() {
+    if (auto const path = modulePath(); _isUntitled) {
+        return saveAs(path);
+    } else {
+        return save(path, false);
+    }
+}
+
+void MainWindow::onSaveAs() {
+    (void)saveAs(modulePath());
+}
+
 void MainWindow::onExportToWav() {}
+
 void MainWindow::onConfiguration() {}
 
 void MainWindow::updateIcons() {
@@ -149,7 +292,8 @@ bool MainWindow::canReload() {
         // prompt the user if they want to save any changes
         auto const result = QMessageBox::warning(
             this, QApplication::applicationName(),
-            tr("Save changes to %1?").arg(_io.filename),
+            tr("Save changes to %1?")
+                .arg(QFileInfo(windowFilePath()).fileName()),
             QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
         switch (result) {
@@ -166,20 +310,18 @@ bool MainWindow::canReload() {
             break;
         }
     }
+    // document not modified: can close document
     return true;
 }
 
-void MainWindow::setDocumentName() {
-    setDocumentName(tr("New Module"));
+void MainWindow::setModulePath() {
+    _isUntitled = true;
+    setWindowFilePath(tr("Untitled.tbm"));
 }
 
-void MainWindow::setDocumentName(QString name) {
-    _io.filename = std::move(name);
-    auto title = QApplication::applicationName();
-    title.append(" - ");
-    title.append(_io.filename);
-    title.append("[*]");
-    setWindowTitle(title);
+void MainWindow::setModulePath(QString const &path) {
+    _isUntitled = false;
+    setWindowFilePath(path);
 }
 
 void MainWindow::initToolBars() {
@@ -217,7 +359,6 @@ void MainWindow::initToolBars() {
 }
 
 void MainWindow::initMenuBar() {
-
     auto const menubar = menuBar();
     QMenu *menu{};
 
@@ -542,11 +683,11 @@ void MainWindow::initMenuBar() {
 }
 
 void MainWindow::initStatusBar() {
-    /* auto status = */ statusBar();
+    /* auto status = */
+    statusBar();
 }
 
 void MainWindow::initUi() {
-
     auto container = new QWidget;
     auto layout = new QHBoxLayout;
 
@@ -618,6 +759,11 @@ void MainWindow::loadSettings() {
     };
     setShowEmpty(_ui.instruments, s.value(TU::cKeyInstrumentsShowEmpty, false));
     setShowEmpty(_ui.waveforms, s.value(TU::cKeyWaveformsShowEmpty, false));
+    _lastFileDir = s.value(TU::cKeyLastSaveDir).toString();
+    if (_lastFileDir.isEmpty()) {
+        // default to home
+        _lastFileDir = QDir::homePath();
+    }
 }
 
 void MainWindow::saveSettings() {
@@ -637,6 +783,7 @@ void MainWindow::saveSettings() {
     s.setValue(TU::cKeySplitterH, _ui.hsplitter->saveState());
     s.setValue(TU::cKeyInstrumentsShowEmpty, _ui.instruments->showEmpty());
     s.setValue(TU::cKeyWaveformsShowEmpty, _ui.waveforms->showEmpty());
+    s.setValue(TU::cKeyLastSaveDir, _lastFileDir);
 }
 
 void MainWindow::updateSongSelectActions() {

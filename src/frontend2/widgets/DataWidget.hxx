@@ -52,6 +52,8 @@ private:
 
     void selectCurrentId();
 
+    void onReload();
+
     void viewSelectionChanged(QItemSelection const &selected,
                               QItemSelection const &deselected);
 
