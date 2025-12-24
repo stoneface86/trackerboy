@@ -1,9 +1,7 @@
 
 #pragma once
 
-#include <QAction>
 #include <QMenu>
-#include <QString>
 #include <QStringList>
 
 #include <array>
@@ -17,14 +15,12 @@ struct RecentFiles {
 
     void setup(QMenu *menu);
 
-    void push(QString const& file);
+    QStringList push(QString const &file);
 
-    void setFromList(QStringList const& list);
+    void setFromList(QStringList const &list);
 
     QStringList toList();
 
-    QAction* separator;
-    std::array<QAction*, 9> actions;
-
-
+    QAction *separator;
+    std::array<QAction *, 9> actions;
 };

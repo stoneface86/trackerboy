@@ -23,6 +23,7 @@
 
 namespace TU {
 static strlit cGroup = "MainWindow";
+static strlit cRecentFiles = "recentFiles";
 static strlit cKeyShowSidebar = "showSidebar";
 static strlit cKeyShowDatabar = "showDatabar";
 static strlit cKeyShowStatusbar = "showStatusBar";
@@ -208,7 +209,11 @@ void MainWindow::showModuleProperties() {
 
 void MainWindow::visitFile(QString const &path) {
     _lastFileDir = QFileInfo(path).absolutePath();
-    _recentFiles.push(path);
+    {
+        auto const list = _recentFiles.push(path);
+        Settings s(SettingsState, TU::cGroup);
+        s.setValue(TU::cRecentFiles, list);
+    }
 }
 
 QString MainWindow::modulePath() const {
@@ -316,6 +321,15 @@ void MainWindow::onSaveAs() {
 }
 
 void MainWindow::onExportToWav() {}
+
+void MainWindow::onRecentFile() {
+    if (auto const action = qobject_cast<QAction *>(sender());
+        action != nullptr) {
+        if (canReload()) {
+            openFile(action->statusTip());
+        }
+    }
+}
 
 void MainWindow::onConfiguration() {}
 
@@ -434,6 +448,9 @@ void MainWindow::initMenuBar() {
         .triggers(lazyslotx(this, onExportToWav));
 
     _recentFiles.setup(menu);
+    for (auto const act : _recentFiles.actions) {
+        lazyconnect(act, triggered, this, onRecentFile);
+    }
     SEP(); // -----------------------------------------------------------------
     A(tr("Configuration..."), tr("Opens the configuration dialog"))
         .icon(icons::Config)
@@ -805,6 +822,8 @@ void MainWindow::loadSettings() {
         // default to home
         _lastFileDir = QDir::homePath();
     }
+
+    _recentFiles.setFromList(s.value(TU::cRecentFiles).toStringList());
 }
 
 void MainWindow::saveSettings() {
