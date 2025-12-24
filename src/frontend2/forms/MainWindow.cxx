@@ -122,7 +122,48 @@ void MainWindow::openFile(QString const &path) {
 }
 
 void MainWindow::panic(QString const &msg) {
-    Q_UNUSED(msg)
+    QString moduleSaveResult;
+    QDir const appDir(
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
+    auto appDirOk = appDir.exists();
+    if (!appDirOk) {
+        appDirOk = appDir.mkpath(".");
+    }
+    if (appDirOk) {
+        // <AppDir>/crash-<timestamp>.<file>
+        auto const prefix =
+            appDir.filePath(QString("crash-%1.")
+                                .arg(QDateTime::currentDateTime().toString(
+                                    "yyyy.mm.ddThh.mm.ss")));
+
+        if (_document->isModified()) {
+            // attempt to save a copy of the current module
+
+            if (auto const file =
+                    prefix + QFileInfo(windowFilePath()).fileName();
+                _document->save(file, false).io != B::ioSuccess) {
+                moduleSaveResult = tr("Unable to save a copy of the module");
+            } else {
+                moduleSaveResult =
+                    tr("A copy of the module has been saved to: %1").arg(file);
+            }
+        }
+        // write msg to prefix.txt
+        if (QFile msgFile(prefix + "txt"); msgFile.open(QIODevice::WriteOnly)) {
+            QTextStream stream(&msgFile);
+            stream << msg << Qt::endl;
+        }
+    }
+
+    QMessageBox msgbox(this);
+    msgbox.setIcon(QMessageBox::Critical);
+    msgbox.setStandardButtons(QMessageBox::Close);
+    msgbox.setText(tr("An unexpected error has occurred."));
+    msgbox.setDetailedText(msg);
+    if (!moduleSaveResult.isEmpty()) {
+        msgbox.setInformativeText(moduleSaveResult);
+    }
+    msgbox.exec();
 }
 
 void MainWindow::closeEvent(QCloseEvent *evt) {
@@ -280,8 +321,7 @@ void MainWindow::onConfiguration() {}
 
 void MainWindow::updateIcons() {
     iterateActions(menuBar(), [](QAction *act) {
-        auto const data = getData(act);
-        if (data.icon != -1) {
+        if (auto const data = getData(act); data.icon != -1) {
             act->setIcon(icons::get((icons::Icons)data.icon));
         }
     });
@@ -667,6 +707,7 @@ void MainWindow::initMenuBar() {
         SUBMENU(tr("Debug"));
         A(tr("Commit"), tr("Commit all pending data to module"))
             .triggers(_document, &Document::aboutToSave);
+        A(tr("Panic"), tr("Force a panic")).triggers(bPanic);
     }
 #endif
     SEP(); // -----------------------------------------------------------------

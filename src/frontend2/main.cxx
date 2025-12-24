@@ -66,7 +66,7 @@ class Application final : public QApplication {
 public:
     using QApplication::QApplication;
 
-    virtual bool notify(QObject *receiver, QEvent *evt) override {
+    bool notify(QObject *receiver, QEvent *evt) override {
         try {
             return QApplication::notify(receiver, evt);
         } catch (std::exception const &except) {
@@ -78,22 +78,45 @@ public:
 
 // Message handler ---
 
-// globals
-static QtMessageHandler gDefaultMessenger; // default message handler
-static MainWindow *gMainWindow;
+class Messenger {
+    QtMessageHandler _defaultMessenger;
+    MainWindow *_mainWindow;
+    bool _handlingMessage;
 
-//
-// custom message handler that passes any fatal message to the user before
-// exiting.
-//
-static void trackerboyMessage(QtMsgType const type,
-                              QMessageLogContext const &ctx,
-                              QString const &msg) {
-    if (type == QtFatalMsg && gMainWindow) {
-        gMainWindow->panic(msg);
+    inline static Messenger *_instance = nullptr;
+
+    static void handler(QtMsgType const type, QMessageLogContext const &ctx,
+                        QString const &msg) {
+        _instance->handlerImpl(type, ctx, msg);
     }
-    gDefaultMessenger(type, ctx, msg);
-}
+
+    void handlerImpl(QtMsgType const type, QMessageLogContext const &ctx,
+                     QString const &msg) {
+        if (!_handlingMessage) {
+            _handlingMessage = true;
+            if (type == QtFatalMsg && _mainWindow) {
+                _mainWindow->panic(msg);
+            }
+            _defaultMessenger(type, ctx, msg);
+            _handlingMessage = false;
+        }
+    }
+
+public:
+    explicit Messenger()
+        : _defaultMessenger(qInstallMessageHandler(handler))
+        , _mainWindow(nullptr)
+        , _handlingMessage(false) {
+        _instance = this;
+    }
+
+    ~Messenger() {
+        _instance = nullptr;
+        qInstallMessageHandler(nullptr);
+    }
+
+    void setWindow(MainWindow *win) { _mainWindow = win; }
+};
 
 //
 // Backend panic handler. Just calls qFatal with the error message.
@@ -116,10 +139,10 @@ int main(int argc, char *argv[]) {
     bInit();
     bSetPanicCallback(backendPanic);
 
-    gDefaultMessenger = qInstallMessageHandler(trackerboyMessage);
+    Messenger messenger;
 
     Application const app(argc, argv);
-    Application::setOrganizationName(cAppName);
+    // Application::setOrganizationName(cAppName);
     Application::setApplicationName(cAppName);
     Application::setApplicationDisplayName(cAppName);
     Application::setApplicationVersion(cVersion);
@@ -156,21 +179,21 @@ int main(int argc, char *argv[]) {
     }
 
     // create and show MainWindow
-    gMainWindow = new MainWindow();
-    gMainWindow->show();
+    auto const win = new MainWindow;
+    messenger.setWindow(win);
+    win->show();
 
     if (!fileToOpen.isEmpty()) {
-        QFileInfo info(fileToOpen);
-        if (!info.exists()) {
-            QMessageBox::critical(gMainWindow, tr("File does not exist"),
+        if (QFileInfo const info(fileToOpen); !info.exists()) {
+            QMessageBox::critical(win, tr("File does not exist"),
                                   tr("The module could not be opened because "
                                      "the file does not exist"));
         } else if (!info.isFile()) {
             QMessageBox::critical(
-                gMainWindow, tr("Invalid filename"),
+                win, tr("Invalid filename"),
                 tr("The module could not be opened because it is not a file"));
         } else {
-            gMainWindow->openFile(fileToOpen);
+            win->openFile(fileToOpen);
         }
     }
 
@@ -178,9 +201,10 @@ int main(int argc, char *argv[]) {
     qInfo() << "Launch time:" << timer.elapsed() << "ms";
 #endif
 
-    auto const code = app.exec();
+    auto const code = Application::exec();
 
-    delete gMainWindow;
+    messenger.setWindow(nullptr);
+    delete win;
     bDeinit();
     return code;
 }

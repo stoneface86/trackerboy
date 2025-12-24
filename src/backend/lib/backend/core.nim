@@ -96,3 +96,7 @@ proc bSetPanicCallback*(callback: BPanicCallback) {.front.} =
 proc bVersion*(): ccstring {.front.} =
   result = ccstring(currentVersionString)
 
+when not defined(release):
+  proc bPanic*() {.front.} =
+    canPanic:
+      raise newException(Exception, "Panic requested")

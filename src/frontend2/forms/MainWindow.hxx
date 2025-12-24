@@ -2,9 +2,7 @@
 #pragma once
 
 #include <QMainWindow>
-#include <QSpinBox>
 #include <QSplitter>
-#include <QToolBar>
 
 #include <array>
 
