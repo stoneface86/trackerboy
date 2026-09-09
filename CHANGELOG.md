@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+ - Command line WAV export: `trackerboy <module> --export-wav <output>`
+   exports a module without starting the editor. Use `--separate` to write
+   each channel to its own file, `--channels` to pick channels, and
+   `--loops`/`--duration`, `--samplerate` and `--song` to control playback.
+   See `trackerboy --help` for details.
+
 ## [0.6.6] - 2025-09-15
 
 ### Fixed

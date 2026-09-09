@@ -121,6 +121,7 @@ void WavExporter::run() {
         }
 
 
+        emit fileStarted(batches[i].filename);
         Wav wav(batches[i].filename.toStdString(), 2, mSamplerate);
         if (!wav.stream().good()) {
             mFailed = true;

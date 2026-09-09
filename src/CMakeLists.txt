@@ -131,6 +131,7 @@ makeSourceList(UI_SRC
     "core/PatternSelection"
     "core/StandardRates"
 
+    "export/ExportWavCommand"
     "export/ExportWavDialog"
     "export/WavExporter"
 

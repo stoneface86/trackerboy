@@ -1,4 +1,5 @@
 
+#include "export/ExportWavCommand.hpp"
 #include "forms/MainWindow.hpp"
 
 #include <QApplication>
@@ -52,6 +53,7 @@ static std::string demangle(const char* name) {
 
 constexpr int EXIT_BAD_ARGUMENTS = -1;
 constexpr int EXIT_BAD_ALLOC = 1;
+constexpr int EXIT_EXPORT_FAILED = 2;
 
 //
 // Singleton class for a custom Qt message handler. This message handler wraps
@@ -127,7 +129,97 @@ public:
 
 
 
+#define main_tr(str) QCoreApplication::translate("main", str)
+
+//
+// Application-wide settings shared by the GUI and headless modes
+//
+static void setupApplication() {
+    QCoreApplication::setOrganizationName("Trackerboy");
+    QCoreApplication::setApplicationName("Trackerboy");
+    QCoreApplication::setApplicationVersion(VERSION_STR);
+    // use INI on all systems, much easier to edit by hand
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+}
+
+//
+// Sets up the command line parser. Shared by both modes so that --help
+// always lists every option.
+//
+static void setupParser(QCommandLineParser &parser) {
+    parser.setApplicationDescription(main_tr("Game Boy music tracker"));
+    parser.addHelpOption();
+    parser.addVersionOption();
+    parser.addPositionalArgument("[module_file]", main_tr("(Optional) the module file to open or export"));
+    ExportWavCommand::addOptions(parser);
+}
+
+//
+// Gets the module file positional argument, if given. false is returned
+// when too many arguments were given, after printing usage to stderr.
+//
+static bool getModuleArgument(QCommandLineParser const& parser, QString &moduleFile) {
+    auto const positionals = parser.positionalArguments();
+    switch (positionals.size()) {
+        case 0:
+            break;
+        case 1:
+            moduleFile = positionals[0];
+            break;
+        default:
+            // we could just only take the first argument and ignore the rest
+            // but I prefer to be strict
+            fputs("too many arguments given\n", stderr);
+            fputs(qPrintable(parser.helpText()), stderr);
+            return false;
+    }
+    return true;
+}
+
+//
+// Headless mode, for exporting a module from the command line. A
+// QCoreApplication is used instead of a QApplication so that no display
+// is required.
+//
+static int headlessMain(int argc, char *argv[]) {
+    QCoreApplication app(argc, argv);
+    setupApplication();
+
+    QCommandLineParser parser;
+    setupParser(parser);
+    parser.process(app);
+
+    QString moduleFile;
+    if (!getModuleArgument(parser, moduleFile)) {
+        return EXIT_BAD_ARGUMENTS;
+    }
+
+    ExportWavCommand::Status status;
+    try {
+        status = ExportWavCommand::run(parser, moduleFile);
+    } catch (const std::bad_alloc &) {
+        fputs("error: out of memory\n", stderr);
+        return EXIT_BAD_ALLOC;
+    } catch (const std::exception &except) {
+        fprintf(stderr, "error: %s\n", except.what());
+        return EXIT_EXPORT_FAILED;
+    }
+
+    switch (status) {
+        case ExportWavCommand::Status::success:
+            return EXIT_SUCCESS;
+        case ExportWavCommand::Status::badArguments:
+            return EXIT_BAD_ARGUMENTS;
+        default:
+            return EXIT_EXPORT_FAILED;
+    }
+}
+
 int main(int argc, char *argv[]) {
+
+    if (ExportWavCommand::requested(argc, argv)) {
+        return headlessMain(argc, argv);
+    }
 
     int code;
 
@@ -137,37 +229,25 @@ int main(int argc, char *argv[]) {
     #endif
 
     Application app(argc, argv);
-    QCoreApplication::setOrganizationName("Trackerboy");
-    QCoreApplication::setApplicationName("Trackerboy");
-    QCoreApplication::setApplicationVersion(VERSION_STR);
-    // use INI on all systems, much easier to edit by hand
-    QSettings::setDefaultFormat(QSettings::IniFormat);
-
-#define main_tr(str) QCoreApplication::translate("main", str)
+    setupApplication();
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(main_tr("Game Boy music tracker"));
-    parser.addHelpOption();
-    parser.addVersionOption();
-    parser.addPositionalArgument("[module_file]", main_tr("(Optional) the module file to open"));
-
+    setupParser(parser);
     parser.process(app);
 
     QString fileToOpen;
-    auto const positionals = parser.positionalArguments();
-    switch (positionals.size()) {
-        case 0:
-            break;
-        case 1:
-            fileToOpen = positionals[0];
-            break;
-        default:
-            // we could just only take the first argument and ignore the rest
-            // but I prefer to be strict
-            fputs("too many arguments given\n", stderr);
-            fputs(qPrintable(parser.helpText()), stderr);
+    if (!getModuleArgument(parser, fileToOpen)) {
+        return EXIT_BAD_ARGUMENTS;
+    }
 
+    {
+        // export-only options are meaningless without --export-wav
+        auto const stray = ExportWavCommand::strayOption(parser);
+        if (!stray.isEmpty()) {
+            fputs(qPrintable(main_tr("option --%1 can only be used when exporting\n").arg(stray)), stderr);
+            fputs(qPrintable(parser.helpText()), stderr);
             return EXIT_BAD_ARGUMENTS;
+        }
     }
 
     // register types for signals
