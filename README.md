@@ -19,6 +19,27 @@ My tag is stoneface#7646 or you can join the server, https://discord.gg/m6wcAK3
  * __Contribute:__ For contributing to this repo, see the [contributing guidelines](CONTRIBUTING.md) and [source code organization](ORGANIZATION.md).
  * __Use:__ For details on how to use the tracker, see the [manual](https://www.trackerboy.org/manual).
 
+## Command line
+
+Trackerboy can also export a module to WAV from the command line, without
+starting the editor (no display is required):
+
+```sh
+# export the whole song to a single file
+trackerboy song.tbm --export-wav song.wav
+
+# export channels 1, 2 and 4, each to its own file: out/song.ch1.wav, out/song.ch2.wav, ...
+trackerboy song.tbm --export-wav out/ --separate --channels 1,2,4
+
+# play the second song of the module 3 times, at 48000 Hz
+trackerboy song.tbm --export-wav song.wav --song 2 --loops 3 --samplerate 48000
+
+# play for 1 minute and 30 seconds instead of looping
+trackerboy song.tbm --export-wav song.wav --duration 01:30
+```
+
+Run `trackerboy --help` for the full list of options.
+
 ## Status
 
 [v0.6.3](https://github.com/stoneface86/trackerboy/releases/tag/v0.6.3) is now available.

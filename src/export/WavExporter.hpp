@@ -39,6 +39,10 @@ public:
     void cancel();
 
 signals:
+    //
+    // Emitted before writing to each output file, with its path
+    //
+    void fileStarted(QString const& filename);
     void progressMax(int max);
     void progress(int amount);
 
